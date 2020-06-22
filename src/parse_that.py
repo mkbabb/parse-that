@@ -2,6 +2,219 @@ from typing import *
 from collections import defaultdict
 from functools import reduce
 
+
+class Monad:
+    def __init__(self, val):
+        self.val = val
+
+    def flat_map(self, func):
+        pass
+
+    def map(self, func):
+        return self.unit(
+            self.flat_map(lambda val: func(val))
+        )
+
+    def unit(self, val):
+        pass
+
+
+class Maybe(Monad):
+    def __init__(self,
+                 val):
+        self.val = val
+        self.is_none = val is None
+
+    def __bool__(self):
+        return not self.is_none
+
+    def flat_map(self, func):
+        val = None
+        if (self.val is not None):
+            try:
+                val = func(self.val)
+            except Exception as e:
+                print(e)
+                pass
+        return val
+
+    def unit(self, val):
+        return Maybe(val)
+
+
+class ParserValue:
+    def __init__(self,
+                 val: str,
+                 col_number: int = 0,
+                 line_number: int = 0):
+        self.val = val
+        self.col_number = col_number
+        self.line_number = line_number
+
+    def get_char(self, pos: Optional[int] = None) -> Maybe(str):
+        pos = self.col_number if pos is None else pos
+        if (pos < len(self.val)):
+            return Maybe(self.val[pos])
+        else:
+            return Maybe(None)
+
+    def shift(self, amount: int):
+        col_number = self.col_number + amount
+        if (col_number < 0 or col_number > len(self.val) - 1):
+            return self
+        else:
+            # TODO: Fix the line number always being 0.
+            return ParserValue(self.val, col_number, 0)
+
+    def __next__(self) -> Maybe("ParserValue"):
+        ch = self.get_char()
+
+        if (bool(ch)):
+            col_number = self.col_number + 1
+
+            line_number = 1 if ch.val == "\n" else 0
+
+            p_value = ParserValue(self.val,
+                                  col_number,
+                                  line_number)
+            return ch, p_value
+        else:
+            return ch, self
+
+    def __repr__(self):
+        return f"val: {self.val}\ncolumn number: {self.col_number}\nline_number: {self.line_number}"
+
+
+class Parser:
+    def __init__(self, parser: Callable[["Maybe[ParserValue]"], "Maybe[ParserValue]"]):
+        self.parser = parser
+
+    def __call__(self, p_value: ParserValue):
+        return self.parser(p_value)
+
+    def __and__(self, other):
+        return and_then(self.parser, other)
+
+    def __or__(self, other):
+        return or_else(self.parser, other)
+
+    def map(self, func):
+        def inner(p_val: ParserValue):
+            match, rest = self.parser(p_val)
+            if (bool(match)):
+                return match.map(func), rest
+            else:
+                return match, p_val
+
+        return Parser(inner)
+
+
+def and_then(parser1: Parser,
+             parser2: Parser) -> Parser:
+
+    def inner(p_val: ParserValue):
+        match1, rest = parser1(p_val)
+
+        if (bool(match1)):
+            match2, rest = parser2(rest)
+
+            if (bool(match2)):
+                return Maybe((match1.val, match2.val)), rest
+            else:
+                return match2, p_val
+        else:
+            return match1, p_val
+
+    return Parser(inner)
+
+
+def or_else(parser1: Parser,
+            parser2: Parser) -> Parser:
+
+    def inner(p_val: ParserValue):
+        match, rest = parser1(p_val)
+        if (not bool(match)):
+            match, rest = parser2(p_val)
+
+        return match, rest
+
+    return Parser(inner)
+
+
+def look_ahead(parser: Parser, amount: int):
+    def inner(p_val: ParserValue):
+        p_val_shifted = p_val.shift(amount)
+        match, rest = parser(p_val_shifted)
+        if (bool(match)):
+            return match, rest
+        else:
+            return match, p_val
+    return Parser(inner)
+
+
+def get_failure(p_val: ParserValue):
+    ch = p_val.get_char()
+    return f"Failure on character '{ch.val}' at column {p_val.col_number}, line {p_val.line_number}"
+
+
+def satisfy(pred: Callable[[ParserValue], bool]) -> Parser:
+
+    def inner(p_value: ParserValue):
+        ch = p_value.get_char()
+
+        if (ch.flat_map(pred)):
+            return next(p_value)
+        else:
+            print(get_failure(p_value))
+            return Maybe(None), p_value
+
+    return Parser(inner)
+
+
+def match_ch(ch):
+    return lambda s: s == ch
+
+
+def match_many(parser: Parser):
+    def inner(p_val: ParserValue):
+        matches: List[Maybe] = []
+        rest_prev = p_val
+
+        while (True):
+            match, rest = parser(rest_prev)
+
+            if (not bool(match)):
+                if (len(matches) == 0):
+                    return Maybe(None), rest_prev
+                else:
+                    return Maybe(matches), rest_prev
+            else:
+                rest_prev = rest
+                match.flat_map(matches.append)
+
+    return Parser(inner)
+
+
+a = satisfy(match_ch("a"))
+b = satisfy(match_ch("b"))
+c = satisfy(match_ch("c"))
+
+
+def tmp(x):
+    x = "".join(x)
+    print(x)
+    return x
+
+
+looks = look_ahead(a & b, -1).map(tmp)
+
+
+parser = match_many(a) & looks
+p_val = ParserValue("aaaaaaaaaaaab")
+matched, rest = parser(p_val)
+matched.flat_map(print)
+
+
 def match_char(ch: str):
     def inner(s: str):
 
@@ -81,16 +294,6 @@ def parse_alnum(s: str):
 
 def parse_whitespace(s: str):
     return any_of([" ", "\t", "\n"])(s)
-
-
-def map_to(f, parser):
-    def inner(s: str):
-        match, rest = parser(s)
-        if (match is not None):
-            return (f(match), rest)
-        else:
-            return match, rest
-    return inner
 
 
 def sequence(parsers: List[any]):
@@ -252,33 +455,6 @@ def between(sep1, interior, sep2):
                        ignore_right(interior,
                                     sep2)
                        )
-
-
-class Parser:
-    def __init__(self, parser):
-        self.parser = parser
-
-    def __call__(self, s):
-        return self.parser(s)
-
-    def __and__(self, other):
-        return and_then(self.parser, other)
-
-    def __or__(self, other):
-        return or_else(self.parser, other)
-
-
-def satisfy(pred: Callable[[str], bool]):
-    def inner(s: str):
-        if (len(s) == 0 or not pred(s[0])):
-            return (None, s)
-        else:
-            return (s[0], s[1:])
-    return Parser(inner)
-
-
-def match_ch(ch):
-    return lambda s: s == ch
 
 
 pp = satisfy(match_ch("a")) & satisfy(match_ch("b"))
