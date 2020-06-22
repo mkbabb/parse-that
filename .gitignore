@@ -1,0 +1,5 @@
+data/
+*.pickle
+.vscode/
+.mypy_cache/
+.DS_Store
