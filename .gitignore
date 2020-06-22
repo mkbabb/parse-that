@@ -1,5 +1,13 @@
-data/
-*.pickle
-.vscode/
-.mypy_cache/
 .DS_Store
+config.php
+phinx.yml
+.vscode/
+vendor/
+.mypy_cache/
+.env
+bootstrap/
+storage/
+auth/
+my_venv/
+data/
+__pycache__/
