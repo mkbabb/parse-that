@@ -1,45 +1,58 @@
 from typing import *
 from collections import defaultdict
 from functools import reduce
+import operator
+
+T = TypeVar("T")
+S = TypeVar("S")
 
 
-class Monad:
-    def __init__(self, val):
+class Monad(Generic[T]):
+    def __init__(self, val: T):
         self.val = val
 
-    def flat_map(self, func):
+    def flat_map(self, func: Callable[[T], Optional[S]]):
         pass
 
-    def map(self, func):
+    def map(self, func: Callable[[T], Optional[S]]) -> "Monad[T]":
         return self.unit(
             self.flat_map(lambda val: func(val))
         )
 
-    def unit(self, val):
+    def unit(self, val) -> "Monad[T]":
         pass
 
 
-class Maybe(Monad):
+class Maybe(Monad[T]):
     def __init__(self,
-                 val):
-        self.val = val
-        self.is_none = val is None
+                 val: T,
+                 is_none: bool = False):
+        self.is_none = is_none or (val is None)
+        super().__init__(val)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return not self.is_none
 
-    def flat_map(self, func):
-        val = None
+    def flat_map(self, func: Callable[[T], Optional[S]]) -> Optional[S]:
+        val: Optional[S] = None
+
         if (self.val is not None):
             try:
                 val = func(self.val)
             except Exception as e:
                 print(e)
                 pass
+
         return val
 
-    def unit(self, val):
+    def map(self, func: Callable[[T], Optional[S]]) -> "Maybe[T]":
+        return super().map(func)
+
+    def unit(self, val: T) -> "Maybe[T]":
         return Maybe(val)
+
+    def __repr__(self) -> str:
+        return self.val if not self.is_none else "None"
 
 
 class ParserValue:
@@ -51,14 +64,17 @@ class ParserValue:
         self.col_number = col_number
         self.line_number = line_number
 
-    def get_char(self, pos: Optional[int] = None) -> Maybe(str):
+    def get_char(self,
+                 pos: Optional[int] = None) -> Maybe[str]:
         pos = self.col_number if pos is None else pos
         if (pos < len(self.val)):
             return Maybe(self.val[pos])
         else:
             return Maybe(None)
 
-    def shift(self, amount: int):
+    def shift(self,
+              amount: int) -> "ParserValue":
+        amount = amount + 1 if amount < 0 else amount
         col_number = self.col_number + amount
         if (col_number < 0 or col_number > len(self.val) - 1):
             return self
@@ -66,7 +82,7 @@ class ParserValue:
             # TODO: Fix the line number always being 0.
             return ParserValue(self.val, col_number, 0)
 
-    def __next__(self) -> Maybe("ParserValue"):
+    def __next__(self) -> Tuple[Maybe[str], "ParserValue"]:
         ch = self.get_char()
 
         if (bool(ch)):
@@ -74,45 +90,44 @@ class ParserValue:
 
             line_number = 1 if ch.val == "\n" else 0
 
-            p_value = ParserValue(self.val,
-                                  col_number,
-                                  line_number)
-            return ch, p_value
+            p_val = ParserValue(self.val,
+                                col_number,
+                                line_number)
+            return ch, p_val
         else:
             return ch, self
 
-    def __repr__(self):
-        return f"val: {self.val}\ncolumn number: {self.col_number}\nline_number: {self.line_number}"
+    def __repr__(self) -> str:
+        return f"val: {self.val}\
+                \ncurrent character: {self.get_char()}\
+                \ncolumn number: {self.col_number}\
+                \nline_number: {self.line_number}"
+
+
+ParserTuple = Tuple[Maybe[T], ParserValue]
+ParserFunction = Callable[[ParserValue], ParserTuple]
 
 
 class Parser:
-    def __init__(self, parser: Callable[["Maybe[ParserValue]"], "Maybe[ParserValue]"]):
+    def __init__(self, parser: ParserFunction):
         self.parser = parser
 
-    def __call__(self, p_value: ParserValue):
-        return self.parser(p_value)
+    def __call__(self, p_val: ParserValue) -> ParserTuple[Any]:
+        return self.parser(p_val)
 
-    def __and__(self, other):
+    def __and__(self, other: "Parser") -> "Parser":
         return and_then(self.parser, other)
 
-    def __or__(self, other):
+    def __or__(self, other: "Parser") -> "Parser":
         return or_else(self.parser, other)
 
-    def map(self, func):
-        def inner(p_val: ParserValue):
-            match, rest = self.parser(p_val)
-            if (bool(match)):
-                return match.map(func), rest
-            else:
-                return match, p_val
-
-        return Parser(inner)
+    def map(self, func: Callable[[T], S]):
+        return parser_map(func, self.parser)
 
 
 def and_then(parser1: Parser,
              parser2: Parser) -> Parser:
-
-    def inner(p_val: ParserValue):
+    def inner(p_val: ParserValue) -> ParserTuple:
         match1, rest = parser1(p_val)
 
         if (bool(match1)):
@@ -130,9 +145,9 @@ def and_then(parser1: Parser,
 
 def or_else(parser1: Parser,
             parser2: Parser) -> Parser:
-
-    def inner(p_val: ParserValue):
+    def inner(p_val: ParserValue) -> ParserTuple:
         match, rest = parser1(p_val)
+
         if (not bool(match)):
             match, rest = parser2(p_val)
 
@@ -141,43 +156,131 @@ def or_else(parser1: Parser,
     return Parser(inner)
 
 
-def look_ahead(parser: Parser, amount: int):
-    def inner(p_val: ParserValue):
+def parser_map(func: Callable[[T], S], parser: Parser) -> Parser:
+    def inner(p_val: ParserValue) -> ParserTuple:
+        match, rest = parser(p_val)
+
+        if (bool(match)):
+            return match.map(func), rest
+        else:
+            return match, p_val
+
+    return Parser(inner)
+
+
+def look_ahead(parser: Parser,
+               amount: int) -> Parser:
+    def inner(p_val: ParserValue) -> ParserTuple:
         p_val_shifted = p_val.shift(amount)
         match, rest = parser(p_val_shifted)
+
         if (bool(match)):
             return match, rest
         else:
             return match, p_val
+
     return Parser(inner)
 
 
-def get_failure(p_val: ParserValue):
+Number = TypeVar("Number", int, float)
+
+
+def clamp(x: Number,
+          lower: Number,
+          upper: Number) -> Number:
+    return lower\
+        if x < lower\
+        else upper\
+        if x > upper\
+        else x
+
+
+def get_failure(p_val: ParserValue,
+                amount: int = 0) -> str:
+    p_val_shifted = p_val.shift(amount)
+
+    col_number = p_val_shifted.col_number
     ch = p_val.get_char()
-    return f"Failure on character '{ch.val}' at column {p_val.col_number}, line {p_val.line_number}"
+
+    front = clamp(col_number - 10, 0, len(p_val_shifted.val))
+    back = clamp(col_number + 10, 0, len(p_val_shifted.val))
+
+    slc = p_val_shifted.val[front: back]
+    dots = "..."
+    space = " " * (
+        len(slc) + len(dots) - (back - col_number) - 1
+    )
+
+    s = dots + slc + dots + "\n"
+    s += space + "^" + "\n"
+    s += space + "|" + "\n"
+    s += f"Error at {ch}, column {p_val_shifted.col_number}, line number, {p_val_shifted.line_number}"
+    return s
 
 
-def satisfy(pred: Callable[[ParserValue], bool]) -> Parser:
+def satisfy(pred: Callable[[Maybe[str]], bool]) -> Parser:
 
-    def inner(p_value: ParserValue):
-        ch = p_value.get_char()
+    def inner(p_val: ParserValue) -> ParserTuple:
+        ch = p_val.get_char()
 
         if (ch.flat_map(pred)):
-            return next(p_value)
+            return next(p_val)
         else:
-            print(get_failure(p_value))
-            return Maybe(None), p_value
+            return Maybe(get_failure(p_val), True), p_val
 
     return Parser(inner)
 
 
-def match_ch(ch):
-    return lambda s: s == ch
+def literal(s: str,
+            ignore_case: bool = False) -> Parser:
+    def icase_equals(x: str, y: str) -> bool:
+        return x.lower() == y.lower()\
+            if ignore_case\
+            else x == y
+
+    inner_ch = satisfy(lambda ch: icase_equals(ch, s))
+
+    def inner_str(p_val: ParserValue) -> ParserTuple:
+        rest = p_val
+        matches: List[str] = []
+
+        for n, ch in enumerate(s):
+            match, rest = next(rest)
+
+            if (bool(match) and
+                    icase_equals(ch, match.val)):
+                matches.append(ch)
+            else:
+                return Maybe(get_failure(rest), True), p_val
+
+        return Maybe(matches), rest
+
+    return inner_ch if len(s) == 1 else Parser(inner_str).map("".join)
 
 
-def match_many(parser: Parser):
-    def inner(p_val: ParserValue):
-        matches: List[Maybe] = []
+def sequence(parsers: List[Parser],
+             backtrack: bool = True) -> Parser:
+
+    def inner(p_val: ParserValue) -> ParserTuple[Optional[List[T]]]:
+        rest = p_val
+        matches: List[T] = []
+
+        for parser in parsers:
+            match, rest = parser(rest)
+            if (bool(match)):
+                match.flat_map(matches.append)
+            else:
+                return (Maybe(get_failure(rest), True),
+                        (p_val if backtrack else rest))
+
+        return Maybe(matches), rest
+
+    return Parser(inner)
+
+
+def many_of(parser: Parser) -> Parser:
+    def inner(p_val: ParserValue) -> ParserTuple[List[T]]:
+        matches: List[T] = []
         rest_prev = p_val
 
         while (True):
@@ -185,7 +288,7 @@ def match_many(parser: Parser):
 
             if (not bool(match)):
                 if (len(matches) == 0):
-                    return Maybe(None), rest_prev
+                    return Maybe([]), rest_prev
                 else:
                     return Maybe(matches), rest_prev
             else:
@@ -195,24 +298,58 @@ def match_many(parser: Parser):
     return Parser(inner)
 
 
-a = satisfy(match_ch("a"))
-b = satisfy(match_ch("b"))
-c = satisfy(match_ch("c"))
+def n_or_more(parser: Parser,
+              n: int = 0):
+    return (sequence([parser] * n) & many_of(parser))\
+        .map(lambda x: x[0] + x[1])
 
 
-def tmp(x):
-    x = "".join(x)
-    print(x)
-    return x
+def one_or_many(parser):
+    return n_or_more(parser, 1)
 
 
-looks = look_ahead(a & b, -1).map(tmp)
+def optional(parser: Parser):
+    def inner(p_val: ParserValue) -> ParserTuple:
+        match, rest = parser(p_val)
+        if (bool(match)):
+            return match, rest
+        else:
+            return Maybe(""), p_val
+    return Parser(inner)
 
 
-parser = match_many(a) & looks
-p_val = ParserValue("aaaaaaaaaaaab")
+def p_number():
+    digit = many_of(satisfy(str.isdigit)).map("".join)
+    dot = literal(".")
+    e = literal("e")
+    minus = literal("-")
+    plus = literal("+")
+
+    integer = digit.map(int)
+    floating = \
+        sequence([digit, dot, optional(digit)])\
+        .map(lambda x: float("".join(x)))
+
+    number = floating | integer
+
+    exp = e & (minus | plus) & digit
+
+    return number & optional(exp)
+
+
+def binary_operator(func: Callable[[float, float], float], token):
+    def op(x):
+        print(x)
+        return func(x[0], x[2])
+    return sequence([p_number(), literal(token), p_number()])\
+        .map(op)
+
+
+parser = binary_operator(lambda x, y: x + y, "+")
+p_val = ParserValue("100+12")
 matched, rest = parser(p_val)
 matched.flat_map(print)
+print(rest)
 
 
 def match_char(ch: str):
@@ -457,7 +594,7 @@ def between(sep1, interior, sep2):
                        )
 
 
-pp = satisfy(match_ch("a")) & satisfy(match_ch("b"))
+pp = satisfy(sta("a")) & satisfy(sta("b"))
 print(pp("ab"))
 
 
