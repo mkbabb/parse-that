@@ -4,6 +4,8 @@ from functools import reduce
 import operator
 from monad import Maybe
 
+Number = TypeVar("Number", int, float)
+
 
 class ParserValue:
     def __init__(self, val: str, is_junk: bool = False):
@@ -30,6 +32,7 @@ class ParserState:
     def shift(self, amount: int) -> "ParserState":
         amount = amount + 1 if amount < 0 else amount
         col_number = self.col_number + amount
+        
         if col_number < 0 or col_number > len(self.val) - 1:
             return self
         else:
@@ -146,9 +149,6 @@ def look_ahead(parser: Parser, amount: int) -> Parser:
             return match, p_val
 
     return Parser(inner)
-
-
-Number = TypeVar("Number", int, float)
 
 
 def clamp(x: Number, lower: Number, upper: Number) -> Number:
