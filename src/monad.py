@@ -64,23 +64,23 @@ class Maybe(Generic[T]):
 
 # if __name__ == "__main__":
 
-    # def tmp(x, y, z):
-    #     print(x, y)
-    #     return x, y
+# def tmp(x, y, z):
+#     print(x, y)
+#     return x, y
 
-    # data = {"vulns": {"hi": 0}, "row": "row"}
-    # row = Maybe(data.get("row"))
-    # vulns = Maybe(data.get("vulns"))
-    # tt = Maybe("ok")
-    # t = 1 + 2 + 3 * 1
+# data = {"vulns": {"hi": 0}, "row": "row"}
+# row = Maybe(data.get("row"))
+# vulns = Maybe(data.get("vulns"))
+# tt = Maybe("ok")
+# t = 1 + 2 + 3 * 1
 
-    # a = row.map(lambda row: (vulns.map(lambda vulns: vulns)))
-    # b = Promise(None)
+# a = row.map(lambda row: (vulns.map(lambda vulns: vulns)))
+# b = Promise(None)
 
-    # def tmp2(x):
-    #     raise ValueError()
+# def tmp2(x):
+#     raise ValueError()
 
-    # b.then(lambda x: tmp2(x)).catch(lambda: print("umm"))
+# b.then(lambda x: tmp2(x)).catch(lambda: print("umm"))
 
-    # m = Maybe(99)
-    # m | (lambda x: x + 99)
+# m = Maybe(99)
+# m | (lambda x: x + 99)

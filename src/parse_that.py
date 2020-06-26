@@ -1,7 +1,8 @@
-from typing import *
+import operator
 from collections import defaultdict
 from functools import reduce
-import operator
+from typing import *
+
 from monad import Maybe
 
 Number = TypeVar("Number", int, float)
@@ -32,7 +33,7 @@ class ParserState:
     def shift(self, amount: int) -> "ParserState":
         amount = amount + 1 if amount < 0 else amount
         col_number = self.col_number + amount
-        
+
         if col_number < 0 or col_number > len(self.val) - 1:
             return self
         else:
