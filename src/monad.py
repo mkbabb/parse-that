@@ -91,7 +91,7 @@ class MonadicList(Generic[T]):
         return acc
 
 
-BITS = 1
+BITS = 2
 WIDTH = 1 << BITS
 MASK = WIDTH - 1
 
@@ -122,10 +122,10 @@ class Node(Generic[T]):
 class MyList:
     def __init__(self):
         self.root = Node()
-        self.size = 1
+        self.size = 0
 
     def depth(self):
-        return 0 if self.size == 1 else int(math.log(self.size - 1, WIDTH))
+        return 0 if self.size == 0 else int(math.log(self.size, WIDTH))
 
     def at(self, key: int):
         node = self.root
@@ -150,13 +150,14 @@ class MyList:
         root = Node(list(self.root.children))
 
         # Root overflow case.
-        if is_power_of(self.size - 1, WIDTH):
+        if is_power_of(self.size, WIDTH):
             root = Node([root])
 
         node = root
-        key = self.size - 1
 
-        for i in range(self.depth(), 0, -BITS):
+        key = self.size
+ 
+        for i in range(self.depth(), 0, -1):
             level = (key >> i) & MASK
 
             # Generate a branch until we get to the leaves.
@@ -167,7 +168,8 @@ class MyList:
                 node.children[level] = node.children[level].copy()
                 node = node.children[level]
 
-        node.children[key & MASK] = val
+        ix = key & MASK
+        node.children[ix] = val
 
         out = MyList()
         out.root = root
@@ -180,17 +182,16 @@ class MyList:
         node = root
         prev_node = node
 
-        key = self.size - 1
-
-        for i in range(self.depth(), 0, -BITS):
-            level = (key >> i) & MASK
+        key = self.size
+        level = key
+        for _ in range(self.depth()):
+            level >>= BITS
 
             prev_node = node
             node.children[level] = node.children[level].copy()
             node = node.children[level]
 
         ix = (key & MASK) - 1
-
         if ix < 0:
             prev_node.children = None
         else:
@@ -210,6 +211,18 @@ if __name__ == "__main__":
     l3 = l2.append(2)
     l4 = l3.append(3)
     l5 = l4.append(4)
+    l5 = l5.append(5)
+    l5 = l5.append(6)
+    l5 = l5.append(7)
+    l5 = l5.append(8)
+    l5 = l5.append(9)
+    l5 = l5.append(10)
+    l5 = l5.append(11)
+    l5 = l5.append(12)
+    l5 = l5.append(13)
+    l5 = l5.append(14)
+    l5 = l5.append(15)
+    l5 = l5.append(16)
 
     for i in range(l5.size - 1):
         print(l5.at(i))
