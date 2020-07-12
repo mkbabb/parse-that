@@ -1,5 +1,6 @@
 from typing import *
 
+
 import typing_extensions
 
 T = TypeVar("T")
@@ -27,23 +28,23 @@ class Monad(Generic[T]):
 
 
 class Maybe(Generic[T]):
-    def __init__(self: "Maybe[T]", val: Optional[T], is_none: bool = False):
+    def __init__(self, val: Optional[T], is_none: bool = False):
         self.val = val
         self.is_none = is_none or (val is None)
 
-    def or_else(self, default: Optional[S]) -> "Maybe[Union[Optional[T], S]]":
+    def or_else(self, default: S) -> Union["Maybe[S]", "Maybe[T]"]:
         if self.is_none:
-            return self.unit(default)
+            return Maybe(default)
         else:
-            return self.unit(self.val)
+            return Maybe(self.val)
 
-    def __or__(self, func: Callable[[T], Optional[S]]) -> "Maybe[Optional[S]]":
+    def __or__(self, func: Callable[[T], S]) -> "Maybe[S]":
         return self.map(func)
 
     def __bool__(self) -> bool:
         return not self.is_none
 
-    def flat_map(self, func: Callable[[T], Optional[S]]) -> Optional[S]:
+    def flat_map(self, func: Callable[[T], S]) -> Optional[S]:
         if self.val is not None:
             try:
                 return func(self.val)
@@ -52,20 +53,174 @@ class Maybe(Generic[T]):
         else:
             return self.val
 
-    def map(self, func: Callable[[T], Optional[S]]) -> "Maybe[Optional[S]]":
-        return self.unit(self.flat_map(func))
-
-    def unit(self, val: S, is_none: bool = False) -> "Maybe[S]":
-        return Maybe(val, is_none)
+    def map(self, func: Callable[[T], S]) -> "Maybe[S]":
+        return Maybe(self.flat_map(func))
 
     def __repr__(self) -> str:
         return str(self.val) if not self.is_none else "None"
 
 
-# if __name__ == "__main__":
+class MonadicList(Generic[T]):
+    def __init__(self, val: List[T]):
+        self.val = val
+
+    def flat_map(self, func: Callable[[T], List[S]]) -> List[S]:
+        out: List[S] = []
+
+        for curr_val in self.val:
+            out.extend(func(curr_val))
+
+        return out
+
+    def map(self, func: Callable[[T], S]) -> "MonadicList[S]":
+        wrapper = lambda curr_val: [func(curr_val)]
+        return MonadicList(self.flat_map(wrapper))
+
+    def reduce(self, func: Callable[[S, T], S], init: Optional[T] = None,) -> S:
+        start_pos = 0
+
+        if init is None:
+            start_pos = 1
+            init = self.val[0]
+
+        acc: S = cast(S, init)
+
+        for n, curr_val in enumerate(self.val[start_pos:]):
+            acc = func(acc, curr_val)
+
+        return acc
+
+
+BITS = 1
+WIDTH = 1 << BITS
+MASK = WIDTH - 1
+
+
+import math
+
+
+def is_power_of(n: int, b: int) -> bool:
+    if n <= 1:
+        return False
+    else:
+        while n % b == 0:
+            n //= b
+        return n == 1
+
+
+class Node(Generic[T]):
+    def __init__(self, children: Optional[List[T]] = None):
+        if children is not None:
+            self.children = children + [None] * (WIDTH - len(children))
+        else:
+            self.children = [None] * WIDTH
+
+    def copy(self):
+        return Node(list(self.children))
+
+
+class MyList:
+    def __init__(self):
+        self.root = Node()
+        self.size = 1
+
+    def depth(self):
+        return 0 if self.size == 1 else int(math.log(self.size - 1, WIDTH))
+
+    def at(self, key: int):
+        node = self.root
+
+        for i in range(self.depth(), 0, -BITS):
+            level = (key >> i) & MASK
+            node = node.children[level]
+
+        return node.children[key & MASK]
+
+    def append(self, val: T):
+        """ Three cases when appending, in order initial possibility:
+         1. Root overflow: there's no more space in the entire tree: thus we must
+         create an entirely root, whereof's left branch is the current root.
+
+         2. There's no room in the left branch, and the right branch is None: thus we must
+         create a right branch and fill its first element with "value".
+
+         3. There's space in the current branch: we simply insert "value" here,
+         path copying on the way down.
+        """
+        root = Node(list(self.root.children))
+
+        # Root overflow case.
+        if is_power_of(self.size - 1, WIDTH):
+            root = Node([root])
+
+        node = root
+        key = self.size - 1
+
+        for i in range(self.depth(), 0, -BITS):
+            level = (key >> i) & MASK
+
+            # Generate a branch until we get to the leaves.
+            if node.children[level] is None:
+                node.children[level] = Node()
+                node = node.children[level]
+            else:
+                node.children[level] = node.children[level].copy()
+                node = node.children[level]
+
+        node.children[key & MASK] = val
+
+        out = MyList()
+        out.root = root
+        out.size = self.size + 1
+
+        return out
+
+    def pop(self):
+        root = Node(list(self.root.children))
+        node = root
+        prev_node = node
+
+        key = self.size - 1
+
+        for i in range(self.depth(), 0, -BITS):
+            level = (key >> i) & MASK
+
+            prev_node = node
+            node.children[level] = node.children[level].copy()
+            node = node.children[level]
+
+        ix = (key & MASK) - 1
+
+        if ix < 0:
+            prev_node.children = None
+        else:
+            node.children[ix] = None
+
+        out = MyList()
+        out.root = root
+        out.size = self.size - 1
+
+        return out
+
+
+if __name__ == "__main__":
+    l0 = MyList()
+    l1 = l0.append(0)
+    l2 = l1.append(1)
+    l3 = l2.append(2)
+    l4 = l3.append(3)
+    l5 = l4.append(4)
+
+    for i in range(l5.size - 1):
+        print(l5.at(i))
+
+    l6 = l5.pop()
+    l7 = l6.pop()
+    print("o")
+
 
 # def tmp(x, y, z):
-#     print(x, y)
+#     print(x, y)``
 #     return x, y
 
 # data = {"vulns": {"hi": 0}, "row": "row"}
