@@ -119,10 +119,13 @@ class Node(Generic[T]):
         return Node(list(self.children))
 
 
+# TODO: Properly implement mutation.
+# TODO: Generalize and modularize the digging logic.
 class MyList:
     def __init__(self):
         self.root = Node()
         self.size = 0
+        self.mutation = False
 
     def depth(self):
         return 0 if self.size == 0 else int(math.log(self.size, WIDTH))
@@ -135,6 +138,9 @@ class MyList:
             node = node.children[level]
 
         return node.children[key & MASK], node.children
+
+    def mutate(self):
+        self.mutation = not self.mutation
 
     def append(self, val: T):
         """ Three cases when appending, in order initial possibility:
@@ -173,7 +179,6 @@ class MyList:
         out = MyList()
         out.root = root
         out.size = self.size + 1
-
         return out
 
     def pop(self):
@@ -199,8 +204,6 @@ class MyList:
         out = MyList()
         out.root = root
         out.size = self.size - 1
-
-        return out
 
 
 if __name__ == "__main__":
