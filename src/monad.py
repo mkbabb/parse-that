@@ -139,6 +139,19 @@ class MyList:
 
         return node.children[key & MASK], node.children
 
+    def reduce_node(
+        self,
+        node: Node[T],
+        key: int,
+        reducer: Callable[[Node[T], int, int], Optional[Node[T]]],
+    ) -> Optional[Node[T]]:
+
+        for level in range(self.depth(), 0, -1):
+            ix = (key >> (level * BITS)) & MASK
+            node = reducer(node, level, ix)
+
+        return node
+
     def mutate(self):
         self.mutation = not self.mutation
 
@@ -159,22 +172,18 @@ class MyList:
         if is_power_of(self.size, WIDTH):
             root = Node([root])
 
-        node = root
-        key = self.size
-
-        for i in range(self.depth(), 0, -1):
-            level = (key >> (i * BITS)) & MASK
-
-            # Generate a branch until we get to the leaves.
-            if node.children[level] is None:
-                node.children[level] = Node()
-                node = node.children[level]
+        def reducer(node: Node[T], level: int, ix: int):
+            if node.children[ix] is None:
+                node.children[ix] = Node()
             else:
-                node.children[level] = node.children[level].copy()
-                node = node.children[level]
+                node.children[ix] = node.children[ix].copy()
+            return node.children[ix]
 
+        key = self.size
         ix = key & MASK
-        node.children[ix] = val
+
+        leaf = self.reduce_node(root, key, reducer)
+        leaf.children[ix] = val
 
         out = MyList()
         out.root = root
