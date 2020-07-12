@@ -130,11 +130,11 @@ class MyList:
     def at(self, key: int):
         node = self.root
 
-        for i in range(self.depth(), 0, -BITS):
-            level = (key >> i) & MASK
+        for i in range(self.depth(), 0, -1):
+            level = (key >> (i * BITS)) & MASK
             node = node.children[level]
 
-        return node.children[key & MASK]
+        return node.children[key & MASK], node.children
 
     def append(self, val: T):
         """ Three cases when appending, in order initial possibility:
@@ -154,11 +154,10 @@ class MyList:
             root = Node([root])
 
         node = root
-
         key = self.size
- 
+
         for i in range(self.depth(), 0, -1):
-            level = (key >> i) & MASK
+            level = (key >> (i * BITS)) & MASK
 
             # Generate a branch until we get to the leaves.
             if node.children[level] is None:
@@ -183,9 +182,9 @@ class MyList:
         prev_node = node
 
         key = self.size
-        level = key
-        for _ in range(self.depth()):
-            level >>= BITS
+
+        for i in range(self.depth(), 0, -1):
+            level = (key >> (i * BITS)) & MASK
 
             prev_node = node
             node.children[level] = node.children[level].copy()
@@ -223,12 +222,21 @@ if __name__ == "__main__":
     l5 = l5.append(14)
     l5 = l5.append(15)
     l5 = l5.append(16)
+    l5 = l5.append(17)
+    l5 = l5.append(18)
 
-    for i in range(l5.size - 1):
+    for i in range(l5.size):
         print(l5.at(i))
 
     l6 = l5.pop()
     l7 = l6.pop()
+
+    for i in range(l6.size):
+        t1, child1 = l6.at(i)
+        t2, child2 = l7.at(i)
+
+        print(t1, id(child1) == id(child2))
+
     print("o")
 
 
