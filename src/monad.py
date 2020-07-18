@@ -127,6 +127,13 @@ class MyList:
         self.size = 0
         self.mutation = False
 
+    @staticmethod
+    def __create(root: Node[T], size: int) -> "MyList":
+        out = MyList()
+        out.root = root
+        out.size = size
+        return out
+
     def depth(self):
         return 0 if self.size == 0 else int(math.log(self.size, WIDTH))
 
@@ -140,17 +147,14 @@ class MyList:
         return node.children[key & MASK], node.children
 
     def reduce_node(
-        self,
-        node: Node[T],
-        key: int,
-        reducer: Callable[[Node[T], int, int], Optional[Node[T]]],
-    ) -> Optional[Node[T]]:
+        self, key: int, reducer: Callable[[S, int, int], Node[T]], init: S
+    ) -> S:
 
         for level in range(self.depth(), 0, -1):
             ix = (key >> (level * BITS)) & MASK
-            node = reducer(node, level, ix)
+            init = reducer(init, level, ix)
 
-        return node
+        return init
 
     def mutate(self):
         self.mutation = not self.mutation
@@ -182,37 +186,42 @@ class MyList:
         key = self.size
         ix = key & MASK
 
-        leaf = self.reduce_node(root, key, reducer)
+        leaf = self.reduce_node(key, reducer, root)
         leaf.children[ix] = val
 
-        out = MyList()
-        out.root = root
-        out.size = self.size + 1
-        return out
+        return self.__create(root, self.size + 1)
 
     def pop(self):
         root = Node(list(self.root.children))
-        node = root
-        prev_node = node
+
+        def reducer(nodes: Tuple[Node[T], Node[T]], level: int, ix: int):
+            prev_node, node = nodes
+            node.children[ix] = node.children[ix].copy()
+            return node, node.children[ix]
 
         key = self.size
-
-        for i in range(self.depth(), 0, -1):
-            level = (key >> (i * BITS)) & MASK
-
-            prev_node = node
-            node.children[level] = node.children[level].copy()
-            node = node.children[level]
-
         ix = (key & MASK) - 1
-        if ix < 0:
-            prev_node.children = None
-        else:
-            node.children[ix] = None
 
-        out = MyList()
-        out.root = root
-        out.size = self.size - 1
+        prev_leaf, leaf = self.reduce_node(key, reducer, (None, root))
+
+        if ix < 0:
+            prev_leaf.children = None
+        else:
+            leaf.children[ix] = None
+
+        return self.__create(root, self.size - 1)
+
+    def concat(self, lists: List["MyList"]) -> "MyList":
+        base = lists[0]
+
+        if len(lists) > 1:
+
+            for i in range(1, len(lists)):
+                sub_list = lists[i]
+                for j in range(sub_list.size()):
+                    base.append(sub_list.at(j))
+
+        return base
 
 
 if __name__ == "__main__":
