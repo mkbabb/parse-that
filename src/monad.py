@@ -140,7 +140,7 @@ class MyList:
         return out
 
     def depth(self):
-        return 0 if self.size == 0 else int(math.log(self.size, WIDTH))
+        return 0 if self.size < WIDTH else math.floor(math.log(self.size, WIDTH))
 
     def mutate(self):
         self.mutation = not self.mutation
@@ -156,11 +156,14 @@ class MyList:
         return init
 
     def at(self, key: int):
+        leaf_ix = key & MASK
+
         def reducer(node: Node[T], level: int, ix: int):
             return node.children[ix]
 
         leaf = self.reduce_node(key, reducer, self.root)
-        return leaf.children[key & MASK]
+        val = leaf.children[leaf_ix]
+        return val
 
     def append(self, val: T):
         """Three cases when appending, in order initial possibility:
@@ -175,6 +178,8 @@ class MyList:
         """
         root = Node(list(self.root.children)) if not self.mutation else self.root
         size = self.size + 1
+        key = self.size
+        leaf_ix = key & MASK
 
         # Root overflow case.
         if is_power_of(self.size, WIDTH):
@@ -189,11 +194,8 @@ class MyList:
                 )
             return node.children[ix]
 
-        key = self.size
-        ix = key & MASK
-
         leaf = self.reduce_node(key, reducer, root)
-        leaf.children[ix] = val
+        leaf.children[leaf_ix] = val
 
         if not self.mutation:
             return self.__create(root, size)
@@ -206,32 +208,32 @@ class MyList:
         """There's three cases when popping, in order of initial possibility:
         1. The right-most leaf node has at least one elements in it: we simply set the right-most
         element therein to None.
-        2. The right-most leaf node is all "None"s: we set this entire node to None, grab the parent dode,
+        2. The right-most leaf node is all "None"s: we set this entire node to None, grab the parent node,
         and pop from that parent node's right-most non-none element.
         """
-        global last_ix
+        global leaf_ix
         root = Node(list(self.root.children)) if not self.mutation else self.root
         size = self.size - 1
         key = self.size
-        last_ix = (key & MASK) - 1
+        leaf_ix = key & MASK
 
-        def reducer(nodes: Tuple[Node[T], Node[T]], level: int, ix: int):
-            global last_ix
+        def reducer(node: Node[T], level: int, ix: int):
+            global leaf_ix
 
-            prev_node, node = nodes
             node.children[ix] = (
                 node.children[ix].copy() if not self.mutation else node.children[ix]
             )
+
             # The second case outlined above.
-            if level == 1 and last_ix == -1:
+            if level == 1 and leaf_ix == 0:
                 node.children[ix] = None
-                last_ix = WIDTH - 1
+                leaf_ix = WIDTH - 1
                 return node, node.children[ix - 1]
             else:
                 return node, node.children[ix]
 
-        prev_leaf, leaf = self.reduce_node(key, reducer, (None, root))
-        leaf.children[last_ix] = None
+        prev_leaf, leaf = self.reduce_node(key, reducer, root)
+        leaf.children[leaf_ix] = None
 
         if not self.mutation:
             return self.__create(root, size)
@@ -278,16 +280,13 @@ class MyList:
 
 
 if __name__ == "__main__":
-    l0 = MyList(list(range(4 * 2 + 1)))
+    l0 = MyList(list(range(5)))
+    l1 = MyList(list(range(18, 18 * 2)))
 
-    for i in range(4):
-        l0 = l0.pop()
-    # l1 = MyList(list(range(18, 18 * 2)))
+    l3 = l0.splice(1, [99])
 
-    # l3 = l0.splice(1, [99])
-
-    # for i in range(l3.size):
-    #     print(l3.at(i))
+    for i in range(l3.size):
+        print(l3.at(i))
 
     # l1 = l0.pop()
     # l2 = l0.pop()
