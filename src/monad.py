@@ -122,14 +122,19 @@ class Node(Generic[T]):
 # TODO: Properly implement mutation.
 # TODO: Generalize and modularize the digging logic.
 class MyList:
-    def __init__(self):
+    def __init__(self, vals: List[T]):
         self.root = Node()
         self.size = 0
         self.mutation = False
 
+        self.mutate()
+        for val in vals:
+            self.append(val)
+        self.mutate()
+
     @staticmethod
     def __create(root: Node[T], size: int) -> "MyList":
-        out = MyList()
+        out = MyList([])
         out.root = root
         out.size = size
         return out
@@ -137,14 +142,8 @@ class MyList:
     def depth(self):
         return 0 if self.size == 0 else int(math.log(self.size, WIDTH))
 
-    def at(self, key: int):
-        node = self.root
-
-        for i in range(self.depth(), 0, -1):
-            level = (key >> (i * BITS)) & MASK
-            node = node.children[level]
-
-        return node.children[key & MASK], node.children
+    def mutate(self):
+        self.mutation = not self.mutation
 
     def reduce_node(
         self, key: int, reducer: Callable[[S, int, int], Node[T]], init: S
@@ -156,11 +155,15 @@ class MyList:
 
         return init
 
-    def mutate(self):
-        self.mutation = not self.mutation
+    def at(self, key: int):
+        def reducer(node: Node[T], level: int, ix: int):
+            return node.children[ix]
+
+        leaf = self.reduce_node(key, reducer, self.root)
+        return leaf.children[key & MASK]
 
     def append(self, val: T):
-        """ Three cases when appending, in order initial possibility:
+        """Three cases when appending, in order initial possibility:
          1. Root overflow: there's no more space in the entire tree: thus we must
          create an entirely root, whereof's left branch is the current root.
 
@@ -170,7 +173,8 @@ class MyList:
          3. There's space in the current branch: we simply insert "value" here,
          path copying on the way down.
         """
-        root = Node(list(self.root.children))
+        root = Node(list(self.root.children)) if not self.mutation else self.root
+        size = self.size + 1
 
         # Root overflow case.
         if is_power_of(self.size, WIDTH):
@@ -180,7 +184,9 @@ class MyList:
             if node.children[ix] is None:
                 node.children[ix] = Node()
             else:
-                node.children[ix] = node.children[ix].copy()
+                node.children[ix] = (
+                    node.children[ix].copy() if not self.mutation else node.children[ix]
+                )
             return node.children[ix]
 
         key = self.size
@@ -189,76 +195,110 @@ class MyList:
         leaf = self.reduce_node(key, reducer, root)
         leaf.children[ix] = val
 
-        return self.__create(root, self.size + 1)
+        if not self.mutation:
+            return self.__create(root, size)
+        else:
+            self.root = root
+            self.size = size
+            return self
 
     def pop(self):
-        root = Node(list(self.root.children))
+        """There's three cases when popping, in order of initial possibility:
+        1. The right-most leaf node has at least one elements in it: we simply set the right-most
+        element therein to None.
+        2. The right-most leaf node is all "None"s: we set this entire node to None, grab the parent dode,
+        and pop from that parent node's right-most non-none element.
+        """
+        global last_ix
+        root = Node(list(self.root.children)) if not self.mutation else self.root
+        size = self.size - 1
+        key = self.size
+        last_ix = (key & MASK) - 1
 
         def reducer(nodes: Tuple[Node[T], Node[T]], level: int, ix: int):
-            prev_node, node = nodes
-            node.children[ix] = node.children[ix].copy()
-            return node, node.children[ix]
+            global last_ix
 
-        key = self.size
-        ix = (key & MASK) - 1
+            prev_node, node = nodes
+            node.children[ix] = (
+                node.children[ix].copy() if not self.mutation else node.children[ix]
+            )
+            # The second case outlined above.
+            if level == 1 and last_ix == -1:
+                node.children[ix] = None
+                last_ix = WIDTH - 1
+                return node, node.children[ix - 1]
+            else:
+                return node, node.children[ix]
 
         prev_leaf, leaf = self.reduce_node(key, reducer, (None, root))
+        leaf.children[last_ix] = None
 
-        if ix < 0:
-            prev_leaf.children = None
+        if not self.mutation:
+            return self.__create(root, size)
         else:
-            leaf.children[ix] = None
+            self.root = root
+            self.size = size
+            return self
 
-        return self.__create(root, self.size - 1)
+    def copy(self):
+        out = self.append(None)
+        return out.pop()
 
     def concat(self, lists: List["MyList"]) -> "MyList":
-        base = lists[0]
+        base = self.copy() if not self.mutation else self
+        mutation = self.mutation
 
-        if len(lists) > 1:
+        base.mutation = True
+        for sub_list in lists:
+            for j in range(sub_list.size):
+                base.append(sub_list.at(j))
+        base.mutation = mutation
 
-            for i in range(1, len(lists)):
-                sub_list = lists[i]
-                for j in range(sub_list.size()):
-                    base.append(sub_list.at(j))
+        return base
+
+    def splice(self, start: int, vals: List[T]) -> "MyList":
+        base = self.copy() if not self.mutation else self
+        mutation = self.mutation
+        end = self.size - start
+        end_vals: List[T] = []
+
+        base.mutation = True
+
+        for _ in range(end, start, -1):
+            val = base.at(base.size - 1)
+            end_vals.append(val)
+            base.pop()
+
+        for val in vals + end_vals:
+            base.append(val)
+
+        base.mutation = mutation
 
         return base
 
 
 if __name__ == "__main__":
-    l0 = MyList()
-    l1 = l0.append(0)
-    l2 = l1.append(1)
-    l3 = l2.append(2)
-    l4 = l3.append(3)
-    l5 = l4.append(4)
-    l5 = l5.append(5)
-    l5 = l5.append(6)
-    l5 = l5.append(7)
-    l5 = l5.append(8)
-    l5 = l5.append(9)
-    l5 = l5.append(10)
-    l5 = l5.append(11)
-    l5 = l5.append(12)
-    l5 = l5.append(13)
-    l5 = l5.append(14)
-    l5 = l5.append(15)
-    l5 = l5.append(16)
-    l5 = l5.append(17)
-    l5 = l5.append(18)
+    l0 = MyList(list(range(4 * 2 + 1)))
 
-    for i in range(l5.size):
-        print(l5.at(i))
+    for i in range(4):
+        l0 = l0.pop()
+    # l1 = MyList(list(range(18, 18 * 2)))
 
-    l6 = l5.pop()
-    l7 = l6.pop()
+    # l3 = l0.splice(1, [99])
 
-    for i in range(l6.size):
-        t1, child1 = l6.at(i)
-        t2, child2 = l7.at(i)
+    # for i in range(l3.size):
+    #     print(l3.at(i))
 
-        print(t1, id(child1) == id(child2))
+    # l1 = l0.pop()
+    # l2 = l0.pop()
 
-    print("o")
+    # for i in range(l1.size):
+    #     t1, child1 = l1.at(i)
+    #     t2, child2 = l2.at(i)
+
+    #     print(t1, id(child1) == id(child2))
+
+    # print("o")
 
 
 # def tmp(x, y, z):
