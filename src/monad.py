@@ -1,5 +1,5 @@
 from typing import *
-
+import contextlib
 
 import typing_extensions
 
@@ -123,7 +123,7 @@ class Node(Generic[T]):
 # TODO: Generalize and modularize the digging logic.
 class MyList:
     def __init__(self, vals: List[T]):
-        self.root = Node()
+        self.root: Node[T] = Node()
         self.size = 0
         self.mutation = False
 
@@ -173,7 +173,7 @@ class MyList:
     def append(self, val: T):
         """Three cases when appending, in order initial possibility:
          1. Root overflow: there's no more space in the entire tree: thus we must
-         create an entirely root, whereof's left branch is the current root.
+         create an entirely new root, whereof's left branch is the current root.
 
          2. There's no room in the left branch, and the right branch is None: thus we must
          create a right branch and fill its first element with "value".
@@ -210,21 +210,24 @@ class MyList:
             return self
 
     def pop(self):
-        """There's three cases when popping, in order of initial possibility:
+        """There's 3[.5] cases when popping, in order of initial possibility:
         1. The right-most leaf node has at least one elements in it: we simply set the right-most
         element therein to None.
-        2. The right-most leaf node is all "None"s: we set this entire node to None, grab the parent node,
-        and pop from that parent node's right-most non-none element.
+
+        2. The right-most leaf node is all "None"s after popping: we set this entire node to None.
+
+        3. The current size is a power of WIDTH, so therefor an entire branch needs trimming:
+        we set the parent node, or previous leaf, equal to the left-most, or zeroth, child leaf.
+        
+        3a. If the size == WIDTH, we must set the root element equal to the left-most child, or prev_leaf.
+        .a case as reference semantics, not logic, force this special case.
         """
-        global leaf_ix
         root = Node(list(self.root.children)) if not self.mutation else self.root
         size = self.size - 1
         key = self.size - 1
         leaf_ix = key & MASK
 
         def reducer(nodes: Tuple[Node[T], Node[T]], level: int, ix: int):
-            global leaf_ix
-
             prev_node, node = nodes
 
             node.children[ix] = (
@@ -233,7 +236,6 @@ class MyList:
 
             if level == 1 and leaf_ix == 0:
                 node.children[ix] = None
-                leaf_ix = WIDTH - 1
                 return node, None
             else:
                 return node, node.children[ix]
@@ -292,15 +294,38 @@ class MyList:
 
         return base
 
+    def slice(self, start: Optional[int] = None, end: Optional[int] = None) -> "MyList":
+        if start is None:
+            out = self.append(None)
+            out.mutate()
+            out.pop()
+            out.mutate()
+            return out
+        else:
+            out_list = []
+            if end is None:
+                end = self.size + 1
+            elif end < 0:
+                end += self.size
+
+            for i in range(start, end):
+                out_list.append(self.at(i))
+
+            return MyList(out_list)
+
 
 if __name__ == "__main__":
-    l0 = MyList(list(range(5)))
-    l1 = MyList(list(range(18, 18 * 2)))
+    l = [0, 1, 2, 3, 4, 5]
+    print(l[1:-1])
+    l0 = MyList(l)
+    l1 = l0.slice()
+    # l0 = MyList(list(range(5)))
+    # l1 = MyList(list(range(18, 18 * 2)))
 
-    l3 = l0.splice(1, [99])
+    # l3 = l0.splice(1, [99])
 
-    for i in range(l3.size):
-        print(l3.at(i))
+    # for i in range(l3.size):
+    #     print(l3.at(i))
 
     # l1 = l0.pop()
     # l2 = l0.pop()
