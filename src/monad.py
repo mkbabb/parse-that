@@ -140,16 +140,21 @@ class MyList:
         return out
 
     def depth(self):
-        return 0 if self.size < WIDTH else math.floor(math.log(self.size, WIDTH))
+        return 0 if self.size == 0 else math.floor(math.log(self.size, WIDTH))
 
     def mutate(self):
         self.mutation = not self.mutation
 
     def reduce_node(
-        self, key: int, reducer: Callable[[S, int, int], Node[T]], init: S
+        self,
+        key: int,
+        reducer: Callable[[S, int, int], Node[T]],
+        init: S,
+        depth: Optional[int] = None,
     ) -> S:
+        depth = self.depth() if depth is None else depth
 
-        for level in range(self.depth(), 0, -1):
+        for level in range(depth, 0, -1):
             ix = (key >> (level * BITS)) & MASK
             init = reducer(init, level, ix)
 
@@ -214,26 +219,35 @@ class MyList:
         global leaf_ix
         root = Node(list(self.root.children)) if not self.mutation else self.root
         size = self.size - 1
-        key = self.size
+        key = self.size - 1
         leaf_ix = key & MASK
 
-        def reducer(node: Node[T], level: int, ix: int):
+        def reducer(nodes: Tuple[Node[T], Node[T]], level: int, ix: int):
             global leaf_ix
+
+            prev_node, node = nodes
 
             node.children[ix] = (
                 node.children[ix].copy() if not self.mutation else node.children[ix]
             )
 
-            # The second case outlined above.
             if level == 1 and leaf_ix == 0:
                 node.children[ix] = None
                 leaf_ix = WIDTH - 1
-                return node, node.children[ix - 1]
+                return node, None
             else:
                 return node, node.children[ix]
 
-        prev_leaf, leaf = self.reduce_node(key, reducer, root)
-        leaf.children[leaf_ix] = None
+        prev_leaf, leaf = self.reduce_node(key, reducer, (root, root))
+
+        if leaf is not None:
+            leaf.children[leaf_ix] = None
+
+        if is_power_of(self.size, WIDTH):
+            prev_leaf = prev_leaf.children[0]
+
+        if self.size == WIDTH:
+            root = prev_leaf
 
         if not self.mutation:
             return self.__create(root, size)
@@ -271,7 +285,7 @@ class MyList:
             end_vals.append(val)
             base.pop()
 
-        for val in vals + end_vals:
+        for val in vals + list(reversed(end_vals)):
             base.append(val)
 
         base.mutation = mutation
