@@ -109,7 +109,7 @@ def is_power_of(n: int, b: int) -> bool:
 
 
 class Node(Generic[T]):
-    def __init__(self, children: Optional[List[T]] = None):
+    def __init__(self, children: Optional[list] = None):
         if children is not None:
             self.children = children + [None] * (WIDTH - len(children))
         else:
@@ -126,6 +126,7 @@ class MyList:
         self.root: Node[T] = Node()
         self.size = 0
         self.mutation = False
+        self.leaf: Optional[Node[T]] = None
 
         self.mutate()
         for val in vals:
@@ -139,19 +140,34 @@ class MyList:
         out.size = size
         return out
 
-    def depth(self):
+    def depth(self) -> int:
         return 0 if self.size == 0 else math.floor(math.log(self.size, WIDTH))
 
-    def mutate(self):
+    def mutate(self) -> None:
         self.mutation = not self.mutation
 
     def reduce_node(
         self,
         key: int,
-        reducer: Callable[[S, int, int], Node[T]],
+        reducer: Callable[[S, int, int], S],
         init: S,
         depth: Optional[int] = None,
     ) -> S:
+        """Low-level list reduction API.
+
+        Args:
+            key (int): leaf child key index. For example, if you wanted to grab the last element
+            of an array of n elements, key = n.
+            reducer (Callable[[S, int, int], S]): Reduction function that requires:
+                a reducer value of type S,
+                the current level in the tree **(0-indexed from the bottom up)**,
+                a current index into said level. 
+            init (S): initial value to reduce upon.
+            depth (Optional[int], optional): depth to traverse down to. Defaults to the list's max depth.
+
+        Returns:
+            S: the reduced value.
+        """
         depth = self.depth() if depth is None else depth
 
         for level in range(depth, 0, -1):
@@ -160,17 +176,20 @@ class MyList:
 
         return init
 
-    def at(self, key: int):
+    def at(self, key: int) -> T:
+        """Returns an element located at index `key`.
+        """
         leaf_ix = key & MASK
 
-        def reducer(node: Node[T], level: int, ix: int):
+        def reducer(node: Node[T], level: int, ix: int) -> Node[T]:
             return node.children[ix]
 
         leaf = self.reduce_node(key, reducer, self.root)
         val = leaf.children[leaf_ix]
+        self.leaf = leaf
         return val
 
-    def append(self, val: T):
+    def append(self, val: T) -> "MyList":
         """Three cases when appending, in order initial possibility:
          1. Root overflow: there's no more space in the entire tree: thus we must
          create an entirely new root, whereof's left branch is the current root.
@@ -190,10 +209,11 @@ class MyList:
         if is_power_of(self.size, WIDTH):
             root = Node([root])
 
-        def reducer(node: Node[T], level: int, ix: int):
+        def reducer(node: Node[T], level: int, ix: int) -> Node[T]:
             if node.children[ix] is None:
                 node.children[ix] = Node()
             else:
+                # Path copying.
                 node.children[ix] = (
                     node.children[ix].copy() if not self.mutation else node.children[ix]
                 )
@@ -209,18 +229,17 @@ class MyList:
             self.size = size
             return self
 
-    def pop(self):
-        """There's 3[.5] cases when popping, in order of initial possibility:
-        1. The right-most leaf node has at least one elements in it: we simply set the right-most
-        element therein to None.
+    def pop(self) -> "MyList":
+        """There's 3.5 cases when popping, in order of initial possibility:
+        1. The right-most leaf node has at least one element in it: we simply set it to None.
 
         2. The right-most leaf node is all "None"s after popping: we set this entire node to None.
 
-        3. The current size is a power of WIDTH, so therefor an entire branch needs trimming:
+        3. The current size is a power of WIDTH, therefore an entire branch needs trimming:
         we set the parent node, or previous leaf, equal to the left-most, or zeroth, child leaf.
         
         3a. If the size == WIDTH, we must set the root element equal to the left-most child, or prev_leaf.
-        .a case as reference semantics, not logic, force this special case.
+            Denoted as an "a" case as reference semantics, not logic, force this special case.
         """
         root = Node(list(self.root.children)) if not self.mutation else self.root
         size = self.size - 1
@@ -234,6 +253,10 @@ class MyList:
                 node.children[ix].copy() if not self.mutation else node.children[ix]
             )
 
+            # Case 2.
+            # If we're at the last level and our index to pop is the zeroth one
+            # we delete the entire branch. This is easier to detect inside the
+            # reduction.
             if level == 1 and leaf_ix == 0:
                 node.children[ix] = None
                 return node, None
@@ -242,12 +265,15 @@ class MyList:
 
         prev_leaf, leaf = self.reduce_node(key, reducer, (root, root))
 
+        # Case 1.
         if leaf is not None:
             leaf.children[leaf_ix] = None
 
+        # Case 3.
         if is_power_of(self.size, WIDTH):
             prev_leaf = prev_leaf.children[0]
 
+        # Case 3a.
         if self.size == WIDTH:
             root = prev_leaf
 
@@ -258,11 +284,12 @@ class MyList:
             self.size = size
             return self
 
-    def copy(self):
+    def copy(self) -> "MyList":
         out = self.append(None)
         return out.pop()
 
-    def concat(self, lists: List["MyList"]) -> "MyList":
+    def concat(self, *args: "MyList") -> "MyList":
+        lists = list(args)
         base = self.copy() if not self.mutation else self
         mutation = self.mutation
 
@@ -275,34 +302,32 @@ class MyList:
         return base
 
     def splice(self, start: int, vals: List[T]) -> "MyList":
-        base = self.copy() if not self.mutation else self
-        mutation = self.mutation
-        end = self.size - start
-        end_vals: List[T] = []
+        """Split the list into two halves, starting at `start`,
+        then insert all values in `vals` into the middle. Finally,
+        rejoin the three lists into one and return.
+        """
+        out_list: List[T] = []
 
-        base.mutation = True
+        for i in range(start):
+            out_list.append(self.at(i))
 
-        for _ in range(end, start, -1):
-            val = base.at(base.size - 1)
-            end_vals.append(val)
-            base.pop()
+        out_list += vals
 
-        for val in vals + list(reversed(end_vals)):
-            base.append(val)
+        for i in range(start, self.size):
+            out_list.append(self.at(i))
 
-        base.mutation = mutation
-
-        return base
+        return MyList(out_list)
 
     def slice(self, start: Optional[int] = None, end: Optional[int] = None) -> "MyList":
+        """Slice the list into a section starting at `start` and ending at `end`.
+        If start is None, return a copy.
+        If end is None, end = self.size + 1.
+        If end is < 0, end's value wraps around; end += self.size.
+        """
         if start is None:
-            out = self.append(None)
-            out.mutate()
-            out.pop()
-            out.mutate()
-            return out
+            return self.copy()
         else:
-            out_list = []
+            out_list: List[T] = []
             if end is None:
                 end = self.size + 1
             elif end < 0:
@@ -313,12 +338,60 @@ class MyList:
 
             return MyList(out_list)
 
+    def for_each(
+        self, func: Callable[[T, int], None], start: int = 0, end: Optional[int] = None,
+    ) -> None:
+        """Optimized iteration over the list: we save the leaf node value to reuse as long
+        as we can, or until the current index & MASK == 0. Asymptotically equivalent to the
+        naïve self.at loop, but more efficient in practice. 
+
+        Args:
+            func (Callable[[T, int], None]): callback that accepts:
+            the current value,
+            the current index?.
+            start (int): starting position, defaults to 0.
+            end (Optional[int]): ending position, defaults to self.size. If end < 0, end += self.size.
+
+        """
+        self.leaf = None
+        end = self.size if end is None else end + self.size if end < 0 else end
+
+        for i in range(start, end):
+            leaf_ix = i & MASK
+
+            if leaf_ix == 0 or self.leaf is None:
+                curr_val: T = self.at(i)
+                func(curr_val, i)
+            else:
+                curr_val = self.leaf.children[leaf_ix]
+                func(curr_val, i)
+
+    def reduce(self, func: Callable[[S, T], S], init: Optional[T] = None) -> S:
+        start = 0
+
+        if init is None:
+            start = 1
+            init = self.at(0)
+
+        acc: S = cast(S, init)
+
+        def _func(curr_val: T, i: int) -> None:
+            nonlocal acc
+            acc = func(acc, curr_val)
+
+        self.for_each(_func, start)
+
+        return acc
+
 
 if __name__ == "__main__":
     l = [0, 1, 2, 3, 4, 5]
     print(l[1:-1])
     l0 = MyList(l)
-    l1 = l0.slice()
+    l1 = l0.splice(1, [99])
+
+    s = l1.reduce(lambda x, y: x + y)
+    print(s)
     # l0 = MyList(list(range(5)))
     # l1 = MyList(list(range(18, 18 * 2)))
 
