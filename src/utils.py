@@ -1,6 +1,5 @@
 from typing import *
 
-
 T = TypeVar("T")
 S = TypeVar("S")
 Number = TypeVar("Number", int, float)
@@ -24,5 +23,14 @@ def list_concat(
     return out_list
 
 
-def concat_non_empty(in_list: List[List[Any]]):
+def concat_non_empty(in_list: List[List[Any]]) -> list:
     return list_concat(in_list, lambda x: len(x) > 0)
+
+
+def is_power_of(n: int, b: int) -> bool:
+    if n <= 1:
+        return False
+    else:
+        while n % b == 0:
+            n //= b
+        return n == 1

@@ -4,7 +4,7 @@ from functools import reduce
 from typing import *
 
 from monad import Maybe
-from utils import Number, T, S, clamp, concat_non_empty
+from utils import Number, S, T, clamp, concat_non_empty
 
 ParserValue = Union[Sequence[T], str]
 ParserTuple = Tuple[Maybe[ParserValue[T]], "ParserState"]
