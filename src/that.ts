@@ -4,27 +4,27 @@ export class ParserState {
     constructor(
         public val: string,
         public offset: number = 0,
-        public col_number: number = 0,
-        public line_number: number = 0,
+        public colNumber: number = 0,
+        public lineNumber: number = 0,
         public isError: boolean = false
     ) {}
 
-    value(pos?: number): string | undefined {
-        return this.val[pos ?? this.offset];
+    value(pos: number): string | undefined {
+        return this.val.slice(this.offset, this.offset + pos + 1);
     }
 
-    next(): ParserStateTuple {
-        const ch = this.value();
+    next(offset: number = 1): ParserStateTuple {
+        offset = offset < 0 ? this.val.length - offset : offset;
+        const ch = this.value(offset);
 
         if (ch !== undefined) {
-            const offset = this.offset + 1;
+            offset += this.offset;
 
-            const line_number = ch === "\n" ? this.line_number + 1 : this.line_number;
+            const lineNumber = ch.split("\n").length - 1 + this.lineNumber;
+            const colNumber = ch.length - ch.lastIndexOf("\n") - 1;
 
-            const col_number = ch === "\n" ? 0 : this.col_number + 1;
-
-            const p_val = new ParserState(this.val, offset, col_number, line_number);
-            return [ch, p_val];
+            const val = new ParserState(this.val, offset, colNumber, lineNumber);
+            return [ch, val];
         } else {
             return [ch, this];
         }
@@ -36,7 +36,7 @@ export class ParserState {
 
         // Get lines before and after current line
         const lines = this.val.split("\n");
-        const lineIdx = Math.min(lines.length - 1, this.line_number);
+        const lineIdx = Math.min(lines.length - 1, this.lineNumber);
         const startIdx = Math.max(lineIdx - MAX_LINES, 0);
         const endIdx = Math.min(lineIdx + MAX_LINES + 1, lines.length);
 
@@ -50,7 +50,7 @@ export class ParserState {
         });
 
         // Add cursor to current line
-        const cursorLine = " ".repeat(this.col_number) + cursor;
+        const cursorLine = " ".repeat(this.colNumber) + cursor;
 
         // Insert cursor line into summaries
         lineSummaries.splice(lineIdx - startIdx + 1, 0, cursorLine);
@@ -76,8 +76,8 @@ export class Parser<T = string> {
             rest = new ParserState(
                 val.val,
                 val.offset,
-                val.col_number,
-                val.line_number,
+                val.colNumber,
+                val.lineNumber,
                 true
             );
         }
@@ -242,15 +242,32 @@ export function sequence<T extends any[]>(...parsers: T) {
     return new Parser(inner, "sequence");
 }
 
-export function match(regex: RegExp) {
+export function any<T extends any[]>(...parsers: T) {
     const inner = (val: ParserState): ParserStateTuple => {
-        const [match, rest] = val.next();
-
-        if (regex.test(match)) {
-            return [match, rest];
+        for (const parser of parsers) {
+            const [match, rest] = parser.apply(val);
+            if (!rest.isError) {
+                return [match, rest];
+            }
         }
-
         return [undefined, val];
+    };
+    return new Parser(inner, "any");
+}
+
+export function match(regex: RegExp) {
+    const sticky = new RegExp(regex, regex.flags + "y");
+
+    const inner = (val: ParserState): ParserStateTuple => {
+        sticky.lastIndex = val.offset;
+        const match = val.val.match(sticky);
+
+        if (match) {
+            const [, rest] = val.next(match[0].length);
+            return [match[0], rest];
+        } else {
+            return [undefined, val];
+        }
     };
 
     return new Parser(inner, "match");
