@@ -1,41 +1,53 @@
-import { Ok, Err, Result } from "./monad";
-
-export type ParserStateTuple<T = string> = [T, ParserState];
-
-export class ParserState {
+export class ParserState<T> {
     constructor(
-        public value: string,
+        public src: string,
+        public value: T = undefined,
         public offset: number = 0,
         public colNumber: number = 0,
-        public lineNumber: number = 0
+        public lineNumber: number = 0,
+        public isError: boolean = false
     ) {}
 
-    slice(pos: number): string | undefined {
-        return this.value.slice(this.offset, this.offset + pos + 1);
+    ok<S>(value: S) {
+        return new ParserState<S>(
+            this.src,
+            value,
+            this.offset,
+            this.colNumber,
+            this.lineNumber
+        );
     }
 
-    next(offset: number = 1): ParserStateTuple {
-        offset = offset < 0 ? this.value.length - offset : offset;
+    err<S>(value?: S) {
+        const nextState = this.ok(value);
+        nextState.isError = true;
+        return nextState;
+    }
+
+    slice(pos: number): string | undefined {
+        return this.src.slice(this.offset, this.offset + pos);
+    }
+
+    next(offset: number = 1) {
         const ch = this.slice(offset);
 
-        if (ch !== undefined) {
-            offset += this.offset;
-
-            const lineNumber = ch.split("\n").length - 1 + this.lineNumber;
-            const colNumber = ch.length - ch.lastIndexOf("\n") - 1;
-
-            const val = new ParserState(this.value, offset, colNumber, lineNumber);
-            return [ch, val];
-        } else {
-            return [ch, this];
+        if (ch === undefined) {
+            return this;
         }
+
+        offset += this.offset;
+
+        const lineNumber = ch.split("\n").length - 1 + this.lineNumber;
+        const colNumber = ch.length - ch.lastIndexOf("\n") - 1;
+
+        return new ParserState(this.src, ch, offset, colNumber, lineNumber);
     }
 
     addCursor(cursor: string = "^"): string {
         const MAX_LINES = 5;
         const MAX_LINE_LENGTH = 50;
 
-        const lines = this.value.split("\n");
+        const lines = this.src.split("\n");
         const lineIdx = Math.min(lines.length - 1, this.lineNumber);
         const startIdx = Math.max(lineIdx - MAX_LINES, 0);
         const endIdx = Math.min(lineIdx + MAX_LINES + 1, lines.length);
@@ -56,217 +68,231 @@ export class ParserState {
     }
 }
 
-type ParserFunction<T = string> = (val: ParserState) => ParserStateTuple<T>;
+type ParserFunction<T = string> = (val: ParserState<T>) => ParserState<T>;
 
 export class Parser<T = string> {
-    constructor(public parser: ParserFunction<Result<T>>, public name?: string) {}
+    constructor(public parser: ParserFunction<T>, public name?: string) {}
 
     parse(val: string) {
-        return this.apply(new ParserState(val))[0].value;
-    }
-
-    apply(state: ParserState) {
-        return this.parser(state);
+        return this.parser(new ParserState(val)).value;
     }
 
     then<S>(next: Parser<S>) {
-        const then = (state: ParserState) => {
-            const [match1, nextState1] = this.apply(state);
+        const then = (state: ParserState<T>) => {
+            const nextState1 = this.parser(state);
 
-            if (match1 instanceof Ok) {
-                const [match2, rest2] = next.apply(nextState1);
-                if (match2 instanceof Ok) {
-                    return [
-                        new Ok([match1.value, match2.value]),
-                        rest2,
-                    ] as ParserStateTuple<Ok<[T, S]>>;
+            if (!nextState1.isError) {
+                const nextState2 = next.parser(nextState1);
+                if (!nextState2.isError) {
+                    return nextState2.ok([nextState1.value, nextState2.value]);
                 }
             }
-            return [new Err(undefined), state] as ParserStateTuple<Err>;
+            return state.err(undefined);
         };
-        return new Parser(then, "then");
+
+        return new Parser(then as ParserFunction<[T, S]>, "then");
     }
 
-    or<S>(other: Parser<S>) {
-        const or = (state: ParserState) => {
-            const [match, newState] = this.apply(state);
+    or<S>(other: Parser<S | T>) {
+        const or = (state: ParserState<T>) => {
+            const newState = this.parser(state);
 
-            if (match instanceof Ok) {
-                return [match, newState];
+            if (!newState.isError) {
+                return newState;
             } else {
-                return other.apply(state);
+                return other.parser(state);
             }
         };
 
-        return new Parser(or as ParserFunction<Result<S>>, "or");
+        return new Parser(or as ParserFunction<T | S>, "or");
     }
 
-    chain<S>(fn: (state: T) => Parser<S>) {
-        const chain = (state: ParserState) => {
-            const [match, newState] = this.apply(state);
+    chain<S>(fn: (value: T) => Parser<S | T>, chainError: boolean = false) {
+        const chain = (state: ParserState<T>) => {
+            const newState = this.parser(state);
 
-            if (match instanceof Err) {
-                return [match, newState];
-            } else if (match.value) {
-                return fn(match.value).apply(newState);
+            if (newState.isError) {
+                return newState;
+            } else if (newState.value || chainError) {
+                return fn(newState.value).parser(newState);
             } else {
-                return [match, state];
+                return state;
             }
         };
 
-        return new Parser(chain as ParserFunction<Result<S>>, "chain");
+        return new Parser(chain, "chain");
     }
 
-    map<S>(fn: (value: T) => S) {
-        const chain: Parser<S> = this.chain(
-            (value) => new Parser((_) => [new Ok(fn(value)), _])
-        );
-        chain.name = "map";
-        return chain;
+    map<S>(fn: (value: T) => S, mapError: boolean = false) {
+        const map = (state: ParserState<T>) => {
+            const newState = this.parser(state);
+
+            if (!newState.isError || mapError) {
+                return newState.ok(fn(newState.value));
+            } else {
+                return newState;
+            }
+        };
+
+        return new Parser<S>(map, "map");
     }
 
-    skip<S>(parser: Parser<S>) {
-        return this.then(parser).map(([a, _]) => a);
+    skip<S>(parser: Parser<S | T>) {
+        return this.then(parser).map(([a]) => {
+            return a;
+        });
     }
 
     opt() {
-        const opt = (state: ParserState) => {
-            const [match, newState] = this.apply(state);
+        const opt = (state: ParserState<T>) => {
+            const newState = this.parser(state);
 
-            if (match instanceof Err) {
-                return [new Ok(undefined), state];
+            if (newState.isError) {
+                return state.ok(undefined);
             } else {
-                return [match, newState];
+                return newState;
             }
         };
-        return new Parser(opt as ParserFunction<Ok<T>>, "opt");
+
+        return new Parser(opt as ParserFunction<T>, "opt");
     }
 
     memoize() {
-        const cache = new Map<number, ParserStateTuple<Result<T>>>();
-        const memo = (state: ParserState) => {
+        const cache = new Map<number, ParserState<T>>();
+        const memo = (state: ParserState<T>) => {
             if (cache.has(state.offset)) {
                 return cache.get(state.offset)!;
             } else {
-                const [match, newState] = this.apply(state);
-                cache.set(state.offset, [match, newState]);
+                const newState = this.parser(state);
+                cache.set(state.offset, newState);
 
-                return [match, newState];
+                return newState;
             }
         };
 
-        return new Parser(memo as ParserFunction<Result<T>>, "memoize");
+        return new Parser(memo, "memoize");
     }
 
     wrap<L, R>(start: Parser<L>, end: Parser<R>) {
         return start
             .then(this)
-            .map(([, a]) => a)
-            .skip(end);
+            .map(([, a]) => {
+                return a;
+            })
+            .skip(end) as Parser<T>;
     }
 
-    trim<S>(parser: Parser<S>) {
+    trim(parser = whitespace) {
         return this.wrap(parser, parser);
     }
 }
 
-export function lazy<T>(fn: () => Parser<T>) {
-    return new Parser((state) => fn().apply(state), "lazy");
+export function eof<T>() {
+    const eof = (state: ParserState<T>) => {
+        if (state.offset >= state.src.length) {
+            return state.ok(state.value);
+        } else {
+            return state.err();
+        }
+    };
+    return new Parser(eof, "eof");
 }
 
-export function lookAhead<T>(parser: Parser<T>) {
-    function inner(state: ParserState) {
-        const [, newState] = state.next();
-        const [match] = parser.apply(newState);
-        return [match, state];
-    }
-    return new Parser(inner as ParserFunction<Result<T>>, "lookAhead");
+export function lazy<T>(fn: () => Parser<T>) {
+    const lazy = (state: ParserState<T>) => fn().parser(state);
+    return new Parser(lazy, "lazy");
 }
 
 export function many<T>(parser: Parser<T>, min: number = 0, max: number = Infinity) {
-    const inner = (state: ParserState) => {
+    const many = (state: ParserState<T>) => {
         const matches: T[] = [];
 
         for (let i = 0; i < max; i += 1) {
-            const [match, newState] = parser.apply(state);
+            const newState = parser.parser(state);
 
-            if (match instanceof Err) {
+            if (newState.isError) {
                 break;
-            } else if (match) {
-                matches.push(match.value);
             }
+            matches.push(newState.value);
             state = newState;
         }
 
         if (matches.length >= min) {
-            return [new Ok(matches), state] as ParserStateTuple<Ok<T[]>>;
+            return state.ok(matches) as ParserState<T[]>;
         } else {
-            return [new Err(""), state] as ParserStateTuple<Err>;
+            return state.err([]) as ParserState<T[]>;
         }
     };
 
-    return new Parser(inner, "many");
-}
-
-export function any<T extends any[]>(...parsers: T) {
-    const inner = (state: ParserState) => {
-        for (const parser of parsers) {
-            const [match, newState] = parser.apply(state);
-            if (match instanceof Ok) {
-                return [match, newState];
-            }
-        }
-        return [new Err(undefined), state];
-    };
-
-    return new Parser(inner, "any");
+    return new Parser(many as ParserFunction<T[]>, "many");
 }
 
 type ExtractValue<T extends ReadonlyArray<Parser<any>>> = {
     [K in keyof T]: T[K] extends Parser<infer V> ? V : never;
 };
 
-export function all<T extends Parser<any>[]>(...parsers: T) {
-    const inner = (state: ParserState): ParserStateTuple<Result<ExtractValue<T>>> => {
+export function any<T extends any[]>(...parsers: T) {
+    const any = (state: ParserState<T>) => {
+        for (const parser of parsers) {
+            const newState = parser.parser(state);
+
+            if (!newState.isError) {
+                return newState;
+            }
+        }
+        return state.err(undefined);
+    };
+
+    return new Parser(any as ParserFunction<ExtractValue<T>[0]>, "any");
+}
+
+export function all<T extends any[]>(...parsers: T) {
+    const all = (state: ParserState<ExtractValue<T>>): ParserState<ExtractValue<T>> => {
         const matches = [] as any;
 
         for (const parser of parsers) {
-            const [match, newState] = parser.apply(state);
+            const newState = parser.parser(state);
 
-            if (match instanceof Err) {
-                return [new Err(undefined), state];
+            if (newState.isError) {
+                return newState;
             }
-            matches.push(match.value);
+            matches.push(newState.value);
             state = newState;
         }
 
-        return [new Ok(matches), state];
+        return state.ok(matches);
     };
 
-    return new Parser(inner, "all");
+    return new Parser(all, "all");
+}
+
+export function string(str: string) {
+    const string = (state: ParserState<string>) => {
+        const nextState = state.next(str.length);
+        if (nextState.value === str) {
+            return nextState;
+        }
+        return state.err(undefined);
+    };
+
+    return new Parser(string as ParserFunction<string>, "string");
 }
 
 export function match(regex: RegExp) {
     const sticky = new RegExp(regex, regex.flags + "y");
 
-    const inner = (state: ParserState) => {
-        if (state.offset === state.value.length) {
-            return [new Err(undefined), state];
-        }
-
+    const match = (state: ParserState<string>) => {
         sticky.lastIndex = state.offset;
-        const match = state.value.match(sticky);
+        const match = state.src.match(sticky)?.[0];
 
         if (match) {
-            const [, newState] = state.next(match[0].length);
-
-            return [new Ok(match[0]), newState];
+            const newState = state.next(match.length);
+            return newState;
         }
-
-        return [new Err(undefined), state];
+        return state.err(undefined);
     };
 
-    return new Parser(inner, "match");
+    return new Parser(match as ParserFunction<string>, "match");
 }
 
 export function sepBy<T, S>(

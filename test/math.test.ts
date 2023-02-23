@@ -1,15 +1,28 @@
-import { match, all, many, Parser, any, lazy, whitespace } from "../src/that";
+import { match, all, many, Parser, any, lazy, whitespace, string } from "../src/that";
 import { test, expect, describe } from "vitest";
 
-const digits = many(match(/[0-9]/))
-    .map((val) => {
-        return val;
-    })
-    .map((val) => val.join(""));
+const insertRandomWhitespace = (str: string) => {
+    const whitespaceChars = [" ", "\t", "\n"];
 
-const sign = match(/-/).opt();
+    return str
+        .split(" ")
+        .map((word) => {
+            if (Math.random() > 0.5) {
+                return word;
+            } else {
+                const ws = whitespaceChars[
+                    Math.floor(Math.random() * whitespaceChars.length)
+                ].repeat(Math.floor(Math.random() * 1000));
 
-const fractional = match(/\./).then(digits);
+                return ws + word + ws;
+            }
+        })
+        .join("");
+};
+
+const digits = many(match(/[0-9]/)).map((val) => val.join(""));
+
+const fractional = string(".").then(digits);
 const integral = digits;
 
 const exponent = all(match(/[eE]/), match(/[-+]/).opt(), digits)
@@ -26,12 +39,18 @@ const numberPart = any(
     fractional
 );
 
-const number = all(sign, numberPart, exponent).map(([sign, numberPart, exponent]) => {
-    return parseFloat(`${sign ?? ""}${numberPart}${exponent ?? ""}`);
-});
+const number = all(numberPart, exponent)
+    .trim()
+    .map(([numberPart, exponent]) => {
+        return parseFloat(`${numberPart}${exponent ?? ""}`);
+    });
 
 const numberRegex = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
-const numberMatch = match(numberRegex).map((v) => parseFloat(v));
+const numberMatch = match(numberRegex)
+    .trim()
+    .map((v) => {
+        return parseFloat(v);
+    });
 
 const evaluateMathOperator = (operator: string, a: number, b: number) => {
     switch (operator) {
@@ -52,17 +71,17 @@ const reduceMathExpression = ([num, rest]) =>
     }, num);
 
 const unary: Parser<number> = lazy(() =>
-    match(/\+|\-/)
+    string("-")
         .then(unary)
         .map(([operator, num]) => {
             return operator === "-" ? -num : num;
         })
-        .or(number)
+        .or(numberMatch)
 );
 
 const pow: Parser<number> = lazy(() =>
     all(
-        unary.trim(whitespace),
+        unary,
         match(/\*\*/)
             .then(pow)
             .map(([, num]) => num)
@@ -85,18 +104,21 @@ const expression = addSub;
 describe("Math", () => {
     test("parse a floating point number", () => {
         const nums = [
+            "123.",
             "123.456e-2",
             "123.456e+2",
             "123.456e2",
             "123.456",
             "123.",
             ".456",
-            "123",
+            "1",
         ];
 
-        for (const num of nums) {
-            const parsed2 = numberMatch.parse(num);
+        for (let num of nums) {
+            num = insertRandomWhitespace(num);
+
             const parsed1 = number.parse(num);
+            const parsed2 = numberMatch.parse(num);
 
             expect(parsed1).toBe(parseFloat(num));
             expect(parsed2).toBe(parseFloat(num));
@@ -105,8 +127,9 @@ describe("Math", () => {
 
     test("Parse math expressions", () => {
         const operators = ["+", "-", "*", "/"];
-        const length = 1000;
-        const nums = Array.from({ length }, () => Math.random() * length).map(String);
+        const length = 10000;
+
+        const nums = Array.from({ length }, () => Math.random() * 100).map(String);
 
         // Generate random expressions
         const getExpression = () =>
@@ -115,12 +138,11 @@ describe("Math", () => {
             }).reduce((acc, expr) => {
                 const operator =
                     operators[Math.floor(Math.random() * operators.length)];
-
                 return `${acc} ${operator} ${expr}`;
             });
 
         for (let i = 0; i < 100; i++) {
-            const expr = getExpression();
+            const expr = insertRandomWhitespace(getExpression());
             const parsed = expression.parse(expr);
 
             expect(parsed).toBe(eval(expr));
