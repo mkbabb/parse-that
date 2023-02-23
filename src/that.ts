@@ -172,6 +172,18 @@ export class Parser<T = string> {
         return new Parser(memo, "memoize");
     }
 
+    lookAhead<S>(parser: Parser<S | T>) {
+        const lookAhead = (state: ParserState<T>) => {
+            const newState = parser.parser(state);
+            if (newState.isError) {
+                return state.err(undefined);
+            } else {
+                return this.parser(state);
+            }
+        };
+        return new Parser(lookAhead as ParserFunction<T>, "lookAhead");
+    }
+
     wrap<L, R>(start: Parser<L>, end: Parser<R>) {
         return start
             .then(this)
@@ -181,8 +193,8 @@ export class Parser<T = string> {
             .skip(end) as Parser<T>;
     }
 
-    trim<S = string>(parser: Parser<S> = whitespace as Parser<S>) {
-        return this.wrap(parser, parser);
+    trim(parser = whitespace): Parser<T> {
+        return this.wrap(parser, parser) as Parser<T>;
     }
 
     sepBy<S>(sep: Parser<S>, min: number = 0, max: number = Infinity) {
@@ -224,6 +236,7 @@ export function eof<T>() {
 
 export function lazy<T>(fn: () => Parser<T>) {
     const lazy = (state: ParserState<T>) => fn().parser(state);
+
     return new Parser<T>(lazy, "lazy");
 }
 

@@ -1,24 +1,10 @@
 import { match, sequence, many, Parser, any, lazy, string } from "../src/that";
 import { test, expect, describe } from "vitest";
-
-const insertRandomWhitespace = (str: string) => {
-    const whitespaceChars = [" ", "\t", "\n"];
-
-    return str
-        .split(" ")
-        .map((word) => {
-            if (Math.random() > 0.5) {
-                return word;
-            } else {
-                const ws = whitespaceChars[
-                    Math.floor(Math.random() * whitespaceChars.length)
-                ].repeat(Math.floor(Math.random() * 12));
-
-                return ws + word + ws;
-            }
-        })
-        .join("");
-};
+import {
+    reduceMathExpression,
+    insertRandomWhitespace,
+    generateMathExpression,
+} from "./utils";
 
 const digits = many(match(/[0-9]/)).map((val) => val.join(""));
 
@@ -53,24 +39,6 @@ const numberMatch = match(numberRegex)
     .map((v) => {
         return parseFloat(v);
     });
-
-const evaluateMathOperator = (operator: string, a: number, b: number) => {
-    switch (operator) {
-        case "+":
-            return a + b;
-        case "-":
-            return a - b;
-        case "*":
-            return a * b;
-        case "/":
-            return a / b;
-    }
-};
-
-const reduceMathExpression = ([num, rest]) =>
-    rest.reduce((acc, [operator, val]) => {
-        return evaluateMathOperator(operator, acc, val);
-    }, num);
 
 const unary: Parser<number> = lazy(() =>
     string("-")
@@ -128,22 +96,8 @@ describe("Math Functions", () => {
     });
 
     test("Parse math expressions", () => {
-        const operators = ["+", "-", "*", "/"];
-        const length = 10000;
-
-        const nums = Array.from({ length }, () => Math.random() * 100).map(String);
-
-        const getExpression = () =>
-            Array.from({ length: length }, () => {
-                return nums[Math.floor(Math.random() * nums.length)];
-            }).reduce((acc, expr) => {
-                const operator =
-                    operators[Math.floor(Math.random() * operators.length)];
-                return `${acc} ${operator} ${expr}`;
-            });
-
         for (let i = 0; i < 100; i++) {
-            const expr = insertRandomWhitespace(getExpression());
+            const expr = insertRandomWhitespace(generateMathExpression());
             const parsed = expression.parse(expr);
 
             expect(parsed).toBe(eval(expr));
