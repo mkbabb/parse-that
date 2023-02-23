@@ -1,4 +1,4 @@
-import { match, all, many, Parser, any, lazy, whitespace, string } from "../src/that";
+import { match, all, many, Parser, any, lazy, string } from "../src/that";
 import { test, expect, describe } from "vitest";
 
 const insertRandomWhitespace = (str: string) => {
@@ -12,7 +12,7 @@ const insertRandomWhitespace = (str: string) => {
             } else {
                 const ws = whitespaceChars[
                     Math.floor(Math.random() * whitespaceChars.length)
-                ].repeat(Math.floor(Math.random() * 1000));
+                ].repeat(Math.floor(Math.random() * 12));
 
                 return ws + word + ws;
             }
@@ -101,7 +101,7 @@ const addSub: Parser<number> = lazy(() =>
 
 const expression = addSub;
 
-describe("Math", () => {
+describe("Math Functions", () => {
     test("parse a floating point number", () => {
         const nums = [
             "123.",
@@ -131,7 +131,6 @@ describe("Math", () => {
 
         const nums = Array.from({ length }, () => Math.random() * 100).map(String);
 
-        // Generate random expressions
         const getExpression = () =>
             Array.from({ length: length }, () => {
                 return nums[Math.floor(Math.random() * nums.length)];

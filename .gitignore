@@ -1,14 +1,3 @@
 .DS_Store
-config.php
-phinx.yml
-.vscode/
-vendor/
-.mypy_cache/
-.env
-bootstrap/
-storage/
-auth/
-my_venv/
-data/
-__pycache__/
 node_modules/
+coverage/

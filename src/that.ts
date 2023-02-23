@@ -182,8 +182,8 @@ export class Parser<T = string> {
             .skip(end) as Parser<T>;
     }
 
-    trim(parser = whitespace) {
-        return this.wrap(parser, parser);
+    trim<S>(parser: Parser<S> = whitespace) {
+        return this.wrap(parser, parser) as Parser<T>;
     }
 }
 
