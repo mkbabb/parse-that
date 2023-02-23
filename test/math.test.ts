@@ -1,4 +1,4 @@
-import { match, all, many, Parser, any, lazy, string } from "../src/that";
+import { match, sequence, many, Parser, any, lazy, string } from "../src/that";
 import { test, expect, describe } from "vitest";
 
 const insertRandomWhitespace = (str: string) => {
@@ -22,24 +22,26 @@ const insertRandomWhitespace = (str: string) => {
 
 const digits = many(match(/[0-9]/)).map((val) => val.join(""));
 
-const fractional = string(".").then(digits);
+const fractional = string(".")
+    .then(digits)
+    .map(([, digits]) => "." + digits);
 const integral = digits;
 
-const exponent = all(match(/[eE]/), match(/[-+]/).opt(), digits)
+const exponent = sequence(match(/[eE]/), match(/[-+]/).opt(), digits)
     .map(([, exponentSign, exponent]) => {
         return `e${exponentSign ?? ""}${exponent}`;
     })
     .opt();
 
 const numberPart = any(
-    integral.then(fractional).map(([integral, [, fractional]]) => {
-        return `${integral}.${fractional}`;
+    integral.then(fractional).map(([integral, fractional]) => {
+        return `${integral}${fractional}`;
     }),
     integral,
     fractional
 );
 
-const number = all(numberPart, exponent)
+const number = sequence(numberPart, exponent)
     .trim()
     .map(([numberPart, exponent]) => {
         return parseFloat(`${numberPart}${exponent ?? ""}`);
@@ -80,7 +82,7 @@ const unary: Parser<number> = lazy(() =>
 );
 
 const pow: Parser<number> = lazy(() =>
-    all(
+    sequence(
         unary,
         match(/\*\*/)
             .then(pow)
@@ -92,11 +94,11 @@ const pow: Parser<number> = lazy(() =>
 );
 
 const multDiv: Parser<number> = lazy(() =>
-    all(pow, many(match(/\*|\//).then(pow))).map(reduceMathExpression)
+    sequence(pow, many(match(/\*|\//).then(pow))).map(reduceMathExpression)
 );
 
 const addSub: Parser<number> = lazy(() =>
-    all(multDiv, many(match(/\+|\-|/).then(multDiv))).map(reduceMathExpression)
+    sequence(multDiv, many(match(/\+|\-|/).then(multDiv))).map(reduceMathExpression)
 );
 
 const expression = addSub;

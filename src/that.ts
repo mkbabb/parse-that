@@ -77,7 +77,7 @@ export class Parser<T = string> {
         return this.parser(new ParserState(val)).value;
     }
 
-    then<S>(next: Parser<S>) {
+    then<S>(next: Parser<S | T>) {
         const then = (state: ParserState<T>) => {
             const nextState1 = this.parser(state);
 
@@ -124,8 +124,8 @@ export class Parser<T = string> {
     }
 
     map<S>(fn: (value: T) => S, mapError: boolean = false) {
-        const map = (state: ParserState<T>) => {
-            const newState = this.parser(state);
+        const map = (state: ParserState<T | S>) => {
+            const newState = this.parser(state as ParserState<T>);
 
             if (!newState.isError || mapError) {
                 return newState.ok(fn(newState.value));
@@ -134,13 +134,13 @@ export class Parser<T = string> {
             }
         };
 
-        return new Parser<S>(map, "map");
+        return new Parser(map as ParserFunction<S>, "map");
     }
 
-    skip<S>(parser: Parser<S | T>) {
+    skip<S>(parser: Parser<S>) {
         return this.then(parser).map(([a]) => {
             return a;
-        });
+        }) as Parser<T>;
     }
 
     opt() {
@@ -153,7 +153,6 @@ export class Parser<T = string> {
                 return newState;
             }
         };
-
         return new Parser(opt as ParserFunction<T>, "opt");
     }
 
@@ -182,8 +181,33 @@ export class Parser<T = string> {
             .skip(end) as Parser<T>;
     }
 
-    trim<S>(parser: Parser<S> = whitespace) {
-        return this.wrap(parser, parser) as Parser<T>;
+    trim<S = string>(parser: Parser<S> = whitespace as Parser<S>) {
+        return this.wrap(parser, parser);
+    }
+
+    sepBy<S>(sep: Parser<S>, min: number = 0, max: number = Infinity) {
+        return this.then(
+            many(
+                sep.then(this).map(([_, value]) => value),
+                min,
+                max
+            )
+        ).map(([value, values]) => [value, ...values]);
+    }
+
+    debug(name: string = "") {
+        const debug = (state: ParserState<T>) => {
+            const newState = this.parser(state);
+
+            console.log(`\n${name} over ${this.name} at ${state.offset}:`);
+            console.log(newState.isError ? "Error" : "Ok");
+
+            console.log(newState.addCursor("^"));
+
+            return newState;
+        };
+
+        return new Parser(debug, "debug");
     }
 }
 
@@ -200,7 +224,7 @@ export function eof<T>() {
 
 export function lazy<T>(fn: () => Parser<T>) {
     const lazy = (state: ParserState<T>) => fn().parser(state);
-    return new Parser(lazy, "lazy");
+    return new Parser<T>(lazy, "lazy");
 }
 
 export function many<T>(parser: Parser<T>, min: number = 0, max: number = Infinity) {
@@ -243,10 +267,10 @@ export function any<T extends any[]>(...parsers: T) {
         return state.err(undefined);
     };
 
-    return new Parser(any as ParserFunction<ExtractValue<T>[0]>, "any");
+    return new Parser(any as ParserFunction<ExtractValue<T>[number]>, "any");
 }
 
-export function all<T extends any[]>(...parsers: T) {
+export function sequence<T extends any[]>(...parsers: T) {
     const all = (state: ParserState<ExtractValue<T>>): ParserState<ExtractValue<T>> => {
         const matches = [] as any;
 
@@ -301,15 +325,7 @@ export function sepBy<T, S>(
     min: number = 0,
     max: number = Infinity
 ) {
-    return parser
-        .then(
-            many(
-                separator.then(parser).map(([_, value]) => value),
-                min,
-                max
-            )
-        )
-        .map(([value, values]) => [value, ...values]);
+    return parser.sepBy(separator, min, max);
 }
 
 export const whitespace = match(/\s+/).opt();

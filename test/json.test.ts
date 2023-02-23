@@ -1,4 +1,4 @@
-import { Parser, match, all, any, sepBy, string, lazy, many } from "../src/that";
+import { Parser, match, sequence, any, sepBy, string, lazy, many } from "../src/that";
 import { test, expect, describe, it } from "vitest";
 
 const comma = string(",").trim();
