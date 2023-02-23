@@ -55,9 +55,15 @@ interface EBNFAlternation {
     value: EBNFExpression[];
 }
 
-const ebnfIdentifier = match(/[_a-zA-Z][_a-zA-Z0-9]+/).map((value) => {
-    return value;
-});
+const comma = string(",").trim();
+const equalSign = string("=").trim();
+const semicolon = string(";").trim();
+
+const ebnfIdentifier = match(/[_a-zA-Z][_a-zA-Z0-9]+/)
+    .trim()
+    .map((value) => {
+        return value;
+    });
 
 const ebnfLiteral = match(/"[^"]+"/).map((value) => ({
     type: "literal",
@@ -71,32 +77,30 @@ const ebnfNonTerminal = ebnfIdentifier.map((value) => {
     };
 });
 
-const ebnfGroup = sequence(
-    string("(").trim(),
-    lazy(() => ebnfExpression).sepBy(string(",").trim()),
-    string(")").trim()
-).map(([, value]) => ({
-    type: "group",
-    value,
-}));
+const ebnfGroup = lazy(() => ebnfExpression)
+    .sepBy(comma)
+    .trim()
+    .wrap(string("("), string(")"))
+    .map((value) => ({
+        type: "group",
+        value,
+    }));
 
-const ebnfOptional = sequence(
-    string("[").trim(),
-    lazy(() => ebnfExpression),
-    string("]").trim()
-).map(([, value]) => ({
-    type: "optional",
-    value,
-}));
+const ebnfOptional = lazy(() => ebnfExpression)
+    .trim()
+    .wrap(string("["), string("]"))
+    .map((value) => ({
+        type: "optional",
+        value,
+    }));
 
-const ebnfRepetition = sequence(
-    string("{").trim(),
-    lazy(() => ebnfExpression),
-    string("}").trim()
-).map(([, value]) => ({
-    type: "repetition",
-    value,
-}));
+const ebnfRepetition = lazy(() => ebnfExpression)
+    .trim()
+    .wrap(string("{"), string("}"))
+    .map((value) => ({
+        type: "repetition",
+        value,
+    }));
 
 const ebnfConcatenation = lazy(() => ebnfTerm)
     .sepBy(whitespace)
@@ -125,10 +129,10 @@ const ebnfTerm = any(
 const ebnfExpression = ebnfAlternation;
 
 const ebnfProductionRule = sequence(
-    ebnfIdentifier.trim(),
-    string("=").trim(),
+    ebnfIdentifier,
+    equalSign,
     ebnfExpression,
-    string(";").trim()
+    semicolon
 ).map(([name, , expression]) => {
     return { name, expression };
 });
