@@ -74,7 +74,7 @@ export class Parser<T = string> {
     constructor(public parser: ParserFunction<T>, public name?: string) {}
 
     parse(val: string) {
-        return this.parser(new ParserState(val)).value;
+        return this.parser(new ParserState(val)).value as T;
     }
 
     then<S>(next: Parser<S | T>) {
@@ -142,6 +142,11 @@ export class Parser<T = string> {
             return a;
         }) as Parser<T>;
     }
+    next<S>(parser: Parser<S>) {
+        return this.then(parser).map(([, b]) => {
+            return b;
+        }) as Parser<S>;
+    }
 
     opt() {
         const opt = (state: ParserState<T>) => {
@@ -156,32 +161,33 @@ export class Parser<T = string> {
         return new Parser(opt as ParserFunction<T>, "opt");
     }
 
-    memoize() {
-        const cache = new Map<number, ParserState<T>>();
-        const memo = (state: ParserState<T>) => {
-            if (cache.has(state.offset)) {
-                return cache.get(state.offset)!;
-            } else {
-                const newState = this.parser(state);
-                cache.set(state.offset, newState);
+    not<S>(parser?: Parser<S>) {
+        const negate = (state: ParserState<T>) => {
+            const newState = this.parser(state);
 
-                return newState;
-            }
-        };
-
-        return new Parser(memo, "memoize");
-    }
-
-    lookAhead<S>(parser: Parser<S | T>) {
-        const lookAhead = (state: ParserState<T>) => {
-            const newState = parser.parser(state);
             if (newState.isError) {
-                return state.err(undefined);
+                return state.ok(state.value);
             } else {
-                return this.parser(state);
+                return state.err(undefined);
             }
         };
-        return new Parser(lookAhead as ParserFunction<T>, "lookAhead");
+
+        const not = (state: ParserState<T>) => {
+            const newState = this.parser(state);
+
+            if (newState.isError) {
+                return newState;
+            } else {
+                const nextState = parser.parser(state);
+                if (nextState.isError) {
+                    return newState;
+                } else {
+                    return state.err(undefined);
+                }
+            }
+        };
+
+        return new Parser(parser ? not : negate, "not");
     }
 
     wrap<L, R>(start: Parser<L>, end: Parser<R>) {
@@ -319,6 +325,12 @@ export function match(regex: RegExp) {
     const sticky = new RegExp(regex, regex.flags + "y");
 
     const match = (state: ParserState<string>) => {
+        if (
+            state.offset >= state.src.length
+        ) {
+            return state.err(undefined);
+        }
+
         sticky.lastIndex = state.offset;
         const match = state.src.match(sticky)?.[0];
 
@@ -342,3 +354,12 @@ export function sepBy<T, S>(
 }
 
 export const whitespace = match(/\s+/).opt();
+
+export function createLanguage<T>(parsers: {
+    [K in keyof T]: (lang: { [K in keyof T]: Parser<T[K]> }) => Parser<T[K]>;
+}) {
+    for (const [key, func] of Object.entries(parsers)) {
+        parsers[key] = lazy(() => func(parsers).debug(key));
+    }
+    return parsers as { [K in keyof T]: Parser<T[K]> };
+}

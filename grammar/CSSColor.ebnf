@@ -1,0 +1,19 @@
+sep =  comma | whitespace;
+alphaSep =  div | sep;
+
+colorType = "rgb" | "hsl" | "hsv" | "hwb" | "lab" | "lch";
+percentage = integer << "%";
+colorValue = percentage | number;
+
+colorFunction = 
+    colorType,
+    ("(" >>
+        colorValue        ),
+        (sep >> colorValue),
+        (sep >> colorValue),
+        ([ (alphaSep >> colorValue) ]
+    << ")");
+
+hex = "#", (3 * digit | 6 * digit);
+
+color = hex | colorFunction;
