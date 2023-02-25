@@ -30,10 +30,10 @@ function breakLineOnSeparator(input: string, separator: string): string {
 
             const groups = line.split(",");
 
-            if (groups.length > 2) {
+            if (groups.length > 1) {
                 return `\n\t${separator} ` + line;
             } else {
-                return  separator + line;
+                return separator + line;
             }
         })
         .join("");
@@ -169,11 +169,25 @@ const EBNFParser = (grammar: string) => {
     });
 
     nonterminals.rule = nonterminals.rule.trim().map((v) => {
-        return v.flat().join(" ");
+        const s = v.flat().join(" ");
+        return s;
     });
 
-    return nonterminals.grammar.trim().map((v) => {
-        return v.flat().join("\n\n");
+    return nonterminals.grammar.trim().map((rules) => {
+        let lastIx = 0;
+        for (let i = 0; i < rules.length; i++) {
+            const rule = rules[i];
+
+            if (rule.length > 80) {
+                rules[i] = rule + "\n";
+                if (i > 0 && lastIx !== i - 1) {
+                    rules[i - 1] = rules[i - 1] + "\n";
+                }
+                lastIx = i;
+            }
+        }
+
+        return rules.join("\n");
     });
 };
 
