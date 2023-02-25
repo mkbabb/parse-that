@@ -1,4 +1,4 @@
-import { match, sequence, many, Parser, any, lazy, string, sepBy } from "../src/that";
+import { match, all, many, Parser, any, lazy, string, sepBy } from "../src/that";
 import { test, expect, describe, it } from "vitest";
 
 const delim = string(",").trim();

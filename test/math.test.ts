@@ -1,4 +1,4 @@
-import { match, sequence, many, Parser, any, lazy, string } from "../src/that";
+import { match, all, many, Parser, any, lazy, string } from "../src/that";
 import { test, expect, describe } from "vitest";
 import {
     reduceMathExpression,
@@ -13,7 +13,7 @@ const fractional = string(".")
     .map(([, digits]) => "." + digits);
 const integral = digits;
 
-const exponent = sequence(match(/[eE]/), match(/[-+]/).opt(), digits)
+const exponent = all(match(/[eE]/), match(/[-+]/).opt(), digits)
     .map(([, exponentSign, exponent]) => {
         return `e${exponentSign ?? ""}${exponent}`;
     })
@@ -27,7 +27,7 @@ const numberPart = any(
     fractional
 );
 
-const number = sequence(numberPart, exponent)
+const number = all(numberPart, exponent)
     .trim()
     .map(([numberPart, exponent]) => {
         return parseFloat(`${numberPart}${exponent ?? ""}`);
@@ -50,7 +50,7 @@ const unary: Parser<number> = lazy(() =>
 );
 
 const pow: Parser<number> = lazy(() =>
-    sequence(
+    all(
         unary,
         match(/\*\*/)
             .then(pow)
@@ -62,11 +62,11 @@ const pow: Parser<number> = lazy(() =>
 );
 
 const multDiv: Parser<number> = lazy(() =>
-    sequence(pow, many(match(/\*|\//).then(pow))).map(reduceMathExpression)
+    all(pow, many(match(/\*|\//).then(pow))).map(reduceMathExpression)
 );
 
 const addSub: Parser<number> = lazy(() =>
-    sequence(multDiv, many(match(/\+|\-|/).then(multDiv))).map(reduceMathExpression)
+    all(multDiv, many(match(/\+|\-|/).then(multDiv))).map(reduceMathExpression)
 );
 
 const expression = addSub;

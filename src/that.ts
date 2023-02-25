@@ -99,9 +99,8 @@ export class Parser<T = string> {
 
             if (!newState.isError) {
                 return newState;
-            } else {
-                return other.parser(state);
             }
+            return other.parser(state);
         };
 
         return new Parser(or as ParserFunction<T | S>, "or");
@@ -115,9 +114,8 @@ export class Parser<T = string> {
                 return newState;
             } else if (newState.value || chainError) {
                 return fn(newState.value).parser(newState);
-            } else {
-                return state;
             }
+            return state;
         };
 
         return new Parser(chain, "chain");
@@ -129,9 +127,8 @@ export class Parser<T = string> {
 
             if (!newState.isError || mapError) {
                 return newState.ok(fn(newState.value));
-            } else {
-                return newState;
             }
+            return newState;
         };
 
         return new Parser(map as ParserFunction<S>, "map");
@@ -142,6 +139,7 @@ export class Parser<T = string> {
             return a;
         }) as Parser<T>;
     }
+
     next<S>(parser: Parser<S>) {
         return this.then(parser).map(([, b]) => {
             return b;
@@ -154,9 +152,9 @@ export class Parser<T = string> {
 
             if (newState.isError) {
                 return state.ok(undefined);
-            } else {
-                return newState;
             }
+
+            return newState;
         };
         return new Parser(opt as ParserFunction<T>, "opt");
     }
@@ -199,17 +197,70 @@ export class Parser<T = string> {
             .skip(end) as Parser<T>;
     }
 
-    trim(parser = whitespace): Parser<T> {
+    trim(parser = whitespace as any): Parser<T> {
         return this.wrap(parser, parser) as Parser<T>;
     }
 
+    many(min: number = 0, max: number = Infinity) {
+        const many = (state: ParserState<T>) => {
+            const matches: T[] = [];
+            let newState = state;
+
+            for (let i = 0; i < max; i += 1) {
+                const tmpState = this.parser(newState);
+                if (tmpState.isError) {
+                    break;
+                }
+                matches.push(tmpState.value);
+                newState = tmpState;
+            }
+
+            if (matches.length >= min) {
+                return newState.ok(matches) as ParserState<T[]>;
+            } else {
+                return state.err([]) as ParserState<T[]>;
+            }
+        };
+
+        return new Parser(many as ParserFunction<T[]>, "many");
+    }
+
+    // sepBy<S>(sep: Parser<S | T>, min: number = 0, max: number = Infinity) {
+    //     const sepBy = (state: ParserState<T>) => {
+    //         const matches: T[] = [];
+
+    //         let newState = state;
+
+    //         for (let i = 0; i < max; i += 1) {
+    //             const tmpState = this.parser(newState);
+    //             if (tmpState.isError) {
+    //                 break;
+    //             }
+    //             newState = tmpState;
+    //             matches.push(newState.value);
+
+    //             const sepState = sep.parser(newState);
+    //             if (sepState.isError) {
+    //                 break;
+    //             }
+    //             newState = sepState as ParserState<T>;
+    //         }
+
+    //         if (matches.length > min) {
+    //             return newState.ok(matches) as ParserState<T[]>;
+    //         }
+    //         return state.err([]) as ParserState<T[]>;
+    //     };
+
+    //     return new Parser(sepBy as ParserFunction<T[]>, "sepBy");
+    // }
+
     sepBy<S>(sep: Parser<S>, min: number = 0, max: number = Infinity) {
         return this.then(
-            many(
-                sep.then(this).map(([_, value]) => value),
-                min,
-                max
-            )
+            sep
+                .then(this)
+                .map(([_, value]) => value)
+                .many(min, max)
         ).map(([value, values]) => [value, ...values]);
     }
 
@@ -242,32 +293,7 @@ export function eof<T>() {
 
 export function lazy<T>(fn: () => Parser<T>) {
     const lazy = (state: ParserState<T>) => fn().parser(state);
-
     return new Parser<T>(lazy, "lazy");
-}
-
-export function many<T>(parser: Parser<T>, min: number = 0, max: number = Infinity) {
-    const many = (state: ParserState<T>) => {
-        const matches: T[] = [];
-
-        for (let i = 0; i < max; i += 1) {
-            const newState = parser.parser(state);
-
-            if (newState.isError) {
-                break;
-            }
-            matches.push(newState.value);
-            state = newState;
-        }
-
-        if (matches.length >= min) {
-            return state.ok(matches) as ParserState<T[]>;
-        } else {
-            return state.err([]) as ParserState<T[]>;
-        }
-    };
-
-    return new Parser(many as ParserFunction<T[]>, "many");
 }
 
 type ExtractValue<T extends ReadonlyArray<Parser<any>>> = {
@@ -278,7 +304,6 @@ export function any<T extends any[]>(...parsers: T) {
     const any = (state: ParserState<T>) => {
         for (const parser of parsers) {
             const newState = parser.parser(state);
-
             if (!newState.isError) {
                 return newState;
             }
@@ -286,10 +311,12 @@ export function any<T extends any[]>(...parsers: T) {
         return state.err(undefined);
     };
 
-    return new Parser(any as ParserFunction<ExtractValue<T>[number]>, "any");
+    return new Parser(parsers.length === 1 ? parsers[0] : any, "any") as Parser<
+        ExtractValue<T>[number]
+    >;
 }
 
-export function sequence<T extends any[]>(...parsers: T) {
+export function all<T extends any[]>(...parsers: T) {
     const all = (state: ParserState<ExtractValue<T>>): ParserState<ExtractValue<T>> => {
         const matches = [] as any;
 
@@ -306,11 +333,20 @@ export function sequence<T extends any[]>(...parsers: T) {
         return state.ok(matches);
     };
 
-    return new Parser(all, "all");
+    return new Parser(parsers.length === 1 ? parsers[0] : all, "all") as Parser<
+        ExtractValue<T>
+    >;
 }
 
 export function string(str: string) {
     const string = (state: ParserState<string>) => {
+        if (
+            state.offset >= state.src.length ||
+            state.offset + str.length > state.src.length
+        ) {
+            return state.err(undefined);
+        }
+
         const nextState = state.next(str.length);
         if (nextState.value === str) {
             return nextState;
@@ -325,9 +361,7 @@ export function match(regex: RegExp) {
     const sticky = new RegExp(regex, regex.flags + "y");
 
     const match = (state: ParserState<string>) => {
-        if (
-            state.offset >= state.src.length
-        ) {
+        if (state.offset >= state.src.length) {
             return state.err(undefined);
         }
 
@@ -337,6 +371,8 @@ export function match(regex: RegExp) {
         if (match) {
             const newState = state.next(match.length);
             return newState;
+        } else if (match === "") {
+            return state.ok(undefined);
         }
         return state.err(undefined);
     };
@@ -344,16 +380,7 @@ export function match(regex: RegExp) {
     return new Parser(match as ParserFunction<string>, "match");
 }
 
-export function sepBy<T, S>(
-    parser: Parser<T>,
-    separator: Parser<S>,
-    min: number = 0,
-    max: number = Infinity
-) {
-    return parser.sepBy(separator, min, max);
-}
-
-export const whitespace = match(/\s+/).opt();
+export const whitespace = match(/\s*/);
 
 export function createLanguage<T>(parsers: {
     [K in keyof T]: (lang: { [K in keyof T]: Parser<T[K]> }) => Parser<T[K]>;
