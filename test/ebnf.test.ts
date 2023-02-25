@@ -1,4 +1,4 @@
-import { whitespace, match, string } from "../src/that";
+import { whitespace, match, string, all } from "../src/that";
 
 import { test, expect, describe, it } from "vitest";
 import fs from "fs";
@@ -12,6 +12,53 @@ import { generateParserFromEBNF } from "../src/ebnf";
 
 const comma = string(",").trim();
 const div = string("/").trim();
+
+function breakLineOnSeparator(input: string, separator: string): string {
+    const lines = input.split(separator);
+
+    if (lines.length === 1) {
+        return input;
+    }
+
+    input = lines
+        .map((line, i) => {
+            if (i === lines.length - 1) {
+                return separator + line;
+            } else if (i === 0) {
+                return line;
+            }
+
+            const groups = line.split(",");
+
+            if (groups.length > 2) {
+                return `\n\t${separator} ` + line;
+            } else {
+                return  separator + line;
+            }
+        })
+        .join("");
+
+    const maxLineLength = 66;
+
+    if (input.length > maxLineLength) {
+        let di = maxLineLength;
+
+        for (let i = 0; i < input.length; i += di) {
+            const nearestSepIx = i === 0 ? maxLineLength : i + di;
+            const nearestSep = input.indexOf(separator, nearestSepIx);
+
+            if (nearestSep === -1) {
+                break;
+            }
+            input =
+                input.slice(0, nearestSep) +
+                `\n\t${separator}` +
+                input.slice(nearestSep + 1);
+        }
+    }
+
+    return input;
+}
 
 const mathParser = (grammar: string) => {
     const [nonterminals, ast] = generateParserFromEBNF(grammar);
@@ -108,13 +155,17 @@ const EBNFParser = (grammar: string) => {
         return v.flat().join("");
     });
 
-    nonterminals.pipe = nonterminals.pipe.trim().map((v) => {
-        return `\n\t${v}`;
-    });
+    nonterminals.pipe = nonterminals.pipe.trim();
     nonterminals.comma = nonterminals.comma.trim();
+    nonterminals.star = nonterminals.star.trim();
+    nonterminals.plus = nonterminals.plus.trim();
+    nonterminals.question = nonterminals.question.trim();
+    nonterminals.dash = nonterminals.dash.trim();
 
     nonterminals.rhs = nonterminals.rhs.trim().map((v) => {
-        return v instanceof Array ? v.flat(Infinity) : v;
+        const a = v instanceof Array ? v.flat(Infinity) : v;
+        const s = a.join(" ");
+        return breakLineOnSeparator(s, "|");
     });
 
     nonterminals.rule = nonterminals.rule.trim().map((v) => {
@@ -122,7 +173,7 @@ const EBNFParser = (grammar: string) => {
     });
 
     return nonterminals.grammar.trim().map((v) => {
-        return v.flat().join("\n");
+        return v.flat().join("\n\n");
     });
 };
 
@@ -163,7 +214,7 @@ describe("EBNF Parser", () => {
         let grammar = fs.readFileSync("./grammar/eebnf.ebnf", "utf8");
         const parser = EBNFParser(grammar);
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 3; i++) {
             grammar = parser.parse(grammar);
             fs.writeFileSync("./grammar/eebnf2.ebnf", grammar);
         }
