@@ -189,12 +189,7 @@ export class Parser<T = string> {
     }
 
     wrap<L, R>(start: Parser<L>, end: Parser<R>) {
-        return start
-            .then(this)
-            .map(([, a]) => {
-                return a;
-            })
-            .skip(end) as Parser<T>;
+        return start.next(this).skip(end) as Parser<T>;
     }
 
     trim(parser = whitespace as any): Parser<T> {
@@ -340,10 +335,7 @@ export function all<T extends any[]>(...parsers: T) {
 
 export function string(str: string) {
     const string = (state: ParserState<string>) => {
-        if (
-            state.offset >= state.src.length ||
-            state.offset + str.length > state.src.length
-        ) {
+        if (state.offset >= state.src.length) {
             return state.err(undefined);
         }
 
@@ -361,7 +353,7 @@ export function match(regex: RegExp) {
     const sticky = new RegExp(regex, regex.flags + "y");
 
     const match = (state: ParserState<string>) => {
-        if (state.offset >= state.src.length) {
+        if (state.offset > state.src.length) {
             return state.err(undefined);
         }
 
@@ -386,7 +378,7 @@ export function createLanguage<T>(parsers: {
     [K in keyof T]: (lang: { [K in keyof T]: Parser<T[K]> }) => Parser<T[K]>;
 }) {
     for (const [key, func] of Object.entries(parsers)) {
-        parsers[key] = lazy(() => func(parsers).debug(key));
+        parsers[key] = lazy(() => func(parsers));
     }
     return parsers as { [K in keyof T]: Parser<T[K]> };
 }

@@ -211,7 +211,7 @@ const EBNFGrammar = createLanguage({
             }) as Parser<EBNFMany1>,
 
     next: (l) =>
-        all(l.factor.skip(leftShift), l.subExpression).map(([left, right]) => {
+        all(l.factor.skip(leftShift), l.factor).map(([left, right]) => {
             return {
                 type: "next",
                 value: [left, right],
@@ -219,7 +219,7 @@ const EBNFGrammar = createLanguage({
         }) as Parser<EBNFNext>,
 
     skip: (l) =>
-        all(l.subExpression2.skip(rightShift), l.factor).map(([left, right]) => {
+        all(l.factor.skip(rightShift), l.factor).map(([left, right]) => {
             return {
                 type: "skip",
                 value: [left, right],
@@ -227,16 +227,20 @@ const EBNFGrammar = createLanguage({
         }) as Parser<EBNFSkip>,
 
     concatenation: (l) =>
-        l.factor.sepBy(comma, 1).map((value) => ({
-            type: "concatenation",
-            value,
-        })) as Parser<EBNFConcatenation>,
+        any(l.skip, l.next, l.factor)
+            .sepBy(comma, 1)
+            .map((value) => ({
+                type: "concatenation",
+                value,
+            })) as Parser<EBNFConcatenation>,
 
     alternation: (l) =>
-        l.subExpression.sepBy(pipe, 1).map((value) => ({
-            type: "alternation",
-            value,
-        })) as Parser<EBNFAlternation>,
+        any(l.concatenation, l.skip, l.next, l.factor)
+            .sepBy(pipe, 1)
+            .map((value) => ({
+                type: "alternation",
+                value,
+            })) as Parser<EBNFAlternation>,
 
     term: (l) =>
         any(
@@ -256,11 +260,14 @@ const EBNFGrammar = createLanguage({
             l.term
         ) as Parser<EBNFExpression>,
 
-    subExpression2: (l) => any(l.concatenation, l.next, l.factor),
-
-    subExpression: (l) => any(l.skip, l.subExpression2),
-
-    expression: (l) => any(l.alternation, l.subExpression) as Parser<EBNFExpression>,
+    expression: (l) =>
+        any(
+            l.alternation,
+            l.concatenation,
+            l.skip,
+            l.next,
+            l.factor
+        ) as Parser<EBNFExpression>,
 
     productionRule: (l) =>
         all(l.identifier.skip(equalSign), l.expression.skip(terminator)).map(
@@ -280,9 +287,7 @@ export function generateParserFromEBNF(input: string) {
     function generateParser(expr: EBNFExpression): Parser<any> {
         switch (expr.type) {
             case "literal":
-                return string(expr.value).map((v) => {
-                    return v;
-                });
+                return string(expr.value);
             case "nonterminal":
                 return lazy(() => {
                     return nonterminals[expr.value];
@@ -309,9 +314,7 @@ export function generateParserFromEBNF(input: string) {
                 );
 
             case "subtraction":
-                return all(
-                    generateParser(expr.value[0]).not(generateParser(expr.value[1]))
-                );
+                return generateParser(expr.value[0]).not(generateParser(expr.value[1]));
 
             case "concatenation":
                 return all(...expr.value.map(generateParser));
@@ -332,9 +335,8 @@ const mathParser = () => {
     expr = term, { ("+" | "-"), term };
     term = factor, { ("*" | "/"), factor };
     factor = number | "(", expr, ")";
-    vibes = 3 * "vibes";
 `;
-    const nonterminals = parseEBNF(grammar);
+    const [nonterminals, ast] = generateParserFromEBNF(grammar);
 
     nonterminals.expr = nonterminals.expr.map(reduceMathExpression);
     nonterminals.term = nonterminals.term.map(reduceMathExpression);
@@ -363,22 +365,28 @@ const CSSColorParser = () => {
 
     colorType = "rgb" | "hsl" | "hsv" | "hwb" | "lab" | "lch";
     percentage = integer << "%";
-    colorValue = percentage | number;
+
+    colorPercentage = percentage;
+    colorValue = colorPercentage | number;
 
     colorFunction = 
-        colorType,
-        ("(" >>
-            colorValue        ),
-            (sep >> colorValue),
-            (sep >> colorValue),
-            ([ (alphaSep >> colorValue) ]
-        << ")");
+        (colorType << "a"?)
+        << "(",
+            colorValue << sep,
+            colorValue << sep,
+            colorValue,
+            (alphaSep >> colorValue)?
+        << ")" ;
+
+    hexDigits = 
+      (digit, digit, digit, (digit,  digit, digit              )?)
+    | (digit, digit, digit,  digit, (digit, digit, digit, digit)?) ;
     
-    hex = "#", (3 * digit | 6 * digit);
+    hex = "#" >> hexDigits;
     
     color = hex | colorFunction;
 `;
-    const nonterminals = parseEBNF(grammar);
+    const [nonterminals, ast] = generateParserFromEBNF(grammar);
 
     nonterminals.whitespace = whitespace;
     nonterminals.comma = comma;
@@ -396,19 +404,30 @@ const CSSColorParser = () => {
     nonterminals.percentage = nonterminals.percentage.map((value) => {
         return value / 100;
     });
+    nonterminals.colorPercentage = nonterminals.colorPercentage.map((value) => {
+        return value * 255;
+    });
 
-    nonterminals.hex = nonterminals.hex.map(([, digits]) => {
-        digits = digits.flat();
 
-        const r = digits.length === 3 ? digits[0] + digits[0] : digits.slice(0, 2);
-        const g = digits.length === 3 ? digits[1] + digits[1] : digits.slice(2, 4);
-        const b = digits.length === 3 ? digits[2] + digits[2] : digits.slice(4, 6);
+    nonterminals.hex = nonterminals.hex.map((digits) => {
+        let hex = digits.join("");
+        let alpha = 1;
 
+        if (hex.length === 3 || hex.length === 4) {
+            hex = hex.replace(/./g, "$&$&");
+        }
+        if (hex.length === 8) {
+            alpha = parseInt(hex.slice(6, 8), 16) / 255;
+            hex = hex.slice(0, 6);
+        }
+        const r = parseInt(hex.slice(0, 2), 16);
+        const g = parseInt(hex.slice(2, 4), 16);
+        const b = parseInt(hex.slice(4, 6), 16);
         return {
             type: "rgb",
-            r: parseInt(r, 16),
-            g: parseInt(g, 16),
-            b: parseInt(b, 16),
+            r,
+            g,
+            b,
         } as Color;
     });
 
@@ -453,7 +472,7 @@ identifier = whitespace >> identifier_0 << whitespace ;
 
 terminal_0 = 
       "'" >> (character - "'")+ << "'" | '"' >> (character - '"')+ << '"' ;
-terminal = whitespace >> terminal_0, "ad" << whitespace ;
+terminal = whitespace >> terminal_0 << whitespace ;
 
 lhs_0 = identifier ;
 rhs_0 = identifier
@@ -471,7 +490,6 @@ rule = lhs << "=" , rhs << ";" ;
 grammar = rule* ;
 `;
     const [nonterminals, ast] = generateParserFromEBNF(grammar);
-    return ast;
 
     nonterminals.whitespace = whitespace;
 
@@ -493,7 +511,7 @@ grammar = rule* ;
     // nonterminals.rule = nonterminals.rule.trim();
 
     // return nonterminals.grammar;
-    return nonterminals.token;
+    return nonterminals.terminal;
 };
 
 describe("EBNF Parser", () => {
@@ -501,7 +519,7 @@ describe("EBNF Parser", () => {
         const parser = mathParser();
 
         for (let i = 0; i < 100; i++) {
-            const expr = insertRandomWhitespace(generateMathExpression());
+            const expr = generateMathExpression();
             const parsed = parser.parse(expr);
             expect(parsed).toBe(eval(expr));
         }
@@ -511,7 +529,8 @@ describe("EBNF Parser", () => {
         const parser = CSSColorParser();
 
         const colors = [
-            "hsl(0 0 0 / 1)",
+            "#fff",
+            "hsl(0 0 0 / 12)",
             "rgb(100%, 100%, 100% / 1)",
             "rgb(10%, 11%, 12%)",
             "rgb(255, 255, 255, 1)",
@@ -530,14 +549,12 @@ describe("EBNF Parser", () => {
     it("should parse a EBNF grammar", () => {
         const parser = EBNFParser();
 
-        expect(parser.length).toEqual(13);
-
         const grammar = `
         "mygayestvibes"
 `;
 
-        // const parsed = parser.parse(grammar);
+        const parsed = parser.parse(grammar);
 
-        // expect(parsed).toBeFalsy();
+        expect(parsed).toBeTruthy();
     });
 });
