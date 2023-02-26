@@ -196,14 +196,29 @@ const EBNFParserLeftRecursion = (grammar: string) => {
     const [nonterminals, ast] = generateParserFromEBNF(grammar);
 
     nonterminals.integer = match(/\d+/).trim().map(Number);
-    nonterminals.string = match(/[a-zA-Z]+/).trim();
+    nonterminals.string = match(/[a-zA-Z]+/)
+        .trim()
+        .map((v) => {
+            return v.charCodeAt(0);
+        });
+    nonterminals.vibes = string("vibes")
+        .trim()
+        .map((v) => {
+            return -10;
+        });
+    nonterminals.whatzupwitu = string("whatzupwitu")
+        .trim()
+        .map((v) => {
+            return 17;
+        });
 
     nonterminals.expr = nonterminals.expr.trim().map((v) => {
-        return v.flat();
+        if (v.length === 2) {
+            return reduceMathExpression(v);
+        } else {
+            return v[0];
+        }
     });
-
-    nonterminals.myVibes = nonterminals.myVibes.trim().map(reduceMathExpression);
-
     return nonterminals.expr;
 };
 
@@ -253,13 +268,21 @@ describe("EBNF Parser", () => {
 
     it("should handle EBNF left recursion", () => {
         const grammar = `
-    expr = expr , "+" , expr | integer | string ;
-    myVibes = expr ;
+    expr = 
+          expr , ("*" , expr) 
+        | expr , ("+" , expr)
+        | expr , ("-" , expr) 
+        | integer
+        | whatzupwitu
+        | vibes
+        | string;
 `;
         const parser = EBNFParserLeftRecursion(grammar);
 
-        const tmp = `1+2+3`;
+        const tmp = `
+1 + 2 + 3 + whatzupwitu * vibes + a
+`;
         const parsed = parser.parse(tmp);
-        console.log(parsed);
+        expect(parsed).toBeGreaterThan(0);
     });
 });
