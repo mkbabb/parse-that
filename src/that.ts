@@ -254,7 +254,7 @@ export class Parser<T = string> {
 export function eof<T>() {
     const eof = (state: ParserState<T>) => {
         if (state.offset >= state.src.length) {
-            return state.ok(state.value);
+            return state.ok(undefined);
         } else {
             return state.err();
         }
@@ -291,7 +291,7 @@ export function any<T extends any[]>(...parsers: T) {
         return state.err(undefined);
     };
 
-    return new Parser(parsers.length === 1 ? parsers[0] : any, "any") as Parser<
+    return new Parser(parsers.length === 1 ? parsers[0].parser : any, "any") as Parser<
         ExtractValue<T>[number]
     >;
 }
@@ -306,14 +306,17 @@ export function all<T extends any[]>(...parsers: T) {
             if (newState.isError) {
                 return newState;
             }
-            matches.push(newState.value);
+            if (newState.value !== undefined) {
+                matches.push(newState.value);
+            }
+
             state = newState;
         }
 
         return state.ok(matches);
     };
 
-    return new Parser(parsers.length === 1 ? parsers[0] : all, "all") as Parser<
+    return new Parser(parsers.length === 1 ? parsers[0].parser : all, "all") as Parser<
         ExtractValue<T>
     >;
 }

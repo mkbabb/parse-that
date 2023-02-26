@@ -192,20 +192,19 @@ const EBNFParser = (grammar: string) => {
     });
 };
 
-const EBNFParserTmp = (grammar: string) => {
+const EBNFParserLeftRecursion = (grammar: string) => {
     const [nonterminals, ast] = generateParserFromEBNF(grammar);
 
-    nonterminals.token = match(/\w+/)
-        .trim()
-        .map((v) => {
-            return v;
-        });
+    nonterminals.integer = match(/\d+/).trim().map(Number);
+    nonterminals.string = match(/[a-zA-Z]+/).trim();
 
-    nonterminals.rhs = nonterminals.rhs.trim().map((v) => {
-        return v;
+    nonterminals.expr = nonterminals.expr.trim().map((v) => {
+        return v.flat();
     });
 
-    return nonterminals.rhs;
+    nonterminals.myVibes = nonterminals.myVibes.trim().map(reduceMathExpression);
+
+    return nonterminals.expr;
 };
 
 describe("EBNF Parser", () => {
@@ -252,15 +251,14 @@ describe("EBNF Parser", () => {
         }
     });
 
-    it("tmp", () => {
+    it("should handle EBNF left recursion", () => {
         const grammar = `
-    rhs = rhs, "gay" | token ;
+    expr = expr , "+" , expr | integer | string ;
+    myVibes = expr ;
 `;
-        const parser = EBNFParserTmp(grammar);
+        const parser = EBNFParserLeftRecursion(grammar);
 
-        const tmp = `
-hey | gay
-`;
+        const tmp = `1+2+3`;
         const parsed = parser.parse(tmp);
         console.log(parsed);
     });

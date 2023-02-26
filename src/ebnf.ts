@@ -1,8 +1,13 @@
-import { Parser, string, lazy, all, any, match, ParserState } from "../src/that";
+import { Parser, string, lazy, all, any, match, ParserState, eof } from "../src/that";
+
+type EBNFProductionRule = {
+    name: string;
+    expression: EBNFExpression;
+};
 
 type EBNFExpression =
     | EBNFLiteral
-    | EBNFNonTerminal
+    | EBNFNonterminal
     | EBNFGroup
     | EBNFOptional
     | EBNFSub
@@ -11,21 +16,22 @@ type EBNFExpression =
     | EBNFSkip
     | EBNFNext
     | EBNFConcatenation
-    | EBNFAlternation;
-
-type EBNFProductionRule = {
-    name: string;
-    expression: EBNFExpression;
-};
+    | EBNFAlternation
+    | EBNFEpsilon;
 
 interface EBNFLiteral {
     type: "literal";
     value: string;
 }
 
-interface EBNFNonTerminal {
+interface EBNFNonterminal {
     type: "nonterminal";
     value: string;
+}
+
+interface EBNFEpsilon {
+    type: "epsilon";
+    value: undefined;
 }
 
 interface EBNFGroup {
@@ -115,7 +121,7 @@ class EBNFGrammar {
             return {
                 type: "nonterminal",
                 value,
-            } as EBNFNonTerminal;
+            } as EBNFNonterminal;
         });
     }
 
@@ -293,24 +299,20 @@ class EBNFGrammar {
     }
 }
 
-export function generateParserFromEBNF(input: string) {
-    const ast = new EBNFGrammar()
-        .grammar()
-        .parse(input)
-        .reduce((acc, { name, expression }) => {
-            acc[name] = expression;
-            return acc;
-        }, new Map<string, EBNFProductionRule>());
+type EBNFAST = Map<string, EBNFExpression>;
+type EBNFNonterminals = { [key: string]: Parser<any> };
 
-    const nonterminals: { [key: string]: Parser<any> } = {};
-    let uniqueIndex = 0;
-
+function generateParserFromAST(ast: EBNFAST) {
     function generateParser(name: string, expr: EBNFExpression): Parser<any> {
         switch (expr.type) {
             case "literal":
                 return string(expr.value);
             case "nonterminal":
                 return Parser.lazy(() => nonterminals[expr.value]);
+
+            case "epsilon":
+                return eof();
+
             case "group":
                 return generateParser(name, expr.value);
             case "optional":
@@ -338,51 +340,145 @@ export function generateParserFromEBNF(input: string) {
         }
     }
 
-    function removeLeftRecursion(name: string, expr: EBNFAlternation) {
-        const head = [];
-        const tail = [];
+    const nonterminals: EBNFNonterminals = {};
 
-        const APrime = {
-            type: "nonterminal",
-            value: name + "_" + ++uniqueIndex,
-        } as EBNFNonTerminal;
-
-        for (const e of expr.value) {
-            if (e.type === "concatenation" && e.value[0].value === name) {
-                tail.push({
-                    type: "concatenation",
-                    value: [...e.value.slice(1), APrime],
-                });
-            } else {
-                head.push({
-                    type: "concatenation",
-                    value: [e, APrime],
-                });
-            }
-        }
-        tail[tail.length - 1] = {
-            type: "optional",
-            value: tail[tail.length - 1],
-        };
-
-        ast[name] = {
-            type: "alternation",
-            value: head,
-        };
-        ast[APrime.value] = {
-            type: "alternation",
-            value: tail,
-        };
-    }
-
-    // for (const [name, expression] of Object.entries(ast)) {
-    //     if (expression.type === "alternation") {
-    //         removeLeftRecursion(name, expression);
-    //     }
-    // }
-    for (const [name, expression] of Object.entries(ast)) {
+    for (const [name, expression] of ast.entries()) {
         nonterminals[name] = generateParser(name, expression);
     }
+    return nonterminals;
+}
 
+function topologicalSort(ast: EBNFAST) {
+    const sortedNodes = new Map() as EBNFAST;
+
+    function visit(name: string, expr: EBNFExpression) {
+        if (sortedNodes.has(name) || !expr) {
+            return;
+        }
+
+        const { value, type } = expr;
+
+        switch (type) {
+            case "alternation":
+            case "concatenation":
+                value.forEach((childNode) => {
+                    if (childNode.type === "nonterminal") {
+                        visit(childNode.value, ast.get(childNode.value)!);
+                    }
+                });
+                break;
+            case "subtraction":
+            case "next":
+            case "skip":
+                value.forEach((childNode) => {
+                    if (childNode.type === "nonterminal") {
+                        visit(childNode.value, ast.get(childNode.value)!);
+                    }
+                });
+                break;
+            case "group":
+            case "optional":
+            case "many":
+            case "many1":
+                if (value.type === "nonterminal") {
+                    visit(value.value, ast.get(value.value)!);
+                }
+                break;
+        }
+        sortedNodes.set(name, expr);
+    }
+
+    for (const [name, expr] of ast) {
+        visit(name, expr);
+    }
+    return sortedNodes;
+}
+
+function removeDirectLeftRecursion(
+    name: string,
+    expr: EBNFAlternation,
+    tailName: string
+) {
+    const head = [];
+    const tail = [];
+
+    const APrime = {
+        type: "nonterminal",
+        value: tailName,
+    } as EBNFNonterminal;
+
+    for (let i = 0; i < expr.value.length; i++) {
+        const e = expr.value[i];
+
+        if (e.type === "concatenation" && e.value[0].value === name) {
+            tail.push({
+                type: "concatenation",
+                value: [...e.value.slice(1), APrime],
+            });
+        } else {
+            head.push({
+                type: "concatenation",
+                value: [e, APrime],
+            });
+        }
+    }
+
+    // No direct left recursion
+    if (tail.length === 0) {
+        return [undefined, undefined];
+    }
+
+    tail.push({
+        type: "epsilon",
+    } as EBNFEpsilon);
+
+    return [
+        {
+            type: "alternation",
+            value: head,
+        } as EBNFAlternation,
+        {
+            type: "alternation",
+            value: tail,
+        } as EBNFAlternation,
+    ] as const;
+}
+
+function removeLeftRecursion(ast: EBNFAST) {
+    const newAST = topologicalSort(ast);
+    const newNodes = new Map() as EBNFAST;
+
+    let uniqueIndex = 0;
+    for (const [name, expression] of newAST) {
+        if (expression.type === "alternation") {
+            const tailName = `${name}_${uniqueIndex++}`;
+
+            const [head, tail] = removeDirectLeftRecursion(name, expression, tailName);
+            if (head) {
+                newNodes.set(tailName, tail);
+                newNodes.set(name, head);
+            }
+        }
+    }
+
+    for (const [name, expression] of newNodes) {
+        newAST.set(name, expression);
+    }
+
+    return newAST;
+}
+
+export function generateParserFromEBNF(input: string) {
+    let ast = new EBNFGrammar()
+        .grammar()
+        .parse(input)
+        .reduce((acc, { name, expression }) => {
+            acc.set(name, expression);
+            return acc;
+        }, new Map<string, EBNFExpression>()) as EBNFAST;
+
+    ast = removeLeftRecursion(ast);
+
+    const nonterminals = generateParserFromAST(ast);
     return [nonterminals, ast] as const;
 }
