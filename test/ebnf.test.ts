@@ -1,4 +1,4 @@
-import { whitespace, match, string, all, Parser } from "../src/that";
+import { whitespace, regex, string, all, Parser } from "../src/that";
 
 import { test, expect, describe, it } from "vitest";
 import fs from "fs";
@@ -68,7 +68,7 @@ const mathParser = (grammar: string) => {
     nonterminals.expr = nonterminals.expr.map(reduceMathExpression);
     nonterminals.term = nonterminals.term.map(reduceMathExpression);
     const numberRegex = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
-    nonterminals.number = match(numberRegex)
+    nonterminals.number = regex(numberRegex)
         .trim()
         .map((v) => {
             return parseFloat(v);
@@ -91,16 +91,16 @@ const CSSColorParser = (grammar: string) => {
     nonterminals.whitespace = whitespace;
     nonterminals.comma = comma;
     nonterminals.div = div;
-    nonterminals.digit = match(/\d|[a-fA-F]/).map((v) => {
+    nonterminals.digit = regex(/\d|[a-fA-F]/).map((v) => {
         return v;
     });
     const numberRegex = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
-    nonterminals.number = match(numberRegex)
+    nonterminals.number = regex(numberRegex)
         .trim()
         .map((v) => {
             return parseFloat(v);
         });
-    nonterminals.integer = match(/\d+/).map(Number);
+    nonterminals.integer = regex(/\d+/).map(Number);
     nonterminals.percentage = nonterminals.percentage.map((value) => {
         return value / 100;
     });
@@ -151,16 +151,16 @@ const CSSValueUnitParser = (grammar: string) => {
     nonterminals.whitespace = whitespace;
     nonterminals.comma = comma;
     nonterminals.div = div;
-    nonterminals.digit = match(/\d|[a-fA-F]/).map((v) => {
+    nonterminals.digit = regex(/\d|[a-fA-F]/).map((v) => {
         return v;
     });
     const numberRegex = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
-    nonterminals.number = match(numberRegex)
+    nonterminals.number = regex(numberRegex)
         .trim()
         .map((v) => {
             return parseFloat(v);
         });
-    nonterminals.integer = match(/\d+/).map(Number);
+    nonterminals.integer = regex(/\d+/).map(Number);
 
     return nonterminals.valueUnit.map(([value, unit]) => {
         return {
@@ -185,10 +185,11 @@ const EBNFParser = (grammar: string) => {
 
     nonterminals.pipe = nonterminals.pipe.trim();
     nonterminals.comma = nonterminals.comma.trim();
-    nonterminals.star = nonterminals.star.trim();
     nonterminals.plus = nonterminals.plus.trim();
+    nonterminals.minus = nonterminals.minus.trim();
+    nonterminals.star = nonterminals.star.trim();
+    nonterminals.div = nonterminals.div.trim();
     nonterminals.question = nonterminals.question.trim();
-    nonterminals.dash = nonterminals.dash.trim();
 
     nonterminals.rhs = nonterminals.rhs.trim().map((v) => {
         const a = v instanceof Array ? v.flat(Infinity) : v;
@@ -226,8 +227,8 @@ const EBNFParser = (grammar: string) => {
 const EBNFParserLeftRecursion = (grammar: string) => {
     const [nonterminals, ast] = generateParserFromEBNF(grammar);
 
-    nonterminals.integer = match(/\d+/).trim().map(Number);
-    nonterminals.string = match(/[a-zA-Z]+/)
+    nonterminals.integer = regex(/\d+/).trim().map(Number);
+    nonterminals.string = regex(/[a-zA-Z]+/)
         .trim()
         .map((v) => {
             return v.charCodeAt(0);
@@ -356,6 +357,7 @@ describe("EBNF Parser", () => {
 
     it("should handle EBNF left recursion", () => {
         const grammar = `
+    digits = /[0-9]+/ ;
     expr = 
           expr , ("*" , expr) 
         | expr , ("+" , expr)
@@ -363,7 +365,8 @@ describe("EBNF Parser", () => {
         | integer
         | whatzupwitu
         | vibes
-        | string;
+        | string
+        | digits ;
 `;
         const parser = EBNFParserLeftRecursion(grammar);
 

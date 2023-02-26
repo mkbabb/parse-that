@@ -8,7 +8,7 @@ digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 
 symbol = "[" | "]" | "{" | "}" | "(" | ")" | "<" | ">" | "'" | '"' | "=" | "
 	|" | "." 
-	|  "," | ";" | "+" | "-" | "*" | "?" | "%" ;
+	|  "," | ";" | "+" | "-" | "*" | "/" | "?" | "%" ;
 
 pipe = "|" ;
 comma = "," ;
@@ -16,24 +16,27 @@ star = "*" ;
 
 plus = "+" ;
 question = "?" ;
-dash = "-" ;
+minus = "-" ;
 
+div = "/" ;
 character = letter | digit | symbol | "_" ;
 identifier = letter , { letter | digit | "_" | "-" } ;
+
+terminal = "'" , ( character - "'" ) * , "'" | '"' , ( character - '"' ) * , '"' ;
+
+regex = div , ( character - div ) * , div ;
 epsilon = "epsilon" ;
-
-terminal = "'" , ( character - "'" ) + , "'" | '"' , ( character - '"' ) + , '"' ;
-
 lhs = identifier ;
 
-term = identifier | terminal 
+term = identifier | terminal | regex 
 	|  "(" , rhs , ")" 
-	|  "[" , rhs , "]" | "{" , rhs , "}" ;
+	|  "[" , rhs , "]" 
+	| "{" , rhs , "}" ;
 
 factor = term , question 
 	|  term , star 
 	|  term , plus 
-	|  term , dash , term 
+	|  term , minus , term 
 	| term ;
 
 concatenation = factor , { comma , factor } ;

@@ -1,4 +1,4 @@
-import { match, all, Parser, any, lazy, string } from "../src/that";
+import { regex, all, Parser, any, lazy, string } from "../src/that";
 import { test, expect, describe } from "vitest";
 import {
     reduceMathExpression,
@@ -6,7 +6,7 @@ import {
     generateMathExpression,
 } from "./utils";
 
-const digits = match(/[0-9]/)
+const digits = regex(/[0-9]/)
     .many()
     .map((val) => val.join(""));
 
@@ -15,7 +15,7 @@ const fractional = string(".")
     .map(([, digits]) => "." + digits);
 const integral = digits;
 
-const exponent = all(match(/[eE]/), match(/[-+]/).opt(), digits)
+const exponent = all(regex(/[eE]/), regex(/[-+]/).opt(), digits)
     .map(([, exponentSign, exponent]) => {
         return `e${exponentSign ?? ""}${exponent}`;
     })
@@ -36,7 +36,7 @@ const number = all(numberPart, exponent)
     });
 
 const numberRegex = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
-const numberMatch = match(numberRegex)
+const numberMatch = regex(numberRegex)
     .trim()
     .map((v) => {
         return parseFloat(v);
@@ -54,7 +54,7 @@ const unary: Parser<number> = Parser.lazy(() =>
 const pow: Parser<number> = Parser.lazy(() =>
     all(
         unary,
-        match(/\*\*/)
+        regex(/\*\*/)
             .then(pow)
             .map(([, num]) => num)
             .opt()
@@ -64,13 +64,13 @@ const pow: Parser<number> = Parser.lazy(() =>
 );
 
 const multDiv: Parser<number> = Parser.lazy(() =>
-    all(pow, match(/\*|\//).then(pow).many()).map(reduceMathExpression)
+    all(pow, regex(/\*|\//).then(pow).many()).map(reduceMathExpression)
 );
 
 const addSub: Parser<number> = Parser.lazy(() =>
     all(
         multDiv,
-        match(/\+|\-|/)
+        regex(/\+|\-|/)
             .then(multDiv)
             .many()
     ).map(reduceMathExpression)

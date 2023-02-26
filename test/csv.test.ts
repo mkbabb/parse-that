@@ -1,4 +1,4 @@
-import { match, all, Parser, any, lazy, string } from "../src/that";
+import { regex, all, Parser, any, lazy, string } from "../src/that";
 import { test, expect, describe, it } from "vitest";
 
 const delim = string(",").trim();
@@ -6,9 +6,9 @@ const doubleQuotes = string('"');
 const singleQuotes = string("'");
 
 const token = any(
-    match(/[^"]+/).wrap(doubleQuotes, doubleQuotes),
-    match(/[^']+/).wrap(singleQuotes, singleQuotes),
-    match(/[^,]+/)
+    regex(/[^"]+/).wrap(doubleQuotes, doubleQuotes),
+    regex(/[^']+/).wrap(singleQuotes, singleQuotes),
+    regex(/[^,]+/)
 );
 
 const line = token.sepBy(delim).trim();

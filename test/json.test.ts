@@ -1,16 +1,16 @@
-import { Parser, match, all, any, string, lazy } from "../src/that";
+import { Parser, regex, all, any, string, lazy } from "../src/that";
 import { test, expect, describe, it } from "vitest";
 
 const comma = string(",").trim();
 
-const jsonNull = match(/null/).map(() => null);
-const jsonBool = any(match(/true/), match(/false/)).map((value) => value === "true");
-const jsonNumber = match(/-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/).map(Number);
+const jsonNull = regex(/null/).map(() => null);
+const jsonBool = any(regex(/true/), regex(/false/)).map((value) => value === "true");
+const jsonNumber = regex(/-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/).map(Number);
 
 const stringChar = any(
-    match(/[^"\\]+/),
-    match(/\\"/).map(() => '"'),
-    match(/\\\\/).map(() => "\\")
+    regex(/[^"\\]+/),
+    regex(/\\"/).map(() => '"'),
+    regex(/\\\\/).map(() => "\\")
 );
 const jsonString = stringChar
     .many(1)

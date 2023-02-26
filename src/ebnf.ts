@@ -1,4 +1,4 @@
-import { Parser, string, lazy, all, any, match, ParserState, eof } from "../src/that";
+import { Parser, string, lazy, all, any, regex, ParserState, eof } from "../src/that";
 
 type EBNFProductionRule = {
     name: string;
@@ -9,6 +9,7 @@ type EBNFExpression =
     | EBNFLiteral
     | EBNFNonterminal
     | EBNFGroup
+    | EBNFRegex
     | EBNFOptional
     | EBNFSub
     | EBNFMany
@@ -37,6 +38,11 @@ interface EBNFEpsilon {
 interface EBNFGroup {
     type: "group";
     value: EBNFExpression;
+}
+
+interface EBNFRegex {
+    type: "regex";
+    value: RegExp;
 }
 
 interface EBNFOptional {
@@ -95,19 +101,19 @@ const div = string("/").trim();
 const leftShift = string(">>").trim();
 const rightShift = string("<<").trim();
 
-const integer = match(/\d+/).trim().map(Number);
+const integer = regex(/\d+/).trim().map(Number);
 
 const terminator = any(semicolon, dot);
 
 class EBNFGrammar {
     identifier() {
-        return match(/[_a-zA-Z][_a-zA-Z0-9]*/).trim();
+        return regex(/[_a-zA-Z][_a-zA-Z0-9]*/).trim();
     }
 
     literal() {
         return any(
-            match(/[^"\s]+/).wrap(string('"'), string('"')),
-            match(/[^'\s]+/).wrap(string("'"), string("'"))
+            regex(/[^"\s]+/).wrap(string('"'), string('"')),
+            regex(/[^'\s]+/).wrap(string("'"), string("'"))
         ).map((value) => {
             return {
                 type: "literal",
@@ -135,6 +141,19 @@ class EBNFGrammar {
                     type: "group",
                     value,
                 } as EBNFGroup;
+            });
+    }
+
+    @lazy
+    regex() {
+        return regex(/[^\/]*/)
+            .trim()
+            .wrap(string("/"), string("/"))
+            .map((value) => {
+                return {
+                    type: "regex",
+                    value: new RegExp(value),
+                } as EBNFRegex;
             });
     }
 
@@ -259,6 +278,7 @@ class EBNFGrammar {
         return any(
             this.literal(),
             this.nonterminal(),
+            this.regex(),
             this.group(),
             this.optionalGroup(),
             this.manyGroup()
@@ -316,6 +336,10 @@ function generateParserFromAST(ast: EBNFAST) {
 
             case "group":
                 return generateParser(name, expr.value);
+
+            case "regex":
+                return regex(expr.value);
+
             case "optional":
                 return generateParser(name, expr.value).opt();
             case "many":

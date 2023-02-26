@@ -337,7 +337,7 @@ export function string(str: string) {
     return new Parser(string as ParserFunction<string>, "string");
 }
 
-export function match(regex: RegExp) {
+export function regex(regex: RegExp) {
     const sticky = new RegExp(regex, regex.flags + "y");
 
     const match = (state: ParserState<string>) => {
@@ -360,4 +360,4 @@ export function match(regex: RegExp) {
     return new Parser(match as ParserFunction<string>, "match");
 }
 
-export const whitespace = match(/\s*/);
+export const whitespace = regex(/\s*/);
