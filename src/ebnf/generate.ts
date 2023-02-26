@@ -1,4 +1,4 @@
-import { Parser, all, any, eof, regex, string } from "../that";
+import { Parser, all, any, eof, regex, string } from "..";
 import { EBNFExpression, EBNFNonterminals, EBNFAST, EBNFGrammar } from "./grammar";
 import { removeLeftRecursion } from "./optimize";
 import chalk from "chalk";

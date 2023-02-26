@@ -88,10 +88,6 @@ Returns a string representation of the current parser with an optional indent va
 
 A class representing the state of a parser after it has been applied to a string.
 
-### `constructor(public src: string, public offset: number = 0, public value?: T, public isError = false, public errorOffset = offset)`
-
-Creates a new instance of a parser state.
-
 ### `next(len: number): ParserState<T>`
 
 Returns a new parser state with the offset incremented by len.
@@ -102,12 +98,12 @@ Returns a new parser state with the value and isError set to false.
 
 ### `err(value?: T): ParserState<T>`
 
-Returns a new parser state with the value and isError set to true, and the errorOffset
-set to the current offset.
+Returns a new parser state with the value and isError set to true.
 
 ### `addCursor(cursor: string): string`
 
-Returns a new string with a cursor added at the current offset.
+Returns a new string with a cursor added at the current offset. Pretty prints the state
+of the currently parsed string.
 
 ## Functions
 

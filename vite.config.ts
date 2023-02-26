@@ -17,9 +17,12 @@ export default defineConfig({
     build: {
         minify: true,
         lib: {
-            entry: path.resolve(__dirname, "src/that.ts"),
+            entry: path.resolve(__dirname, "src/index.ts"),
             name: "ParseThat",
             fileName: "@mkbabb/parse-that",
+        },
+        rollupOptions: {
+            external: ["chalk", "fs", "path", "util"],
         },
     },
     plugins: [dts()],

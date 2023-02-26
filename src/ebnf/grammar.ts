@@ -1,4 +1,4 @@
-import { Parser, string, lazy, all, any, regex, ParserState, eof } from "../that";
+import { Parser, string, lazy, all, any, regex, ParserState, eof } from "..";
 
 export type EBNFExpression =
     | EBNFLiteral

@@ -1,4 +1,4 @@
-import { regex, all, Parser, any, lazy, string } from "../src/that";
+import { regex, all, Parser, any, lazy, string } from "../src";
 import { test, expect, describe } from "vitest";
 import {
     reduceMathExpression,

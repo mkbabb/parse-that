@@ -1,4 +1,4 @@
-import { whitespace, regex, string, all, Parser } from "../src/that";
+import { whitespace, regex, string, all, Parser } from "../src";
 
 import { test, expect, describe, it } from "vitest";
 import fs from "fs";
