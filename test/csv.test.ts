@@ -6,13 +6,13 @@ const doubleQuotes = string('"');
 const singleQuotes = string("'");
 
 const token = any(
-    regex(/[^"]+/).wrap(doubleQuotes, doubleQuotes),
-    regex(/[^']+/).wrap(singleQuotes, singleQuotes),
-    regex(/[^,]+/)
-);
+    regex(/[^"]+/).debug("double quotes").wrap(doubleQuotes, doubleQuotes),
+    regex(/[^']+/).debug("single quotes").wrap(singleQuotes, singleQuotes),
+    regex(/[^,]+/).debug("no quotes")
+).debug("token");
 
-const line = token.sepBy(delim).trim();
-const csv = line.many();
+const line = token.sepBy(delim).trim().debug("line");
+const csv = line.many().debug("csv");
 
 describe("CSV Parser", () => {
     it("should parse an empty input", () => {
@@ -68,10 +68,4 @@ describe("CSV Parser", () => {
             ["Jane Smith", "25", "456 Oak Ave."],
         ]);
     });
-
-    //   it("should throw an error when there is a syntax error", () => {
-    //     expect(() => {
-    //       csv.parse('"hello", "world, "123"');
-    //     }).toThrow();
-    //   });
 });

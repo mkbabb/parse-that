@@ -1,0 +1,101 @@
+{
+    "name": "EEBNF",
+    "scopeName": "source.eebnf",
+    "fileTypes": [
+        "eebnf"
+    ],
+    "patterns": [
+        {
+            "name": "letter",
+            "match": "(A)|(B)|(C)|(D)|(E)|(F)|(G)|(H)|(I)|(J)|(K)|(L)|(M)|(N)|(O)|(P)|(Q)|(R)|(S)|(T)|(U)|(V)|(W)|(X)|(Y)|(Z)|(a)|(b)|(c)|(d)|(e)|(f)|(g)|(h)|(i)|(j)|(k)|(l)|(m)|(n)|(o)|(p)|(q)|(r)|(s)|(t)|(u)|(v)|(w)|(x)|(y)|(z)"
+        },
+        {
+            "name": "digit",
+            "match": "(0)|(1)|(2)|(3)|(4)|(5)|(6)|(7)|(8)|(9)"
+        },
+        {
+            "name": "symbol",
+            "match": "(\\[)|(\\])|(\\{)|(\\})|(\\()|(\\))|(<)|(>)|(')|(\")|(=)|(\\|)|(\\.)|(,)|(;)|(\\+)|(-)|(\\*)|(/)|(\\?)|(%)"
+        },
+        {
+            "name": "pipe",
+            "match": "\\|"
+        },
+        {
+            "name": "comma",
+            "match": ","
+        },
+        {
+            "name": "star",
+            "match": "\\*"
+        },
+        {
+            "name": "plus",
+            "match": "\\+"
+        },
+        {
+            "name": "question",
+            "match": "\\?"
+        },
+        {
+            "name": "minus",
+            "match": "-"
+        },
+        {
+            "name": "div",
+            "match": "/"
+        },
+        {
+            "name": "character",
+            "match": "(($letter))|(($digit))|(($symbol))|(_)"
+        },
+        {
+            "name": "identifier",
+            "match": "($letter)((($letter))|(($digit))|(_)|(-))*"
+        },
+        {
+            "name": "terminal",
+            "match": "('((($character)(?!')))*')|(\"((($character)(?!\")))*\")"
+        },
+        {
+            "name": "regex",
+            "match": "($div)((($character)(?!($div))))*($div)"
+        },
+        {
+            "name": "epsilon",
+            "match": "epsilon"
+        },
+        {
+            "name": "lhs",
+            "match": "($identifier)"
+        },
+        {
+            "name": "term",
+            "match": "(($identifier))|(($terminal))|(($regex))|(\\(($rhs)\\))|(\\[($rhs)\\])|(\\{($rhs)\\})"
+        },
+        {
+            "name": "factor",
+            "match": "(($term)($question))|(($term)($star))|(($term)($plus))|(($term)($minus)($term))|(($term))"
+        },
+        {
+            "name": "concatenation",
+            "match": "($factor)(($comma)($factor))*"
+        },
+        {
+            "name": "alternation",
+            "match": "($concatenation)(($pipe)($concatenation))*"
+        },
+        {
+            "name": "rhs",
+            "match": "(($alternation))|(($concatenation))|(($factor))"
+        },
+        {
+            "name": "rule",
+            "match": "($lhs)=($rhs);"
+        },
+        {
+            "name": "grammar",
+            "match": "(($rule))*"
+        }
+    ]
+}

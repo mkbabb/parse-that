@@ -8,7 +8,8 @@ import {
     reduceMathExpression,
 } from "./utils";
 
-import { generateParserFromEBNF } from "../src/ebnf";
+import { generateParserFromEBNF } from "../src/ebnf/generate";
+import { transformEBNFASTToTextMateLanguage } from "../src/ebnf/transform";
 
 const EEBNFGrammarPath = "./grammar/eebnf.ebnf" as const;
 
@@ -172,6 +173,10 @@ const CSSValueUnitParser = (grammar: string) => {
 
 const EBNFParser = (grammar: string) => {
     const [nonterminals, ast] = generateParserFromEBNF(grammar);
+
+    const textMateObject = transformEBNFASTToTextMateLanguage(ast);
+    const textMateString = JSON.stringify(textMateObject, null, 4);
+    fs.writeFileSync("./grammar/eebnf.tmLanguage.json", textMateString);
 
     nonterminals.symbol = nonterminals.symbol.trim();
 

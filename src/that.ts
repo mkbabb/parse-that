@@ -1,9 +1,10 @@
+import fs from "fs";
+
 export class ParserState<T> {
     constructor(
         public src: string,
         public value: T = undefined,
         public offset: number = 0,
-        public colNumber: number = 0,
         public lineNumber: number = 0,
         public isError: boolean = false
     ) {}
@@ -13,7 +14,7 @@ export class ParserState<T> {
             this.src,
             value,
             this.offset,
-            this.colNumber,
+
             this.lineNumber
         );
     }
@@ -38,14 +39,20 @@ export class ParserState<T> {
         offset += this.offset;
 
         const lineNumber = ch.split("\n").length - 1 + this.lineNumber;
-        const colNumber = ch.length - ch.lastIndexOf("\n") - 1;
 
-        return new ParserState(this.src, ch, offset, colNumber, lineNumber);
+        return new ParserState(this.src, ch, offset, lineNumber);
+    }
+
+    getColumnNumber(): number {
+        const lastNewline = this.src.lastIndexOf("\n", this.offset);
+        const columnNumber =
+            lastNewline === -1 ? this.offset : this.offset - (lastNewline + 1);
+        return columnNumber;
     }
 
     addCursor(cursor: string = "^"): string {
         const MAX_LINES = 5;
-        const MAX_LINE_LENGTH = 50;
+        const MAX_LINE_LENGTH = 80;
 
         const lines = this.src.split("\n");
         const lineIdx = Math.min(lines.length - 1, this.lineNumber);
@@ -60,11 +67,18 @@ export class ParserState<T> {
             }
         });
 
-        const cursorLine = " ".repeat(this.colNumber) + cursor;
+        const cursorLine = " ".repeat(this.getColumnNumber()) + cursor;
 
         lineSummaries.splice(lineIdx - startIdx + 1, 0, cursorLine);
 
-        return lineSummaries.join("\n");
+        const lineNumberWidth = (endIdx + "").length;
+        const resultLines = lineSummaries.map((line, idx) => {
+            const lineNum = startIdx + idx + 1;
+            const paddedLineNum = (lineNum + "").padStart(lineNumberWidth);
+            return `${paddedLineNum} | ${line}`;
+        });
+
+        return resultLines.join("\n");
     }
 }
 
@@ -193,7 +207,9 @@ export class Parser<T = string> {
     }
 
     trim(parser: Parser<T> = whitespace as Parser<T>): Parser<T> {
-        return this.wrap(parser, parser.opt()) as Parser<T>;
+        const trim = this.wrap(parser, parser.opt()) as Parser<T>;
+        trim.name = "trim";
+        return trim;
     }
 
     many(min: number = 0, max: number = Infinity) {
@@ -231,14 +247,19 @@ export class Parser<T = string> {
     }
 
     debug(name: string = "") {
+        const logger = (s: string) => {
+            fs.appendFileSync("debug.txt", s + "\n");
+        };
+
         const debug = (state: ParserState<T>) => {
             const newState = this.parser(state);
+            if (this.parser.name !== "whitespace") {
+                logger(`\n${name} over ${this.name} at ${state.offset}:`);
+                logger(newState.isError ? "Error" : "Ok");
 
-            console.log(`\n${name} over ${this.name} at ${state.offset}:`);
-            console.log(newState.isError ? "Error" : "Ok");
-
-            console.log(newState.addCursor("^"));
-
+                const s = newState.addCursor("^");
+                logger(s + "\n");
+            }
             return newState;
         };
 
@@ -337,10 +358,10 @@ export function string(str: string) {
     return new Parser(string as ParserFunction<string>, "string");
 }
 
-export function regex(regex: RegExp) {
-    const sticky = new RegExp(regex, regex.flags + "y");
+export function regex(r: RegExp) {
+    const sticky = new RegExp(r, r.flags + "y");
 
-    const match = (state: ParserState<string>) => {
+    const regex = (state: ParserState<string>) => {
         if (state.offset >= state.src.length) {
             return state.err(undefined);
         }
@@ -357,7 +378,8 @@ export function regex(regex: RegExp) {
         return state.err(undefined);
     };
 
-    return new Parser(match as ParserFunction<string>, "match");
+    return new Parser(regex as ParserFunction<string>, "regex");
 }
 
 export const whitespace = regex(/\s*/);
+whitespace.name = "whitespace";
