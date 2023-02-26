@@ -1,5 +1,6 @@
 import { regex, all, Parser, any, lazy, string } from "../src/that";
 import { test, expect, describe, it } from "vitest";
+import fs from "fs";
 
 const delim = string(",").trim();
 const doubleQuotes = string('"');
@@ -67,5 +68,11 @@ describe("CSV Parser", () => {
             ["John Doe", "30", "123 Main St."],
             ["Jane Smith", "25", "456 Oak Ave."],
         ]);
+    });
+
+    it("should parse a csv file", () => {
+        const filepath = "./test/data.csv";
+        const input = fs.readFileSync(filepath, "utf-8");
+        const result = csv.parse(input);
     });
 });

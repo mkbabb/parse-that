@@ -1,6 +1,7 @@
 import { Parser, all, any, eof, regex, string } from "../that";
 import { EBNFExpression, EBNFNonterminals, EBNFAST, EBNFGrammar } from "./grammar";
 import { removeLeftRecursion } from "./optimize";
+import chalk from "chalk";
 
 function generateParserFromAST(ast: EBNFAST) {
     function generateParser(name: string, expr: EBNFExpression): Parser<any> {
@@ -8,7 +9,9 @@ function generateParserFromAST(ast: EBNFAST) {
             case "literal":
                 return string(expr.value);
             case "nonterminal":
-                return Parser.lazy(() => nonterminals[expr.value]);
+                const l = Parser.lazy(() => nonterminals[expr.value]);
+                l.context.name = chalk.blue(expr.value);
+                return l;
 
             case "epsilon":
                 // TODO maybe change this to return Parser.of(null), or something
@@ -40,7 +43,7 @@ function generateParserFromAST(ast: EBNFAST) {
                 );
             case "concatenation":
                 const parsers = expr.value.map((x) => generateParser(name, x));
-                if (parsers.at(-1).name === "eof") {
+                if (parsers.at(-1)?.context?.name === "eof") {
                     parsers.pop();
                 }
                 return all(...parsers);
@@ -71,3 +74,12 @@ export function generateParserFromEBNF(input: string) {
     const nonterminals = generateParserFromAST(ast);
     return [nonterminals, ast] as const;
 }
+
+export const addNonterminalsDebugging = (
+    nonterminals: EBNFNonterminals,
+    logger: (...args: any[]) => void
+) => {
+    Object.entries(nonterminals).forEach(([k, v]) => {
+        nonterminals[k] = v.debug(k, logger);
+    });
+};

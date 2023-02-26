@@ -2,66 +2,21 @@ import { whitespace, regex, string, all, Parser } from "../src/that";
 
 import { test, expect, describe, it } from "vitest";
 import fs from "fs";
-import {
-    generateMathExpression,
-    insertRandomWhitespace,
-    reduceMathExpression,
-} from "./utils";
+import { generateMathExpression, reduceMathExpression } from "./utils";
 
-import { generateParserFromEBNF } from "../src/ebnf/generate";
-import { transformEBNFASTToTextMateLanguage } from "../src/ebnf/transform";
-
-const EEBNFGrammarPath = "./grammar/eebnf.ebnf" as const;
+import { addNonterminalsDebugging, generateParserFromEBNF } from "../src/ebnf/generate";
+import { EBNFParser } from "../src/ebnf/transform";
+import { EBNFNonterminals } from "../src/ebnf/grammar";
 
 const comma = string(",").trim();
 const div = string("/").trim();
 
-function breakLineOnSeparator(input: string, separator: string): string {
-    const lines = input.split(separator);
-
-    if (lines.length === 1) {
-        return input;
-    }
-
-    input = lines
-        .map((line, i) => {
-            if (i === lines.length - 1) {
-                return separator + line;
-            } else if (i === 0) {
-                return line;
-            }
-
-            const groups = line.split(",");
-
-            if (groups.length > 1) {
-                return `\n\t${separator} ` + line;
-            } else {
-                return separator + line;
-            }
-        })
-        .join("");
-
-    const maxLineLength = 66;
-
-    if (input.length > maxLineLength) {
-        let di = maxLineLength;
-
-        for (let i = 0; i < input.length; i += di) {
-            const nearestSepIx = i === 0 ? maxLineLength : i + di;
-            const nearestSep = input.indexOf(separator, nearestSepIx);
-
-            if (nearestSep === -1) {
-                break;
-            }
-            input =
-                input.slice(0, nearestSep) +
-                `\n\t${separator}` +
-                input.slice(nearestSep + 1);
-        }
-    }
-
-    return input;
-}
+const debugging = (x: EBNFNonterminals) => {
+    const logger = (...s: string[]) => {
+        console.log(...s);
+    };
+    return addNonterminalsDebugging(x, logger);
+};
 
 const mathParser = (grammar: string) => {
     const [nonterminals, ast] = generateParserFromEBNF(grammar);
@@ -143,6 +98,9 @@ const CSSColorParser = (grammar: string) => {
             return color;
         }
     );
+
+    debugging(nonterminals);
+
     return nonterminals.color;
 };
 
@@ -163,69 +121,13 @@ const CSSValueUnitParser = (grammar: string) => {
         });
     nonterminals.integer = regex(/\d+/).map(Number);
 
+    debugging(nonterminals);
+
     return nonterminals.valueUnit.map(([value, unit]) => {
         return {
             value,
             unit: unit,
         } as const;
-    });
-};
-
-const EBNFParser = (grammar: string) => {
-    const [nonterminals, ast] = generateParserFromEBNF(grammar);
-
-    const textMateObject = transformEBNFASTToTextMateLanguage(ast);
-    const textMateString = JSON.stringify(textMateObject, null, 4);
-    fs.writeFileSync("./grammar/eebnf.tmLanguage.json", textMateString);
-
-    nonterminals.symbol = nonterminals.symbol.trim();
-
-    nonterminals.identifier = nonterminals.identifier.trim().map((v) => {
-        return v.flat().join("");
-    });
-
-    nonterminals.terminal = nonterminals.terminal.trim().map((v) => {
-        return v.flat().join("");
-    });
-
-    nonterminals.pipe = nonterminals.pipe.trim();
-    nonterminals.comma = nonterminals.comma.trim();
-    nonterminals.plus = nonterminals.plus.trim();
-    nonterminals.minus = nonterminals.minus.trim();
-    nonterminals.star = nonterminals.star.trim();
-    nonterminals.div = nonterminals.div.trim();
-    nonterminals.question = nonterminals.question.trim();
-
-    nonterminals.rhs = nonterminals.rhs.trim().map((v) => {
-        const a = v instanceof Array ? v.flat(Infinity) : v;
-        const s = a.join(" ");
-        return breakLineOnSeparator(s, "|");
-    });
-
-    nonterminals.rule = nonterminals.rule.trim().map((v) => {
-        const s = v.flat().join(" ");
-        return s;
-    });
-
-    return nonterminals.grammar.trim().map((rules) => {
-        let lastIx = 0;
-
-        for (let i = 0; i < rules.length; i++) {
-            const rule = rules[i];
-
-            if (rule.length > 80) {
-                rules[i] = rule + "\n";
-                if (i > 0 && lastIx !== i - 1) {
-                    rules[i - 1] = rules[i - 1] + "\n";
-                }
-                lastIx = i;
-            } else if (i - lastIx > 2) {
-                rules[i] = rule + "\n";
-                lastIx = i;
-            }
-        }
-
-        return rules.join("\n");
     });
 };
 
@@ -256,23 +158,17 @@ const EBNFParserLeftRecursion = (grammar: string) => {
             return v[0];
         }
     });
+
+    debugging(nonterminals);
+
     return nonterminals.expr;
-};
-
-const formatGrammar = (
-    grammar: string,
-    eebnfGrammarPath: string = EEBNFGrammarPath
-) => {
-    const eebnfGrammar = fs.readFileSync(eebnfGrammarPath, "utf8");
-    const ebnfParser = EBNFParser(eebnfGrammar);
-
-    return ebnfParser.parse(grammar);
 };
 
 describe("EBNF Parser", () => {
     it("should parse a simple math grammar", () => {
         const grammar = fs.readFileSync("./grammar/math.ebnf", "utf8");
         const parser = mathParser(grammar);
+
         for (let i = 0; i < 100; i++) {
             const expr = generateMathExpression();
             const parsed = parser.parse(expr);

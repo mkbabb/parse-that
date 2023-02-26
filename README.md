@@ -1,8 +1,11 @@
 # Parse That Thang
 
-Parser combinators for TypeScript. Write your language in EEBNF (extended extended backus-naur form) and parse it with ease. Handles left recursion, right recursion, and left factoring.
+Parser combinators for TypeScript. Write your language in EEBNF (extended extended
+backus-naur form) and parse it with ease. Handles left recursion, right recursion, and
+left factoring.
 
-Does what basically every other parser combinator library does, with a few extra features and optimizations - performance focused.
+Does what basically every other parser combinator library does, with a few extra
+features and optimizations - performance focused.
 
 ## Usage
 
@@ -37,23 +40,31 @@ nice.
 
 ## EEBNF and the Great Parser Generator
 
-Extended Extended Backus-Naur Form is a simple and readable way to describe a language. See the EEBNF for EEBNF (meta right) at [eebnf.ebnf](./grammar/eebnf.ebnf).
+Extended Extended Backus-Naur Form is a simple and readable way to describe a language.
+See the EEBNF for EEBNF (meta right) at [eebnf.ebnf](./grammar/eebnf.ebnf).
 
-With your grammar in hand, call the `generateParserFromEBNF` function within [ebnf.ts](./src/ebnf.ts) and you'll be returned two objects:
+With your grammar in hand, call the `generateParserFromEBNF` function within
+[ebnf.ts](./src/ebnf.ts) and you'll be returned two objects:
 
 ```ts
 [nonterminals, ast]: [EBNFNonterminals, EBNFAST] = generateParserFromEBNF(grammar);
 ```
 
-a JavaScript object containing all of the parsed nonterminals in your language, and the AST for your language. Each nonterminal is a `Parser` object - use it as you would any other parser.
+a JavaScript object containing all of the parsed nonterminals in your language, and the
+AST for your language. Each nonterminal is a `Parser` object - use it as you would any
+other parser.
 
-Fully featured, and self-parsing, so the EEBNF parser-generator is written in EEBNF. Checkout the self-parsing example (+ formatting), at [eebnf.test.ts](./test/ebnf.test.ts).
+Fully featured, and self-parsing, so the EEBNF parser-generator is written in EEBNF.
+Checkout the self-parsing example (+ formatting), at
+[eebnf.test.ts](./test/ebnf.test.ts).
 
 ### Key differences with EBNF
 
-It's a mesh between your run-of-the-mill EBNF and W3C's EBNF. So stuff like `?` and `*` are allowed - but it also supports `[ ]` and `{ }` for optional and repeated elements.
+It's a mesh between your run-of-the-mill EBNF and W3C's EBNF. So stuff like `?` and `*`
+are allowed - but it also supports `[ ]` and `{ }` for optional and repeated elements.
 
-Set-like subtraction is supported, so you can do things like `a - b` to mean "a, but not b".
+Set-like subtraction is supported, so you can do things like `a - b` to mean "a, but not
+b".
 
 Here's a list of operators:
 
@@ -69,7 +80,9 @@ Here's a list of operators:
 
 ### Left recursion & more
 
-The EEBNF parser generator supports left recursion, right recursion, and left factoring. It also supports left recursion with left factoring, and right recursion with left factoring. So things like
+The EEBNF parser generator supports left recursion, right recursion, and left factoring.
+It also supports left recursion with left factoring, and right recursion with left
+factoring. So things like
 
 ```ebnf
 expr = expr , "+" , expr
@@ -77,7 +90,8 @@ expr = expr , "+" , expr
      | string
 ```
 
-Will parse correctly, and will be optimized to rewrite the modified tree structure. This is done in three passes:
+Will parse correctly, and will be optimized to rewrite the modified tree structure. This
+is done in three passes:
 
 -   1. Sort the nonterminals topologically
 -   2. Remove left recursion
@@ -112,15 +126,21 @@ expr_0 = "+" , expr , expr_0
 
 ### Performance
 
-There are a lot of little optimizations that are done to make the parser as efficient as possible.
+There are a lot of little optimizations that are done to make the parser as efficient as
+possible.
 
-For example, if you have a rule like `A = A`, it will be rewritten to `A = ε`, or if you have a rule like `A = A, B, ε`, it will be rewritten to `A = B`.
+For example, if you have a rule like `A = A`, it will be rewritten to `A = ε`, or if you
+have a rule like `A = A, B, ε`, it will be rewritten to `A = B`.
 
-On the combinator side, calls to `any` with a single parser will be rewritten to just that parser, and calls to `all` with a single parser will be rewritten to just that parser, etc.
+On the combinator side, calls to `any` with a single parser will be rewritten to just
+that parser, and calls to `all` with a single parser will be rewritten to just that
+parser, etc.
 
 ### Formatting, syntax highlighting, & more
 
-With the EEBNF parser generator you basically get formatting for free. Call the `formatEBNF` function within [ebnf.ts](./src/ebnf.ts) and you'll be returned a string containing the formatted EEBNF.
+With the EEBNF parser generator you basically get formatting for free. Call the
+`formatEBNF` function within [ebnf.ts](./src/ebnf.ts) and you'll be returned a string
+containing the formatted EEBNF.
 
 ```ts
 const formattedGrammar: string = formatEBNF(grammar);
@@ -130,7 +150,7 @@ const formattedGrammar: string = formatEBNF(grammar);
 
 See [api.md](./docs/api.md) for all of the API information.
 
-See the [examples](./examples/) directory for fully explained and working examples. Most of them are derived from the [test](./test/) directory, but with more explanation.
+See the [test](./test/) directory for fully explained and working examples.
 
 ## Sources, acknowledgements, & c.
 

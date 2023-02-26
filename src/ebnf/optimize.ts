@@ -135,6 +135,7 @@ export const findCommonPrefix = (
         }
 
         case "alternation":
+            // TODO! This is not correct
             for (const e of e1.value) {
                 const common = findCommonPrefix(e, e2);
                 if (common) {
@@ -152,7 +153,10 @@ export const findCommonPrefix = (
     return undefined;
 };
 
-export const comparePrefix = (prefix: EBNFExpression, expr: EBNFExpression): boolean => {
+export const comparePrefix = (
+    prefix: EBNFExpression,
+    expr: EBNFExpression
+): boolean => {
     if (prefix.type !== expr.type) {
         return false;
     }

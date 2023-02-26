@@ -1,6 +1,114 @@
 import { EBNFExpression, EBNFAST } from "./grammar";
 
-// Helper function to escape a string for use in a regular expression
+import fs from "fs";
+import { generateParserFromEBNF } from "./generate";
+
+function breakLineOnSeparator(input: string, separator: string): string {
+    const lines = input.split(separator);
+
+    if (lines.length === 1) {
+        return input;
+    }
+
+    input = lines
+        .map((line, i) => {
+            if (i === lines.length - 1) {
+                return separator + line;
+            } else if (i === 0) {
+                return line;
+            }
+
+            const groups = line.split(",");
+
+            if (groups.length > 1) {
+                return `\n\t${separator} ` + line;
+            } else {
+                return separator + line;
+            }
+        })
+        .join("");
+
+    const maxLineLength = 66;
+
+    if (input.length > maxLineLength) {
+        let di = maxLineLength;
+
+        for (let i = 0; i < input.length; i += di) {
+            const nearestSepIx = i === 0 ? maxLineLength : i + di;
+            const nearestSep = input.indexOf(separator, nearestSepIx);
+
+            if (nearestSep === -1) {
+                break;
+            }
+            input =
+                input.slice(0, nearestSep) +
+                `\n\t${separator}` +
+                input.slice(nearestSep + 1);
+        }
+    }
+
+    return input;
+}
+
+export const EBNFParser = (grammar: string) => {
+    const [nonterminals, ast] = generateParserFromEBNF(grammar);
+
+    nonterminals.symbol = nonterminals.symbol.trim();
+
+    nonterminals.identifier = nonterminals.identifier.trim().map((v) => {
+        return v.flat().join("");
+    });
+
+    nonterminals.terminal = nonterminals.terminal.trim().map((v) => {
+        return v.flat().join("");
+    });
+
+    nonterminals.pipe = nonterminals.pipe.trim();
+    nonterminals.comma = nonterminals.comma.trim();
+    nonterminals.plus = nonterminals.plus.trim();
+    nonterminals.minus = nonterminals.minus.trim();
+    nonterminals.star = nonterminals.star.trim();
+    nonterminals.div = nonterminals.div.trim();
+    nonterminals.question = nonterminals.question.trim();
+
+    nonterminals.rhs = nonterminals.rhs.trim().map((v) => {
+        const a = v instanceof Array ? v.flat(Infinity) : v;
+        const s = a.join(" ");
+        return breakLineOnSeparator(s, "|");
+    });
+
+    nonterminals.rule = nonterminals.rule.trim().map((v) => {
+        const s = v.flat().join(" ");
+        return s;
+    });
+
+    return nonterminals.grammar.trim().map((rules) => {
+        let lastIx = 0;
+
+        for (let i = 0; i < rules.length; i++) {
+            const rule = rules[i];
+
+            if (rule.length > 80) {
+                rules[i] = rule + "\n";
+                if (i > 0 && lastIx !== i - 1) {
+                    rules[i - 1] = rules[i - 1] + "\n";
+                }
+                lastIx = i;
+            } else if (i - lastIx > 2) {
+                rules[i] = rule + "\n";
+                lastIx = i;
+            }
+        }
+        return rules.join("\n");
+    });
+};
+
+export const formatEBNFGrammar = (grammar: string, eebnfGrammarPath: string) => {
+    const eebnfGrammar = fs.readFileSync(eebnfGrammarPath, "utf8");
+    const ebnfParser = EBNFParser(eebnfGrammar);
+    return ebnfParser.parse(grammar);
+};
+
 function escapeRegExp(string: string): string {
     return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 }

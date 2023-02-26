@@ -1,4 +1,4 @@
-import fs from "fs";
+import chalk from "chalk";
 
 export class ParserState<T> {
     constructor(
@@ -44,10 +44,11 @@ export class ParserState<T> {
     }
 
     getColumnNumber(): number {
-        const lastNewline = this.src.lastIndexOf("\n", this.offset);
-        const columnNumber =
-            lastNewline === -1 ? this.offset : this.offset - (lastNewline + 1);
-        return columnNumber;
+        const offset = this.offset;
+        const lastNewline = this.src.lastIndexOf("\n", offset);
+        const columnNumber = lastNewline === -1 ? offset : offset - (lastNewline + 1);
+
+        return Math.max(0, columnNumber);
     }
 
     addCursor(cursor: string = "^"): string {
@@ -83,9 +84,13 @@ export class ParserState<T> {
 }
 
 type ParserFunction<T = string> = (val: ParserState<T>) => ParserState<T>;
+type ParserContext = {
+    name?: string;
+    args?: any[];
+};
 
 export class Parser<T = string> {
-    constructor(public parser: ParserFunction<T>, public name?: string) {}
+    constructor(public parser: ParserFunction<T>, public context?: ParserContext) {}
 
     parse(val: string) {
         return this.parser(new ParserState(val)).value as T;
@@ -104,7 +109,10 @@ export class Parser<T = string> {
             return state.err(undefined);
         };
 
-        return new Parser(then as ParserFunction<[T, S]>, "then");
+        return new Parser(then as ParserFunction<[T, S]>, {
+            name: "then",
+            args: [next],
+        });
     }
 
     or<S>(other: Parser<S | T>) {
@@ -117,7 +125,10 @@ export class Parser<T = string> {
             return other.parser(state);
         };
 
-        return new Parser(or as ParserFunction<T | S>, "or");
+        return new Parser(or as ParserFunction<T | S>, {
+            name: "or",
+            args: [other],
+        });
     }
 
     chain<S>(fn: (value: T) => Parser<S | T>, chainError: boolean = false) {
@@ -132,7 +143,10 @@ export class Parser<T = string> {
             return state;
         };
 
-        return new Parser(chain, "chain");
+        return new Parser(chain, {
+            name: "chain",
+            args: [fn],
+        });
     }
 
     map<S>(fn: (value: T) => S, mapError: boolean = false) {
@@ -145,19 +159,26 @@ export class Parser<T = string> {
             return newState;
         };
 
-        return new Parser(map as ParserFunction<S>, "map");
+        return new Parser(map as ParserFunction<S>, {
+            name: "map",
+            args: [this],
+        });
     }
 
     skip<S>(parser: Parser<S>) {
-        return this.then(parser).map(([a]) => {
+        const skip = this.then(parser).map(([a]) => {
             return a;
         }) as Parser<T>;
+        skip.context.name = "skip";
+        return skip;
     }
 
     next<S>(parser: Parser<S>) {
-        return this.then(parser).map(([, b]) => {
+        const next = this.then(parser).map(([, b]) => {
             return b;
         }) as Parser<S>;
+        next.context.name = "next";
+        return next;
     }
 
     opt() {
@@ -170,7 +191,10 @@ export class Parser<T = string> {
 
             return newState;
         };
-        return new Parser(opt as ParserFunction<T>, "opt");
+        return new Parser(opt as ParserFunction<T>, {
+            name: "opt",
+            args: [this],
+        });
     }
 
     not<S>(parser?: Parser<S>) {
@@ -199,16 +223,22 @@ export class Parser<T = string> {
             }
         };
 
-        return new Parser(parser ? not : negate, "not");
+        return new Parser(parser ? not : negate, {
+            name: "not",
+            args: [parser],
+        });
     }
 
     wrap<L, R>(start: Parser<L>, end: Parser<R>) {
-        return start.next(this).skip(end) as Parser<T>;
+        const wrap = start.next(this).skip(end) as Parser<T>;
+        wrap.context.name = "wrap";
+        wrap.context.args = [start, end];
+        return wrap;
     }
 
     trim(parser: Parser<T> = whitespace as Parser<T>): Parser<T> {
         const trim = this.wrap(parser, parser.opt()) as Parser<T>;
-        trim.name = "trim";
+        trim.context.name = "trim";
         return trim;
     }
 
@@ -234,41 +264,110 @@ export class Parser<T = string> {
             }
         };
 
-        return new Parser(many as ParserFunction<T[]>, "many");
+        return new Parser(many as ParserFunction<T[]>, {
+            name: "many",
+            args: [min, max],
+        });
     }
 
     sepBy<S>(sep: Parser<S>, min: number = 0, max: number = Infinity) {
-        return this.then(
+        const sepBy = this.then(
             sep
                 .then(this)
                 .map(([_, value]) => value)
                 .many(min, max)
         ).map(([value, values]) => [value, ...values]);
+
+        sepBy.context.name = "sepBy";
+        sepBy.context.args = [sep, min, max];
+        return sepBy;
     }
 
-    debug(name: string = "") {
-        const logger = (s: string) => {
-            fs.appendFileSync("debug.txt", s + "\n");
-        };
+    debug(name: string = "", logger: (...s: any[]) => void = console.log) {
+        name = chalk.italic(name);
 
         const debug = (state: ParserState<T>) => {
             const newState = this.parser(state);
-            if (this.parser.name !== "whitespace") {
-                logger(`\n${name} over ${this.name} at ${state.offset}:`);
-                logger(newState.isError ? "Error" : "Ok");
 
-                const s = newState.addCursor("^");
-                logger(s + "\n");
-            }
+            const stateBgColor = !newState.isError ? chalk.bgGreen : chalk.bgRed;
+
+            const stateColor = !newState.isError ? chalk.green : chalk.red;
+
+            logger(
+                stateBgColor.bold(!newState.isError ? " Ok " : " Err "),
+                stateColor(!newState.isError ? "✓" : "ｘ", `\t${name}\t`),
+                `${this.toString()}`
+            );
+
+            const s = state.addCursor("^");
+            logger(chalk.yellow(s) + "\n");
+
             return newState;
         };
 
-        return new Parser(debug, "debug");
+        return new Parser(debug, {
+            name: "debug",
+            args: [name],
+        });
     }
 
     static lazy<T>(fn: () => Parser<T>) {
         const lazy = (state: ParserState<T>) => fn().parser(state);
-        return new Parser<T>(lazy, "lazy");
+        return new Parser<T>(lazy, {
+            name: "lazy",
+            args: [fn],
+        });
+    }
+
+    toString(indent: number = 0) {
+        const name = this.context?.name ?? "unknown";
+        const s = (() => {
+            switch (name) {
+                case "string":
+                    return `"${this.context.args[0]}"`;
+                case "regex":
+                    return `${this.context.args[0]}`;
+
+                case "wrap":
+                case "trim":
+                    return `wrap(${this.context.args[0]}, ${this.context.args[1]})`;
+                case "not":
+                    return `!${this.context.args[0]}`;
+                case "opt":
+                    return `${this.context.args[0]}?`;
+                case "next":
+                    return ` (next ${this.context.args[0]}) `;
+                case "skip":
+                    return ` (skip ${this.context.args[0]}) `;
+                case "then":
+                    return `( then ${this.context.args[0]}) `;
+                case "map":
+                    const original = this.context.args[0].toString();
+                    return `${original}`;
+                case "any":
+                case "all":
+                    const delim = name === "any" ? " | " : " , ";
+
+                    return `(${this.context.args
+                        .map((a) => a.toString(indent + 1))
+                        .join(delim)})`;
+
+                case "many":
+                    return `${this.context.args[0]} ... ${this.context.args[1]}`;
+
+                case "sepBy":
+                    return `sepBy ${this.context.args[0]}`;
+
+                case "lazy":
+                    return `() => ${this.context.args[0]}`;
+            }
+        })();
+
+        if (s !== undefined) {
+            return s;
+        } else {
+            return chalk.bold(name);
+        }
     }
 }
 
@@ -280,7 +379,9 @@ export function eof<T>() {
             return state.err();
         }
     };
-    return new Parser(eof, "eof");
+    return new Parser(eof, {
+        name: "eof",
+    });
 }
 
 export function lazy<T>(
@@ -293,7 +394,10 @@ export function lazy<T>(
     descriptor.value = function () {
         const lazy = (state: ParserState<T>) =>
             method.apply(this, arguments).parser(state);
-        return new Parser<T>(lazy, "lazy");
+        return new Parser<T>(lazy, {
+            name: "lazy",
+            args: [method],
+        });
     };
 }
 
@@ -312,9 +416,10 @@ export function any<T extends any[]>(...parsers: T) {
         return state.err(undefined);
     };
 
-    return new Parser(parsers.length === 1 ? parsers[0].parser : any, "any") as Parser<
-        ExtractValue<T>[number]
-    >;
+    return new Parser(parsers.length === 1 ? parsers[0].parser : any, {
+        name: "any",
+        args: parsers,
+    }) as Parser<ExtractValue<T>[number]>;
 }
 
 export function all<T extends any[]>(...parsers: T) {
@@ -337,9 +442,10 @@ export function all<T extends any[]>(...parsers: T) {
         return state.ok(matches);
     };
 
-    return new Parser(parsers.length === 1 ? parsers[0].parser : all, "all") as Parser<
-        ExtractValue<T>
-    >;
+    return new Parser(parsers.length === 1 ? parsers[0].parser : all, {
+        name: "all",
+        args: parsers,
+    }) as Parser<ExtractValue<T>>;
 }
 
 export function string(str: string) {
@@ -355,7 +461,10 @@ export function string(str: string) {
         return state.err(undefined);
     };
 
-    return new Parser(string as ParserFunction<string>, "string");
+    return new Parser(string as ParserFunction<string>, {
+        name: "string",
+        args: [str],
+    });
 }
 
 export function regex(r: RegExp) {
@@ -378,8 +487,11 @@ export function regex(r: RegExp) {
         return state.err(undefined);
     };
 
-    return new Parser(regex as ParserFunction<string>, "regex");
+    return new Parser(regex as ParserFunction<string>, {
+        name: "regex",
+        args: [r],
+    });
 }
 
 export const whitespace = regex(/\s*/);
-whitespace.name = "whitespace";
+whitespace.context.name = "whitespace";
