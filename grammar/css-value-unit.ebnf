@@ -1,0 +1,21 @@
+absoluteLengthUnit = "cm" | "mm" | "Q" | "in" | "pc" | "pt" | "px" ;
+relativeLengthUnit = "em" | "ex" | "ch" | "rem" | "lh" | "vw" | "vh" | "vmin" | "vmax" 
+                    | "fr" | "dvh" | "dvmin" | "dvmax" | "dvw" | "vb" | "vi" | "svw" | "svh" ;
+
+lengthUnit = absoluteLengthUnit | relativeLengthUnit ;
+
+angleUnit = "deg" | "rad" | "grad" | "turn" ;
+timeUnit = "s" | "ms" ;
+resolutionUnit = "dpi" | "dpcm" | "dppx" ;
+
+percentageUnit = "%" ;
+
+length = number , lengthUnit ;
+angle = number , angleUnit ;
+time = number , timeUnit ;
+resolution = number , resolutionUnit ;
+percentage = integer , percentageUnit ;
+
+unitless = number ;
+
+valueUnit = length | angle | time | resolution | percentage | (number, unitless?) ;

@@ -311,7 +311,8 @@ function generateParserFromAST(ast: EBNFAST) {
                 return Parser.lazy(() => nonterminals[expr.value]);
 
             case "epsilon":
-                return eof();
+                // TODO maybe change this to return Parser.of(null), or something
+                return eof().opt();
 
             case "group":
                 return generateParser(name, expr.value);

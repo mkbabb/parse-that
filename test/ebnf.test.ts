@@ -1,4 +1,4 @@
-import { whitespace, match, string, all } from "../src/that";
+import { whitespace, match, string, all, Parser } from "../src/that";
 
 import { test, expect, describe, it } from "vitest";
 import fs from "fs";
@@ -9,6 +9,8 @@ import {
 } from "./utils";
 
 import { generateParserFromEBNF } from "../src/ebnf";
+
+const EEBNFGrammarPath = "./grammar/eebnf.ebnf" as const;
 
 const comma = string(",").trim();
 const div = string("/").trim();
@@ -143,6 +145,31 @@ const CSSColorParser = (grammar: string) => {
     return nonterminals.color;
 };
 
+const CSSValueUnitParser = (grammar: string) => {
+    const [nonterminals, ast] = generateParserFromEBNF(grammar);
+
+    nonterminals.whitespace = whitespace;
+    nonterminals.comma = comma;
+    nonterminals.div = div;
+    nonterminals.digit = match(/\d|[a-fA-F]/).map((v) => {
+        return v;
+    });
+    const numberRegex = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
+    nonterminals.number = match(numberRegex)
+        .trim()
+        .map((v) => {
+            return parseFloat(v);
+        });
+    nonterminals.integer = match(/\d+/).map(Number);
+
+    return nonterminals.valueUnit.map(([value, unit]) => {
+        return {
+            value,
+            unit: unit,
+        } as const;
+    });
+};
+
 const EBNFParser = (grammar: string) => {
     const [nonterminals, ast] = generateParserFromEBNF(grammar);
 
@@ -176,6 +203,7 @@ const EBNFParser = (grammar: string) => {
 
     return nonterminals.grammar.trim().map((rules) => {
         let lastIx = 0;
+
         for (let i = 0; i < rules.length; i++) {
             const rule = rules[i];
 
@@ -184,6 +212,9 @@ const EBNFParser = (grammar: string) => {
                 if (i > 0 && lastIx !== i - 1) {
                     rules[i - 1] = rules[i - 1] + "\n";
                 }
+                lastIx = i;
+            } else if (i - lastIx > 2) {
+                rules[i] = rule + "\n";
                 lastIx = i;
             }
         }
@@ -222,6 +253,16 @@ const EBNFParserLeftRecursion = (grammar: string) => {
     return nonterminals.expr;
 };
 
+const formatGrammar = (
+    grammar: string,
+    eebnfGrammarPath: string = EEBNFGrammarPath
+) => {
+    const eebnfGrammar = fs.readFileSync(eebnfGrammarPath, "utf8");
+    const ebnfParser = EBNFParser(eebnfGrammar);
+
+    return ebnfParser.parse(grammar);
+};
+
 describe("EBNF Parser", () => {
     it("should parse a simple math grammar", () => {
         const grammar = fs.readFileSync("./grammar/math.ebnf", "utf8");
@@ -255,6 +296,53 @@ describe("EBNF Parser", () => {
         }
     });
 
+    it("should parse a CSS value unit grammar", () => {
+        const grammar = fs.readFileSync("./grammar/css-value-unit.ebnf", "utf8");
+        // fs.writeFileSync("./grammar/css-value-unit2.ebnf", formatGrammar(grammar));
+        const parser = CSSValueUnitParser(grammar);
+
+        const units = [
+            "",
+            "px",
+            "em",
+            "rem",
+            "vh",
+            "vw",
+            "vmin",
+            "vmax",
+            "ch",
+            "ex",
+            "cm",
+            "mm",
+            "in",
+            "pt",
+            "pc",
+            "deg",
+            "grad",
+            "rad",
+            "turn",
+            "s",
+            "ms",
+            "dpi",
+            "dpcm",
+            "dppx",
+            "%",
+            "fr",
+        ];
+        for (let i = 0; i < units.length; i++) {
+            const unit = units[i];
+            let value = Math.random() * 100;
+            if (i % 3 === 0 || unit === "%") {
+                value = Math.round(value);
+            }
+
+            const parsed = parser.parse(value + unit);
+
+            expect(parsed.unit ?? "").toBe(unit);
+            expect(parsed.value).toBe(value);
+        }
+    });
+
     it("should parse a EBNF grammar", () => {
         let grammar = fs.readFileSync("./grammar/eebnf.ebnf", "utf8");
 
@@ -280,7 +368,7 @@ describe("EBNF Parser", () => {
         const parser = EBNFParserLeftRecursion(grammar);
 
         const tmp = `
-1 + 2 + 3 + whatzupwitu * vibes + a
+    1 + 2 + 3 + whatzupwitu * vibes + a
 `;
         const parsed = parser.parse(tmp);
         expect(parsed).toBeGreaterThan(0);
