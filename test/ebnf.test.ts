@@ -151,6 +151,7 @@ const EBNFParser = (grammar: string) => {
     nonterminals.identifier = nonterminals.identifier.trim().map((v) => {
         return v.flat().join("");
     });
+
     nonterminals.terminal = nonterminals.terminal.trim().map((v) => {
         return v.flat().join("");
     });
@@ -191,6 +192,22 @@ const EBNFParser = (grammar: string) => {
     });
 };
 
+const EBNFParserTmp = (grammar: string) => {
+    const [nonterminals, ast] = generateParserFromEBNF(grammar);
+
+    nonterminals.token = match(/\w+/)
+        .trim()
+        .map((v) => {
+            return v;
+        });
+
+    nonterminals.rhs = nonterminals.rhs.trim().map((v) => {
+        return v;
+    });
+
+    return nonterminals.rhs;
+};
+
 describe("EBNF Parser", () => {
     it("should parse a simple math grammar", () => {
         const grammar = fs.readFileSync("./grammar/math.ebnf", "utf8");
@@ -226,11 +243,25 @@ describe("EBNF Parser", () => {
 
     it("should parse a EBNF grammar", () => {
         let grammar = fs.readFileSync("./grammar/eebnf.ebnf", "utf8");
+
         const parser = EBNFParser(grammar);
 
         for (let i = 0; i < 3; i++) {
             grammar = parser.parse(grammar);
             fs.writeFileSync("./grammar/eebnf2.ebnf", grammar);
         }
+    });
+
+    it("tmp", () => {
+        const grammar = `
+    rhs = rhs, "gay" | token ;
+`;
+        const parser = EBNFParserTmp(grammar);
+
+        const tmp = `
+hey | gay
+`;
+        const parsed = parser.parse(tmp);
+        console.log(parsed);
     });
 });

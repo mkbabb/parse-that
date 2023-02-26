@@ -1,4 +1,4 @@
-import { match, all, many, Parser, any, lazy, string, sepBy } from "../src/that";
+import { match, all, Parser, any, lazy, string } from "../src/that";
 import { test, expect, describe, it } from "vitest";
 
 const delim = string(",").trim();
@@ -11,8 +11,8 @@ const token = any(
     match(/[^,]+/)
 );
 
-const line = sepBy(token, delim).trim();
-const csv = many(line);
+const line = token.sepBy(delim).trim();
+const csv = line.many();
 
 describe("CSV Parser", () => {
     it("should parse an empty input", () => {

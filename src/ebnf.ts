@@ -1,4 +1,4 @@
-import { Parser, string, lazy, all, any, match, createLanguage } from "../src/that";
+import { Parser, string, lazy, all, any, match, ParserState } from "../src/that";
 
 type EBNFExpression =
     | EBNFLiteral
@@ -93,219 +93,304 @@ const integer = match(/\d+/).trim().map(Number);
 
 const terminator = any(semicolon, dot);
 
-export const EBNFGrammar = createLanguage({
-    identifier: () => {
+class EBNFGrammar {
+    identifier() {
         return match(/[_a-zA-Z][_a-zA-Z0-9]*/).trim();
-    },
+    }
 
-    literal: () =>
-        any(
+    literal() {
+        return any(
             match(/[^"\s]+/).wrap(string('"'), string('"')),
             match(/[^'\s]+/).wrap(string("'"), string("'"))
         ).map((value) => {
             return {
                 type: "literal",
                 value,
-            };
-        }) as Parser<EBNFLiteral>,
+            } as EBNFLiteral;
+        });
+    }
 
-    nonterminal: (l) =>
-        l.identifier.map((value) => {
+    @lazy
+    nonterminal() {
+        return this.identifier().map((value) => {
             return {
                 type: "nonterminal",
                 value,
-            };
-        }) as Parser<EBNFNonTerminal>,
+            } as EBNFNonTerminal;
+        });
+    }
 
-    group: (l) =>
-        l.expression
+    @lazy
+    group() {
+        return this.expression()
             .trim()
             .wrap(string("("), string(")"))
             .map((value) => {
                 return {
                     type: "group",
                     value,
-                };
-            }) as Parser<EBNFGroup>,
+                } as EBNFGroup;
+            });
+    }
 
-    optional: (l) =>
-        l.term
+    @lazy
+    optional() {
+        return this.term()
             .trim()
             .skip(questionMark)
             .map((value) => {
                 return {
                     type: "optional",
                     value,
-                };
-            }) as Parser<EBNFOptional>,
-
-    optionalGroup: (l) =>
-        l.expression
+                } as EBNFOptional;
+            });
+    }
+    @lazy
+    optionalGroup() {
+        return this.expression()
             .trim()
             .wrap(string("["), string("]"))
             .map((value) => {
                 return {
                     type: "optional",
                     value,
-                };
-            }) as Parser<EBNFOptional>,
+                } as EBNFOptional;
+            });
+    }
 
-    subtraction: (l) =>
-        all(l.term.skip(minus), l.term).map(([left, right]) => {
+    @lazy
+    subtraction() {
+        return all(this.term().skip(minus), this.term()).map(([left, right]) => {
             return {
                 type: "subtraction",
                 value: [left, right],
-            };
-        }) as Parser<EBNFSub>,
+            } as EBNFSub;
+        });
+    }
 
-    manyGroup: (l) =>
-        l.expression
+    @lazy
+    manyGroup() {
+        return this.expression()
             .trim()
             .wrap(string("{"), string("}"))
             .map((value) => {
                 return {
                     type: "many",
                     value,
-                };
-            }) as Parser<EBNFMany>,
+                } as EBNFMany;
+            });
+    }
 
-    many: (l) =>
-        l.term
+    @lazy
+    many() {
+        return this.term()
             .trim()
             .skip(mul)
             .map((value) => {
                 return {
                     type: "many",
                     value,
-                };
-            }) as Parser<EBNFMany>,
+                } as EBNFMany;
+            });
+    }
 
-    many1: (l) =>
-        l.term
+    @lazy
+    many1() {
+        return this.term()
             .trim()
             .skip(plus)
             .map((value) => {
                 return {
                     type: "many1",
                     value,
-                };
-            }) as Parser<EBNFMany1>,
+                } as EBNFMany1;
+            });
+    }
 
-    next: (l) =>
-        all(l.factor.skip(leftShift), any(l.skip, l.factor)).map(([left, right]) => {
-            return {
-                type: "next",
-                value: [left, right],
-            };
-        }) as Parser<EBNFNext>,
-
-    skip: (l) =>
-        all(any(l.next, l.factor).skip(rightShift), l.factor).map(([left, right]) => {
-            return {
-                type: "skip",
-                value: [left, right],
-            };
-        }) as Parser<EBNFSkip>,
-
-    concatenation: (l) =>
-        any(l.skip, l.next, l.factor)
-            .sepBy(comma, 1)
-            .map((value) => ({
-                type: "concatenation",
-                value,
-            })) as Parser<EBNFConcatenation>,
-
-    alternation: (l) =>
-        any(l.concatenation, l.skip, l.next, l.factor)
-            .sepBy(pipe, 1)
-            .map((value) => ({
-                type: "alternation",
-                value,
-            })) as Parser<EBNFAlternation>,
-
-    term: (l) =>
-        any(
-            l.literal,
-            l.nonterminal,
-            l.group,
-            l.optionalGroup,
-            l.manyGroup
-        ) as Parser<EBNFExpression>,
-
-    factor: (l) =>
-        any(
-            l.optional,
-            l.many,
-            l.many1,
-            l.subtraction,
-            l.term
-        ) as Parser<EBNFExpression>,
-
-    expression: (l) =>
-        any(
-            l.alternation,
-            l.concatenation,
-            l.skip,
-            l.next,
-            l.factor
-        ) as Parser<EBNFExpression>,
-
-    productionRule: (l) =>
-        all(l.identifier.skip(equalSign), l.expression.skip(terminator)).map(
-            ([name, expression]) => {
-                return { name, expression };
+    @lazy
+    next() {
+        return all(this.factor().skip(leftShift), any(this.skip(), this.factor())).map(
+            ([left, right]) => {
+                return {
+                    type: "next",
+                    value: [left, right],
+                } as EBNFNext;
             }
-        ) as Parser<EBNFProductionRule>,
+        );
+    }
 
-    grammar: (l) => l.productionRule.many(),
-});
+    @lazy
+    skip() {
+        return all(any(this.next(), this.factor()).skip(rightShift), this.factor()).map(
+            ([left, right]) => {
+                return {
+                    type: "skip",
+                    value: [left, right],
+                } as EBNFSkip;
+            }
+        );
+    }
+
+    @lazy
+    concatenation() {
+        return any(this.skip(), this.next(), this.factor())
+            .sepBy(comma, 1)
+            .map((value) => {
+                return {
+                    type: "concatenation",
+                    value,
+                } as EBNFConcatenation;
+            });
+    }
+
+    @lazy
+    alternation() {
+        return any(this.concatenation(), this.skip(), this.next(), this.factor())
+            .sepBy(pipe, 1)
+            .map((value) => {
+                return {
+                    type: "alternation",
+                    value,
+                } as EBNFAlternation;
+            });
+    }
+
+    @lazy
+    term() {
+        return any(
+            this.literal(),
+            this.nonterminal(),
+            this.group(),
+            this.optionalGroup(),
+            this.manyGroup()
+        ) as Parser<EBNFExpression>;
+    }
+
+    @lazy
+    factor() {
+        return any(
+            this.optional(),
+            this.many(),
+            this.many1(),
+            this.subtraction(),
+            this.term()
+        ) as Parser<EBNFExpression>;
+    }
+
+    @lazy
+    expression() {
+        return any(
+            this.alternation(),
+            this.concatenation(),
+            this.skip(),
+            this.next(),
+            this.factor()
+        ) as Parser<EBNFExpression>;
+    }
+
+    productionRule() {
+        return all(
+            this.identifier().skip(equalSign),
+            this.expression().skip(terminator)
+        ).map(([name, expression]) => {
+            return { name, expression } as EBNFProductionRule;
+        });
+    }
+
+    grammar() {
+        return this.productionRule().many();
+    }
+}
 
 export function generateParserFromEBNF(input: string) {
-    const ast = EBNFGrammar.grammar.parse(input);
+    const ast = new EBNFGrammar()
+        .grammar()
+        .parse(input)
+        .reduce((acc, { name, expression }) => {
+            acc[name] = expression;
+            return acc;
+        }, new Map<string, EBNFProductionRule>());
 
     const nonterminals: { [key: string]: Parser<any> } = {};
+    let uniqueIndex = 0;
 
-    function generateParser(expr: EBNFExpression): Parser<any> {
+    function generateParser(name: string, expr: EBNFExpression): Parser<any> {
         switch (expr.type) {
             case "literal":
                 return string(expr.value);
             case "nonterminal":
-                return lazy(() => {
-                    return nonterminals[expr.value];
-                });
-
+                return Parser.lazy(() => nonterminals[expr.value]);
             case "group":
-                return generateParser(expr.value);
+                return generateParser(name, expr.value);
             case "optional":
-                return generateParser(expr.value).opt();
-
+                return generateParser(name, expr.value).opt();
             case "many":
-                return generateParser(expr.value).many();
-
+                return generateParser(name, expr.value).many();
             case "many1":
-                return generateParser(expr.value).many(1);
-
+                return generateParser(name, expr.value).many(1);
             case "skip":
-                return generateParser(expr.value[0]).skip(
-                    generateParser(expr.value[1])
+                return generateParser(name, expr.value[0]).skip(
+                    generateParser(name, expr.value[1])
                 );
             case "next":
-                return generateParser(expr.value[0]).next(
-                    generateParser(expr.value[1])
+                return generateParser(name, expr.value[0]).next(
+                    generateParser(name, expr.value[1])
                 );
-
             case "subtraction":
-                return generateParser(expr.value[0]).not(generateParser(expr.value[1]));
-
+                return generateParser(name, expr.value[0]).not(
+                    generateParser(name, expr.value[1])
+                );
             case "concatenation":
-                return all(...expr.value.map(generateParser));
+                return all(...expr.value.map((x) => generateParser(name, x)));
             case "alternation":
-                return any(...expr.value.map(generateParser));
+                return any(...expr.value.map((x) => generateParser(name, x)));
         }
     }
 
-    for (const { name, expression } of ast) {
-        nonterminals[name] = generateParser(expression);
+    function removeLeftRecursion(name: string, expr: EBNFAlternation) {
+        const head = [];
+        const tail = [];
+
+        const APrime = {
+            type: "nonterminal",
+            value: name + "_" + ++uniqueIndex,
+        } as EBNFNonTerminal;
+
+        for (const e of expr.value) {
+            if (e.type === "concatenation" && e.value[0].value === name) {
+                tail.push({
+                    type: "concatenation",
+                    value: [...e.value.slice(1), APrime],
+                });
+            } else {
+                head.push({
+                    type: "concatenation",
+                    value: [e, APrime],
+                });
+            }
+        }
+        tail[tail.length - 1] = {
+            type: "optional",
+            value: tail[tail.length - 1],
+        };
+
+        ast[name] = {
+            type: "alternation",
+            value: head,
+        };
+        ast[APrime.value] = {
+            type: "alternation",
+            value: tail,
+        };
+    }
+
+    // for (const [name, expression] of Object.entries(ast)) {
+    //     if (expression.type === "alternation") {
+    //         removeLeftRecursion(name, expression);
+    //     }
+    // }
+    for (const [name, expression] of Object.entries(ast)) {
+        nonterminals[name] = generateParser(name, expression);
     }
 
     return [nonterminals, ast] as const;

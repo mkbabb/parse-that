@@ -10,7 +10,8 @@
         ],
         "alwaysStrict": true,
         "strict": false,
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        "experimentalDecorators": true
     },
     "include": [
         "src/",

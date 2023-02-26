@@ -17,7 +17,7 @@ plus = "+" ;
 question = "?" ;
 dash = "-" ;
 character = letter | digit | symbol | "_" ;
-identifier = letter , { letter | digit | "_" } ;
+identifier = letter , { letter | digit | "_" | "-" } ;
 
 terminal = "'" , ( character - "'" ) + , "'" | '"' , ( character - '"' ) + , '"' ;
 

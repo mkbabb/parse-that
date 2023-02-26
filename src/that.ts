@@ -192,8 +192,8 @@ export class Parser<T = string> {
         return start.next(this).skip(end) as Parser<T>;
     }
 
-    trim(parser = whitespace as any): Parser<T> {
-        return this.wrap(parser, parser) as Parser<T>;
+    trim(parser: Parser<T> = whitespace as Parser<T>): Parser<T> {
+        return this.wrap(parser, parser.opt()) as Parser<T>;
     }
 
     many(min: number = 0, max: number = Infinity) {
@@ -203,6 +203,7 @@ export class Parser<T = string> {
 
             for (let i = 0; i < max; i += 1) {
                 const tmpState = this.parser(newState);
+
                 if (tmpState.isError) {
                     break;
                 }
@@ -219,36 +220,6 @@ export class Parser<T = string> {
 
         return new Parser(many as ParserFunction<T[]>, "many");
     }
-
-    // sepBy<S>(sep: Parser<S | T>, min: number = 0, max: number = Infinity) {
-    //     const sepBy = (state: ParserState<T>) => {
-    //         const matches: T[] = [];
-
-    //         let newState = state;
-
-    //         for (let i = 0; i < max; i += 1) {
-    //             const tmpState = this.parser(newState);
-    //             if (tmpState.isError) {
-    //                 break;
-    //             }
-    //             newState = tmpState;
-    //             matches.push(newState.value);
-
-    //             const sepState = sep.parser(newState);
-    //             if (sepState.isError) {
-    //                 break;
-    //             }
-    //             newState = sepState as ParserState<T>;
-    //         }
-
-    //         if (matches.length > min) {
-    //             return newState.ok(matches) as ParserState<T[]>;
-    //         }
-    //         return state.err([]) as ParserState<T[]>;
-    //     };
-
-    //     return new Parser(sepBy as ParserFunction<T[]>, "sepBy");
-    // }
 
     sepBy<S>(sep: Parser<S>, min: number = 0, max: number = Infinity) {
         return this.then(
@@ -273,6 +244,11 @@ export class Parser<T = string> {
 
         return new Parser(debug, "debug");
     }
+
+    static lazy<T>(fn: () => Parser<T>) {
+        const lazy = (state: ParserState<T>) => fn().parser(state);
+        return new Parser<T>(lazy, "lazy");
+    }
 }
 
 export function eof<T>() {
@@ -286,9 +262,18 @@ export function eof<T>() {
     return new Parser(eof, "eof");
 }
 
-export function lazy<T>(fn: () => Parser<T>) {
-    const lazy = (state: ParserState<T>) => fn().parser(state);
-    return new Parser<T>(lazy, "lazy");
+export function lazy<T>(
+    target: any,
+    propertyName: string,
+    descriptor: TypedPropertyDescriptor<() => Parser<T>>
+) {
+    let method = descriptor.value!;
+
+    descriptor.value = function () {
+        const lazy = (state: ParserState<T>) =>
+            method.apply(this, arguments).parser(state);
+        return new Parser<T>(lazy, "lazy");
+    };
 }
 
 type ExtractValue<T extends ReadonlyArray<Parser<any>>> = {
@@ -353,7 +338,7 @@ export function match(regex: RegExp) {
     const sticky = new RegExp(regex, regex.flags + "y");
 
     const match = (state: ParserState<string>) => {
-        if (state.offset > state.src.length) {
+        if (state.offset >= state.src.length) {
             return state.err(undefined);
         }
 
@@ -373,12 +358,3 @@ export function match(regex: RegExp) {
 }
 
 export const whitespace = match(/\s*/);
-
-export function createLanguage<T>(parsers: {
-    [K in keyof T]: (lang: { [K in keyof T]: Parser<T[K]> }) => Parser<T[K]>;
-}) {
-    for (const [key, func] of Object.entries(parsers)) {
-        parsers[key] = lazy(() => func(parsers));
-    }
-    return parsers as { [K in keyof T]: Parser<T[K]> };
-}

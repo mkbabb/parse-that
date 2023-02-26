@@ -1,4 +1,4 @@
-import { Parser, match, all, any, sepBy, string, lazy, many } from "../src/that";
+import { Parser, match, all, any, string, lazy } from "../src/that";
 import { test, expect, describe, it } from "vitest";
 
 const comma = string(",").trim();
@@ -12,12 +12,14 @@ const stringChar = any(
     match(/\\"/).map(() => '"'),
     match(/\\\\/).map(() => "\\")
 );
-const jsonString = many(stringChar, 1)
+const jsonString = stringChar
+    .many(1)
     .wrap(string('"'), string('"'))
     .map((value) => value.join(""));
 
-const jsonArray = lazy(() =>
-    sepBy(jsonValue, comma)
+const jsonArray = Parser.lazy(() =>
+    jsonValue
+        .sepBy(comma)
         .opt()
         .trim()
         .wrap(string("["), string("]"))
@@ -25,8 +27,11 @@ const jsonArray = lazy(() =>
             return values ?? [];
         })
 );
-const jsonObject = lazy(() =>
-    sepBy(jsonString.skip(string(":")).then(jsonValue), comma)
+const jsonObject = Parser.lazy(() =>
+    jsonString
+        .skip(string(":"))
+        .then(jsonValue)
+        .sepBy(comma)
         .opt()
         .trim()
         .wrap(string("{"), string("}"))

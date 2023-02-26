@@ -1,4 +1,4 @@
-import { match, all, many, Parser, any, lazy, string } from "../src/that";
+import { match, all, Parser, any, lazy, string } from "../src/that";
 import { test, expect, describe } from "vitest";
 import {
     reduceMathExpression,
@@ -6,7 +6,9 @@ import {
     generateMathExpression,
 } from "./utils";
 
-const digits = many(match(/[0-9]/)).map((val) => val.join(""));
+const digits = match(/[0-9]/)
+    .many()
+    .map((val) => val.join(""));
 
 const fractional = string(".")
     .then(digits)
@@ -40,7 +42,7 @@ const numberMatch = match(numberRegex)
         return parseFloat(v);
     });
 
-const unary: Parser<number> = lazy(() =>
+const unary: Parser<number> = Parser.lazy(() =>
     string("-")
         .then(unary)
         .map(([operator, num]) => {
@@ -49,7 +51,7 @@ const unary: Parser<number> = lazy(() =>
         .or(numberMatch)
 );
 
-const pow: Parser<number> = lazy(() =>
+const pow: Parser<number> = Parser.lazy(() =>
     all(
         unary,
         match(/\*\*/)
@@ -61,12 +63,17 @@ const pow: Parser<number> = lazy(() =>
     })
 );
 
-const multDiv: Parser<number> = lazy(() =>
-    all(pow, many(match(/\*|\//).then(pow))).map(reduceMathExpression)
+const multDiv: Parser<number> = Parser.lazy(() =>
+    all(pow, match(/\*|\//).then(pow).many()).map(reduceMathExpression)
 );
 
-const addSub: Parser<number> = lazy(() =>
-    all(multDiv, many(match(/\+|\-|/).then(multDiv))).map(reduceMathExpression)
+const addSub: Parser<number> = Parser.lazy(() =>
+    all(
+        multDiv,
+        match(/\+|\-|/)
+            .then(multDiv)
+            .many()
+    ).map(reduceMathExpression)
 );
 
 const expression = addSub;
