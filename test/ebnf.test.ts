@@ -246,7 +246,7 @@ describe("EBNF Parser", () => {
 
         const parser = EBNFParser(grammar);
 
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 10; i++) {
             grammar = parser.parse(grammar);
             fs.writeFileSync("./grammar/eebnf2.ebnf", grammar);
         }

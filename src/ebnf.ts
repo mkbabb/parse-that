@@ -110,7 +110,6 @@ class EBNFGrammar {
         });
     }
 
-    @lazy
     nonterminal() {
         return this.identifier().map((value) => {
             return {
@@ -133,7 +132,6 @@ class EBNFGrammar {
             });
     }
 
-    @lazy
     optional() {
         return this.term()
             .trim()
@@ -145,6 +143,7 @@ class EBNFGrammar {
                 } as EBNFOptional;
             });
     }
+
     @lazy
     optionalGroup() {
         return this.expression()
@@ -158,7 +157,6 @@ class EBNFGrammar {
             });
     }
 
-    @lazy
     subtraction() {
         return all(this.term().skip(minus), this.term()).map(([left, right]) => {
             return {
@@ -181,7 +179,6 @@ class EBNFGrammar {
             });
     }
 
-    @lazy
     many() {
         return this.term()
             .trim()
@@ -194,7 +191,6 @@ class EBNFGrammar {
             });
     }
 
-    @lazy
     many1() {
         return this.term()
             .trim()
@@ -231,7 +227,6 @@ class EBNFGrammar {
         );
     }
 
-    @lazy
     concatenation() {
         return any(this.skip(), this.next(), this.factor())
             .sepBy(comma, 1)
@@ -243,7 +238,6 @@ class EBNFGrammar {
             });
     }
 
-    @lazy
     alternation() {
         return any(this.concatenation(), this.skip(), this.next(), this.factor())
             .sepBy(pipe, 1)
@@ -255,7 +249,6 @@ class EBNFGrammar {
             });
     }
 
-    @lazy
     term() {
         return any(
             this.literal(),
@@ -266,7 +259,6 @@ class EBNFGrammar {
         ) as Parser<EBNFExpression>;
     }
 
-    @lazy
     factor() {
         return any(
             this.optional(),
@@ -277,7 +269,6 @@ class EBNFGrammar {
         ) as Parser<EBNFExpression>;
     }
 
-    @lazy
     expression() {
         return any(
             this.alternation(),
