@@ -343,7 +343,7 @@ describe("EBNF Parser", () => {
         }
     });
 
-    it("should parse a EBNF grammar", () => {
+    it("should parse a EEBNF grammar", () => {
         let grammar = fs.readFileSync("./grammar/eebnf.ebnf", "utf8");
 
         const parser = EBNFParser(grammar);
