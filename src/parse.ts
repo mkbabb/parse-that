@@ -44,6 +44,8 @@ export class ParserState<T> {
         const MAX_LINES = 5;
         const MAX_LINE_LENGTH = 80;
 
+        const color = (error ? chalk.red : chalk.green).bold;
+
         const lines = this.src.split("\n");
         const lineIdx = Math.min(lines.length - 1, this.getLineNumber());
         const startIdx = Math.max(lineIdx - MAX_LINES, 0);
@@ -57,7 +59,7 @@ export class ParserState<T> {
             }
         });
 
-        const cursorLine = " ".repeat(this.getColumnNumber()) + chalk.bold(cursor);
+        const cursorLine = " ".repeat(this.getColumnNumber()) + color(cursor);
 
         lineSummaries.splice(lineIdx - startIdx + 1, 0, cursorLine);
 
@@ -70,7 +72,7 @@ export class ParserState<T> {
 
             // if the line is the current line, highlight it
             if (lineNum === lineIdx + 1) {
-                return (error ? chalk.red : chalk.green)(chalk.bold(paddedLine));
+                return color(paddedLine);
             } else {
                 return paddedLine;
             }
@@ -340,10 +342,10 @@ export class Parser<T = string> {
             logger(
                 stateBgColor.bold(!newState.isError ? " Ok ✓ " : " Err ｘ "),
                 stateColor(`\t${name}\t${newState.offset}\t`),
-                chalk.yellow(`${this.toString()}`),
+                chalk.yellow(`${this.toString()}`)
             );
             logger(state.addCursor("^", newState.isError) + "\n");
-            
+
             return newState;
         };
         return new Parser(debug, createParserContext("debug", name, logger));

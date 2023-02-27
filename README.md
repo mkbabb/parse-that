@@ -96,20 +96,21 @@ create a lexer ;\).
 Debugging is made 🌈pretty🌈 by using the `debug` combinator - but you must run in
 `development` mode (`vite build --mode development`) to see the output.
 
-![image](./assets/debuggin.png)
+![image](./assets/debug.png)
 
 As output, you'll see a few things:
 
 -   A header containing:
     -   parsing status (`Ok` or `Err`)
+    -   current offset into the input string
     -   debug node's name
     -   stringified current parser - a bit like the EEBNF format
 -   A body containing:
-    -   A maximum of 5 lines of the input string, with the current offset into the parse
+    -   A maximum of 10 lines of the input string, with the current offset into the parse
         string denoted by `^`
     -   Line numbers for each line currently displayed
 
-The `blue` color indicates that that variable is an EEBNF nonterminal.
+The `blue` color indicates that that variable is an EEBNF nonterminal - `yellow` is the stringified parser.
 
 ##### Thanks to [chalk](https://github.com/chalk/chalk) for the colors!
 
