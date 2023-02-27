@@ -5,7 +5,8 @@ backus-naur form) and parse it with ease. Handles left recursion, right recursio
 left factoring.
 
 Does what basically every other parser combinator library does, with a few extra
-features and optimizations - performance focused.
+features and optimizations. Focused on performance as much as possible, though
+combinators are always going to be slower than a custom flattened parser.
 
 ## Usage
 
@@ -33,7 +34,7 @@ const grammar = `
 
 const [nonterminals, ast] = generateParserFromEBNF(grammar);
 const expr = nonterminals.expr;
-expr.parse("1 + 2 * 3"); // => [1, "+", [2, "*", 3]]
+expr.parse("1 + whatzupwitu * 3"); // => [1, "+", [2, "*", 3]]
 ```
 
 nice.
@@ -166,3 +167,4 @@ Other great parsing libraries 🎉:
 -   [Parsimmon](https://github.com/jneen/parsimmon)
 -   [bread-n-butter](https://github.com/wavebeem/bread-n-butter)
 -   [parsy](https://github.com/python-parsy/parsy)
+-   [Chevrotain](https://github.com/chevrotain/chevrotain)
