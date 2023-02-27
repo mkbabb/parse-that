@@ -1,7 +1,6 @@
+/// #if !DEBUG
+/// #else
 import chalk from "chalk";
-
-/// #if DEBUG
-console.log(chalk.yellow("DEBUG MODE ENABLED"));
 /// #endif
 
 type ExtractValue<T extends ReadonlyArray<Parser<any>>> = {
@@ -41,6 +40,7 @@ export class ParserState<T> {
     }
 
     addCursor(cursor: string = "^", error: boolean = false): string {
+        /// #if DEBUG
         const MAX_LINES = 5;
         const MAX_LINE_LENGTH = 80;
 
@@ -79,6 +79,9 @@ export class ParserState<T> {
         });
 
         return resultLines.join("\n");
+        /// #else
+        return "";
+        /// #endif
     }
 }
 
@@ -185,12 +188,29 @@ export class Parser<T = string> {
         return new Parser(map as ParserFunction<S>, createParserContext("map", this));
     }
 
+    // skip<S>(parser: Parser<S>) {
+    //     const skip = this.then(parser).map(([a]) => {
+    //         return a;
+    //     }) as Parser<T>;
+    //     skip.context = createParserContext("skip", parser);
+    //     return skip;
+    // }
     skip<S>(parser: Parser<S>) {
-        const skip = this.then(parser).map(([a]) => {
-            return a;
-        }) as Parser<T>;
-        skip.context = createParserContext("skip", parser);
-        return skip;
+        const skip = (state: ParserState<T>) => {
+            const nextState1 = this.parser(state);
+
+            if (!nextState1.isError) {
+                const nextState2 = parser.parser(nextState1);
+                if (!nextState2.isError) {
+                    return nextState2.ok(nextState1.value);
+                }
+            }
+            return state.err(undefined);
+        };
+        return new Parser(
+            skip as ParserFunction<T>,
+            createParserContext("skip", parser)
+        );
     }
 
     next<S>(parser: Parser<S>) {
@@ -432,7 +452,7 @@ export function eof<T>() {
             return state.err();
         }
     };
-    return new Parser(eof, createParserContext("eof"));
+    return new Parser(eof, createParserContext("eof")) as Parser<any>;
 }
 
 export function lazy<T>(
@@ -498,6 +518,43 @@ export function all<T extends any[]>(...parsers: T) {
         parsers.length === 1 ? parsers[0].parser : all,
         createParserContext("all", ...parsers)
     ) as Parser<ExtractValue<T>>;
+}
+
+export function lookAhead<T>(parser: Parser<T>): Parser<T> {
+    const lookAhead = (state: ParserState<T>) => {
+        const aheadState = parser.parser(state);
+
+        if (aheadState.isError) {
+            return state.err(undefined);
+        } else {
+            return state.ok(aheadState.value);
+        }
+    };
+    return new Parser(
+        lookAhead as ParserFunction<T>,
+        createParserContext("lookAhead", parser)
+    );
+}
+
+export function lookBehind<T>(parser: Parser<T>): Parser<T> {
+    const lookBehind = (state: ParserState<T>) => {
+        let behindState = parser.parser(state);
+
+        while (behindState.offset > 0 && behindState.isError) {
+            behindState.offset -= 1;
+            behindState = parser.parser(behindState);
+        }
+
+        if (behindState.isError) {
+            return state.err(undefined);
+        } else {
+            return state.ok(behindState.value);
+        }
+    };
+    return new Parser(
+        lookBehind as ParserFunction<T>,
+        createParserContext("lookBehind", parser)
+    );
 }
 
 export function string(str: string) {

@@ -13,7 +13,8 @@ export type EBNFExpression =
     | EBNFNext
     | EBNFConcatenation
     | EBNFAlternation
-    | EBNFEpsilon;
+    | EBNFEpsilon
+    | EBNFEOF;
 
 export interface EBNFLiteral {
     type: "literal";
@@ -27,6 +28,11 @@ export interface EBNFNonterminal {
 
 export interface EBNFEpsilon {
     type: "epsilon";
+    value: undefined;
+}
+
+export interface EBNFEOF {
+    type: "eof";
     value: undefined;
 }
 
@@ -142,6 +148,17 @@ export class EBNFGrammar {
                     type: "group",
                     value,
                 } as EBNFGroup;
+            });
+    }
+
+    eof() {
+        return string("$")
+            .trim()
+            .map((value) => {
+                return {
+                    type: "eof",
+                    value,
+                } as EBNFEOF;
             });
     }
 
@@ -278,7 +295,8 @@ export class EBNFGrammar {
             this.regex(),
             this.group(),
             this.optionalGroup(),
-            this.manyGroup()
+            this.manyGroup(),
+            this.eof()
         ) as Parser<EBNFExpression>;
     }
 

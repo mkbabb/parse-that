@@ -13,10 +13,7 @@ export function topologicalSort(ast: EBNFAST) {
     const order: EBNFProductionRule[] = [];
 
     function visit(node: string, stack: Set<string>) {
-        if (stack.has(node)) {
-            throw new Error("Dependency cycle detected");
-        }
-        if (visited.has(node)) {
+        if (stack.has(node) || visited.has(node)) {
             return;
         }
 

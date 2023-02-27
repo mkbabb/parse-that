@@ -1,19 +1,19 @@
 import { Parser, regex, all, any, string, lazy } from "../src";
 import { test, expect, describe, it, bench } from "vitest";
+import fs from "fs";
 
 const comma = string(",").trim();
+const colon = string(":").trim();
 
-const jsonNull = regex(/null/).map(() => null);
-const jsonBool = any(regex(/true/), regex(/false/)).map((value) => value === "true");
-const jsonNumber = regex(/-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/).map(Number);
+const jsonNull = string("null").map(() => null);
+const jsonBool = any(string("true"), string("false")).map((v) => v === "true");
+const jsonNumber = regex(/-?(0|[1-9]\d*)(\.\d+)?/).map((v) => parseFloat(v));
 
-const stringChar = any(regex(/[^"\\]+/), regex(/\\"/), regex(/\\\\/));
+const stringChar = regex(/[^"\\]+/);
 const jsonString = stringChar
     .many(1)
     .wrap(string('"'), string('"'))
-    .map((value) => value.join(""))
-    .debug("string");
-
+    .map((v) => v.join(""));
 const jsonArray = Parser.lazy(() =>
     jsonValue
         .sepBy(comma)
@@ -23,39 +23,34 @@ const jsonArray = Parser.lazy(() =>
         .map((values) => {
             return values ?? [];
         })
-        .debug("array")
 );
 const jsonObject = Parser.lazy(() =>
     jsonString
-        .skip(string(":"))
+        .skip(colon)
         .then(jsonValue)
         .sepBy(comma)
-        .opt()
         .trim()
+        .opt()
         .wrap(string("{"), string("}"))
-)
-    .map((pairs) => {
-        if (pairs === undefined) {
-            return {};
-        }
-        const obj: Record<string, any> = {};
-        for (const [key, value] of pairs) {
-            obj[key] = value;
-        }
-        return obj;
-    })
-    .debug("object");
+).map((pairs) => {
+    if (pairs === undefined) {
+        return {};
+    }
+    const obj: Record<string, any> = {};
+    for (const [key, value] of pairs) {
+        obj[key] = value;
+    }
+    return obj;
+});
 
 export const jsonValue: Parser<any> = any(
-    jsonNull,
-    jsonBool,
-    jsonNumber,
-    jsonString,
+    jsonObject,
     jsonArray,
-    jsonObject
-)
-    .trim()
-    .debug("value");
+    jsonString,
+    jsonNumber,
+    jsonBool,
+    jsonNull
+);
 
 describe("JSON Parser", () => {
     it("should parse a null value", () => {
@@ -86,7 +81,7 @@ describe("JSON Parser", () => {
     });
 
     it("should parse an array with values", () => {
-        const result = jsonValue.parse('[1, "two", false]');
+        const result = jsonValue.parse('[ 1, "two", false ]');
         expect(result).toEqual([1, "two", false]);
     });
 
@@ -97,8 +92,13 @@ describe("JSON Parser", () => {
 
     it("should parse an object with key-value pairs", () => {
         const result = jsonValue.parse(
-            '{"name": "John", "age": 30, "isStudent": true}'
+            '{ "name": "John", "age": 30, "isStudent": true }'
         );
         expect(result).toEqual({ name: "John", age: 30, isStudent: true });
+    });
+    it("should read a JSON file", () => {
+        const input = fs.readFileSync("data/data.json", "utf-8");
+        const result = jsonValue.parse(input);
+        expect(result).toEqual(JSON.parse(input));
     });
 });

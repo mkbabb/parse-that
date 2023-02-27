@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => ({
                 DEBUG: mode === "development",
             },
             options: {
-                verbose: true,
+                verbose: false,
             },
         }),
     ],

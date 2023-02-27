@@ -17,6 +17,7 @@
         "test": "vitest --mode development",
         "test:coverage": "vitest --mode development --coverage",
         "test:watch": "vitest --mode development --watch",
+        "test:bench": "vitest bench",
         "test:production": "vitest",
         "build": "vite build",
         "build:debug": "vite build --mode development"

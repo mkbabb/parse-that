@@ -70,6 +70,7 @@ export const EBNFParser = (grammar: string) => {
     nonterminals.star = nonterminals.star.trim();
     nonterminals.div = nonterminals.div.trim();
     nonterminals.question = nonterminals.question.trim();
+    nonterminals.eof = nonterminals.eof.trim();
 
     nonterminals.regex = nonterminals.regex.trim().map((v) => {
         const s = v.flat().join("");
@@ -106,6 +107,8 @@ export const EBNFParser = (grammar: string) => {
         }
         return rules.join("\n");
     });
+
+    // debugging(nonterminals);
 };
 
 export const formatEBNFGrammar = (

@@ -12,10 +12,13 @@ function generateParserFromAST(ast: EBNFAST) {
                 const l = Parser.lazy(() => nonterminals[expr.value]);
                 l.context.name = chalk.blue(expr.value);
                 return l;
-                
+
             case "epsilon":
                 // TODO maybe change this to return Parser.of(null), or something
                 return eof().opt();
+
+            case "eof":
+                return eof();
 
             case "group":
                 return generateParser(name, expr.value);

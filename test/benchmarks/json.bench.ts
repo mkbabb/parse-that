@@ -1,29 +1,29 @@
-import { Parser, regex, all, any, string, lazy } from "../../src";
-import { test, expect, describe, it, bench, BenchOptions } from "vitest";
+import { describe, bench, BenchOptions } from "vitest";
 import fs from "fs";
 import { insertRandomWhitespace } from "../utils";
 
-import { jsonValue } from "../json.test";
-import { JSONParser } from "../ebnf.test";
+import { JSONParser as EBNFJsonParser } from "./ebnf";
+import { JSONParser as StandardJsonParser } from "./parse-that";
 
 import { parse as ChevrotainJSONParser } from "./chevrotain";
 import { json as ParsimmonJSONParser } from "./parsimmon";
 
 const options = {
-    iterations: 100,
+    iterations: 10,
 } as BenchOptions;
 
 const whitespace = /\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/g;
 let input = fs.readFileSync("data/data-large.json", "utf-8");
 input = insertRandomWhitespace(input, 100);
 
-const jsonValueEBNF = JSONParser(fs.readFileSync("./grammar/json.ebnf", "utf-8"));
+fs.writeFileSync("data/tmp.json", input);
+// input = input.replaceAll(whitespace, "");
 
 describe("JSON Parser", () => {
     bench(
         "Standard",
         () => {
-            jsonValue.parse(input);
+            StandardJsonParser.parse(input);
         },
         options
     );
@@ -31,7 +31,7 @@ describe("JSON Parser", () => {
     bench(
         "EEBNF",
         () => {
-            jsonValueEBNF.parse(input);
+            EBNFJsonParser.parse(input);
         },
         options
     );

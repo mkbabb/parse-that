@@ -18,4 +18,4 @@ percentage = integer , percentageUnit ;
 
 unitless = number ;
 
-valueUnit = length | angle | time | resolution | percentage | (number, unitless?) ;
+valueUnit = length | angle | time | resolution | percentage | color | (number, unitless?) ;

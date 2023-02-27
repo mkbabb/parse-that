@@ -1,4 +1,4 @@
-import { whitespace, regex, string, all, Parser } from "../src";
+import { whitespace, regex, string, all, Parser, eof, lookBehind } from "../src";
 
 import { test, expect, describe, it } from "vitest";
 import fs from "fs";
@@ -31,7 +31,7 @@ const mathParser = (grammar: string) => {
             return parseFloat(v);
         });
 
-    return nonterminals.expr;
+    return [nonterminals, ast] as const;
 };
 
 const CSSColorParser = (grammar: string) => {
@@ -100,9 +100,10 @@ const CSSColorParser = (grammar: string) => {
         }
     );
 
-    debugging(nonterminals);
-
-    return nonterminals.color;
+    nonterminals.color = nonterminals.color.map((color) => {
+        return [color, "color"] as const;
+    });
+    return [nonterminals, ast] as const;
 };
 
 const CSSValueUnitParser = (grammar: string) => {
@@ -122,14 +123,14 @@ const CSSValueUnitParser = (grammar: string) => {
         });
     nonterminals.integer = regex(/\d+/).map(Number);
 
-    debugging(nonterminals);
-
-    return nonterminals.valueUnit.map(([value, unit]) => {
+    nonterminals.valueUnit = nonterminals.valueUnit.map(([value, unit]) => {
         return {
             value,
             unit: unit,
         } as const;
     });
+
+    return [nonterminals, ast] as const;
 };
 
 const EBNFParserLeftRecursion = (grammar: string) => {
@@ -160,9 +161,7 @@ const EBNFParserLeftRecursion = (grammar: string) => {
         }
     });
 
-    debugging(nonterminals);
-
-    return nonterminals.expr;
+    return [nonterminals, ast] as const;
 };
 
 export const JSONParser = (grammar: string) => {
@@ -184,90 +183,112 @@ export const JSONParser = (grammar: string) => {
     });
 
     nonterminals.value = nonterminals.value.trim();
-    // debugging(nonterminals);
     return nonterminals.value;
 };
 
 describe("EBNF Parser", () => {
-    // it("should parse a simple math grammar", () => {
-    //     const grammar = fs.readFileSync("./grammar/math.ebnf", "utf8");
-    //     const parser = mathParser(grammar);
+    it("should parse a simple math grammar", () => {
+        const grammar = fs.readFileSync("./grammar/math.ebnf", "utf8");
+        const [nonterminals] = mathParser(grammar);
+        const parser = nonterminals.expr;
 
-    //     for (let i = 0; i < 100; i++) {
-    //         const expr = generateMathExpression();
-    //         const parsed = parser.parse(expr);
-    //         expect(parsed).toBe(eval(expr));
-    //     }
-    // });
+        for (let i = 0; i < 100; i++) {
+            const expr = generateMathExpression();
+            const parsed = parser.parse(expr);
+            expect(parsed).toBe(eval(expr));
+        }
+    });
 
-    // it("should parse a CSS color grammar", () => {
-    //     const grammar = fs.readFileSync("./grammar/css-color.ebnf", "utf8");
-    //     const parser = CSSColorParser(grammar);
+    it("should parse a CSS color grammar", () => {
+        const grammar = fs.readFileSync("./grammar/css-color.ebnf", "utf8");
+        const [nonterminals] = CSSColorParser(grammar);
+        const parser = nonterminals.color;
 
-    //     const colors = [
-    //         "#fff",
-    //         "hsl(0 0 0 / 12)",
-    //         "rgb(100%, 100%, 100% / 1)",
-    //         "rgb(10%, 11%, 12%)",
-    //         "rgb(255, 255, 255, 1)",
-    //         "rgb(255, 255, 255)",
-    //         "#fff",
-    //         "#ffffff",
-    //     ];
+        const colors = [
+            "#fff",
+            "hsl(0 0 0 / 12)",
+            "rgb(100%, 100%, 100% / 1)",
+            "rgb(10%, 11%, 12%)",
+            "rgb(255, 255, 255, 1)",
+            "rgb(255, 255, 255)",
+            "#fff",
+            "#ffffff",
+        ];
 
-    //     for (const color of colors) {
-    //         const parsed = parser.parse(color);
+        for (const color of colors) {
+            const parsed = parser.parse(color);
+            expect(parsed).toBeTruthy();
+        }
+    });
 
-    //         expect(parsed).toBeTruthy();
-    //     }
-    // });
+    it("should parse a CSS value unit grammar", () => {
+        const grammar = fs.readFileSync("./grammar/css-value-unit.ebnf", "utf8");
+        const colorGrammar = fs.readFileSync("./grammar/css-color.ebnf", "utf8");
 
-    // it("should parse a CSS value unit grammar", () => {
-    //     const grammar = fs.readFileSync("./grammar/css-value-unit.ebnf", "utf8");
-    //     // fs.writeFileSync("./grammar/css-value-unit2.ebnf", formatGrammar(grammar));
-    //     const parser = CSSValueUnitParser(grammar);
+        const [nonterminals] = CSSValueUnitParser(grammar);
+        const [colorNonterminals] = CSSColorParser(colorGrammar);
 
-    //     const units = [
-    //         "",
-    //         "px",
-    //         "em",
-    //         "rem",
-    //         "vh",
-    //         "vw",
-    //         "vmin",
-    //         "vmax",
-    //         "ch",
-    //         "ex",
-    //         "cm",
-    //         "mm",
-    //         "in",
-    //         "pt",
-    //         "pc",
-    //         "deg",
-    //         "grad",
-    //         "rad",
-    //         "turn",
-    //         "s",
-    //         "ms",
-    //         "dpi",
-    //         "dpcm",
-    //         "dppx",
-    //         "%",
-    //         "fr",
-    //     ];
-    //     for (let i = 0; i < units.length; i++) {
-    //         const unit = units[i];
-    //         let value = Math.random() * 100;
-    //         if (i % 3 === 0 || unit === "%") {
-    //             value = Math.round(value);
-    //         }
+        nonterminals.color = colorNonterminals.color;
+        const parser = nonterminals.valueUnit;
 
-    //         const parsed = parser.parse(value + unit);
+        const units = [
+            "",
+            "px",
+            "em",
+            "rem",
+            "vh",
+            "vw",
+            "vmin",
+            "vmax",
+            "ch",
+            "ex",
+            "cm",
+            "mm",
+            "in",
+            "pt",
+            "pc",
+            "deg",
+            "grad",
+            "rad",
+            "turn",
+            "s",
+            "ms",
+            "dpi",
+            "dpcm",
+            "dppx",
+            "%",
+            "fr",
+        ];
+        for (let i = 0; i < units.length; i++) {
+            const unit = units[i];
+            let value = Math.random() * 100;
+            if (i % 3 === 0 || unit === "%") {
+                value = Math.round(value);
+            }
 
-    //         expect(parsed.unit ?? "").toBe(unit);
-    //         expect(parsed.value).toBe(value);
-    //     }
-    // });
+            const parsed = parser.parse(value + unit);
+
+            expect(parsed.unit ?? "").toBe(unit);
+            expect(parsed.value).toBe(value);
+        }
+
+        const colors = [
+            "#fff",
+            "hsl(0 0 0 / 12)",
+            "rgb(100%, 100%, 100% / 1)",
+            "rgb(10%, 11%, 12%)",
+            "rgb(255, 255, 255, 1)",
+            "rgb(255, 255, 255)",
+            "#fff",
+            "#ffffff",
+        ];
+
+        for (const color of colors) {
+            const parsed = parser.parse(color);
+
+            expect(parsed).toBeTruthy();
+        }
+    });
 
     it("should parse a CSS keyframes grammar", () => {
         const grammar = fs.readFileSync("./grammar/css-keyframes.ebnf", "utf8");
@@ -295,52 +316,82 @@ describe("EBNF Parser", () => {
             }
           }
 `;
-        debugging(nonterminals);
+        // debugging(nonterminals);
         const parsed = nonterminals.KEYFRAMES_RULE.parse(keyframes);
-        console.log(chalk.bold.green(parsed));
+        // console.log(chalk.bold.green(parsed));
     });
 
-    // it("should parse a EEBNF grammar", () => {
-    //     let grammar = fs.readFileSync("./grammar/eebnf.ebnf", "utf8");
+    it("should parse a EEBNF grammar", () => {
+        let grammar = fs.readFileSync("./grammar/eebnf.ebnf", "utf8");
 
-    //     const parser = EBNFParser(grammar);
+        const parser = EBNFParser(grammar);
 
-    //     for (let i = 0; i < 10; i++) {
-    //         grammar = parser.parse(grammar);
-    //         fs.writeFileSync("./grammar/eebnf2.ebnf", grammar);
-    //     }
-    // });
+        for (let i = 0; i < 10; i++) {
+            grammar = parser.parse(grammar);
+            fs.writeFileSync("./grammar/eebnf2.eebnf", grammar);
+        }
+    });
 
-    // it("should handle EBNF left recursion", () => {
-    //     const grammar = `
-    //     digits = /[0-9]+/ ;
-    //     expr =
-    //           expr , ("*" , expr)
-    //         | expr , ("+" , expr)
-    //         | expr , ("-" , expr)
-    //         | integer
-    //         | whatzupwitu
-    //         | vibes
-    //         | string
-    //         | digits ;
-    // `;
-    //     const parser = EBNFParserLeftRecursion(grammar);
+    it("should handle EBNF left recursion", () => {
+        const grammar = `
+        digits = /[0-9]+/ ;
+        expr =
+              expr , ("*" , expr)
+            | expr , ("+" , expr)
+            | expr , ("-" , expr)
+            | integer
+            | whatzupwitu
+            | vibes
+            | string
+            | digits ;
+    `;
+        const [nonterminals, ast] = EBNFParserLeftRecursion(grammar);
+        const parser = nonterminals.expr;
 
-    //     const tmp = `
-    //     1 + 2 + 3 + whatzupwitu * vibes + a
-    // `;
-    //     const parsed = parser.parse(tmp);
-    //     expect(parsed).toBeGreaterThan(0);
-    // });
+        const tmp = `
+        1 + 2 + 3 + whatzupwitu * vibes + a
+    `;
+        const parsed = parser.parse(tmp);
+        expect(parsed).toBeGreaterThan(0);
+    });
 
-    // it("should parse JSON data", () => {
-    //     const grammar = fs.readFileSync("./grammar/json.ebnf", "utf8");
+    it("should parse JSON data", () => {
+        const grammar = fs.readFileSync("./grammar/json.ebnf", "utf8");
 
-    //     const parser = JSONParser(grammar);
+        const parser = JSONParser(grammar);
 
-    //     const jsonData = fs.readFileSync("./data/data.json", "utf8");
-    //     const parsed = parser.parse(jsonData);
+        const jsonData = fs.readFileSync("./data/data.json", "utf8");
+        const parsed = parser.parse(jsonData);
 
-    //     expect(parsed).toEqual(JSON.parse(jsonData));
-    // });
+        expect(parsed).toEqual(JSON.parse(jsonData));
+    });
+
+    it("should parse regular expressions", () => {
+        const grammar = fs.readFileSync("./grammar/regex.ebnf", "utf8");
+
+        const [nonterminals, ast] = generateParserFromEBNF(grammar);
+
+        const regexExamples = [
+            /[A-Z]\w+/,
+            /(a|b)*abb/,
+            /^((cat))*$/,
+            /[^a-zA-Z0-9]/,
+            /(?=(\d))ab/,
+            /[\dA-Fa-f]{8}-[\dA-Fa-f]{4}-[\dA-Fa-f]{4}-[\dA-Fa-f]{4}-[\dA-Fa-f]{12}/,
+            /^(?=.{8,}).*\w\b$/y,
+        ];
+
+        nonterminals.regex = nonterminals.regex.map((regex) => {
+            return regex;
+        });
+
+        debugging(nonterminals);
+
+        const parser = nonterminals.regex;
+
+        for (const r of regexExamples) {
+            const parsed = parser.parse(r.toString());
+            console.log(chalk.green(parsed));
+        }
+    });
 });

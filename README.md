@@ -60,8 +60,8 @@ nice.
 ## Performance
 
 As stated earlier, parser combinators using closures like this are always going to be
-"slow". But it's perhaps not as bad as you think. Here's a benchmark comparing the
-following libraries, all parsing the same `JSON` grammar:
+"slow" - at least in JavaScript. But it's perhaps not as bad as you think. Here's a
+benchmark comparing the following libraries, all parsing the same `JSON` grammar:
 
 -   [Chevrotain](https://github.com/chevrotain/chevrotain)
 -   [Parsimmon](https://github.com/jneen/parsimmon)
@@ -76,20 +76,20 @@ randomly inserted to make the file a bit more difficult to parse (makes the file
 
 | name       | hz     | min    | max    | mean   | p75    | p99    | p995   | p999   | rme    | samples |
 | ---------- | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------- |
-| Standard   | 5.5048 | 175.07 | 201.34 | 181.66 | 182.51 | 197.69 | 201.34 | 201.34 | ±0.58% | 100     |
-| EEBNF      | 4.9793 | 191.08 | 214.62 | 200.83 | 205.12 | 211.93 | 214.62 | 214.62 | ±0.58% | 100     |
-| Chevrotain | 6.7840 | 128.83 | 171.45 | 147.41 | 156.70 | 171.09 | 171.45 | 171.45 | ±1.50% | 100     |
-| Parsimmon  | 3.8697 | 239.98 | 298.99 | 258.42 | 263.65 | 281.52 | 298.99 | 298.99 | ±0.81% | 100     |
+| Standard   | 8.1013 | 119.20 | 127.90 | 123.44 | 127.08 | 127.90 | 127.90 | 127.90 | ±2.64% | 10      |
+| EEBNF      | 5.1979 | 183.18 | 216.12 | 192.38 | 195.59 | 216.12 | 216.12 | 216.12 | ±3.97% | 10      |
+| Chevrotain | 6.8699 | 129.91 | 167.46 | 145.56 | 158.21 | 167.46 | 167.46 | 167.46 | ±5.70% | 10      |
+| Parsimmon  | 4.0256 | 246.69 | 250.34 | 248.41 | 249.09 | 250.34 | 250.34 | 250.34 | ±1.54% | 10      |
 
 ##### hz: ops/sec - higher is better
 
-    Chevrotain - test/benchmarks/json.bench.ts > JSON Parser
-        1.23x faster than Standard
-        1.36x faster than EEBNF
-        1.75x faster than Parsimmon
+    Standard - test/benchmarks/json.bench.ts > JSON Parser
+        1.18x faster than Chevrotain
+        1.56x faster than EEBNF
+        2.01x faster than Parsimmon
 
-Chevrotain is definitely the fastest, but it's also the most complex to use - gotta
-create a lexer ;\).
+Probably not the most scientific comparison, but it's about 10-25% faster, consistently,
+than the rest. have a look inside [benchmarks](./test/benchmarks) if you're curious.
 
 ## Debugging
 
@@ -106,11 +106,12 @@ As output, you'll see a few things:
     -   debug node's name
     -   stringified current parser - a bit like the EEBNF format
 -   A body containing:
-    -   A maximum of 10 lines of the input string, with the current offset into the parse
-        string denoted by `^`
+    -   A maximum of 10 lines of the input string, with the current offset into the
+        parse string denoted by `^`
     -   Line numbers for each line currently displayed
 
-The `blue` color indicates that that variable is an EEBNF nonterminal - `yellow` is the stringified parser.
+The `blue` color indicates that that variable is an EEBNF nonterminal - `yellow` is the
+stringified parser.
 
 ##### Thanks to [chalk](https://github.com/chalk/chalk) for the colors!
 
