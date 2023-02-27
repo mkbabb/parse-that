@@ -7,7 +7,6 @@ export declare class ParserState<T> {
     constructor(src: string, value?: T, offset?: number, lineNumber?: number, isError?: boolean);
     ok<S>(value: S): ParserState<S>;
     err<S>(value?: S): ParserState<S>;
-    slice(pos: number): string | undefined;
     next(offset?: number): any;
     getColumnNumber(): number;
     addCursor(cursor?: string): string;

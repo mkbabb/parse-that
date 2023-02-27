@@ -104,8 +104,6 @@ const div = string("/").trim();
 const leftShift = string(">>").trim();
 const rightShift = string("<<").trim();
 
-const integer = regex(/\d+/).trim().map(Number);
-
 const terminator = any(semicolon, dot);
 
 export class EBNFGrammar {
@@ -150,7 +148,6 @@ export class EBNFGrammar {
     @lazy
     regex() {
         return regex(/[^\/]*/)
-            .trim()
             .wrap(string("/"), string("/"))
             .map((value) => {
                 return {
@@ -162,7 +159,6 @@ export class EBNFGrammar {
 
     optional() {
         return this.term()
-            .trim()
             .skip(questionMark)
             .map((value) => {
                 return {
@@ -175,7 +171,6 @@ export class EBNFGrammar {
     @lazy
     optionalGroup() {
         return this.expression()
-            .trim()
             .wrap(string("["), string("]"))
             .map((value) => {
                 return {
@@ -209,7 +204,7 @@ export class EBNFGrammar {
 
     many() {
         return this.term()
-            .trim()
+
             .skip(mul)
             .map((value) => {
                 return {
@@ -221,7 +216,7 @@ export class EBNFGrammar {
 
     many1() {
         return this.term()
-            .trim()
+
             .skip(plus)
             .map((value) => {
                 return {

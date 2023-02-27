@@ -7,15 +7,12 @@ const jsonNull = regex(/null/).map(() => null);
 const jsonBool = any(regex(/true/), regex(/false/)).map((value) => value === "true");
 const jsonNumber = regex(/-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/).map(Number);
 
-const stringChar = any(
-    regex(/[^"\\]+/),
-    regex(/\\"/).map(() => '"'),
-    regex(/\\\\/).map(() => "\\")
-);
+const stringChar = any(regex(/[^"\\]+/), regex(/\\"/), regex(/\\\\/));
 const jsonString = stringChar
     .many(1)
     .wrap(string('"'), string('"'))
-    .map((value) => value.join(""));
+    .map((value) => value.join(""))
+    .debug("string");
 
 const jsonArray = Parser.lazy(() =>
     jsonValue
@@ -26,6 +23,7 @@ const jsonArray = Parser.lazy(() =>
         .map((values) => {
             return values ?? [];
         })
+        .debug("array")
 );
 const jsonObject = Parser.lazy(() =>
     jsonString
@@ -35,16 +33,18 @@ const jsonObject = Parser.lazy(() =>
         .opt()
         .trim()
         .wrap(string("{"), string("}"))
-).map((pairs) => {
-    if (pairs === undefined) {
-        return {};
-    }
-    const obj: Record<string, any> = {};
-    for (const [key, value] of pairs) {
-        obj[key] = value;
-    }
-    return obj;
-});
+)
+    .map((pairs) => {
+        if (pairs === undefined) {
+            return {};
+        }
+        const obj: Record<string, any> = {};
+        for (const [key, value] of pairs) {
+            obj[key] = value;
+        }
+        return obj;
+    })
+    .debug("object");
 
 export const jsonValue: Parser<any> = any(
     jsonNull,
@@ -53,7 +53,9 @@ export const jsonValue: Parser<any> = any(
     jsonString,
     jsonArray,
     jsonObject
-).trim();
+)
+    .trim()
+    .debug("value");
 
 describe("JSON Parser", () => {
     it("should parse a null value", () => {

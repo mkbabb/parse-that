@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import path from "path";
 import dts from "vite-plugin-dts";
 import autoprefixer from "autoprefixer";
+import vitePluginIfDef from "vite-plugin-ifdef";
 
 const defaultOptions = {
     base: "./",
@@ -12,8 +13,9 @@ const defaultOptions = {
     },
 };
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
     ...defaultOptions,
+
     build: {
         minify: true,
         lib: {
@@ -25,5 +27,16 @@ export default defineConfig({
             external: ["chalk", "fs", "path", "util"],
         },
     },
-    plugins: [dts()],
-});
+
+    plugins: [
+        dts(),
+        vitePluginIfDef.default({
+            define: {
+                DEBUG: mode === "development",
+            },
+            options: {
+                verbose: true,
+            },
+        }),
+    ],
+}));

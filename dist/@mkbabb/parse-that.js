@@ -4,22 +4,14 @@ class k {
     this.src = t, this.value = e, this.offset = n, this.lineNumber = r, this.isError = s;
   }
   ok(t) {
-    return new k(
-      this.src,
-      t,
-      this.offset,
-      this.lineNumber
-    );
+    return new k(this.src, t, this.offset, this.lineNumber);
   }
   err(t) {
     const e = this.ok(t);
     return e.isError = !0, e;
   }
-  slice(t) {
-    return this.src.slice(this.offset, this.offset + t);
-  }
   next(t = 1) {
-    const e = this.slice(t);
+    const e = this.src.slice(this.offset, this.offset + t);
     if (e === void 0)
       return this;
     t += this.offset;

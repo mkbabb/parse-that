@@ -1,20 +1,35 @@
 import { Parser, regex, all, any, string, lazy } from "../src";
-import { test, expect, describe, it, bench } from "vitest";
+import { test, expect, describe, it, bench, BenchOptions } from "vitest";
 import fs from "fs";
 
 import { jsonValue } from "./json.test";
 import { JSONParser } from "./ebnf.test";
+import { insertRandomWhitespace } from "./utils";
 
-bench("should parse a JSON file", () => {
-    const input = fs.readFileSync("data/data.json", "utf-8");
-    const result = jsonValue.parse(input);
+const options = {
+    iterations: 10,
+} as BenchOptions;
 
-    expect(result).toEqual(JSON.parse(input));
-});
+const whitespace = /\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/g;
+let input = fs.readFileSync("data/data.json", "utf-8");
+// input = insertRandomWhitespace(input, 100);
 
-bench("should parse a JSON file using EEBNF", () => {
-    const input = fs.readFileSync("data/data.json", "utf-8");
-    const result = jsonValue.parse(input);
+const jsonValueEBNF = JSONParser(fs.readFileSync("./grammar/json.ebnf", "utf-8"));
 
-    expect(result).toEqual(JSON.parse(input));
+describe("JSON Parser", () => {
+    bench(
+        "should parse a JSON file",
+        () => {
+            jsonValue.parse(input);
+        },
+        options
+    );
+
+    bench(
+        "should parse a JSON file using EEBNF",
+        () => {
+            jsonValueEBNF.parse(input);
+        },
+        options
+    );
 });
