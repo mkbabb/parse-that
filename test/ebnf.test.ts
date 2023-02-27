@@ -164,6 +164,29 @@ const EBNFParserLeftRecursion = (grammar: string) => {
     return nonterminals.expr;
 };
 
+export const JSONParser = (grammar: string) => {
+    const [nonterminals, ast] = generateParserFromEBNF(grammar);
+
+    nonterminals.string = nonterminals.string.trim();
+    nonterminals.number = nonterminals.number.map((v) => parseFloat(v));
+
+    nonterminals.pair = nonterminals.pair.trim();
+    nonterminals.object = nonterminals.object.map((pairs) => {
+        if (pairs === undefined) {
+            return {};
+        }
+        const obj: Record<string, any> = {};
+        for (const [key, value] of pairs) {
+            obj[key] = value;
+        }
+        return obj;
+    });
+
+    nonterminals.value = nonterminals.value.trim();
+    // debugging(nonterminals);
+    return nonterminals.value;
+};
+
 describe("EBNF Parser", () => {
     it("should parse a simple math grammar", () => {
         const grammar = fs.readFileSync("./grammar/math.ebnf", "utf8");
@@ -258,23 +281,34 @@ describe("EBNF Parser", () => {
 
     it("should handle EBNF left recursion", () => {
         const grammar = `
-    digits = /[0-9]+/ ;
-    expr = 
-          expr , ("*" , expr) 
-        | expr , ("+" , expr)
-        | expr , ("-" , expr) 
-        | integer
-        | whatzupwitu
-        | vibes
-        | string
-        | digits ;
-`;
+        digits = /[0-9]+/ ;
+        expr =
+              expr , ("*" , expr)
+            | expr , ("+" , expr)
+            | expr , ("-" , expr)
+            | integer
+            | whatzupwitu
+            | vibes
+            | string
+            | digits ;
+    `;
         const parser = EBNFParserLeftRecursion(grammar);
 
         const tmp = `
-    1 + 2 + 3 + whatzupwitu * vibes + a
-`;
+        1 + 2 + 3 + whatzupwitu * vibes + a
+    `;
         const parsed = parser.parse(tmp);
         expect(parsed).toBeGreaterThan(0);
+    });
+
+    it("should parse JSON data", () => {
+        const grammar = fs.readFileSync("./grammar/json.ebnf", "utf8");
+
+        const parser = JSONParser(grammar);
+
+        const jsonData = fs.readFileSync("./data/data.json", "utf8");
+        const parsed = parser.parse(jsonData);
+
+        expect(parsed).toEqual(JSON.parse(jsonData));
     });
 });

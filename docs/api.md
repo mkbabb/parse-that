@@ -1,4 +1,4 @@
-# Parser Combinator Library API
+# API
 
 ## `Parser<T>`
 

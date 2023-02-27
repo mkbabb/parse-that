@@ -1,7 +1,7 @@
 {
     "name": "@mkbabb/parse-that",
     "version": "0.2",
-    "description": "TypeScript parser combinators",
+    "description": "Parser combinators for TypeScript",
     "type": "module",
     "main": "./dist/@mkbabb/parse-that",
     "module": "./dist/@mkbabb/parse-that",
@@ -24,6 +24,7 @@
     },
     "devDependencies": {
         "@types/node": "^18.14.0",
+        "@types/prettier": "^2.7.2",
         "@vitest/coverage-c8": "^0.28.5",
         "autoprefixer": "^10.4.13",
         "prettier": "^2.8.4",

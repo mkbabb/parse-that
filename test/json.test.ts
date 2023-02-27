@@ -1,5 +1,5 @@
 import { Parser, regex, all, any, string, lazy } from "../src";
-import { test, expect, describe, it } from "vitest";
+import { test, expect, describe, it, bench } from "vitest";
 
 const comma = string(",").trim();
 
@@ -46,7 +46,7 @@ const jsonObject = Parser.lazy(() =>
     return obj;
 });
 
-const jsonValue: Parser<any> = any(
+export const jsonValue: Parser<any> = any(
     jsonNull,
     jsonBool,
     jsonNumber,

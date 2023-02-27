@@ -71,7 +71,7 @@ describe("CSV Parser", () => {
     });
 
     it("should parse a csv file", () => {
-        const filepath = "./test/data.csv";
+        const filepath = "./data/data.csv";
         const input = fs.readFileSync(filepath, "utf-8");
         const result = csv.parse(input);
     });

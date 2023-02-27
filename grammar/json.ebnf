@@ -1,0 +1,13 @@
+null = "null" ;
+bool = "true" | "false" ;
+number = /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ ;
+
+char = /[^"'\\]+/ | /\\"/ | /\\'/ | /\\\\/ ;
+string = '"' >> char << '"' | "'" >> char << "'" ;
+
+array = "[" >> ( value << ","? ) * << "]" ;
+
+pair = string, ":" >> value ;
+object = "{" >> ( pair << ","? ) * << "}" ;
+
+value = null | bool | number | string | array | object ;
