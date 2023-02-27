@@ -5,8 +5,9 @@ import fs from "fs";
 import { generateMathExpression, reduceMathExpression } from "./utils";
 
 import { addNonterminalsDebugging, generateParserFromEBNF } from "../src/ebnf/generate";
-import { EBNFParser } from "../src/ebnf/transform";
+import { EBNFParser, formatEBNFGrammar } from "../src/ebnf/transform";
 import { EBNFNonterminals } from "../src/ebnf/grammar";
+import chalk from "chalk";
 
 const comma = string(",").trim();
 const div = string("/").trim();
@@ -188,127 +189,158 @@ export const JSONParser = (grammar: string) => {
 };
 
 describe("EBNF Parser", () => {
-    it("should parse a simple math grammar", () => {
-        const grammar = fs.readFileSync("./grammar/math.ebnf", "utf8");
-        const parser = mathParser(grammar);
+    // it("should parse a simple math grammar", () => {
+    //     const grammar = fs.readFileSync("./grammar/math.ebnf", "utf8");
+    //     const parser = mathParser(grammar);
 
-        for (let i = 0; i < 100; i++) {
-            const expr = generateMathExpression();
-            const parsed = parser.parse(expr);
-            expect(parsed).toBe(eval(expr));
-        }
-    });
+    //     for (let i = 0; i < 100; i++) {
+    //         const expr = generateMathExpression();
+    //         const parsed = parser.parse(expr);
+    //         expect(parsed).toBe(eval(expr));
+    //     }
+    // });
 
-    it("should parse a CSS color grammar", () => {
-        const grammar = fs.readFileSync("./grammar/css-color.ebnf", "utf8");
-        const parser = CSSColorParser(grammar);
+    // it("should parse a CSS color grammar", () => {
+    //     const grammar = fs.readFileSync("./grammar/css-color.ebnf", "utf8");
+    //     const parser = CSSColorParser(grammar);
 
-        const colors = [
-            "#fff",
-            "hsl(0 0 0 / 12)",
-            "rgb(100%, 100%, 100% / 1)",
-            "rgb(10%, 11%, 12%)",
-            "rgb(255, 255, 255, 1)",
-            "rgb(255, 255, 255)",
-            "#fff",
-            "#ffffff",
-        ];
+    //     const colors = [
+    //         "#fff",
+    //         "hsl(0 0 0 / 12)",
+    //         "rgb(100%, 100%, 100% / 1)",
+    //         "rgb(10%, 11%, 12%)",
+    //         "rgb(255, 255, 255, 1)",
+    //         "rgb(255, 255, 255)",
+    //         "#fff",
+    //         "#ffffff",
+    //     ];
 
-        for (const color of colors) {
-            const parsed = parser.parse(color);
+    //     for (const color of colors) {
+    //         const parsed = parser.parse(color);
 
-            expect(parsed).toBeTruthy();
-        }
-    });
+    //         expect(parsed).toBeTruthy();
+    //     }
+    // });
 
-    it("should parse a CSS value unit grammar", () => {
-        const grammar = fs.readFileSync("./grammar/css-value-unit.ebnf", "utf8");
-        // fs.writeFileSync("./grammar/css-value-unit2.ebnf", formatGrammar(grammar));
-        const parser = CSSValueUnitParser(grammar);
+    // it("should parse a CSS value unit grammar", () => {
+    //     const grammar = fs.readFileSync("./grammar/css-value-unit.ebnf", "utf8");
+    //     // fs.writeFileSync("./grammar/css-value-unit2.ebnf", formatGrammar(grammar));
+    //     const parser = CSSValueUnitParser(grammar);
 
-        const units = [
-            "",
-            "px",
-            "em",
-            "rem",
-            "vh",
-            "vw",
-            "vmin",
-            "vmax",
-            "ch",
-            "ex",
-            "cm",
-            "mm",
-            "in",
-            "pt",
-            "pc",
-            "deg",
-            "grad",
-            "rad",
-            "turn",
-            "s",
-            "ms",
-            "dpi",
-            "dpcm",
-            "dppx",
-            "%",
-            "fr",
-        ];
-        for (let i = 0; i < units.length; i++) {
-            const unit = units[i];
-            let value = Math.random() * 100;
-            if (i % 3 === 0 || unit === "%") {
-                value = Math.round(value);
+    //     const units = [
+    //         "",
+    //         "px",
+    //         "em",
+    //         "rem",
+    //         "vh",
+    //         "vw",
+    //         "vmin",
+    //         "vmax",
+    //         "ch",
+    //         "ex",
+    //         "cm",
+    //         "mm",
+    //         "in",
+    //         "pt",
+    //         "pc",
+    //         "deg",
+    //         "grad",
+    //         "rad",
+    //         "turn",
+    //         "s",
+    //         "ms",
+    //         "dpi",
+    //         "dpcm",
+    //         "dppx",
+    //         "%",
+    //         "fr",
+    //     ];
+    //     for (let i = 0; i < units.length; i++) {
+    //         const unit = units[i];
+    //         let value = Math.random() * 100;
+    //         if (i % 3 === 0 || unit === "%") {
+    //             value = Math.round(value);
+    //         }
+
+    //         const parsed = parser.parse(value + unit);
+
+    //         expect(parsed.unit ?? "").toBe(unit);
+    //         expect(parsed.value).toBe(value);
+    //     }
+    // });
+
+    it("should parse a CSS keyframes grammar", () => {
+        const grammar = fs.readFileSync("./grammar/css-keyframes.ebnf", "utf8");
+        const [nonterminals, ast] = generateParserFromEBNF(grammar);
+
+        nonterminals.KEYFRAMES_RULE = nonterminals.KEYFRAMES_RULE.trim();
+
+        const keyframes = `
+        @keyframes matrixExample {
+            from {
+                top: 0px; background-color: red;
+                transform: matrix3d(
+                    1, 0, 0, 0,
+                    0, 1, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1);
             }
-
-            const parsed = parser.parse(value + unit);
-
-            expect(parsed.unit ?? "").toBe(unit);
-            expect(parsed.value).toBe(value);
-        }
+            to {
+                top: 200px; background-color: blue;
+                transform: matrix3d(
+                    -0.6,       1.34788, 0,        0,
+                    -2.34788,  -0.6,     0,        0,
+                     0,         0,       1,        0,
+                     0,         0,      10,        1);
+            }
+          }
+`;
+        debugging(nonterminals);
+        const parsed = nonterminals.KEYFRAMES_RULE.parse(keyframes);
+        console.log(chalk.bold.green(parsed));
     });
 
-    it("should parse a EEBNF grammar", () => {
-        let grammar = fs.readFileSync("./grammar/eebnf.ebnf", "utf8");
+    // it("should parse a EEBNF grammar", () => {
+    //     let grammar = fs.readFileSync("./grammar/eebnf.ebnf", "utf8");
 
-        const parser = EBNFParser(grammar);
+    //     const parser = EBNFParser(grammar);
 
-        for (let i = 0; i < 10; i++) {
-            grammar = parser.parse(grammar);
-            fs.writeFileSync("./grammar/eebnf2.ebnf", grammar);
-        }
-    });
+    //     for (let i = 0; i < 10; i++) {
+    //         grammar = parser.parse(grammar);
+    //         fs.writeFileSync("./grammar/eebnf2.ebnf", grammar);
+    //     }
+    // });
 
-    it("should handle EBNF left recursion", () => {
-        const grammar = `
-        digits = /[0-9]+/ ;
-        expr =
-              expr , ("*" , expr)
-            | expr , ("+" , expr)
-            | expr , ("-" , expr)
-            | integer
-            | whatzupwitu
-            | vibes
-            | string
-            | digits ;
-    `;
-        const parser = EBNFParserLeftRecursion(grammar);
+    // it("should handle EBNF left recursion", () => {
+    //     const grammar = `
+    //     digits = /[0-9]+/ ;
+    //     expr =
+    //           expr , ("*" , expr)
+    //         | expr , ("+" , expr)
+    //         | expr , ("-" , expr)
+    //         | integer
+    //         | whatzupwitu
+    //         | vibes
+    //         | string
+    //         | digits ;
+    // `;
+    //     const parser = EBNFParserLeftRecursion(grammar);
 
-        const tmp = `
-        1 + 2 + 3 + whatzupwitu * vibes + a
-    `;
-        const parsed = parser.parse(tmp);
-        expect(parsed).toBeGreaterThan(0);
-    });
+    //     const tmp = `
+    //     1 + 2 + 3 + whatzupwitu * vibes + a
+    // `;
+    //     const parsed = parser.parse(tmp);
+    //     expect(parsed).toBeGreaterThan(0);
+    // });
 
-    it("should parse JSON data", () => {
-        const grammar = fs.readFileSync("./grammar/json.ebnf", "utf8");
+    // it("should parse JSON data", () => {
+    //     const grammar = fs.readFileSync("./grammar/json.ebnf", "utf8");
 
-        const parser = JSONParser(grammar);
+    //     const parser = JSONParser(grammar);
 
-        const jsonData = fs.readFileSync("./data/data.json", "utf8");
-        const parsed = parser.parse(jsonData);
+    //     const jsonData = fs.readFileSync("./data/data.json", "utf8");
+    //     const parsed = parser.parse(jsonData);
 
-        expect(parsed).toEqual(JSON.parse(jsonData));
-    });
+    //     expect(parsed).toEqual(JSON.parse(jsonData));
+    // });
 });

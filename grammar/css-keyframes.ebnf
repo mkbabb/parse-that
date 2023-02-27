@@ -1,0 +1,28 @@
+S = /\s*/ ? ;
+COMMA = "," , S ;
+
+IDENT = /[a-zA-Z0-9_-]+/ ;
+NUMBER = /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ ;
+PERCENTAGE = /[0-9]+%/ ;
+DIMENSION = /[0-9]+/, IDENT ;
+HASH = /#[a-zA-Z0-9_-]+/ ;
+INCLUDES = /~=([a-zA-Z0-9_-]+)/ ;
+
+DASHMATCH = /\|=(.+)/ ;
+IMPORTANT_SYM = /!important/ ;
+UNICODE_RANGE = /u\+[0-9a-fA-F?]{1,6}(-[0-9a-fA-F]{1,6})?/ ;
+STRING = /"((?:[^"\n\r\f\\]|\\[\n\r\f\\"])*?)"/ ;
+
+VENDOR_PREFIX = /-\w+-/ ;
+DECLARATIONS_LIST = DECLARATION , { S , ";" , S , DECLARATION } , [ S , ";" ];
+DECLARATION = PROPERTY_NAME << (S , ":" , S) , PROPERTY_VALUE ;
+PROPERTY_NAME = IDENT ;
+FUNCTION = IDENT, "(" >> ( PROPERTY_VALUE << COMMA ? ) + << ")" ;
+PROPERTY_VALUE = S >> (FUNCTION | STRING | PERCENTAGE | DIMENSION | HASH | INCLUDES | DASHMATCH | UNICODE_RANGE | IMPORTANT_SYM | NUMBER | IDENT ) << S;
+
+KEYFRAMES_RULE = "@keyframes" , S , KEYFRAMES_NAME , S , "{" , S , KEYFRAME_BLOCKS , S , "}" , S;
+KEYFRAMES_NAME = IDENT ;
+KEYFRAME_BLOCKS = ( VENDOR_PREFIX? , KEYFRAME_BLOCK , S ) + ;
+KEYFRAME_BLOCK = KEYFRAME_SELECTOR , S , "{" , S , DECLARATIONS_LIST , S , "}" , S ;
+KEYFRAME_SELECTOR = PERCENTAGE | FROM_TO_KEYWORD | ( PERCENTAGE << COMMA ? ) + ;
+FROM_TO_KEYWORD = "from" | "to" ;

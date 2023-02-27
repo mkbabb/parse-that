@@ -171,6 +171,7 @@ export class EBNFGrammar {
     @lazy
     optionalGroup() {
         return this.expression()
+            .trim()
             .wrap(string("["), string("]"))
             .map((value) => {
                 return {
@@ -204,7 +205,6 @@ export class EBNFGrammar {
 
     many() {
         return this.term()
-
             .skip(mul)
             .map((value) => {
                 return {
@@ -216,7 +216,6 @@ export class EBNFGrammar {
 
     many1() {
         return this.term()
-
             .skip(plus)
             .map((value) => {
                 return {

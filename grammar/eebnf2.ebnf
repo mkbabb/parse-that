@@ -8,7 +8,8 @@ digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 
 symbol = "[" | "]" | "{" | "}" | "(" | ")" | "<" | ">" | "'" | '"' | "=" | "
 	|" | "." 
-	|  "," | ";" | "+" | "-" | "*" | "/" | "?" | "%" ;
+	|  "," | ";" | "+" | "-" | "*" | "/" | "?" | "%" | "&" 
+	| "^" | "~" | "`" | "!" | "@" | "#" | "$" | ":" ;
 
 pipe = "|" ;
 comma = "," ;
@@ -28,7 +29,7 @@ regex = div , ( character - div ) * , div ;
 epsilon = "epsilon" ;
 lhs = identifier ;
 
-term = identifier | terminal | regex 
+term = regex | identifier | terminal 
 	|  "(" , rhs , ")" 
 	|  "[" , rhs , "]" 
 	| "{" , rhs , "}" ;

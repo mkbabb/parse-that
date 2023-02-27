@@ -35,12 +35,12 @@ export class ParserState<T> {
     }
 
     getLineNumber(): number {
-        const offset = this.offset;
-        const lastNewline = this.src.lastIndexOf("\n", offset);
-        return Math.max(0, lastNewline);
+        const lines = this.src.slice(0, this.offset).split("\n");
+        const lineNumber = lines.length - 1;
+        return Math.max(0, lineNumber);
     }
 
-    addCursor(cursor: string = "^"): string {
+    addCursor(cursor: string = "^", error: boolean = false): string {
         const MAX_LINES = 5;
         const MAX_LINE_LENGTH = 80;
 
@@ -57,7 +57,7 @@ export class ParserState<T> {
             }
         });
 
-        const cursorLine = " ".repeat(this.getColumnNumber()) + cursor;
+        const cursorLine = " ".repeat(this.getColumnNumber()) + chalk.bold(cursor);
 
         lineSummaries.splice(lineIdx - startIdx + 1, 0, cursorLine);
 
@@ -65,7 +65,15 @@ export class ParserState<T> {
         const resultLines = lineSummaries.map((line, idx) => {
             const lineNum = startIdx + idx + 1;
             const paddedLineNum = (lineNum + "").padStart(lineNumberWidth);
-            return `${paddedLineNum} | ${line}`;
+
+            const paddedLine = `${paddedLineNum} | ${line}`;
+
+            // if the line is the current line, highlight it
+            if (lineNum === lineIdx + 1) {
+                return (error ? chalk.red : chalk.green)(chalk.bold(paddedLine));
+            } else {
+                return paddedLine;
+            }
         });
 
         return resultLines.join("\n");
@@ -330,17 +338,14 @@ export class Parser<T = string> {
             const stateColor = !newState.isError ? chalk.green : chalk.red;
 
             logger(
-                stateBgColor.bold(!newState.isError ? " Ok " : " Err "),
-                stateColor(!newState.isError ? "✓" : "ｘ", `\t${name}\t`),
-                `${this.toString()}`
+                stateBgColor.bold(!newState.isError ? " Ok ✓ " : " Err ｘ "),
+                stateColor(`\t${name}\t${newState.offset}\t`),
+                chalk.yellow(`${this.toString()}`),
             );
-
-            const s = state.addCursor("^");
-            logger(chalk.yellow(s) + "\n");
-
+            logger(state.addCursor("^", newState.isError) + "\n");
+            
             return newState;
         };
-
         return new Parser(debug, createParserContext("debug", name, logger));
         /// #else
         return this;

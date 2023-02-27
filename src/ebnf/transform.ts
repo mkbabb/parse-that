@@ -71,6 +71,11 @@ export const EBNFParser = (grammar: string) => {
     nonterminals.div = nonterminals.div.trim();
     nonterminals.question = nonterminals.question.trim();
 
+    nonterminals.regex = nonterminals.regex.trim().map((v) => {
+        const s = v.flat().join("");
+        return s;
+    });
+
     nonterminals.rhs = nonterminals.rhs.trim().map((v) => {
         const a = v instanceof Array ? v.flat(Infinity) : v;
         const s = a.join(" ");
@@ -103,10 +108,19 @@ export const EBNFParser = (grammar: string) => {
     });
 };
 
-export const formatEBNFGrammar = (grammar: string, eebnfGrammarPath: string) => {
+export const formatEBNFGrammar = (
+    grammar: string,
+    eebnfGrammarPath: string,
+    outfilePath?: string
+) => {
     const eebnfGrammar = fs.readFileSync(eebnfGrammarPath, "utf8");
     const ebnfParser = EBNFParser(eebnfGrammar);
-    return ebnfParser.parse(grammar);
+    const formatted = ebnfParser.parse(grammar);
+
+    if (outfilePath !== undefined) {
+        fs.writeFileSync(outfilePath, formatted);
+    }
+    return formatted;
 };
 
 function escapeRegExp(string: string): string {

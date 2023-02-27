@@ -12,12 +12,12 @@
             "require": "./dist/@mkbabb/parse-that.umd.js"
         }
     },
+
     "scripts": {
         "test": "vitest --mode development",
         "test:coverage": "vitest --mode development --coverage",
         "test:watch": "vitest --mode development --watch",
         "test:production": "vitest",
-
         "build": "vite build",
         "build:debug": "vite build --mode development"
     },
@@ -32,6 +32,8 @@
         "@types/prettier": "^2.7.2",
         "@vitest/coverage-c8": "^0.28.5",
         "autoprefixer": "^10.4.13",
+        "chevrotain": "^10.4.2",
+        "parsimmon": "^1.18.1",
         "prettier": "^2.8.4",
         "typescript": "^4.9.5",
         "vite": "^4.1.4",

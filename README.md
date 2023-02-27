@@ -1,4 +1,4 @@
-# Parse That Thang
+# Parse That [Thang](https://oldinterneticons.tumblr.com/post/679136268174688256/go-mouse-fuck-that-thang)
 
 Parser combinators for TypeScript. Write your language in EEBNF (extended extended
 backus-naur form) and parse it with ease. Handles left recursion, right recursion, and
@@ -39,9 +39,85 @@ expr.parse("1 + whatzupwitu * 3"); // => [1, "+", [2, "*", 3]]
 
 nice.
 
+## Table of Contents
+
+- [Parse That Thang](#parse-that-thang)
+  - [Usage](#usage)
+  - [Table of Contents](#table-of-contents)
+  - [Performance](#performance)
+    - [Results](#results)
+        - [hz: ops/sec - higher is better](#hz-opssec---higher-is-better)
+  - [Debugging](#debugging)
+        - [Thanks to chalk for the colors!](#thanks-to-chalk-for-the-colors)
+  - [EEBNF and the Great Parser Generator](#eebnf-and-the-great-parser-generator)
+    - [Key differences with EBNF](#key-differences-with-ebnf)
+    - [Left recursion \& more](#left-recursion--more)
+    - [Performance](#performance-1)
+    - [Formatting, syntax highlighting, \& more](#formatting-syntax-highlighting--more)
+  - [API \& examples](#api--examples)
+  - [Sources, acknowledgements, \& c.](#sources-acknowledgements--c)
+
+## Performance
+
+As stated earlier, parser combinators using closures like this are always going to be
+"slow". But it's perhaps not as bad as you think. Here's a benchmark comparing the
+following libraries, all parsing the same `JSON` grammar:
+
+-   [Chevrotain](https://github.com/chevrotain/chevrotain)
+-   [Parsimmon](https://github.com/jneen/parsimmon)
+-   this library, with standard combinators: [here](test/json.test.ts)
+-   this library, using a generated parser from EEBNF: [here](test/ebnf.test.ts)
+
+The file used is a 3.8 MB `JSON` file, containing ~10K lines of `JSON`. Whitespace is
+randomly inserted to make the file a bit more difficult to parse (makes the file about
+5x the size). The benchmark is run 100 times, and the average is taken.
+
+### Results
+
+| name       | hz     | min    | max    | mean   | p75    | p99    | p995   | p999   | rme    | samples |
+| ---------- | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------- |
+| Standard   | 5.5048 | 175.07 | 201.34 | 181.66 | 182.51 | 197.69 | 201.34 | 201.34 | ±0.58% | 100     |
+| EEBNF      | 4.9793 | 191.08 | 214.62 | 200.83 | 205.12 | 211.93 | 214.62 | 214.62 | ±0.58% | 100     |
+| Chevrotain | 6.7840 | 128.83 | 171.45 | 147.41 | 156.70 | 171.09 | 171.45 | 171.45 | ±1.50% | 100     |
+| Parsimmon  | 3.8697 | 239.98 | 298.99 | 258.42 | 263.65 | 281.52 | 298.99 | 298.99 | ±0.81% | 100     |
+
+##### hz: ops/sec - higher is better
+
+    Chevrotain - test/benchmarks/json.bench.ts > JSON Parser
+        1.23x faster than Standard
+        1.36x faster than EEBNF
+        1.75x faster than Parsimmon
+
+Chevrotain is definitely the fastest, but it's also the most complex to use - gotta
+create a lexer ;\).
+
+## Debugging
+
+Debugging is made 🌈pretty🌈 by using the `debug` combinator - but you must run in
+`development` mode (`vite build --mode development`) to see the output.
+
+![image](./assets/debuggin.png)
+
+As output, you'll see a few things:
+
+-   A header containing:
+    -   parsing status (`Ok` or `Err`)
+    -   debug node's name
+    -   stringified current parser - a bit like the EEBNF format
+-   A body containing:
+    -   A maximum of 5 lines of the input string, with the current offset into the parse
+        string denoted by `^`
+    -   Line numbers for each line currently displayed
+
+The `blue` color indicates that that variable is an EEBNF nonterminal.
+
+##### Thanks to [chalk](https://github.com/chalk/chalk) for the colors!
+
 ## EEBNF and the Great Parser Generator
 
 Extended Extended Backus-Naur Form is a simple and readable way to describe a language.
+A [better](https://dwheeler.com/essays/dont-use-iso-14977-ebnf.html) EBNF.
+
 See the EEBNF for EEBNF (meta right) at [eebnf.ebnf](./grammar/eebnf.ebnf).
 
 With your grammar in hand, call the `generateParserFromEBNF` function within
@@ -61,8 +137,9 @@ Checkout the self-parsing example (+ formatting), at
 
 ### Key differences with EBNF
 
-It's a mesh between your run-of-the-mill EBNF and W3C's EBNF. So stuff like `?` and `*`
-are allowed - but it also supports `[ ]` and `{ }` for optional and repeated elements.
+It's a mesh between your run-of-the-mill EBNF and
+[W3C's EBNF](https://www.w3.org/TR/REC-xml/#sec-notation). So stuff like `?` and `*` are
+allowed - but it also supports `[ ]` and `{ }` for optional and repeated elements.
 
 Set-like subtraction is supported, so you can do things like `a - b` to mean "a, but not
 b".
