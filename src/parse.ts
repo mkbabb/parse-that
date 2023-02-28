@@ -148,26 +148,34 @@ export class Parser<T = string> {
 
     memoize() {
         const memoize = (state: ParserState<T>) => {
-            const cijKey = this.getCijKey(state);
-            const cij = leftRecursionCounts.get(cijKey) ?? 0;
+            const cijKey1 = this.getCijKey(state);
+            const cij1 = leftRecursionCounts.get(cijKey1) ?? 0;
 
             let cached = memoizeCache.get(this.id);
 
             if (cached) {
-                return cached;
+                if (cached.offset < state.offset) {
+                    memoizeCache.delete(this.id);
+                } else {
+                    return cached;
+                }
             } else if (this.atLeftRecursionLimit(state)) {
                 return state.err(undefined);
             }
 
-            leftRecursionCounts.set(cijKey, cij + 1);
+            leftRecursionCounts.set(cijKey1, cij1 + 1);
             const newState = this.parser(state);
 
             cached = memoizeCache.get(this.id);
+            if (cached) {
+                if (cached.offset > newState.offset) {
+                    return newState;
+                }
 
-            if (!cached) {
-                memoizeCache.set(this.id, newState);
+                newState.offset = Math.max(cached.offset, newState.offset);
+                cached.offset = newState.offset;
             } else {
-                cached.offset = Math.max(cached.offset, newState.offset);
+                memoizeCache.set(this.id, newState);
             }
             return newState;
         };
@@ -190,8 +198,12 @@ export class Parser<T = string> {
 
             cached = memoizeCache.get(this.id);
             if (!cached) {
+                memoizeCache.set(this.id, newState);
                 return newState;
+            } else {
+                memoizeCache.delete(this.id);
             }
+
             return newState;
         };
 
@@ -219,7 +231,7 @@ export class Parser<T = string> {
             createParserContext("then", next)
         );
         /// #if MEMOIZE
-        // p = p.mergeMemo() as Parser<[T, S]>;
+        p = p.mergeMemo() as Parser<[T, S]>;
         /// #endif
         return p;
     }
@@ -239,7 +251,7 @@ export class Parser<T = string> {
             createParserContext("or", other)
         );
         /// #if MEMOIZE
-        // p = p.memoize() as Parser<T | S>;
+        p = p.memoize() as Parser<T | S>;
         /// #endif
         return p;
     }
@@ -465,6 +477,7 @@ export class Parser<T = string> {
                 return lazyCache.get(id)!.parser(state);
             }
             const parser = fn();
+            parser.id = id;
             lazyCache.set(id, parser);
             return parser.parser(state);
         };
@@ -555,8 +568,8 @@ export function lazy<T>(
             if (lazyCache.has(id)) {
                 return lazyCache.get(id)!.parser(state);
             }
-
             const parser = method.apply(this, arguments);
+            parser.id = id;
             lazyCache.set(id, parser);
             return parser.parser(state);
         };
