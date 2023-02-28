@@ -1,0 +1,5 @@
+expression = 
+      ( expression, "+", expression ) 
+    | ( expression, "-", expression )
+    | ( number ) ;
+number = /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/  ;

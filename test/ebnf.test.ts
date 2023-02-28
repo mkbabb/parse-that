@@ -297,25 +297,25 @@ describe("EBNF Parser", () => {
         nonterminals.KEYFRAMES_RULE = nonterminals.KEYFRAMES_RULE.trim();
 
         const keyframes = `
-        @keyframes matrixExample {
-            from {
-                top: 0px; background-color: red;
-                transform: matrix3d(
-                    1, 0, 0, 0,
-                    0, 1, 0, 0,
-                    0, 0, 1, 0,
-                    0, 0, 0, 1);
-            }
-            to {
-                top: 200px; background-color: blue;
-                transform: matrix3d(
-                    -0.6,       1.34788, 0,        0,
-                    -2.34788,  -0.6,     0,        0,
-                     0,         0,       1,        0,
-                     0,         0,      10,        1);
-            }
-          }
-`;
+            @keyframes matrixExample {
+                from {
+                    top: 0px; background-color: red;
+                    transform: matrix3d(
+                        1, 0, 0, 0,
+                        0, 1, 0, 0,
+                        0, 0, 1, 0,
+                        0, 0, 0, 1);
+                }
+                to {
+                    top: 200px; background-color: blue;
+                    transform: matrix3d(
+                        -0.6,       1.34788, 0,        0,
+                        -2.34788,  -0.6,     0,        0,
+                         0,         0,       1,        0,
+                         0,         0,      10,        1);
+                }
+              }
+    `;
         // debugging(nonterminals);
         const parsed = nonterminals.KEYFRAMES_RULE.parse(keyframes);
         // console.log(chalk.bold.green(parsed));
@@ -334,23 +334,23 @@ describe("EBNF Parser", () => {
 
     it("should handle EBNF left recursion", () => {
         const grammar = `
-        digits = /[0-9]+/ ;
-        expr =
-              expr , ("*" , expr)
-            | expr , ("+" , expr)
-            | expr , ("-" , expr)
-            | integer
-            | whatzupwitu
-            | vibes
-            | string
-            | digits ;
-    `;
+            digits = /[0-9]+/ ;
+            expr =
+                  expr , ("*" , expr)
+                | expr , ("+" , expr)
+                | expr , ("-" , expr)
+                | integer
+                | whatzupwitu
+                | vibes
+                | string
+                | digits ;
+        `;
         const [nonterminals, ast] = EBNFParserLeftRecursion(grammar);
         const parser = nonterminals.expr;
 
         const tmp = `
-        1 + 2 + 3 + whatzupwitu * vibes + a
-    `;
+            1 + 2 + 3 + whatzupwitu * vibes + a
+        `;
         const parsed = parser.parse(tmp);
         expect(parsed).toBeGreaterThan(0);
     });
@@ -391,6 +391,34 @@ describe("EBNF Parser", () => {
 
         for (const r of regexExamples) {
             const parsed = parser.parse(r.toString());
+            console.log(chalk.green(parsed));
+        }
+    });
+
+    it("should parse an ambiguous EEBNF grammar", () => {
+        let grammar = fs.readFileSync("./grammar/g4.ebnf", "utf8");
+
+        const [nonterminals, ast] = generateParserFromEBNF(grammar);
+
+        const sentences = [
+            "the big cat ate the green green woman",
+            "the woman hit the man with the banana",
+        ];
+
+        const memoFuncs = ["sentence"];
+
+        for (const key of Object.keys(nonterminals)) {
+            nonterminals[key] = nonterminals[key].trim();
+            if (memoFuncs.includes(key)) {
+                nonterminals[key] = nonterminals[key].memoize();
+            }
+        }
+
+        const parser = nonterminals.sentence;
+        debugging(nonterminals);
+
+        for (const sentence of sentences) {
+            const parsed = parser.parse(sentence);
             console.log(chalk.green(parsed));
         }
     });

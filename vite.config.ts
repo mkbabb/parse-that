@@ -33,6 +33,7 @@ export default defineConfig(({ mode }) => ({
         vitePluginIfDef.default({
             define: {
                 DEBUG: mode === "development",
+                MEMOIZE: false,
             },
             options: {
                 verbose: false,

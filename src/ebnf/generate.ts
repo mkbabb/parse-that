@@ -1,6 +1,6 @@
 import { Parser, all, any, eof, regex, string } from "..";
 import { EBNFExpression, EBNFNonterminals, EBNFAST, EBNFGrammar } from "./grammar";
-import { removeLeftRecursion } from "./optimize";
+import { removeAllLeftRecursion } from "./optimize";
 import chalk from "chalk";
 
 function generateParserFromAST(ast: EBNFAST) {
@@ -44,14 +44,16 @@ function generateParserFromAST(ast: EBNFAST) {
                 return generateParser(name, expr.value[0]).not(
                     generateParser(name, expr.value[1])
                 );
-            case "concatenation":
+            case "concatenation": {
                 const parsers = expr.value.map((x) => generateParser(name, x));
                 if (parsers.at(-1)?.context?.name === "eof") {
                     parsers.pop();
                 }
                 return all(...parsers);
-            case "alternation":
+            }
+            case "alternation": {
                 return any(...expr.value.map((x) => generateParser(name, x)));
+            }
         }
     }
 
@@ -72,7 +74,7 @@ export function generateParserFromEBNF(input: string) {
             return acc;
         }, new Map<string, EBNFExpression>()) as EBNFAST;
 
-    ast = removeLeftRecursion(ast);
+    ast = removeAllLeftRecursion(ast);
 
     const nonterminals = generateParserFromAST(ast);
     return [nonterminals, ast] as const;

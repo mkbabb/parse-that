@@ -182,56 +182,6 @@ export const comparePrefix = (
     }
 };
 
-export function removeDirectLeftRecursion(
-    name: string,
-    expr: EBNFAlternation,
-    tailName: string
-) {
-    const head = [];
-    const tail = [];
-
-    const APrime = {
-        type: "nonterminal",
-        value: tailName,
-    } as EBNFNonterminal;
-
-    for (let i = 0; i < expr.value.length; i++) {
-        const e = expr.value[i];
-
-        if (e.type === "concatenation" && e.value[0].value === name) {
-            tail.push({
-                type: "concatenation",
-                value: [...e.value.slice(1), APrime],
-            });
-        } else {
-            head.push({
-                type: "concatenation",
-                value: [e, APrime],
-            });
-        }
-    }
-
-    // No direct left recursion
-    if (tail.length === 0) {
-        return [undefined, undefined];
-    }
-
-    tail.push({
-        type: "epsilon",
-    } as EBNFEpsilon);
-
-    return [
-        {
-            type: "alternation",
-            value: head,
-        } as EBNFAlternation,
-        {
-            type: "alternation",
-            value: tail,
-        } as EBNFAlternation,
-    ] as const;
-}
-
 export function rewriteTreeLeftRecursion(name: string, expr: EBNFAlternation) {
     const prefixMap = new Map<EBNFExpression, EBNFExpression[]>();
     let commonPrefix: EBNFExpression | null = null;
@@ -281,16 +231,69 @@ export function rewriteTreeLeftRecursion(name: string, expr: EBNFAlternation) {
     }
 }
 
-export function removeLeftRecursion(ast: EBNFAST) {
-    const newAST = topologicalSort(ast);
-    const newNodes = new Map() as EBNFAST;
-    let uniqueIndex = 0;
+const removeDirectLeftRecursionProduction = (
+    name: string,
+    expr: EBNFAlternation,
+    tailName: string
+) => {
+    const head = [];
+    const tail = [];
 
-    for (const [name, expression] of newAST) {
+    const APrime = {
+        type: "nonterminal",
+        value: tailName,
+    } as EBNFNonterminal;
+
+    for (let i = 0; i < expr.value.length; i++) {
+        const e = expr.value[i];
+
+        if (e.type === "concatenation" && e.value[0].value === name) {
+            tail.push({
+                type: "concatenation",
+                value: [...e.value.slice(1), APrime],
+            });
+        } else {
+            head.push({
+                type: "concatenation",
+                value: [e, APrime],
+            });
+        }
+    }
+
+    // No direct left recursion
+    if (tail.length === 0) {
+        return [undefined, undefined];
+    }
+
+    tail.push({
+        type: "epsilon",
+    } as EBNFEpsilon);
+
+    return [
+        {
+            type: "alternation",
+            value: head,
+        } as EBNFAlternation,
+        {
+            type: "alternation",
+            value: tail,
+        } as EBNFAlternation,
+    ] as const;
+};
+
+export function removeDirectLeftRecursion(ast: EBNFAST) {
+    const newNodes = new Map() as EBNFAST;
+
+    let uniqueIndex = 0;
+    for (const [name, expression] of ast) {
         if (expression.type === "alternation") {
             const tailName = `${name}_${uniqueIndex++}`;
 
-            const [head, tail] = removeDirectLeftRecursion(name, expression, tailName);
+            const [head, tail] = removeDirectLeftRecursionProduction(
+                name,
+                expression,
+                tailName
+            );
             if (head) {
                 newNodes.set(tailName, tail);
                 newNodes.set(name, head);
@@ -302,13 +305,47 @@ export function removeLeftRecursion(ast: EBNFAST) {
         return ast;
     }
     for (const [name, expression] of newNodes) {
-        newAST.set(name, expression);
+        ast.set(name, expression);
     }
-    for (const [name, expression] of newAST) {
+
+    for (const [name, expression] of ast) {
         if (expression.type === "alternation") {
             rewriteTreeLeftRecursion(name, expression);
         }
     }
+}
+
+export function removeIndirectLeftRecursion(ast: EBNFAST) {
+    let i = 0;
+
+    let uniqueIndex = 0;
+    const betas = new Map<string, EBNFExpression>();
+
+    const recurse = (name: string, expr: EBNFExpression) => {
+        if (expr.type === "concatenation") {
+            if (expr.value[0].type === "nonterminal" && expr.value[0].value === name) {
+                const beta = {
+                    type: "concatenation",
+                    value: expr.value.slice(1, expr.value.length),
+                } as EBNFConcatenation;
+                const aj = expr.value.shift();
+                const tailName = `${name}_${uniqueIndex++}`;
+            }
+        }
+    };
+
+    for (const [name, expression] of ast) {
+        recurse(name, expression);
+
+        i += 1;
+    }
+}
+
+export function removeAllLeftRecursion(ast: EBNFAST) {
+    const newAST = topologicalSort(ast);
+
+    // removeIndirectLeftRecursion(newAST);
+    removeDirectLeftRecursion(newAST);
 
     return newAST;
 }
