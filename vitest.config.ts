@@ -9,9 +9,7 @@ export default defineConfig(({ mode }) => ({
             provider: "c8",
             reporter: ["text", "json", "html"],
         },
-        onConsoleLog: (message) => {
-            console.log(message);
-        },
+        cache: false,
         watch: true,
         forceRerunTriggers: ["**/*.ebnf/**"],
     },

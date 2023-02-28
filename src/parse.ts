@@ -25,6 +25,10 @@ export class ParserState<T> {
         return nextState;
     }
 
+    from<S>(value: S, offset: number = 0) {
+        return new ParserState<S>(this.src, value, this.offset + offset, this.isError);
+    }
+
     getColumnNumber(): number {
         const offset = this.offset;
         const lastNewline = this.src.lastIndexOf("\n", offset);
@@ -117,12 +121,76 @@ const trimStateWhitespace = <T>(state: ParserState<T>) => {
 
 const lazyCache = new Map<number, Parser<any>>();
 let lazyId = 0;
+let parserId = 0;
+
+const memoizeCache = new Map<number, ParserState<any>>();
+const leftRecursionCounts = new Map<string, number>();
 
 export class Parser<T = string> {
+    id: number = parserId++;
     constructor(public parser: ParserFunction<T>, public context: ParserContext = {}) {}
 
     parse(val: string) {
+        memoizeCache.clear();
         return this.parser(new ParserState(val)).value as T;
+    }
+
+    atLeftRecursionLimit(state: ParserState<T>) {
+        const cijKey = `${this.id}${state.offset}`;
+        const cij = leftRecursionCounts.get(cijKey) ?? 0;
+
+        return cij > state.src.length - state.offset;
+    }
+
+    memoize() {
+        const memoize = (state: ParserState<T>) => {
+            const cijKey = `${this.id}${state.offset}`;
+            const cij = leftRecursionCounts.get(cijKey) ?? 0;
+
+            const cached = memoizeCache.get(this.id);
+
+            if (cached) {
+                return cached;
+            } else if (this.atLeftRecursionLimit(state)) {
+                return state.err(undefined);
+            }
+
+            leftRecursionCounts.set(cijKey, cij + 1);
+            const newState = this.parser(state);
+
+            memoizeCache.set(this.id, newState);
+            return newState;
+        };
+        return new Parser(
+            memoize as ParserFunction<T>,
+            createParserContext("memoize", this)
+        );
+    }
+
+    mergeMemo<S>() {
+        const mergeMemo = (state: ParserState<T>) => {
+            let cached = memoizeCache.get(this.id);
+            if (cached) {
+                return cached;
+            } else if (this.atLeftRecursionLimit(state)) {
+                return state.err(undefined);
+            }
+            const newState = this.parser(state);
+
+            cached = memoizeCache.get(this.id);
+            if (!cached) {
+                memoizeCache.set(this.id, newState);
+                return newState;
+            }
+
+            memoizeCache.delete(this.id);
+            return newState.from(cached.value);
+        };
+
+        return new Parser(
+            mergeMemo as ParserFunction<[T, S]>,
+            createParserContext("mergeMemo", this)
+        );
     }
 
     then<S>(next: Parser<S | T>) {
@@ -141,7 +209,7 @@ export class Parser<T = string> {
         return new Parser(
             then as ParserFunction<[T, S]>,
             createParserContext("then", next)
-        );
+        ).mergeMemo();
     }
 
     or<S>(other: Parser<S | T>) {
@@ -157,7 +225,7 @@ export class Parser<T = string> {
         return new Parser(
             or as ParserFunction<T | S>,
             createParserContext("or", other)
-        );
+        ).mergeMemo();
     }
 
     chain<S>(fn: (value: T) => Parser<S | T>, chainError: boolean = false) {
@@ -188,13 +256,6 @@ export class Parser<T = string> {
         return new Parser(map as ParserFunction<S>, createParserContext("map", this));
     }
 
-    // skip<S>(parser: Parser<S>) {
-    //     const skip = this.then(parser).map(([a]) => {
-    //         return a;
-    //     }) as Parser<T>;
-    //     skip.context = createParserContext("skip", parser);
-    //     return skip;
-    // }
     skip<S>(parser: Parser<S>) {
         const skip = (state: ParserState<T>) => {
             const nextState1 = this.parser(state);
@@ -374,6 +435,12 @@ export class Parser<T = string> {
         /// #endif
     }
 
+    eof() {
+        const p = this.skip(eof()) as Parser<T>;
+        p.context = createParserContext("eof", this);
+        return p;
+    }
+
     static lazy<T>(fn: () => Parser<T>) {
         const id = lazyId++;
 
@@ -422,15 +489,20 @@ export class Parser<T = string> {
                     return `(${this.context.args
                         .map((a) => a.toString(indent + 1))
                         .join(delim)})`;
-
                 case "many":
                     return `${this.context.args[0]} ... ${this.context.args[1]}`;
-
                 case "sepBy":
                     return `sepBy ${this.context.args[0]}`;
-
                 case "lazy":
                     return `() => ${this.context.args[0]}`;
+                case "debug":
+                    return `debug ${this.context.args[0]}`;
+                case "memoize":
+                    return `memoize ${this.context.args[0]}`;
+                case "mergeMemo":
+                    return `mergeMemo ${this.context.args[0]}`;
+                case "eof":
+                    return `${this.context.args[0]} eof`;
             }
         })();
         if (s !== undefined) {
