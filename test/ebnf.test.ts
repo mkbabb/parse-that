@@ -428,14 +428,14 @@ describe("EBNF Parser", () => {
         }
     });
 
-    it("should parse a EBNF grammar", () => {
+    it("should parse an EBNF grammar", () => {
         let grammar = fs.readFileSync("./grammar/ebnf.ebnf", "utf8");
 
         for (let i = 0; i < 10; i++) {
             const [nonterminals, ast] = generateParserFromEBNF(grammar);
             nonterminals.S = regex(/\s*/);
 
-            const parser = nonterminals.grammar.debug("grammar");
+            const parser = nonterminals.grammar.trim().debug("grammar");
             const result = parser.parse(grammar);
             grammar = result.flat(Infinity).join("");
 
@@ -443,4 +443,34 @@ describe("EBNF Parser", () => {
             expect(grammar).toBeTruthy();
         }
     });
+
+    // it("should parse an emoji grammar 🌈", () => {
+    //     const grammar = fs.readFileSync("./grammar/emoji.ebnf", "utf8");
+
+    //     const [nonterminals, ast] = generateParserFromEBNF(grammar);
+
+    //     const sentences = [
+    //         "😎 🍔 🔢🔢🍕",
+    //         "😂 🍔 (👉😎 🥗 🔢👈) 🍰 🔢🔢🍕",
+    //         "😊 🍔 😂 🍟 🔢🍕",
+    //         "😍 🍔 😊 🍰 (👉😎 🥗 🔢👈) 🍰 🔢🔢🍕",
+    //         "📢 😎 🥗 😂 🥗 😊 🥗 😍",
+    //     ];
+
+    //     Object.keys(nonterminals).forEach((key) => {
+    //         nonterminals[key] = nonterminals[key].trim();
+    //     });
+    //     nonterminals.program = nonterminals.program.map((v) => {
+    //         return v;
+    //     });
+
+    //     debugging(nonterminals);
+
+    //     const parser = nonterminals.regex;
+
+    //     for (const s of sentences) {
+    //         const parsed = parser.parse(s);
+    //         expect(parsed).toBeTruthy;
+    //     }
+    // });
 });

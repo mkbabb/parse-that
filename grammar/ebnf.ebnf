@@ -16,7 +16,7 @@ symbol = "[" | "]" | "{" | "}" | "(" | ")" | "<" | ">"
 character = letter | digit | symbol | "_" | " " ;
 identifier = letter , { letter | digit | "_" } ;
 
-S = { " " | "\t" | "\r" | "\f" | "\b" | "\n" } ;
+S = { " " | "\n" | "\t" | "\r" | "\f" | "\b" } ;
 
 terminal = "'" , character - "'" , { character - "'" } , "'"
          | '"' , character - '"' , { character - '"' } , '"' ;

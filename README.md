@@ -188,7 +188,7 @@ expr = expr , "+" , expr
      | string ;
 ```
 
-and like (highly ambiguous grammar):
+and like (highly ambiguous):
 
 ```ebnf
 ms = "s";

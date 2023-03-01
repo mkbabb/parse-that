@@ -78,6 +78,7 @@ export function generateParserFromEBNF(input: string, optimizeGraph: boolean = f
 
     let ast = new EBNFGrammar()
         .grammar()
+        .trim()
         .parse(input)
         .reduce((acc, { name, expression, type }, ix) => {
             if (type === "comment") {
