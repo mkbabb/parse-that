@@ -1,4 +1,14 @@
-import { whitespace, regex, string, all, Parser, eof, lookBehind, lazy } from "../src";
+import {
+    whitespace,
+    regex,
+    string,
+    all,
+    Parser,
+    eof,
+    lookBehind,
+    lazy,
+    any,
+} from "../src";
 
 import { expect, describe, it } from "vitest";
 import fs from "fs";
@@ -10,10 +20,7 @@ const digits = regex(/[0-9]+/);
 
 describe("JSON Parser", () => {
     it("should expr", () => {
-        const expr = Parser.lazy(() => expr.or(digits))
-            .memoize()
-            .eof();
-
+        const expr = Parser.lazy(() => expr.or(digits)).memoize();
         const result = expr.parse("12356");
         expect(result).toEqual("12356");
     });
@@ -26,9 +33,7 @@ describe("JSON Parser", () => {
         const mz = string("z");
         const mZ = Parser.lazy(() => mz.or(mY)).memoize();
 
-        const mY = Parser.lazy(() => mZ.then(mSL))
-            .memoize()
-            .eof();
+        const mY = Parser.lazy(() => mZ.then(mSL)).memoize();
 
         const input = "zss";
 
@@ -51,44 +56,53 @@ describe("JSON Parser", () => {
         expect(sCount).toBe(input.length);
     });
 
-    // it("should sS from EEBNF", () => {
-    //     const grammar = fs.readFileSync("./grammar/sS.ebnf", "utf-8");
-    //     const [nonterminals, ast] = generateParserFromEBNF(grammar);
-    //     const sentences = ["ssssss"];
+    it("should sS from EEBNF", () => {
+        const grammar = fs.readFileSync("./grammar/sS.ebnf", "utf-8");
+        const [nonterminals, ast] = generateParserFromEBNF(grammar);
 
-    //     nonterminals.sS = nonterminals.sS.memoize();
+        nonterminals.sS = nonterminals.sS.mergeMemos().memoize();
+        const sentence = "s".repeat(100);
 
-    //     for (const sentence of sentences) {
-    //         const result = nonterminals.sS.parse(sentence).flat(Infinity);
+        const result = nonterminals.sS.parse(sentence).flat(Infinity) ?? [];
 
-    //         const sCount = result.filter((x) => x === "s").length;
-    //         expect(sCount).toBe(sentence.length);
-    //     }
-    // });
+        const sCount = result.filter((x) => x === "s").length;
+        expect(sCount).toBe(sentence.length);
+    });
 
     it("should math from EEBNF", () => {
-        // const grammar = fs.readFileSync("./grammar/math-ambiguous.ebnf", "utf-8");
-        // const [nonterminals, ast] = generateParserFromEBNF(grammar);
+        const grammar = fs.readFileSync("./grammar/math-ambiguous.ebnf", "utf-8");
+        const [nonterminals, ast] = generateParserFromEBNF(grammar);
 
-        // for (const key of Object.keys(nonterminals)) {
-        //     nonterminals[key] = nonterminals[key].trim();
-        // }
-        // nonterminals.expression = nonterminals.expression.memoize().debug("expression");
+        nonterminals.expression = nonterminals.expression.memoize().trim();
 
-        // const parser = nonterminals.expression;
+        const parser = nonterminals.expression;
+
+        for (let i = 0; i < 100; i++) {
+            const expr = generateMathExpression(10);
+            const parsed = parser.parse(expr) ?? [];
+            const flat = parsed.flat(Infinity).join("");
+            expect(flat).toEqual(expr.replaceAll(" ", ""));
+        }
+    });
+    it("should math again", () => {
+        const operators = any(string("+"), string("-"), string("*"), string("/"));
+
         const expression = Parser.lazy(() =>
-            expression.then(string("+")).then(expression).or(digits.debug("digits"))
+            all(expression, operators.then(expression).opt())
+                .mergeMemos()
+                .or(regex(/-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/))
         )
             .opt()
+            .trim()
             .memoize();
+
         const parser = expression;
 
         for (let i = 0; i < 1; i++) {
-            const expr = "1+3+5+6+2";
+            const expr = generateMathExpression(10);
             const parsed = parser.parse(expr) ?? [];
             const flat = parsed.flat(Infinity).join("");
-
-            expect(flat).toEqual(expr);
+            expect(flat).toEqual(expr.replaceAll(" ", ""));
         }
     });
 });

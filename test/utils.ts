@@ -37,12 +37,12 @@ export const reduceMathExpression = ([num, rest]: [number, [string, number][]]) 
 };
 
 export const generateMathExpression = (
-    length: number = 100,
+    numberCount: number = 100,
     operators = ["+", "-", "*", "/"] as const
 ) => {
-    const nums = Array.from({ length }, () => Math.random() * 100).map(String);
+    const nums = Array.from({ length: numberCount }, () => Math.random() * 100).map(String);
 
-    return Array.from({ length: length }, () => {
+    return Array.from({ length: numberCount }, () => {
         return nums[Math.floor(Math.random() * nums.length)];
     }).reduce((acc, expr) => {
         const operator = operators[Math.floor(Math.random() * operators.length)];

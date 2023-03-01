@@ -9,7 +9,9 @@ function generateParserFromAST(ast: EBNFAST) {
             case "literal":
                 return string(expr.value);
             case "nonterminal":
-                const l = Parser.lazy(() => nonterminals[expr.value]);
+                const l = Parser.lazy(() => {
+                    return nonterminals[expr.value];
+                });
                 l.context.name = chalk.blue(expr.value);
                 return l;
 
@@ -65,7 +67,7 @@ function generateParserFromAST(ast: EBNFAST) {
     return nonterminals;
 }
 
-export function generateParserFromEBNF(input: string) {
+export function generateParserFromEBNF(input: string, optimizeGraph: boolean = false) {
     let ast = new EBNFGrammar()
         .grammar()
         .parse(input)
@@ -74,8 +76,9 @@ export function generateParserFromEBNF(input: string) {
             return acc;
         }, new Map<string, EBNFExpression>()) as EBNFAST;
 
-    ast = removeAllLeftRecursion(ast);
-
+    if (optimizeGraph) {
+        ast = removeAllLeftRecursion(ast);
+    }
     const nonterminals = generateParserFromAST(ast);
     return [nonterminals, ast] as const;
 }

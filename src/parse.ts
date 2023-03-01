@@ -143,6 +143,7 @@ export class Parser<T = string> {
 
     atLeftRecursionLimit(state: ParserState<T>) {
         const cij = leftRecursionCounts.get(this.getCijKey(state)) ?? 0;
+
         return cij > state.src.length - state.offset;
     }
 
@@ -178,7 +179,7 @@ export class Parser<T = string> {
         );
     }
 
-    mergeMemo<S>() {
+    mergeMemos<S>() {
         const mergeMemo = (state: ParserState<T>) => {
             let cached = memoizeCache.get(this.id);
             if (cached) {
@@ -215,14 +216,10 @@ export class Parser<T = string> {
             return state.err(undefined);
         };
 
-        let p = new Parser(
+        return new Parser(
             then as ParserFunction<[T, S]>,
             createParserContext("then", next)
         );
-        /// #if MEMOIZE
-        p = p.mergeMemo() as Parser<[T, S]>;
-        /// #endif
-        return p;
     }
 
     or<S>(other: Parser<S | T>) {
@@ -235,14 +232,10 @@ export class Parser<T = string> {
             return other.parser(state);
         };
 
-        let p = new Parser(
+        return new Parser(
             or as ParserFunction<T | S>,
             createParserContext("or", other)
         );
-        /// #if MEMOIZE
-        p = p.memoize() as Parser<T | S>;
-        /// #endif
-        return p;
     }
 
     chain<S>(fn: (value: T) => Parser<S | T>, chainError: boolean = false) {
