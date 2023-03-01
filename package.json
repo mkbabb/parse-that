@@ -1,18 +1,17 @@
 {
     "name": "@mkbabb/parse-that",
-    "version": "0.2",
+    "version": "0.5",
     "description": "Parser combinators for TypeScript",
     "type": "module",
     "main": "./dist/@mkbabb/parse-that",
     "module": "./dist/@mkbabb/parse-that",
-    "types": "dist/parse.d.ts",
+    "types": "./dist/parse.d.ts",
     "exports": {
         ".": {
             "import": "./dist/@mkbabb/parse-that.mjs",
             "require": "./dist/@mkbabb/parse-that.umd.js"
         }
     },
-
     "scripts": {
         "test": "vitest --mode development",
         "test:coverage": "vitest --mode development --coverage",
