@@ -18,8 +18,8 @@ import { generateMathExpression, reduceMathExpression } from "./utils";
 
 const digits = regex(/[0-9]+/);
 
-describe("JSON Parser", () => {
-    it("should expr", () => {
+describe("Memoization & left recursion", () => {
+    it("should 123456", () => {
         const expr = Parser.lazy(() => expr.or(digits)).memoize();
         const result = expr.parse("12356");
         expect(result).toEqual("12356");
@@ -31,7 +31,7 @@ describe("JSON Parser", () => {
             .opt()
             .memoize();
         const mz = string("z");
-        const mZ = Parser.lazy(() => mz.or(mY)).memoize();
+        const mZ = Parser.lazy(() => mZ.or(mY).or(mz)).memoize();
 
         const mY = Parser.lazy(() => mZ.then(mSL)).memoize();
 
@@ -86,11 +86,9 @@ describe("JSON Parser", () => {
     });
     it("should math again", () => {
         const operators = any(string("+"), string("-"), string("*"), string("/"));
-
+        const number = regex(/-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/);
         const expression = Parser.lazy(() =>
-            all(expression, operators.then(expression).opt())
-                .mergeMemos()
-                .or(regex(/-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/))
+            all(expression, operators.then(expression).opt()).mergeMemos().or(number)
         )
             .opt()
             .trim()

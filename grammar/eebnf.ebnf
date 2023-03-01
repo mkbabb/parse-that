@@ -32,7 +32,7 @@ terminal = "'" , ( character - "'" ) * , "'"
 
 regex = div , (character - div) * , div ;
 
-epsilon = "epsilon" ;
+epsilon = "epsilon" | "ε" ;
 
 lhs = identifier ;
 

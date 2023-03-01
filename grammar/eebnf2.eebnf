@@ -28,23 +28,3 @@ identifier = letter , { letter | digit | "_" | "-" } ;
 terminal = "'" , ( character - "'" ) * , "'" | '"' , ( character - '"' ) * , '"' ;
 
 regex = div , ( character - div ) * , div ;
-epsilon = "epsilon" ;
-lhs = identifier ;
-
-term = identifier | terminal | regex | eof 
-	|  "(" , rhs , ")" 
-	|  "[" , rhs , "]" 
-	| "{" , rhs , "}" ;
-
-factor = term , question 
-	|  term , star 
-	|  term , plus 
-	|  term , minus , term 
-	| term ;
-
-concatenation = factor , { comma , factor } ;
-alternation = concatenation , { pipe , concatenation } ;
-rhs = alternation | concatenation | factor ;
-
-rule = lhs , "=" , rhs , ";" ;
-grammar = rule * ;

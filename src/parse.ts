@@ -7,6 +7,9 @@ type ExtractValue<T extends ReadonlyArray<Parser<any>>> = {
     [K in keyof T]: T[K] extends Parser<infer V> ? V : never;
 };
 
+const MAX_LINES = 5;
+const MAX_LINE_LENGTH = 80;
+
 export class ParserState<T> {
     constructor(
         public src: string,
@@ -45,8 +48,6 @@ export class ParserState<T> {
 
     addCursor(cursor: string = "^", error: boolean = false): string {
         /// #if DEBUG
-        const MAX_LINES = 5;
-        const MAX_LINE_LENGTH = 80;
 
         const color = (error ? chalk.red : chalk.green).bold;
 
@@ -74,7 +75,6 @@ export class ParserState<T> {
 
             const paddedLine = `${paddedLineNum} | ${line}`;
 
-            // if the line is the current line, highlight it
             if (lineNum === lineIdx + 1) {
                 return color(paddedLine);
             } else {
@@ -119,21 +119,21 @@ const trimStateWhitespace = <T>(state: ParserState<T>) => {
     return state.ok(state.value, match.length);
 };
 
-const lazyCache = new Map<number, Parser<any>>();
-let lazyId = 0;
-let parserId = 0;
+const LAZY_CACHE = new Map<number, Parser<any>>();
+let LAZY_ID = 0;
+let PARSER_ID = 0;
 
-const memoizeCache = new Map<number, ParserState<any>>();
-const leftRecursionCounts = new Map<string, number>();
+const MEMO = new Map<number, ParserState<any>>();
+const LEFT_RECURSION_COUNTS = new Map<string, number>();
 
 export class Parser<T = string> {
-    id: number = parserId++;
+    id: number = PARSER_ID++;
     constructor(public parser: ParserFunction<T>, public context: ParserContext = {}) {}
 
     parse(val: string) {
-        memoizeCache.clear();
-        lazyCache.clear();
-        leftRecursionCounts.clear();
+        MEMO.clear();
+        LAZY_CACHE.clear();
+        LEFT_RECURSION_COUNTS.clear();
         return this.parser(new ParserState(val)).value as T;
     }
 
@@ -142,17 +142,16 @@ export class Parser<T = string> {
     }
 
     atLeftRecursionLimit(state: ParserState<T>) {
-        const cij = leftRecursionCounts.get(this.getCijKey(state)) ?? 0;
-
+        const cij = LEFT_RECURSION_COUNTS.get(this.getCijKey(state)) ?? 0;
         return cij > state.src.length - state.offset;
     }
 
     memoize() {
         const memoize = (state: ParserState<T>) => {
-            const cijKey1 = this.getCijKey(state);
-            const cij1 = leftRecursionCounts.get(cijKey1) ?? 0;
+            const cijKey = this.getCijKey(state);
+            const cij = LEFT_RECURSION_COUNTS.get(cijKey) ?? 0;
 
-            let cached = memoizeCache.get(this.id);
+            let cached = MEMO.get(this.id);
 
             if (cached && cached.offset >= state.offset) {
                 return cached;
@@ -160,15 +159,15 @@ export class Parser<T = string> {
                 return state.err(undefined);
             }
 
-            leftRecursionCounts.set(cijKey1, cij1 + 1);
+            LEFT_RECURSION_COUNTS.set(cijKey, cij + 1);
             const newState = this.parser(state);
 
-            cached = memoizeCache.get(this.id);
+            cached = MEMO.get(this.id);
 
             if (cached && cached.offset > newState.offset) {
                 newState.offset = cached.offset;
             } else if (!cached) {
-                memoizeCache.set(this.id, newState);
+                MEMO.set(this.id, newState);
             }
 
             return newState;
@@ -181,7 +180,7 @@ export class Parser<T = string> {
 
     mergeMemos<S>() {
         const mergeMemo = (state: ParserState<T>) => {
-            let cached = memoizeCache.get(this.id);
+            let cached = MEMO.get(this.id);
             if (cached) {
                 return cached;
             } else if (this.atLeftRecursionLimit(state)) {
@@ -190,9 +189,9 @@ export class Parser<T = string> {
 
             const newState = this.parser(state);
 
-            cached = memoizeCache.get(this.id);
+            cached = MEMO.get(this.id);
             if (!cached) {
-                memoizeCache.set(this.id, newState);
+                MEMO.set(this.id, newState);
             }
             return newState;
         };
@@ -266,7 +265,7 @@ export class Parser<T = string> {
         return new Parser(map as ParserFunction<S>, createParserContext("map", this));
     }
 
-    skip<S>(parser: Parser<S>) {
+    skip<S>(parser: Parser<T | S>) {
         const skip = (state: ParserState<T>) => {
             const nextState1 = this.parser(state);
 
@@ -340,7 +339,7 @@ export class Parser<T = string> {
 
     trim(parser: Parser<T> = whitespace as Parser<T>): Parser<T> {
         if (parser.context?.name === "whitespace") {
-            const whitespaceTrim = <T>(state: ParserState<T>) => {
+            const whitespaceTrim = (state: ParserState<T>) => {
                 const newState = trimStateWhitespace(state);
                 const tmpState = this.parser(newState);
 
@@ -452,15 +451,15 @@ export class Parser<T = string> {
     }
 
     static lazy<T>(fn: () => Parser<T>) {
-        const id = lazyId++;
+        const id = LAZY_ID++;
 
         const lazy = (state: ParserState<T>) => {
-            if (lazyCache.has(id)) {
-                return lazyCache.get(id)!.parser(state);
+            if (LAZY_CACHE.has(id)) {
+                return LAZY_CACHE.get(id)!.parser(state);
             }
             const parser = fn();
             parser.id = id;
-            lazyCache.set(id, parser);
+            LAZY_CACHE.set(id, parser);
             return parser.parser(state);
         };
 
@@ -543,16 +542,16 @@ export function lazy<T>(
     descriptor: TypedPropertyDescriptor<() => Parser<T>>
 ) {
     let method = descriptor.value!;
-    const id = lazyId++;
+    const id = LAZY_ID++;
 
     descriptor.value = function () {
         const lazy = (state: ParserState<T>) => {
-            if (lazyCache.has(id)) {
-                return lazyCache.get(id)!.parser(state);
+            if (LAZY_CACHE.has(id)) {
+                return LAZY_CACHE.get(id)!.parser(state);
             }
             const parser = method.apply(this, arguments);
             parser.id = id;
-            lazyCache.set(id, parser);
+            LAZY_CACHE.set(id, parser);
             return parser.parser(state);
         };
 

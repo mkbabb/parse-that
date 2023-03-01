@@ -134,7 +134,7 @@ const CSSValueUnitParser = (grammar: string) => {
 };
 
 const EBNFParserLeftRecursion = (grammar: string) => {
-    const [nonterminals, ast] = generateParserFromEBNF(grammar);
+    const [nonterminals, ast] = generateParserFromEBNF(grammar, true);
 
     nonterminals.integer = regex(/\d+/).trim().map(Number);
     nonterminals.string = regex(/[a-zA-Z]+/)
@@ -398,7 +398,7 @@ describe("EBNF Parser", () => {
     it("should parse an ambiguous EEBNF grammar", () => {
         let grammar = fs.readFileSync("./grammar/g4.ebnf", "utf8");
 
-        const [nonterminals, ast] = generateParserFromEBNF(grammar);
+        const [nonterminals, ast] = generateParserFromEBNF(grammar, true);
 
         const sentences = [
             "the big cat ate the green green woman",

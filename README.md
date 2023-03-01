@@ -34,7 +34,7 @@ const grammar = `
 
 const [nonterminals, ast] = generateParserFromEBNF(grammar);
 const expr = nonterminals.expr;
-expr.parse("1 + whatzupwitu * 3"); // => [1, "+", [2, "*", 3]]
+expr.parse("1 + whatzupwitu * 3"); // => [1, "+", ["whatzupwitu", "*", 3]]
 ```
 
 nice.
@@ -51,9 +51,11 @@ nice.
         - [Thanks to chalk for the colors!](#thanks-to-chalk-for-the-colors)
   - [EEBNF and the Great Parser Generator](#eebnf-and-the-great-parser-generator)
     - [Key differences with EBNF](#key-differences-with-ebnf)
-    - [Left recursion \& more](#left-recursion--more)
-    - [Performance](#performance-1)
     - [Formatting, syntax highlighting, \& more](#formatting-syntax-highlighting--more)
+  - [Left recursion \& more](#left-recursion--more)
+      - [Using EEBNF](#using-eebnf)
+      - [Combinator support](#combinator-support)
+      - [Caveats](#caveats)
   - [API \& examples](#api--examples)
   - [Sources, acknowledgements, \& c.](#sources-acknowledgements--c)
 
@@ -88,8 +90,10 @@ randomly inserted to make the file a bit more difficult to parse (makes the file
         1.56x faster than EEBNF
         2.01x faster than Parsimmon
 
-Probably not the most scientific comparison, but it's about 10-25% faster, consistently,
-than the rest. have a look inside [benchmarks](./test/benchmarks) if you're curious.
+Probably not the most scientific comparison, but it's generally about 10-30% faster than
+the rest.
+
+Have a look inside [benchmarks](./test/benchmarks) if you're curious.
 
 ## Debugging
 
@@ -158,63 +162,8 @@ Here's a list of operators:
 -   `A << B`: A, then B, but only return A
 -   `( A )`: grouping - maximum precedence
 
-### Left recursion & more
-
-The EEBNF parser generator supports left recursion, right recursion, and left factoring.
-It also supports left recursion with left factoring, and right recursion with left
-factoring. So things like
-
-```ebnf
-expr = expr , "+" , expr
-     | integer
-     | string
-```
-
-Will parse correctly, and will be optimized to rewrite the modified tree structure. This
-is done in three passes:
-
--   1. Sort the nonterminals topologically
--   2. Remove left recursion
--   3. Factorize
-
-For the above example each pass would look something like this:
-
-Input grammar:
-
-```ebnf
-expr = expr , "+" , expr
-     | integer
-     | string
-```
-
-Sorted & removed left recursion:
-
-```ebnf
-expr = integer, expr_0
-     | string, expr_0
-expr_0 = "+" , expr , expr_0
-        | ε
-```
-
-Factorized:
-
-```ebnf
-expr = (integer | string), expr_0
-expr_0 = "+" , expr , expr_0
-        | ε
-```
-
-### Performance
-
-There are a lot of little optimizations that are done to make the parser as efficient as
-possible.
-
-For example, if you have a rule like `A = A`, it will be rewritten to `A = ε`, or if you
-have a rule like `A = A, B, ε`, it will be rewritten to `A = B`.
-
-On the combinator side, calls to `any` with a single parser will be rewritten to just
-that parser, and calls to `all` with a single parser will be rewritten to just that
-parser, etc.
+And yes emojis are supported. Epsilon even has a special value for it - `ε` (or just use
+the word epsilon).
 
 ### Formatting, syntax highlighting, & more
 
@@ -225,6 +174,105 @@ containing the formatted EEBNF.
 ```ts
 const formattedGrammar: string = formatEBNF(grammar);
 ```
+
+## Left recursion & more
+
+This library fully supports left recursion (either direct or indirect) and highly
+ambiguous grammars.
+
+So grammars like (trivial direct left recursion):
+
+```ebnf
+expr = expr , "+" , expr
+     | integer
+     | string ;
+```
+
+and like (highly ambiguous grammar):
+
+```ebnf
+ms = "s";
+mSL = ( mSL , mSL , ms ) ? ;
+
+mz = "z" ;
+mZ = mZ | mY | mz ;
+
+mY = mZ, mSL ;
+```
+
+are supported fully supported.
+
+Our scheme is multifaceted and optimized depending upon a few factors:
+
+#### Using EEBNF
+
+Since EEBNF allows for one to easily grab ahold of the AST, we can optimize its
+structure rather easily. Left recursion is "removed" (it's actually just factored out)
+using a four-pass algorithm:
+
+-   1. Sort the nonterminals topologically
+-   2. Remove indirect left recursion
+-   3. Remove left recursion
+-   4. Factorize
+
+For the above example each pass would look something like this:
+
+Input grammar:
+
+```ebnf
+expr = expr , "+" , expr
+     | integer
+     | string ;
+```
+
+Sorted & removed left recursion:
+
+```ebnf
+expr = integer, expr_0
+     | string, expr_0 ;
+expr_0 = "+" , expr , expr_0
+        | ε ;
+```
+
+Factorized:
+
+```ebnf
+expr = (integer | string) , expr_0 ;
+expr_0 = "+" , expr , expr_0
+        | ε
+```
+
+If any remaining left recursion is found, it's handled via the combinators.
+
+#### Combinator support
+
+Left recursion can be handled via two combinators: `memoize` and `mergeMemos`.
+`mergeMemos` must be applied directly one's left-recursive call, and `memoize` must be
+applied to the entire parser.
+
+Here's an example:
+
+```ts
+...
+const expression = Parser.lazy(() =>
+    all(expression, operators.then(expression).opt()).mergeMemos().or(number)
+)
+    .memoize();
+...
+```
+
+How this is done under the hood is by using a memoization table and a few clever tricks
+to detect if the current parser is in a left-recursive call. See the
+[left recursion](./docs/left-recursion.md) document for more information, and the
+[memoization tests](./test/memoize.test.ts) for examples.
+
+#### Caveats
+
+Though left recursion is supported, it's absolutely not optimal. If it can be factored
+out via the EEBNF parser generator generally the performance will quite fine, but if it
+cannot you may run into some performance issues. This stems, among other things,
+primarily from JavaScript's lack of tail call optimization. Again, see the
+[left recursion](./docs/left-recursion.md) document for more information.
 
 ## API & examples
 
