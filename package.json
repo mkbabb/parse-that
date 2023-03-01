@@ -5,7 +5,7 @@
     "type": "module",
     "main": "./dist/@mkbabb/parse-that",
     "module": "./dist/@mkbabb/parse-that",
-    "types": "dist/that.d.ts",
+    "types": "dist/parse.d.ts",
     "exports": {
         ".": {
             "import": "./dist/@mkbabb/parse-that.mjs",

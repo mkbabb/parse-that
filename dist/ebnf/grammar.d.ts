@@ -1,74 +1,95 @@
 import { Parser } from "..";
-export type EBNFExpression = EBNFLiteral | EBNFNonterminal | EBNFGroup | EBNFRegex | EBNFOptional | EBNFSub | EBNFMany | EBNFMany1 | EBNFSkip | EBNFNext | EBNFConcatenation | EBNFAlternation | EBNFEpsilon;
-export interface EBNFLiteral {
+export type Expression = Literal | Comment | Nonterminal | Group | Regex | Optional | Minus | Many | Many1 | Skip | Next | Concatenation | Alteration | Epsilon | OptionalWhitespace | Coalesce | EOF;
+export interface Literal {
     type: "literal";
     value: string;
 }
-export interface EBNFNonterminal {
+export interface Comment {
+    type: "comment";
+    value: string;
+}
+export interface Nonterminal {
     type: "nonterminal";
     value: string;
 }
-export interface EBNFEpsilon {
+export interface Epsilon {
     type: "epsilon";
     value: undefined;
 }
-export interface EBNFGroup {
-    type: "group";
-    value: EBNFExpression;
+export interface EOF {
+    type: "eof";
+    value: undefined;
 }
-export interface EBNFRegex {
+export interface OptionalWhitespace {
+    type: "optionalWhitespace";
+    value: undefined;
+}
+export interface Coalesce {
+    type: "coalesce";
+    value: Expression[];
+}
+export interface Group {
+    type: "group";
+    value: Expression;
+}
+export interface Regex {
     type: "regex";
     value: RegExp;
 }
-export interface EBNFOptional {
+export interface Optional {
     type: "optional";
-    value: EBNFExpression;
+    value: Expression;
 }
-export interface EBNFSub {
+export interface Minus {
     type: "minus";
-    value: [EBNFExpression, EBNFExpression];
+    value: [Expression, Expression];
 }
-export interface EBNFMany {
+export interface Many {
     type: "many";
-    value: EBNFExpression;
+    value: Expression;
 }
-export interface EBNFMany1 {
+export interface Many1 {
     type: "many1";
-    value: EBNFExpression;
+    value: Expression;
 }
-export interface EBNFSkip {
+export interface Skip {
     type: "skip";
-    value: [EBNFExpression, EBNFExpression];
+    value: [Expression, Expression];
 }
-export interface EBNFNext {
+export interface Next {
     type: "next";
-    value: [EBNFExpression, EBNFExpression];
+    value: [Expression, Expression];
 }
-export interface EBNFConcatenation {
+export interface Concatenation {
     type: "concatenation";
-    value: EBNFExpression[];
+    value: Expression[];
 }
-export interface EBNFAlternation {
+export interface Alteration {
     type: "alternation";
-    value: EBNFExpression[];
+    value: Expression[];
 }
 export type EBNFProductionRule = {
-    name: string;
-    expression: EBNFExpression;
+    type: "productionRule" | "comment";
+    expression: Expression;
+    name?: string;
 };
-export type EBNFAST = Map<string, EBNFExpression>;
+export type EBNFAST = Map<string, Expression>;
 export type EBNFNonterminals = {
     [key: string]: Parser<any>;
 };
 export declare class EBNFGrammar {
     identifier(): Parser<string>;
-    literal(): Parser<EBNFLiteral>;
-    nonterminal(): Parser<EBNFNonterminal>;
+    literal(): Parser<Literal>;
+    epsilon(): Parser<Epsilon>;
+    nonterminal(): Parser<Nonterminal>;
     group(): any;
-    regex(): Parser<EBNFRegex>;
+    eof(): Parser<EOF>;
+    regex(): Parser<Regex>;
     optional(): any;
     optionalGroup(): any;
-    subtraction(): Parser<EBNFSub>;
+    optionalWhitespace(): any;
+    coalesce(): any;
+    subtraction(): Parser<Minus>;
     manyGroup(): any;
     many(): any;
     many1(): any;
@@ -76,8 +97,10 @@ export declare class EBNFGrammar {
     skip(): any;
     concatenation(): any;
     alternation(): any;
+    bigComment(): Parser<EBNFProductionRule>;
     term(): any;
     factor(): any;
+    comment(): Parser<EBNFProductionRule>;
     expression(): any;
     productionRule(): Parser<EBNFProductionRule>;
     grammar(): Parser<EBNFProductionRule[]>;
