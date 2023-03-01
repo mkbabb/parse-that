@@ -9,7 +9,8 @@ digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 symbol = "[" | "]" | "{" | "}" | "(" | ")" | "<" | ">" | "'" | '"' | "=" | "
 	|" | "." 
 	|  "," | ";" | "+" | "-" | "*" | "/" | "?" | "%" | "&" 
-	| "^" | "~" | "`" | "!" | "@" | "#" | "$" | ":" | "\" ;
+	| "^" | "~" | "`" | "!" | "@" | "#" | "$" | ":" | "\" | "ε" | "\t" 
+	| "\r" | "?w" ;
 
 pipe = "|" ;
 comma = "," ;
@@ -20,7 +21,11 @@ question = "?" ;
 minus = "-" ;
 
 div = "/" ;
+left_shift = "<<" ;
+right_shift = ">>" ;
+
 eof = "$" ;
+optional_whitespace = "?w" ;
 character = letter | digit | symbol | "_" ;
 
 identifier = letter , { letter | digit | "_" | "-" } ;
@@ -28,3 +33,26 @@ identifier = letter , { letter | digit | "_" | "-" } ;
 terminal = "'" , ( character - "'" ) * , "'" | '"' , ( character - '"' ) * , '"' ;
 
 regex = div , ( character - div ) * , div ;
+lhs = identifier ;
+
+term = "ε" | identifier | terminal | regex | eof 
+	|  "(" , rhs , ")" 
+	|  "[" , rhs , "]" 
+	| "{" , rhs , "}" ;
+
+factor = term , optional_whitespace 
+	|  term , question 
+	|  term , star 
+	
+	|  term , plus 
+	|  term , minus , term 
+	|  term , left_shift , term 
+	
+	|  term , right_shift , term | term ;
+
+concatenation = factor , { comma , factor } ;
+alternation = concatenation , { pipe , concatenation } ;
+rhs = alternation | concatenation | factor ;
+
+rule = lhs , "=" , rhs , ";" ;
+grammar = rule * ;

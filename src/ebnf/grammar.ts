@@ -14,6 +14,7 @@ export type Expression =
     | Concatenation
     | Alteration
     | Epsilon
+    | OptionalWhitespace
     | EOF;
 
 export interface Literal {
@@ -33,6 +34,11 @@ export interface Epsilon {
 
 export interface EOF {
     type: "eof";
+    value: undefined;
+}
+
+export interface OptionalWhitespace {
+    type: "optionalWhitespace";
     value: undefined;
 }
 
@@ -100,6 +106,7 @@ const equalSign = string("=").trim();
 const semicolon = string(";").trim();
 const dot = string(".").trim();
 const questionMark = string("?").trim();
+const optionalWhitespace = string("?w").trim();
 const pipe = string("|").trim();
 
 const plus = string("+").trim();
@@ -127,6 +134,17 @@ export class EBNFGrammar {
                 value,
             } as Literal;
         });
+    }
+
+    epsilon() {
+        return any(string("epsilon"), string("ε"), string("ϵ"))
+            .trim()
+            .map((value) => {
+                return {
+                    type: "epsilon",
+                    value: undefined,
+                } as Epsilon;
+            });
     }
 
     nonterminal() {
@@ -195,6 +213,17 @@ export class EBNFGrammar {
                     type: "optional",
                     value,
                 } as Optional;
+            });
+    }
+
+    optionalWhitespace() {
+        return this.term()
+            .skip(optionalWhitespace)
+            .map((value) => {
+                return {
+                    type: "optionalWhitespace",
+                    value,
+                } as OptionalWhitespace;
             });
     }
 
@@ -290,6 +319,7 @@ export class EBNFGrammar {
 
     term() {
         return any(
+            this.epsilon(),
             this.literal(),
             this.nonterminal(),
             this.regex(),
@@ -302,6 +332,7 @@ export class EBNFGrammar {
 
     factor() {
         return any(
+            this.optionalWhitespace(),
             this.optional(),
             this.many(),
             this.many1(),

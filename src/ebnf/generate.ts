@@ -28,6 +28,9 @@ function generateParserFromAST(ast: EBNFAST) {
             case "regex":
                 return regex(expr.value);
 
+            case "optionalWhitespace":
+                return generateParser(name, expr.value).trim();
+
             case "optional":
                 return generateParser(name, expr.value).opt();
             case "many":

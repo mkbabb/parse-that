@@ -50,45 +50,59 @@ function breakLineOnSeparator(input: string, separator: string): string {
     return input;
 }
 
+const nonterminalsToTrim = [
+    "symbol",
+    "identifier",
+    "terminal",
+    "pipe",
+    "comma",
+    "plus",
+    "minus",
+    "star",
+    "div",
+    "question",
+    "eof",
+    "optional_whitespace",
+    "regex",
+    "rhs",
+    "rule",
+    "grammar",
+];
+
 export const EBNFParser = (grammar: string) => {
     const [nonterminals, ast] = generateParserFromEBNF(grammar);
 
-    nonterminals.symbol = nonterminals.symbol.trim();
+    for (const name of nonterminalsToTrim) {
+        nonterminals[name] = nonterminals[name].trim();
+    }
 
-    nonterminals.identifier = nonterminals.identifier.trim().map((v) => {
+    nonterminals.symbol = nonterminals.symbol;
+
+    nonterminals.identifier = nonterminals.identifier.map((v) => {
         return v.flat().join("");
     });
 
-    nonterminals.terminal = nonterminals.terminal.trim().map((v) => {
+    nonterminals.terminal = nonterminals.terminal.map((v) => {
         return v.flat().join("");
     });
 
-    nonterminals.pipe = nonterminals.pipe.trim();
-    nonterminals.comma = nonterminals.comma.trim();
-    nonterminals.plus = nonterminals.plus.trim();
-    nonterminals.minus = nonterminals.minus.trim();
-    nonterminals.star = nonterminals.star.trim();
-    nonterminals.div = nonterminals.div.trim();
-    nonterminals.question = nonterminals.question.trim();
-    nonterminals.eof = nonterminals.eof.trim();
-
-    nonterminals.regex = nonterminals.regex.trim().map((v) => {
+    nonterminals.regex = nonterminals.regex.map((v) => {
         const s = v.flat().join("");
         return s;
     });
 
-    nonterminals.rhs = nonterminals.rhs.trim().map((v) => {
+    nonterminals.rhs = nonterminals.rhs.map((v) => {
         const a = v instanceof Array ? v.flat(Infinity) : v;
         const s = a.join(" ");
         return breakLineOnSeparator(s, "|");
     });
 
-    nonterminals.rule = nonterminals.rule.trim().map((v) => {
+    nonterminals.rule = nonterminals.rule.map((v) => {
         const s = v.flat().join(" ");
         return s;
     });
 
-    return nonterminals.grammar.trim().map((rules) => {
+    return nonterminals.grammar.map((rules) => {
         let lastIx = 0;
 
         for (let i = 0; i < rules.length; i++) {
