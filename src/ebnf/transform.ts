@@ -1,4 +1,4 @@
-import { EBNFExpression, EBNFAST } from "./grammar";
+import { Expression, EBNFAST } from "./grammar";
 
 import fs from "fs";
 import { generateParserFromEBNF } from "./generate";
@@ -142,7 +142,7 @@ type TextMateLanguage = {
     patterns: TextMateProductionRule[];
 };
 
-function transformEBNFASTToTextMateRegExp(expression: EBNFExpression): string {
+function transformEBNFASTToTextMateRegExp(expression: Expression): string {
     switch (expression.type) {
         case "literal":
             return escapeRegExp(expression.value);
@@ -156,7 +156,7 @@ function transformEBNFASTToTextMateRegExp(expression: EBNFExpression): string {
             return expression.value.source;
         case "optional":
             return `(${transformEBNFASTToTextMateRegExp(expression.value)})?`;
-        case "subtraction":
+        case "minus":
             return `${transformEBNFASTToTextMateRegExp(
                 expression.value[0]
             )}(?!${transformEBNFASTToTextMateRegExp(expression.value[1])})`;

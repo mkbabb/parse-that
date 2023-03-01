@@ -288,6 +288,7 @@ See the [test](./test/) directory for fully explained and working examples.
 -   [Notes On The Formal Theory Of Parsing](http://www.cs.may.ie/~jpower/Courses/parsing/parsing.pdf#search='indirect%20left%20recursion')
 -   [Removing Left Recursion From Context Free Grammars](http://research.microsoft.com/pubs/68869/naacl2k-proc-rev.pdf)
 -   [A new top-down parsing algorithm to accommodate ambiguity and left recursion in polynomial time](https://dl.acm.org/doi/10.1145/1149982.1149988)
+-   [Modular and efficient top-down parsing for ambiguous left-recursive grammars](https://www.researchgate.net/profile/Richard-Frost-5/publication/30053225_Modular_and_efficient_top-down_parsing_for_ambiguous_left-recursive_grammars/links/00463518a68a2a7a6b000000/Modular-and-efficient-top-down-parsing-for-ambiguous-left-recursive-grammars.pdf?origin=publication_detail)
 
 Other great parsing libraries 🎉:
 

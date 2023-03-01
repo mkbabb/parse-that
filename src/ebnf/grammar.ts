@@ -1,97 +1,97 @@
 import { Parser, string, lazy, all, any, regex, ParserState, eof } from "..";
 
-export type EBNFExpression =
-    | EBNFLiteral
-    | EBNFNonterminal
-    | EBNFGroup
-    | EBNFRegex
-    | EBNFOptional
-    | EBNFSub
-    | EBNFMany
-    | EBNFMany1
-    | EBNFSkip
-    | EBNFNext
-    | EBNFConcatenation
-    | EBNFAlternation
-    | EBNFEpsilon
-    | EBNFEOF;
+export type Expression =
+    | Literal
+    | Nonterminal
+    | Group
+    | Regex
+    | Optional
+    | Minus
+    | Many
+    | Many1
+    | Skip
+    | Next
+    | Concatenation
+    | Alteration
+    | Epsilon
+    | EOF;
 
-export interface EBNFLiteral {
+export interface Literal {
     type: "literal";
     value: string;
 }
 
-export interface EBNFNonterminal {
+export interface Nonterminal {
     type: "nonterminal";
     value: string;
 }
 
-export interface EBNFEpsilon {
+export interface Epsilon {
     type: "epsilon";
     value: undefined;
 }
 
-export interface EBNFEOF {
+export interface EOF {
     type: "eof";
     value: undefined;
 }
 
-export interface EBNFGroup {
+export interface Group {
     type: "group";
-    value: EBNFExpression;
+    value: Expression;
 }
 
-export interface EBNFRegex {
+export interface Regex {
     type: "regex";
     value: RegExp;
 }
 
-export interface EBNFOptional {
+export interface Optional {
     type: "optional";
-    value: EBNFExpression;
+    value: Expression;
 }
 
-export interface EBNFSub {
-    type: "subtraction";
-    value: [EBNFExpression, EBNFExpression];
+export interface Minus {
+    type: "minus";
+    value: [Expression, Expression];
 }
 
-export interface EBNFMany {
+export interface Many {
     type: "many";
-    value: EBNFExpression;
+    value: Expression;
 }
 
-export interface EBNFMany1 {
+export interface Many1 {
     type: "many1";
-    value: EBNFExpression;
+    value: Expression;
 }
 
-export interface EBNFSkip {
+export interface Skip {
     type: "skip";
-    value: [EBNFExpression, EBNFExpression];
+    value: [Expression, Expression];
 }
 
-export interface EBNFNext {
+export interface Next {
     type: "next";
-    value: [EBNFExpression, EBNFExpression];
+    value: [Expression, Expression];
 }
 
-export interface EBNFConcatenation {
+export interface Concatenation {
     type: "concatenation";
-    value: EBNFExpression[];
+    value: Expression[];
 }
 
-export interface EBNFAlternation {
+export interface Alteration {
     type: "alternation";
-    value: EBNFExpression[];
+    value: Expression[];
 }
 
 export type EBNFProductionRule = {
     name: string;
-    expression: EBNFExpression;
+    expression: Expression;
 };
 
-export type EBNFAST = Map<string, EBNFExpression>;
+export type EBNFAST = Map<string, Expression>;
 export type EBNFNonterminals = { [key: string]: Parser<any> };
 
 const comma = string(",").trim();
@@ -125,7 +125,7 @@ export class EBNFGrammar {
             return {
                 type: "literal",
                 value,
-            } as EBNFLiteral;
+            } as Literal;
         });
     }
 
@@ -134,7 +134,7 @@ export class EBNFGrammar {
             return {
                 type: "nonterminal",
                 value,
-            } as EBNFNonterminal;
+            } as Nonterminal;
         });
     }
 
@@ -147,7 +147,7 @@ export class EBNFGrammar {
                 return {
                     type: "group",
                     value,
-                } as EBNFGroup;
+                } as Group;
             });
     }
 
@@ -158,7 +158,7 @@ export class EBNFGrammar {
                 return {
                     type: "eof",
                     value,
-                } as EBNFEOF;
+                } as EOF;
             });
     }
 
@@ -170,7 +170,7 @@ export class EBNFGrammar {
                 return {
                     type: "regex",
                     value: new RegExp(value),
-                } as EBNFRegex;
+                } as Regex;
             });
     }
 
@@ -181,7 +181,7 @@ export class EBNFGrammar {
                 return {
                     type: "optional",
                     value,
-                } as EBNFOptional;
+                } as Optional;
             });
     }
 
@@ -194,16 +194,16 @@ export class EBNFGrammar {
                 return {
                     type: "optional",
                     value,
-                } as EBNFOptional;
+                } as Optional;
             });
     }
 
     subtraction() {
         return all(this.term().skip(minus), this.term()).map(([left, right]) => {
             return {
-                type: "subtraction",
+                type: "minus",
                 value: [left, right],
-            } as EBNFSub;
+            } as Minus;
         });
     }
 
@@ -216,7 +216,7 @@ export class EBNFGrammar {
                 return {
                     type: "many",
                     value,
-                } as EBNFMany;
+                } as Many;
             });
     }
 
@@ -227,7 +227,7 @@ export class EBNFGrammar {
                 return {
                     type: "many",
                     value,
-                } as EBNFMany;
+                } as Many;
             });
     }
 
@@ -238,7 +238,7 @@ export class EBNFGrammar {
                 return {
                     type: "many1",
                     value,
-                } as EBNFMany1;
+                } as Many1;
             });
     }
 
@@ -249,7 +249,7 @@ export class EBNFGrammar {
                 return {
                     type: "next",
                     value: [left, right],
-                } as EBNFNext;
+                } as Next;
             }
         );
     }
@@ -261,7 +261,7 @@ export class EBNFGrammar {
                 return {
                     type: "skip",
                     value: [left, right],
-                } as EBNFSkip;
+                } as Skip;
             }
         );
     }
@@ -273,7 +273,7 @@ export class EBNFGrammar {
                 return {
                     type: "concatenation",
                     value,
-                } as EBNFConcatenation;
+                } as Concatenation;
             });
     }
 
@@ -284,7 +284,7 @@ export class EBNFGrammar {
                 return {
                     type: "alternation",
                     value,
-                } as EBNFAlternation;
+                } as Alteration;
             });
     }
 
@@ -297,7 +297,7 @@ export class EBNFGrammar {
             this.optionalGroup(),
             this.manyGroup(),
             this.eof()
-        ) as Parser<EBNFExpression>;
+        ) as Parser<Expression>;
     }
 
     factor() {
@@ -307,7 +307,7 @@ export class EBNFGrammar {
             this.many1(),
             this.subtraction(),
             this.term()
-        ) as Parser<EBNFExpression>;
+        ) as Parser<Expression>;
     }
 
     expression() {
@@ -317,7 +317,7 @@ export class EBNFGrammar {
             this.skip(),
             this.next(),
             this.factor()
-        ) as Parser<EBNFExpression>;
+        ) as Parser<Expression>;
     }
 
     productionRule() {

@@ -25,7 +25,7 @@ export interface EBNFOptional {
     value: EBNFExpression;
 }
 export interface EBNFSub {
-    type: "subtraction";
+    type: "minus";
     value: [EBNFExpression, EBNFExpression];
 }
 export interface EBNFMany {

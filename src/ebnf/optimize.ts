@@ -1,10 +1,10 @@
 import {
-    EBNFAlternation,
+    Alteration,
     EBNFAST,
-    EBNFConcatenation,
-    EBNFEpsilon,
-    EBNFExpression,
-    EBNFNonterminal,
+    Concatenation,
+    Epsilon,
+    Expression,
+    Nonterminal,
     EBNFProductionRule,
 } from "./grammar";
 
@@ -42,7 +42,7 @@ export function topologicalSort(ast: EBNFAST) {
         visit(name, new Set<string>());
     }
 
-    const newAST = new Map<string, EBNFExpression>();
+    const newAST = new Map<string, Expression>();
     for (const rule of order) {
         newAST.set(rule.name, rule.expression);
     }
@@ -51,9 +51,9 @@ export function topologicalSort(ast: EBNFAST) {
 }
 
 export const findCommonPrefix = (
-    e1: EBNFExpression,
-    e2: EBNFExpression
-): [EBNFExpression | null, EBNFExpression, EBNFExpression] => {
+    e1: Expression,
+    e2: Expression
+): [Expression | null, Expression, Expression] => {
     if (!e1?.type || !e2?.type || e1.type !== e2.type) {
         return undefined;
     }
@@ -65,9 +65,9 @@ export const findCommonPrefix = (
                 return undefined;
             } else {
                 return [e1, { type: "epsilon" }, { type: "epsilon" }] as [
-                    EBNFExpression,
-                    EBNFExpression,
-                    EBNFExpression
+                    Expression,
+                    Expression,
+                    Expression
                 ];
             }
         }
@@ -76,7 +76,7 @@ export const findCommonPrefix = (
         case "optional":
         case "many":
         case "many1": {
-            const common = findCommonPrefix(e1.value, e2.value as EBNFExpression);
+            const common = findCommonPrefix(e1.value, e2.value as Expression);
             if (!common) {
                 return undefined;
             } else {
@@ -93,7 +93,7 @@ export const findCommonPrefix = (
                         type: e1.type,
                         value: common[2],
                     },
-                ] as [EBNFExpression, EBNFExpression, EBNFExpression];
+                ] as [Expression, Expression, Expression];
             }
         }
 
@@ -139,7 +139,7 @@ export const findCommonPrefix = (
                     return common;
                 }
             }
-            for (const e of e2.value as EBNFExpression[]) {
+            for (const e of e2.value as Expression[]) {
                 const common = findCommonPrefix(e1, e);
                 if (common) {
                     return common;
@@ -151,8 +151,8 @@ export const findCommonPrefix = (
 };
 
 export const comparePrefix = (
-    prefix: EBNFExpression,
-    expr: EBNFExpression
+    prefix: Expression,
+    expr: Expression
 ): boolean => {
     if (prefix.type !== expr.type) {
         return false;
@@ -165,8 +165,8 @@ export const comparePrefix = (
         case "optional":
         case "many":
         case "many1":
-            return comparePrefix(prefix.value, expr.value as EBNFExpression);
-        case "subtraction":
+            return comparePrefix(prefix.value, expr.value as Expression);
+        case "minus":
         case "skip":
         case "next":
             return (
@@ -182,9 +182,9 @@ export const comparePrefix = (
     }
 };
 
-export function rewriteTreeLeftRecursion(name: string, expr: EBNFAlternation) {
-    const prefixMap = new Map<EBNFExpression, EBNFExpression[]>();
-    let commonPrefix: EBNFExpression | null = null;
+export function rewriteTreeLeftRecursion(name: string, expr: Alteration) {
+    const prefixMap = new Map<Expression, Expression[]>();
+    let commonPrefix: Expression | null = null;
 
     for (let i = 0; i < expr.value.length - 1; i++) {
         const e1 = expr.value[i];
@@ -212,7 +212,7 @@ export function rewriteTreeLeftRecursion(name: string, expr: EBNFAlternation) {
         const alternation = {
             type: "alternation",
             value: expressions,
-        } as EBNFAlternation;
+        } as Alteration;
         const newExpr = {
             type: "concatenation",
             value: [
@@ -225,7 +225,7 @@ export function rewriteTreeLeftRecursion(name: string, expr: EBNFAlternation) {
                     value: prefix,
                 },
             ],
-        } as EBNFConcatenation;
+        } as Concatenation;
 
         expr.value.push(newExpr);
     }
@@ -233,7 +233,7 @@ export function rewriteTreeLeftRecursion(name: string, expr: EBNFAlternation) {
 
 const removeDirectLeftRecursionProduction = (
     name: string,
-    expr: EBNFAlternation,
+    expr: Alteration,
     tailName: string
 ) => {
     const head = [];
@@ -242,7 +242,7 @@ const removeDirectLeftRecursionProduction = (
     const APrime = {
         type: "nonterminal",
         value: tailName,
-    } as EBNFNonterminal;
+    } as Nonterminal;
 
     for (let i = 0; i < expr.value.length; i++) {
         const e = expr.value[i];
@@ -267,17 +267,17 @@ const removeDirectLeftRecursionProduction = (
 
     tail.push({
         type: "epsilon",
-    } as EBNFEpsilon);
+    } as Epsilon);
 
     return [
         {
             type: "alternation",
             value: head,
-        } as EBNFAlternation,
+        } as Alteration,
         {
             type: "alternation",
             value: tail,
-        } as EBNFAlternation,
+        } as Alteration,
     ] as const;
 };
 
@@ -319,15 +319,15 @@ export function removeIndirectLeftRecursion(ast: EBNFAST) {
     let i = 0;
 
     let uniqueIndex = 0;
-    const betas = new Map<string, EBNFExpression>();
+    const betas = new Map<string, Expression>();
 
-    const recurse = (name: string, expr: EBNFExpression) => {
+    const recurse = (name: string, expr: Expression) => {
         if (expr.type === "concatenation") {
             if (expr.value[0].type === "nonterminal" && expr.value[0].value === name) {
                 const beta = {
                     type: "concatenation",
                     value: expr.value.slice(1, expr.value.length),
-                } as EBNFConcatenation;
+                } as Concatenation;
                 const aj = expr.value.shift();
                 const tailName = `${name}_${uniqueIndex++}`;
             }

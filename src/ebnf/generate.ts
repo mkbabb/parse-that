@@ -1,10 +1,10 @@
 import { Parser, all, any, eof, regex, string } from "..";
-import { EBNFExpression, EBNFNonterminals, EBNFAST, EBNFGrammar } from "./grammar";
+import { Expression, EBNFNonterminals, EBNFAST, EBNFGrammar } from "./grammar";
 import { removeAllLeftRecursion } from "./optimize";
 import chalk from "chalk";
 
 function generateParserFromAST(ast: EBNFAST) {
-    function generateParser(name: string, expr: EBNFExpression): Parser<any> {
+    function generateParser(name: string, expr: Expression): Parser<any> {
         switch (expr.type) {
             case "literal":
                 return string(expr.value);
@@ -42,7 +42,7 @@ function generateParserFromAST(ast: EBNFAST) {
                 return generateParser(name, expr.value[0]).next(
                     generateParser(name, expr.value[1])
                 );
-            case "subtraction":
+            case "minus":
                 return generateParser(name, expr.value[0]).not(
                     generateParser(name, expr.value[1])
                 );
@@ -74,7 +74,7 @@ export function generateParserFromEBNF(input: string, optimizeGraph: boolean = f
         .reduce((acc, { name, expression }) => {
             acc.set(name, expression);
             return acc;
-        }, new Map<string, EBNFExpression>()) as EBNFAST;
+        }, new Map<string, Expression>()) as EBNFAST;
 
     if (optimizeGraph) {
         ast = removeAllLeftRecursion(ast);
