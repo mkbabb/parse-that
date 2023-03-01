@@ -325,7 +325,7 @@ describe("EBNF Parser", () => {
         // console.log(chalk.bold.green(parsed));
     });
 
-    it("should parse a EEBNF grammar", () => {
+    it("should parse an EEBNF grammar", () => {
         let grammar = fs.readFileSync("./grammar/eebnf.ebnf", "utf8");
 
         const parser = EBNFParser(grammar);
@@ -333,7 +333,6 @@ describe("EBNF Parser", () => {
         for (let i = 0; i < 10; i++) {
             grammar = parser.parse(grammar);
             expect(grammar).toBeTruthy();
-            fs.writeFileSync("./grammar/eebnf2.eebnf", grammar);
         }
     });
 
