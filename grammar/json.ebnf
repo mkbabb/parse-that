@@ -8,8 +8,7 @@ bool = "true" | "false" ;
 number = /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ ; // oh wow ;
 
 char = /[^"'\\]+/ | /\\"/ | /\\'/ | /\\\\/ ; // ' fixed dat lol
-string = '"' >> char << '"' | "'" >> char << "'" ;
-
+string = '"' >> char /*" i'm a vibe machine "*/ << '"' | "'" >> char << "'" ;
 array = "[" >> ( value << ","? ) * << "]" ;
 
 pair = string, ":" >> value ;
@@ -17,4 +16,4 @@ object = "{" >> ( pair << ","? ) * << "}" ;
 
 value = null | bool | number | string | array | object ;
 
-// and done. i'm a vibe machine
+// and done

@@ -33,14 +33,16 @@ identifier = letter , { letter | digit | "_" | "-" } ;
 
 terminal = "'" , ( character - "'" ) * , "'" | '"' , ( character - '"' ) * , '"' ;
 
+big_comment = "/*" , /.*$/ , "*/" ;
 comment = "//" , /.*$/ ;
 regex = div , ( character - div ) * , div ;
+
 lhs = identifier ;
 
-term = "ε" | identifier | terminal | regex | eof 
+term = "ε" | big_comment | identifier | terminal | regex | eof 
 	|  "(" , rhs , ")" 
-	|  "[" , rhs , "]" 
-	| "{" , rhs , "}" ;
+	
+	|  "[" , rhs , "]" | "{" , rhs , "}" ;
 
 factor = term , optional_whitespace 
 	|  term , colasece , term 

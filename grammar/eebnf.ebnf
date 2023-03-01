@@ -37,6 +37,7 @@ terminal = "'" , ( character - "'" ) * , "'"
          | '"' , ( character - '"' ) * , '"' ;
 
 
+big_comment = "/*" , /.*$/ , "*/" ;
 comment = "//" , /.*$/ ;
 
 regex = div , (character - div) * , div ;
@@ -44,6 +45,7 @@ regex = div , (character - div) * , div ;
 lhs = identifier ;
 
 term = "ε"
+     | big_comment
      | identifier
      | terminal 
      | regex

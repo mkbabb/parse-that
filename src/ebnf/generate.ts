@@ -15,6 +15,10 @@ function generateParserFromAST(ast: EBNFAST) {
                 l.context.name = chalk.blue(expr.value);
                 return l;
 
+            case "comment":
+                Parser.lazy(() => {
+                    return "";
+                });
             case "epsilon":
                 // TODO maybe change this to return Parser.of(null), or something
                 return eof().opt();
@@ -75,7 +79,7 @@ function generateParserFromAST(ast: EBNFAST) {
 
 export function generateParserFromEBNF(input: string, optimizeGraph: boolean = false) {
     const comments = new Map<number, any>();
-    
+
     let ast = new EBNFGrammar()
         .grammar()
         .parse(input)

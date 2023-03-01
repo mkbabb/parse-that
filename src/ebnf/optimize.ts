@@ -5,7 +5,6 @@ import {
     Epsilon,
     Expression,
     Nonterminal,
-
     EBNFProductionRule,
 } from "./grammar";
 
@@ -151,10 +150,7 @@ export const findCommonPrefix = (
     return undefined;
 };
 
-export const comparePrefix = (
-    prefix: Expression,
-    expr: Expression
-): boolean => {
+export const comparePrefix = (prefix: Expression, expr: Expression): boolean => {
     if (prefix.type !== expr.type) {
         return false;
     }

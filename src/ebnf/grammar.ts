@@ -2,6 +2,7 @@ import { Parser, string, lazy, all, any, regex, ParserState, eof } from "..";
 
 export type Expression =
     | Literal
+    | Comment
     | Nonterminal
     | Group
     | Regex
@@ -20,6 +21,11 @@ export type Expression =
 
 export interface Literal {
     type: "literal";
+    value: string;
+}
+
+export interface Comment {
+    type: "comment";
     value: string;
 }
 
@@ -335,6 +341,20 @@ export class EBNFGrammar {
             });
     }
 
+    bigComment() {
+        return regex(/\/\*[^]*?\*\//)
+            .trim()
+            .map((value) => {
+                return {
+                    type: "comment",
+                    expression: {
+                        type: "literal",
+                        value,
+                    } as Literal,
+                } as EBNFProductionRule;
+            });
+    }
+
     term() {
         return any(
             this.epsilon(),
@@ -345,7 +365,7 @@ export class EBNFGrammar {
             this.optionalGroup(),
             this.manyGroup(),
             this.eof()
-        ) as Parser<Expression>;
+        ).trim(this.bigComment().opt()) as Parser<Expression>;
     }
 
     factor() {
@@ -371,7 +391,8 @@ export class EBNFGrammar {
                         value,
                     } as Literal,
                 } as EBNFProductionRule;
-            });
+            })
+            .or(this.bigComment());
     }
 
     expression() {
