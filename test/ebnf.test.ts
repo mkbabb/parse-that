@@ -2,7 +2,11 @@ import { whitespace, regex, string, all, Parser, eof, lookBehind } from "../src"
 
 import { test, expect, describe, it } from "vitest";
 import fs from "fs";
-import { generateMathExpression, reduceMathExpression } from "./utils";
+import {
+    generateMathExpression,
+    insertRandomWhitespace,
+    reduceMathExpression,
+} from "./utils";
 
 import { addNonterminalsDebugging, generateParserFromEBNF } from "../src/ebnf/generate";
 import { EBNFParser, formatEBNFGrammar } from "../src/ebnf/transform";
@@ -328,6 +332,7 @@ describe("EBNF Parser", () => {
 
         for (let i = 0; i < 10; i++) {
             grammar = parser.parse(grammar);
+            expect(grammar).toBeTruthy();
             fs.writeFileSync("./grammar/eebnf2.eebnf", grammar);
         }
     });
@@ -420,6 +425,22 @@ describe("EBNF Parser", () => {
         for (const sentence of sentences) {
             const parsed = parser.parse(sentence);
             // console.log(chalk.green(parsed));
+        }
+    });
+
+    it("should parse a EBNF grammar", () => {
+        let grammar = fs.readFileSync("./grammar/ebnf.ebnf", "utf8");
+
+        for (let i = 0; i < 10; i++) {
+            const [nonterminals, ast] = generateParserFromEBNF(grammar);
+            nonterminals.S = regex(/\s*/);
+
+            const parser = nonterminals.grammar.debug("grammar");
+            const result = parser.parse(grammar);
+            grammar = result.flat(Infinity).join("");
+
+            expect(result).toBeTruthy();
+            expect(grammar).toBeTruthy();
         }
     });
 });

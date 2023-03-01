@@ -16,11 +16,7 @@ function generateParserFromAST(ast: EBNFAST) {
                 return l;
 
             case "comment":
-                Parser.lazy(() => {
-                    return "";
-                });
             case "epsilon":
-                // TODO maybe change this to return Parser.of(null), or something
                 return eof().opt();
 
             case "eof":

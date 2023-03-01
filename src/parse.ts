@@ -10,6 +10,14 @@ type ExtractValue<T extends ReadonlyArray<Parser<any>>> = {
 const MAX_LINES = 5;
 const MAX_LINE_LENGTH = 80;
 
+const summarizeLine = (line: string, maxLength: number = MAX_LINE_LENGTH) => {
+    if (line.length <= MAX_LINE_LENGTH) {
+        return line;
+    } else {
+        return line.slice(0, MAX_LINE_LENGTH) + "...";
+    }
+};
+
 export class ParserState<T> {
     constructor(
         public src: string,
@@ -48,7 +56,6 @@ export class ParserState<T> {
 
     addCursor(cursor: string = "^", error: boolean = false): string {
         /// #if DEBUG
-
         const color = (error ? chalk.red : chalk.green).bold;
 
         const lines = this.src.split("\n");
@@ -56,17 +63,12 @@ export class ParserState<T> {
         const startIdx = Math.max(lineIdx - MAX_LINES, 0);
         const endIdx = Math.min(lineIdx + MAX_LINES + 1, lines.length);
 
-        const lineSummaries = lines.slice(startIdx, endIdx).map((line) => {
-            if (line.length <= MAX_LINE_LENGTH) {
-                return line;
-            } else {
-                return line.slice(0, MAX_LINE_LENGTH - 3) + "...";
-            }
-        });
+        const lineSummaries = lines.slice(startIdx, endIdx).map(summarizeLine);
 
-        const cursorLine = " ".repeat(this.getColumnNumber()) + color(cursor);
-
-        lineSummaries.splice(lineIdx - startIdx + 1, 0, cursorLine);
+        if (cursor) {
+            const cursorLine = " ".repeat(this.getColumnNumber()) + color(cursor);
+            lineSummaries.splice(lineIdx - startIdx + 1, 0, cursorLine);
+        }
 
         const lineNumberWidth = (endIdx + "").length;
         const resultLines = lineSummaries.map((line, idx) => {
@@ -429,12 +431,30 @@ export class Parser<T = string> {
             const stateBgColor = !newState.isError ? chalk.bgGreen : chalk.bgRed;
             const stateColor = !newState.isError ? chalk.green : chalk.red;
 
-            logger(
-                stateBgColor.bold(!newState.isError ? " Ok ✓ " : " Err ｘ "),
-                stateColor(`\t${name}\t${newState.offset}\t`),
-                chalk.yellow(`${this.toString()}`)
+            const finished = newState.offset >= newState.src.length;
+
+            const stateSymbol = !newState.isError ? (finished ? "🎉" : "✓") : "ｘ";
+            const stateName = !newState.isError ? (finished ? "Done" : "Ok") : "Err";
+            const stateString = " " + stateName + " " + stateSymbol + " ";
+
+            let header =
+                stateBgColor.bold(stateString) +
+                stateColor(`\t${name}\t${newState.offset}\t`);
+
+            header += chalk.yellow(
+                summarizeLine(this.toString(), MAX_LINE_LENGTH - header.length)
             );
-            logger(state.addCursor("^", newState.isError) + "\n");
+            logger(header);
+
+            if (newState.offset >= newState.src.length) {
+                logger(
+                    chalk.bold.greenBright(
+                        newState.addCursor("", newState.isError) + "\n"
+                    )
+                );
+            } else {
+                logger(state.addCursor("^", newState.isError) + "\n");
+            }
 
             return newState;
         };

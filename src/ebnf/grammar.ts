@@ -140,8 +140,8 @@ export class EBNFGrammar {
 
     literal() {
         return any(
-            regex(/[^"\s]+/).wrap(string('"'), string('"')),
-            regex(/[^'\s]+/).wrap(string("'"), string("'"))
+            regex(/[^"]+/).wrap(string('"'), string('"')),
+            regex(/[^']+/).wrap(string("'"), string("'"))
         ).map((value) => {
             return {
                 type: "literal",
