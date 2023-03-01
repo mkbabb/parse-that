@@ -15,6 +15,7 @@ export type Expression =
     | Alteration
     | Epsilon
     | OptionalWhitespace
+    | Coalesce
     | EOF;
 
 export interface Literal {
@@ -40,6 +41,11 @@ export interface EOF {
 export interface OptionalWhitespace {
     type: "optionalWhitespace";
     value: undefined;
+}
+
+export interface Coalesce {
+    type: "coalesce";
+    value: Expression[];
 }
 
 export interface Group {
@@ -93,8 +99,9 @@ export interface Alteration {
 }
 
 export type EBNFProductionRule = {
-    name: string;
+    type: "productionRule" | "comment";
     expression: Expression;
+    name?: string;
 };
 
 export type EBNFAST = Map<string, Expression>;
@@ -107,6 +114,7 @@ const semicolon = string(";").trim();
 const dot = string(".").trim();
 const questionMark = string("?").trim();
 const optionalWhitespace = string("?w").trim();
+const coalsece = string("??").trim();
 const pipe = string("|").trim();
 
 const plus = string("+").trim();
@@ -227,6 +235,16 @@ export class EBNFGrammar {
             });
     }
 
+    @lazy
+    coalesce() {
+        return all(this.term().skip(coalsece), this.factor()).map(([left, right]) => {
+            return {
+                type: "coalesce",
+                value: [left, right],
+            } as Coalesce;
+        });
+    }
+
     subtraction() {
         return all(this.term().skip(minus), this.term()).map(([left, right]) => {
             return {
@@ -332,6 +350,7 @@ export class EBNFGrammar {
 
     factor() {
         return any(
+            this.coalesce(),
             this.optionalWhitespace(),
             this.optional(),
             this.many(),
@@ -339,6 +358,20 @@ export class EBNFGrammar {
             this.subtraction(),
             this.term()
         ) as Parser<Expression>;
+    }
+
+    comment() {
+        return regex(/\/\/.*/)
+            .trim()
+            .map((value) => {
+                return {
+                    type: "comment",
+                    expression: {
+                        type: "literal",
+                        value,
+                    } as Literal,
+                } as EBNFProductionRule;
+            });
     }
 
     expression() {
@@ -356,11 +389,15 @@ export class EBNFGrammar {
             this.identifier().skip(equalSign),
             this.expression().skip(terminator)
         ).map(([name, expression]) => {
-            return { name, expression } as EBNFProductionRule;
+            return { name, expression, type: "productionRule" } as EBNFProductionRule;
         });
     }
 
     grammar() {
-        return this.productionRule().many();
+        return all(this.comment().many(), this.productionRule(), this.comment().many())
+            .many(1)
+            .map((v) => {
+                return v.flat(2);
+            });
     }
 }

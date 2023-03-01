@@ -1,8 +1,13 @@
+// biiiiiiiiig vibes
 null = "null" ;
 bool = "true" | "false" ;
-number = /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ ;
 
-char = /[^"'\\]+/ | /\\"/ | /\\'/ | /\\\\/ ;
+// yeah man i'm str8 up a vibing human
+// that's really just going for it
+
+number = /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ ; // oh wow ;
+
+char = /[^"'\\]+/ | /\\"/ | /\\'/ | /\\\\/ ; // ' fixed dat lol
 string = '"' >> char << '"' | "'" >> char << "'" ;
 
 array = "[" >> ( value << ","? ) * << "]" ;
@@ -11,3 +16,5 @@ pair = string, ":" >> value ;
 object = "{" >> ( pair << ","? ) * << "}" ;
 
 value = null | bool | number | string | array | object ;
+
+// and done. i'm a vibe machine

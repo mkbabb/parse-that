@@ -7,13 +7,13 @@ const doubleQuotes = string('"');
 const singleQuotes = string("'");
 
 const token = any(
-    regex(/[^"]+/).debug("double quotes").wrap(doubleQuotes, doubleQuotes),
-    regex(/[^']+/).debug("single quotes").wrap(singleQuotes, singleQuotes),
-    regex(/[^,]+/).debug("no quotes")
-).debug("token");
+    regex(/[^"]+/).wrap(doubleQuotes, doubleQuotes),
+    regex(/[^']+/).wrap(singleQuotes, singleQuotes),
+    regex(/[^,]+/)
+);
 
-const line = token.sepBy(delim).trim().debug("line");
-const csv = line.many().debug("csv");
+const line = token.sepBy(delim).trim();
+const csv = line.many();
 
 describe("CSV Parser", () => {
     it("should parse an empty input", () => {

@@ -31,6 +31,9 @@ function generateParserFromAST(ast: EBNFAST) {
             case "optionalWhitespace":
                 return generateParser(name, expr.value).trim();
 
+            case "coalesce":
+                return any(...expr.value.map((x) => generateParser(name, x)));
+
             case "optional":
                 return generateParser(name, expr.value).opt();
             case "many":
@@ -71,10 +74,15 @@ function generateParserFromAST(ast: EBNFAST) {
 }
 
 export function generateParserFromEBNF(input: string, optimizeGraph: boolean = false) {
+    const comments = new Map<number, any>();
+    
     let ast = new EBNFGrammar()
         .grammar()
         .parse(input)
-        .reduce((acc, { name, expression }) => {
+        .reduce((acc, { name, expression, type }, ix) => {
+            if (type === "comment") {
+                comments.set(ix, expression.value);
+            }
             acc.set(name, expression);
             return acc;
         }, new Map<string, Expression>()) as EBNFAST;

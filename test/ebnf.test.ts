@@ -296,7 +296,7 @@ describe("EBNF Parser", () => {
 
         nonterminals.KEYFRAMES_RULE = nonterminals.KEYFRAMES_RULE.trim();
 
-        const keyframes = `
+        const keyframes = /* css */ `
             @keyframes matrixExample {
                 from {
                     top: 0px; background-color: red;
@@ -306,7 +306,7 @@ describe("EBNF Parser", () => {
                         0, 0, 1, 0,
                         0, 0, 0, 1);
                 }
-                to {
+                tooge {
                     top: 200px; background-color: blue;
                     transform: matrix3d(
                         -0.6,       1.34788, 0,        0,
@@ -385,13 +385,13 @@ describe("EBNF Parser", () => {
             return regex;
         });
 
-        debugging(nonterminals);
+        // debugging(nonterminals);
 
         const parser = nonterminals.regex;
 
         for (const r of regexExamples) {
             const parsed = parser.parse(r.toString());
-            console.log(chalk.green(parsed));
+            // console.log(chalk.green(parsed));
         }
     });
 
@@ -415,11 +415,11 @@ describe("EBNF Parser", () => {
         }
 
         const parser = nonterminals.sentence;
-        debugging(nonterminals);
+        // debugging(nonterminals);
 
         for (const sentence of sentences) {
             const parsed = parser.parse(sentence);
-            console.log(chalk.green(parsed));
+            // console.log(chalk.green(parsed));
         }
     });
 });

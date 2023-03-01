@@ -14,7 +14,7 @@ symbol = "[" | "]" | "{" | "}" | "(" | ")" | "<" | ">"
         | "'" | '"' | "=" | "|" | "." | "," | ";" | "+" 
         | "-" | "*" | "/" | "?" | "%" | "&" | "^" | "~"
         | "`" | "!" | "@" | "#" | "$" | ":" | "\" | "ε"
-        | "\t" | "\r" | "?w" ;
+        | "\t" | "\r" | "?w" | "??" | "//" ;
 
 pipe = "|" ;
 comma = "," ;
@@ -28,12 +28,16 @@ right_shift = ">>" ;
 eof = "$" ;
 
 optional_whitespace = "?w" ;
+colasece = "??" ;
 
 character =  letter | digit | symbol | "_" ;
 identifier = letter , { letter | digit | "_" | "-" } ;
 
 terminal = "'" , ( character - "'" ) * , "'" 
          | '"' , ( character - '"' ) * , '"' ;
+
+
+comment = "//" , /.*$/ ;
 
 regex = div , (character - div) * , div ;
 
@@ -48,7 +52,8 @@ term = "ε"
      | "[" , rhs , "]"
      | "{" , rhs , "}" ;
 
-factor = term, optional_whitespace
+factor = term , optional_whitespace
+       | term , colasece , term
        | term , question
        | term , star
        | term , plus
@@ -60,9 +65,10 @@ factor = term, optional_whitespace
 concatenation = factor , { comma , factor };
 alternation = concatenation , { pipe , concatenation } ;
 
-rhs = alternation
+rhs = comment
+    | alternation
     | concatenation 
     | factor ;
 
 rule = lhs, "=", rhs, ";" ;
-grammar = rule* ;
+grammar = ( comment | rule ) * ;
