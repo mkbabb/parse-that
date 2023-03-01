@@ -80,15 +80,15 @@ describe("JSON Parser", () => {
             expression.then(string("+")).then(expression).or(digits.debug("digits"))
         )
             .opt()
-            // .debug("expression")
             .memoize();
         const parser = expression;
 
         for (let i = 0; i < 1; i++) {
-            const expr = "1+3";
-            const parsed = parser.parse(expr);
-            expect(parsed).toEqual([["1", "+"], "3"]);
-            console.log(parsed);
+            const expr = "1+3+5+6+2";
+            const parsed = parser.parse(expr) ?? [];
+            const flat = parsed.flat(Infinity).join("");
+
+            expect(flat).toEqual(expr);
         }
     });
 });

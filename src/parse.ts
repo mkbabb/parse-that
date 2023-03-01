@@ -153,12 +153,8 @@ export class Parser<T = string> {
 
             let cached = memoizeCache.get(this.id);
 
-            if (cached) {
-                if (cached.offset < state.offset) {
-                    memoizeCache.delete(this.id);
-                } else {
-                    return cached;
-                }
+            if (cached && cached.offset >= state.offset) {
+                return cached;
             } else if (this.atLeftRecursionLimit(state)) {
                 return state.err(undefined);
             }
@@ -167,16 +163,13 @@ export class Parser<T = string> {
             const newState = this.parser(state);
 
             cached = memoizeCache.get(this.id);
-            if (cached) {
-                if (cached.offset > newState.offset) {
-                    return newState;
-                }
 
-                newState.offset = Math.max(cached.offset, newState.offset);
-                cached.offset = newState.offset;
-            } else {
+            if (cached && cached.offset > newState.offset) {
+                newState.offset = cached.offset;
+            } else if (!cached) {
                 memoizeCache.set(this.id, newState);
             }
+
             return newState;
         };
         return new Parser(
@@ -199,11 +192,7 @@ export class Parser<T = string> {
             cached = memoizeCache.get(this.id);
             if (!cached) {
                 memoizeCache.set(this.id, newState);
-                return newState;
-            } else {
-                memoizeCache.delete(this.id);
             }
-
             return newState;
         };
 
