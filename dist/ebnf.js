@@ -1,5 +1,4 @@
 import { string as s, any as p, regex as f, all as v, lazy as y, eof as b, Parser as E } from "./parse.js";
-import "chalk";
 var S = Object.defineProperty, k = Object.getOwnPropertyDescriptor, h = (n, e, a, t) => {
   for (var r = t > 1 ? void 0 : t ? k(e, a) : e, o = n.length - 1, i; o >= 0; o--)
     (i = n[o]) && (r = (t ? i(e, a, r) : i(r)) || r);
@@ -393,7 +392,7 @@ function D(n) {
   for (const [t, r] of n)
     r.type === "alternation" && z(t, r);
 }
-function X(n) {
+function V(n) {
   const e = (a, t) => {
     t.type === "concatenation" && t.value[0].type === "nonterminal" && t.value[0].value === a && (t.value.slice(1, t.value.length), t.value.shift());
   };
@@ -467,7 +466,7 @@ function H(n, e = !1) {
   let a = q(n);
   return e && (a = W(a)), [Z(a), a];
 }
-const Y = (n, e) => {
+const X = (n, e) => {
   Object.entries(n).forEach(([a, t]) => {
     n[a] = t.debug(a, !1, e);
   });
@@ -508,7 +507,7 @@ const K = [
   "rhs",
   "rule",
   "grammar"
-], ee = (n) => {
+], Y = (n) => {
   const [e, a] = H(n);
   for (const t of K)
     e[t] = e[t].trim();
@@ -567,7 +566,7 @@ function c(n) {
       return n.value.map((e) => `(${c(e)})`).join("|");
   }
 }
-function te(n) {
+function ee(n) {
   const e = [];
   for (const [a, t] of n)
     e.push({
@@ -583,8 +582,8 @@ function te(n) {
 }
 export {
   m as EBNFGrammar,
-  ee as EBNFParser,
-  Y as addNonterminalsDebugging,
+  Y as EBNFParser,
+  X as addNonterminalsDebugging,
   d as comparePrefix,
   w as findCommonPrefix,
   q as generateASTFromEBNF,
@@ -592,8 +591,8 @@ export {
   H as generateParserFromEBNF,
   W as removeAllLeftRecursion,
   D as removeDirectLeftRecursion,
-  X as removeIndirectLeftRecursion,
+  V as removeIndirectLeftRecursion,
   z as rewriteTreeLeftRecursion,
   x as topologicalSort,
-  te as transformEBNFASTToTextMateLanguage
+  ee as transformEBNFASTToTextMateLanguage
 };
