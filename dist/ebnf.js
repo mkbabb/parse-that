@@ -1,21 +1,21 @@
-import { string as s, any as m, regex as v, all as y, lazy as h, eof as $, Parser as E } from "./parse.js";
-import P from "chalk";
-var F = Object.defineProperty, T = Object.getOwnPropertyDescriptor, g = (n, e, a, t) => {
-  for (var r = t > 1 ? void 0 : t ? T(e, a) : e, o = n.length - 1, i; o >= 0; o--)
+import { string as s, any as m, regex as f, all as v, lazy as y, eof as $, Parser as E } from "./parse.js";
+import k from "chalk";
+var F = Object.defineProperty, P = Object.getOwnPropertyDescriptor, h = (n, e, a, t) => {
+  for (var r = t > 1 ? void 0 : t ? P(e, a) : e, o = n.length - 1, i; o >= 0; o--)
     (i = n[o]) && (r = (t ? i(e, a, r) : i(r)) || r);
   return t && r && F(e, a, r), r;
 };
-const j = s(",").trim(), N = s("=").trim(), R = s(";").trim(), _ = s(".").trim(), A = s("?").trim(), B = s("?w").trim(), G = s("??").trim(), L = s("|").trim(), M = s("+").trim(), O = s("-").trim(), I = s("*").trim();
+const T = s(",").trim(), N = s("=").trim(), j = s(";").trim(), A = s(".").trim(), B = s("?").trim(), R = s("?w").trim(), _ = s("??").trim(), G = s("|").trim(), L = s("+").trim(), M = s("-").trim(), O = s("*").trim();
 s("/").trim();
-const z = s(">>").trim(), C = s("<<").trim(), D = m(R, _);
-class f {
+const I = s(">>").trim(), x = s("<<").trim(), z = m(j, A);
+class p {
   identifier() {
-    return v(/[_a-zA-Z][_a-zA-Z0-9]*/).trim();
+    return f(/[_a-zA-Z][_a-zA-Z0-9]*/).trim();
   }
   literal() {
     return m(
-      v(/[^"]+/).wrap(s('"'), s('"')),
-      v(/[^']+/).wrap(s("'"), s("'"))
+      f(/[^"]+/).wrap(s('"'), s('"')),
+      f(/[^']+/).wrap(s("'"), s("'"))
     ).map((e) => ({
       type: "literal",
       value: e
@@ -46,13 +46,13 @@ class f {
     }));
   }
   regex() {
-    return v(/[^\/]*/).wrap(s("/"), s("/")).map((e) => ({
+    return f(/[^\/]*/).wrap(s("/"), s("/")).map((e) => ({
       type: "regex",
       value: new RegExp(e)
     }));
   }
   optional() {
-    return this.term().skip(A).map((e) => ({
+    return this.term().skip(B).map((e) => ({
       type: "optional",
       value: e
     }));
@@ -64,19 +64,19 @@ class f {
     }));
   }
   optionalWhitespace() {
-    return this.term().skip(B).map((e) => ({
+    return this.term().skip(R).map((e) => ({
       type: "optionalWhitespace",
       value: e
     }));
   }
   coalesce() {
-    return y(this.term().skip(G), this.factor()).map(([e, a]) => ({
+    return v(this.term().skip(_), this.factor()).map(([e, a]) => ({
       type: "coalesce",
       value: [e, a]
     }));
   }
   subtraction() {
-    return y(this.term().skip(O), this.term()).map(([e, a]) => ({
+    return v(this.term().skip(M), this.term()).map(([e, a]) => ({
       type: "minus",
       value: [e, a]
     }));
@@ -88,19 +88,19 @@ class f {
     }));
   }
   many() {
-    return this.term().skip(I).map((e) => ({
+    return this.term().skip(O).map((e) => ({
       type: "many",
       value: e
     }));
   }
   many1() {
-    return this.term().skip(M).map((e) => ({
+    return this.term().skip(L).map((e) => ({
       type: "many1",
       value: e
     }));
   }
   next() {
-    return y(this.factor().skip(z), m(this.skip(), this.factor())).map(
+    return v(this.factor().skip(I), m(this.skip(), this.factor())).map(
       ([e, a]) => ({
         type: "next",
         value: [e, a]
@@ -108,7 +108,7 @@ class f {
     );
   }
   skip() {
-    return y(m(this.next(), this.factor()).skip(C), this.factor()).map(
+    return v(m(this.next(), this.factor()).skip(x), this.factor()).map(
       ([e, a]) => ({
         type: "skip",
         value: [e, a]
@@ -116,19 +116,19 @@ class f {
     );
   }
   concatenation() {
-    return m(this.skip(), this.next(), this.factor()).sepBy(j, 1).map((e) => ({
+    return m(this.skip(), this.next(), this.factor()).sepBy(T, 1).map((e) => ({
       type: "concatenation",
       value: e
     }));
   }
   alternation() {
-    return m(this.concatenation(), this.skip(), this.next(), this.factor()).sepBy(L, 1).map((e) => ({
+    return m(this.concatenation(), this.skip(), this.next(), this.factor()).sepBy(G, 1).map((e) => ({
       type: "alternation",
       value: e
     }));
   }
   bigComment() {
-    return v(/\/\*[^]*?\*\//).trim().map((e) => ({
+    return f(/\/\*[^]*?\*\//).trim().map((e) => ({
       type: "comment",
       expression: {
         type: "literal",
@@ -160,7 +160,7 @@ class f {
     );
   }
   comment() {
-    return v(/\/\/.*/).trim().map((e) => ({
+    return f(/\/\/.*/).trim().map((e) => ({
       type: "comment",
       expression: {
         type: "literal",
@@ -178,37 +178,37 @@ class f {
     );
   }
   productionRule() {
-    return y(
+    return v(
       this.identifier().skip(N),
-      this.expression().skip(D)
+      this.expression().skip(z)
     ).map(([e, a]) => ({ name: e, expression: a, type: "productionRule" }));
   }
   grammar() {
-    return y(this.comment().many(), this.productionRule(), this.comment().many()).many(1).map((e) => e.flat(2));
+    return v(this.comment().many(), this.productionRule(), this.comment().many()).many(1).map((e) => e.flat(2));
   }
 }
-g([
-  h
-], f.prototype, "group", 1);
-g([
-  h
-], f.prototype, "regex", 1);
-g([
-  h
-], f.prototype, "optionalGroup", 1);
-g([
-  h
-], f.prototype, "coalesce", 1);
-g([
-  h
-], f.prototype, "manyGroup", 1);
-g([
-  h
-], f.prototype, "next", 1);
-g([
-  h
-], f.prototype, "skip", 1);
-function W(n) {
+h([
+  y
+], p.prototype, "group", 1);
+h([
+  y
+], p.prototype, "regex", 1);
+h([
+  y
+], p.prototype, "optionalGroup", 1);
+h([
+  y
+], p.prototype, "coalesce", 1);
+h([
+  y
+], p.prototype, "manyGroup", 1);
+h([
+  y
+], p.prototype, "next", 1);
+h([
+  y
+], p.prototype, "skip", 1);
+function C(n) {
   const e = /* @__PURE__ */ new Set(), a = [];
   function t(o, i) {
     if (i.has(o) || e.has(o))
@@ -259,7 +259,7 @@ const w = (n, e) => {
       }
       case "concatenation": {
         const a = n.value.map(
-          (l, p) => w(n.value[p], e.value[p])
+          (l, g) => w(n.value[g], e.value[g])
         );
         if (a.some((l) => l === void 0))
           return;
@@ -316,14 +316,14 @@ const w = (n, e) => {
       return !0;
   }
 };
-function q(n, e) {
+function D(n, e) {
   const a = /* @__PURE__ */ new Map();
   let t = null;
   for (let r = 0; r < e.value.length - 1; r++) {
     const o = e.value[r], i = e.value[r + 1], u = w(o, i);
     if (u) {
-      const [l, p, b] = u;
-      t !== null && d(l, t) ? a.get(t).push(b) : (a.set(l, [p, b]), t = l), r === e.value.length - 2 && e.value.shift(), e.value.shift(), r -= 1;
+      const [l, g, b] = u;
+      t !== null && d(l, t) ? a.get(t).push(b) : (a.set(l, [g, b]), t = l), r === e.value.length - 2 && e.value.shift(), e.value.shift(), r -= 1;
     }
   }
   for (const [r, o] of a) {
@@ -346,7 +346,7 @@ function q(n, e) {
     e.value.push(u);
   }
 }
-const x = (n, e, a) => {
+const W = (n, e, a) => {
   const t = [], r = [], o = {
     type: "nonterminal",
     value: a
@@ -374,12 +374,12 @@ const x = (n, e, a) => {
     }
   ]);
 };
-function Z(n) {
+function q(n) {
   const e = /* @__PURE__ */ new Map();
   let a = 0;
   for (const [t, r] of n)
     if (r.type === "alternation") {
-      const o = `${t}_${a++}`, [i, u] = x(
+      const o = `${t}_${a++}`, [i, u] = W(
         t,
         r,
         o
@@ -391,7 +391,7 @@ function Z(n) {
   for (const [t, r] of e)
     n.set(t, r);
   for (const [t, r] of n)
-    r.type === "alternation" && q(t, r);
+    r.type === "alternation" && D(t, r);
 }
 function te(n) {
   const e = (a, t) => {
@@ -400,9 +400,15 @@ function te(n) {
   for (const [a, t] of n)
     e(a, t);
 }
+function Z(n) {
+  const e = C(n);
+  return q(e), e;
+}
 function H(n) {
-  const e = W(n);
-  return Z(e), e;
+  const a = new p().grammar().trim().parse(n);
+  if (!a)
+    throw new Error("Failed to parse EBNF grammar");
+  return a.reduce((t, { name: r, expression: o, type: i }, u) => (t.set(r, o), t), /* @__PURE__ */ new Map());
 }
 function J(n) {
   function e(t, r) {
@@ -412,7 +418,7 @@ function J(n) {
         return s(r.value);
       case "nonterminal":
         const u = E.lazy(() => a[r.value]);
-        return u.context.name = P.bold.blue(r.value), u;
+        return u.context.name = k.bold.blue(r.value), u;
       case "comment":
       case "epsilon":
         return $().opt();
@@ -421,7 +427,7 @@ function J(n) {
       case "group":
         return e(t, r.value);
       case "regex":
-        return v(r.value);
+        return f(r.value);
       case "optionalWhitespace":
         return e(t, r.value).trim();
       case "coalesce":
@@ -445,8 +451,8 @@ function J(n) {
           e(t, r.value[1])
         );
       case "concatenation": {
-        const l = r.value.map((p) => e(t, p));
-        return ((i = (o = l.at(-1)) == null ? void 0 : o.context) == null ? void 0 : i.name) === "eof" && l.pop(), y(...l);
+        const l = r.value.map((g) => e(t, g));
+        return ((i = (o = l.at(-1)) == null ? void 0 : o.context) == null ? void 0 : i.name) === "eof" && l.pop(), v(...l);
       }
       case "alternation":
         return m(...r.value.map((l) => e(t, l)));
@@ -458,15 +464,12 @@ function J(n) {
   return a;
 }
 function K(n, e = !1) {
-  const a = /* @__PURE__ */ new Map(), r = new f().grammar().trim().parse(n);
-  if (!r)
-    throw new Error("Failed to parse EBNF grammar");
-  let o = r.reduce((u, { name: l, expression: p, type: b }, k) => (b === "comment" && a.set(k, p.value), u.set(l, p), u), /* @__PURE__ */ new Map());
-  return e && (o = H(o)), [J(o), o];
+  let a = H(n);
+  return e && (a = Z(a)), [J(a), a];
 }
 const ne = (n, e) => {
   Object.entries(n).forEach(([a, t]) => {
-    n[a] = t.debug(a, e);
+    n[a] = t.debug(a, !1, e);
   });
 }, S = {};
 function Q(n, e) {
@@ -582,17 +585,19 @@ function ae(n) {
   };
 }
 export {
-  f as EBNFGrammar,
+  p as EBNFGrammar,
   V as EBNFParser,
   ne as addNonterminalsDebugging,
   d as comparePrefix,
   w as findCommonPrefix,
   re as formatEBNFGrammar,
+  H as generateASTFromEBNF,
+  J as generateParserFromAST,
   K as generateParserFromEBNF,
-  H as removeAllLeftRecursion,
-  Z as removeDirectLeftRecursion,
+  Z as removeAllLeftRecursion,
+  q as removeDirectLeftRecursion,
   te as removeIndirectLeftRecursion,
-  q as rewriteTreeLeftRecursion,
-  W as topologicalSort,
+  D as rewriteTreeLeftRecursion,
+  C as topologicalSort,
   ae as transformEBNFASTToTextMateLanguage
 };

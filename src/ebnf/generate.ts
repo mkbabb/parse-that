@@ -3,6 +3,20 @@ import { Expression, Nonterminals, AST, EBNFGrammar } from "./grammar";
 import { removeAllLeftRecursion } from "./optimize";
 import chalk from "chalk";
 
+export function generateASTFromEBNF(input: string) {
+    const parser = new EBNFGrammar().grammar().trim();
+    const parsed = parser.parse(input);
+
+    if (!parsed) {
+        throw new Error("Failed to parse EBNF grammar");
+    }
+
+    return parsed.reduce((acc, { name, expression, type }, ix) => {
+        acc.set(name, expression);
+        return acc;
+    }, new Map<string, Expression>()) as AST;
+}
+
 export function generateParserFromAST(ast: AST) {
     function generateParser(name: string, expr: Expression): Parser<any> {
         switch (expr.type) {
@@ -71,20 +85,6 @@ export function generateParserFromAST(ast: AST) {
         nonterminals[name] = generateParser(name, expression);
     }
     return nonterminals;
-}
-
-export function generateASTFromEBNF(input: string) {
-    const parser = new EBNFGrammar().grammar().trim();
-    const parsed = parser.parse(input);
-
-    if (!parsed) {
-        throw new Error("Failed to parse EBNF grammar");
-    }
-
-    return parsed.reduce((acc, { name, expression, type }, ix) => {
-        acc.set(name, expression);
-        return acc;
-    }, new Map<string, Expression>()) as AST;
 }
 
 export function generateParserFromEBNF(input: string, optimizeGraph: boolean = false) {
