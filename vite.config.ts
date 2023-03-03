@@ -49,7 +49,6 @@ export default defineConfig(({ mode }) => ({
         vitePluginIfDef.default({
             define: {
                 DEBUG: true,
-                MEMOIZE: false,
             },
             options: {
                 verbose: false,

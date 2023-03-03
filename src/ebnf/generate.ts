@@ -12,7 +12,7 @@ function generateParserFromAST(ast: AST) {
                 const l = Parser.lazy(() => {
                     return nonterminals[expr.value];
                 });
-                l.context.name = chalk.blue(expr.value);
+                l.context.name = chalk.bold.blue(expr.value) as any;
                 return l;
 
             case "comment":
@@ -75,18 +75,20 @@ function generateParserFromAST(ast: AST) {
 
 export function generateParserFromEBNF(input: string, optimizeGraph: boolean = false) {
     const comments = new Map<number, any>();
+    const parser = new EBNFGrammar().grammar().trim();
+    const parsed = parser.parse(input);
 
-    let ast = new EBNFGrammar()
-        .grammar()
-        .trim()
-        .parse(input)
-        .reduce((acc, { name, expression, type }, ix) => {
-            if (type === "comment") {
-                comments.set(ix, expression.value);
-            }
-            acc.set(name, expression);
-            return acc;
-        }, new Map<string, Expression>()) as AST;
+    if (!parsed) {
+        throw new Error("Failed to parse EBNF grammar");
+    }
+
+    let ast = parsed.reduce((acc, { name, expression, type }, ix) => {
+        if (type === "comment") {
+            comments.set(ix, expression.value);
+        }
+        acc.set(name, expression);
+        return acc;
+    }, new Map<string, Expression>()) as AST;
 
     if (optimizeGraph) {
         ast = removeAllLeftRecursion(ast);

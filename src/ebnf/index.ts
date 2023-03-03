@@ -1,4 +1,4 @@
-import { Parser, string, lazy, all, any, regex, ParserState, eof } from "../parse";
+import { Parser, string, lazy, all, any, regex, eof } from "../parse";
 
 export type Expression =
     | Literal

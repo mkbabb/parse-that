@@ -1,4 +1,4 @@
-import { whitespace, regex, string, all, Parser, eof, lookBehind } from "../src/parse";
+import { whitespace, regex, string, all, Parser, eof } from "../src/parse";
 
 import { test, expect, describe, it } from "vitest";
 import fs from "fs";
@@ -434,7 +434,7 @@ describe("EBNF Parser", () => {
             const [nonterminals, ast] = generateParserFromEBNF(grammar);
             nonterminals.S = regex(/\s*/);
 
-            const parser = nonterminals.grammar.trim().debug("grammar");
+            const parser = nonterminals.grammar.trim();
             const result = parser.parse(grammar);
             grammar = result.flat(Infinity).join("");
 
