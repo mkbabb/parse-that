@@ -5,11 +5,12 @@
     "type": "module",
     "exports": {
         ".": {
-            "import": "./dist/parse.js"
+            "import": "./dist/parse.js",
+            "require": "./dist/parse.cjs"
         },
         "./ebnf": {
-            "import": "./dist/ebnf.js"
-           
+            "import": "./dist/ebnf.js",
+            "require": "./dist/ebnf.cjs"
         }
     },
     "typesVersions": {

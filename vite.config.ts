@@ -24,10 +24,10 @@ export default defineConfig(({ mode }) => ({
                 parse: "./src/parse/index.ts",
                 ebnf: "./src/ebnf/index.ts",
             },
-            formats: ["es"],
+            formats: ["es", "cjs"],
         },
         rollupOptions: {
-            // external: ["chalk", "prettier"],
+            external: ["chalk", "prettier"],
         },
     },
 
