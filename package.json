@@ -6,13 +6,23 @@
     "exports": {
         "./parse": {
             "import": "./dist/parse.js",
-            "require": "./dist/parse.cjs",
-            "types": "./dist/parse.d.ts"
+            "require": "./dist/parse.cjs"
         },
         "./ebnf": {
             "import": "./dist/ebnf.js",
-            "require": "./dist/ebnf.cjs",
-            "types": "./dist/ebnf.d.ts"
+            "require": "./dist/ebnf.cjs"
+        }
+    },
+    "typesVersions": {
+        "*": {
+            "parse": [
+                "dist/parse/index.d.ts",
+                "dist/parse/state.d.ts",
+                "dist/parse/string.d.ts"
+            ],
+            "ebnf": [
+                "dist/ebnf/index.d.ts"
+            ]
         }
     },
     "scripts": {

@@ -48,7 +48,7 @@ export default defineConfig(({ mode }) => ({
     },
 
     plugins: [
-        dts({ insertTypesEntry: true }),
+        dts(),
         vitePluginIfDef.default({
             define: {
                 DEBUG: true,
