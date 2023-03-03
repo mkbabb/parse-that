@@ -3,7 +3,7 @@ import { Expression, Nonterminals, AST, EBNFGrammar } from "./grammar";
 import { removeAllLeftRecursion } from "./optimize";
 import chalk from "chalk";
 
-function generateParserFromAST(ast: AST) {
+export function generateParserFromAST(ast: AST) {
     function generateParser(name: string, expr: Expression): Parser<any> {
         switch (expr.type) {
             case "literal":
