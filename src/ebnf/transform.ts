@@ -1,6 +1,5 @@
 import { Expression, AST } from "./grammar";
 
-import fs from "fs";
 import { generateParserFromEBNF } from "./generate";
 
 function breakLineOnSeparator(input: string, separator: string): string {
@@ -123,21 +122,6 @@ export const EBNFParser = (grammar: string) => {
     });
 
     // debugging(nonterminals);
-};
-
-export const formatEBNFGrammar = (
-    grammar: string,
-    eebnfGrammarPath: string,
-    outfilePath?: string
-) => {
-    const eebnfGrammar = fs.readFileSync(eebnfGrammarPath, "utf8");
-    const ebnfParser = EBNFParser(eebnfGrammar);
-    const formatted = ebnfParser.parse(grammar);
-
-    if (outfilePath !== undefined) {
-        fs.writeFileSync(outfilePath, formatted);
-    }
-    return formatted;
 };
 
 function escapeRegExp(string: string): string {

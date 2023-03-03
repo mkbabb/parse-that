@@ -1,7 +1,6 @@
 import { Parser, all, any, eof, regex, string } from "../parse";
 import { Expression, Nonterminals, AST, EBNFGrammar } from "./grammar";
 import { removeAllLeftRecursion } from "./optimize";
-import chalk from "chalk";
 
 export function generateASTFromEBNF(input: string) {
     const parser = new EBNFGrammar().grammar().trim();
@@ -26,7 +25,7 @@ export function generateParserFromAST(ast: AST) {
                 const l = Parser.lazy(() => {
                     return nonterminals[expr.value];
                 });
-                l.context.name = chalk.bold.blue(expr.value) as any;
+                l.context.name = expr.value as any;
                 return l;
 
             case "comment":
