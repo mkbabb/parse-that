@@ -12,7 +12,7 @@ export declare class Parser<T = string> {
     parse(val: string): T;
     getCijKey(state: ParserState<T>): string;
     atLeftRecursionLimit(state: ParserState<T>): boolean;
-    memoize(): Parser<T>;
+    memoize(): any;
     mergeMemos<S>(): Parser<[T, S]>;
     then<S>(next: Parser<S | T>): Parser<string>;
     or<S>(other: Parser<S | T>): Parser<string>;

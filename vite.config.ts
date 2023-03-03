@@ -24,7 +24,6 @@ export default defineConfig(({ mode }) => ({
                 parse: "./src/parse/index.ts",
                 ebnf: "./src/ebnf/index.ts",
             },
-            formats: ["es"],
         },
         rollupOptions: {
             external: ["chalk", "prettier"],
