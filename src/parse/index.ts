@@ -11,24 +11,15 @@ type ExtractValue<T extends ReadonlyArray<Parser<any>>> = {
 type ParserFunction<T = string> = (val: ParserState<T>) => ParserState<T>;
 
 let PARSER_ID = 0;
-let LAZY_ID = 0;
+
 const MEMO = new Map<number, ParserState<any>>();
 const LEFT_RECURSION_COUNTS = new Map<string, number>();
 
-const LAZY_CACHE = new Map<number, Parser<any>>();
-
-export function getLazyParser<T>(
-    id: number,
-    fn: () => Parser<T>,
-    cache: Map<number, Parser<T>> = LAZY_CACHE
-) {
-    if (cache.has(id)) {
-        return cache.get(id)!;
-    } else {
-        const parser = fn();
-        cache.set(id, parser);
-        return parser;
+export function getLazyParser<T>(fn: () => Parser<T>) {
+    if (fn.parser) {
+        return fn.parser;
     }
+    return (fn.parser = fn());
 }
 
 export class Parser<T = string> {
@@ -365,11 +356,10 @@ export class Parser<T = string> {
     }
 
     static lazy<T>(fn: () => Parser<T>) {
-        const id = LAZY_ID++;
         const lazy = (state: ParserState<T>) => {
-            return getLazyParser(id, fn).parser(state);
+            return getLazyParser(fn).parser(state);
         };
-        return new Parser<T>(lazy, createParserContext("lazy", undefined, id, fn));
+        return new Parser<T>(lazy, createParserContext("lazy", undefined, fn));
     }
 
     toString() {
@@ -442,17 +432,13 @@ export function lazy<T>(
     propertyName: string,
     descriptor: TypedPropertyDescriptor<() => Parser<T>>
 ) {
-    const id = LAZY_ID++;
     const method = descriptor.value.bind(target)!;
 
     descriptor.value = function () {
         const lazy = (state: ParserState<T>) => {
-            return getLazyParser(id, method).parser(state) as ParserState<T>;
+            return getLazyParser(method).parser(state) as ParserState<T>;
         };
-        return new Parser<T>(
-            lazy,
-            createParserContext("lazy", undefined, id, () => method())
-        );
+        return new Parser<T>(lazy, createParserContext("lazy", undefined, method));
     };
 }
 

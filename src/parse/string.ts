@@ -158,8 +158,8 @@ export function parserToString(parser: Parser<any>) {
                         b.indent([" sepBy ", print(args[0], id)]),
                     ]);
                 case "lazy": {
-                    const [lazyId, lazy] = args;
-                    const p = getLazyParser(lazyId, lazy);
+                    const [lazy] = args;
+                    const p = getLazyParser(lazy);
 
                     if (!id) {
                         const s = print(p, p.id);
