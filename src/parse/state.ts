@@ -1,9 +1,9 @@
 /// #if DEBUG
 import chalk from "chalk";
+import { addCursor } from "./string";
 /// #else
 /// #endif
 import { Parser } from ".";
-import { addCursor } from "./string";
 
 export class ParserState<T> {
     constructor(
