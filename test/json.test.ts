@@ -1,4 +1,4 @@
-import { Parser, regex, all, any, string, lazy } from "../src";
+import { Parser, regex, all, any, string, lazy } from "../src/parse";
 import { test, expect, describe, it, bench } from "vitest";
 import fs from "fs";
 
@@ -50,7 +50,7 @@ export const jsonValue: Parser<any> = any(
     jsonNumber,
     jsonBool,
     jsonNull
-);
+).debug("jsonValue");
 
 describe("JSON Parser", () => {
     it("should parse a null value", () => {

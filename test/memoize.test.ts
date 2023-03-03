@@ -8,7 +8,7 @@ import {
     lookBehind,
     lazy,
     any,
-} from "../src";
+} from "../src/parse";
 
 import { expect, describe, it } from "vitest";
 import fs from "fs";

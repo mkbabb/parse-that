@@ -1,5 +1,5 @@
-import { Parser, all, any, eof, regex, string } from "..";
-import { Expression, EBNFNonterminals, EBNFAST, EBNFGrammar } from "./grammar";
+import { Parser, all, any, eof, regex, string } from "../parse";
+import { Expression, EBNFNonterminals, EBNFAST, EBNFGrammar } from ".";
 import { removeAllLeftRecursion } from "./optimize";
 import chalk from "chalk";
 

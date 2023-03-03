@@ -6,7 +6,7 @@ import {
     Expression,
     Nonterminal,
     EBNFProductionRule,
-} from "./grammar";
+} from ".";
 
 export function topologicalSort(ast: EBNFAST) {
     const visited = new Set<string>();

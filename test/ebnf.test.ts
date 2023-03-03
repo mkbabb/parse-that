@@ -1,4 +1,4 @@
-import { whitespace, regex, string, all, Parser, eof, lookBehind } from "../src";
+import { whitespace, regex, string, all, Parser, eof, lookBehind } from "../src/parse";
 
 import { test, expect, describe, it } from "vitest";
 import fs from "fs";
@@ -10,7 +10,7 @@ import {
 
 import { addNonterminalsDebugging, generateParserFromEBNF } from "../src/ebnf/generate";
 import { EBNFParser, formatEBNFGrammar } from "../src/ebnf/transform";
-import { EBNFNonterminals } from "../src/ebnf/grammar";
+import { EBNFNonterminals } from "../src/ebnf";
 import chalk from "chalk";
 
 const comma = string(",").trim();

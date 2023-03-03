@@ -18,8 +18,12 @@ export default defineConfig(({ mode }) => ({
 
     build: {
         minify: true,
+
         lib: {
-            entry: path.resolve(__dirname, "src/index.ts"),
+            entry: {
+                parse: "./src/math.ts",
+                ebnf: "./src/ebnf/generate.ts.ts",
+            },
             name: "ParseThat",
             fileName: "@mkbabb/parse-that",
         },
@@ -28,11 +32,23 @@ export default defineConfig(({ mode }) => ({
         },
     },
 
+    test: {
+        include: ["test/*.test.ts"],
+
+        coverage: {
+            provider: "c8",
+            reporter: ["text", "json", "html"],
+        },
+        cache: false,
+        watch: true,
+        forceRerunTriggers: ["**/*.ebnf/**"],
+    },
+
     plugins: [
         dts(),
         vitePluginIfDef.default({
             define: {
-                DEBUG: mode === "development",
+                DEBUG: true,
                 MEMOIZE: false,
             },
             options: {

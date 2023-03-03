@@ -9,12 +9,12 @@ import { parse as ChevrotainJSONParser } from "./chevrotain";
 import { json as ParsimmonJSONParser } from "./parsimmon";
 
 const options = {
-    iterations: 10,
+    iterations: 100,
 } as BenchOptions;
 
 const whitespace = /\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/g;
 let input = fs.readFileSync("data/data-large.json", "utf-8");
-input = insertRandomWhitespace(input, 100);
+input = insertRandomWhitespace(input, 0);
 
 fs.writeFileSync("data/tmp.json", input);
 // input = input.replaceAll(whitespace, "");

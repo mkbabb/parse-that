@@ -11,10 +11,13 @@ const MAX_LINES = 5;
 const MAX_LINE_LENGTH = 80;
 
 const summarizeLine = (line: string, maxLength: number = MAX_LINE_LENGTH) => {
-    if (line.length <= MAX_LINE_LENGTH) {
+    const newLine = line.indexOf("\n");
+    const length = Math.min(line.length, newLine === -1 ? line.length : newLine);
+
+    if (length <= MAX_LINE_LENGTH) {
         return line;
     } else {
-        return line.slice(0, MAX_LINE_LENGTH) + "...";
+        return line.slice(0, maxLength) + "...";
     }
 };
 
@@ -136,6 +139,7 @@ export class Parser<T = string> {
         MEMO.clear();
         LAZY_CACHE.clear();
         LEFT_RECURSION_COUNTS.clear();
+
         return this.parser(new ParserState(val)).value as T;
     }
 
@@ -205,6 +209,10 @@ export class Parser<T = string> {
     }
 
     then<S>(next: Parser<S | T>) {
+        if (isStringParsers(this, next)) {
+            return concatStringParsers([this, next], "", (m) => [m?.[0], m?.[1]]);
+        }
+
         const then = (state: ParserState<T>) => {
             const nextState1 = this.parser(state);
 
@@ -224,6 +232,10 @@ export class Parser<T = string> {
     }
 
     or<S>(other: Parser<S | T>) {
+        if (isStringParsers(this, other)) {
+            return concatStringParsers([this, other], "|");
+        }
+
         const or = (state: ParserState<T>) => {
             const newState = this.parser(state);
 
@@ -334,13 +346,25 @@ export class Parser<T = string> {
     }
 
     wrap<L, R>(start: Parser<L>, end: Parser<R>) {
+        if (isStringParsers(start, this, end)) {
+            return wrapStringParsers(start, this, end);
+        }
+
         const wrap = start.next(this).skip(end) as Parser<T>;
-        wrap.context = createParserContext("wrap", start, end);
+        wrap.context = createParserContext("wrap", start, this, end);
         return wrap;
     }
 
     trim(parser: Parser<T> = whitespace as Parser<T>): Parser<T> {
         if (parser.context?.name === "whitespace") {
+            if (isStringParsers(this, parser)) {
+                return concatStringParsers(
+                    [parser, this, parser],
+                    "",
+                    (m) => m?.[2]
+                ) as Parser<T>;
+            }
+
             const whitespaceTrim = (state: ParserState<T>) => {
                 const newState = trimStateWhitespace(state);
                 const tmpState = this.parser(newState);
@@ -351,14 +375,14 @@ export class Parser<T = string> {
                     return trimStateWhitespace(tmpState);
                 }
             };
+
             return new Parser(
                 whitespaceTrim as ParserFunction<T>,
-                createParserContext("trim", parser)
+                createParserContext("trim", " ", this, " ")
             );
         }
-        const trim = this.wrap(parser, parser.opt()) as Parser<T>;
-        trim.context = createParserContext("trim", parser);
-        return trim;
+
+        return this.wrap(parser, parser) as Parser<T>;
     }
 
     many(min: number = 0, max: number = Infinity) {
@@ -441,9 +465,7 @@ export class Parser<T = string> {
                 stateBgColor.bold(stateString) +
                 stateColor(`\t${name}\t${newState.offset}\t`);
 
-            header += chalk.yellow(
-                summarizeLine(this.toString(), MAX_LINE_LENGTH - header.length)
-            );
+            header += chalk.yellow(summarizeLine(this.toString(), 1000));
             logger(header);
 
             if (newState.offset >= newState.src.length) {
@@ -480,11 +502,13 @@ export class Parser<T = string> {
             const parser = fn();
             parser.id = id;
             LAZY_CACHE.set(id, parser);
+
             return parser.parser(state);
         };
 
         return new Parser<T>(lazy, createParserContext("lazy", fn));
     }
+
     toString(indent: number = 0) {
         /// #if DEBUG
         const name = this.context?.name ?? "unknown";
@@ -496,34 +520,35 @@ export class Parser<T = string> {
                     return `${this.context.args[0]}`;
 
                 case "wrap":
+                    return `${name}(${this.context.args[0]}, ${this.context.args[1]}, ${this.context.args[2]})`;
                 case "trim":
-                    return `wrap(${this.context.args[0]}, ${this.context.args[1]})`;
+                    return `${name}(${this.context.args[0]}, ${this.context.args[1]})`;
                 case "not":
                     return `!${this.context.args[0]}`;
                 case "opt":
                     return `${this.context.args[0]}?`;
                 case "next":
-                    return ` (next ${this.context.args[0]}) `;
+                    return `next ${this.context.args[0]}`;
                 case "skip":
-                    return ` (skip ${this.context.args[0]}) `;
+                    return `skip ${this.context.args[0]}`;
                 case "then":
-                    return `( then ${this.context.args[0]}) `;
+                    return `then ${this.context.args[0]}`;
                 case "map":
                     const original = this.context.args[0].toString();
                     return `${original}`;
                 case "any":
                 case "all":
                     const delim = name === "any" ? " | " : " , ";
-
                     return `(${this.context.args
-                        .map((a) => a.toString(indent + 1))
-                        .join(delim)})`;
+                        .map((a) => "\n\t" + delim + a.toString(indent + 1))
+                        .join("")})`;
                 case "many":
                     return `${this.context.args[0]} ... ${this.context.args[1]}`;
                 case "sepBy":
                     return `sepBy ${this.context.args[0]}`;
                 case "lazy":
-                    return `() => ${this.context.args[0]}`;
+                    console.log("lazy", this.context.args[0]);
+                    return `${this.context.args[0]()}`;
                 case "debug":
                     return `debug ${this.context.args[0]}`;
                 case "memoize":
@@ -543,6 +568,50 @@ export class Parser<T = string> {
         return name;
         /// #endif
     }
+}
+
+function isStringParsers(...parsers: Parser<any>[]) {
+    return parsers.every(
+        (p) =>
+            p.context?.name === "string" ||
+            p.context?.name === "regex" ||
+            p.context?.name === "whitespace"
+    );
+}
+
+function stringParserValue(p: Parser<any>) {
+    if (p.context?.name === "string") {
+        return p.context.args[0].replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+    } else if (p.context?.name === "regex" || p.context?.name === "whitespace") {
+        return p.context.args[0].source;
+    }
+}
+
+function concatStringParsers(
+    parsers: Parser<any>[],
+    delim: string = "",
+    matchFunction?: (m: RegExpMatchArray) => any
+): Parser<string> {
+    const s = parsers.map((s) => `(${stringParserValue(s)})`).join(delim);
+    const r = new RegExp(s);
+    const rP = regex(r, matchFunction);
+
+    if (delim !== "|") {
+        rP.context = createParserContext("regexConcat", delim, parsers);
+    }
+    return rP;
+}
+
+function wrapStringParsers<L, T, R>(
+    left: Parser<L>,
+    p: Parser<T>,
+    right: Parser<R>
+): Parser<string> {
+    const rP = concatStringParsers([left, p, right], "", (m) => {
+        return m?.[2];
+    });
+    rP.context.name = "regexWrap";
+    return rP;
 }
 
 export function eof<T>() {
@@ -571,6 +640,7 @@ export function lazy<T>(
             }
             const parser = method.apply(this, arguments);
             parser.id = id;
+            parser.context = createParserContext("lazy", method);
             LAZY_CACHE.set(id, parser);
             return parser.parser(state);
         };
@@ -580,6 +650,10 @@ export function lazy<T>(
 }
 
 export function any<T extends any[]>(...parsers: T) {
+    if (isStringParsers(...parsers)) {
+        return concatStringParsers(parsers, "|") as Parser<ExtractValue<T>[number]>;
+    }
+
     const any = (state: ParserState<T>) => {
         for (const parser of parsers) {
             const newState = parser.parser(state);
@@ -676,8 +750,11 @@ export function string(str: string) {
     );
 }
 
-export function regex(r: RegExp) {
-    const sticky = new RegExp(r, r.flags + "y");
+export function regex(
+    r: RegExp,
+    matchFunction: (match: RegExpMatchArray) => any = (m) => m?.[0]
+) {
+    const sticky = new RegExp(r, "y");
 
     const regex = (state: ParserState<string>) => {
         if (state.offset >= state.src.length) {
@@ -685,10 +762,10 @@ export function regex(r: RegExp) {
         }
 
         sticky.lastIndex = state.offset;
-        const match = state.src.match(sticky)?.[0];
+        const match = matchFunction(state.src.match(sticky));
 
         if (match) {
-            return state.ok(match, match.length);
+            return state.ok(match, sticky.lastIndex - state.offset);
         } else if (match === "") {
             return state.ok(undefined);
         }

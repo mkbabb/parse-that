@@ -1,4 +1,4 @@
-import { Parser, string, lazy, all, any, regex, ParserState, eof } from "..";
+import { Parser, string, lazy, all, any, regex, ParserState, eof } from "../parse";
 
 export type Expression =
     | Literal
@@ -118,7 +118,7 @@ const equalSign = string("=").trim();
 
 const semicolon = string(";").trim();
 const dot = string(".").trim();
-const questionMark = string("?").trim();
+const questionMark = string("\?").trim();
 const optionalWhitespace = string("?w").trim();
 const coalsece = string("??").trim();
 const pipe = string("|").trim();
