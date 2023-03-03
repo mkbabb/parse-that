@@ -3,6 +3,7 @@ import path from "path";
 import dts from "vite-plugin-dts";
 import autoprefixer from "autoprefixer";
 import vitePluginIfDef from "vite-plugin-ifdef";
+import { nodeResolve } from "@rollup/plugin-node-resolve";
 
 const defaultOptions = {
     base: "./",
@@ -15,7 +16,6 @@ const defaultOptions = {
 
 export default defineConfig(({ mode }) => ({
     ...defaultOptions,
-
     build: {
         minify: true,
 
@@ -24,11 +24,7 @@ export default defineConfig(({ mode }) => ({
                 parse: "./src/parse/index.ts",
                 ebnf: "./src/ebnf/index.ts",
             },
-
-            formats: ["es", "cjs"],
-        },
-        rollupOptions: {
-            external: ["chalk", "prettier"],
+            formats: ["es"],
         },
     },
 
@@ -45,14 +41,15 @@ export default defineConfig(({ mode }) => ({
     },
 
     plugins: [
+        nodeResolve(),
         dts({}),
-        vitePluginIfDef.default({
-            define: {
-                DEBUG: true,
-            },
-            options: {
-                verbose: false,
-            },
-        }),
+        // vitePluginIfDef.default({
+        //     define: {
+        //         DEBUG: true,
+        //     },
+        //     options: {
+        //         verbose: false,
+        //     },
+        // }),
     ],
 }));
