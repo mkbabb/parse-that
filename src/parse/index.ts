@@ -227,7 +227,7 @@ export class Parser<T = string> {
 
         return new Parser(
             then as ParserFunction<[T, S]>,
-            createParserContext("then", next)
+            createParserContext("then", this, next)
         );
     }
 
@@ -247,7 +247,7 @@ export class Parser<T = string> {
 
         return new Parser(
             or as ParserFunction<T | S>,
-            createParserContext("or", other)
+            createParserContext("or", this, other)
         );
     }
 
@@ -293,7 +293,7 @@ export class Parser<T = string> {
         };
         return new Parser(
             skip as ParserFunction<T>,
-            createParserContext("skip", parser)
+            createParserContext("skip", this, parser)
         );
     }
 
@@ -301,7 +301,7 @@ export class Parser<T = string> {
         const next = this.then(parser).map(([, b]) => {
             return b;
         }) as Parser<S>;
-        next.context = createParserContext("next", parser);
+        next.context = createParserContext("next", this, parser);
         return next;
     }
 
@@ -378,7 +378,7 @@ export class Parser<T = string> {
 
             return new Parser(
                 whitespaceTrim as ParserFunction<T>,
-                createParserContext("trim", " ", this, " ")
+                createParserContext("trimWhitespace", this)
             );
         }
 
@@ -409,7 +409,7 @@ export class Parser<T = string> {
 
         return new Parser(
             many as ParserFunction<T[]>,
-            createParserContext("many", min, max)
+            createParserContext("many", this, min, max)
         );
     }
 
@@ -442,7 +442,7 @@ export class Parser<T = string> {
 
         return new Parser(
             sepBy as ParserFunction<T[]>,
-            createParserContext("sepBy", sep)
+            createParserContext("sepBy", this, sep)
         );
     }
 
@@ -509,8 +509,10 @@ export class Parser<T = string> {
         return new Parser<T>(lazy, createParserContext("lazy", fn));
     }
 
-    toString(indent: number = 0) {
+    toString(indent: number = 1) {
         /// #if DEBUG
+        const indentString = "\t".repeat(indent);
+
         const name = this.context?.name ?? "unknown";
         const s = (() => {
             switch (name) {
@@ -518,39 +520,54 @@ export class Parser<T = string> {
                     return `"${this.context.args[0]}"`;
                 case "regex":
                     return `${this.context.args[0]}`;
-
                 case "wrap":
-                    return `${name}(${this.context.args[0]}, ${this.context.args[1]}, ${this.context.args[2]})`;
+                    return `${this.context.args[0]}, ${this.context.args[1]}, ${this.context.args[2]}`;
                 case "trim":
                     return `${name}(${this.context.args[0]}, ${this.context.args[1]})`;
+                case "trimWhitespace":
+                    return `${this.context.args[0]}?w`;
                 case "not":
                     return `!${this.context.args[0]}`;
                 case "opt":
                     return `${this.context.args[0]}?`;
                 case "next":
-                    return `next ${this.context.args[0]}`;
+                    return `${this.context.args[0]} << ${this.context.args[1]}`;
                 case "skip":
-                    return `skip ${this.context.args[0]}`;
+                    return `${this.context.args[0]} >> ${this.context.args[1]}`;
                 case "then":
-                    return `then ${this.context.args[0]}`;
+                    return `${this.context.args[0].toString(
+                        indent + 1
+                    )},\n${this.context.args[1].toString(indent + 2)}`;
+                case "or":
+                    return `${
+                        this.context.args[0]
+                    }\n${indentString}$| ${this.context.args[1].toString(indent + 1)}`;
                 case "map":
-                    const original = this.context.args[0].toString();
-                    return `${original}`;
-                case "any":
-                case "all":
-                    const delim = name === "any" ? " | " : " , ";
-                    return `(${this.context.args
-                        .map((a) => "\n\t" + delim + a.toString(indent + 1))
-                        .join("")})`;
+                    return `${this.context.args[0]}`;
+                case "all": {
+                    const delim = " , ";
+                    return `${this.context.args
+                        .map(
+                            (a) => `\n${indentString}` + a.toString(indent + 1) + delim
+                        )
+                        .join("")}`;
+                }
+                case "any": {
+                    const delim = " | ";
+                    return `${this.context.args
+                        .map(
+                            (a) => `\n${indentString}` + delim + a.toString(indent + 1)
+                        )
+                        .join("")}`;
+                }
                 case "many":
-                    return `${this.context.args[0]} ... ${this.context.args[1]}`;
+                    return `${this.context.args[0]} {${this.context.args[1]}, ${this.context.args[2]}}`;
                 case "sepBy":
-                    return `sepBy ${this.context.args[0]}`;
+                    return `${this.context.args[0]} sep {${this.context.args[1]}`;
                 case "lazy":
-                    console.log("lazy", this.context.args[0]);
                     return `${this.context.args[0]()}`;
                 case "debug":
-                    return `debug ${this.context.args[0]}`;
+                    return `${this.context.args[0]}`;
                 case "memoize":
                     return `memoize ${this.context.args[0]}`;
                 case "mergeMemo":

@@ -1,9 +1,9 @@
 import { Parser, all, any, eof, regex, string } from "../parse";
-import { Expression, EBNFNonterminals, EBNFAST, EBNFGrammar } from ".";
+import { Expression, Nonterminals, AST, EBNFGrammar } from ".";
 import { removeAllLeftRecursion } from "./optimize";
 import chalk from "chalk";
 
-function generateParserFromAST(ast: EBNFAST) {
+function generateParserFromAST(ast: AST) {
     function generateParser(name: string, expr: Expression): Parser<any> {
         switch (expr.type) {
             case "literal":
@@ -65,7 +65,7 @@ function generateParserFromAST(ast: EBNFAST) {
         }
     }
 
-    const nonterminals: EBNFNonterminals = {};
+    const nonterminals: Nonterminals = {};
 
     for (const [name, expression] of ast.entries()) {
         nonterminals[name] = generateParser(name, expression);
@@ -86,7 +86,7 @@ export function generateParserFromEBNF(input: string, optimizeGraph: boolean = f
             }
             acc.set(name, expression);
             return acc;
-        }, new Map<string, Expression>()) as EBNFAST;
+        }, new Map<string, Expression>()) as AST;
 
     if (optimizeGraph) {
         ast = removeAllLeftRecursion(ast);
@@ -96,7 +96,7 @@ export function generateParserFromEBNF(input: string, optimizeGraph: boolean = f
 }
 
 export const addNonterminalsDebugging = (
-    nonterminals: EBNFNonterminals,
+    nonterminals: Nonterminals,
     logger: (...args: any[]) => void
 ) => {
     Object.entries(nonterminals).forEach(([k, v]) => {

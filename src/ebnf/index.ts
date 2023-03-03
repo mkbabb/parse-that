@@ -104,14 +104,14 @@ export interface Alteration {
     value: Expression[];
 }
 
-export type EBNFProductionRule = {
+export type ProductionRule = {
     type: "productionRule" | "comment";
     expression: Expression;
     name?: string;
 };
 
-export type EBNFAST = Map<string, Expression>;
-export type EBNFNonterminals = { [key: string]: Parser<any> };
+export type AST = Map<string, Expression>;
+export type Nonterminals = { [key: string]: Parser<any> };
 
 const comma = string(",").trim();
 const equalSign = string("=").trim();
@@ -351,7 +351,7 @@ export class EBNFGrammar {
                         type: "literal",
                         value,
                     } as Literal,
-                } as EBNFProductionRule;
+                } as ProductionRule;
             });
     }
 
@@ -390,7 +390,7 @@ export class EBNFGrammar {
                         type: "literal",
                         value,
                     } as Literal,
-                } as EBNFProductionRule;
+                } as ProductionRule;
             })
             .or(this.bigComment());
     }
@@ -410,7 +410,7 @@ export class EBNFGrammar {
             this.identifier().skip(equalSign),
             this.expression().skip(terminator)
         ).map(([name, expression]) => {
-            return { name, expression, type: "productionRule" } as EBNFProductionRule;
+            return { name, expression, type: "productionRule" } as ProductionRule;
         });
     }
 

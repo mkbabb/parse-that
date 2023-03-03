@@ -1,16 +1,16 @@
 import {
     Alteration,
-    EBNFAST,
+    AST,
     Concatenation,
     Epsilon,
     Expression,
     Nonterminal,
-    EBNFProductionRule,
+    ProductionRule,
 } from ".";
 
-export function topologicalSort(ast: EBNFAST) {
+export function topologicalSort(ast: AST) {
     const visited = new Set<string>();
-    const order: EBNFProductionRule[] = [];
+    const order: ProductionRule[] = [];
 
     function visit(node: string, stack: Set<string>) {
         if (stack.has(node) || visited.has(node)) {
@@ -278,8 +278,8 @@ const removeDirectLeftRecursionProduction = (
     ] as const;
 };
 
-export function removeDirectLeftRecursion(ast: EBNFAST) {
-    const newNodes = new Map() as EBNFAST;
+export function removeDirectLeftRecursion(ast: AST) {
+    const newNodes = new Map() as AST;
 
     let uniqueIndex = 0;
     for (const [name, expression] of ast) {
@@ -312,7 +312,7 @@ export function removeDirectLeftRecursion(ast: EBNFAST) {
     }
 }
 
-export function removeIndirectLeftRecursion(ast: EBNFAST) {
+export function removeIndirectLeftRecursion(ast: AST) {
     let i = 0;
 
     let uniqueIndex = 0;
@@ -338,7 +338,7 @@ export function removeIndirectLeftRecursion(ast: EBNFAST) {
     }
 }
 
-export function removeAllLeftRecursion(ast: EBNFAST) {
+export function removeAllLeftRecursion(ast: AST) {
     const newAST = topologicalSort(ast);
 
     // removeIndirectLeftRecursion(newAST);

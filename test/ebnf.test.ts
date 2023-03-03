@@ -10,13 +10,13 @@ import {
 
 import { addNonterminalsDebugging, generateParserFromEBNF } from "../src/ebnf/generate";
 import { EBNFParser, formatEBNFGrammar } from "../src/ebnf/transform";
-import { EBNFNonterminals } from "../src/ebnf";
+import { Nonterminals } from "../src/ebnf";
 import chalk from "chalk";
 
 const comma = string(",").trim();
 const div = string("/").trim();
 
-const debugging = (x: EBNFNonterminals) => {
+const debugging = (x: Nonterminals) => {
     const logger = (...s: string[]) => {
         console.log(...s);
     };

@@ -1,4 +1,4 @@
-import { Expression, EBNFAST } from ".";
+import { Expression, AST } from ".";
 
 import fs from "fs";
 import { generateParserFromEBNF } from "./generate";
@@ -195,7 +195,7 @@ function transformEBNFASTToTextMateRegExp(expression: Expression): string {
     }
 }
 
-export function transformEBNFASTToTextMateLanguage(ast: EBNFAST): TextMateLanguage {
+export function transformEBNFASTToTextMateLanguage(ast: AST): TextMateLanguage {
     const rules: TextMateProductionRule[] = [];
 
     // Traverse the EBNF AST and transform each production rule into a TextMate production rule
