@@ -1,4 +1,4 @@
-import { Expression, AST } from ".";
+import { Expression, AST } from "./grammar";
 
 import fs from "fs";
 import { generateParserFromEBNF } from "./generate";

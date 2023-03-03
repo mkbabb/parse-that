@@ -6,7 +6,7 @@ import {
     Expression,
     Nonterminal,
     ProductionRule,
-} from ".";
+} from "./grammar";
 
 export function topologicalSort(ast: AST) {
     const visited = new Set<string>();

@@ -16,9 +16,7 @@
     "typesVersions": {
         "*": {
             "*": [
-                "dist/parse/index.d.ts",
-                "dist/parse/state.d.ts",
-                "dist/parse/string.d.ts"
+                "dist/parse/index.d.ts"
             ],
             "ebnf": [
                 "dist/ebnf/index.d.ts"

@@ -1,6 +1,5 @@
 /// #if DEBUG
-import chalk from "chalk";
-import { parserDebug, parserToString, summarizeLine } from "./string";
+import { parserDebug, parserToString } from "./string";
 /// #endif
 import { createParserContext, ParserContext, ParserState } from "./state";
 

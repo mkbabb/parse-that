@@ -24,14 +24,11 @@ export default defineConfig(({ mode }) => ({
                 parse: "./src/parse/index.ts",
                 ebnf: "./src/ebnf/index.ts",
             },
-            // fileName: (m, entryName) => {
-            //     const ext = m === "es" ? "js" : "cjs";
-            //     return `${entryName}.${ext}`;
-            // },
+
             formats: ["es", "cjs"],
         },
         rollupOptions: {
-            external: ["chalk", "fs", "path", "util"],
+            external: ["chalk", "prettier"],
         },
     },
 
@@ -48,7 +45,7 @@ export default defineConfig(({ mode }) => ({
     },
 
     plugins: [
-        dts(),
+        dts({}),
         vitePluginIfDef.default({
             define: {
                 DEBUG: true,

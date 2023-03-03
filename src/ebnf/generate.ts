@@ -1,5 +1,5 @@
 import { Parser, all, any, eof, regex, string } from "../parse";
-import { Expression, Nonterminals, AST, EBNFGrammar } from ".";
+import { Expression, Nonterminals, AST, EBNFGrammar } from "./grammar";
 import { removeAllLeftRecursion } from "./optimize";
 import chalk from "chalk";
 
@@ -73,8 +73,7 @@ function generateParserFromAST(ast: AST) {
     return nonterminals;
 }
 
-export function generateParserFromEBNF(input: string, optimizeGraph: boolean = false) {
-    const comments = new Map<number, any>();
+export function generateASTFromEBNF(input: string) {
     const parser = new EBNFGrammar().grammar().trim();
     const parsed = parser.parse(input);
 
@@ -82,13 +81,14 @@ export function generateParserFromEBNF(input: string, optimizeGraph: boolean = f
         throw new Error("Failed to parse EBNF grammar");
     }
 
-    let ast = parsed.reduce((acc, { name, expression, type }, ix) => {
-        if (type === "comment") {
-            comments.set(ix, expression.value);
-        }
+    return parsed.reduce((acc, { name, expression, type }, ix) => {
         acc.set(name, expression);
         return acc;
     }, new Map<string, Expression>()) as AST;
+}
+
+export function generateParserFromEBNF(input: string, optimizeGraph: boolean = false) {
+    let ast = generateASTFromEBNF(input);
 
     if (optimizeGraph) {
         ast = removeAllLeftRecursion(ast);
@@ -102,6 +102,6 @@ export const addNonterminalsDebugging = (
     logger: (...args: any[]) => void
 ) => {
     Object.entries(nonterminals).forEach(([k, v]) => {
-        nonterminals[k] = v.debug(k, logger);
+        nonterminals[k] = v.debug(k, false, logger);
     });
 };

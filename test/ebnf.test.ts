@@ -10,7 +10,7 @@ import {
 
 import { addNonterminalsDebugging, generateParserFromEBNF } from "../src/ebnf/generate";
 import { EBNFParser, formatEBNFGrammar } from "../src/ebnf/transform";
-import { Nonterminals } from "../src/ebnf";
+import { Nonterminals } from "../src/ebnf/grammar";
 import chalk from "chalk";
 
 const comma = string(",").trim();
