@@ -118,7 +118,7 @@ const equalSign = string("=").trim();
 
 const semicolon = string(";").trim();
 const dot = string(".").trim();
-const questionMark = string("\?").trim();
+const questionMark = string("?").trim();
 const optionalWhitespace = string("?w").trim();
 const coalsece = string("??").trim();
 const pipe = string("|").trim();
@@ -392,7 +392,7 @@ export class EBNFGrammar {
                     } as Literal,
                 } as ProductionRule;
             })
-            .or(this.bigComment());
+            .or(this.bigComment()) as unknown as Parser<ProductionRule>;
     }
 
     expression() {

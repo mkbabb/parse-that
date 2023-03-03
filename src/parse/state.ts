@@ -86,20 +86,15 @@ export type ParserContext<T = any> = {
     args?: any[];
 };
 
+// TODO: maybe reintroduce debug check.
 export function createParserContext<T = any>(
     name: (typeof parserNames)[number],
     parser: Parser<T>,
     ...args: any[]
 ) {
-    /// #if DEBUG
     return {
         name,
         parser,
         args,
     };
-    /// #else
-    return {
-        // name,
-    };
-    /// #endif
 }

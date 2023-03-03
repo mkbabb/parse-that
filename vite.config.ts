@@ -21,11 +21,14 @@ export default defineConfig(({ mode }) => ({
 
         lib: {
             entry: {
-                parse: "./src/math.ts",
-                ebnf: "./src/ebnf/generate.ts.ts",
+                parse: "./src/parse/index.ts",
+                ebnf: "./src/ebnf/index.ts",
             },
-            name: "ParseThat",
-            fileName: "@mkbabb/parse-that",
+            fileName: (m, entryName) => {
+                const ext = m === "es" ? "js" : "cjs";
+                return `@mkbabb/${entryName}.${ext}`;
+            },
+            formats: ["es", "cjs"],
         },
         rollupOptions: {
             external: ["chalk", "fs", "path", "util"],

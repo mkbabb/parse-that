@@ -1,4 +1,4 @@
-import { Parser } from "..";
+import { Parser } from "../parse";
 export type Expression = Literal | Comment | Nonterminal | Group | Regex | Optional | Minus | Many | Many1 | Skip | Next | Concatenation | Alteration | Epsilon | OptionalWhitespace | Coalesce | EOF;
 export interface Literal {
     type: "literal";
@@ -68,13 +68,13 @@ export interface Alteration {
     type: "alternation";
     value: Expression[];
 }
-export type EBNFProductionRule = {
+export type ProductionRule = {
     type: "productionRule" | "comment";
     expression: Expression;
     name?: string;
 };
-export type EBNFAST = Map<string, Expression>;
-export type EBNFNonterminals = {
+export type AST = Map<string, Expression>;
+export type Nonterminals = {
     [key: string]: Parser<any>;
 };
 export declare class EBNFGrammar {
@@ -97,11 +97,11 @@ export declare class EBNFGrammar {
     skip(): any;
     concatenation(): any;
     alternation(): any;
-    bigComment(): Parser<EBNFProductionRule>;
+    bigComment(): Parser<ProductionRule>;
     term(): any;
     factor(): any;
-    comment(): Parser<EBNFProductionRule>;
+    comment(): Parser<ProductionRule>;
     expression(): any;
-    productionRule(): Parser<EBNFProductionRule>;
-    grammar(): Parser<EBNFProductionRule[]>;
+    productionRule(): Parser<ProductionRule>;
+    grammar(): Parser<ProductionRule[]>;
 }
