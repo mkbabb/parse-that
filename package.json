@@ -3,15 +3,17 @@
     "version": "0.5.0",
     "description": "Parser combinators for TypeScript",
     "types": "./dist/parse.d.ts",
+    "main": "./dist/parse.cjs",
+    "module": "./dist/parse.js",
     "type": "module",
     "exports": {
         "./parse": {
-            "import": "./dist/@mkbabb/parse.js",
-            "require": "./dist/@mkbabb/parse.cjs"
+            "import": "./dist/parse.js",
+            "require": "./dist/parse.cjs"
         },
         "./ebnf": {
-            "import": "./dist/@mkbabb/ebnf.js",
-            "require": "./dist/@mkbabb/ebnf.cjs"
+            "import": "./dist/ebnf.js",
+            "require": "./dist/ebnf.cjs"
         }
     },
     "scripts": {

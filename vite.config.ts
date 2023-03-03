@@ -24,10 +24,10 @@ export default defineConfig(({ mode }) => ({
                 parse: "./src/parse/index.ts",
                 ebnf: "./src/ebnf/index.ts",
             },
-            fileName: (m, entryName) => {
-                const ext = m === "es" ? "js" : "cjs";
-                return `@mkbabb/${entryName}.${ext}`;
-            },
+            // fileName: (m, entryName) => {
+            //     const ext = m === "es" ? "js" : "cjs";
+            //     return `${entryName}.${ext}`;
+            // },
             formats: ["es", "cjs"],
         },
         rollupOptions: {
