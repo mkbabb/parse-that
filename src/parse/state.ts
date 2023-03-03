@@ -1,5 +1,4 @@
 /// #if DEBUG
-import chalk from "chalk";
 import { addCursor } from "./string";
 /// #else
 /// #endif

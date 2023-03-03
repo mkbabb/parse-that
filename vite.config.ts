@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => ({
                 parse: "./src/parse/index.ts",
                 ebnf: "./src/ebnf/index.ts",
             },
-            formats: ["es", "cjs"],
+            formats: ["es"],
         },
         rollupOptions: {
             external: ["chalk", "prettier"],
@@ -44,8 +44,11 @@ export default defineConfig(({ mode }) => ({
     },
 
     plugins: [
-        nodeResolve(),
-        dts({}),
+        nodeResolve({
+            exportConditions: ["node"],
+            preferBuiltins: false,
+        }),
+        dts(),
         // vitePluginIfDef.default({
         //     define: {
         //         DEBUG: true,

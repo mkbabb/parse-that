@@ -1,9 +1,10 @@
-import chalk from "chalk";
 import { createParserContext, ParserState } from "./state";
 import { getLazyParser, Parser } from ".";
 import { Options, RequiredOptions } from "prettier";
 import { Doc } from "prettier";
 import { builders as b, printer } from "prettier/doc";
+
+import chalk from "chalk";
 
 const MAX_LINES = 4;
 const MAX_LINE_LENGTH = 80;

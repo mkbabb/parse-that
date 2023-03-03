@@ -9,9 +9,9 @@ import {
 } from "./utils";
 
 import { addNonterminalsDebugging, generateParserFromEBNF } from "../src/ebnf/generate";
-import { EBNFParser, formatEBNFGrammar } from "../src/ebnf/transform";
+import { EBNFParser } from "../src/ebnf/transform";
 import { Nonterminals } from "../src/ebnf/grammar";
-import chalk from "chalk";
+
 
 const comma = string(",").trim();
 const div = string("/").trim();
