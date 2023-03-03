@@ -40,7 +40,6 @@
         "prettier": "^2.8.4"
     },
     "devDependencies": {
-        "chalk": "^5.2.0",
         "@types/node": "^18.14.0",
         "@types/prettier": "^2.7.2",
         "@vitest/coverage-c8": "^0.28.5",
