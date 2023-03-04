@@ -9,7 +9,7 @@ import {
     reduceMathExpression,
 } from "./utils";
 
-import { generateParserFromEBNF } from "../src/ebnf";
+import { generateParserFromEBNF } from "../src/ebnf/generate";
 import { EBNFParser } from "../src/ebnf/transform";
 import { Nonterminals } from "../src/ebnf/grammar";
 

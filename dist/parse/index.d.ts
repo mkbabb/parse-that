@@ -28,7 +28,7 @@ export declare class Parser<T = string> {
     many(min?: number, max?: number): Parser<T[]>;
     sepBy<S>(sep: Parser<S | T>, min?: number, max?: number): Parser<T[]>;
     eof(): Parser<T>;
-    toString(): "string" | "skip" | "next" | "many" | "debug" | "regex" | "then" | "or" | "chain" | "map" | "lazy" | "memoize" | "mergeMemo" | "not" | "trim" | "trimWhitespace" | "whitespace" | "wrap" | "sepBy" | "any" | "all" | "opt" | "lookAhead" | "lookBehind" | "eof" | "regexConcat" | "regexWrap" | "mapState";
+    toString(): "string" | "regex" | "then" | "or" | "chain" | "map" | "many" | "lazy" | "memoize" | "mergeMemo" | "not" | "skip" | "next" | "trim" | "trimWhitespace" | "whitespace" | "wrap" | "sepBy" | "any" | "all" | "opt" | "lookAhead" | "lookBehind" | "eof" | "regexConcat" | "regexWrap" | "debug" | "mapState";
     static lazy<T>(fn: () => Parser<T>): Parser<T>;
 }
 export declare function eof<T>(): Parser<any>;

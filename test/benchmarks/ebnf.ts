@@ -1,4 +1,4 @@
-import { generateParserFromEBNF } from "../../src/ebnf";
+import { generateParserFromEBNF } from "../../src/ebnf/generate";
 import fs from "fs";
 
 const grammar = fs.readFileSync("./grammar/json.ebnf", "utf8");

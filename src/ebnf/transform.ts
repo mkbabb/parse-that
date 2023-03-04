@@ -1,6 +1,6 @@
 import { Expression, AST, Nonterminals } from "./grammar";
 
-import { generateParserFromEBNF } from ".";
+import { generateParserFromEBNF } from "./generate";
 import { parserDebug } from "../parse/debug";
 
 const nonterminalsToTrim = [

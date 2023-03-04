@@ -1,13 +1,13 @@
-var R = Object.defineProperty;
-var b = (r, t, o) => t in r ? R(r, t, { enumerable: !0, configurable: !0, writable: !0, value: o }) : r[t] = o;
-var P = (r, t, o) => (b(r, typeof t != "symbol" ? t + "" : t, o), o);
-import { lazy as p, regex as f, any as y, string as i, all as g, eof as B, Parser as _ } from "./parse.js";
-var A = Object.defineProperty, C = Object.getOwnPropertyDescriptor, m = (r, t, o, e) => {
-  for (var n = e > 1 ? void 0 : e ? C(t, o) : t, a = r.length - 1, s; a >= 0; a--)
-    (s = r[a]) && (n = (e ? s(t, o, n) : s(n)) || n);
-  return e && n && A(t, o, n), n;
+var F = Object.defineProperty;
+var b = (r, t, n) => t in r ? F(r, t, { enumerable: !0, configurable: !0, writable: !0, value: n }) : r[t] = n;
+var P = (r, t, n) => (b(r, typeof t != "symbol" ? t + "" : t, n), n);
+import { regex as f, any as y, string as i, all as g, lazy as p, eof as B, Parser as _ } from "./parse.js";
+var A = Object.defineProperty, C = Object.getOwnPropertyDescriptor, m = (r, t, n, e) => {
+  for (var o = e > 1 ? void 0 : e ? C(t, n) : t, a = r.length - 1, s; a >= 0; a--)
+    (s = r[a]) && (o = (e ? s(t, n, o) : s(o)) || o);
+  return e && o && A(t, n, o), o;
 };
-const F = {
+const R = {
   "|": "alternation",
   ",": "concatenation",
   "-": "minus",
@@ -17,11 +17,11 @@ const F = {
   "+": "many1",
   "?": "optional",
   "?w": "optionalWhitespace"
-}, E = ([r, t]) => t.length === 0 ? r : t.reduce((o, [e, n]) => ({
-  type: F[e],
-  value: [o, n]
+}, E = ([r, t]) => t.length === 0 ? r : t.reduce((n, [e, o]) => ({
+  type: R[e],
+  value: [n, o]
 }), r), G = ([r, t]) => t === void 0 ? r : {
-  type: F[t],
+  type: R[t],
   value: r
 }, S = {
   debug: !1,
@@ -68,9 +68,9 @@ class c {
     return f(/\/\/.*/).or(this.bigComment()).trim();
   }
   trimBigComment(t) {
-    return t.trim(this.bigComment().many(), !1).map(([o, e, n]) => (e.comment = {
-      left: o,
-      right: n
+    return t.trim(this.bigComment().many(), !1).map(([n, e, o]) => (e.comment = {
+      left: n,
+      right: o
     }, e));
   }
   group() {
@@ -154,13 +154,13 @@ class c {
       i("=").trim(),
       this.rhs(),
       y(i(";"), i(".")).trim()
-    ).map(([t, , o]) => ({ name: t, expression: o }));
+    ).map(([t, , n]) => ({ name: t, expression: n }));
   }
   grammar() {
-    return this.productionRule().trim(this.comment().many(), !1).map(([t, o, e]) => (o.comment = {
+    return this.productionRule().trim(this.comment().many(), !1).map(([t, n, e]) => (n.comment = {
       above: t,
       below: e
-    }, o)).many(1);
+    }, n)).many(1);
   }
 }
 m([
@@ -209,7 +209,7 @@ m([
   p
 ], c.prototype, "grammar", 1);
 function T(r) {
-  const t = /* @__PURE__ */ new Set(), o = [];
+  const t = /* @__PURE__ */ new Set(), n = [];
   function e(a, s) {
     if (s.has(a) || t.has(a))
       return;
@@ -223,14 +223,14 @@ function T(r) {
     else if (u.value instanceof Array)
       for (const v of u.value)
         v.type === "nonterminal" && e(v.value, s);
-    t.add(a), s.delete(a), o.unshift(r.get(a));
+    t.add(a), s.delete(a), n.unshift(r.get(a));
   }
   for (const [a] of r)
     e(a, /* @__PURE__ */ new Set());
-  const n = /* @__PURE__ */ new Map();
-  for (const a of o)
-    n.set(a.name, a);
-  return n;
+  const o = /* @__PURE__ */ new Map();
+  for (const a of n)
+    o.set(a.name, a);
+  return o;
 }
 const d = (r, t) => {
   if (!(!(r != null && r.type) || !(t != null && t.type) || r.type !== t.type))
@@ -243,29 +243,29 @@ const d = (r, t) => {
       case "optionalWhitespace":
       case "many":
       case "many1": {
-        const o = d(r.value, t.value);
-        return o ? [
+        const n = d(r.value, t.value);
+        return n ? [
           {
             type: r.type,
-            value: o[0]
+            value: n[0]
           },
           {
             type: r.type,
-            value: o[1]
+            value: n[1]
           },
           {
             type: r.type,
-            value: o[2]
+            value: n[2]
           }
         ] : void 0;
       }
       case "concatenation": {
-        const o = r.value.map(
+        const n = r.value.map(
           (u, v) => d(r.value[v], t.value[v])
         );
-        if (o.some((u) => u === void 0))
+        if (n.some((u) => u === void 0))
           return;
-        const e = o.map((u) => u[0]), n = o.map((u) => u[1]), a = o.map((u) => u[2]), s = e.lastIndexOf(null);
+        const e = n.map((u) => u[0]), o = n.map((u) => u[1]), a = n.map((u) => u[2]), s = e.lastIndexOf(null);
         return s === e.length - 1 ? void 0 : [
           {
             type: "concatenation",
@@ -273,7 +273,7 @@ const d = (r, t) => {
           },
           {
             type: "concatenation",
-            value: n
+            value: o
           },
           {
             type: "concatenation",
@@ -282,13 +282,13 @@ const d = (r, t) => {
         ];
       }
       case "alternation":
-        for (const o of r.value) {
-          const e = d(o, t);
+        for (const n of r.value) {
+          const e = d(n, t);
           if (e)
             return e;
         }
-        for (const o of t.value) {
-          const e = d(r, o);
+        for (const n of t.value) {
+          const e = d(r, n);
           if (e)
             return e;
         }
@@ -311,24 +311,24 @@ const d = (r, t) => {
     case "next":
       return h(r.value[0], t.value[0]) && h(r.value[1], t.value[1]);
     case "concatenation":
-      return r.value.every((o, e) => h(o, t.value[e]));
+      return r.value.every((n, e) => h(n, t.value[e]));
     case "alternation":
-      return r.value.some((o, e) => h(o, t.value[e]));
+      return r.value.some((n, e) => h(n, t.value[e]));
     case "epsilon":
       return !0;
   }
 };
 function N(r, t) {
-  const o = /* @__PURE__ */ new Map();
+  const n = /* @__PURE__ */ new Map();
   let e = null;
-  for (let n = 0; n < t.value.length - 1; n++) {
-    const a = t.value[n], s = t.value[n + 1], l = d(a, s);
+  for (let o = 0; o < t.value.length - 1; o++) {
+    const a = t.value[o], s = t.value[o + 1], l = d(a, s);
     if (l) {
       const [u, v, w] = l;
-      e !== null && h(u, e) ? o.get(e).push(w) : (o.set(u, [v, w]), e = u), n === t.value.length - 2 && t.value.shift(), t.value.shift(), n -= 1;
+      e !== null && h(u, e) ? n.get(e).push(w) : (n.set(u, [v, w]), e = u), o === t.value.length - 2 && t.value.shift(), t.value.shift(), o -= 1;
     }
   }
-  for (const [n, a] of o) {
+  for (const [o, a] of n) {
     const l = {
       type: "concatenation",
       value: [
@@ -341,21 +341,21 @@ function N(r, t) {
         },
         {
           type: "group",
-          value: n
+          value: o
         }
       ]
     };
     t.value.push(l);
   }
 }
-const O = (r, t, o) => {
-  const e = [], n = [], a = {
+const O = (r, t, n) => {
+  const e = [], o = [], a = {
     type: "nonterminal",
-    value: o
+    value: n
   };
   for (let s = 0; s < t.value.length; s++) {
     const l = t.value[s];
-    l.type === "concatenation" && l.value[0].value === r ? n.push({
+    l.type === "concatenation" && l.value[0].value === r ? o.push({
       type: "concatenation",
       value: [...l.value.slice(1), a]
     }) : e.push({
@@ -363,7 +363,7 @@ const O = (r, t, o) => {
       value: [l, a]
     });
   }
-  return n.length === 0 ? [void 0, void 0] : (n.push({
+  return o.length === 0 ? [void 0, void 0] : (o.push({
     type: "epsilon"
   }), [
     {
@@ -372,17 +372,17 @@ const O = (r, t, o) => {
     },
     {
       type: "alternation",
-      value: n
+      value: o
     }
   ]);
 };
 function z(r) {
   const t = /* @__PURE__ */ new Map();
-  let o = 0;
-  for (const [e, n] of r) {
-    const { expression: a } = n;
+  let n = 0;
+  for (const [e, o] of r) {
+    const { expression: a } = o;
     if (a.type === "alternation") {
-      const s = `${e}_${o++}`, [l, u] = O(
+      const s = `${e}_${n++}`, [l, u] = O(
         e,
         a,
         s
@@ -393,84 +393,99 @@ function z(r) {
       }), t.set(e, {
         name: e,
         expression: l,
-        comment: n.comment
+        comment: o.comment
       }));
     }
   }
   if (t.size === 0)
     return r;
-  for (const [e, n] of t)
-    r.set(e, n);
-  for (const [e, n] of r) {
-    const { expression: a } = n;
+  for (const [e, o] of t)
+    r.set(e, o);
+  for (const [e, o] of r) {
+    const { expression: a } = o;
     a.type === "alternation" && N(e, a);
   }
 }
-function M(r) {
+function j(r) {
+  const t = (n, e) => {
+    e.type === "concatenation" && e.value[0].type === "nonterminal" && e.value[0].value === n && (e.value.slice(1, e.value.length), e.value.shift());
+  };
+  for (const [n, e] of r)
+    t(n, e);
+}
+function L(r) {
   const t = T(r);
   return z(t), t;
 }
-function D(r) {
-  const o = new c().grammar().parse(r);
-  if (!o)
+function M(r) {
+  const n = new c().grammar().parse(r);
+  if (!n)
     throw new Error("Failed to parse EBNF grammar");
-  return o.reduce((e, n, a) => e.set(n.name, n), /* @__PURE__ */ new Map());
+  return n.reduce((e, o, a) => e.set(o.name, o), /* @__PURE__ */ new Map());
 }
-function L(r) {
-  function t(e, n) {
+function D(r) {
+  function t(e, o) {
     var a, s;
-    switch (n.type) {
+    switch (o.type) {
       case "literal":
-        return i(n.value);
+        return i(o.value);
       case "nonterminal":
-        const l = _.lazy(() => o[n.value]);
-        return l.context.name = n.value, l;
+        const l = _.lazy(() => n[o.value]);
+        return l.context.name = o.value, l;
       case "epsilon":
         return B().opt();
       case "group":
-        return t(e, n.value);
+        return t(e, o.value);
       case "regex":
-        return f(n.value);
+        return f(o.value);
       case "optionalWhitespace":
-        return t(e, n.value).trim();
+        return t(e, o.value).trim();
       case "optional":
-        return t(e, n.value).opt();
+        return t(e, o.value).opt();
       case "many":
-        return t(e, n.value).many();
+        return t(e, o.value).many();
       case "many1":
-        return t(e, n.value).many(1);
+        return t(e, o.value).many(1);
       case "skip":
-        return t(e, n.value[0]).skip(
-          t(e, n.value[1])
+        return t(e, o.value[0]).skip(
+          t(e, o.value[1])
         );
       case "next":
-        return t(e, n.value[0]).next(
-          t(e, n.value[1])
+        return t(e, o.value[0]).next(
+          t(e, o.value[1])
         );
       case "minus":
-        return t(e, n.value[0]).not(
-          t(e, n.value[1])
+        return t(e, o.value[0]).not(
+          t(e, o.value[1])
         );
       case "concatenation": {
-        const u = n.value.map((v) => t(e, v));
+        const u = o.value.map((v) => t(e, v));
         return ((s = (a = u.at(-1)) == null ? void 0 : a.context) == null ? void 0 : s.name) === "eof" && u.pop(), g(...u);
       }
       case "alternation":
-        return y(...n.value.map((u) => t(e, u)));
+        return y(...o.value.map((u) => t(e, u)));
     }
   }
-  const o = {};
-  for (const [e, n] of r.entries())
-    o[e] = t(e, n.expression);
-  return o;
+  const n = {};
+  for (const [e, o] of r.entries())
+    n[e] = t(e, o.expression);
+  return n;
 }
-function j(r, t = !1) {
-  let o = D(r);
-  return t && (o = M(o)), [L(o), o];
+function Z(r, t = !1) {
+  let n = M(r);
+  return t && (n = L(n)), [D(n), n];
 }
 export {
-  D as generateASTFromEBNF,
-  L as generateParserFromAST,
-  j as generateParserFromEBNF
+  c as EBNFGrammar,
+  h as comparePrefix,
+  d as findCommonPrefix,
+  M as generateASTFromEBNF,
+  D as generateParserFromAST,
+  Z as generateParserFromEBNF,
+  L as removeAllLeftRecursion,
+  z as removeDirectLeftRecursion,
+  j as removeIndirectLeftRecursion,
+  N as rewriteTreeLeftRecursion,
+  T as topologicalSort
 };
 //# sourceMappingURL=ebnf.js.map
