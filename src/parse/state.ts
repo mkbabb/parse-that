@@ -25,23 +25,18 @@ export class ParserState<T> {
         return new ParserState<S>(this.src, value, offset, this.isError);
     }
 
-    join<S>(...states: ParserState<S>[]) {
-        this.furthest = Math.max(this.furthest, ...states.map((s) => s?.furthest ?? 0));
-        return this;
-    }
-
     getColumnNumber(): number {
         const offset = this.offset;
         const lastNewline = this.src.lastIndexOf("\n", offset);
         const columnNumber = lastNewline === -1 ? offset : offset - (lastNewline + 1);
-
         return Math.max(0, columnNumber);
     }
 
     getLineNumber(): number {
-        const lines = this.src.slice(0, this.offset).split("\n");
-        const lineNumber = lines.length - 1;
-        return Math.max(0, lineNumber);
+        const newlineIndex = this.src.lastIndexOf("\n", this.offset);
+        return newlineIndex >= 0
+            ? this.src.slice(0, newlineIndex).split("\n").length
+            : 0;
     }
 }
 

@@ -35,16 +35,14 @@ export class Parser<T = string> {
     constructor(public parser: ParserFunction<T>, public context: ParserContext = {}) {}
 
     reset() {
-        this.id = 0;
-        PARSER_ID = 0;
         lastState = undefined;
-
         MEMO.clear();
         LEFT_RECURSION_COUNTS.clear();
     }
 
     parse(val: string) {
         this.reset();
+
         const newState = this.parser(new ParserState(val));
 
         this.state = mergeErrorState(newState);
