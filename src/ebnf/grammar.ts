@@ -1,4 +1,5 @@
 import { Parser, string, lazy, all, any, regex } from "../parse";
+import { parserDebug } from "../parse/debug";
 
 export type Expression =
     | Literal
@@ -19,7 +20,10 @@ export type Expression =
 interface BaseExpression<T, V = string> {
     type: T;
     value: V;
-    comment?: string[];
+    comment?: {
+        left: string[];
+        right: string[];
+    };
 }
 
 export type Nonterminal = BaseExpression<"nonterminal">;
@@ -49,29 +53,85 @@ export type ProductionRule = {
     expression: Expression;
     name: string;
     comment: {
-        above?: string[];
-        below?: string[];
+        above: string[];
+        below: string[];
     };
 };
 
 export type AST = Map<string, ProductionRule>;
 export type Nonterminals = { [key: string]: Parser<any> };
 
+const operatorToType = {
+    "|": "alternation",
+    ",": "concatenation",
+    "-": "minus",
+    "<<": "skip",
+    ">>": "next",
+    "*": "many",
+    "+": "many1",
+    "?": "optional",
+    "?w": "optionalWhitespace",
+};
+
+const reduceBinaryExpression = ([left, rightExpression]) => {
+    if (rightExpression.length === 0) {
+        return left;
+    }
+    return rightExpression.reduce((acc, [op, right]) => {
+        return {
+            type: operatorToType[op],
+            value: [acc, right],
+        };
+    }, left);
+};
+
+const mapFactor = ([term, op]) => {
+    if (op === undefined) {
+        return term;
+    }
+    const type = operatorToType[op];
+    return {
+        type,
+        value: term,
+    } as Expression;
+};
+
+type Options = {
+    debug: boolean;
+    comments: boolean;
+};
+
+const defaultOptions = {
+    debug: false,
+    comments: true,
+} as Options;
+
 export class EBNFGrammar {
+    options: Options;
+
+    constructor(options?: Partial<Options>) {
+        this.options = {
+            ...defaultOptions,
+            ...(options ?? {}),
+        };
+    }
+
     identifier() {
         return regex(/[_a-zA-Z][_a-zA-Z0-9]*/).trim();
     }
 
     literal() {
-        return any(
-            regex(/[^"]+/).wrap(string('"'), string('"')),
-            regex(/[^']+/).wrap(string("'"), string("'"))
-        ).map((value) => {
-            return {
-                type: "literal",
-                value,
-            } as Literal;
-        });
+        return this.trimBigComment(
+            any(
+                regex(/[^"]+/).wrap(string('"'), string('"')),
+                regex(/[^']+/).wrap(string("'"), string("'"))
+            ).map((value) => {
+                return {
+                    type: "literal",
+                    value,
+                } as Literal;
+            })
+        );
     }
 
     epsilon() {
@@ -95,8 +155,32 @@ export class EBNFGrammar {
     }
 
     @lazy
+    bigComment() {
+        return regex(/\/\*[^\*]*\*\//).trim();
+    }
+
+    @lazy
+    comment() {
+        return regex(/\/\/.*/)
+            .or(this.bigComment())
+            .trim();
+    }
+
+    trimBigComment(e: Parser<any>) {
+        return e
+            .trim(this.bigComment().many(), false)
+            .map(([left, expression, right]) => {
+                expression.comment = {
+                    left,
+                    right,
+                };
+                return expression as unknown as Expression;
+            }) as Parser<Expression>;
+    }
+
+    @lazy
     group() {
-        return this.expression()
+        return this.rhs()
             .trim()
             .wrap(string("("), string(")"))
             .map((value) => {
@@ -119,20 +203,9 @@ export class EBNFGrammar {
             });
     }
 
-    optional() {
-        return this.term()
-            .skip(string("?").trim())
-            .map((value) => {
-                return {
-                    type: "optional",
-                    value,
-                } as Optional;
-            });
-    }
-
     @lazy
     optionalGroup() {
-        return this.expression()
+        return this.rhs()
             .trim()
             .wrap(string("["), string("]"))
             .map((value) => {
@@ -143,31 +216,9 @@ export class EBNFGrammar {
             });
     }
 
-    optionalWhitespace() {
-        return this.term()
-            .skip(string("?w").trim())
-            .map((value) => {
-                return {
-                    type: "optionalWhitespace",
-                    value,
-                } as OptionalWhitespace;
-            });
-    }
-
-    minus() {
-        return all(this.term().skip(string("-").trim()), this.term()).map(
-            ([left, right]) => {
-                return {
-                    type: "minus",
-                    value: [left, right],
-                } as Minus;
-            }
-        );
-    }
-
     @lazy
     manyGroup() {
-        return this.expression()
+        return this.rhs()
             .trim()
             .wrap(string("{"), string("}"))
             .map((value) => {
@@ -178,58 +229,59 @@ export class EBNFGrammar {
             });
     }
 
-    many() {
-        return this.term()
-            .skip(string("*").trim())
-            .map((value) => {
-                return {
-                    type: "many",
-                    value,
-                } as Many;
-            });
-    }
-
-    many1() {
-        return this.term()
-            .skip(string("+").trim())
-            .map((value) => {
-                return {
-                    type: "many1",
-                    value,
-                } as Many1;
-            });
+    @lazy
+    lhs() {
+        return this.identifier();
     }
 
     @lazy
-    next() {
-        return all(
-            this.factor().skip(string(">>").trim()),
-            any(this.skip(), this.factor())
-        ).map(([left, right]) => {
-            return {
-                type: "next",
-                value: [left, right],
-            } as Next;
-        });
+    term() {
+        return any(
+            this.epsilon(),
+            this.group(),
+            this.optionalGroup(),
+            this.manyGroup(),
+            this.nonterminal(),
+            this.literal(),
+            this.regex()
+        );
     }
 
     @lazy
-    skip() {
-        return all(
-            any(this.next(), this.factor()).skip(string("<<").trim()),
-            this.factor()
-        ).map(([left, right]) => {
-            return {
-                type: "skip",
-                value: [left, right],
-            } as Skip;
-        });
+    factor() {
+        return this.trimBigComment(
+            all(
+                this.term(),
+                any(
+                    string("?w").trim(),
+                    string("?").trim(),
+                    string("*").trim(),
+                    string("+").trim()
+                ).opt()
+            ).map(mapFactor)
+        ) as Parser<Expression>;
     }
 
+    @lazy
+    binaryFactor() {
+        return all(
+            this.factor(),
+            all(
+                any(string("<<").trim(), string(">>").trim(), string("-").trim()),
+                this.factor()
+            ).many()
+        ).map(reduceBinaryExpression);
+    }
+
+    @lazy
     concatenation() {
-        return any(this.skip(), this.next(), this.factor())
-            .sepBy(string(",").trim(), 1)
+        return this.binaryFactor()
+            .sepBy(string(",").trim())
             .map((value) => {
+                if (value.length === 1) {
+                    return value[0];
+                }
+
                 return {
                     type: "concatenation",
                     value,
@@ -237,10 +289,15 @@ export class EBNFGrammar {
             });
     }
 
+    @lazy
     alternation() {
-        return any(this.concatenation(), this.skip(), this.next(), this.factor())
-            .sepBy(string("|").trim(), 1)
+        return this.concatenation()
+            .sepBy(string("|").trim())
             .map((value) => {
+                if (value.length === 1) {
+                    return value[0];
+                }
+
                 return {
                     type: "alternation",
                     value,
@@ -248,65 +305,27 @@ export class EBNFGrammar {
             });
     }
 
-    bigComment() {
-        return regex(/\/\*[^]*?\*\//).trim();
+    @lazy
+    rhs() {
+        return this.alternation();
     }
 
-    comment() {
-        return regex(/\/\/.*/)
-            .trim()
-            .or(this.bigComment());
-    }
-
-    term() {
-        return any(
-            this.epsilon(),
-            this.literal(),
-            this.nonterminal(),
-            this.regex(),
-            this.group(),
-            this.optionalGroup(),
-            this.manyGroup()
-        )
-            .then(this.bigComment().opt())
-            .map(([left, comment]) => {
-                left.comment = comment;
-                return left as unknown as Expression;
-            }) as Parser<Expression>;
-    }
-
-    factor() {
-        return any(
-            this.optionalWhitespace(),
-            this.optional(),
-            this.many(),
-            this.many1(),
-            this.minus(),
-            this.term()
-        ) as Parser<Expression>;
-    }
-
-    expression() {
-        return any(
-            this.alternation(),
-            this.concatenation(),
-            this.skip(),
-            this.next(),
-            this.factor()
-        ) as Parser<Expression>;
-    }
-
+    @lazy
     productionRule() {
         return all(
-            this.identifier().skip(string("=").trim()),
-            this.expression().skip(any(string(";").trim(), string(".").trim()))
-        ).map(([name, expression]) => {
+            this.lhs(),
+            string("=").trim(),
+            this.rhs(),
+            any(string(";"), string(".")).trim()
+        ).map(([name, , expression]) => {
             return { name, expression } as ProductionRule;
         });
     }
 
+    @lazy
     grammar() {
-        return all(this.comment().many(), this.productionRule(), this.comment().many())
+        return this.productionRule()
+            .trim(this.comment().many(), false)
             .map(([above, rule, below]) => {
                 rule.comment = {
                     above,

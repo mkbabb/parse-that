@@ -56,7 +56,7 @@ export function addCursor(
         let paddedLineNum = color.reset.black(String(lineNum));
 
         line = lineNum === lineIdx + 1 ? color(line) : line;
-        const paddedLine = `\t${paddedLineNum}| ${line}`;
+        const paddedLine = `      ${paddedLineNum}| ${line}`;
 
         return paddedLine;
     });
@@ -206,7 +206,7 @@ export function parserDebug<T>(
         const stateName = !newState.isError ? (finished ? "Done" : "Ok") : "Err";
         const stateString = " " + stateName + " " + stateSymbol + " ";
 
-        const me = recursivePrint ? parser.toString() : parser.context.name;
+        const me = recursivePrint ? parserPrint(parser) : parser.context.name;
 
         const header = group([
             stateBgColor.bold(stateString),
@@ -217,9 +217,9 @@ export function parserDebug<T>(
 
         const body = (() => {
             if (newState.offset >= newState.src.length) {
-                return chalk.bold.greenBright(addCursor("", newState.isError));
+                return chalk.bold.greenBright(addCursor(newState, "", newState.isError));
             }
-            return newState.addCursor("^", newState.isError);
+            return addCursor(newState, "^", newState.isError);
         })();
 
         const headerBody = group([header, b.hardline, b.indent([body])]);

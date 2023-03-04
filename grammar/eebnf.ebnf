@@ -1,5 +1,4 @@
-letter = 
-      "A" | "B" | "C" | "D" | "E" | "F" | "G"
+letter =  "A" | "B" | "C" | "D" | "E" | "F" | "G"
     | "H" | "I" | "J" | "K" | "L" | "M" | "N"
     | "O" | "P" | "Q" | "R" | "S" | "T" | "U"
     | "V" | "W" | "X" | "Y" | "Z" | "a" | "b"
@@ -25,19 +24,17 @@ minus = "-" ;
 div = "/" ;
 left_shift = "<<" ;
 right_shift = ">>" ;
-eof = "$" ;
 
 optional_whitespace = "?w" ;
-colasece = "??" ;
 
 character =  letter | digit | symbol | "_" ;
 identifier = letter , { letter | digit | "_" | "-" } ;
 
-terminal = "'" , ( character - "'" ) * , "'" 
+literal =  "'" , ( character - "'" ) * , "'" 
          | '"' , ( character - '"' ) * , '"' ;
 
 
-big_comment = "/*" , /.*$/ , "*/" ;
+big_comment = "/*" , /[^\*]*$/ , "*/" ;
 comment = "//" , /.*$/ ;
 
 regex = div , (character - div) * , div ;
@@ -45,32 +42,31 @@ regex = div , (character - div) * , div ;
 lhs = identifier ;
 
 term = "ε"
-     | big_comment
      | identifier
-     | terminal 
+     | literal 
      | regex
-     | eof
      | "(" , rhs , ")" 
      | "[" , rhs , "]"
      | "{" , rhs , "}" ;
 
-factor = term , optional_whitespace
-       | term , colasece , term
-       | term , question
-       | term , star
-       | term , plus
-       | term , minus , term
-       | term , left_shift , term
-       | term , right_shift , term
-       | term ;
 
-concatenation = factor , { comma , factor };
-alternation = concatenation , { pipe , concatenation } ;
+factor = big_comment ? , (
+      term , optional_whitespace
+    | term , question
+    | term , star
+    | term , plus
+    | term  
+) , big_comment ? ;
 
-rhs = comment
-    | alternation
-    | concatenation 
-    | factor ;
+binary_operators = left_shift | right_shift | minus ;
+
+binary_factor = factor , ( binary_operators , factor ) * ;
+
+concatenation = ( binary_factor , comma ? ) + ;
+alternation = ( concatenation , pipe ? ) + ;
+
+rhs = alternation ;
 
 rule = lhs, "=", rhs, ";" ;
-grammar = ( comment | rule ) * ;
+
+grammar =  rule * ;

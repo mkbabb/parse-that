@@ -1,6 +1,7 @@
-import { Expression, AST } from "./grammar";
+import { Expression, AST, Nonterminals } from "./grammar";
 
 import { generateParserFromEBNF } from "./generate";
+import { parserDebug } from "../parse/debug";
 
 function breakLineOnSeparator(input: string, separator: string): string {
     const lines = input.split(separator);
@@ -50,23 +51,39 @@ function breakLineOnSeparator(input: string, separator: string): string {
 }
 
 const nonterminalsToTrim = [
-    "symbol",
+    "literal",
     "identifier",
-    "terminal",
+    "symbol",
     "pipe",
     "comma",
-    "plus",
-    "minus",
     "star",
-    "div",
+    "plus",
     "question",
-    "eof",
+    "minus",
+    "div",
+    "left_shift",
+    "right_shift",
     "optional_whitespace",
-    "regex",
+    "big_comment",
+    "comment",
+    "factor",
+    "binary_factor",
+    "concatenation",
+    "alternation",
     "rhs",
     "rule",
     "grammar",
 ];
+
+const debugging = (x: Nonterminals) => {
+    const logger = (...s: string[]) => {
+        console.log(...s);
+    };
+
+    Object.entries(x).forEach(([key, value]) => {
+        x[key] = parserDebug(value, key, true, logger);
+    });
+};
 
 export const EBNFParser = (grammar: string) => {
     const [nonterminals, ast] = generateParserFromEBNF(grammar);
@@ -81,7 +98,7 @@ export const EBNFParser = (grammar: string) => {
         return v.flat().join("");
     });
 
-    nonterminals.terminal = nonterminals.terminal.map((v) => {
+    nonterminals.literal = nonterminals.literal.map((v) => {
         return v.flat().join("");
     });
 
@@ -100,6 +117,8 @@ export const EBNFParser = (grammar: string) => {
         const s = v.flat().join(" ");
         return s;
     });
+
+    // debugging(nonterminals);
 
     return nonterminals.grammar.map((rules) => {
         let lastIx = 0;
@@ -121,7 +140,6 @@ export const EBNFParser = (grammar: string) => {
         return rules.join("\n");
     });
 
-    // debugging(nonterminals);
 };
 
 function escapeRegExp(string: string): string {

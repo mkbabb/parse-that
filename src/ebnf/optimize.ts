@@ -75,9 +75,9 @@ export const findCommonPrefix = (
                 ];
             }
         }
-
         case "group":
         case "optional":
+        case "optionalWhitespace":
         case "many":
         case "many1": {
             const common = findCommonPrefix(e1.value, e2.value as Expression);
@@ -117,7 +117,6 @@ export const findCommonPrefix = (
             if (startIx === prefixes.length - 1) {
                 return undefined;
             }
-
             const prefix = prefixes.slice(startIx + 1);
             return [
                 {
@@ -261,7 +260,6 @@ const removeDirectLeftRecursionProduction = (
         }
     }
 
-    // No direct left recursion
     if (tail.length === 0) {
         return [undefined, undefined];
     }

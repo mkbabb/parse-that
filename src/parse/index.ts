@@ -245,7 +245,11 @@ export class Parser<T = string> {
         );
     }
 
-    wrap<L, R>(start: Parser<L>, end: Parser<R>) {
+    wrap<L, R>(start: Parser<L>, end: Parser<R>, discard: boolean = true) {
+        if (!discard) {
+            return all(start, this, end);
+        }
+
         if (isStringParsers(start, this, end)) {
             return wrapStringParsers(start, this, end);
         }
@@ -254,7 +258,11 @@ export class Parser<T = string> {
         return wrap;
     }
 
-    trim(parser: Parser<T> = whitespace as Parser<T>): Parser<T> {
+    trim(parser: Parser<T> = whitespace as Parser<T>, discard: boolean = true) {
+        if (!discard) {
+            return all(parser, this, parser)
+        } /*a*/ /*a*/ /*a*/
+
         if (parser.context?.name === "whitespace") {
             if (isStringParsers(this, parser)) {
                 return concatStringParsers(
@@ -278,7 +286,7 @@ export class Parser<T = string> {
             return new Parser(
                 whitespaceTrim as ParserFunction<T>,
                 createParserContext("trimWhitespace", this)
-            );
+            ) as Parser<T>;
         }
 
         return this.wrap(parser, parser) as Parser<T>;
@@ -465,9 +473,8 @@ export function all<T extends any[]>(...parsers: T) {
             if (newState.isError) {
                 return newState;
             }
-            if (newState.value !== undefined) {
-                matches.push(newState.value);
-            }
+
+            matches.push(newState.value);
 
             state = newState;
         }

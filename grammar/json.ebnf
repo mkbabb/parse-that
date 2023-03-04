@@ -1,19 +1,25 @@
 // biiiiiiiiig vibes
-null = "null" ;
-bool = "true" | "false" ;
+null = /*a*/   "null"  /*a*/   ;
+bool = /*a*/ /*a*/ /*a*/ "true" /*a*/ | /*a*/  "false" ;
 
 // yeah man i'm str8 up a vibing human
-// that's really just going for it
+// that's really just going for it /*a*/
 
-number = /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ ; // oh wow ;
+number = /*a*/  /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ ; // oh wow ;
 
 char = /[^"'\\]+/ | /\\"/ | /\\'/ | /\\\\/ ; // ' fixed dat lol
-string = '"' >> char /*" i'm a vibe machine "*/ << '"' | "'" >> char << "'" ;
-array = "[" >> ( value << ","? ) * << "]" ;
+string = '"' >> /*a*/ char /*a*/ << '"' | "'" >> char << "'" ; // now that's 
+array = /*a
 
-pair = string, ":" >> value ;
+biiiiiiiiig vibes
+
+*/
+
+"[" >> ( value << ","? ) * << "]" ;
+
+pair = string, /*a*/ ":" /*a*/ >> /*a*/ value ;
 object = "{" >> ( pair << ","? ) * << "}" ;
 
-value = null | bool | number | string | array | object ;
+value = /*a*/ /*a*/ /*a*/ null | bool | number | string | array | object ;
 
-// and done
+// and done !

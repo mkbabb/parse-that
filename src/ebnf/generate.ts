@@ -2,8 +2,10 @@ import { Parser, all, any, eof, regex, string } from "../parse";
 import { Expression, Nonterminals, AST, EBNFGrammar, ProductionRule } from "./grammar";
 import { removeAllLeftRecursion } from "./optimize";
 
+import { parserDebug } from "../parse/debug";
+
 export function generateASTFromEBNF(input: string) {
-    const parser = new EBNFGrammar().grammar().trim();
+    const parser = parserDebug(new EBNFGrammar().grammar(), "grammar", false);
     const parsed = parser.parse(input);
 
     if (!parsed) {
@@ -11,8 +13,7 @@ export function generateASTFromEBNF(input: string) {
     }
 
     return parsed.reduce((acc, productionRule, ix) => {
-        acc.set(productionRule.name, productionRule);
-        return acc;
+        return acc.set(productionRule.name, productionRule);
     }, new Map<string, ProductionRule>()) as AST;
 }
 

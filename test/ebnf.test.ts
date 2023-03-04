@@ -1,4 +1,5 @@
 import { whitespace, regex, string, all, Parser, eof } from "../src/parse";
+import { parserDebug } from "../src/parse/debug";
 
 import { test, expect, describe, it } from "vitest";
 import fs from "fs";
@@ -8,10 +9,9 @@ import {
     reduceMathExpression,
 } from "./utils";
 
-import { addNonterminalsDebugging, generateParserFromEBNF } from "../src/ebnf/generate";
+import { generateParserFromEBNF } from "../src/ebnf/generate";
 import { EBNFParser } from "../src/ebnf/transform";
 import { Nonterminals } from "../src/ebnf/grammar";
-
 
 const comma = string(",").trim();
 const div = string("/").trim();
@@ -20,7 +20,10 @@ const debugging = (x: Nonterminals) => {
     const logger = (...s: string[]) => {
         console.log(...s);
     };
-    return addNonterminalsDebugging(x, logger);
+
+    Object.entries(x).forEach(([key, value]) => {
+        x[key] = parserDebug(value, key, true, logger);
+    });
 };
 
 const mathParser = (grammar: string) => {
@@ -353,7 +356,7 @@ describe("EBNF Parser", () => {
         const parser = nonterminals.expr;
 
         const tmp = `
-            1 + 2 + 3 + whatzupwitu * vibes + a
+            1 + 2 + 3 + 4
         `;
         const parsed = parser.parse(tmp);
         expect(parsed).toBeGreaterThan(0);
