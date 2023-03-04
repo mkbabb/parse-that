@@ -7,12 +7,14 @@ export function generateASTFromEBNF(input: string) {
     const parsed = parser.parse(input);
 
     if (!parsed) {
-        throw new Error("Failed to parse EBNF grammar");
+        return [parser] as const;
     }
 
-    return parsed.reduce((acc, productionRule, ix) => {
+    const ast = parsed.reduce((acc, productionRule, ix) => {
         return acc.set(productionRule.name, productionRule);
     }, new Map<string, ProductionRule>()) as AST;
+
+    return [parser, ast] as const;
 }
 
 export function generateParserFromAST(ast: AST) {
@@ -79,7 +81,7 @@ export function generateParserFromAST(ast: AST) {
 }
 
 export function generateParserFromEBNF(input: string, optimizeGraph: boolean = false) {
-    let ast = generateASTFromEBNF(input);
+    let [parser, ast] = generateASTFromEBNF(input);
 
     if (optimizeGraph) {
         ast = removeAllLeftRecursion(ast);
