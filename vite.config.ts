@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => ({
     },
 
     plugins: [
-        commonjs({}),
+        commonjs(),
         nodeResolve({
             browser: false,
             preferBuiltins: true,
