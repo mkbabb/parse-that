@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
             formats: ["es", "cjs"],
         },
         rollupOptions: {
-            // external: ["chalk", "prettier"],
+            external: ["chalk", "prettier"],
         },
     },
 
@@ -35,11 +35,11 @@ export default defineConfig(({ mode }) => ({
     },
 
     plugins: [
-        commonjs(),
+        commonjs({}),
         nodeResolve({
             browser: false,
             preferBuiltins: true,
-            exportConditions: ["node", "default"],
+            exportConditions: ["node"],
         }),
         dts(),
     ],
