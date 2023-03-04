@@ -1,4 +1,5 @@
-import { Parser } from "./parse";
+import { Parser } from ".";
+import { statePrint } from "./debug";
 
 export class ParserState<T> {
     constructor(
@@ -37,6 +38,10 @@ export class ParserState<T> {
         return newlineIndex >= 0
             ? this.src.slice(0, newlineIndex).split("\n").length
             : 0;
+    }
+
+    toString() {
+        return statePrint(this);
     }
 }
 

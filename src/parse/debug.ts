@@ -1,5 +1,5 @@
 import { createParserContext, ParserState } from "./state";
-import { getLazyParser, Parser, lastState } from "./parse";
+import { getLazyParser, Parser, lastState } from ".";
 
 import { Options, RequiredOptions } from "prettier";
 import { Doc } from "prettier";

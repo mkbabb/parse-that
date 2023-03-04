@@ -1,4 +1,4 @@
-import { Parser, all, any, eof, regex, string } from "../parse/parse";
+import { Parser, all, any, eof, regex, string } from "../parse";
 import { Expression, Nonterminals, AST, EBNFGrammar, ProductionRule } from "./grammar";
 import { removeAllLeftRecursion } from "./optimize";
 
