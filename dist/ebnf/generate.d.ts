@@ -1,4 +1,4 @@
-import { Parser } from "../parse/parse";
+import { Parser } from "../parse";
 import { Nonterminals, AST } from "./grammar";
 export declare function generateASTFromEBNF(input: string): readonly [Parser<any[]>] | readonly [Parser<any[]>, AST];
 export declare function generateParserFromAST(ast: AST): Nonterminals;

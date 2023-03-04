@@ -1,4 +1,4 @@
-import { Parser } from "./parse";
+import { Parser } from ".";
 export declare class ParserState<T> {
     src: string;
     value: T;
@@ -11,6 +11,7 @@ export declare class ParserState<T> {
     from<S>(value: S, offset?: number): ParserState<S>;
     getColumnNumber(): number;
     getLineNumber(): number;
+    toString(): string;
 }
 export declare const parserNames: readonly ["string", "regex", "then", "or", "chain", "map", "many", "lazy", "memoize", "mergeMemo", "not", "skip", "next", "trim", "trimWhitespace", "whitespace", "wrap", "sepBy", "any", "all", "opt", "lookAhead", "lookBehind", "eof", "regexConcat", "regexWrap", "debug", "mapState"];
 export type ParserContext<T = any> = {
@@ -19,7 +20,7 @@ export type ParserContext<T = any> = {
     args?: any[];
 };
 export declare function createParserContext<T = any>(name: (typeof parserNames)[number], parser: Parser<T>, ...args: any[]): {
-    name: "string" | "regex" | "then" | "or" | "chain" | "map" | "many" | "lazy" | "memoize" | "mergeMemo" | "not" | "skip" | "next" | "trim" | "trimWhitespace" | "whitespace" | "wrap" | "sepBy" | "any" | "all" | "opt" | "lookAhead" | "lookBehind" | "eof" | "regexConcat" | "regexWrap" | "debug" | "mapState";
+    name: "string" | "trim" | "all" | "regex" | "then" | "or" | "chain" | "map" | "many" | "lazy" | "memoize" | "mergeMemo" | "not" | "skip" | "next" | "trimWhitespace" | "whitespace" | "wrap" | "sepBy" | "any" | "opt" | "lookAhead" | "lookBehind" | "eof" | "regexConcat" | "regexWrap" | "debug" | "mapState";
     parser: Parser<T>;
     args: any[];
 };

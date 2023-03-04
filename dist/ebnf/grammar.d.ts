@@ -1,4 +1,4 @@
-import { Parser } from "../parse/parse";
+import { Parser } from "../parse";
 export type Expression = Literal | Nonterminal | Group | Regex | Optional | Minus | Many | Many1 | Skip | Next | Concatenation | Alteration | Epsilon | OptionalWhitespace;
 interface BaseExpression<T, V = string> {
     type: T;
