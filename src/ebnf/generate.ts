@@ -3,7 +3,7 @@ import { Expression, Nonterminals, AST, EBNFGrammar, ProductionRule } from "./gr
 import { removeAllLeftRecursion } from "./optimize";
 
 export function generateASTFromEBNF(input: string) {
-    const parser = new EBNFGrammar().grammar();
+    const parser = new EBNFGrammar().grammar().eof();
     const parsed = parser.parse(input);
 
     if (!parsed) {

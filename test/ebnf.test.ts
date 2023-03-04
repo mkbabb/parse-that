@@ -446,33 +446,5 @@ describe("EBNF Parser", () => {
         }
     });
 
-    // it("should parse an emoji grammar 🌈", () => {
-    //     const grammar = fs.readFileSync("./grammar/emoji.ebnf", "utf8");
-
-    //     const [nonterminals, ast] = generateParserFromEBNF(grammar);
-
-    //     const sentences = [
-    //         "😎 🍔 🔢🔢🍕",
-    //         "😂 🍔 (👉😎 🥗 🔢👈) 🍰 🔢🔢🍕",
-    //         "😊 🍔 😂 🍟 🔢🍕",
-    //         "😍 🍔 😊 🍰 (👉😎 🥗 🔢👈) 🍰 🔢🔢🍕",
-    //         "📢 😎 🥗 😂 🥗 😊 🥗 😍",
-    //     ];
-
-    //     Object.keys(nonterminals).forEach((key) => {
-    //         nonterminals[key] = nonterminals[key].trim();
-    //     });
-    //     nonterminals.program = nonterminals.program.map((v) => {
-    //         return v;
-    //     });
-
-    //     debugging(nonterminals);
-
-    //     const parser = nonterminals.regex;
-
-    //     for (const s of sentences) {
-    //         const parsed = parser.parse(s);
-    //         expect(parsed).toBeTruthy;
-    //     }
-    // });
+    
 });

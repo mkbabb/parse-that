@@ -419,7 +419,7 @@ function M(n) {
   return L(t), t;
 }
 function N(n) {
-  const t = new c().grammar(), r = t.parse(n);
+  const t = new c().grammar().eof(), r = t.parse(n);
   if (!r)
     return [t];
   const e = r.reduce((o, a, i) => o.set(a.name, a), /* @__PURE__ */ new Map());

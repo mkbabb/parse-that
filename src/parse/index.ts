@@ -203,10 +203,9 @@ export class Parser<T = string> {
     skip<S>(parser: Parser<T | S>) {
         const skip = (state: ParserState<T>) => {
             const nextState1 = this.parser(state);
-            let nextState2;
 
             if (!nextState1.isError) {
-                nextState2 = parser.parser(nextState1);
+                const nextState2 = parser.parser(nextState1);
                 if (!nextState2.isError) {
                     return nextState2.ok(nextState1.value);
                 }
@@ -461,6 +460,7 @@ export function eof<T>() {
         if (state.offset >= state.src.length) {
             return state.ok(undefined);
         } else {
+            mergeErrorState(state);
             return state.err();
         }
     };

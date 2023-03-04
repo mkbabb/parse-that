@@ -1,7 +1,7 @@
 var DD = Object.defineProperty;
 var eD = (s, u, e) => u in s ? DD(s, u, { enumerable: !0, configurable: !0, writable: !0, value: e }) : s[u] = e;
 var mu = (s, u, e) => (eD(s, typeof u != "symbol" ? u + "" : u, e), e);
-import J from "chalk";
+import H from "chalk";
 var q = {}, tD = {
   get exports() {
     return q;
@@ -94,7 +94,7 @@ var q = {}, tD = {
                 expandedStates: c
               }));
             }
-            function H(c) {
+            function K(c) {
               return {
                 type: "fill",
                 parts: c
@@ -176,7 +176,7 @@ var q = {}, tD = {
               literalline: j,
               group: $,
               conditionalGroup: b,
-              fill: H,
+              fill: K,
               lineSuffix: R,
               lineSuffixBoundary: v,
               cursor: G,
@@ -395,7 +395,7 @@ var q = {}, tD = {
                 return t(a);
               }
             }
-            function H(D, t, F) {
+            function K(D, t, F) {
               let f = F, E = !1;
               function a(l) {
                 const W = t(l);
@@ -409,7 +409,7 @@ var q = {}, tD = {
                 return !0;
             }
             function _(D) {
-              return H(D, o, !1);
+              return K(D, o, !1);
             }
             function R(D) {
               if (D.length > 0) {
@@ -556,14 +556,14 @@ var q = {}, tD = {
                 return !0;
             }
             function c(D) {
-              return H(D, x, !1);
+              return K(D, x, !1);
             }
             g.exports = {
               isConcat: $,
               getDocParts: p,
               willBreak: _,
               traverseDoc: T,
-              findInDoc: H,
+              findInDoc: K,
               mapDoc: b,
               propagateBreaks: v,
               removeLines: tu,
@@ -588,7 +588,7 @@ var q = {}, tD = {
             } = du(), {
               isConcat: T,
               getDocParts: b
-            } = Au(), H, o = 1, _ = 2;
+            } = Au(), K, o = 1, _ = 2;
             function R() {
               return {
                 value: "",
@@ -712,7 +712,7 @@ var q = {}, tD = {
                       break;
                     }
                     case "if-break": {
-                      const f = (t.groupId ? H[t.groupId] || _ : D) === o ? t.breakContents : t.flatContents;
+                      const f = (t.groupId ? K[t.groupId] || _ : D) === o ? t.breakContents : t.flatContents;
                       f && x.push({
                         mode: D,
                         doc: f
@@ -736,7 +736,7 @@ var q = {}, tD = {
               return !1;
             }
             function fu(y, S) {
-              H = {};
+              K = {};
               const j = S.printWidth, G = d(S.endOfLine);
               let L = 0;
               const h = [{
@@ -844,7 +844,7 @@ var q = {}, tD = {
                           break;
                         }
                       }
-                      E.id && (H[E.id] = A(h).mode);
+                      E.id && (K[E.id] = A(h).mode);
                       break;
                     case "fill": {
                       const a = j - L, {
@@ -893,7 +893,7 @@ var q = {}, tD = {
                     }
                     case "if-break":
                     case "indent-if-break": {
-                      const a = E.groupId ? H[E.groupId] : f;
+                      const a = E.groupId ? K[E.groupId] : f;
                       if (a === o) {
                         const l = E.type === "if-break" ? E.breakContents : E.negate ? E.contents : N(E.contents);
                         l && h.push({
@@ -1038,16 +1038,16 @@ var q = {}, tD = {
                 if (o.type === "align")
                   return o.n === Number.NEGATIVE_INFINITY ? "dedentToRoot(" + b(o.contents) + ")" : o.n < 0 ? "dedent(" + b(o.contents) + ")" : o.n.type === "root" ? "markAsRoot(" + b(o.contents) + ")" : "align(" + JSON.stringify(o.n) + ", " + b(o.contents) + ")";
                 if (o.type === "if-break")
-                  return "ifBreak(" + b(o.breakContents) + (o.flatContents ? ", " + b(o.flatContents) : "") + (o.groupId ? (o.flatContents ? "" : ', ""') + `, { groupId: ${H(o.groupId)} }` : "") + ")";
+                  return "ifBreak(" + b(o.breakContents) + (o.flatContents ? ", " + b(o.flatContents) : "") + (o.groupId ? (o.flatContents ? "" : ', ""') + `, { groupId: ${K(o.groupId)} }` : "") + ")";
                 if (o.type === "indent-if-break") {
                   const v = [];
-                  o.negate && v.push("negate: true"), o.groupId && v.push(`groupId: ${H(o.groupId)}`);
+                  o.negate && v.push("negate: true"), o.groupId && v.push(`groupId: ${K(o.groupId)}`);
                   const Z = v.length > 0 ? `, { ${v.join(", ")} }` : "";
                   return `indentIfBreak(${b(o.contents)}${Z})`;
                 }
                 if (o.type === "group") {
                   const v = [];
-                  o.break && o.break !== "propagated" && v.push("shouldBreak: true"), o.id && v.push(`id: ${H(o.id)}`);
+                  o.break && o.break !== "propagated" && v.push("shouldBreak: true"), o.id && v.push(`id: ${K(o.id)}`);
                   const Z = v.length > 0 ? `, { ${v.join(", ")} }` : "";
                   return o.expandedStates ? `conditionalGroup([${o.expandedStates.map((tu) => b(tu)).join(",")}]${Z})` : `group(${b(o.contents)}${Z})`;
                 }
@@ -1061,7 +1061,7 @@ var q = {}, tD = {
                   return `label(${JSON.stringify(o.label)}, ${b(o.contents)})`;
                 throw new Error("Unknown doc type " + o.type);
               }
-              function H(o) {
+              function K(o) {
                 if (typeof o != "symbol")
                   return JSON.stringify(String(o));
                 if (o in N)
@@ -1099,7 +1099,7 @@ function Tu(s) {
   return q.printer.printDocToString(s, $u).formatted;
 }
 function _u(s, u = "^", e = !1) {
-  const r = (e ? J.red : J.green).bold, i = s.src.split(`
+  const r = (e ? H.red : H.green).bold, i = s.src.split(`
 `), n = Math.min(i.length - 1, s.getLineNumber()), B = Math.max(n - ju, 0), m = Math.min(n + ju + 1, i.length), I = i.slice(B, m);
   if (u) {
     const M = " ".repeat(s.getColumnNumber()) + r(u);
@@ -1112,22 +1112,22 @@ function _u(s, u = "^", e = !1) {
   }).join(`
 `);
 }
-const X = (s, u = {}) => q.builders.group(s, { ...$u, ...u }), ou = (s) => J.gray(s), su = /* @__PURE__ */ new Map();
+const X = (s, u = {}) => q.builders.group(s, { ...$u, ...u }), ou = (s) => H.gray(s), su = /* @__PURE__ */ new Map();
 function Lu(s) {
   if (su.has(s.id))
     return su.get(s.id);
   const u = (i, n) => {
     if (su.has(i.id))
       return su.get(i.id);
-    const { name: B, args: m, parser: I } = i.context, z = I != null ? u(I, n) : J.red.bold("unknown");
+    const { name: B, args: m, parser: I } = i.context, z = I != null ? u(I, n) : H.red.bold("unknown");
     let M = (() => {
       switch (B) {
         case "string":
-          return J.yellow(`"${m[0]}"`);
+          return H.yellow(`"${m[0]}"`);
         case "regex":
         case "regexConcat":
         case "regexWrap":
-          return J.redBright(`${m[0]}`);
+          return H.redBright(`${m[0]}`);
         case "wrap":
         case "trim": {
           const [Q, P] = m;
@@ -1183,7 +1183,7 @@ function Lu(s) {
         case "many":
           const [uu, Y] = m;
           let Eu = Y === 1 / 0 ? `${uu},` : `${uu},${Y}`;
-          return Eu = J.bold.gray(` {${Eu}}`), X([z, Eu]);
+          return Eu = H.bold.gray(` {${Eu}}`), X([z, Eu]);
         case "sepBy":
           return X([
             z,
@@ -1192,7 +1192,7 @@ function Lu(s) {
         case "lazy": {
           const [Q] = m, P = ku(Q);
           if (n)
-            return J.bold.blue(B);
+            return H.bold.blue(B);
           {
             const Bu = u(P, P.id);
             return su.set(P.id, Bu), Bu;
@@ -1202,17 +1202,17 @@ function Lu(s) {
           return z;
       }
     })();
-    return M ?? (M = J.red.bold(B)), n && su.set(i.id, M), M;
+    return M ?? (M = H.red.bold(B)), n && su.set(i.id, M), M;
   }, e = u(s), r = Tu(e);
   return su.set(s.id, r), r;
 }
 function Mu(s, u = "", e = "") {
-  const r = s.isError ? J.bgRed : J.bgGreen, i = s.isError ? J.red : J.green, n = s.offset >= s.src.length, B = s.isError ? "ｘ" : n ? "🎉" : "✓", I = " " + (s.isError ? "Err" : n ? "Done" : "Ok") + " " + B + " ", z = X([
+  const r = s.isError ? H.bgRed : H.bgGreen, i = s.isError ? H.red : H.green, n = s.offset >= s.src.length, B = s.isError ? "ｘ" : n ? "🎉" : "✓", I = " " + (s.isError ? "Err" : n ? "Done" : "Ok") + " " + B + " ", z = X([
     r.bold(I),
     i(`	${u}	${s.offset}`),
     q.builders.softline,
-    "	" + J.yellow(e)
-  ]), M = (() => s.offset >= s.src.length ? J.bold.greenBright(_u(s, "", s.isError)) : _u(s, "^", s.isError))(), ru = X([z, q.builders.hardline, q.builders.indent([M])]);
+    "	" + H.yellow(e)
+  ]), M = (() => s.offset >= s.src.length ? H.bold.greenBright(_u(s, "", s.isError)) : _u(s, "^", s.isError))(), ru = X([z, q.builders.hardline, q.builders.indent([M])]);
   return Tu(ru);
 }
 function nD(s, u = "", e = !1, r = console.log) {
@@ -1261,7 +1261,7 @@ function w(s, u, ...e) {
 let rD = 0;
 const iu = /* @__PURE__ */ new Map(), hu = /* @__PURE__ */ new Map();
 let au;
-function K(s) {
+function J(s) {
   return (!au || au && s.offset > au.offset) && (au = s), au;
 }
 function ku(s) {
@@ -1279,7 +1279,7 @@ class O {
   parse(u) {
     this.reset();
     const e = this.parser(new gu(u));
-    return this.state = K(e), this.state.isError = e.isError, e.value;
+    return this.state = J(e), this.state.isError = e.isError, e.value;
   }
   getCijKey(u) {
     return `${this.id}${u.offset}`;
@@ -1329,7 +1329,7 @@ class O {
         if (!n.isError)
           return n.ok([i.value, n.value]);
       }
-      return K(r), r.err(void 0);
+      return J(r), r.err(void 0);
     };
     return new O(
       e,
@@ -1375,8 +1375,12 @@ class O {
   skip(u) {
     const e = (r) => {
       const i = this.parser(r);
-      let n;
-      return !i.isError && (n = u.parser(i), !n.isError) ? n.ok(i.value) : (K(r), r.err(void 0));
+      if (!i.isError) {
+        const n = u.parser(i);
+        if (!n.isError)
+          return n.ok(i.value);
+      }
+      return J(r), r.err(void 0);
     };
     return new O(
       e,
@@ -1390,14 +1394,14 @@ class O {
   opt() {
     const u = (e) => {
       const r = this.parser(e);
-      return r.isError ? (K(e), e.ok(void 0)) : r;
+      return r.isError ? (J(e), e.ok(void 0)) : r;
     };
     return new O(u, w("opt", this));
   }
   not(u) {
-    const e = (i) => this.parser(i).isError ? (K(i), i.ok(i.value)) : i.err(void 0), r = (i) => {
+    const e = (i) => this.parser(i).isError ? (J(i), i.ok(i.value)) : i.err(void 0), r = (i) => {
       const n = this.parser(i);
-      return n.isError ? (K(i), n) : u.parser(i).isError ? n : (K(i), i.err(void 0));
+      return n.isError ? (J(i), n) : u.parser(i).isError ? n : (J(i), i.err(void 0));
     };
     return new O(
       u ? r : e,
@@ -1425,7 +1429,7 @@ class O {
         );
       const i = (n) => {
         const B = Nu(n), m = this.parser(B);
-        return m.isError ? (K(n), n.err(void 0)) : Nu(m);
+        return m.isError ? (J(n), n.err(void 0)) : Nu(m);
       };
       return new O(
         i,
@@ -1444,7 +1448,7 @@ class O {
           break;
         n.push(I.value), B = I;
       }
-      return n.length >= u ? B.ok(n) : (K(i), i.err([]));
+      return n.length >= u ? B.ok(n) : (J(i), i.err([]));
     };
     return new O(
       r,
@@ -1465,7 +1469,7 @@ class O {
           break;
         m = M;
       }
-      return B.length > e ? m.ok(B) : (K(n), n.err([]));
+      return B.length > e ? m.ok(B) : (J(n), n.err([]));
     };
     return new O(
       i,
@@ -1511,7 +1515,7 @@ function iD(s, u, e) {
   return r.context.name = "regexWrap", r;
 }
 function FD() {
-  const s = (u) => u.offset >= u.src.length ? u.ok(void 0) : u.err();
+  const s = (u) => u.offset >= u.src.length ? u.ok(void 0) : (J(u), u.err());
   return new O(s, w("eof", void 0));
 }
 function fD(s, u, e) {
@@ -1530,7 +1534,7 @@ function lD(...s) {
       if (!i.isError)
         return i;
     }
-    return K(e), e.err(void 0);
+    return J(e), e.err(void 0);
   };
   return new O(
     s.length === 1 ? s[0].parser : u,
@@ -1546,7 +1550,7 @@ function Ou(...s) {
         return n;
       n.value !== void 0 && r.push(n.value), e = n;
     }
-    return K(e), e.ok(r);
+    return J(e), e.ok(r);
   };
   return new O(
     s.length === 1 ? s[0].parser : u,
@@ -1558,7 +1562,7 @@ function cD(s) {
     if (e.offset >= e.src.length)
       return e.err(void 0);
     const r = e.src.slice(e.offset, e.offset + s.length);
-    return r === s ? e.ok(r, r.length) : (K(e), e.err(void 0));
+    return r === s ? e.ok(r, r.length) : (J(e), e.err(void 0));
   };
   return new O(
     u,
@@ -1571,7 +1575,7 @@ function Ru(s, u = (e) => e == null ? void 0 : e[0]) {
       return n.err(void 0);
     r.lastIndex = n.offset;
     const B = u(n.src.match(r));
-    return B ? n.ok(B, r.lastIndex - n.offset) : B === "" ? n.ok(void 0) : (K(n), n.err(void 0));
+    return B ? n.ok(B, r.lastIndex - n.offset) : B === "" ? n.ok(void 0) : (J(n), n.err(void 0));
   };
   return new O(
     i,
@@ -1594,7 +1598,7 @@ export {
   FD as eof,
   ku as getLazyParser,
   fD as lazy,
-  K as mergeErrorState,
+  J as mergeErrorState,
   Ru as regex,
   cD as string,
   Wu as whitespace
