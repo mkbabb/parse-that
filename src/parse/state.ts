@@ -65,6 +65,7 @@ export const parserNames = [
     "regexConcat",
     "regexWrap",
     "debug",
+    "mapState",
 ] as const;
 
 export type ParserContext<T = any> = {

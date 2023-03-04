@@ -11,14 +11,14 @@ export declare class ParserState<T> {
     getColumnNumber(): number;
     getLineNumber(): number;
 }
-export declare const parserNames: readonly ["string", "regex", "then", "or", "chain", "map", "many", "lazy", "memoize", "mergeMemo", "not", "skip", "next", "trim", "trimWhitespace", "whitespace", "wrap", "sepBy", "any", "all", "opt", "lookAhead", "lookBehind", "eof", "regexConcat", "regexWrap", "debug"];
+export declare const parserNames: readonly ["string", "regex", "then", "or", "chain", "map", "many", "lazy", "memoize", "mergeMemo", "not", "skip", "next", "trim", "trimWhitespace", "whitespace", "wrap", "sepBy", "any", "all", "opt", "lookAhead", "lookBehind", "eof", "regexConcat", "regexWrap", "debug", "mapState"];
 export type ParserContext<T = any> = {
     name?: (typeof parserNames)[number];
     parser?: Parser<T>;
     args?: any[];
 };
 export declare function createParserContext<T = any>(name: (typeof parserNames)[number], parser: Parser<T>, ...args: any[]): {
-    name: "string" | "trim" | "map" | "regex" | "then" | "or" | "chain" | "many" | "lazy" | "memoize" | "mergeMemo" | "not" | "skip" | "next" | "trimWhitespace" | "whitespace" | "wrap" | "sepBy" | "any" | "all" | "opt" | "lookAhead" | "lookBehind" | "eof" | "regexConcat" | "regexWrap" | "debug";
+    name: "string" | "skip" | "next" | "many" | "debug" | "regex" | "then" | "or" | "chain" | "map" | "lazy" | "memoize" | "mergeMemo" | "not" | "trim" | "trimWhitespace" | "whitespace" | "wrap" | "sepBy" | "any" | "all" | "opt" | "lookAhead" | "lookBehind" | "eof" | "regexConcat" | "regexWrap" | "mapState";
     parser: Parser<T>;
     args: any[];
 };

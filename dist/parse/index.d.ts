@@ -12,23 +12,23 @@ export declare class Parser<T = string> {
     parse(val: string): T;
     getCijKey(state: ParserState<T>): string;
     atLeftRecursionLimit(state: ParserState<T>): boolean;
-    memoize(): any;
+    memoize(): Parser<T>;
     mergeMemos<S>(): Parser<[T, S]>;
     then<S>(next: Parser<S | T>): Parser<string>;
     or<S>(other: Parser<S | T>): Parser<string>;
     chain<S>(fn: (value: T) => Parser<S | T>, chainError?: boolean): Parser<T | S>;
     map<S>(fn: (value: T) => S, mapError?: boolean): Parser<S>;
-    mapState<S>(fn: (state: ParserState<T>) => ParserState<S>): Parser<S>;
+    mapState<S extends T>(fn: (state: ParserState<T>) => ParserState<S>): Parser<S>;
     skip<S>(parser: Parser<T | S>): Parser<T>;
     next<S>(parser: Parser<S>): Parser<S>;
     opt(): Parser<T>;
     not<S>(parser?: Parser<S>): Parser<any>;
-    wrap<L, R>(start: Parser<L>, end: Parser<R>): Parser<T>;
-    trim(parser?: Parser<T>): Parser<T>;
+    wrap<L, R>(start: Parser<L>, end: Parser<R>, discard?: boolean): Parser<T>;
+    trim(parser?: Parser<T>, discard?: boolean): Parser<T>;
     many(min?: number, max?: number): Parser<T[]>;
     sepBy<S>(sep: Parser<S | T>, min?: number, max?: number): Parser<T[]>;
     eof(): Parser<T>;
-    toString(): "string" | "trim" | "map" | "regex" | "then" | "or" | "chain" | "many" | "lazy" | "memoize" | "mergeMemo" | "not" | "skip" | "next" | "trimWhitespace" | "whitespace" | "wrap" | "sepBy" | "any" | "all" | "opt" | "lookAhead" | "lookBehind" | "eof" | "regexConcat" | "regexWrap" | "debug";
+    toString(): "string" | "skip" | "next" | "many" | "debug" | "regex" | "then" | "or" | "chain" | "map" | "lazy" | "memoize" | "mergeMemo" | "not" | "trim" | "trimWhitespace" | "whitespace" | "wrap" | "sepBy" | "any" | "all" | "opt" | "lookAhead" | "lookBehind" | "eof" | "regexConcat" | "regexWrap" | "mapState";
     static lazy<T>(fn: () => Parser<T>): Parser<T>;
 }
 export declare function eof<T>(): Parser<any>;

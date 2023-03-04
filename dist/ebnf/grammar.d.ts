@@ -3,7 +3,10 @@ export type Expression = Literal | Nonterminal | Group | Regex | Optional | Minu
 interface BaseExpression<T, V = string> {
     type: T;
     value: V;
-    comment?: string[];
+    comment?: {
+        left: string[];
+        right: string[];
+    };
 }
 export type Nonterminal = BaseExpression<"nonterminal">;
 export type Literal = BaseExpression<"literal">;
@@ -25,38 +28,40 @@ export type ProductionRule = {
     expression: Expression;
     name: string;
     comment: {
-        above?: string[];
-        below?: string[];
+        above: string[];
+        below: string[];
     };
 };
 export type AST = Map<string, ProductionRule>;
 export type Nonterminals = {
     [key: string]: Parser<any>;
 };
+type Options = {
+    debug: boolean;
+    comments: boolean;
+};
 export declare class EBNFGrammar {
+    options: Options;
+    constructor(options?: Partial<Options>);
     identifier(): Parser<string>;
-    literal(): Parser<Literal>;
+    literal(): Parser<Expression>;
     epsilon(): Parser<Epsilon>;
     nonterminal(): Parser<Nonterminal>;
-    group(): any;
-    regex(): Parser<Regex>;
-    optional(): any;
-    optionalGroup(): any;
-    optionalWhitespace(): any;
-    minus(): Parser<Minus>;
-    manyGroup(): any;
-    many(): any;
-    many1(): any;
-    next(): any;
-    skip(): any;
-    concatenation(): any;
-    alternation(): any;
     bigComment(): Parser<string>;
     comment(): Parser<string>;
+    trimBigComment(e: Parser<any>): Parser<Expression>;
+    group(): any;
+    regex(): Parser<Regex>;
+    optionalGroup(): any;
+    manyGroup(): any;
+    lhs(): Parser<string>;
     term(): any;
     factor(): any;
-    expression(): any;
+    binaryFactor(): any;
+    concatenation(): any;
+    alternation(): any;
+    rhs(): any;
     productionRule(): Parser<ProductionRule>;
-    grammar(): Parser<ProductionRule[]>;
+    grammar(): Parser<any[]>;
 }
 export {};
