@@ -2,7 +2,6 @@ import { Parser, string, lazy, all, any, regex } from "../parse";
 
 export type Expression =
     | Literal
-    | Comment
     | Nonterminal
     | Group
     | Regex
@@ -15,123 +14,48 @@ export type Expression =
     | Concatenation
     | Alteration
     | Epsilon
-    | OptionalWhitespace
-    | Coalesce
-    | EOF;
+    | OptionalWhitespace;
 
-export interface Literal {
-    type: "literal";
-    value: string;
+interface BaseExpression<T, V = string> {
+    type: T;
+    value: V;
+    comment?: string[];
 }
 
-export interface Comment {
-    type: "comment";
-    value: string;
-}
+export type Nonterminal = BaseExpression<"nonterminal">;
 
-export interface Nonterminal {
-    type: "nonterminal";
-    value: string;
-}
+export type Literal = BaseExpression<"literal">;
+export type Regex = BaseExpression<"regex", RegExp>;
+export type Epsilon = BaseExpression<"epsilon">;
 
-export interface Epsilon {
-    type: "epsilon";
-    value: undefined;
-}
+export type Group = BaseExpression<"group", Expression>;
+export type ManyGroup = BaseExpression<"many", Expression>;
+export type OptionalGroup = BaseExpression<"optional", Expression>;
 
-export interface EOF {
-    type: "eof";
-    value: undefined;
-}
+export type Optional = BaseExpression<"optional", Expression>;
+export type OptionalWhitespace = BaseExpression<"optionalWhitespace", undefined>;
 
-export interface OptionalWhitespace {
-    type: "optionalWhitespace";
-    value: undefined;
-}
+export type Minus = BaseExpression<"minus", [Expression, Expression]>;
 
-export interface Coalesce {
-    type: "coalesce";
-    value: Expression[];
-}
+export type Many = BaseExpression<"many", Expression>;
+export type Many1 = BaseExpression<"many1", Expression>;
+export type Skip = BaseExpression<"skip", [Expression, Expression]>;
+export type Next = BaseExpression<"next", [Expression, Expression]>;
 
-export interface Group {
-    type: "group";
-    value: Expression;
-}
-
-export interface Regex {
-    type: "regex";
-    value: RegExp;
-}
-
-export interface Optional {
-    type: "optional";
-    value: Expression;
-}
-
-export interface Minus {
-    type: "minus";
-    value: [Expression, Expression];
-}
-
-export interface Many {
-    type: "many";
-    value: Expression;
-}
-
-export interface Many1 {
-    type: "many1";
-    value: Expression;
-}
-
-export interface Skip {
-    type: "skip";
-    value: [Expression, Expression];
-}
-
-export interface Next {
-    type: "next";
-    value: [Expression, Expression];
-}
-
-export interface Concatenation {
-    type: "concatenation";
-    value: Expression[];
-}
-
-export interface Alteration {
-    type: "alternation";
-    value: Expression[];
-}
+export type Concatenation = BaseExpression<"concatenation", Expression[]>;
+export type Alteration = BaseExpression<"alternation", Expression[]>;
 
 export type ProductionRule = {
-    type: "productionRule" | "comment";
     expression: Expression;
-    name?: string;
+    name: string;
+    comment: {
+        above?: string[];
+        below?: string[];
+    };
 };
 
 export type AST = Map<string, Expression>;
 export type Nonterminals = { [key: string]: Parser<any> };
-
-const comma = string(",").trim();
-const equalSign = string("=").trim();
-
-const semicolon = string(";").trim();
-const dot = string(".").trim();
-const questionMark = string("?").trim();
-const optionalWhitespace = string("?w").trim();
-const coalsece = string("??").trim();
-const pipe = string("|").trim();
-
-const plus = string("+").trim();
-const minus = string("-").trim();
-const mul = string("*").trim();
-const div = string("/").trim();
-
-const leftShift = string(">>").trim();
-const rightShift = string("<<").trim();
-
-const terminator = any(semicolon, dot);
 
 export class EBNFGrammar {
     identifier() {
@@ -151,7 +75,7 @@ export class EBNFGrammar {
     }
 
     epsilon() {
-        return any(string("epsilon"), string("ε"), string("ϵ"))
+        return any(string("epsilon"), string("ε"))
             .trim()
             .map((value) => {
                 return {
@@ -183,17 +107,6 @@ export class EBNFGrammar {
             });
     }
 
-    eof() {
-        return string("$")
-            .trim()
-            .map((value) => {
-                return {
-                    type: "eof",
-                    value,
-                } as EOF;
-            });
-    }
-
     @lazy
     regex() {
         return regex(/[^\/]*/)
@@ -208,7 +121,7 @@ export class EBNFGrammar {
 
     optional() {
         return this.term()
-            .skip(questionMark)
+            .skip(string("?").trim())
             .map((value) => {
                 return {
                     type: "optional",
@@ -232,7 +145,7 @@ export class EBNFGrammar {
 
     optionalWhitespace() {
         return this.term()
-            .skip(optionalWhitespace)
+            .skip(string("?w").trim())
             .map((value) => {
                 return {
                     type: "optionalWhitespace",
@@ -241,23 +154,15 @@ export class EBNFGrammar {
             });
     }
 
-    @lazy
-    coalesce() {
-        return all(this.term().skip(coalsece), this.factor()).map(([left, right]) => {
-            return {
-                type: "coalesce",
-                value: [left, right],
-            } as Coalesce;
-        });
-    }
-
-    subtraction() {
-        return all(this.term().skip(minus), this.term()).map(([left, right]) => {
-            return {
-                type: "minus",
-                value: [left, right],
-            } as Minus;
-        });
+    minus() {
+        return all(this.term().skip(string("-").trim()), this.term()).map(
+            ([left, right]) => {
+                return {
+                    type: "minus",
+                    value: [left, right],
+                } as Minus;
+            }
+        );
     }
 
     @lazy
@@ -275,7 +180,7 @@ export class EBNFGrammar {
 
     many() {
         return this.term()
-            .skip(mul)
+            .skip(string("*").trim())
             .map((value) => {
                 return {
                     type: "many",
@@ -286,7 +191,7 @@ export class EBNFGrammar {
 
     many1() {
         return this.term()
-            .skip(plus)
+            .skip(string("+").trim())
             .map((value) => {
                 return {
                     type: "many1",
@@ -297,31 +202,33 @@ export class EBNFGrammar {
 
     @lazy
     next() {
-        return all(this.factor().skip(leftShift), any(this.skip(), this.factor())).map(
-            ([left, right]) => {
-                return {
-                    type: "next",
-                    value: [left, right],
-                } as Next;
-            }
-        );
+        return all(
+            this.factor().skip(string(">>").trim()),
+            any(this.skip(), this.factor())
+        ).map(([left, right]) => {
+            return {
+                type: "next",
+                value: [left, right],
+            } as Next;
+        });
     }
 
     @lazy
     skip() {
-        return all(any(this.next(), this.factor()).skip(rightShift), this.factor()).map(
-            ([left, right]) => {
-                return {
-                    type: "skip",
-                    value: [left, right],
-                } as Skip;
-            }
-        );
+        return all(
+            any(this.next(), this.factor()).skip(string("<<").trim()),
+            this.factor()
+        ).map(([left, right]) => {
+            return {
+                type: "skip",
+                value: [left, right],
+            } as Skip;
+        });
     }
 
     concatenation() {
         return any(this.skip(), this.next(), this.factor())
-            .sepBy(comma, 1)
+            .sepBy(string(",").trim(), 1)
             .map((value) => {
                 return {
                     type: "concatenation",
@@ -332,7 +239,7 @@ export class EBNFGrammar {
 
     alternation() {
         return any(this.concatenation(), this.skip(), this.next(), this.factor())
-            .sepBy(pipe, 1)
+            .sepBy(string("|").trim(), 1)
             .map((value) => {
                 return {
                     type: "alternation",
@@ -342,17 +249,13 @@ export class EBNFGrammar {
     }
 
     bigComment() {
-        return regex(/\/\*[^]*?\*\//)
+        return regex(/\/\*[^]*?\*\//).trim();
+    }
+
+    comment() {
+        return regex(/\/\/.*/)
             .trim()
-            .map((value) => {
-                return {
-                    type: "comment",
-                    expression: {
-                        type: "literal",
-                        value,
-                    } as Literal,
-                } as ProductionRule;
-            });
+            .or(this.bigComment());
     }
 
     term() {
@@ -363,43 +266,24 @@ export class EBNFGrammar {
             this.regex(),
             this.group(),
             this.optionalGroup(),
-            this.manyGroup(),
-            this.eof()
+            this.manyGroup()
         )
             .then(this.bigComment().opt())
             .map(([left, comment]) => {
-                if (comment) {
-                    left.comment = comment;
-                }
+                left.comment = comment;
                 return left as unknown as Expression;
             }) as Parser<Expression>;
     }
 
     factor() {
         return any(
-            this.coalesce(),
             this.optionalWhitespace(),
             this.optional(),
             this.many(),
             this.many1(),
-            this.subtraction(),
+            this.minus(),
             this.term()
         ) as Parser<Expression>;
-    }
-
-    comment() {
-        return regex(/\/\/.*/)
-            .trim()
-            .map((value) => {
-                return {
-                    type: "comment",
-                    expression: {
-                        type: "literal",
-                        value,
-                    } as Literal,
-                } as ProductionRule;
-            })
-            .or(this.bigComment()) as unknown as Parser<ProductionRule>;
     }
 
     expression() {
@@ -414,10 +298,10 @@ export class EBNFGrammar {
 
     productionRule() {
         return all(
-            this.identifier().skip(equalSign),
-            this.expression().skip(terminator)
+            this.identifier().skip(string("=").trim()),
+            this.expression().skip(any(string(";").trim(), string(".").trim()))
         ).map(([name, expression]) => {
-            return { name, expression, type: "productionRule" } as ProductionRule;
+            return { name, expression } as ProductionRule;
         });
     }
 

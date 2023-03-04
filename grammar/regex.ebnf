@@ -1,5 +1,5 @@
 flags = ( "i" | "m" | "s" | "x" | "g" | "u" | "y" ) * ;
-end = "/" >> flags, $ ;
+end = "/" >> flags ;
 
 expression = ( term + , "|"? ) + ;
 term = factor - end ;

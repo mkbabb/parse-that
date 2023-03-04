@@ -10,7 +10,7 @@ export function generateASTFromEBNF(input: string) {
         throw new Error("Failed to parse EBNF grammar");
     }
 
-    return parsed.reduce((acc, { name, expression, type }, ix) => {
+    return parsed.reduce((acc, { name, expression }, ix) => {
         acc.set(name, expression);
         return acc;
     }, new Map<string, Expression>()) as AST;
@@ -28,12 +28,8 @@ export function generateParserFromAST(ast: AST) {
                 l.context.name = expr.value as any;
                 return l;
 
-            case "comment":
             case "epsilon":
                 return eof().opt();
-
-            case "eof":
-                return eof();
 
             case "group":
                 return generateParser(name, expr.value);
@@ -43,9 +39,6 @@ export function generateParserFromAST(ast: AST) {
 
             case "optionalWhitespace":
                 return generateParser(name, expr.value).trim();
-
-            case "coalesce":
-                return any(...expr.value.map((x) => generateParser(name, x)));
 
             case "optional":
                 return generateParser(name, expr.value).opt();
@@ -95,12 +88,3 @@ export function generateParserFromEBNF(input: string, optimizeGraph: boolean = f
     const nonterminals = generateParserFromAST(ast);
     return [nonterminals, ast] as const;
 }
-
-export const addNonterminalsDebugging = (
-    nonterminals: Nonterminals,
-    logger: (...args: any[]) => void
-) => {
-    Object.entries(nonterminals).forEach(([k, v]) => {
-        nonterminals[k] = v.debug(k, false, logger);
-    });
-};
