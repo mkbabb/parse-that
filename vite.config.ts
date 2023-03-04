@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 import commonjs from "@rollup/plugin-commonjs";
-import { nodeResolve } from "@rollup/plugin-node-resolve";
 
 export default defineConfig(({ mode }) => ({
     base: "./",
@@ -34,13 +33,5 @@ export default defineConfig(({ mode }) => ({
         forceRerunTriggers: ["**/*.ebnf/**"],
     },
 
-    plugins: [
-        commonjs({}),
-        nodeResolve({
-            browser: false,
-            preferBuiltins: true,
-            exportConditions: ["node"],
-        }),
-        dts(),
-    ],
+    plugins: [commonjs(), dts()],
 }));
