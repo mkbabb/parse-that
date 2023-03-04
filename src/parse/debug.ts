@@ -1,5 +1,5 @@
 import { createParserContext, ParserState } from "./state";
-import { getLazyParser, Parser } from ".";
+import { getLazyParser, Parser, lastState } from ".";
 
 import { Options, RequiredOptions } from "prettier";
 import { Doc } from "prettier";
@@ -188,6 +188,39 @@ export function parserPrint(parser: Parser<any>) {
     return s;
 }
 
+export function statePrint(
+    state: ParserState<any>,
+    name: string = "",
+    parserString: string = ""
+) {
+    const stateBgColor = !state.isError ? chalk.bgGreen : chalk.bgRed;
+    const stateColor = !state.isError ? chalk.green : chalk.red;
+
+    const finished = state.offset >= state.src.length;
+
+    const stateSymbol = !state.isError ? (finished ? "🎉" : "✓") : "ｘ";
+    const stateName = !state.isError ? (finished ? "Done" : "Ok") : "Err";
+    const stateString = " " + stateName + " " + stateSymbol + " ";
+
+    const header = group([
+        stateBgColor.bold(stateString),
+        stateColor(`\t${name}\t${state.offset}`),
+        b.softline,
+        "\t" + chalk.yellow(parserString),
+    ]);
+
+    const body = (() => {
+        if (state.offset >= state.src.length) {
+            return chalk.bold.greenBright(addCursor(state, "", state.isError));
+        }
+        return addCursor(state, "^", state.isError);
+    })();
+
+    const headerBody = group([header, b.hardline, b.indent([body])]);
+
+    return prettierPrint(headerBody);
+}
+
 export function parserDebug<T>(
     parser: Parser<T>,
     name: string = "",
@@ -197,33 +230,10 @@ export function parserDebug<T>(
     const debug = (state: ParserState<T>) => {
         const newState = parser.parser(state);
 
-        const stateBgColor = !newState.isError ? chalk.bgGreen : chalk.bgRed;
-        const stateColor = !newState.isError ? chalk.green : chalk.red;
+        const parserString = recursivePrint ? parserPrint(parser) : parser.context.name;
+        const s = statePrint(newState, name, parserString);
 
-        const finished = newState.offset >= newState.src.length;
-
-        const stateSymbol = !newState.isError ? (finished ? "🎉" : "✓") : "ｘ";
-        const stateName = !newState.isError ? (finished ? "Done" : "Ok") : "Err";
-        const stateString = " " + stateName + " " + stateSymbol + " ";
-
-        const me = recursivePrint ? parserPrint(parser) : parser.context.name;
-
-        const header = group([
-            stateBgColor.bold(stateString),
-            stateColor(`\t${name}\t${newState.offset}`),
-            b.softline,
-            "\t" + chalk.yellow(me),
-        ]);
-
-        const body = (() => {
-            if (newState.offset >= newState.src.length) {
-                return chalk.bold.greenBright(addCursor(newState, "", newState.isError));
-            }
-            return addCursor(newState, "^", newState.isError);
-        })();
-
-        const headerBody = group([header, b.hardline, b.indent([body])]);
-        logger(prettierPrint(headerBody));
+        logger(s);
 
         return newState;
     };

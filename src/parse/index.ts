@@ -1,4 +1,5 @@
 import { createParserContext, ParserContext, ParserState } from "./state";
+import { parserDebug, parserPrint, statePrint } from "./debug";
 
 type ExtractValue<T extends ReadonlyArray<Parser<any>>> = {
     [K in keyof T]: T[K] extends Parser<infer V> ? V : never;
@@ -11,6 +12,15 @@ let PARSER_ID = 0;
 const MEMO = new Map<number, ParserState<any>>();
 const LEFT_RECURSION_COUNTS = new Map<string, number>();
 
+let lastState: ParserState<any> | undefined;
+
+export function mergeErrorState(state: ParserState<any>) {
+    if (!lastState || (lastState && state.offset > lastState.offset)) {
+        lastState = state;
+    }
+    return lastState;
+}
+
 export function getLazyParser<T>(fn: () => Parser<T>) {
     if (fn.parser) {
         return fn.parser;
@@ -20,12 +30,27 @@ export function getLazyParser<T>(fn: () => Parser<T>) {
 
 export class Parser<T = string> {
     id: number = PARSER_ID++;
+    state: ParserState<T> | undefined;
+
     constructor(public parser: ParserFunction<T>, public context: ParserContext = {}) {}
 
-    parse(val: string) {
+    reset() {
+        this.id = 0;
+        PARSER_ID = 0;
+        lastState = undefined;
+
         MEMO.clear();
         LEFT_RECURSION_COUNTS.clear();
-        return this.parser(new ParserState(val)).value as T;
+    }
+
+    parse(val: string) {
+        this.reset();
+        const newState = this.parser(new ParserState(val));
+
+        this.state = mergeErrorState(newState);
+        this.state.isError = newState.isError;
+
+        return newState.value;
     }
 
     getCijKey(state: ParserState<T>) {
@@ -107,6 +132,7 @@ export class Parser<T = string> {
                     return nextState2.ok([nextState1.value, nextState2.value]);
                 }
             }
+            mergeErrorState(state);
             return state.err(undefined);
         };
 
@@ -179,13 +205,15 @@ export class Parser<T = string> {
     skip<S>(parser: Parser<T | S>) {
         const skip = (state: ParserState<T>) => {
             const nextState1 = this.parser(state);
+            let nextState2;
 
             if (!nextState1.isError) {
-                const nextState2 = parser.parser(nextState1);
+                nextState2 = parser.parser(nextState1);
                 if (!nextState2.isError) {
                     return nextState2.ok(nextState1.value);
                 }
             }
+            mergeErrorState(state);
             return state.err(undefined);
         };
         return new Parser(
@@ -206,6 +234,7 @@ export class Parser<T = string> {
         const opt = (state: ParserState<T>) => {
             const newState = this.parser(state);
             if (newState.isError) {
+                mergeErrorState(state);
                 return state.ok(undefined);
             }
             return newState;
@@ -218,6 +247,7 @@ export class Parser<T = string> {
             const newState = this.parser(state);
 
             if (newState.isError) {
+                mergeErrorState(state);
                 return state.ok(state.value);
             } else {
                 return state.err(undefined);
@@ -228,12 +258,14 @@ export class Parser<T = string> {
             const newState = this.parser(state);
 
             if (newState.isError) {
+                mergeErrorState(state);
                 return newState;
             } else {
                 const nextState = parser.parser(state);
                 if (nextState.isError) {
                     return newState;
                 } else {
+                    mergeErrorState(state);
                     return state.err(undefined);
                 }
             }
@@ -277,6 +309,7 @@ export class Parser<T = string> {
                 const tmpState = this.parser(newState);
 
                 if (tmpState.isError) {
+                    mergeErrorState(state);
                     return state.err(undefined);
                 } else {
                     return trimStateWhitespace(tmpState);
@@ -309,9 +342,9 @@ export class Parser<T = string> {
 
             if (matches.length >= min) {
                 return newState.ok(matches) as ParserState<T[]>;
-            } else {
-                return state.err([]) as ParserState<T[]>;
             }
+            mergeErrorState(state);
+            return state.err([]) as ParserState<T[]>;
         };
 
         return new Parser(
@@ -344,6 +377,7 @@ export class Parser<T = string> {
             if (matches.length > min) {
                 return newState.ok(matches) as ParserState<T[]>;
             }
+            mergeErrorState(state);
             return state.err([]) as ParserState<T[]>;
         };
 
@@ -359,8 +393,16 @@ export class Parser<T = string> {
         return p;
     }
 
+    debug(
+        name: string = "",
+        recursivePrint: boolean = false,
+        logger: (...s: any[]) => void = console.log
+    ) {
+        return parserDebug(this, name, recursivePrint, logger);
+    }
+
     toString() {
-        return this.context?.name;
+        return parserPrint(this);
     }
 
     static lazy<T>(fn: () => Parser<T>) {
@@ -454,6 +496,7 @@ export function any<T extends any[]>(...parsers: T) {
                 return newState;
             }
         }
+        mergeErrorState(state);
         return state.err(undefined);
     };
 
@@ -478,9 +521,9 @@ export function all<T extends any[]>(...parsers: T) {
             if (newState.value !== undefined) {
                 matches.push(newState.value);
             }
-
             state = newState;
         }
+        mergeErrorState(state);
         return state.ok(matches);
     };
 
@@ -499,6 +542,7 @@ export function string(str: string) {
         if (s === str) {
             return state.ok(s, s.length);
         }
+        mergeErrorState(state);
         return state.err(undefined);
     };
 
@@ -528,7 +572,7 @@ export function regex(
         } else if (match === "") {
             return state.ok(undefined);
         }
-
+        mergeErrorState(state);
         return state.err(undefined);
     };
 

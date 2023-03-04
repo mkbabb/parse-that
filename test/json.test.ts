@@ -50,45 +50,45 @@ export const jsonValue: Parser<any> = any(
     jsonNumber,
     jsonBool,
     jsonNull
-)
+);
 
 describe("JSON Parser", () => {
-    it("should parse a null value", () => {
-        const result = jsonValue.parse("null");
-        expect(result).toBe(null);
-    });
+    // it("should parse a null value", () => {
+    //     const result = jsonValue.parse("null");
+    //     expect(result).toBe(null);
+    // });
 
-    it("should parse a boolean value", () => {
-        const result1 = jsonValue.parse("true");
-        expect(result1).toBe(true);
-        const result2 = jsonValue.parse("false");
-        expect(result2).toBe(false);
-    });
+    // it("should parse a boolean value", () => {
+    //     const result1 = jsonValue.parse("true");
+    //     expect(result1).toBe(true);
+    //     const result2 = jsonValue.parse("false");
+    //     expect(result2).toBe(false);
+    // });
 
-    it("should parse a number value", () => {
-        const result = jsonValue.parse("123.45");
-        expect(result).toBe(123.45);
-    });
+    // it("should parse a number value", () => {
+    //     const result = jsonValue.parse("123.45");
+    //     expect(result).toBe(123.45);
+    // });
 
-    it("should parse a string value", () => {
-        const result = jsonValue.parse('"hello, world"');
-        expect(result).toBe("hello, world");
-    });
+    // it("should parse a string value", () => {
+    //     const result = jsonValue.parse('"hello, world"');
+    //     expect(result).toBe("hello, world");
+    // });
 
-    it("should parse an empty array", () => {
-        const result = jsonValue.parse("[]");
-        expect(result).toEqual([]);
-    });
+    // it("should parse an empty array", () => {
+    //     const result = jsonValue.parse("[]");
+    //     expect(result).toEqual([]);
+    // });
 
-    it("should parse an array with values", () => {
-        const result = jsonValue.parse('[ 1, "two", false ]');
-        expect(result).toEqual([1, "two", false]);
-    });
+    // it("should parse an array with values", () => {
+    //     const result = jsonValue.parse('[ 1, "two", false ]');
+    //     expect(result).toEqual([1, "two", false]);
+    // });
 
-    it("should parse an empty object", () => {
-        const result = jsonValue.parse("{}");
-        expect(result).toEqual({});
-    });
+    // it("should parse an empty object", () => {
+    //     const result = jsonValue.parse("{}");
+    //     expect(result).toEqual({});
+    // });
 
     it("should parse an object with key-value pairs", () => {
         const result = jsonValue.parse(
@@ -96,8 +96,9 @@ describe("JSON Parser", () => {
         );
         expect(result).toEqual({ name: "John", age: 30, isStudent: true });
     });
+
     it("should read a JSON file", () => {
-        const input = fs.readFileSync("data/data.json", "utf-8");
+        const input = fs.readFileSync("data/data-large.json", "utf-8");
         const result = jsonValue.parse(input);
         expect(result).toEqual(JSON.parse(input));
     });

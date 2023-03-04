@@ -5,11 +5,13 @@ export class ParserState<T> {
         public src: string,
         public value: T = undefined,
         public offset: number = 0,
-        public isError: boolean = false
+        public isError: boolean = false,
+        public furthest: number = 0
     ) {}
 
     ok<S>(value: S, offset: number = 0) {
-        return new ParserState<S>(this.src, value, this.offset + offset);
+        offset += this.offset;
+        return new ParserState<S>(this.src, value, offset, false);
     }
 
     err<S>(value?: S, offset: number = 0) {
@@ -19,7 +21,13 @@ export class ParserState<T> {
     }
 
     from<S>(value: S, offset: number = 0) {
-        return new ParserState<S>(this.src, value, this.offset + offset, this.isError);
+        offset += this.offset;
+        return new ParserState<S>(this.src, value, offset, this.isError);
+    }
+
+    join<S>(...states: ParserState<S>[]) {
+        this.furthest = Math.max(this.furthest, ...states.map((s) => s?.furthest ?? 0));
+        return this;
     }
 
     getColumnNumber(): number {

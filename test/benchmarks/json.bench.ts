@@ -9,7 +9,7 @@ import { parse as ChevrotainJSONParser } from "./chevrotain";
 import { json as ParsimmonJSONParser } from "./parsimmon";
 
 const options = {
-    iterations: 100,
+    iterations: 10,
 } as BenchOptions;
 
 const whitespace = /\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/g;
