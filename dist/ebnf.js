@@ -80,9 +80,9 @@ class c {
     }));
   }
   regex() {
-    return f(/[^\/]*/).wrap(i("/"), i("/")).map((t) => ({
+    return f(/[^\/]*/).wrap(i("/"), i("/")).then(f(/[gimuy]*/).opt()).map(([t, n]) => ({
       type: "regex",
-      value: new RegExp(t)
+      value: new RegExp(t, n)
     }));
   }
   optionalGroup() {
