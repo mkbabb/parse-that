@@ -260,8 +260,8 @@ export class Parser<T = string> {
 
     trim(parser: Parser<T> = whitespace as Parser<T>, discard: boolean = true) {
         if (!discard) {
-            return all(parser, this, parser)
-        } /*a*/ /*a*/ /*a*/
+            return all(parser, this, parser);
+        }
 
         if (parser.context?.name === "whitespace") {
             if (isStringParsers(this, parser)) {
@@ -424,7 +424,7 @@ export function eof<T>() {
             return state.err();
         }
     };
-    return new Parser(eof, createParserContext("eof")) as Parser<any>;
+    return new Parser(eof, createParserContext("eof", undefined)) as Parser<any>;
 }
 
 export function lazy<T>(
@@ -474,7 +474,10 @@ export function all<T extends any[]>(...parsers: T) {
                 return newState;
             }
 
-            matches.push(newState.value);
+            // TODO! hack or ...?
+            if (newState.value !== undefined) {
+                matches.push(newState.value);
+            }
 
             state = newState;
         }

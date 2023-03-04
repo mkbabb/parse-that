@@ -13,7 +13,7 @@ import {
 import { expect, describe, it } from "vitest";
 import fs from "fs";
 
-import { generateParserFromEBNF } from "../src/ebnf/generate";
+import { generateParserFromEBNF } from "../src/ebnf";
 import { generateMathExpression, reduceMathExpression } from "./utils";
 
 const digits = regex(/[0-9]+/);

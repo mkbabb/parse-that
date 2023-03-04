@@ -9,7 +9,7 @@ import {
     reduceMathExpression,
 } from "./utils";
 
-import { generateParserFromEBNF } from "../src/ebnf/generate";
+import { generateParserFromEBNF } from "../src/ebnf";
 import { EBNFParser } from "../src/ebnf/transform";
 import { Nonterminals } from "../src/ebnf/grammar";
 
@@ -161,7 +161,7 @@ const EBNFParserLeftRecursion = (grammar: string) => {
         });
 
     nonterminals.expr = nonterminals.expr.trim().map((v) => {
-        if (v.length === 2) {
+        if (v.length === 2 && v[1]) {
             return reduceMathExpression(v);
         } else {
             return v[0];
