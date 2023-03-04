@@ -1682,6 +1682,9 @@ class Parser {
     const newState = this.parser(new ParserState(val));
     this.state = mergeErrorState(newState);
     this.state.isError = newState.isError;
+    if (this.state.isError) {
+      console.log(this.state.toString());
+    }
     return newState.value;
   }
   getCijKey(state) {

@@ -7,6 +7,9 @@ interface BaseExpression<T, V = string> {
         left: string[];
         right: string[];
     };
+    line?: number;
+    column?: number;
+    offset?: number;
 }
 export type Nonterminal = BaseExpression<"nonterminal">;
 export type Literal = BaseExpression<"literal">;

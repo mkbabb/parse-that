@@ -19,10 +19,15 @@ export type Expression =
 interface BaseExpression<T, V = string> {
     type: T;
     value: V;
+
     comment?: {
         left: string[];
         right: string[];
     };
+
+    line?: number;
+    column?: number;
+    offset?: number;
 }
 
 export type Nonterminal = BaseExpression<"nonterminal">;
@@ -95,6 +100,17 @@ const mapFactor = ([term, op]) => {
     } as Expression;
 };
 
+function mapStatePosition(parser: Parser<any>) {
+    return parser.mapState((state) => {
+        if (state.value) {
+            state.value.column = state.getColumnNumber();
+            state.value.line = state.getLineNumber();
+            state.value.offset = state.offset;
+        }
+        return state;
+    });
+}
+
 type Options = {
     debug: boolean;
     comments: boolean;
@@ -136,7 +152,7 @@ export class EBNFGrammar {
     epsilon() {
         return any(string("epsilon"), string("ε"))
             .trim()
-            .map((value) => {
+            .map(() => {
                 return {
                     type: "epsilon",
                     value: undefined,
@@ -211,7 +227,10 @@ export class EBNFGrammar {
             .map((value) => {
                 return {
                     type: "optional",
-                    value,
+                    value: {
+                        type: "group",
+                        value,
+                    },
                 } as Optional;
             });
     }
@@ -224,7 +243,10 @@ export class EBNFGrammar {
             .map((value) => {
                 return {
                     type: "many",
-                    value,
+                    value: {
+                        type: "group",
+                        value,
+                    },
                 } as Many;
             });
     }
@@ -236,14 +258,16 @@ export class EBNFGrammar {
 
     @lazy
     term() {
-        return any(
-            this.epsilon(),
-            this.group(),
-            this.optionalGroup(),
-            this.manyGroup(),
-            this.nonterminal(),
-            this.literal(),
-            this.regex()
+        return mapStatePosition(
+            any(
+                this.epsilon(),
+                this.group(),
+                this.optionalGroup(),
+                this.manyGroup(),
+                this.nonterminal(),
+                this.literal(),
+                this.regex()
+            )
         );
     }
 

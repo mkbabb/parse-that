@@ -51,6 +51,16 @@ const mapFactor = ([term, op]) => {
     value: term
   };
 };
+function mapStatePosition(parser) {
+  return parser.mapState((state) => {
+    if (state.value) {
+      state.value.column = state.getColumnNumber();
+      state.value.line = state.getLineNumber();
+      state.value.offset = state.offset;
+    }
+    return state;
+  });
+}
 const defaultOptions = {
   debug: false,
   comments: true
@@ -80,7 +90,7 @@ class EBNFGrammar {
     );
   }
   epsilon() {
-    return parse.any(parse.string("epsilon"), parse.string("ε")).trim().map((value) => {
+    return parse.any(parse.string("epsilon"), parse.string("ε")).trim().map(() => {
       return {
         type: "epsilon",
         value: void 0
@@ -130,7 +140,10 @@ class EBNFGrammar {
     return this.rhs().trim().wrap(parse.string("["), parse.string("]")).map((value) => {
       return {
         type: "optional",
-        value
+        value: {
+          type: "group",
+          value
+        }
       };
     });
   }
@@ -138,7 +151,10 @@ class EBNFGrammar {
     return this.rhs().trim().wrap(parse.string("{"), parse.string("}")).map((value) => {
       return {
         type: "many",
-        value
+        value: {
+          type: "group",
+          value
+        }
       };
     });
   }
@@ -146,14 +162,16 @@ class EBNFGrammar {
     return this.identifier();
   }
   term() {
-    return parse.any(
-      this.epsilon(),
-      this.group(),
-      this.optionalGroup(),
-      this.manyGroup(),
-      this.nonterminal(),
-      this.literal(),
-      this.regex()
+    return mapStatePosition(
+      parse.any(
+        this.epsilon(),
+        this.group(),
+        this.optionalGroup(),
+        this.manyGroup(),
+        this.nonterminal(),
+        this.literal(),
+        this.regex()
+      )
     );
   }
   factor() {
