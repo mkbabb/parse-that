@@ -1,9 +1,9 @@
 import { createParserContext, ParserState } from "./state";
 import { getLazyParser, Parser } from ".";
+
 import { Options, RequiredOptions } from "prettier";
 import { Doc } from "prettier";
 import { builders as b, printer } from "prettier/doc";
-
 import chalk from "chalk";
 
 const MAX_LINES = 4;
@@ -33,21 +33,21 @@ export const summarizeLine = (line: string, maxLength: number = MAX_LINE_LENGTH)
 };
 
 export function addCursor(
-    this: ParserState<any>,
+    state: ParserState<any>,
     cursor: string = "^",
     error: boolean = false
 ): string {
     const color = (error ? chalk.red : chalk.green).bold;
 
-    const lines = this.src.split("\n");
-    const lineIdx = Math.min(lines.length - 1, this.getLineNumber());
+    const lines = state.src.split("\n");
+    const lineIdx = Math.min(lines.length - 1, state.getLineNumber());
     const startIdx = Math.max(lineIdx - MAX_LINES, 0);
     const endIdx = Math.min(lineIdx + MAX_LINES + 1, lines.length);
 
     const lineSummaries = lines.slice(startIdx, endIdx);
 
     if (cursor) {
-        const cursorLine = " ".repeat(this.getColumnNumber()) + color(cursor);
+        const cursorLine = " ".repeat(state.getColumnNumber()) + color(cursor);
         lineSummaries.splice(lineIdx - startIdx + 1, 0, cursorLine);
     }
 
@@ -71,7 +71,7 @@ const group = (docs: Doc, groupOptions: Options = {}) => {
 const opStyle = (op: string) => chalk.gray(op);
 const PARSER_STRINGS = new Map<number, any>();
 
-export function parserToString(parser: Parser<any>) {
+export function parserPrint(parser: Parser<any>) {
     if (PARSER_STRINGS.has(parser.id)) {
         return PARSER_STRINGS.get(parser.id);
     }
@@ -217,7 +217,7 @@ export function parserDebug<T>(
 
         const body = (() => {
             if (newState.offset >= newState.src.length) {
-                return chalk.bold.greenBright(newState.addCursor("", newState.isError));
+                return chalk.bold.greenBright(addCursor("", newState.isError));
             }
             return newState.addCursor("^", newState.isError);
         })();

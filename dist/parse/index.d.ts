@@ -12,12 +12,13 @@ export declare class Parser<T = string> {
     parse(val: string): T;
     getCijKey(state: ParserState<T>): string;
     atLeftRecursionLimit(state: ParserState<T>): boolean;
-    memoize(): any;
+    memoize(): Parser<T>;
     mergeMemos<S>(): Parser<[T, S]>;
     then<S>(next: Parser<S | T>): Parser<string>;
     or<S>(other: Parser<S | T>): Parser<string>;
     chain<S>(fn: (value: T) => Parser<S | T>, chainError?: boolean): Parser<T | S>;
     map<S>(fn: (value: T) => S, mapError?: boolean): Parser<S>;
+    mapState<S>(fn: (state: ParserState<T>) => ParserState<S>): Parser<S>;
     skip<S>(parser: Parser<T | S>): Parser<T>;
     next<S>(parser: Parser<S>): Parser<S>;
     opt(): Parser<T>;
@@ -26,10 +27,9 @@ export declare class Parser<T = string> {
     trim(parser?: Parser<T>): Parser<T>;
     many(min?: number, max?: number): Parser<T[]>;
     sepBy<S>(sep: Parser<S | T>, min?: number, max?: number): Parser<T[]>;
-    debug(name?: string, recursivePrint?: boolean, logger?: (...s: any[]) => void): Parser<T>;
     eof(): Parser<T>;
+    toString(): "string" | "regex" | "then" | "or" | "chain" | "map" | "many" | "lazy" | "memoize" | "mergeMemo" | "not" | "skip" | "next" | "trim" | "trimWhitespace" | "whitespace" | "wrap" | "sepBy" | "any" | "all" | "opt" | "lookAhead" | "lookBehind" | "eof" | "regexConcat" | "regexWrap" | "debug";
     static lazy<T>(fn: () => Parser<T>): Parser<T>;
-    toString(): any;
 }
 export declare function eof<T>(): Parser<any>;
 export declare function lazy<T>(target: any, propertyName: string, descriptor: TypedPropertyDescriptor<() => Parser<T>>): void;

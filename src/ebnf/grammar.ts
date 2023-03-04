@@ -365,7 +365,14 @@ export class EBNFGrammar {
             this.optionalGroup(),
             this.manyGroup(),
             this.eof()
-        ).trim(this.bigComment().opt()) as Parser<Expression>;
+        )
+            .then(this.bigComment().opt())
+            .map(([left, comment]) => {
+                if (comment) {
+                    left.comment = comment;
+                }
+                return left as unknown as Expression;
+            }) as Parser<Expression>;
     }
 
     factor() {
@@ -416,9 +423,13 @@ export class EBNFGrammar {
 
     grammar() {
         return all(this.comment().many(), this.productionRule(), this.comment().many())
-            .many(1)
-            .map((v) => {
-                return v.flat(2);
-            });
+            .map(([above, rule, below]) => {
+                rule.comment = {
+                    above,
+                    below,
+                };
+                return rule;
+            })
+            .many(1);
     }
 }

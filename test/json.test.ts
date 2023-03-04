@@ -50,7 +50,7 @@ export const jsonValue: Parser<any> = any(
     jsonNumber,
     jsonBool,
     jsonNull
-).debug("jsonValue");
+)
 
 describe("JSON Parser", () => {
     it("should parse a null value", () => {

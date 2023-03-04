@@ -1,6 +1,3 @@
-/// #if DEBUG
-import { parserDebug, parserToString } from "./string";
-/// #endif
 import { createParserContext, ParserContext, ParserState } from "./state";
 
 type ExtractValue<T extends ReadonlyArray<Parser<any>>> = {
@@ -165,6 +162,18 @@ export class Parser<T = string> {
         };
 
         return new Parser(map as ParserFunction<S>, createParserContext("map", this));
+    }
+
+    mapState<S>(fn: (state: ParserState<T>) => ParserState<S>) {
+        const mapState = (state: ParserState<T>) => {
+            const newState = this.parser(state);
+            return fn(newState);
+        };
+
+        return new Parser(
+            mapState as ParserFunction<S>,
+            createParserContext("mapState", this)
+        );
     }
 
     skip<S>(parser: Parser<T | S>) {
@@ -336,22 +345,14 @@ export class Parser<T = string> {
         );
     }
 
-    debug(
-        name: string = "",
-        recursivePrint: boolean = false,
-        logger: (...s: any[]) => void = console.log
-    ) {
-        /// #if DEBUG
-        return parserDebug(this, name, recursivePrint, logger);
-        /// #else
-        return this;
-        /// #endif
-    }
-
     eof() {
         const p = this.skip(eof()) as Parser<T>;
         p.context = createParserContext("eof", this);
         return p;
+    }
+
+    toString() {
+        return this.context?.name;
     }
 
     static lazy<T>(fn: () => Parser<T>) {
@@ -359,14 +360,6 @@ export class Parser<T = string> {
             return getLazyParser(fn).parser(state);
         };
         return new Parser<T>(lazy, createParserContext("lazy", undefined, fn));
-    }
-
-    toString() {
-        /// #if DEBUG
-        return parserToString(this);
-        /// #else
-        return this.context?.name;
-        /// #endif
     }
 }
 

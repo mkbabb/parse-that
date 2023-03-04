@@ -1,15 +1,16 @@
 {
     "name": "@mkbabb/parse-that",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "description": "Parser combinators for TypeScript",
     "type": "module",
     "exports": {
         ".": {
-            "import": "./dist/parse.js"
+            "import": "./dist/parse.js",
+            "require": "./dist/parse.cjs"
         },
         "./ebnf": {
-            "import": "./dist/ebnf.js"
-           
+            "import": "./dist/ebnf.js",
+            "require": "./dist/ebnf.cjs"
         }
     },
     "typesVersions": {
@@ -34,12 +35,9 @@
     "files": [
         "./dist"
     ],
-    "dependencies": {
-        "chalk": "^5.2.0",
-        "prettier": "^2.8.4"
-    },
     "devDependencies": {
-        "@rollup/plugin-node-resolve": "^15.0.1",
+        "chalk": "^5.2.0",
+        "prettier": "^2.8.4",
         "@types/node": "^18.14.0",
         "@types/prettier": "^2.7.2",
         "@vitest/coverage-c8": "^0.28.5",
@@ -49,7 +47,6 @@
         "typescript": "^4.9.5",
         "vite": "^4.1.4",
         "vite-plugin-dts": "^2.0.0-beta.3",
-        "vite-plugin-ifdef": "^1.0.5",
         "vitest": "^0.28.5"
     }
 }

@@ -1,7 +1,3 @@
-/// #if DEBUG
-import { addCursor } from "./string";
-/// #else
-/// #endif
 import { Parser } from ".";
 
 export class ParserState<T> {
@@ -38,14 +34,6 @@ export class ParserState<T> {
         const lines = this.src.slice(0, this.offset).split("\n");
         const lineNumber = lines.length - 1;
         return Math.max(0, lineNumber);
-    }
-
-    addCursor(cursor: string = "^", error: boolean = false): string {
-        /// #if DEBUG
-        return addCursor.call(this, cursor, error);
-        /// #else
-        return "";
-        /// #endif
     }
 }
 
