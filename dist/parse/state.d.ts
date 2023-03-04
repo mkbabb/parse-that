@@ -4,7 +4,8 @@ export declare class ParserState<T> {
     value: T;
     offset: number;
     isError: boolean;
-    constructor(src: string, value?: T, offset?: number, isError?: boolean);
+    furthest: number;
+    constructor(src: string, value?: T, offset?: number, isError?: boolean, furthest?: number);
     ok<S>(value: S, offset?: number): ParserState<S>;
     err<S>(value?: S, offset?: number): ParserState<S>;
     from<S>(value: S, offset?: number): ParserState<S>;

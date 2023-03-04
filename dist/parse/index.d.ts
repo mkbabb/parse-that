@@ -3,12 +3,15 @@ type ExtractValue<T extends ReadonlyArray<Parser<any>>> = {
     [K in keyof T]: T[K] extends Parser<infer V> ? V : never;
 };
 type ParserFunction<T = string> = (val: ParserState<T>) => ParserState<T>;
+export declare function mergeErrorState(state: ParserState<any>): ParserState<any>;
 export declare function getLazyParser<T>(fn: () => Parser<T>): any;
 export declare class Parser<T = string> {
     parser: ParserFunction<T>;
     context: ParserContext;
     id: number;
+    state: ParserState<T> | undefined;
     constructor(parser: ParserFunction<T>, context?: ParserContext);
+    reset(): void;
     parse(val: string): T;
     getCijKey(state: ParserState<T>): string;
     atLeftRecursionLimit(state: ParserState<T>): boolean;
@@ -28,7 +31,8 @@ export declare class Parser<T = string> {
     many(min?: number, max?: number): Parser<T[]>;
     sepBy<S>(sep: Parser<S | T>, min?: number, max?: number): Parser<T[]>;
     eof(): Parser<T>;
-    toString(): "string" | "regex" | "then" | "or" | "chain" | "map" | "many" | "lazy" | "memoize" | "mergeMemo" | "not" | "skip" | "next" | "trim" | "trimWhitespace" | "whitespace" | "wrap" | "sepBy" | "any" | "all" | "opt" | "lookAhead" | "lookBehind" | "eof" | "regexConcat" | "regexWrap" | "debug" | "mapState";
+    debug(name?: string, recursivePrint?: boolean, logger?: (...s: any[]) => void): Parser<T>;
+    toString(): any;
     static lazy<T>(fn: () => Parser<T>): Parser<T>;
 }
 export declare function eof<T>(): Parser<any>;

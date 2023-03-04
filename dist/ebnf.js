@@ -2,6 +2,7 @@ var F = Object.defineProperty;
 var b = (r, t, n) => t in r ? F(r, t, { enumerable: !0, configurable: !0, writable: !0, value: n }) : r[t] = n;
 var P = (r, t, n) => (b(r, typeof t != "symbol" ? t + "" : t, n), n);
 import { regex as f, any as y, string as i, all as g, lazy as p, eof as B, Parser as _ } from "./parse.js";
+import "chalk";
 var A = Object.defineProperty, C = Object.getOwnPropertyDescriptor, m = (r, t, n, e) => {
   for (var o = e > 1 ? void 0 : e ? C(t, n) : t, a = r.length - 1, s; a >= 0; a--)
     (s = r[a]) && (o = (e ? s(t, n, o) : s(o)) || o);
@@ -406,7 +407,7 @@ function z(r) {
     a.type === "alternation" && N(e, a);
   }
 }
-function j(r) {
+function Z(r) {
   const t = (n, e) => {
     e.type === "concatenation" && e.value[0].type === "nonterminal" && e.value[0].value === n && (e.value.slice(1, e.value.length), e.value.shift());
   };
@@ -471,7 +472,7 @@ function D(r) {
     n[e] = t(e, o.expression);
   return n;
 }
-function Z(r, t = !1) {
+function $(r, t = !1) {
   let n = M(r);
   return t && (n = L(n)), [D(n), n];
 }
@@ -481,10 +482,10 @@ export {
   d as findCommonPrefix,
   M as generateASTFromEBNF,
   D as generateParserFromAST,
-  Z as generateParserFromEBNF,
+  $ as generateParserFromEBNF,
   L as removeAllLeftRecursion,
   z as removeDirectLeftRecursion,
-  j as removeIndirectLeftRecursion,
+  Z as removeIndirectLeftRecursion,
   N as rewriteTreeLeftRecursion,
   T as topologicalSort
 };
