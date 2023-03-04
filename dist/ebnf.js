@@ -5,7 +5,6 @@ var __publicField = (obj, key, value) => {
   return value;
 };
 import { regex, any, string, all, lazy, eof, Parser } from "./parse.js";
-import "chalk";
 var __defProp2 = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __decorateClass = (decorators, target, key, kind) => {

@@ -7,7 +7,6 @@ var __publicField = (obj, key, value) => {
 };
 Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 const parse = require("./parse.cjs");
-require("chalk");
 var __defProp2 = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __decorateClass = (decorators, target, key, kind) => {

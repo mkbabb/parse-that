@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
             formats: ["es", "cjs"],
         },
         rollupOptions: {
-            external: ["chalk", "prettier"],
+            // external: ["chalk", "prettier"],
         },
     },
 
