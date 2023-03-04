@@ -18,7 +18,7 @@ export type ParserContext<T = any> = {
     args?: any[];
 };
 export declare function createParserContext<T = any>(name: (typeof parserNames)[number], parser: Parser<T>, ...args: any[]): {
-    name: "string" | "regex" | "then" | "or" | "chain" | "map" | "many" | "lazy" | "memoize" | "mergeMemo" | "not" | "skip" | "next" | "trim" | "trimWhitespace" | "whitespace" | "wrap" | "sepBy" | "any" | "all" | "opt" | "lookAhead" | "lookBehind" | "eof" | "regexConcat" | "regexWrap" | "debug";
+    name: "string" | "trim" | "map" | "regex" | "then" | "or" | "chain" | "many" | "lazy" | "memoize" | "mergeMemo" | "not" | "skip" | "next" | "trimWhitespace" | "whitespace" | "wrap" | "sepBy" | "any" | "all" | "opt" | "lookAhead" | "lookBehind" | "eof" | "regexConcat" | "regexWrap" | "debug";
     parser: Parser<T>;
     args: any[];
 };

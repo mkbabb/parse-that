@@ -12,7 +12,7 @@ export declare class Parser<T = string> {
     parse(val: string): T;
     getCijKey(state: ParserState<T>): string;
     atLeftRecursionLimit(state: ParserState<T>): boolean;
-    memoize(): Parser<T>;
+    memoize(): any;
     mergeMemos<S>(): Parser<[T, S]>;
     then<S>(next: Parser<S | T>): Parser<string>;
     or<S>(other: Parser<S | T>): Parser<string>;
@@ -28,7 +28,7 @@ export declare class Parser<T = string> {
     many(min?: number, max?: number): Parser<T[]>;
     sepBy<S>(sep: Parser<S | T>, min?: number, max?: number): Parser<T[]>;
     eof(): Parser<T>;
-    toString(): "string" | "regex" | "then" | "or" | "chain" | "map" | "many" | "lazy" | "memoize" | "mergeMemo" | "not" | "skip" | "next" | "trim" | "trimWhitespace" | "whitespace" | "wrap" | "sepBy" | "any" | "all" | "opt" | "lookAhead" | "lookBehind" | "eof" | "regexConcat" | "regexWrap" | "debug";
+    toString(): "string" | "trim" | "map" | "regex" | "then" | "or" | "chain" | "many" | "lazy" | "memoize" | "mergeMemo" | "not" | "skip" | "next" | "trimWhitespace" | "whitespace" | "wrap" | "sepBy" | "any" | "all" | "opt" | "lookAhead" | "lookBehind" | "eof" | "regexConcat" | "regexWrap" | "debug";
     static lazy<T>(fn: () => Parser<T>): Parser<T>;
 }
 export declare function eof<T>(): Parser<any>;

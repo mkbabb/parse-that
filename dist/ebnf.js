@@ -1,18 +1,15 @@
-import { string as s, any as p, regex as f, all as v, lazy as y, eof as b, Parser as E } from "./parse.js";
-var S = Object.defineProperty, k = Object.getOwnPropertyDescriptor, h = (n, e, a, t) => {
-  for (var r = t > 1 ? void 0 : t ? k(e, a) : e, o = n.length - 1, i; o >= 0; o--)
+import { regex as f, any as m, string as s, all as y, lazy as g, eof as E, Parser as P } from "./parse.js";
+var R = Object.defineProperty, T = Object.getOwnPropertyDescriptor, d = (n, e, a, t) => {
+  for (var r = t > 1 ? void 0 : t ? T(e, a) : e, o = n.length - 1, i; o >= 0; o--)
     (i = n[o]) && (r = (t ? i(e, a, r) : i(r)) || r);
-  return t && r && S(e, a, r), r;
+  return t && r && R(e, a, r), r;
 };
-const P = s(",").trim(), T = s("=").trim(), j = s(";").trim(), F = s(".").trim(), N = s("?").trim(), A = s("?w").trim(), R = s("??").trim(), _ = s("|").trim(), B = s("+").trim(), L = s("-").trim(), M = s("*").trim();
-s("/").trim();
-const O = s(">>").trim(), G = s("<<").trim(), I = p(j, F);
-class m {
+class v {
   identifier() {
     return f(/[_a-zA-Z][_a-zA-Z0-9]*/).trim();
   }
   literal() {
-    return p(
+    return m(
       f(/[^"]+/).wrap(s('"'), s('"')),
       f(/[^']+/).wrap(s("'"), s("'"))
     ).map((e) => ({
@@ -21,7 +18,7 @@ class m {
     }));
   }
   epsilon() {
-    return p(s("epsilon"), s("ε"), s("ϵ")).trim().map((e) => ({
+    return m(s("epsilon"), s("ε")).trim().map((e) => ({
       type: "epsilon",
       value: void 0
     }));
@@ -38,12 +35,6 @@ class m {
       value: e
     }));
   }
-  eof() {
-    return s("$").trim().map((e) => ({
-      type: "eof",
-      value: e
-    }));
-  }
   regex() {
     return f(/[^\/]*/).wrap(s("/"), s("/")).map((e) => ({
       type: "regex",
@@ -51,7 +42,7 @@ class m {
     }));
   }
   optional() {
-    return this.term().skip(N).map((e) => ({
+    return this.term().skip(s("?").trim()).map((e) => ({
       type: "optional",
       value: e
     }));
@@ -63,22 +54,18 @@ class m {
     }));
   }
   optionalWhitespace() {
-    return this.term().skip(A).map((e) => ({
+    return this.term().skip(s("?w").trim()).map((e) => ({
       type: "optionalWhitespace",
       value: e
     }));
   }
-  coalesce() {
-    return v(this.term().skip(R), this.factor()).map(([e, a]) => ({
-      type: "coalesce",
-      value: [e, a]
-    }));
-  }
-  subtraction() {
-    return v(this.term().skip(L), this.term()).map(([e, a]) => ({
-      type: "minus",
-      value: [e, a]
-    }));
+  minus() {
+    return y(this.term().skip(s("-").trim()), this.term()).map(
+      ([e, a]) => ({
+        type: "minus",
+        value: [e, a]
+      })
+    );
   }
   manyGroup() {
     return this.expression().trim().wrap(s("{"), s("}")).map((e) => ({
@@ -87,88 +74,76 @@ class m {
     }));
   }
   many() {
-    return this.term().skip(M).map((e) => ({
+    return this.term().skip(s("*").trim()).map((e) => ({
       type: "many",
       value: e
     }));
   }
   many1() {
-    return this.term().skip(B).map((e) => ({
+    return this.term().skip(s("+").trim()).map((e) => ({
       type: "many1",
       value: e
     }));
   }
   next() {
-    return v(this.factor().skip(O), p(this.skip(), this.factor())).map(
-      ([e, a]) => ({
-        type: "next",
-        value: [e, a]
-      })
-    );
+    return y(
+      this.factor().skip(s(">>").trim()),
+      m(this.skip(), this.factor())
+    ).map(([e, a]) => ({
+      type: "next",
+      value: [e, a]
+    }));
   }
   skip() {
-    return v(p(this.next(), this.factor()).skip(G), this.factor()).map(
-      ([e, a]) => ({
-        type: "skip",
-        value: [e, a]
-      })
-    );
+    return y(
+      m(this.next(), this.factor()).skip(s("<<").trim()),
+      this.factor()
+    ).map(([e, a]) => ({
+      type: "skip",
+      value: [e, a]
+    }));
   }
   concatenation() {
-    return p(this.skip(), this.next(), this.factor()).sepBy(P, 1).map((e) => ({
+    return m(this.skip(), this.next(), this.factor()).sepBy(s(",").trim(), 1).map((e) => ({
       type: "concatenation",
       value: e
     }));
   }
   alternation() {
-    return p(this.concatenation(), this.skip(), this.next(), this.factor()).sepBy(_, 1).map((e) => ({
+    return m(this.concatenation(), this.skip(), this.next(), this.factor()).sepBy(s("|").trim(), 1).map((e) => ({
       type: "alternation",
       value: e
     }));
   }
   bigComment() {
-    return f(/\/\*[^]*?\*\//).trim().map((e) => ({
-      type: "comment",
-      expression: {
-        type: "literal",
-        value: e
-      }
-    }));
+    return f(/\/\*[^]*?\*\//).trim();
+  }
+  comment() {
+    return f(/\/\/.*/).trim().or(this.bigComment());
   }
   term() {
-    return p(
+    return m(
       this.epsilon(),
       this.literal(),
       this.nonterminal(),
       this.regex(),
       this.group(),
       this.optionalGroup(),
-      this.manyGroup(),
-      this.eof()
-    ).then(this.bigComment().opt()).map(([e, a]) => (a && (e.comment = a), e));
+      this.manyGroup()
+    ).then(this.bigComment().opt()).map(([e, a]) => (e.comment = a, e));
   }
   factor() {
-    return p(
-      this.coalesce(),
+    return m(
       this.optionalWhitespace(),
       this.optional(),
       this.many(),
       this.many1(),
-      this.subtraction(),
+      this.minus(),
       this.term()
     );
   }
-  comment() {
-    return f(/\/\/.*/).trim().map((e) => ({
-      type: "comment",
-      expression: {
-        type: "literal",
-        value: e
-      }
-    })).or(this.bigComment());
-  }
   expression() {
-    return p(
+    return m(
       this.alternation(),
       this.concatenation(),
       this.skip(),
@@ -177,60 +152,58 @@ class m {
     );
   }
   productionRule() {
-    return v(
-      this.identifier().skip(T),
-      this.expression().skip(I)
-    ).map(([e, a]) => ({ name: e, expression: a, type: "productionRule" }));
+    return y(
+      this.identifier().skip(s("=").trim()),
+      this.expression().skip(m(s(";").trim(), s(".").trim()))
+    ).map(([e, a]) => ({ name: e, expression: a }));
   }
   grammar() {
-    return v(this.comment().many(), this.productionRule(), this.comment().many()).map(([e, a, t]) => (a.comment = {
+    return y(this.comment().many(), this.productionRule(), this.comment().many()).map(([e, a, t]) => (a.comment = {
       above: e,
       below: t
     }, a)).many(1);
   }
 }
-h([
-  y
-], m.prototype, "group", 1);
-h([
-  y
-], m.prototype, "regex", 1);
-h([
-  y
-], m.prototype, "optionalGroup", 1);
-h([
-  y
-], m.prototype, "coalesce", 1);
-h([
-  y
-], m.prototype, "manyGroup", 1);
-h([
-  y
-], m.prototype, "next", 1);
-h([
-  y
-], m.prototype, "skip", 1);
-function x(n) {
+d([
+  g
+], v.prototype, "group", 1);
+d([
+  g
+], v.prototype, "regex", 1);
+d([
+  g
+], v.prototype, "optionalGroup", 1);
+d([
+  g
+], v.prototype, "manyGroup", 1);
+d([
+  g
+], v.prototype, "next", 1);
+d([
+  g
+], v.prototype, "skip", 1);
+function k(n) {
   const e = /* @__PURE__ */ new Set(), a = [];
   function t(o, i) {
     if (i.has(o) || e.has(o))
       return;
     i.add(o);
-    const u = n.get(o);
-    if (u) {
-      if (u.type === "nonterminal")
-        t(u.value, i);
-      else if (u.type === "concatenation" || u.type === "alternation")
-        for (const l of u.value)
-          l.type === "nonterminal" && t(l.value, i);
-      e.add(o), i.delete(o), a.unshift({ name: o, expression: u });
-    }
+    const l = n.get(o);
+    if (!l)
+      return;
+    const u = l.expression;
+    if (u.type === "nonterminal")
+      t(u.value, i);
+    else if (u.value instanceof Array)
+      for (const p of u.value)
+        p.type === "nonterminal" && t(p.value, i);
+    e.add(o), i.delete(o), a.unshift(n.get(o));
   }
   for (const [o] of n)
     t(o, /* @__PURE__ */ new Set());
   const r = /* @__PURE__ */ new Map();
   for (const o of a)
-    r.set(o.name, o.expression);
+    r.set(o.name, o);
   return r;
 }
 const w = (n, e) => {
@@ -261,11 +234,11 @@ const w = (n, e) => {
       }
       case "concatenation": {
         const a = n.value.map(
-          (l, g) => w(n.value[g], e.value[g])
+          (u, p) => w(n.value[p], e.value[p])
         );
-        if (a.some((l) => l === void 0))
+        if (a.some((u) => u === void 0))
           return;
-        const t = a.map((l) => l[0]), r = a.map((l) => l[1]), o = a.map((l) => l[2]), i = t.lastIndexOf(null);
+        const t = a.map((u) => u[0]), r = a.map((u) => u[1]), o = a.map((u) => u[2]), i = t.lastIndexOf(null);
         return i === t.length - 1 ? void 0 : [
           {
             type: "concatenation",
@@ -294,7 +267,7 @@ const w = (n, e) => {
         }
         return;
     }
-}, d = (n, e) => {
+}, h = (n, e) => {
   if (n.type !== e.type)
     return !1;
   switch (n.type) {
@@ -305,31 +278,31 @@ const w = (n, e) => {
     case "optional":
     case "many":
     case "many1":
-      return d(n.value, e.value);
+      return h(n.value, e.value);
     case "minus":
     case "skip":
     case "next":
-      return d(n.value[0], e.value[0]) && d(n.value[1], e.value[1]);
+      return h(n.value[0], e.value[0]) && h(n.value[1], e.value[1]);
     case "concatenation":
-      return n.value.every((a, t) => d(a, e.value[t]));
+      return n.value.every((a, t) => h(a, e.value[t]));
     case "alternation":
-      return n.value.some((a, t) => d(a, e.value[t]));
+      return n.value.some((a, t) => h(a, e.value[t]));
     case "epsilon":
       return !0;
   }
 };
-function z(n, e) {
+function b(n, e) {
   const a = /* @__PURE__ */ new Map();
   let t = null;
   for (let r = 0; r < e.value.length - 1; r++) {
-    const o = e.value[r], i = e.value[r + 1], u = w(o, i);
-    if (u) {
-      const [l, g, $] = u;
-      t !== null && d(l, t) ? a.get(t).push($) : (a.set(l, [g, $]), t = l), r === e.value.length - 2 && e.value.shift(), e.value.shift(), r -= 1;
+    const o = e.value[r], i = e.value[r + 1], l = w(o, i);
+    if (l) {
+      const [u, p, $] = l;
+      t !== null && h(u, t) ? a.get(t).push($) : (a.set(u, [p, $]), t = u), r === e.value.length - 2 && e.value.shift(), e.value.shift(), r -= 1;
     }
   }
   for (const [r, o] of a) {
-    const u = {
+    const l = {
       type: "concatenation",
       value: [
         {
@@ -345,22 +318,22 @@ function z(n, e) {
         }
       ]
     };
-    e.value.push(u);
+    e.value.push(l);
   }
 }
-const C = (n, e, a) => {
+const A = (n, e, a) => {
   const t = [], r = [], o = {
     type: "nonterminal",
     value: a
   };
   for (let i = 0; i < e.value.length; i++) {
-    const u = e.value[i];
-    u.type === "concatenation" && u.value[0].value === n ? r.push({
+    const l = e.value[i];
+    l.type === "concatenation" && l.value[0].value === n ? r.push({
       type: "concatenation",
-      value: [...u.value.slice(1), o]
+      value: [...l.value.slice(1), o]
     }) : t.push({
       type: "concatenation",
-      value: [u, o]
+      value: [l, o]
     });
   }
   return r.length === 0 ? [void 0, void 0] : (r.push({
@@ -376,64 +349,70 @@ const C = (n, e, a) => {
     }
   ]);
 };
-function D(n) {
+function F(n) {
   const e = /* @__PURE__ */ new Map();
   let a = 0;
-  for (const [t, r] of n)
-    if (r.type === "alternation") {
-      const o = `${t}_${a++}`, [i, u] = C(
+  for (const [t, r] of n) {
+    const { expression: o } = r;
+    if (o.type === "alternation") {
+      const i = `${t}_${a++}`, [l, u] = A(
         t,
-        r,
-        o
+        o,
+        i
       );
-      i && (e.set(o, u), e.set(t, i));
+      l && (e.set(i, {
+        name: i,
+        expression: u
+      }), e.set(t, {
+        name: t,
+        expression: l,
+        comment: r.comment
+      }));
     }
+  }
   if (e.size === 0)
     return n;
   for (const [t, r] of e)
     n.set(t, r);
-  for (const [t, r] of n)
-    r.type === "alternation" && z(t, r);
+  for (const [t, r] of n) {
+    const { expression: o } = r;
+    o.type === "alternation" && b(t, o);
+  }
 }
-function V(n) {
+function M(n) {
   const e = (a, t) => {
     t.type === "concatenation" && t.value[0].type === "nonterminal" && t.value[0].value === a && (t.value.slice(1, t.value.length), t.value.shift());
   };
   for (const [a, t] of n)
     e(a, t);
 }
-function W(n) {
-  const e = x(n);
-  return D(e), e;
+function S(n) {
+  const e = k(n);
+  return F(e), e;
 }
-function q(n) {
-  const a = new m().grammar().trim().parse(n);
+function j(n) {
+  const a = new v().grammar().trim().parse(n);
   if (!a)
     throw new Error("Failed to parse EBNF grammar");
-  return a.reduce((t, { name: r, expression: o, type: i }, u) => (t.set(r, o), t), /* @__PURE__ */ new Map());
+  return a.reduce((t, r, o) => (t.set(r.name, r), t), /* @__PURE__ */ new Map());
 }
-function Z(n) {
+function N(n) {
   function e(t, r) {
     var o, i;
     switch (r.type) {
       case "literal":
         return s(r.value);
       case "nonterminal":
-        const u = E.lazy(() => a[r.value]);
-        return u.context.name = r.value, u;
-      case "comment":
+        const l = P.lazy(() => a[r.value]);
+        return l.context.name = r.value, l;
       case "epsilon":
-        return b().opt();
-      case "eof":
-        return b();
+        return E().opt();
       case "group":
         return e(t, r.value);
       case "regex":
         return f(r.value);
       case "optionalWhitespace":
         return e(t, r.value).trim();
-      case "coalesce":
-        return p(...r.value.map((l) => e(t, l)));
       case "optional":
         return e(t, r.value).opt();
       case "many":
@@ -453,28 +432,23 @@ function Z(n) {
           e(t, r.value[1])
         );
       case "concatenation": {
-        const l = r.value.map((g) => e(t, g));
-        return ((i = (o = l.at(-1)) == null ? void 0 : o.context) == null ? void 0 : i.name) === "eof" && l.pop(), v(...l);
+        const u = r.value.map((p) => e(t, p));
+        return ((i = (o = u.at(-1)) == null ? void 0 : o.context) == null ? void 0 : i.name) === "eof" && u.pop(), y(...u);
       }
       case "alternation":
-        return p(...r.value.map((l) => e(t, l)));
+        return m(...r.value.map((u) => e(t, u)));
     }
   }
   const a = {};
   for (const [t, r] of n.entries())
-    a[t] = e(t, r);
+    a[t] = e(t, r.expression);
   return a;
 }
-function H(n, e = !1) {
-  let a = q(n);
-  return e && (a = W(a)), [Z(a), a];
+function _(n, e = !1) {
+  let a = j(n);
+  return e && (a = S(a)), [N(a), a];
 }
-const X = (n, e) => {
-  Object.entries(n).forEach(([a, t]) => {
-    n[a] = t.debug(a, !1, e);
-  });
-};
-function J(n, e) {
+function B(n, e) {
   const a = n.split(e);
   if (a.length === 1)
     return n;
@@ -484,16 +458,16 @@ function J(n, e) {
   if (n.length > t) {
     let r = t;
     for (let o = 0; o < n.length; o += r) {
-      const i = o === 0 ? t : o + r, u = n.indexOf(e, i);
-      if (u === -1)
+      const i = o === 0 ? t : o + r, l = n.indexOf(e, i);
+      if (l === -1)
         break;
-      n = n.slice(0, u) + `
-	${e}` + n.slice(u + 1);
+      n = n.slice(0, l) + `
+	${e}` + n.slice(l + 1);
     }
   }
   return n;
 }
-const K = [
+const L = [
   "symbol",
   "identifier",
   "terminal",
@@ -510,13 +484,13 @@ const K = [
   "rhs",
   "rule",
   "grammar"
-], Y = (n) => {
-  const [e, a] = H(n);
-  for (const t of K)
+], O = (n) => {
+  const [e, a] = _(n);
+  for (const t of L)
     e[t] = e[t].trim();
   return e.symbol = e.symbol, e.identifier = e.identifier.map((t) => t.flat().join("")), e.terminal = e.terminal.map((t) => t.flat().join("")), e.regex = e.regex.map((t) => t.flat().join("")), e.rhs = e.rhs.map((t) => {
     const o = (t instanceof Array ? t.flat(1 / 0) : t).join(" ");
-    return J(o, "|");
+    return B(o, "|");
   }), e.rule = e.rule.map((t) => t.flat().join(" ")), e.grammar.map((t) => {
     let r = 0;
     for (let o = 0; o < t.length; o++) {
@@ -530,13 +504,13 @@ const K = [
 `);
   });
 };
-function Q(n) {
+function G(n) {
   return n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 function c(n) {
   switch (n.type) {
     case "literal":
-      return Q(n.value);
+      return G(n.value);
     case "nonterminal":
       return `($${n.value})`;
     case "epsilon":
@@ -569,7 +543,7 @@ function c(n) {
       return n.value.map((e) => `(${c(e)})`).join("|");
   }
 }
-function ee(n) {
+function x(n) {
   const e = [];
   for (const [a, t] of n)
     e.push({
@@ -584,19 +558,18 @@ function ee(n) {
   };
 }
 export {
-  m as EBNFGrammar,
-  Y as EBNFParser,
-  X as addNonterminalsDebugging,
-  d as comparePrefix,
+  v as EBNFGrammar,
+  O as EBNFParser,
+  h as comparePrefix,
   w as findCommonPrefix,
-  q as generateASTFromEBNF,
-  Z as generateParserFromAST,
-  H as generateParserFromEBNF,
-  W as removeAllLeftRecursion,
-  D as removeDirectLeftRecursion,
-  V as removeIndirectLeftRecursion,
-  z as rewriteTreeLeftRecursion,
-  x as topologicalSort,
-  ee as transformEBNFASTToTextMateLanguage
+  j as generateASTFromEBNF,
+  N as generateParserFromAST,
+  _ as generateParserFromEBNF,
+  S as removeAllLeftRecursion,
+  F as removeDirectLeftRecursion,
+  M as removeIndirectLeftRecursion,
+  b as rewriteTreeLeftRecursion,
+  k as topologicalSort,
+  x as transformEBNFASTToTextMateLanguage
 };
 //# sourceMappingURL=ebnf.js.map
