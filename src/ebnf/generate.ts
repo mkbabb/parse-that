@@ -1,5 +1,5 @@
 import { Parser, all, any, eof, regex, string } from "../parse";
-import { Expression, Nonterminals, AST, EBNFGrammar } from "./grammar";
+import { Expression, Nonterminals, AST, EBNFGrammar, ProductionRule } from "./grammar";
 import { removeAllLeftRecursion } from "./optimize";
 
 export function generateASTFromEBNF(input: string) {
@@ -10,10 +10,10 @@ export function generateASTFromEBNF(input: string) {
         throw new Error("Failed to parse EBNF grammar");
     }
 
-    return parsed.reduce((acc, { name, expression }, ix) => {
-        acc.set(name, expression);
+    return parsed.reduce((acc, productionRule, ix) => {
+        acc.set(productionRule.name, productionRule);
         return acc;
-    }, new Map<string, Expression>()) as AST;
+    }, new Map<string, ProductionRule>()) as AST;
 }
 
 export function generateParserFromAST(ast: AST) {
@@ -73,8 +73,8 @@ export function generateParserFromAST(ast: AST) {
 
     const nonterminals: Nonterminals = {};
 
-    for (const [name, expression] of ast.entries()) {
-        nonterminals[name] = generateParser(name, expression);
+    for (const [name, productionRule] of ast.entries()) {
+        nonterminals[name] = generateParser(name, productionRule.expression);
     }
     return nonterminals;
 }

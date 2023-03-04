@@ -54,7 +54,7 @@ export type ProductionRule = {
     };
 };
 
-export type AST = Map<string, Expression>;
+export type AST = Map<string, ProductionRule>;
 export type Nonterminals = { [key: string]: Parser<any> };
 
 export class EBNFGrammar {

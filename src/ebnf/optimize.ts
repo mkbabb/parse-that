@@ -18,14 +18,17 @@ export function topologicalSort(ast: AST) {
         }
 
         stack.add(node);
-        const expr = ast.get(node)!;
-        if (!expr) {
+        const productionRule = ast.get(node)!;
+
+        if (!productionRule) {
             return;
         }
 
+        const expr = productionRule.expression;
+
         if (expr.type === "nonterminal") {
             visit(expr.value, stack);
-        } else if (expr.type === "concatenation" || expr.type === "alternation") {
+        } else if (expr.value instanceof Array) {
             for (const child of expr.value) {
                 if (child.type === "nonterminal") {
                     visit(child.value, stack);
@@ -35,16 +38,17 @@ export function topologicalSort(ast: AST) {
 
         visited.add(node);
         stack.delete(node);
-        order.unshift({ name: node, expression: expr });
+
+        order.unshift(ast.get(node) as ProductionRule);
     }
 
     for (const [name] of ast) {
         visit(name, new Set<string>());
     }
 
-    const newAST = new Map<string, Expression>();
+    const newAST = new Map() as AST;
     for (const rule of order) {
-        newAST.set(rule.name, rule.expression);
+        newAST.set(rule.name, rule);
     }
 
     return newAST;
@@ -282,7 +286,9 @@ export function removeDirectLeftRecursion(ast: AST) {
     const newNodes = new Map() as AST;
 
     let uniqueIndex = 0;
-    for (const [name, expression] of ast) {
+    for (const [name, productionRule] of ast) {
+        const { expression } = productionRule;
+
         if (expression.type === "alternation") {
             const tailName = `${name}_${uniqueIndex++}`;
 
@@ -291,9 +297,17 @@ export function removeDirectLeftRecursion(ast: AST) {
                 expression,
                 tailName
             );
+
             if (head) {
-                newNodes.set(tailName, tail);
-                newNodes.set(name, head);
+                newNodes.set(tailName, {
+                    name: tailName,
+                    expression: tail,
+                } as ProductionRule);
+                newNodes.set(name, {
+                    name,
+                    expression: head,
+                    comment: productionRule.comment,
+                } as ProductionRule);
             }
         }
     }
@@ -301,11 +315,12 @@ export function removeDirectLeftRecursion(ast: AST) {
     if (newNodes.size === 0) {
         return ast;
     }
-    for (const [name, expression] of newNodes) {
-        ast.set(name, expression);
+    for (const [name, productionRule] of newNodes) {
+        ast.set(name, productionRule);
     }
 
-    for (const [name, expression] of ast) {
+    for (const [name, productionRule] of ast) {
+        const { expression } = productionRule;
         if (expression.type === "alternation") {
             rewriteTreeLeftRecursion(name, expression);
         }
