@@ -1,2 +1,630 @@
-"use strict";var b=Object.defineProperty;var A=(r,e,o)=>e in r?b(r,e,{enumerable:!0,configurable:!0,writable:!0,value:o}):r[e]=o;var g=(r,e,o)=>(A(r,typeof e!="symbol"?e+"":e,o),o);Object.defineProperty(exports,Symbol.toStringTag,{value:"Module"});const n=require("./parse.cjs");require("chalk");var B=Object.defineProperty,S=Object.getOwnPropertyDescriptor,p=(r,e,o,t)=>{for(var a=t>1?void 0:t?S(e,o):e,i=r.length-1,s;i>=0;i--)(s=r[i])&&(a=(t?s(e,o,a):s(a))||a);return t&&a&&B(e,o,a),a};const h={"|":"alternation",",":"concatenation","-":"minus","<<":"skip",">>":"next","*":"many","+":"many1","?":"optional","?w":"optionalWhitespace"},T=([r,e])=>e.length===0?r:e.reduce((o,[t,a])=>({type:h[t],value:[o,a]}),r),C=([r,e])=>e===void 0?r:{type:h[e],value:r},_={debug:!1,comments:!0};class c{constructor(e){g(this,"options");this.options={..._,...e??{}}}identifier(){return n.regex(/[_a-zA-Z][_a-zA-Z0-9]*/).trim()}literal(){return this.trimBigComment(n.any(n.regex(/[^"]+/).wrap(n.string('"'),n.string('"')),n.regex(/[^']+/).wrap(n.string("'"),n.string("'"))).map(e=>({type:"literal",value:e})))}epsilon(){return n.any(n.string("epsilon"),n.string("ε")).trim().map(e=>({type:"epsilon",value:void 0}))}nonterminal(){return this.identifier().map(e=>({type:"nonterminal",value:e}))}bigComment(){return n.regex(/\/\*[^\*]*\*\//).trim()}comment(){return n.regex(/\/\/.*/).or(this.bigComment()).trim()}trimBigComment(e){return e.trim(this.bigComment().many(),!1).map(([o,t,a])=>(t.comment={left:o,right:a},t))}group(){return this.rhs().trim().wrap(n.string("("),n.string(")")).map(e=>({type:"group",value:e}))}regex(){return n.regex(/[^\/]*/).wrap(n.string("/"),n.string("/")).then(n.regex(/[gimuy]*/).opt()).map(([e,o])=>({type:"regex",value:new RegExp(e,o)}))}optionalGroup(){return this.rhs().trim().wrap(n.string("["),n.string("]")).map(e=>({type:"optional",value:e}))}manyGroup(){return this.rhs().trim().wrap(n.string("{"),n.string("}")).map(e=>({type:"many",value:e}))}lhs(){return this.identifier()}term(){return n.any(this.epsilon(),this.group(),this.optionalGroup(),this.manyGroup(),this.nonterminal(),this.literal(),this.regex())}factor(){return this.trimBigComment(n.all(this.term(),n.any(n.string("?w").trim(),n.string("?").trim(),n.string("*").trim(),n.string("+").trim()).opt()).map(C))}binaryFactor(){return n.all(this.factor(),n.all(n.any(n.string("<<").trim(),n.string(">>").trim(),n.string("-").trim()),this.factor()).many()).map(T)}concatenation(){return this.binaryFactor().sepBy(n.string(",").trim()).map(e=>e.length===1?e[0]:{type:"concatenation",value:e})}alternation(){return this.concatenation().sepBy(n.string("|").trim()).map(e=>e.length===1?e[0]:{type:"alternation",value:e})}rhs(){return this.alternation()}productionRule(){return n.all(this.lhs(),n.string("=").trim(),this.rhs(),n.any(n.string(";"),n.string(".")).trim()).map(([e,,o])=>({name:e,expression:o}))}grammar(){return this.productionRule().trim(this.comment().many(),!1).map(([e,o,t])=>(o.comment={above:e,below:t},o)).many(1)}}p([n.lazy],c.prototype,"bigComment",1);p([n.lazy],c.prototype,"comment",1);p([n.lazy],c.prototype,"group",1);p([n.lazy],c.prototype,"regex",1);p([n.lazy],c.prototype,"optionalGroup",1);p([n.lazy],c.prototype,"manyGroup",1);p([n.lazy],c.prototype,"lhs",1);p([n.lazy],c.prototype,"term",1);p([n.lazy],c.prototype,"factor",1);p([n.lazy],c.prototype,"binaryFactor",1);p([n.lazy],c.prototype,"concatenation",1);p([n.lazy],c.prototype,"alternation",1);p([n.lazy],c.prototype,"rhs",1);p([n.lazy],c.prototype,"productionRule",1);p([n.lazy],c.prototype,"grammar",1);function d(r){const e=new Set,o=[];function t(i,s){if(s.has(i)||e.has(i))return;s.add(i);const l=r.get(i);if(!l)return;const u=l.expression;if(u.type==="nonterminal")t(u.value,s);else if(u.value instanceof Array)for(const m of u.value)m.type==="nonterminal"&&t(m.value,s);e.add(i),s.delete(i),o.unshift(r.get(i))}for(const[i]of r)t(i,new Set);const a=new Map;for(const i of o)a.set(i.name,i);return a}const f=(r,e)=>{if(!(!(r!=null&&r.type)||!(e!=null&&e.type)||r.type!==e.type))switch(r.type){case"literal":case"nonterminal":return r.value!==e.value?void 0:[r,{type:"epsilon"},{type:"epsilon"}];case"group":case"optional":case"optionalWhitespace":case"many":case"many1":{const o=f(r.value,e.value);return o?[{type:r.type,value:o[0]},{type:r.type,value:o[1]},{type:r.type,value:o[2]}]:void 0}case"concatenation":{const o=r.value.map((u,m)=>f(r.value[m],e.value[m]));if(o.some(u=>u===void 0))return;const t=o.map(u=>u[0]),a=o.map(u=>u[1]),i=o.map(u=>u[2]),s=t.lastIndexOf(null);return s===t.length-1?void 0:[{type:"concatenation",value:t.slice(s+1)},{type:"concatenation",value:a},{type:"concatenation",value:i}]}case"alternation":for(const o of r.value){const t=f(o,e);if(t)return t}for(const o of e.value){const t=f(r,o);if(t)return t}return}},y=(r,e)=>{if(r.type!==e.type)return!1;switch(r.type){case"literal":case"nonterminal":return r.value===e.value;case"group":case"optional":case"many":case"many1":return y(r.value,e.value);case"minus":case"skip":case"next":return y(r.value[0],e.value[0])&&y(r.value[1],e.value[1]);case"concatenation":return r.value.every((o,t)=>y(o,e.value[t]));case"alternation":return r.value.some((o,t)=>y(o,e.value[t]));case"epsilon":return!0}};function w(r,e){const o=new Map;let t=null;for(let a=0;a<e.value.length-1;a++){const i=e.value[a],s=e.value[a+1],l=f(i,s);if(l){const[u,m,v]=l;t!==null&&y(u,t)?o.get(t).push(v):(o.set(u,[m,v]),t=u),a===e.value.length-2&&e.value.shift(),e.value.shift(),a-=1}}for(const[a,i]of o){const l={type:"concatenation",value:[{type:"group",value:{type:"alternation",value:i}},{type:"group",value:a}]};e.value.push(l)}}const L=(r,e,o)=>{const t=[],a=[],i={type:"nonterminal",value:o};for(let s=0;s<e.value.length;s++){const l=e.value[s];l.type==="concatenation"&&l.value[0].value===r?a.push({type:"concatenation",value:[...l.value.slice(1),i]}):t.push({type:"concatenation",value:[l,i]})}return a.length===0?[void 0,void 0]:(a.push({type:"epsilon"}),[{type:"alternation",value:t},{type:"alternation",value:a}])};function z(r){const e=new Map;let o=0;for(const[t,a]of r){const{expression:i}=a;if(i.type==="alternation"){const s=`${t}_${o++}`,[l,u]=L(t,i,s);l&&(e.set(s,{name:s,expression:u}),e.set(t,{name:t,expression:l,comment:a.comment}))}}if(e.size===0)return r;for(const[t,a]of e)r.set(t,a);for(const[t,a]of r){const{expression:i}=a;i.type==="alternation"&&w(t,i)}}function E(r){const e=(o,t)=>{t.type==="concatenation"&&t.value[0].type==="nonterminal"&&t.value[0].value===o&&(t.value.slice(1,t.value.length),t.value.shift())};for(const[o,t]of r)e(o,t)}function P(r){const e=d(r);return z(e),e}function R(r){const e=new c().grammar().eof(),o=e.parse(r);if(!o)return[e];const t=o.reduce((a,i,s)=>a.set(i.name,i),new Map);return[e,t]}function F(r){function e(t,a){var i,s;switch(a.type){case"literal":return n.string(a.value);case"nonterminal":const l=n.Parser.lazy(()=>o[a.value]);return l.context.name=a.value,l;case"epsilon":return n.eof().opt();case"group":return e(t,a.value);case"regex":return n.regex(a.value);case"optionalWhitespace":return e(t,a.value).trim();case"optional":return e(t,a.value).opt();case"many":return e(t,a.value).many();case"many1":return e(t,a.value).many(1);case"skip":return e(t,a.value[0]).skip(e(t,a.value[1]));case"next":return e(t,a.value[0]).next(e(t,a.value[1]));case"minus":return e(t,a.value[0]).not(e(t,a.value[1]));case"concatenation":{const u=a.value.map(m=>e(t,m));return((s=(i=u.at(-1))==null?void 0:i.context)==null?void 0:s.name)==="eof"&&u.pop(),n.all(...u)}case"alternation":return n.any(...a.value.map(u=>e(t,u)))}}const o={};for(const[t,a]of r.entries())o[t]=e(t,a.expression);return o}function G(r,e=!1){let[o,t]=R(r);return e&&(t=P(t)),[F(t),t]}exports.EBNFGrammar=c;exports.comparePrefix=y;exports.findCommonPrefix=f;exports.generateASTFromEBNF=R;exports.generateParserFromAST=F;exports.generateParserFromEBNF=G;exports.removeAllLeftRecursion=P;exports.removeDirectLeftRecursion=z;exports.removeIndirectLeftRecursion=E;exports.rewriteTreeLeftRecursion=w;exports.topologicalSort=d;
+"use strict";
+var __defProp = Object.defineProperty;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __publicField = (obj, key, value) => {
+  __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+  return value;
+};
+Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+const parse = require("./parse.cjs");
+require("chalk");
+var __defProp2 = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result)
+    __defProp2(target, key, result);
+  return result;
+};
+const operatorToType = {
+  "|": "alternation",
+  ",": "concatenation",
+  "-": "minus",
+  "<<": "skip",
+  ">>": "next",
+  "*": "many",
+  "+": "many1",
+  "?": "optional",
+  "?w": "optionalWhitespace"
+};
+const reduceBinaryExpression = ([left, rightExpression]) => {
+  if (rightExpression.length === 0) {
+    return left;
+  }
+  return rightExpression.reduce((acc, [op, right]) => {
+    return {
+      type: operatorToType[op],
+      value: [acc, right]
+    };
+  }, left);
+};
+const mapFactor = ([term, op]) => {
+  if (op === void 0) {
+    return term;
+  }
+  const type = operatorToType[op];
+  return {
+    type,
+    value: term
+  };
+};
+const defaultOptions = {
+  debug: false,
+  comments: true
+};
+class EBNFGrammar {
+  constructor(options) {
+    __publicField(this, "options");
+    this.options = {
+      ...defaultOptions,
+      ...options ?? {}
+    };
+  }
+  identifier() {
+    return parse.regex(/[_a-zA-Z][_a-zA-Z0-9]*/).trim();
+  }
+  literal() {
+    return this.trimBigComment(
+      parse.any(
+        parse.regex(/[^"]+/).wrap(parse.string('"'), parse.string('"')),
+        parse.regex(/[^']+/).wrap(parse.string("'"), parse.string("'"))
+      ).map((value) => {
+        return {
+          type: "literal",
+          value
+        };
+      })
+    );
+  }
+  epsilon() {
+    return parse.any(parse.string("epsilon"), parse.string("ε")).trim().map((value) => {
+      return {
+        type: "epsilon",
+        value: void 0
+      };
+    });
+  }
+  nonterminal() {
+    return this.identifier().map((value) => {
+      return {
+        type: "nonterminal",
+        value
+      };
+    });
+  }
+  bigComment() {
+    return parse.regex(/\/\*[^\*]*\*\//).trim();
+  }
+  comment() {
+    return parse.regex(/\/\/.*/).or(this.bigComment()).trim();
+  }
+  trimBigComment(e) {
+    return e.trim(this.bigComment().many(), false).map(([left, expression, right]) => {
+      expression.comment = {
+        left,
+        right
+      };
+      return expression;
+    });
+  }
+  group() {
+    return this.rhs().trim().wrap(parse.string("("), parse.string(")")).map((value) => {
+      return {
+        type: "group",
+        value
+      };
+    });
+  }
+  regex() {
+    return parse.regex(/[^\/]*/).wrap(parse.string("/"), parse.string("/")).then(parse.regex(/[gimuy]*/).opt()).map(([r, flags]) => {
+      return {
+        type: "regex",
+        value: new RegExp(r, flags)
+      };
+    });
+  }
+  optionalGroup() {
+    return this.rhs().trim().wrap(parse.string("["), parse.string("]")).map((value) => {
+      return {
+        type: "optional",
+        value
+      };
+    });
+  }
+  manyGroup() {
+    return this.rhs().trim().wrap(parse.string("{"), parse.string("}")).map((value) => {
+      return {
+        type: "many",
+        value
+      };
+    });
+  }
+  lhs() {
+    return this.identifier();
+  }
+  term() {
+    return parse.any(
+      this.epsilon(),
+      this.group(),
+      this.optionalGroup(),
+      this.manyGroup(),
+      this.nonterminal(),
+      this.literal(),
+      this.regex()
+    );
+  }
+  factor() {
+    return this.trimBigComment(
+      parse.all(
+        this.term(),
+        parse.any(
+          parse.string("?w").trim(),
+          parse.string("?").trim(),
+          parse.string("*").trim(),
+          parse.string("+").trim()
+        ).opt()
+      ).map(mapFactor)
+    );
+  }
+  binaryFactor() {
+    return parse.all(
+      this.factor(),
+      parse.all(
+        parse.any(parse.string("<<").trim(), parse.string(">>").trim(), parse.string("-").trim()),
+        this.factor()
+      ).many()
+    ).map(reduceBinaryExpression);
+  }
+  concatenation() {
+    return this.binaryFactor().sepBy(parse.string(",").trim()).map((value) => {
+      if (value.length === 1) {
+        return value[0];
+      }
+      return {
+        type: "concatenation",
+        value
+      };
+    });
+  }
+  alternation() {
+    return this.concatenation().sepBy(parse.string("|").trim()).map((value) => {
+      if (value.length === 1) {
+        return value[0];
+      }
+      return {
+        type: "alternation",
+        value
+      };
+    });
+  }
+  rhs() {
+    return this.alternation();
+  }
+  productionRule() {
+    return parse.all(
+      this.lhs(),
+      parse.string("=").trim(),
+      this.rhs(),
+      parse.any(parse.string(";"), parse.string(".")).trim()
+    ).map(([name, , expression]) => {
+      return { name, expression };
+    });
+  }
+  grammar() {
+    return this.productionRule().trim(this.comment().many(), false).map(([above, rule, below]) => {
+      rule.comment = {
+        above,
+        below
+      };
+      return rule;
+    }).many(1);
+  }
+}
+__decorateClass([
+  parse.lazy
+], EBNFGrammar.prototype, "bigComment", 1);
+__decorateClass([
+  parse.lazy
+], EBNFGrammar.prototype, "comment", 1);
+__decorateClass([
+  parse.lazy
+], EBNFGrammar.prototype, "group", 1);
+__decorateClass([
+  parse.lazy
+], EBNFGrammar.prototype, "regex", 1);
+__decorateClass([
+  parse.lazy
+], EBNFGrammar.prototype, "optionalGroup", 1);
+__decorateClass([
+  parse.lazy
+], EBNFGrammar.prototype, "manyGroup", 1);
+__decorateClass([
+  parse.lazy
+], EBNFGrammar.prototype, "lhs", 1);
+__decorateClass([
+  parse.lazy
+], EBNFGrammar.prototype, "term", 1);
+__decorateClass([
+  parse.lazy
+], EBNFGrammar.prototype, "factor", 1);
+__decorateClass([
+  parse.lazy
+], EBNFGrammar.prototype, "binaryFactor", 1);
+__decorateClass([
+  parse.lazy
+], EBNFGrammar.prototype, "concatenation", 1);
+__decorateClass([
+  parse.lazy
+], EBNFGrammar.prototype, "alternation", 1);
+__decorateClass([
+  parse.lazy
+], EBNFGrammar.prototype, "rhs", 1);
+__decorateClass([
+  parse.lazy
+], EBNFGrammar.prototype, "productionRule", 1);
+__decorateClass([
+  parse.lazy
+], EBNFGrammar.prototype, "grammar", 1);
+function topologicalSort(ast) {
+  const visited = /* @__PURE__ */ new Set();
+  const order = [];
+  function visit(node, stack) {
+    if (stack.has(node) || visited.has(node)) {
+      return;
+    }
+    stack.add(node);
+    const productionRule = ast.get(node);
+    if (!productionRule) {
+      return;
+    }
+    const expr = productionRule.expression;
+    if (expr.type === "nonterminal") {
+      visit(expr.value, stack);
+    } else if (expr.value instanceof Array) {
+      for (const child of expr.value) {
+        if (child.type === "nonterminal") {
+          visit(child.value, stack);
+        }
+      }
+    }
+    visited.add(node);
+    stack.delete(node);
+    order.unshift(ast.get(node));
+  }
+  for (const [name] of ast) {
+    visit(name, /* @__PURE__ */ new Set());
+  }
+  const newAST = /* @__PURE__ */ new Map();
+  for (const rule of order) {
+    newAST.set(rule.name, rule);
+  }
+  return newAST;
+}
+const findCommonPrefix = (e1, e2) => {
+  if (!(e1 == null ? void 0 : e1.type) || !(e2 == null ? void 0 : e2.type) || e1.type !== e2.type) {
+    return void 0;
+  }
+  switch (e1.type) {
+    case "literal":
+    case "nonterminal": {
+      if (e1.value !== e2.value) {
+        return void 0;
+      } else {
+        return [e1, { type: "epsilon" }, { type: "epsilon" }];
+      }
+    }
+    case "group":
+    case "optional":
+    case "optionalWhitespace":
+    case "many":
+    case "many1": {
+      const common = findCommonPrefix(e1.value, e2.value);
+      if (!common) {
+        return void 0;
+      } else {
+        return [
+          {
+            type: e1.type,
+            value: common[0]
+          },
+          {
+            type: e1.type,
+            value: common[1]
+          },
+          {
+            type: e1.type,
+            value: common[2]
+          }
+        ];
+      }
+    }
+    case "concatenation": {
+      const commons = e1.value.map(
+        (_, i) => findCommonPrefix(e1.value[i], e2.value[i])
+      );
+      if (commons.some((x) => x === void 0)) {
+        return void 0;
+      }
+      const prefixes = commons.map((x) => x[0]);
+      const e1s = commons.map((x) => x[1]);
+      const e2s = commons.map((x) => x[2]);
+      const startIx = prefixes.lastIndexOf(null);
+      if (startIx === prefixes.length - 1) {
+        return void 0;
+      }
+      const prefix = prefixes.slice(startIx + 1);
+      return [
+        {
+          type: "concatenation",
+          value: prefix
+        },
+        {
+          type: "concatenation",
+          value: e1s
+        },
+        {
+          type: "concatenation",
+          value: e2s
+        }
+      ];
+    }
+    case "alternation":
+      for (const e of e1.value) {
+        const common = findCommonPrefix(e, e2);
+        if (common) {
+          return common;
+        }
+      }
+      for (const e of e2.value) {
+        const common = findCommonPrefix(e1, e);
+        if (common) {
+          return common;
+        }
+      }
+      return void 0;
+  }
+  return void 0;
+};
+const comparePrefix = (prefix, expr) => {
+  if (prefix.type !== expr.type) {
+    return false;
+  }
+  switch (prefix.type) {
+    case "literal":
+    case "nonterminal":
+      return prefix.value === expr.value;
+    case "group":
+    case "optional":
+    case "many":
+    case "many1":
+      return comparePrefix(prefix.value, expr.value);
+    case "minus":
+    case "skip":
+    case "next":
+      return comparePrefix(prefix.value[0], expr.value[0]) && comparePrefix(prefix.value[1], expr.value[1]);
+    case "concatenation":
+      return prefix.value.every((e, i) => comparePrefix(e, expr.value[i]));
+    case "alternation":
+      return prefix.value.some((e, i) => comparePrefix(e, expr.value[i]));
+    case "epsilon":
+      return true;
+  }
+};
+function rewriteTreeLeftRecursion(name, expr) {
+  const prefixMap = /* @__PURE__ */ new Map();
+  let commonPrefix = null;
+  for (let i = 0; i < expr.value.length - 1; i++) {
+    const e1 = expr.value[i];
+    const e2 = expr.value[i + 1];
+    const common = findCommonPrefix(e1, e2);
+    if (common) {
+      const [prefix, te1, te2] = common;
+      if (commonPrefix !== null && comparePrefix(prefix, commonPrefix)) {
+        prefixMap.get(commonPrefix).push(te2);
+      } else {
+        prefixMap.set(prefix, [te1, te2]);
+        commonPrefix = prefix;
+      }
+      if (i === expr.value.length - 2) {
+        expr.value.shift();
+      }
+      expr.value.shift();
+      i -= 1;
+    }
+  }
+  for (const [prefix, expressions] of prefixMap) {
+    const alternation = {
+      type: "alternation",
+      value: expressions
+    };
+    const newExpr = {
+      type: "concatenation",
+      value: [
+        {
+          type: "group",
+          value: alternation
+        },
+        {
+          type: "group",
+          value: prefix
+        }
+      ]
+    };
+    expr.value.push(newExpr);
+  }
+}
+const removeDirectLeftRecursionProduction = (name, expr, tailName) => {
+  const head = [];
+  const tail = [];
+  const APrime = {
+    type: "nonterminal",
+    value: tailName
+  };
+  for (let i = 0; i < expr.value.length; i++) {
+    const e = expr.value[i];
+    if (e.type === "concatenation" && e.value[0].value === name) {
+      tail.push({
+        type: "concatenation",
+        value: [...e.value.slice(1), APrime]
+      });
+    } else {
+      head.push({
+        type: "concatenation",
+        value: [e, APrime]
+      });
+    }
+  }
+  if (tail.length === 0) {
+    return [void 0, void 0];
+  }
+  tail.push({
+    type: "epsilon"
+  });
+  return [
+    {
+      type: "alternation",
+      value: head
+    },
+    {
+      type: "alternation",
+      value: tail
+    }
+  ];
+};
+function removeDirectLeftRecursion(ast) {
+  const newNodes = /* @__PURE__ */ new Map();
+  let uniqueIndex = 0;
+  for (const [name, productionRule] of ast) {
+    const { expression } = productionRule;
+    if (expression.type === "alternation") {
+      const tailName = `${name}_${uniqueIndex++}`;
+      const [head, tail] = removeDirectLeftRecursionProduction(
+        name,
+        expression,
+        tailName
+      );
+      if (head) {
+        newNodes.set(tailName, {
+          name: tailName,
+          expression: tail
+        });
+        newNodes.set(name, {
+          name,
+          expression: head,
+          comment: productionRule.comment
+        });
+      }
+    }
+  }
+  if (newNodes.size === 0) {
+    return ast;
+  }
+  for (const [name, productionRule] of newNodes) {
+    ast.set(name, productionRule);
+  }
+  for (const [name, productionRule] of ast) {
+    const { expression } = productionRule;
+    if (expression.type === "alternation") {
+      rewriteTreeLeftRecursion(name, expression);
+    }
+  }
+}
+function removeIndirectLeftRecursion(ast) {
+  for (const [name, expression] of ast) {
+  }
+}
+function removeAllLeftRecursion(ast) {
+  const newAST = topologicalSort(ast);
+  removeDirectLeftRecursion(newAST);
+  return newAST;
+}
+function generateASTFromEBNF(input) {
+  const parser = new EBNFGrammar().grammar().eof();
+  const parsed = parser.parse(input);
+  if (!parsed) {
+    return [parser];
+  }
+  const ast = parsed.reduce((acc, productionRule, ix) => {
+    return acc.set(productionRule.name, productionRule);
+  }, /* @__PURE__ */ new Map());
+  return [parser, ast];
+}
+function generateParserFromAST(ast) {
+  function generateParser(name, expr) {
+    var _a, _b;
+    switch (expr.type) {
+      case "literal":
+        return parse.string(expr.value);
+      case "nonterminal":
+        const l = parse.Parser.lazy(() => {
+          return nonterminals[expr.value];
+        });
+        l.context.name = expr.value;
+        return l;
+      case "epsilon":
+        return parse.eof().opt();
+      case "group":
+        return generateParser(name, expr.value);
+      case "regex":
+        return parse.regex(expr.value);
+      case "optionalWhitespace":
+        return generateParser(name, expr.value).trim();
+      case "optional":
+        return generateParser(name, expr.value).opt();
+      case "many":
+        return generateParser(name, expr.value).many();
+      case "many1":
+        return generateParser(name, expr.value).many(1);
+      case "skip":
+        return generateParser(name, expr.value[0]).skip(
+          generateParser(name, expr.value[1])
+        );
+      case "next":
+        return generateParser(name, expr.value[0]).next(
+          generateParser(name, expr.value[1])
+        );
+      case "minus":
+        return generateParser(name, expr.value[0]).not(
+          generateParser(name, expr.value[1])
+        );
+      case "concatenation": {
+        const parsers = expr.value.map((x) => generateParser(name, x));
+        if (((_b = (_a = parsers.at(-1)) == null ? void 0 : _a.context) == null ? void 0 : _b.name) === "eof") {
+          parsers.pop();
+        }
+        return parse.all(...parsers);
+      }
+      case "alternation": {
+        return parse.any(...expr.value.map((x) => generateParser(name, x)));
+      }
+    }
+  }
+  const nonterminals = {};
+  for (const [name, productionRule] of ast.entries()) {
+    nonterminals[name] = generateParser(name, productionRule.expression);
+  }
+  return nonterminals;
+}
+function generateParserFromEBNF(input, optimizeGraph = false) {
+  let [parser, ast] = generateASTFromEBNF(input);
+  if (optimizeGraph) {
+    ast = removeAllLeftRecursion(ast);
+  }
+  const nonterminals = generateParserFromAST(ast);
+  return [nonterminals, ast];
+}
+exports.EBNFGrammar = EBNFGrammar;
+exports.comparePrefix = comparePrefix;
+exports.findCommonPrefix = findCommonPrefix;
+exports.generateASTFromEBNF = generateASTFromEBNF;
+exports.generateParserFromAST = generateParserFromAST;
+exports.generateParserFromEBNF = generateParserFromEBNF;
+exports.removeAllLeftRecursion = removeAllLeftRecursion;
+exports.removeDirectLeftRecursion = removeDirectLeftRecursion;
+exports.removeIndirectLeftRecursion = removeIndirectLeftRecursion;
+exports.rewriteTreeLeftRecursion = rewriteTreeLeftRecursion;
+exports.topologicalSort = topologicalSort;
 //# sourceMappingURL=ebnf.cjs.map

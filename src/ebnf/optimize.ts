@@ -345,7 +345,7 @@ export function removeIndirectLeftRecursion(ast: AST) {
     };
 
     for (const [name, expression] of ast) {
-        recurse(name, expression);
+        // recurse(name, expression);
 
         i += 1;
     }

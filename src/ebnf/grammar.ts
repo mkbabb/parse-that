@@ -326,7 +326,7 @@ export class EBNFGrammar {
     grammar() {
         return this.productionRule()
             .trim(this.comment().many(), false)
-            .map(([above, rule, below]) => {
+            .map(([above, rule, below]: any) => {
                 rule.comment = {
                     above,
                     below,

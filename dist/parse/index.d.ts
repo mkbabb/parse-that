@@ -4,7 +4,7 @@ type ExtractValue<T extends ReadonlyArray<Parser<any>>> = {
 };
 type ParserFunction<T = string> = (val: ParserState<T>) => ParserState<T>;
 export declare function mergeErrorState(state: ParserState<any>): ParserState<any>;
-export declare function getLazyParser<T>(fn: () => Parser<T>): any;
+export declare function getLazyParser<T>(fn: (() => Parser<T>) & any): Parser<T>;
 export declare class Parser<T = string> {
     parser: ParserFunction<T>;
     context: ParserContext;
@@ -25,13 +25,13 @@ export declare class Parser<T = string> {
     skip<S>(parser: Parser<T | S>): Parser<T>;
     next<S>(parser: Parser<S>): Parser<S>;
     opt(): Parser<T>;
-    not<S>(parser?: Parser<S>): Parser<any>;
+    not<S extends T>(parser?: Parser<S | T>): Parser<any>;
     wrap<L, R>(start: Parser<L>, end: Parser<R>, discard?: boolean): Parser<T>;
-    trim(parser?: Parser<T>, discard?: boolean): Parser<T>;
+    trim<S>(parser?: Parser<S>, discard?: boolean): Parser<T>;
     many(min?: number, max?: number): Parser<T[]>;
     sepBy<S>(sep: Parser<S | T>, min?: number, max?: number): Parser<T[]>;
     eof(): Parser<T>;
-    debug(name?: string, recursivePrint?: boolean, logger?: (...s: any[]) => void): any;
+    debug(name?: string, recursivePrint?: boolean, logger?: (...s: any[]) => void): Parser<T>;
     toString(): any;
     static lazy<T>(fn: () => Parser<T>): Parser<T>;
 }

@@ -21,7 +21,7 @@ export function mergeErrorState(state: ParserState<any>) {
     return lastState;
 }
 
-export function getLazyParser<T>(fn: () => Parser<T>) {
+export function getLazyParser<T>(fn: (() => Parser<T>) & any): Parser<T> {
     if (fn.parser) {
         return fn.parser;
     }
@@ -239,7 +239,7 @@ export class Parser<T = string> {
         return new Parser(opt as ParserFunction<T>, createParserContext("opt", this));
     }
 
-    not<S>(parser?: Parser<S>) {
+    not<S extends T>(parser?: Parser<S | T>) {
         const negate = (state: ParserState<T>) => {
             const newState = this.parser(state);
 
@@ -287,9 +287,9 @@ export class Parser<T = string> {
         return wrap;
     }
 
-    trim(parser: Parser<T> = whitespace as Parser<T>, discard: boolean = true) {
+    trim<S>(parser: Parser<S> = whitespace as any, discard: boolean = true) {
         if (!discard) {
-            return all(parser, this, parser);
+            return all(parser, this, parser) as Parser<T[]>;
         }
 
         if (parser.context?.name === "whitespace") {
@@ -404,7 +404,7 @@ export class Parser<T = string> {
 
     static lazy<T>(fn: () => Parser<T>) {
         const lazy = (state: ParserState<T>) => {
-            return getLazyParser(fn).parser(state);
+            return getLazyParser(fn).parser(state) as ParserState<T>;
         };
         return new Parser<T>(lazy, createParserContext("lazy", undefined, fn));
     }
