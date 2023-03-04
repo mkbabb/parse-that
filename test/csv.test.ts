@@ -1,4 +1,4 @@
-import { regex, all, Parser, any, lazy, string } from "../src/parse";
+import { regex, all, Parser, any, lazy, string } from "../src/parse/parse";
 import { test, expect, describe, it } from "vitest";
 import fs from "fs";
 

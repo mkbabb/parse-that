@@ -1,4 +1,4 @@
-import { whitespace, regex, string, all, Parser, eof } from "../src/parse";
+import { whitespace, regex, string, all, Parser, eof } from "../src/parse/parse";
 import { parserDebug } from "../src/parse/debug";
 
 import { test, expect, describe, it } from "vitest";

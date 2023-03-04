@@ -1,4 +1,4 @@
-import { Parser } from ".";
+import { Parser } from "./parse";
 
 export class ParserState<T> {
     constructor(

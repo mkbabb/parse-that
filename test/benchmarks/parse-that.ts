@@ -1,4 +1,4 @@
-import { Parser, regex, any, string, whitespace, all } from "../../src/parse";
+import { Parser, regex, any, string, whitespace, all } from "../../src/parse/parse";
 
 const comma = string(",").trim();
 const colon = string(":").trim();

@@ -1,4 +1,4 @@
-import { Parser } from ".";
+import { Parser } from "./parse";
 export declare class ParserState<T> {
     src: string;
     value: T;
