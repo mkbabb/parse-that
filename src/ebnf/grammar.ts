@@ -195,10 +195,11 @@ export class EBNFGrammar {
     regex() {
         return regex(/[^\/]*/)
             .wrap(string("/"), string("/"))
-            .map((value) => {
+            .then(regex(/[gimuy]*/).opt())
+            .map(([r, flags]) => {
                 return {
                     type: "regex",
-                    value: new RegExp(value),
+                    value: new RegExp(r, flags),
                 } as Regex;
             });
     }
