@@ -13,7 +13,7 @@ import {
 import { expect, describe, it } from "vitest";
 import fs from "fs";
 
-import { BBNFToParser } from "../src/ebnf/generate";
+import { BBNFToParser } from "../src/bbnf/generate";
 import { generateMathExpression, reduceMathExpression } from "./utils";
 
 const digits = regex(/[0-9]+/);
@@ -56,8 +56,8 @@ describe("Memoization & left recursion", () => {
         expect(sCount).toBe(input.length);
     });
 
-    it("should sS from EEBNF", () => {
-        const grammar = fs.readFileSync("./grammar/sS.ebnf", "utf-8");
+    it("should sS from BBNF", () => {
+        const grammar = fs.readFileSync("./grammar/sS.bbnf", "utf-8");
         const [nonterminals, ast] = BBNFToParser(grammar);
 
         nonterminals.sS = nonterminals.sS.mergeMemos().memoize();
@@ -69,8 +69,8 @@ describe("Memoization & left recursion", () => {
         expect(sCount).toBe(sentence.length);
     });
 
-    it("should math from EEBNF", () => {
-        const grammar = fs.readFileSync("./grammar/math-ambiguous.ebnf", "utf-8");
+    it("should math from BBNF", () => {
+        const grammar = fs.readFileSync("./grammar/math-ambiguous.bbnf", "utf-8");
         const [nonterminals, ast] = BBNFToParser(grammar);
 
         nonterminals.expression = nonterminals.expression.memoize().trim();

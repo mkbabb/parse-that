@@ -11,9 +11,8 @@ export default defineConfig(({ mode }) => ({
         lib: {
             entry: {
                 parse: "./src/parse/index.ts",
-                ebnf: "./src/ebnf/index.ts",
+                bbnf: "./src/bbnf/index.ts",
             },
-
             formats: ["es", "cjs"],
         },
         rollupOptions: {
@@ -30,7 +29,7 @@ export default defineConfig(({ mode }) => ({
         },
         cache: false,
         watch: true,
-        forceRerunTriggers: ["**/*.ebnf/**"],
+        forceRerunTriggers: ["**/*.bbnf/**"],
     },
 
     plugins: [commonjs(), dts()],

@@ -38,7 +38,7 @@ const debugging = (x: Nonterminals) => {
     });
 };
 
-export const EBNFParser = (grammar: string) => {
+export const BBNFParser = (grammar: string) => {
     const [nonterminals, ast] = BBNFToParser(grammar);
 
     for (const name of nonterminalsToTrim) {

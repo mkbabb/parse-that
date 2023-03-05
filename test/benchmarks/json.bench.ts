@@ -2,7 +2,7 @@ import { describe, bench, BenchOptions } from "vitest";
 import fs from "fs";
 import { insertRandomWhitespace } from "../utils";
 
-import { JSONParser as EBNFJsonParser } from "./bbnf";
+import { JSONParser as BBNFJsonParser } from "./bbnf";
 import { JSONParser as StandardJsonParser } from "./parse-that";
 
 import { parse as ChevrotainJSONParser } from "./chevrotain";
@@ -29,9 +29,9 @@ describe("JSON Parser", () => {
     );
 
     bench(
-        "EEBNF",
+        "BBNF",
         () => {
-            EBNFJsonParser.parse(input);
+            BBNFJsonParser.parse(input);
         },
         options
     );

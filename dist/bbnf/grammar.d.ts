@@ -43,7 +43,7 @@ type Options = {
     debug: boolean;
     comments: boolean;
 };
-export declare class EBNFGrammar {
+export declare class BBNFGrammar {
     options: Options;
     constructor(options?: Partial<Options>);
     identifier(): Parser<string>;

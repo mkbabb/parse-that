@@ -21,7 +21,7 @@ heyy.parse("heyyyyyyyyyt"); // => "heyyyyyyyyyt"
 Or with a grammar:
 
 ```ts
-import { string, match, generateParserFromEBNF } from "@mkbabb/parse-that";
+import { string, match, generateParserFromBBNF } from "@mkbabb/parse-that";
 
 const grammar = `
     expr = term, { ("+" | "-"), term };
@@ -31,7 +31,7 @@ const grammar = `
     whatzupwitu = "whatzupwitu";
 `;
 
-const [nonterminals, ast] = generateParserFromEBNF(grammar);
+const [nonterminals, ast] = generateParserFromBBNF(grammar);
 const expr = nonterminals.expr;
 expr.parse("1 + whatzupwitu * 3"); // => [1, "+", ["whatzupwitu", "*", 3]]
 ```
@@ -49,7 +49,7 @@ nice.
   - [Debugging](#debugging)
         - [Thanks to chalk for the colors!](#thanks-to-chalk-for-the-colors)
   - [BBNF and the Great Parser Generator](#bbnf-and-the-great-parser-generator)
-    - [Key differences with EBNF](#key-differences-with-ebnf)
+    - [Key differences with BBNF](#key-differences-with-bbnf)
     - [Formatting, syntax highlighting, \& more](#formatting-syntax-highlighting--more)
   - [Left recursion \& more](#left-recursion--more)
       - [Using BBNF](#using-bbnf)
@@ -67,7 +67,7 @@ benchmark comparing the following libraries, all parsing the same `JSON` grammar
 -   [Chevrotain](https://github.com/chevrotain/chevrotain)
 -   [Parsimmon](https://github.com/jneen/parsimmon)
 -   this library, with standard combinators: [here](test/json.test.ts)
--   this library, using a generated parser from BBNF: [here](test/ebnf.test.ts)
+-   this library, using a generated parser from BBNF: [here](test/bbnf.test.ts)
 
 The file used is a 3.8 MB `JSON` file, containing ~10K lines of `JSON`. Whitespace is
 randomly inserted to make the file a bit more difficult to parse (makes the file about
@@ -121,15 +121,15 @@ stringified parser.
 ## BBNF and the Great Parser Generator
 
 Better Backus-Naur Form is a simple and readable way to describe a language.
-A [better](https://dwheeler.com/essays/dont-use-iso-14977-ebnf.html) EBNF.
+A [better](https://dwheeler.com/essays/dont-use-iso-14977-bbnf.html) BBNF.
 
-See the BBNF for BBNF (meta right) at [bbnf.ebnf](./grammar/bbnf.ebnf).
+See the BBNF for BBNF (meta right) at [bbnf.bbnf](./grammar/bbnf.bbnf).
 
-With your grammar in hand, call the `generateParserFromEBNF` function within
-[ebnf.ts](./src/ebnf.ts) and you'll be returned two objects:
+With your grammar in hand, call the `generateParserFromBBNF` function within
+[bbnf.ts](./src/bbnf.ts) and you'll be returned two objects:
 
 ```ts
-[nonterminals, ast]: [EBNFNonterminals, EBNFAST] = generateParserFromEBNF(grammar);
+[nonterminals, ast]: [BBNFNonterminals, BBNFAST] = generateParserFromBBNF(grammar);
 ```
 
 a JavaScript object containing all of the parsed nonterminals in your language, and the
@@ -138,12 +138,12 @@ other parser.
 
 Fully featured, and self-parsing, so the BBNF parser-generator is written in BBNF.
 Checkout the self-parsing example (+ formatting), at
-[bbnf.test.ts](./test/ebnf.test.ts).
+[bbnf.test.ts](./test/bbnf.test.ts).
 
-### Key differences with EBNF
+### Key differences with BBNF
 
-It's a mesh between your run-of-the-mill EBNF and
-[W3C's EBNF](https://www.w3.org/TR/REC-xml/#sec-notation). So stuff like `?` and `*` are
+It's a mesh between your run-of-the-mill BBNF and
+[W3C's BBNF](https://www.w3.org/TR/REC-xml/#sec-notation). So stuff like `?` and `*` are
 allowed - but it also supports `[ ]` and `{ }` for optional and repeated elements.
 
 Set-like subtraction is supported, so you can do things like `a - b` to mean "a, but not
@@ -167,11 +167,11 @@ the word epsilon).
 ### Formatting, syntax highlighting, & more
 
 With the BBNF parser generator you basically get formatting for free. Call the
-`formatEBNF` function within [ebnf.ts](./src/ebnf.ts) and you'll be returned a string
+`formatBBNF` function within [bbnf.ts](./src/bbnf.ts) and you'll be returned a string
 containing the formatted BBNF.
 
 ```ts
-const formattedGrammar: string = formatEBNF(grammar);
+const formattedGrammar: string = formatBBNF(grammar);
 ```
 
 ## Left recursion & more
@@ -181,7 +181,7 @@ ambiguous grammars.
 
 So grammars like (trivial direct left recursion):
 
-```ebnf
+```bbnf
 expr = expr , "+" , expr
      | integer
      | string ;
@@ -189,7 +189,7 @@ expr = expr , "+" , expr
 
 and like (highly ambiguous):
 
-```ebnf
+```bbnf
 ms = "s";
 mSL = ( mSL , mSL , ms ) ? ;
 
@@ -218,7 +218,7 @@ For the above example each pass would look something like this:
 
 Input grammar:
 
-```ebnf
+```bbnf
 expr = expr , "+" , expr
      | integer
      | string ;
@@ -226,7 +226,7 @@ expr = expr , "+" , expr
 
 Sorted & removed left recursion:
 
-```ebnf
+```bbnf
 expr = integer, expr_0
      | string, expr_0 ;
 expr_0 = "+" , expr , expr_0
@@ -235,7 +235,7 @@ expr_0 = "+" , expr , expr_0
 
 Factorized:
 
-```ebnf
+```bbnf
 expr = (integer | string) , expr_0 ;
 expr_0 = "+" , expr , expr_0
         | ε
@@ -281,9 +281,9 @@ See the [test](./test/) directory for fully explained and working examples.
 
 ## Sources, acknowledgements, & c.
 
--   [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form)
+-   [BBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form)
 -   [Left recursion information](https://en.wikipedia.org/wiki/Left_recursion)
--   [Notes On Parsing Ebnf](https://www.cs.umd.edu/class/spring2003/cmsc330/Notes/ebnf/ebnf.html)
+-   [Notes On Parsing Ebnf](https://www.cs.umd.edu/class/spring2003/cmsc330/Notes/bbnf/bbnf.html)
 -   [Notes On The Formal Theory Of Parsing](http://www.cs.may.ie/~jpower/Courses/parsing/parsing.pdf#search='indirect%20left%20recursion')
 -   [Removing Left Recursion From Context Free Grammars](http://research.microsoft.com/pubs/68869/naacl2k-proc-rev.pdf)
 -   [A new top-down parsing algorithm to accommodate ambiguity and left recursion in polynomial time](https://dl.acm.org/doi/10.1145/1149982.1149988)

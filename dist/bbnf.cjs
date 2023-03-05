@@ -65,7 +65,7 @@ const defaultOptions = {
   debug: false,
   comments: true
 };
-class EBNFGrammar {
+class BBNFGrammar {
   constructor(options) {
     __publicField(this, "options");
     this.options = {
@@ -243,49 +243,49 @@ class EBNFGrammar {
 }
 __decorateClass([
   parse.lazy
-], EBNFGrammar.prototype, "bigComment", 1);
+], BBNFGrammar.prototype, "bigComment", 1);
 __decorateClass([
   parse.lazy
-], EBNFGrammar.prototype, "comment", 1);
+], BBNFGrammar.prototype, "comment", 1);
 __decorateClass([
   parse.lazy
-], EBNFGrammar.prototype, "group", 1);
+], BBNFGrammar.prototype, "group", 1);
 __decorateClass([
   parse.lazy
-], EBNFGrammar.prototype, "regex", 1);
+], BBNFGrammar.prototype, "regex", 1);
 __decorateClass([
   parse.lazy
-], EBNFGrammar.prototype, "optionalGroup", 1);
+], BBNFGrammar.prototype, "optionalGroup", 1);
 __decorateClass([
   parse.lazy
-], EBNFGrammar.prototype, "manyGroup", 1);
+], BBNFGrammar.prototype, "manyGroup", 1);
 __decorateClass([
   parse.lazy
-], EBNFGrammar.prototype, "lhs", 1);
+], BBNFGrammar.prototype, "lhs", 1);
 __decorateClass([
   parse.lazy
-], EBNFGrammar.prototype, "term", 1);
+], BBNFGrammar.prototype, "term", 1);
 __decorateClass([
   parse.lazy
-], EBNFGrammar.prototype, "factor", 1);
+], BBNFGrammar.prototype, "factor", 1);
 __decorateClass([
   parse.lazy
-], EBNFGrammar.prototype, "binaryFactor", 1);
+], BBNFGrammar.prototype, "binaryFactor", 1);
 __decorateClass([
   parse.lazy
-], EBNFGrammar.prototype, "concatenation", 1);
+], BBNFGrammar.prototype, "concatenation", 1);
 __decorateClass([
   parse.lazy
-], EBNFGrammar.prototype, "alternation", 1);
+], BBNFGrammar.prototype, "alternation", 1);
 __decorateClass([
   parse.lazy
-], EBNFGrammar.prototype, "rhs", 1);
+], BBNFGrammar.prototype, "rhs", 1);
 __decorateClass([
   parse.lazy
-], EBNFGrammar.prototype, "productionRule", 1);
+], BBNFGrammar.prototype, "productionRule", 1);
 __decorateClass([
   parse.lazy
-], EBNFGrammar.prototype, "grammar", 1);
+], BBNFGrammar.prototype, "grammar", 1);
 function topologicalSort(ast) {
   const visited = /* @__PURE__ */ new Set();
   const order = [];
@@ -559,8 +559,8 @@ function removeAllLeftRecursion(ast) {
   removeDirectLeftRecursion(newAST);
   return newAST;
 }
-function generateASTFromEBNF(input) {
-  const parser = new EBNFGrammar().grammar().eof();
+function BBNFToAST(input) {
+  const parser = new BBNFGrammar().grammar().eof();
   const parsed = parser.parse(input);
   if (!parsed) {
     return [parser];
@@ -570,7 +570,7 @@ function generateASTFromEBNF(input) {
   }, /* @__PURE__ */ new Map());
   return [parser, ast];
 }
-function generateParserFromAST(ast) {
+function ASTToParser(ast) {
   function generateParser(name, expr) {
     var _a, _b;
     switch (expr.type) {
@@ -626,23 +626,23 @@ function generateParserFromAST(ast) {
   }
   return nonterminals;
 }
-function generateParserFromEBNF(input, optimizeGraph = false) {
-  let [parser, ast] = generateASTFromEBNF(input);
+function BBNFToParser(input, optimizeGraph = false) {
+  let [parser, ast] = BBNFToAST(input);
   if (optimizeGraph) {
     ast = removeAllLeftRecursion(ast);
   }
-  const nonterminals = generateParserFromAST(ast);
+  const nonterminals = ASTToParser(ast);
   return [nonterminals, ast];
 }
-exports.EBNFGrammar = EBNFGrammar;
+exports.ASTToParser = ASTToParser;
+exports.BBNFGrammar = BBNFGrammar;
+exports.BBNFToAST = BBNFToAST;
+exports.BBNFToParser = BBNFToParser;
 exports.comparePrefix = comparePrefix;
 exports.findCommonPrefix = findCommonPrefix;
-exports.generateASTFromEBNF = generateASTFromEBNF;
-exports.generateParserFromAST = generateParserFromAST;
-exports.generateParserFromEBNF = generateParserFromEBNF;
 exports.removeAllLeftRecursion = removeAllLeftRecursion;
 exports.removeDirectLeftRecursion = removeDirectLeftRecursion;
 exports.removeIndirectLeftRecursion = removeIndirectLeftRecursion;
 exports.rewriteTreeLeftRecursion = rewriteTreeLeftRecursion;
 exports.topologicalSort = topologicalSort;
-//# sourceMappingURL=ebnf.cjs.map
+//# sourceMappingURL=bbnf.cjs.map

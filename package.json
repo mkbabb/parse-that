@@ -9,10 +9,10 @@
             "require": "./dist/parse.cjs",
             "node": "./dist/parse.cjs"
         },
-        "./ebnf": {
-            "import": "./dist/ebnf.js",
-            "require": "./dist/ebnf.cjs",
-            "node": "./dist/ebnf.cjs"
+        "./bbnf": {
+            "import": "./dist/bbnf.js",
+            "require": "./dist/bbnf.cjs",
+            "node": "./dist/bbnf.cjs"
         }
     },
     "typesVersions": {
@@ -20,8 +20,8 @@
             "*": [
                 "dist/parse/index.d.ts"
             ],
-            "ebnf": [
-                "dist/ebnf/index.d.ts"
+            "bbnf": [
+                "dist/bbnf/index.d.ts"
             ]
         }
     },

@@ -9,9 +9,9 @@ import {
     reduceMathExpression,
 } from "./utils";
 
-import { BBNFToParser } from "../src/ebnf/generate";
-import { EBNFParser } from "../src/ebnf/transform";
-import { Nonterminals } from "../src/ebnf/grammar";
+import { BBNFToParser } from "../src/bbnf/generate";
+import { BBNFParser } from "../src/bbnf/transform";
+import { Nonterminals } from "../src/bbnf/grammar";
 
 const comma = string(",").trim();
 const div = string("/").trim();
@@ -140,7 +140,7 @@ const CSSValueUnitParser = (grammar: string) => {
     return [nonterminals, ast] as const;
 };
 
-const EBNFParserLeftRecursion = (grammar: string) => {
+const BBNFParserLeftRecursion = (grammar: string) => {
     const [nonterminals, ast] = BBNFToParser(grammar, true);
 
     nonterminals.integer = regex(/\d+/).trim().map(Number);
@@ -193,9 +193,9 @@ export const JSONParser = (grammar: string) => {
     return nonterminals.value;
 };
 
-describe("EBNF Parser", () => {
+describe("BBNF Parser", () => {
     it("should parse a simple math grammar", () => {
-        const grammar = fs.readFileSync("./grammar/math.ebnf", "utf8");
+        const grammar = fs.readFileSync("./grammar/math.bbnf", "utf8");
         const [nonterminals] = mathParser(grammar);
         const parser = nonterminals.expr;
 
@@ -207,7 +207,7 @@ describe("EBNF Parser", () => {
     });
 
     it("should parse a CSS color grammar", () => {
-        const grammar = fs.readFileSync("./grammar/css-color.ebnf", "utf8");
+        const grammar = fs.readFileSync("./grammar/css-color.bbnf", "utf8");
         const [nonterminals] = CSSColorParser(grammar);
         const parser = nonterminals.color;
 
@@ -229,8 +229,8 @@ describe("EBNF Parser", () => {
     });
 
     it("should parse a CSS value unit grammar", () => {
-        const grammar = fs.readFileSync("./grammar/css-value-unit.ebnf", "utf8");
-        const colorGrammar = fs.readFileSync("./grammar/css-color.ebnf", "utf8");
+        const grammar = fs.readFileSync("./grammar/css-value-unit.bbnf", "utf8");
+        const colorGrammar = fs.readFileSync("./grammar/css-color.bbnf", "utf8");
 
         const [nonterminals] = CSSValueUnitParser(grammar);
         const [colorNonterminals] = CSSColorParser(colorGrammar);
@@ -298,7 +298,7 @@ describe("EBNF Parser", () => {
     });
 
     it("should parse a CSS keyframes grammar", () => {
-        const grammar = fs.readFileSync("./grammar/css-keyframes.ebnf", "utf8");
+        const grammar = fs.readFileSync("./grammar/css-keyframes.bbnf", "utf8");
         const [nonterminals, ast] = BBNFToParser(grammar);
 
         nonterminals.KEYFRAMES_RULE = nonterminals.KEYFRAMES_RULE.trim();
@@ -328,10 +328,10 @@ describe("EBNF Parser", () => {
         // console.log(chalk.bold.green(parsed));
     });
 
-    it("should parse an EEBNF grammar", () => {
-        let grammar = fs.readFileSync("./grammar/eebnf.ebnf", "utf8");
+    it("should parse an BBNF grammar", () => {
+        let grammar = fs.readFileSync("./grammar/bbnf.bbnf", "utf8");
 
-        const parser = EBNFParser(grammar);
+        const parser = BBNFParser(grammar);
 
         for (let i = 0; i < 10; i++) {
             grammar = parser.parse(grammar);
@@ -339,7 +339,7 @@ describe("EBNF Parser", () => {
         }
     });
 
-    it("should handle EBNF left recursion", () => {
+    it("should handle BBNF left recursion", () => {
         const grammar = `
             digits = /[0-9]+/ ;
             expr =
@@ -352,7 +352,7 @@ describe("EBNF Parser", () => {
                 | string
                 | digits ;
         `;
-        const [nonterminals, ast] = EBNFParserLeftRecursion(grammar);
+        const [nonterminals, ast] = BBNFParserLeftRecursion(grammar);
         const parser = nonterminals.expr;
 
         const tmp = `
@@ -363,7 +363,7 @@ describe("EBNF Parser", () => {
     });
 
     it("should parse JSON data", () => {
-        const grammar = fs.readFileSync("./grammar/json.ebnf", "utf8");
+        const grammar = fs.readFileSync("./grammar/json.bbnf", "utf8");
 
         const parser = JSONParser(grammar);
 
@@ -374,7 +374,7 @@ describe("EBNF Parser", () => {
     });
 
     it("should parse regular expressions", () => {
-        const grammar = fs.readFileSync("./grammar/regex.ebnf", "utf8");
+        const grammar = fs.readFileSync("./grammar/regex.bbnf", "utf8");
 
         const [nonterminals, ast] = BBNFToParser(grammar);
 
@@ -402,8 +402,8 @@ describe("EBNF Parser", () => {
         }
     });
 
-    it("should parse an ambiguous EEBNF grammar", () => {
-        let grammar = fs.readFileSync("./grammar/g4.ebnf", "utf8");
+    it("should parse an ambiguous BBNF grammar", () => {
+        let grammar = fs.readFileSync("./grammar/g4.bbnf", "utf8");
 
         const [nonterminals, ast] = BBNFToParser(grammar, true);
 
@@ -431,7 +431,7 @@ describe("EBNF Parser", () => {
     });
 
     it("should parse an EBNF grammar", () => {
-        let grammar = fs.readFileSync("./grammar/ebnf.ebnf", "utf8");
+        let grammar = fs.readFileSync("./grammar/ebnf.bbnf", "utf8");
 
         for (let i = 0; i < 10; i++) {
             const [nonterminals, ast] = BBNFToParser(grammar);
