@@ -102,7 +102,7 @@ const mapFactor = ([term, op]) => {
 
 function mapStatePosition(parser: Parser<any>) {
     return parser.mapState((state) => {
-        if (state.value) {
+        if (state.value && state.value.line === undefined) {
             state.value.column = state.getColumnNumber();
             state.value.line = state.getLineNumber();
             state.value.offset = state.offset;
@@ -132,32 +132,32 @@ export class BBNFGrammar {
     }
 
     identifier() {
-        return regex(/[_a-zA-Z][_a-zA-Z0-9]*/).trim();
+        return regex(/[_a-zA-Z][_a-zA-Z0-9]*/);
     }
 
     literal() {
         return this.trimBigComment(
-            any(
-                regex(/[^"]+/).wrap(string('"'), string('"')),
-                regex(/[^']+/).wrap(string("'"), string("'"))
-            ).map((value) => {
-                return {
-                    type: "literal",
-                    value,
-                } as Literal;
-            })
+            mapStatePosition(
+                any(
+                    regex(/[^"]+/).wrap(string('"'), string('"')),
+                    regex(/[^']+/).wrap(string("'"), string("'"))
+                ).map((value) => {
+                    return {
+                        type: "literal",
+                        value,
+                    } as Literal;
+                })
+            )
         );
     }
 
     epsilon() {
-        return any(string("epsilon"), string("ε"))
-            .trim()
-            .map(() => {
-                return {
-                    type: "epsilon",
-                    value: undefined,
-                } as Epsilon;
-            });
+        return any(string("epsilon"), string("ε")).map(() => {
+            return {
+                type: "epsilon",
+                value: undefined,
+            } as Epsilon;
+        });
     }
 
     nonterminal() {
@@ -357,6 +357,7 @@ export class BBNFGrammar {
                 };
                 return rule;
             })
-            .many(1);
+            .many(1)
+            .trim();
     }
 }
