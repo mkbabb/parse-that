@@ -1,11 +1,8 @@
 # Parse That [Thang](https://oldinterneticons.tumblr.com/post/679136268174688256/go-mouse-fuck-that-thang)
 
 Parser combinators for TypeScript. Write your language in BBNF (better backus-naur form)
-and parse with ease. Handles left recursion, right recursion, and left factoring.
-
-Does what basically every other parser combinator library does, with a few extra
-features and optimizations. Focused on performance as much as possible, though
-combinators are always going to be slower than a custom flattened parser.
+and parse with ease. Handles left recursion and left factoring. Performance focused
+whilst maintaining readability and ease of use.
 
 ## Usage
 
@@ -49,8 +46,7 @@ nice.
   - [Debugging](#debugging)
         - [Thanks to chalk for the colors!](#thanks-to-chalk-for-the-colors)
   - [BBNF and the Great Parser Generator](#bbnf-and-the-great-parser-generator)
-    - [Key differences with BBNF](#key-differences-with-bbnf)
-    - [Formatting, syntax highlighting, \& more](#formatting-syntax-highlighting--more)
+    - [Key differences with EBNF](#key-differences-with-ebnf)
   - [Left recursion \& more](#left-recursion--more)
       - [Using BBNF](#using-bbnf)
       - [Combinator support](#combinator-support)
@@ -60,9 +56,9 @@ nice.
 
 ## Performance
 
-As stated earlier, parser combinators using closures like this are always going to be
-"slow" - at least in JavaScript. But it's perhaps not as bad as you think. Here's a
-benchmark comparing the following libraries, all parsing the same `JSON` grammar:
+Parser combinators using closures like this are always going to be "slow" - at least in
+JavaScript. But it's perhaps not as bad as you think. Here's a benchmark comparing the
+following libraries, all parsing the same `JSON` grammar:
 
 -   [Chevrotain](https://github.com/chevrotain/chevrotain)
 -   [Parsimmon](https://github.com/jneen/parsimmon)
@@ -71,7 +67,7 @@ benchmark comparing the following libraries, all parsing the same `JSON` grammar
 
 The file used is a 3.8 MB `JSON` file, containing ~10K lines of `JSON`. Whitespace is
 randomly inserted to make the file a bit more difficult to parse (makes the file about
-5x the size). The benchmark is run 100 times, and the average is taken.
+5x the size). Benchmark is run 100 times.
 
 ### Results
 
@@ -90,7 +86,7 @@ randomly inserted to make the file a bit more difficult to parse (makes the file
         2.01x faster than Parsimmon
 
 Probably not the most scientific comparison, but it's generally about 10-30% faster than
-the rest.
+what I've tested it against.
 
 Have a look inside [benchmarks](./test/benchmarks) if you're curious.
 
@@ -120,8 +116,8 @@ stringified parser.
 
 ## BBNF and the Great Parser Generator
 
-Better Backus-Naur Form is a simple and readable way to describe a language.
-A [better](https://dwheeler.com/essays/dont-use-iso-14977-bbnf.html) BBNF.
+Better Backus-Naur Form is a simple and readable way to describe a language. A
+[better](https://dwheeler.com/essays/dont-use-iso-14977-bbnf.html) EBNF.
 
 See the BBNF for BBNF (meta right) at [bbnf.bbnf](./grammar/bbnf.bbnf).
 
@@ -140,10 +136,10 @@ Fully featured, and self-parsing, so the BBNF parser-generator is written in BBN
 Checkout the self-parsing example (+ formatting), at
 [bbnf.test.ts](./test/bbnf.test.ts).
 
-### Key differences with BBNF
+### Key differences with EBNF
 
-It's a mesh between your run-of-the-mill BBNF and
-[W3C's BBNF](https://www.w3.org/TR/REC-xml/#sec-notation). So stuff like `?` and `*` are
+It's a mesh between your run-of-the-mill EBNF and
+[W3C's EBNF](https://www.w3.org/TR/REC-xml/#sec-notation). So stuff like `?` and `*` are
 allowed - but it also supports `[ ]` and `{ }` for optional and repeated elements.
 
 Set-like subtraction is supported, so you can do things like `a - b` to mean "a, but not
@@ -164,19 +160,9 @@ Here's a list of operators:
 And yes emojis are supported. Epsilon even has a special value for it - `ε` (or just use
 the word epsilon).
 
-### Formatting, syntax highlighting, & more
-
-With the BBNF parser generator you basically get formatting for free. Call the
-`formatBBNF` function within [bbnf.ts](./src/bbnf.ts) and you'll be returned a string
-containing the formatted BBNF.
-
-```ts
-const formattedGrammar: string = formatBBNF(grammar);
-```
-
 ## Left recursion & more
 
-This library fully supports left recursion (either direct or indirect) and highly
+This library fully supports left recursion (either direct or indirect) - highly
 ambiguous grammars.
 
 So grammars like (trivial direct left recursion):
@@ -199,7 +185,7 @@ mZ = mZ | mY | mz ;
 mY = mZ, mSL ;
 ```
 
-are supported fully supported.
+are supported.
 
 Our scheme is multifaceted and optimized depending upon a few factors:
 
@@ -281,7 +267,7 @@ See the [test](./test/) directory for fully explained and working examples.
 
 ## Sources, acknowledgements, & c.
 
--   [BBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form)
+-   [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form)
 -   [Left recursion information](https://en.wikipedia.org/wiki/Left_recursion)
 -   [Notes On Parsing Ebnf](https://www.cs.umd.edu/class/spring2003/cmsc330/Notes/bbnf/bbnf.html)
 -   [Notes On The Formal Theory Of Parsing](http://www.cs.may.ie/~jpower/Courses/parsing/parsing.pdf#search='indirect%20left%20recursion')
