@@ -1,6 +1,6 @@
 import { Expression, AST, Nonterminals } from "./grammar";
 
-import { generateParserFromEBNF } from "./generate";
+import { BBNFToParser } from "./generate";
 import { parserDebug } from "../parse/debug";
 
 const nonterminalsToTrim = [
@@ -39,7 +39,7 @@ const debugging = (x: Nonterminals) => {
 };
 
 export const EBNFParser = (grammar: string) => {
-    const [nonterminals, ast] = generateParserFromEBNF(grammar);
+    const [nonterminals, ast] = BBNFToParser(grammar);
 
     for (const name of nonterminalsToTrim) {
         nonterminals[name] = nonterminals[name].trim();

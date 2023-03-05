@@ -1,9 +1,9 @@
-import { generateParserFromEBNF } from "../../src/ebnf/generate";
+import { BBNFToParser } from "../../src/ebnf/generate";
 import fs from "fs";
 
 const grammar = fs.readFileSync("./grammar/json.ebnf", "utf8");
 
-const [nonterminals, ast] = generateParserFromEBNF(grammar);
+const [nonterminals, ast] = BBNFToParser(grammar);
 
 nonterminals.string = nonterminals.string.trim();
 nonterminals.pair = nonterminals.pair.trim();

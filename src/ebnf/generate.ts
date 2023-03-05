@@ -1,9 +1,9 @@
 import { Parser, all, any, eof, regex, string } from "../parse";
-import { Expression, Nonterminals, AST, EBNFGrammar, ProductionRule } from "./grammar";
+import { Expression, Nonterminals, AST, BBNFGrammar, ProductionRule } from "./grammar";
 import { removeAllLeftRecursion } from "./optimize";
 
-export function generateASTFromEBNF(input: string) {
-    const parser = new EBNFGrammar().grammar().eof();
+export function BBNFToAST(input: string) {
+    const parser = new BBNFGrammar().grammar().eof();
     const parsed = parser.parse(input);
 
     if (!parsed) {
@@ -17,7 +17,7 @@ export function generateASTFromEBNF(input: string) {
     return [parser, ast] as const;
 }
 
-export function generateParserFromAST(ast: AST) {
+export function ASTToParser(ast: AST) {
     function generateParser(name: string, expr: Expression): Parser<any> {
         switch (expr.type) {
             case "literal":
@@ -80,12 +80,12 @@ export function generateParserFromAST(ast: AST) {
     return nonterminals;
 }
 
-export function generateParserFromEBNF(input: string, optimizeGraph: boolean = false) {
-    let [parser, ast] = generateASTFromEBNF(input);
+export function BBNFToParser(input: string, optimizeGraph: boolean = false) {
+    let [parser, ast] = BBNFToAST(input);
 
     if (optimizeGraph) {
         ast = removeAllLeftRecursion(ast);
     }
-    const nonterminals = generateParserFromAST(ast);
+    const nonterminals = ASTToParser(ast);
     return [nonterminals, ast] as const;
 }

@@ -121,7 +121,7 @@ const defaultOptions = {
     comments: true,
 } as Options;
 
-export class EBNFGrammar {
+export class BBNFGrammar {
     options: Options;
 
     constructor(options?: Partial<Options>) {

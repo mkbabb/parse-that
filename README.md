@@ -1,8 +1,7 @@
 # Parse That [Thang](https://oldinterneticons.tumblr.com/post/679136268174688256/go-mouse-fuck-that-thang)
 
-Parser combinators for TypeScript. Write your language in EEBNF (extended extended
-backus-naur form) and parse it with ease. Handles left recursion, right recursion, and
-left factoring.
+Parser combinators for TypeScript. Write your language in BBNF (better backus-naur form)
+and parse with ease. Handles left recursion, right recursion, and left factoring.
 
 Does what basically every other parser combinator library does, with a few extra
 features and optimizations. Focused on performance as much as possible, though
@@ -49,11 +48,11 @@ nice.
         - [hz: ops/sec - higher is better](#hz-opssec---higher-is-better)
   - [Debugging](#debugging)
         - [Thanks to chalk for the colors!](#thanks-to-chalk-for-the-colors)
-  - [EEBNF and the Great Parser Generator](#eebnf-and-the-great-parser-generator)
+  - [BBNF and the Great Parser Generator](#bbnf-and-the-great-parser-generator)
     - [Key differences with EBNF](#key-differences-with-ebnf)
     - [Formatting, syntax highlighting, \& more](#formatting-syntax-highlighting--more)
   - [Left recursion \& more](#left-recursion--more)
-      - [Using EEBNF](#using-eebnf)
+      - [Using BBNF](#using-bbnf)
       - [Combinator support](#combinator-support)
       - [Caveats](#caveats)
   - [API \& examples](#api--examples)
@@ -68,7 +67,7 @@ benchmark comparing the following libraries, all parsing the same `JSON` grammar
 -   [Chevrotain](https://github.com/chevrotain/chevrotain)
 -   [Parsimmon](https://github.com/jneen/parsimmon)
 -   this library, with standard combinators: [here](test/json.test.ts)
--   this library, using a generated parser from EEBNF: [here](test/ebnf.test.ts)
+-   this library, using a generated parser from BBNF: [here](test/ebnf.test.ts)
 
 The file used is a 3.8 MB `JSON` file, containing ~10K lines of `JSON`. Whitespace is
 randomly inserted to make the file a bit more difficult to parse (makes the file about
@@ -79,7 +78,7 @@ randomly inserted to make the file a bit more difficult to parse (makes the file
 | name       | hz     | min    | max    | mean   | p75    | p99    | p995   | p999   | rme    | samples |
 | ---------- | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------- |
 | Standard   | 8.1013 | 119.20 | 127.90 | 123.44 | 127.08 | 127.90 | 127.90 | 127.90 | ±2.64% | 10      |
-| EEBNF      | 5.1979 | 183.18 | 216.12 | 192.38 | 195.59 | 216.12 | 216.12 | 216.12 | ±3.97% | 10      |
+| BBNF       | 5.1979 | 183.18 | 216.12 | 192.38 | 195.59 | 216.12 | 216.12 | 216.12 | ±3.97% | 10      |
 | Chevrotain | 6.8699 | 129.91 | 167.46 | 145.56 | 158.21 | 167.46 | 167.46 | 167.46 | ±5.70% | 10      |
 | Parsimmon  | 4.0256 | 246.69 | 250.34 | 248.41 | 249.09 | 250.34 | 250.34 | 250.34 | ±1.54% | 10      |
 
@@ -87,7 +86,7 @@ randomly inserted to make the file a bit more difficult to parse (makes the file
 
     Standard - test/benchmarks/json.bench.ts > JSON Parser
         1.18x faster than Chevrotain
-        1.56x faster than EEBNF
+        1.56x faster than BBNF
         2.01x faster than Parsimmon
 
 Probably not the most scientific comparison, but it's generally about 10-30% faster than
@@ -108,23 +107,23 @@ As output, you'll see a few things:
     -   parsing status (`Ok` or `Err`)
     -   current offset into the input string
     -   debug node's name
-    -   stringified current parser - a bit like the EEBNF format
+    -   stringified current parser - a bit like the BBNF format
 -   A body containing:
     -   A maximum of 10 lines of the input string, with the current offset into the
         parse string denoted by `^`
     -   Line numbers for each line currently displayed
 
-The `blue` color indicates that that variable is an EEBNF nonterminal - `yellow` is the
+The `blue` color indicates that that variable is an BBNF nonterminal - `yellow` is the
 stringified parser.
 
 ##### Thanks to [chalk](https://github.com/chalk/chalk) for the colors!
 
-## EEBNF and the Great Parser Generator
+## BBNF and the Great Parser Generator
 
-Extended Extended Backus-Naur Form is a simple and readable way to describe a language.
+Better Backus-Naur Form is a simple and readable way to describe a language.
 A [better](https://dwheeler.com/essays/dont-use-iso-14977-ebnf.html) EBNF.
 
-See the EEBNF for EEBNF (meta right) at [eebnf.ebnf](./grammar/eebnf.ebnf).
+See the BBNF for BBNF (meta right) at [bbnf.ebnf](./grammar/bbnf.ebnf).
 
 With your grammar in hand, call the `generateParserFromEBNF` function within
 [ebnf.ts](./src/ebnf.ts) and you'll be returned two objects:
@@ -137,9 +136,9 @@ a JavaScript object containing all of the parsed nonterminals in your language, 
 AST for your language. Each nonterminal is a `Parser` object - use it as you would any
 other parser.
 
-Fully featured, and self-parsing, so the EEBNF parser-generator is written in EEBNF.
+Fully featured, and self-parsing, so the BBNF parser-generator is written in BBNF.
 Checkout the self-parsing example (+ formatting), at
-[eebnf.test.ts](./test/ebnf.test.ts).
+[bbnf.test.ts](./test/ebnf.test.ts).
 
 ### Key differences with EBNF
 
@@ -167,9 +166,9 @@ the word epsilon).
 
 ### Formatting, syntax highlighting, & more
 
-With the EEBNF parser generator you basically get formatting for free. Call the
+With the BBNF parser generator you basically get formatting for free. Call the
 `formatEBNF` function within [ebnf.ts](./src/ebnf.ts) and you'll be returned a string
-containing the formatted EEBNF.
+containing the formatted BBNF.
 
 ```ts
 const formattedGrammar: string = formatEBNF(grammar);
@@ -204,11 +203,11 @@ are supported fully supported.
 
 Our scheme is multifaceted and optimized depending upon a few factors:
 
-#### Using EEBNF
+#### Using BBNF
 
-Since EEBNF allows for one to easily grab ahold of the AST, we can optimize its
-structure rather easily. Left recursion is "removed" (it's actually just factored out)
-using a four-pass algorithm:
+Since BBNF allows for one to easily grab ahold of the AST, we can optimize its structure
+rather easily. Left recursion is "removed" (it's actually just factored out) using a
+four-pass algorithm:
 
 -   1. Sort the nonterminals topologically
 -   2. Remove indirect left recursion
@@ -269,7 +268,7 @@ to detect if the current parser is in a left-recursive call. See the
 #### Caveats
 
 Though left recursion is supported, it's absolutely not optimal. If it can be factored
-out via the EEBNF parser generator generally the performance will quite fine, but if it
+out via the BBNF parser generator generally the performance will quite fine, but if it
 cannot you may run into some performance issues. This stems, among other things,
 primarily from JavaScript's lack of tail call optimization. Again, see the
 [left recursion](./docs/left-recursion.md) document for more information.
