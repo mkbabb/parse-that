@@ -25,9 +25,10 @@ interface BaseExpression<T, V = string> {
         right: string[];
     };
 
-    line?: number;
-    column?: number;
-    offset?: number;
+    range?: {
+        start: number;
+        end: number;
+    };
 }
 
 export type Nonterminal = BaseExpression<"nonterminal">;
@@ -101,13 +102,14 @@ const mapFactor = ([term, op]) => {
 };
 
 function mapStatePosition(parser: Parser<any>) {
-    return parser.mapState((state) => {
-        if (state.value && state.value.line === undefined) {
-            state.value.column = state.getColumnNumber();
-            state.value.line = state.getLineNumber();
-            state.value.offset = state.offset;
+    return parser.mapState((newState, oldState) => {
+        if (newState.value && newState.value.range === undefined) {
+            newState.value.range = {
+                start: oldState.offset,
+                end: newState.offset,
+            };
         }
-        return state;
+        return newState;
     });
 }
 

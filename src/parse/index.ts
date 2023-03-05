@@ -192,10 +192,12 @@ export class Parser<T = string> {
         return new Parser(map as ParserFunction<S>, createParserContext("map", this));
     }
 
-    mapState<S extends T>(fn: (state: ParserState<T>) => ParserState<S>) {
+    mapState<S extends T>(
+        fn: (newState: ParserState<T>, oldState?: ParserState<T>) => ParserState<S>
+    ) {
         const mapState = (state: ParserState<T>) => {
             const newState = this.parser(state);
-            return fn(newState);
+            return fn(newState, state);
         };
 
         return new Parser(
