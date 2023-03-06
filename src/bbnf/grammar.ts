@@ -134,16 +134,18 @@ export class BBNFGrammar {
     }
 
     identifier() {
-        return regex(/[_a-zA-Z][_a-zA-Z0-9]*/);
+        return regex(/[_a-zA-Z][_a-zA-Z0-9-]*/);
     }
 
     literal() {
         return this.trimBigComment(
             mapStatePosition(
                 any(
-                    regex(/[^"]+/).wrap(string('"'), string('"')),
-                    regex(/[^']+/).wrap(string("'"), string("'"))
+                    regex(/(\\.|[^"\\])*/).wrap(string('"'), string('"')),
+                    regex(/(\\.|[^'\\])*/).wrap(string("'"), string("'")),
+                    regex(/(\\.|[^`\\])*/).wrap(string("`"), string("`"))
                 ).map((value) => {
+                    value = value.replace(/\\(.)/g, "$1");
                     return {
                         type: "literal",
                         value,
@@ -210,7 +212,7 @@ export class BBNFGrammar {
 
     @lazy
     regex() {
-        return regex(/[^\/]*/)
+        return regex(/(\\.|[^\/])+/)
             .wrap(string("/"), string("/"))
             .then(regex(/[gimuy]*/).opt())
             .map(([r, flags]) => {
@@ -301,9 +303,8 @@ export class BBNFGrammar {
 
     @lazy
     concatenation() {
-        return this.binaryFactor()
-            .sepBy(string(",").trim())
-            .map((value) => {
+        return mapStatePosition(this.binaryFactor().sepBy(string(",").trim())).map(
+            (value) => {
                 if (value.length === 1) {
                     return value[0];
                 }
@@ -312,14 +313,14 @@ export class BBNFGrammar {
                     type: "concatenation",
                     value,
                 } as Concatenation;
-            });
+            }
+        );
     }
 
     @lazy
     alternation() {
-        return this.concatenation()
-            .sepBy(string("|").trim())
-            .map((value) => {
+        return mapStatePosition(this.concatenation().sepBy(string("|").trim())).map(
+            (value) => {
                 if (value.length === 1) {
                     return value[0];
                 }
@@ -328,7 +329,8 @@ export class BBNFGrammar {
                     type: "alternation",
                     value,
                 } as Alteration;
-            });
+            }
+        );
     }
 
     @lazy
@@ -350,7 +352,7 @@ export class BBNFGrammar {
 
     @lazy
     grammar() {
-        return this.productionRule()
+        return mapStatePosition(this.productionRule())
             .trim(this.comment().many(), false)
             .map(([above, rule, below]: any) => {
                 rule.comment = {

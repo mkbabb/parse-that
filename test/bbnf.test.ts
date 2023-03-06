@@ -10,7 +10,6 @@ import {
 } from "./utils";
 
 import { BBNFToParser } from "../src/bbnf/generate";
-import { BBNFParser } from "../src/bbnf/transform";
 import { Nonterminals } from "../src/bbnf/grammar";
 
 const comma = string(",").trim();
@@ -22,7 +21,7 @@ const debugging = (x: Nonterminals) => {
     };
 
     Object.entries(x).forEach(([key, value]) => {
-        x[key] = parserDebug(value, key, true, logger);
+        x[key] = parserDebug(value, key, false, logger);
     });
 };
 
@@ -331,11 +330,13 @@ describe("BBNF Parser", () => {
     it("should parse an BBNF grammar", () => {
         let grammar = fs.readFileSync("./grammar/bbnf.bbnf", "utf8");
 
-        const parser = BBNFParser(grammar);
+        const [nonterminals, ast] = BBNFToParser(grammar);
+        const parser = nonterminals.grammar;
 
         for (let i = 0; i < 10; i++) {
-            grammar = parser.parse(grammar);
+            grammar = parser.eof().parse(grammar).flat(Infinity).join("");
             expect(grammar).toBeTruthy();
+            fs.writeFileSync("./grammar/bbnf.out", grammar, "utf8");
         }
     });
 
@@ -445,6 +446,4 @@ describe("BBNF Parser", () => {
             expect(grammar).toBeTruthy();
         }
     });
-
-    
 });

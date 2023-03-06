@@ -1,43 +1,13 @@
-letter =  "A" | "B" | "C" | "D" | "E" | "F" | "G"
-    | "H" | "I" | "J" | "K" | "L" | "M" | "N"
-    | "O" | "P" | "Q" | "R" | "S" | "T" | "U"
-    | "V" | "W" | "X" | "Y" | "Z" | "a" | "b"
-    | "c" | "d" | "e" | "f" | "g" | "h" | "i"
-    | "j" | "k" | "l" | "m" | "n" | "o" | "p"
-    | "q" | "r" | "s" | "t" | "u" | "v" | "w"
-    | "x" | "y" | "z" ;
+identifier = /[_a-zA-Z][_a-zA-Z0-9-]*/ ;
 
-digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+literal = "\"" , /(\\.|[^"\\])*/  , "\""
+        | "'"  , /(\\.|[^'\\])*/  , "'"
+        | "`"  , /(\\.|[^`\\])*/  , "`" ;
 
-symbol = "[" | "]" | "{" | "}" | "(" | ")" | "<" | ">"
-        | "'" | '"' | "=" | "|" | "." | "," | ";" | "+" 
-        | "-" | "*" | "/" | "?" | "%" | "&" | "^" | "~"
-        | "`" | "!" | "@" | "#" | "$" | ":" | "\" | "ε" /*"*/
-        | "\t" | "\r" | "?w" | "??" | "//" | " " ;
+big_comment = ( "/*" , /[^\*]*/ , "*/" ) ?w ;
+comment = ( "//" , /.*/ ) ?w ;
 
-pipe = "|" ;
-comma = "," ;
-star = "*" ;
-plus = "+" ;
-question = "?" ;
-minus = "-" ;
-div = "/" ;
-left_shift = "<<" ;
-right_shift = ">>" ;
-
-optional_whitespace = "?w" ;
-
-character =  letter | digit | symbol | "_" ;
-identifier = letter , { letter | digit | "_" | "-" } ;
-
-literal =  "'" , ( character - "'" ) * , "'" 
-         | '"' , ( character - '"' ) * , '"' ;
-
-
-big_comment = "/*" , /[^\*]*$/ , "*/" ;
-comment = "//" , /.*$/ ;
-
-regex = div , (character - div) * , div ;
+regex = "/" , /(\\.|[^\/])+/ , "/" ;
 
 lhs = identifier ;
 
@@ -45,28 +15,28 @@ term = "ε"
      | identifier
      | literal 
      | regex
-     | "(" , rhs , ")" 
-     | "[" , rhs , "]"
-     | "{" , rhs , "}" ;
+     | "(" , rhs ?w , ")" 
+     | "[" , rhs ?w , "]"
+     | "{" , rhs ?w , "}" ;
 
 
 factor = big_comment ? , (
-      term , optional_whitespace
-    | term , question
-    | term , star
-    | term , plus
+      term ?w , "?w"
+    | term ?w , "?"
+    | term ?w , "*"
+    | term ?w , "+"
     | term  
 ) , big_comment ? ;
 
-binary_operators = left_shift | right_shift | minus ;
+binary_operators = "<<" | ">>" | "-" ;
 
-binary_factor = factor , ( binary_operators , factor ) * ;
+binary_factor = factor , ( binary_operators ?w , factor ) * ;
 
-concatenation = ( binary_factor , comma ? ) + ;
-alternation = ( concatenation , pipe ? ) + ;
+concatenation = ( binary_factor ?w , "," ? ) + ;
+alternation = ( concatenation ?w , "|" ? ) + ;
 
 rhs = alternation ;
 
-rule = lhs, "=", rhs, ";" ;
+rule = lhs, "=" ?w, rhs ?w, ( ";" | "." ) ;
 
-grammar =  rule * ;
+grammar =  ( comment ? , rule ?w , comment ? ) * ;

@@ -80,8 +80,50 @@ export function ASTToParser(ast: AST) {
     return nonterminals;
 }
 
+export function traverseAST(
+    ast: Map<string, any>,
+    callback: (node: Expression, parentNode?: Expression) => void
+) {
+    const stack: Expression[] = [...ast.values()].map((x) => x.expression).reverse();
+    let parentNode;
+
+    while (stack.length > 0) {
+        const node = stack.pop();
+        if (!node?.type) continue;
+
+        callback(node, parentNode);
+
+        parentNode = node;
+
+        if (node.value instanceof Array) {
+            for (let i = node.value.length - 1; i >= 0; i--) {
+                stack.push(node.value[i]);
+            }
+        } else {
+            stack.push(node.value as any);
+        }
+    }
+}
+
+export function dedupGroups(ast: AST) {
+    traverseAST(ast, (node, parentNode) => {
+        const parentType = parentNode?.type;
+
+        if (
+            node.type === "group" &&
+            (parentType === "group" || parentType === "nonterminal")
+        ) {
+            const innerValue = node.value;
+            node.value = innerValue.value;
+            node.type = innerValue.type;
+        }
+    });
+}
+
 export function BBNFToParser(input: string, optimizeGraph: boolean = false) {
     let [parser, ast] = BBNFToAST(input);
+
+    dedupGroups(ast);
 
     if (optimizeGraph) {
         ast = removeAllLeftRecursion(ast);

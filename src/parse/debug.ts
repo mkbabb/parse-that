@@ -193,13 +193,14 @@ export function statePrint(
     name: string = "",
     parserString: string = ""
 ) {
+    parserString = state.value;
     const stateBgColor = !state.isError ? chalk.bgGreen : chalk.bgRed;
     const stateColor = !state.isError ? chalk.green : chalk.red;
 
     const finished = state.offset >= state.src.length;
 
-    const stateSymbol = !state.isError ? (finished ? "🎉" : "✓") : "ｘ";
-    const stateName = !state.isError ? (finished ? "Done" : "Ok") : "Err";
+    const stateSymbol = !state.isError ? (finished ? "🎉" : "✓ ") : "ｘ";
+    const stateName = !state.isError ? (finished ? "Done" : "Ok ") : "Err";
     const stateString = " " + stateName + " " + stateSymbol + " ";
 
     const header = group([
