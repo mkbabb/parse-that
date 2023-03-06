@@ -50,13 +50,14 @@ const mapFactor = ([term, op]) => {
   };
 };
 function mapStatePosition(parser) {
-  return parser.mapState((state) => {
-    if (state.value) {
-      state.value.column = state.getColumnNumber();
-      state.value.line = state.getLineNumber();
-      state.value.offset = state.offset;
+  return parser.mapState((newState, oldState) => {
+    if (newState.value && newState.value.range === void 0) {
+      newState.value.range = {
+        start: oldState.offset,
+        end: newState.offset
+      };
     }
-    return state;
+    return newState;
   });
 }
 const defaultOptions = {
@@ -72,23 +73,27 @@ class BBNFGrammar {
     };
   }
   identifier() {
-    return regex(/[_a-zA-Z][_a-zA-Z0-9]*/).trim();
+    return regex(/[_a-zA-Z][_a-zA-Z0-9-]*/);
   }
   literal() {
     return this.trimBigComment(
-      any(
-        regex(/[^"]+/).wrap(string('"'), string('"')),
-        regex(/[^']+/).wrap(string("'"), string("'"))
-      ).map((value) => {
-        return {
-          type: "literal",
-          value
-        };
-      })
+      mapStatePosition(
+        any(
+          regex(/(\\.|[^"\\])*/).wrap(string('"'), string('"')),
+          regex(/(\\.|[^'\\])*/).wrap(string("'"), string("'")),
+          regex(/(\\.|[^`\\])*/).wrap(string("`"), string("`"))
+        ).map((value) => {
+          value = value.replace(/\\(.)/g, "$1");
+          return {
+            type: "literal",
+            value
+          };
+        })
+      )
     );
   }
   epsilon() {
-    return any(string("epsilon"), string("ε")).trim().map(() => {
+    return any(string("epsilon"), string("ε")).map(() => {
       return {
         type: "epsilon",
         value: void 0
@@ -127,7 +132,7 @@ class BBNFGrammar {
     });
   }
   regex() {
-    return regex(/[^\/]*/).wrap(string("/"), string("/")).then(regex(/[gimuy]*/).opt()).map(([r, flags]) => {
+    return regex(/(\\.|[^\/])+/).wrap(string("/"), string("/")).then(regex(/[gimuy]*/).opt()).map(([r, flags]) => {
       return {
         type: "regex",
         value: new RegExp(r, flags)
@@ -195,26 +200,30 @@ class BBNFGrammar {
     ).map(reduceBinaryExpression);
   }
   concatenation() {
-    return this.binaryFactor().sepBy(string(",").trim()).map((value) => {
-      if (value.length === 1) {
-        return value[0];
+    return mapStatePosition(this.binaryFactor().sepBy(string(",").trim())).map(
+      (value) => {
+        if (value.length === 1) {
+          return value[0];
+        }
+        return {
+          type: "concatenation",
+          value
+        };
       }
-      return {
-        type: "concatenation",
-        value
-      };
-    });
+    );
   }
   alternation() {
-    return this.concatenation().sepBy(string("|").trim()).map((value) => {
-      if (value.length === 1) {
-        return value[0];
+    return mapStatePosition(this.concatenation().sepBy(string("|").trim())).map(
+      (value) => {
+        if (value.length === 1) {
+          return value[0];
+        }
+        return {
+          type: "alternation",
+          value
+        };
       }
-      return {
-        type: "alternation",
-        value
-      };
-    });
+    );
   }
   rhs() {
     return this.alternation();
@@ -230,13 +239,13 @@ class BBNFGrammar {
     });
   }
   grammar() {
-    return this.productionRule().trim(this.comment().many(), false).map(([above, rule, below]) => {
+    return mapStatePosition(this.productionRule()).trim(this.comment().many(), false).map(([above, rule, below]) => {
       rule.comment = {
         above,
         below
       };
       return rule;
-    }).many(1);
+    }).many(1).trim();
   }
 }
 __decorateClass([
@@ -624,8 +633,37 @@ function ASTToParser(ast) {
   }
   return nonterminals;
 }
+function traverseAST(ast, callback) {
+  const stack = [...ast.values()].map((x) => x.expression).reverse();
+  let parentNode;
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (!(node == null ? void 0 : node.type))
+      continue;
+    callback(node, parentNode);
+    parentNode = node;
+    if (node.value instanceof Array) {
+      for (let i = node.value.length - 1; i >= 0; i--) {
+        stack.push(node.value[i]);
+      }
+    } else {
+      stack.push(node.value);
+    }
+  }
+}
+function dedupGroups(ast) {
+  traverseAST(ast, (node, parentNode) => {
+    const parentType = parentNode == null ? void 0 : parentNode.type;
+    if (node.type === "group" && (parentType === "group" || parentType === "nonterminal")) {
+      const innerValue = node.value;
+      node.value = innerValue.value;
+      node.type = innerValue.type;
+    }
+  });
+}
 function BBNFToParser(input, optimizeGraph = false) {
   let [parser, ast] = BBNFToAST(input);
+  dedupGroups(ast);
   if (optimizeGraph) {
     ast = removeAllLeftRecursion(ast);
   }
@@ -638,11 +676,13 @@ export {
   BBNFToAST,
   BBNFToParser,
   comparePrefix,
+  dedupGroups,
   findCommonPrefix,
   removeAllLeftRecursion,
   removeDirectLeftRecursion,
   removeIndirectLeftRecursion,
   rewriteTreeLeftRecursion,
-  topologicalSort
+  topologicalSort,
+  traverseAST
 };
 //# sourceMappingURL=bbnf.js.map

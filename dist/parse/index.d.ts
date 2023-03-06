@@ -21,7 +21,7 @@ export declare class Parser<T = string> {
     or<S>(other: Parser<S | T>): Parser<string>;
     chain<S>(fn: (value: T) => Parser<S | T>, chainError?: boolean): Parser<T | S>;
     map<S>(fn: (value: T) => S, mapError?: boolean): Parser<S>;
-    mapState<S extends T>(fn: (state: ParserState<T>) => ParserState<S>): Parser<S>;
+    mapState<S extends T>(fn: (newState: ParserState<T>, oldState?: ParserState<T>) => ParserState<S>): Parser<S>;
     skip<S>(parser: Parser<T | S>): Parser<T>;
     next<S>(parser: Parser<S>): Parser<S>;
     opt(): Parser<T>;
@@ -31,7 +31,7 @@ export declare class Parser<T = string> {
     many(min?: number, max?: number): Parser<T[]>;
     sepBy<S>(sep: Parser<S | T>, min?: number, max?: number): Parser<T[]>;
     eof(): Parser<T>;
-    debug(name?: string, recursivePrint?: boolean, logger?: (...s: any[]) => void): any;
+    debug(name?: string, recursivePrint?: boolean, logger?: (...s: any[]) => void): Parser<T>;
     toString(): any;
     static lazy<T>(fn: () => Parser<T>): Parser<T>;
 }

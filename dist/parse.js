@@ -1576,11 +1576,12 @@ function parserPrint(parser) {
   return s;
 }
 function statePrint(state, name = "", parserString = "") {
+  parserString = state.value;
   const stateBgColor = !state.isError ? chalk.bgGreen : chalk.bgRed;
   const stateColor = !state.isError ? chalk.green : chalk.red;
   const finished = state.offset >= state.src.length;
-  const stateSymbol = !state.isError ? finished ? "🎉" : "✓" : "ｘ";
-  const stateName = !state.isError ? finished ? "Done" : "Ok" : "Err";
+  const stateSymbol = !state.isError ? finished ? "🎉" : "✓ " : "ｘ";
+  const stateName = !state.isError ? finished ? "Done" : "Ok " : "Err";
   const stateString = " " + stateName + " " + stateSymbol + " ";
   const header = group([
     stateBgColor.bold(stateString),
@@ -1800,7 +1801,7 @@ class Parser {
   mapState(fn) {
     const mapState = (state) => {
       const newState = this.parser(state);
-      return fn(newState);
+      return fn(newState, state);
     };
     return new Parser(
       mapState,

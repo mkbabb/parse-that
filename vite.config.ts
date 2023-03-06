@@ -32,5 +32,5 @@ export default defineConfig(({ mode }) => ({
         forceRerunTriggers: ["**/*.bbnf/**"],
     },
 
-    plugins: [commonjs(), dts()],
+    plugins: [dts()],
 }));
