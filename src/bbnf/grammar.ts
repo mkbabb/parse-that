@@ -30,8 +30,8 @@ export type Comment = Token<"comment">;
 
 interface ExpressionToken<T, V = string> extends Token<T, V> {
     comment?: {
-        left: string[];
-        right: string[];
+        left: Comment[];
+        right: Comment[];
     };
 }
 
