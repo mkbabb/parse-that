@@ -76,21 +76,17 @@ class BBNFGrammar {
     return regex(/[_a-zA-Z][_a-zA-Z0-9-]*/);
   }
   literal() {
-    return this.trimBigComment(
-      mapStatePosition(
-        any(
-          regex(/(\\.|[^"\\])*/).wrap(string('"'), string('"')),
-          regex(/(\\.|[^'\\])*/).wrap(string("'"), string("'")),
-          regex(/(\\.|[^`\\])*/).wrap(string("`"), string("`"))
-        ).map((value) => {
-          value = value.replace(/\\(.)/g, "$1");
-          return {
-            type: "literal",
-            value
-          };
-        })
-      )
-    );
+    return any(
+      regex(/(\\.|[^"\\])*/).wrap(string('"'), string('"')),
+      regex(/(\\.|[^'\\])*/).wrap(string("'"), string("'")),
+      regex(/(\\.|[^`\\])*/).wrap(string("`"), string("`"))
+    ).map((value) => {
+      value = value.replace(/\\(.)/g, "$1");
+      return {
+        type: "literal",
+        value
+      };
+    });
   }
   epsilon() {
     return any(string("epsilon"), string("ε")).map(() => {
@@ -108,14 +104,31 @@ class BBNFGrammar {
       };
     });
   }
-  bigComment() {
-    return regex(/\/\*[^\*]*\*\//).trim();
+  blockComment() {
+    return mapStatePosition(
+      regex(/\/\*[^\*]*\*\//).map((v) => {
+        return {
+          type: "comment",
+          value: v
+        };
+      })
+    );
+  }
+  lineComment() {
+    return mapStatePosition(
+      regex(/\/\/.*/).map((v) => {
+        return {
+          type: "comment",
+          value: v
+        };
+      })
+    );
   }
   comment() {
-    return regex(/\/\/.*/).or(this.bigComment()).trim();
+    return any(this.blockComment(), this.lineComment());
   }
   trimBigComment(e) {
-    return e.trim(this.bigComment().many(), false).map(([left, expression, right]) => {
+    return e.trim(this.blockComment().trim().many(), false).map(([left, expression, right]) => {
       expression.comment = {
         left,
         right
@@ -162,7 +175,7 @@ class BBNFGrammar {
     });
   }
   lhs() {
-    return this.identifier();
+    return mapStatePosition(this.nonterminal());
   }
   term() {
     return mapStatePosition(
@@ -179,25 +192,24 @@ class BBNFGrammar {
   }
   factor() {
     return this.trimBigComment(
-      all(
-        this.term(),
-        any(
-          string("?w").trim(),
-          string("?").trim(),
-          string("*").trim(),
-          string("+").trim()
-        ).opt()
-      ).map(mapFactor)
+      mapStatePosition(
+        all(
+          this.term(),
+          any(string("?w"), string("?"), string("*"), string("+")).trim().opt()
+        ).map(mapFactor)
+      )
     );
   }
   binaryFactor() {
-    return all(
-      this.factor(),
+    return mapStatePosition(
       all(
-        any(string("<<").trim(), string(">>").trim(), string("-").trim()),
-        this.factor()
-      ).many()
-    ).map(reduceBinaryExpression);
+        this.factor(),
+        all(
+          any(string("<<"), string(">>"), string("-")).trim(),
+          this.factor()
+        ).many()
+      ).map(reduceBinaryExpression)
+    );
   }
   concatenation() {
     return mapStatePosition(this.binaryFactor().sepBy(string(",").trim())).map(
@@ -239,7 +251,7 @@ class BBNFGrammar {
     });
   }
   grammar() {
-    return mapStatePosition(this.productionRule()).trim(this.comment().many(), false).map(([above, rule, below]) => {
+    return this.productionRule().trim(this.lineComment().trim().many(), false).map(([above, rule, below]) => {
       rule.comment = {
         above,
         below
@@ -250,7 +262,10 @@ class BBNFGrammar {
 }
 __decorateClass([
   lazy
-], BBNFGrammar.prototype, "bigComment", 1);
+], BBNFGrammar.prototype, "blockComment", 1);
+__decorateClass([
+  lazy
+], BBNFGrammar.prototype, "lineComment", 1);
 __decorateClass([
   lazy
 ], BBNFGrammar.prototype, "comment", 1);
@@ -324,7 +339,7 @@ function topologicalSort(ast) {
   }
   const newAST = /* @__PURE__ */ new Map();
   for (const rule of order) {
-    newAST.set(rule.name, rule);
+    newAST.set(rule.name.value, rule);
   }
   return newAST;
 }
@@ -533,11 +548,14 @@ function removeDirectLeftRecursion(ast) {
       );
       if (head) {
         newNodes.set(tailName, {
-          name: tailName,
+          name: {
+            type: "nonterminal",
+            value: tailName
+          },
           expression: tail
         });
         newNodes.set(name, {
-          name,
+          name: productionRule.name,
           expression: head,
           comment: productionRule.comment
         });
@@ -573,7 +591,7 @@ function BBNFToAST(input) {
     return [parser];
   }
   const ast = parsed.reduce((acc, productionRule, ix) => {
-    return acc.set(productionRule.name, productionRule);
+    return acc.set(productionRule.name.value, productionRule);
   }, /* @__PURE__ */ new Map());
   return [parser, ast];
 }
@@ -658,6 +676,7 @@ function dedupGroups(ast) {
       const innerValue = node.value;
       node.value = innerValue.value;
       node.type = innerValue.type;
+      node.comment = innerValue.comment;
     }
   });
 }

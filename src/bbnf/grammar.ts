@@ -16,14 +16,9 @@ export type Expression =
     | Epsilon
     | OptionalWhitespace;
 
-interface BaseExpression<T, V = string> {
+interface Token<T, V = string> {
     type: T;
     value: V;
-
-    comment?: {
-        left: string[];
-        right: string[];
-    };
 
     range?: {
         start: number;
@@ -31,35 +26,44 @@ interface BaseExpression<T, V = string> {
     };
 }
 
-export type Nonterminal = BaseExpression<"nonterminal">;
+export type Comment = Token<"comment">;
 
-export type Literal = BaseExpression<"literal">;
-export type Regex = BaseExpression<"regex", RegExp>;
-export type Epsilon = BaseExpression<"epsilon">;
+interface ExpressionToken<T, V = string> extends Token<T, V> {
+    comment?: {
+        left: string[];
+        right: string[];
+    };
+}
 
-export type Group = BaseExpression<"group", Expression>;
-export type ManyGroup = BaseExpression<"many", Expression>;
-export type OptionalGroup = BaseExpression<"optional", Expression>;
+export type Nonterminal = ExpressionToken<"nonterminal">;
 
-export type Optional = BaseExpression<"optional", Expression>;
-export type OptionalWhitespace = BaseExpression<"optionalWhitespace", undefined>;
+export type Literal = ExpressionToken<"literal">;
+export type Regex = ExpressionToken<"regex", RegExp>;
+export type Epsilon = ExpressionToken<"epsilon">;
 
-export type Minus = BaseExpression<"minus", [Expression, Expression]>;
+export type Group = ExpressionToken<"group", Expression>;
+export type ManyGroup = ExpressionToken<"many", Expression>;
+export type OptionalGroup = ExpressionToken<"optional", Expression>;
 
-export type Many = BaseExpression<"many", Expression>;
-export type Many1 = BaseExpression<"many1", Expression>;
-export type Skip = BaseExpression<"skip", [Expression, Expression]>;
-export type Next = BaseExpression<"next", [Expression, Expression]>;
+export type Optional = ExpressionToken<"optional", Expression>;
+export type OptionalWhitespace = ExpressionToken<"optionalWhitespace", undefined>;
 
-export type Concatenation = BaseExpression<"concatenation", Expression[]>;
-export type Alteration = BaseExpression<"alternation", Expression[]>;
+export type Minus = ExpressionToken<"minus", [Expression, Expression]>;
+
+export type Many = ExpressionToken<"many", Expression>;
+export type Many1 = ExpressionToken<"many1", Expression>;
+export type Skip = ExpressionToken<"skip", [Expression, Expression]>;
+export type Next = ExpressionToken<"next", [Expression, Expression]>;
+
+export type Concatenation = ExpressionToken<"concatenation", Expression[]>;
+export type Alteration = ExpressionToken<"alternation", Expression[]>;
 
 export type ProductionRule = {
+    name: Nonterminal;
     expression: Expression;
-    name: string;
     comment: {
-        above: string[];
-        below: string[];
+        above: Comment[];
+        below: Comment[];
     };
 };
 
@@ -138,28 +142,23 @@ export class BBNFGrammar {
     }
 
     literal() {
-        return this.trimBigComment(
-            mapStatePosition(
-                any(
-                    regex(/(\\.|[^"\\])*/).wrap(string('"'), string('"')),
-                    regex(/(\\.|[^'\\])*/).wrap(string("'"), string("'")),
-                    regex(/(\\.|[^`\\])*/).wrap(string("`"), string("`"))
-                ).map((value) => {
-                    value = value.replace(/\\(.)/g, "$1");
-                    return {
-                        type: "literal",
-                        value,
-                    } as Literal;
-                })
-            )
-        );
+        return any(
+            regex(/(\\.|[^"\\])*/).wrap(string('"'), string('"')),
+            regex(/(\\.|[^'\\])*/).wrap(string("'"), string("'")),
+            regex(/(\\.|[^`\\])*/).wrap(string("`"), string("`"))
+        ).map((value) => {
+            value = value.replace(/\\(.)/g, "$1");
+            return {
+                type: "literal",
+                value,
+            } as Literal;
+        });
     }
 
     epsilon() {
         return any(string("epsilon"), string("ε")).map(() => {
             return {
                 type: "epsilon",
-                value: undefined,
             } as Epsilon;
         });
     }
@@ -174,20 +173,37 @@ export class BBNFGrammar {
     }
 
     @lazy
-    bigComment() {
-        return regex(/\/\*[^\*]*\*\//).trim();
+    blockComment() {
+        return mapStatePosition(
+            regex(/\/\*[^\*]*\*\//).map((v) => {
+                return {
+                    type: "comment",
+                    value: v,
+                } as Comment;
+            })
+        );
+    }
+
+    @lazy
+    lineComment() {
+        return mapStatePosition(
+            regex(/\/\/.*/).map((v) => {
+                return {
+                    type: "comment",
+                    value: v,
+                } as Comment;
+            })
+        );
     }
 
     @lazy
     comment() {
-        return regex(/\/\/.*/)
-            .or(this.bigComment())
-            .trim();
+        return any(this.blockComment(), this.lineComment());
     }
 
     trimBigComment(e: Parser<any>) {
         return e
-            .trim(this.bigComment().many(), false)
+            .trim(this.blockComment().trim().many(), false)
             .map(([left, expression, right]) => {
                 expression.comment = {
                     left,
@@ -257,7 +273,7 @@ export class BBNFGrammar {
 
     @lazy
     lhs() {
-        return this.identifier();
+        return mapStatePosition(this.nonterminal());
     }
 
     @lazy
@@ -278,27 +294,28 @@ export class BBNFGrammar {
     @lazy
     factor() {
         return this.trimBigComment(
-            all(
-                this.term(),
-                any(
-                    string("?w").trim(),
-                    string("?").trim(),
-                    string("*").trim(),
-                    string("+").trim()
-                ).opt()
-            ).map(mapFactor)
+            mapStatePosition(
+                all(
+                    this.term(),
+                    any(string("?w"), string("?"), string("*"), string("+"))
+                        .trim()
+                        .opt()
+                ).map(mapFactor)
+            )
         ) as Parser<Expression>;
     }
 
     @lazy
     binaryFactor() {
-        return all(
-            this.factor(),
+        return mapStatePosition(
             all(
-                any(string("<<").trim(), string(">>").trim(), string("-").trim()),
-                this.factor()
-            ).many()
-        ).map(reduceBinaryExpression);
+                this.factor(),
+                all(
+                    any(string("<<"), string(">>"), string("-")).trim(),
+                    this.factor()
+                ).many()
+            ).map(reduceBinaryExpression)
+        );
     }
 
     @lazy
@@ -352,8 +369,8 @@ export class BBNFGrammar {
 
     @lazy
     grammar() {
-        return mapStatePosition(this.productionRule())
-            .trim(this.comment().many(), false)
+        return this.productionRule()
+            .trim(this.lineComment().trim().many(), false)
             .map(([above, rule, below]: any) => {
                 rule.comment = {
                     above,
@@ -362,6 +379,6 @@ export class BBNFGrammar {
                 return rule;
             })
             .many(1)
-            .trim();
+            .trim() as Parser<ProductionRule[]>;
     }
 }

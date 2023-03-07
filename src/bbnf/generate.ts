@@ -11,7 +11,7 @@ export function BBNFToAST(input: string) {
     }
 
     const ast = parsed.reduce((acc, productionRule, ix) => {
-        return acc.set(productionRule.name, productionRule);
+        return acc.set(productionRule.name.value, productionRule);
     }, new Map<string, ProductionRule>()) as AST;
 
     return [parser, ast] as const;
@@ -81,27 +81,26 @@ export function ASTToParser(ast: AST) {
 }
 
 export function traverseAST(
-    ast: Map<string, any>,
-    callback: (node: Expression, parentNode?: Expression) => void
+    ast: AST,
+    callback: (node: Expression, parentNode?: Expression) => Expression | undefined
 ) {
-    const stack: Expression[] = [...ast.values()].map((x) => x.expression).reverse();
-    let parentNode;
+    const recurse = (node: Expression, parentNode?: Expression) => {
+        if (!node?.type) return;
 
-    while (stack.length > 0) {
-        const node = stack.pop();
-        if (!node?.type) continue;
-
-        callback(node, parentNode);
-
+        node = callback(node, parentNode) ?? node;
         parentNode = node;
 
-        if (node.value instanceof Array) {
+        if (node?.value instanceof Array) {
             for (let i = node.value.length - 1; i >= 0; i--) {
-                stack.push(node.value[i]);
+                recurse(node.value[i], parentNode);
             }
         } else {
-            stack.push(node.value as any);
+            recurse(node?.value as any, parentNode);
         }
+    };
+
+    for (const [name, productionRule] of ast.entries()) {
+        recurse(productionRule.expression);
     }
 }
 
@@ -110,12 +109,24 @@ export function dedupGroups(ast: AST) {
         const parentType = parentNode?.type;
 
         if (
-            node.type === "group" &&
-            (parentType === "group" || parentType === "nonterminal")
+            parentType === "group" &&
+            (node.type === "group" || node.type === "nonterminal")
         ) {
-            const innerValue = node.value;
-            node.value = innerValue.value;
-            node.type = innerValue.type;
+            parentNode.value = node.value;
+            parentNode.range = node.range;
+            parentNode.type = node.type;
+
+            parentNode.comment = {
+                left: [
+                    ...(parentNode.comment?.left ?? []),
+                    ...(node.comment?.left ?? []),
+                ],
+                right: [
+                    ...(parentNode.comment?.right ?? []),
+                    ...(node.comment?.right ?? []),
+                ],
+            };
+            return node.value;
         }
     });
 }

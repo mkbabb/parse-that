@@ -48,7 +48,7 @@ export function topologicalSort(ast: AST) {
 
     const newAST = new Map() as AST;
     for (const rule of order) {
-        newAST.set(rule.name, rule);
+        newAST.set(rule.name.value, rule);
     }
 
     return newAST;
@@ -298,11 +298,14 @@ export function removeDirectLeftRecursion(ast: AST) {
 
             if (head) {
                 newNodes.set(tailName, {
-                    name: tailName,
+                    name: {
+                        type: "nonterminal",
+                        value: tailName,
+                    },
                     expression: tail,
                 } as ProductionRule);
                 newNodes.set(name, {
-                    name,
+                    name: productionRule.name,
                     expression: head,
                     comment: productionRule.comment,
                 } as ProductionRule);

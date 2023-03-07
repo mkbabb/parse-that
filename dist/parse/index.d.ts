@@ -31,7 +31,7 @@ export declare class Parser<T = string> {
     many(min?: number, max?: number): Parser<T[]>;
     sepBy<S>(sep: Parser<S | T>, min?: number, max?: number): Parser<T[]>;
     eof(): Parser<T>;
-    debug(name?: string, recursivePrint?: boolean, logger?: (...s: any[]) => void): any;
+    debug(name?: string, recursivePrint?: boolean, logger?: (...s: any[]) => void): Parser<T>;
     toString(): any;
     static lazy<T>(fn: () => Parser<T>): Parser<T>;
 }
