@@ -5,7 +5,7 @@ type ExtractValue<T extends ReadonlyArray<Parser<any>>> = {
     [K in keyof T]: T[K] extends Parser<infer V> ? V : never;
 };
 
-type ParserFunction<T = string> = (val: ParserState<T>) => ParserState<T>;
+export type ParserFunction<T = string> = (val: ParserState<T>) => ParserState<T>;
 
 let PARSER_ID = 0;
 
@@ -40,7 +40,7 @@ export class Parser<T = string> {
         LEFT_RECURSION_COUNTS.clear();
     }
 
-    parse(val: string) {
+    parseState(val: string) {
         this.reset();
 
         const newState = this.parser(new ParserState(val));
@@ -52,7 +52,11 @@ export class Parser<T = string> {
             console.log(this.state.toString());
         }
 
-        return newState.value;
+        return newState;
+    }
+
+    parse(val: string) {
+        return this.parseState(val).value;
     }
 
     getCijKey(state: ParserState<T>) {
@@ -121,10 +125,6 @@ export class Parser<T = string> {
     }
 
     then<S>(next: Parser<S | T>) {
-        if (isStringParsers(this, next)) {
-            return concatStringParsers([this, next], "", (m) => [m?.[0], m?.[1]]);
-        }
-
         const then = (state: ParserState<T>) => {
             const nextState1 = this.parser(state);
 
@@ -145,10 +145,6 @@ export class Parser<T = string> {
     }
 
     or<S>(other: Parser<S | T>) {
-        if (isStringParsers(this, other)) {
-            return concatStringParsers([this, other], "|");
-        }
-
         const or = (state: ParserState<T>) => {
             const newState = this.parser(state);
 
@@ -285,9 +281,6 @@ export class Parser<T = string> {
             return all(start, this, end);
         }
 
-        if (isStringParsers(start, this, end)) {
-            return wrapStringParsers(start, this, end);
-        }
         const wrap = start.next(this).skip(end) as Parser<T>;
         wrap.context = createParserContext("wrap", this, start, end);
         return wrap;
@@ -299,14 +292,6 @@ export class Parser<T = string> {
         }
 
         if (parser.context?.name === "whitespace") {
-            if (isStringParsers(this, parser)) {
-                return concatStringParsers(
-                    [parser, this, parser],
-                    "",
-                    (m) => m?.[2]
-                ) as Parser<T>;
-            }
-
             const whitespaceTrim = (state: ParserState<T>) => {
                 const newState = trimStateWhitespace(state);
                 const tmpState = this.parser(newState);
@@ -416,51 +401,6 @@ export class Parser<T = string> {
     }
 }
 
-function isStringParsers(...parsers: Parser<any>[]) {
-    return parsers.every(
-        (p) =>
-            (p.context?.name === "string" ||
-                p.context?.name === "regex" ||
-                p.context?.name === "whitespace") &&
-            p.context?.args
-    );
-}
-
-function stringParserValue(p: Parser<any>) {
-    if (p.context?.name === "string") {
-        return p.context?.args[0].replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
-    } else if (p.context?.name === "regex" || p.context?.name === "whitespace") {
-        return p.context?.args[0].source;
-    }
-}
-
-function concatStringParsers(
-    parsers: Parser<any>[],
-    delim: string = "",
-    matchFunction?: (m: RegExpMatchArray) => any
-): Parser<string> {
-    const s = parsers.map((s) => `(${stringParserValue(s)})`).join(delim);
-    const r = new RegExp(s);
-    const rP = regex(r, matchFunction);
-
-    if (delim !== "|") {
-        rP.context = createParserContext("regexConcat", this, r);
-    }
-    return rP;
-}
-
-function wrapStringParsers<L, T, R>(
-    left: Parser<L>,
-    p: Parser<T>,
-    right: Parser<R>
-): Parser<string> {
-    const rP = concatStringParsers([left, p, right], "", (m) => {
-        return m?.[2];
-    });
-    rP.context.name = "regexWrap";
-    return rP;
-}
-
 export function eof<T>() {
     const eof = (state: ParserState<T>) => {
         if (state.offset >= state.src.length) {
@@ -489,10 +429,6 @@ export function lazy<T>(
 }
 
 export function any<T extends any[]>(...parsers: T) {
-    if (isStringParsers(...parsers)) {
-        return concatStringParsers(parsers, "|") as Parser<ExtractValue<T>[number]>;
-    }
-
     const any = (state: ParserState<T>) => {
         for (const parser of parsers) {
             const newState = parser.parser(state);

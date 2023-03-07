@@ -1,7 +1,7 @@
 import { Parser } from ".";
 import { statePrint } from "./debug";
 
-export class ParserState<T> {
+export class ParserState<T = any> {
     constructor(
         public src: string,
         public value: T = undefined,
