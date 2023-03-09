@@ -8,10 +8,11 @@ interface BaseInst<T extends string> {
     id: number;
     opcode: T;
     name?: string;
+    gen?: number;
 }
 
 interface Char extends BaseInst<"char"> {
-    parser: ParserFunction<string>;
+    parser: RegExp;
 }
 
 interface Jmp extends BaseInst<"jmp"> {
@@ -34,16 +35,27 @@ interface Save extends BaseInst<"save" | "map"> {
 type Inst = Char | Jmp | Split | Match | Save;
 
 const FSMRegex = (r: RegExp) => {
+    const flags = r.flags.replace("y", "");
+    const sticky = new RegExp(r.source, flags + "y");
     const fsm = new FSMParser();
+
     fsm.instructions.push({
         id: fsm.instructions.length,
         opcode: "char",
-        parser: regex(r).parser,
+        parser: sticky,
     });
+
     return fsm;
 };
 
+type Thread = {
+    pc: number;
+    saved?: any;
+};
+
 class FSMParser {
+    gen: number = 0;
+
     constructor(public instructions: Inst[] = []) {}
 
     shiftInst(inst: Inst[], offset: number = 0) {
@@ -53,10 +65,10 @@ class FSMParser {
                 id: i.id + offset,
             };
 
-            if (inst?.x) {
+            if (inst?.x != null) {
                 inst.x += offset;
             }
-            if (inst?.y) {
+            if (inst?.y != null) {
                 inst.y += offset;
             }
 
@@ -75,7 +87,6 @@ class FSMParser {
 
     or(other: FSMParser) {
         const split = {
-            name: "or",
             id: 0,
             opcode: "split",
             x: 1,
@@ -99,7 +110,6 @@ class FSMParser {
 
     many(lower: number = 0, upper: number = Infinity) {
         const split = {
-            name: "many",
             id: 0,
             opcode: "split",
             x: 1,
@@ -123,7 +133,6 @@ class FSMParser {
 
     opt() {
         const split = {
-            name: "opt",
             id: 0,
             opcode: "split",
             x: 1,
@@ -143,7 +152,8 @@ class FSMParser {
         return new FSMParser(instructions);
     }
 
-    wrap(left: FSMParser, right: FSMParser) {
+    wrap(left: FSMParser, right?: FSMParser) {
+        right ??= left;
         return left.then(this).then(right);
     }
 
@@ -152,18 +162,13 @@ class FSMParser {
     }
 
     trimWhitespace() {
-        return FSMAll(
-            FSMRegex(/\s*/).opt(),
-            this,
-            FSMRegex(/\s*/).opt()
-        );
+        return FSMAll(FSMRegex(/\s*/), this, FSMRegex(/\s*/));
     }
 
     save(fn: (x: any) => any = (x) => x, label: "save" | "map" = "save") {
         const save1 = {
             id: 0,
             opcode: label,
-            x: this.instructions.length,
             pos: "start",
             fn,
         } as Save;
@@ -171,7 +176,6 @@ class FSMParser {
         const save2 = {
             id: this.instructions.length + 1,
             opcode: label,
-            x: this.instructions.length + 2,
             pos: "end",
             fn,
         } as Save;
@@ -184,83 +188,89 @@ class FSMParser {
         return this.save(fn, "map");
     }
 
+    addThread(threadList: Thread[], thread: Thread, saved: any) {
+        const { pc } = thread;
+        const inst = this.instructions[pc];
+
+        if (inst.gen === this.gen) {
+            return;
+        }
+
+        inst.gen = this.gen;
+
+        switch (inst.opcode) {
+            default: {
+                threadList.push(thread);
+                break;
+            }
+            case "jmp": {
+                this.addThread(threadList, { ...thread, pc: inst.x }, saved);
+                break;
+            }
+            case "split": {
+                this.addThread(threadList, { ...thread, pc: inst.y }, saved);
+                this.addThread(threadList, { ...thread, pc: inst.x }, saved);
+                break;
+            }
+            case "save": {
+                // if (inst.pos === "start") {
+                //     saved = thread.saved;
+                //     this.addThread(threadList, { ...thread, pc: pc + 1, saved}, saved);
+                // } else {
+
+                this.addThread(threadList, { ...thread, pc: pc + 1 }, saved);
+                break;
+            }
+        }
+    }
+
     run(src: string) {
-        let ti = 1;
+        let clist = [] as Thread[];
+        let nlist = [] as Thread[];
 
-        type State = {
-            pc: number;
-            sp: ParserState<string>;
-            saved?: any[];
-        };
+        this.instructions.forEach((i) => (i.gen = 0));
 
-        const states: State[] = [{ pc: 0, sp: new ParserState(src), saved: [] }];
+        let i = 0;
+        this.gen += 1;
+        let matched = false;
 
-        while (ti > 0 && ti < 100) {
-            ti -= 1;
+        this.addThread(clist, { pc: 0 }, undefined);
+        while (i <= src.length && clist.length > 0) {
+            this.gen += 1;
 
-            let state = states[ti];
-            let dead = false;
-
-            while (!dead) {
-                const { pc, sp } = state;
+            while (clist.length > 0) {
+                const { pc, saved } = clist.pop();
                 const inst = this.instructions[pc];
-                const { opcode } = inst;
 
-                switch (opcode) {
+                switch (inst.opcode) {
                     case "char": {
-                        const { parser } = inst;
-                        const newState = parser(sp);
-
-                        if (newState.isError) {
-                            dead = true;
+                        if (i >= src.length) {
                             break;
                         }
-                        state = {
-                            pc: pc + 1,
-                            sp: newState,
-                        };
-                        continue;
-                    }
 
-                    case "jmp": {
-                        const { x } = inst;
-                        state = { pc: x, sp };
-                        continue;
-                    }
+                        const p = inst.parser;
+                        p.lastIndex = i;
+                        const match = src.match(p)?.[0];
 
-                    case "split": {
-                        const { x, y } = inst;
-                        state = { pc: x, sp };
-
-                        if (
-                            !states.some((s) => s.pc === y && s.sp.offset === sp.offset)
-                        ) {
-                            states[ti] = { pc: y, sp };
-                            ti += 1;
+                        if (match == null) {
+                            break;
                         }
-                        continue;
-                    }
 
-                    case "save":
-                    case "map": {
-                        const { x, fn, pos } = inst;
-                        if (pos === "end") {
-                            state.saved = [fn(state.saved)];
-                        } else {
-                            state.saved = [];
-                        }
-                        state = { pc: x, sp };
-                        continue;
+                        i += match.length;
+                        this.addThread(nlist, { pc: pc + 1, saved: match }, saved);
+                        break;
                     }
 
                     case "match": {
-                        const t = sp.offset >= src.length;
-                        console.log(t);
-                        return t
+                        matched = true;
+                        break;
                     }
                 }
             }
+            [clist, nlist] = [nlist, clist];
         }
+
+        return matched && i === src.length;
     }
 }
 
@@ -283,8 +293,8 @@ const csvFSM = () => {
         FSMRegex(/[^,]*/)
     );
 
-    const line = FSMAll(token.trimWhitespace(), delim.opt()).many();
-    const csv = line.trimWhitespace().many();
+    const line = FSMAll(token.save(), delim.opt()).many().trimWhitespace();
+    const csv = line.many();
     return csv.done();
 };
 
@@ -304,44 +314,50 @@ const csvCombinator = () => {
     return csv;
 };
 
-const src = `"58","""This is a sentence with quotes"" and a\nnewline","31","45","This cell has no special characters","13","29","""This cell has quotes, but no\nnewlines""","""This cell has\na newline, but no quotes""","""This cell has both\na newline and ""quotes"" in it""",vi
-`;
+// const src = `"58","""This is a sentence with quotes"" and a\nnewline","31","45","This cell has no special characters","13","29","""This cell has quotes, but no\nnewlines""","""This cell has\na newline, but no quotes""","""This cell has both\na newline and ""quotes"" in it""",vi
+
+// `;
+
+const src = fs.readFileSync("data/active_charter_schools_report.csv", "utf8");
 
 describe("FSM", () => {
-    it("should print vibes", () => {
-        // A = "a"
-        // B = "b" | "v"
-        // P = ( A , B ) *
+    // it("should print vibes", () => {
+    //     // A = "a"
+    //     // B = "b" | "v"
+    //     // P = ( A , B ) *
 
-        // const src = "$$$aaaaab$$$";
+    //     const src = "taaaaat";
 
-        // const a = FSMRegex(/a/).many();
-        // const b = FSMRegex(/b/).or(FSMRegex(/v/));
+    //     const a = FSMRegex(/a/);
+    //     const b = FSMRegex(/b/).or(FSMRegex(/v/));
+    //     const fsm = a.many().wrap(FSMRegex(/t/));
+    //     const t = fsm.done().run(src);
+    //     console.log(t);
 
-        // const fsm = a.then(b.opt()).wrap(FSMRegex(/\$/).many(), FSMRegex(/\$/).many());
+    //     // const fsm = a.then(b.opt()).wrap(FSMRegex(/\$/).many(), FSMRegex(/\$/).many());
 
-        const t = csvFSM().run(src);
-        console.log(t);
-        console.log("hey");
-    });
+    //     // const t = csvFSM().run(src);
+    //     // console.log(t);
+    //     // console.log("hey");
+    // });
 
-    // bench(
-    //     "FSM",
-    //     () => {
-    //         csvFSM().run(src);
-    //     },
-    //     {
-    //         iterations: 1,
-    //     }
-    // );
+    bench(
+        "FSM",
+        () => {
+            csvFSM().run(src);
+        },
+        {
+            iterations: 10,
+        }
+    );
 
-    // bench(
-    //     "Combinator",
-    //     () => {
-    //         csvCombinator().parse(src);
-    //     },
-    //     {
-    //         iterations: 1,
-    //     }
-    // );
+    bench(
+        "Combinator",
+        () => {
+            const t = csvCombinator().parse(src);
+        },
+        {
+            iterations: 10,
+        }
+    );
 });
