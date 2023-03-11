@@ -1,5 +1,6 @@
 use regex::Regex;
 
+#[derive(Debug, Clone, Copy)]
 pub struct ParserState<'a> {
     src: &'a str,
     offset: usize,
@@ -23,7 +24,12 @@ impl<'a> ParserState<'a> {
 
     #[allow(dead_code)]
     fn get_line_number(&self) -> usize {
-        self.src[..self.offset].matches('\n').count() + 1
+        self.src[..self.offset]
+            .as_bytes()
+            .iter()
+            .filter(|&&c| c == b'\n')
+            .count()
+            + 1
     }
 }
 
@@ -40,7 +46,6 @@ where
 
 impl<'a, Output> Parser<'a, Output> {
     pub fn parse(&self, src: &'a str) -> Option<Output> {
-        let src = src.into();
         let state = ParserState { src, offset: 0 };
 
         match (self.parser_fn)(&state) {
@@ -82,6 +87,37 @@ impl<'a, Output> Parser<'a, Output> {
         }
     }
 
+    pub fn not<Output2>(self, parser: Parser<'a, Output2>) -> Parser<'a, Output> {
+        let not = move |state: &ParserState<'a>| {
+            if let Ok(_) = (parser.parser_fn)(state) {
+                return Err(());
+            }
+
+            if let Ok(result) = (self.parser_fn)(state) {
+                return Ok(result);
+            }
+
+            Err(())
+        };
+
+        Parser {
+            parser_fn: Box::new(not),
+        }
+    }
+
+    pub fn negate(self) -> Parser<'a, Option<Output>> {
+        let negate = move |state: &ParserState<'a>| {
+            if let Ok(_) = (self.parser_fn)(state) {
+                return Err(());
+            }
+
+            Ok((state.from(0), None))
+        };
+        Parser {
+            parser_fn: Box::new(negate),
+        }
+    }
+
     pub fn map<Output2>(self, f: fn(Output) -> Output2) -> Parser<'a, Output2> {
         let map = move |state: &ParserState<'a>| {
             if let Ok((state1, Some(value1))) = (self.parser_fn)(state) {
@@ -95,12 +131,9 @@ impl<'a, Output> Parser<'a, Output> {
     }
 
     pub fn opt(self) -> Parser<'a, Output> {
-        let opt = move |state: &ParserState<'a>| {
-            if let Ok(result) = (self.parser_fn)(state) {
-                return Ok(result);
-            }
-
-            Ok((state.from(0), None))
+        let opt = move |state: &ParserState<'a>| match (self.parser_fn)(state) {
+            Err(_) => return Ok((state.from(0), None)),
+            Ok(result) => return Ok(result),
         };
 
         Parser {
@@ -140,7 +173,7 @@ impl<'a, Output> Parser<'a, Output> {
                 }
             }
 
-            Ok((state1, Some(values)))
+            Ok((state1.from(0), Some(values)))
         };
 
         Parser {
@@ -189,6 +222,19 @@ impl<'a, Output> Parser<'a, Output> {
         self.skip(delim.opt())
             .many(lower.map_or(Some(1), |x| Some(x + 1)), upper)
     }
+
+    pub fn look_ahead(self, parser: Parser<'a, Output>) -> Parser<'a, Output> {
+        let look_ahead = move |state: &ParserState<'a>| {
+            let (state1, value1) = (self.parser_fn)(state)?;
+            (parser.parser_fn)(&state1)?;
+
+            Ok((state1, value1))
+        };
+
+        Parser {
+            parser_fn: Box::new(look_ahead),
+        }
+    }
 }
 
 impl<'a, Output> std::ops::BitOr<Parser<'a, Output>> for Parser<'a, Output> {
@@ -202,6 +248,64 @@ impl<'a, Output, Output2> std::ops::Add<Parser<'a, Output2>> for Parser<'a, Outp
     type Output = Parser<'a, (Output, Option<Output2>)>;
     fn add(self, other: Parser<'a, Output2>) -> Parser<'a, (Output, Option<Output2>)> {
         self.then(other)
+    }
+}
+
+pub fn eof<'a>() -> Parser<'a, ()> {
+    let eof = move |state: &ParserState<'a>| {
+        if state.offset == state.src.len() {
+            Ok((state.from(0), Some(())))
+        } else {
+            Err(())
+        }
+    };
+
+    Parser {
+        parser_fn: Box::new(eof),
+    }
+}
+
+use std::cell::RefCell;
+use std::rc::Rc;
+
+pub struct LazyParser<'a, Output> {
+    parser_fn: fn() -> Parser<'a, Output>,
+    cached_parser: Option<Rc<Parser<'a, Output>>>,
+}
+
+impl<'a, Output> LazyParser<'a, Output> {
+    pub fn new(parser_fn: fn() -> Parser<'a, Output>) -> LazyParser<'a, Output> {
+        LazyParser {
+            parser_fn: parser_fn,
+            cached_parser: None,
+        }
+    }
+
+    pub fn get(&mut self) -> Rc<Parser<'a, Output>>
+    where
+        Output: 'a,
+        Self: 'a,
+    {
+        if let Some(parser) = self.cached_parser.as_ref() {
+            parser.clone()
+        } else {
+            let parser = Rc::new((self.parser_fn)());
+            self.cached_parser = Some(parser.clone());
+            parser
+        }
+    }
+}
+
+pub fn lazy<'a, Output>(f: fn() -> Parser<'a, Output>) -> Parser<'a, Output> {
+    let lazy_parser = Rc::new(RefCell::new(LazyParser::new(f)));
+
+    let lazy = move |state: &ParserState<'a>| {
+        let parser = lazy_parser.borrow_mut().get();
+        (parser.parser_fn)(state)
+    };
+
+    Parser {
+        parser_fn: Box::new(lazy),
     }
 }
 
@@ -229,18 +333,16 @@ pub fn regex<'a>(r: &str) -> Parser<'a, &'a str> {
     let re = Regex::new(r).expect(&format!("Failed to compile regex: {}", r));
 
     let regex = move |state: &ParserState<'a>| {
-        state
-            .src
-            .get(state.offset..)
-            .and_then(|src| {
-                re.find(src).map(|m| {
-                    let value = m.as_str();
-                    let offset = m.end();
+        let slc = state.src.get(state.offset..).unwrap_or("");
+        if let Some(m) = re.find(slc) {
+            if m.start() == 0 {
+                let value = m.as_str();
+                let offset = m.end();
+                return Ok((state.from(offset), Some(value)));
+            }
+        }
 
-                    (state.from(offset), Some(value))
-                })
-            })
-            .ok_or(())
+        return Err(());
     };
 
     Parser {
