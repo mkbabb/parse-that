@@ -1,6 +1,8 @@
 pub mod parse_that;
 use parse_that::*;
 
+use std::fmt::*;
+
 pub mod doc;
 use doc::*;
 
@@ -14,6 +16,20 @@ pub enum JsonValue {
     String(String),
     Array(Vec<JsonValue>),
     Object(HashMap<String, JsonValue>),
+}
+
+// Doc<'a> impl for JsonValue:
+impl<'a> Into<Doc<'a>> for JsonValue {
+    fn into(self) -> Doc<'a> {
+        match self {
+            JsonValue::Null => "null".into(),
+            JsonValue::Bool(b) => b.to_string().into(),
+            JsonValue::Number(n) => n.into(),
+            JsonValue::String(s) => format!("\"{}\"", s).into(),
+            JsonValue::Array(a) => a.into(),
+            JsonValue::Object(o) => o.into(),
+        }
+    }
 }
 
 pub fn json<'a>() -> Parser<'a, JsonValue> {
@@ -60,7 +76,7 @@ pub fn json<'a>() -> Parser<'a, JsonValue> {
 
                 for pair in pairs {
                     if let (JsonValue::String(key), Some(value)) = pair {
-                        obj.insert(key, value);
+                        obj.insert(format!("\"{}\"", key), value);
                     }
                 }
 
@@ -71,8 +87,8 @@ pub fn json<'a>() -> Parser<'a, JsonValue> {
     json_null() | json_bool() | json_number() | json_string() | json_array | json_object
 }
 
-pub fn csv_test() -> Vec<Vec<String>> {
-    let csv_parser = || {
+pub fn parse_csv(src: &str) -> Vec<Vec<&str>> {
+    let parser = || {
         let whitespace = || regex(r"\s*");
 
         let double_quotes = || string("\"");
@@ -91,86 +107,49 @@ pub fn csv_test() -> Vec<Vec<String>> {
         csv
     };
 
-    let file_path = "data/active_charter_schools_report.csv";
-    let string = fs::read_to_string(file_path).unwrap();
-    let src = string.as_str();
-
-    let now = SystemTime::now();
-
-    let results = csv_parser().parse(src).unwrap();
-
-    let elapsed = now.elapsed().unwrap();
-    println!("elapsed: {:?}", elapsed);
-
-    return results
-        .into_iter()
-        .map(|x| x.into_iter().map(|x| x.to_string()).collect())
-        .collect();
-}
-
-pub fn json_test() {
-    let now = SystemTime::now();
-
-    let file_path = "data/data-l.json";
-    let string = fs::read_to_string(file_path).unwrap();
-    let src = string.as_str();
-
-    let parser = json();
-
-    let values = parser.parse(src).unwrap();
-
-    dbg!(values);
-
-    let elapsed = now.elapsed().unwrap();
-    println!("elapsed: {:?}", elapsed);
+    parser().parse(src).expect("failed to parse csv")
 }
 
 pub fn main() {
-    // let rows = csv_test();
+    // let csv_file_path = "data/active_charter_schools_report.csv";
+    // let csv_string = fs::read_to_string(csv_file_path).unwrap();
+    // let rows = parse_csv(&csv_string);
 
-    let rows = vec![
-        vec!["a", "b", "c"],
-        vec!["d", "e", "f"],
-        vec!["g", "h", "i"],
-    ];
+    let json_file_path = "data/data-l.json";
+    let json_string = fs::read_to_string(json_file_path).unwrap();
+    let map = json().parse(&json_string).unwrap();
 
-    let p = Printer::new(30, 2);
+    // test hashmap with 10 items:
 
-    let array_to_doc =
-        |items: Vec<&str>| -> Vec<Doc> { items.into_iter().map(|x| text(x)).collect() };
+    // let mut map0 = HashMap::new();
+    // map0.insert("my vibes", vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    // map0.insert("thats vibes", vec![1, 2, 3, ]);
+    // map0.insert("ok", vec![1, 2, 3, ]);
 
-    let format_array = |items: Vec<Doc>| -> Doc {
-        text("[") + p.indent(join(text(",") + Doc::Hardline, items)) + Doc::Hardline + text("]")
+
+    // let mut map2 = HashMap::new();
+    // map2.insert("my vibes", map0.clone());
+    // let mut map3 = HashMap::new();
+    // map3.insert("thats vibes", map2.clone());
+    // map3.insert("ok", map2.clone());
+
+
+    // let mut map = HashMap::new();
+    // map.insert("ok", map3.clone());
+
+    let printer = Printer {
+        max_width: 80,
+        indent: 1,
+        break_long_text: true,
+        use_tabs: true,
     };
 
     let now = SystemTime::now();
+    
+    let pretty = printer.pretty(map);
+    let elapsed = now.elapsed().unwrap();
+    
+    println!("Elapsed: {:?}", elapsed);
 
-    let fmt = rows
-        .into_iter()
-        .map(|row| array_to_doc(row))
-        .map(|row| format_array(row))
-        .collect::<Vec<Doc>>();
-
-    let mut smrt = smart_join(
-        text(" , "),
-        vec![
-            text("hey this is cool"),
-            text("gay ass vibes"),
-            text("a"),
-            text("wthat the heck"),
-            text("b"),
-            text("c"),
-            text("d"),
-            text("gay ass vibes"),
-            text("gay ass vibes"),
-        ],
-    );
-
-    smrt = text("[") + p.indent(smrt) + Doc::Hardline + text("]");
-
-    let pretty = p.pretty(smrt);
-
-    println!("{}", pretty);
-
-    // json_test();
+    fs::write("pretty.json", pretty).expect("Unable to write file");
 }
