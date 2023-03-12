@@ -213,6 +213,10 @@ impl<'a, Output> Parser<'a, Output> {
         }
     }
 
+    pub fn trim_whitespace(self) -> Parser<'a, Output> {
+        self.trim(regex(r"\s*"))
+    }
+
     pub fn sep_by<Output2>(
         self,
         delim: Parser<'a, Output2>,
@@ -268,13 +272,15 @@ pub fn eof<'a>() -> Parser<'a, ()> {
 use std::cell::RefCell;
 use std::rc::Rc;
 
+type LazyParserFn<'a, Output> = Box<dyn Fn() -> Parser<'a, Output>>;
+
 pub struct LazyParser<'a, Output> {
-    parser_fn: fn() -> Parser<'a, Output>,
+    parser_fn: LazyParserFn<'a, Output>,
     cached_parser: Option<Rc<Parser<'a, Output>>>,
 }
 
 impl<'a, Output> LazyParser<'a, Output> {
-    pub fn new(parser_fn: fn() -> Parser<'a, Output>) -> LazyParser<'a, Output> {
+    pub fn new(parser_fn: LazyParserFn<'a, Output>) -> LazyParser<'a, Output> {
         LazyParser {
             parser_fn: parser_fn,
             cached_parser: None,
@@ -296,7 +302,7 @@ impl<'a, Output> LazyParser<'a, Output> {
     }
 }
 
-pub fn lazy<'a, Output>(f: fn() -> Parser<'a, Output>) -> Parser<'a, Output> {
+pub fn lazy<'a, Output>(f: LazyParserFn<'a, Output>) -> Parser<'a, Output> {
     let lazy_parser = Rc::new(RefCell::new(LazyParser::new(f)));
 
     let lazy = move |state: &ParserState<'a>| {
