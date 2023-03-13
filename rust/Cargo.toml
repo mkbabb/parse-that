@@ -5,7 +5,7 @@ edition = "2021"
 
 [[bin]]
 name = "parse_that"
-path = "./crab/main.rs"
+path = "./src/main.rs"
 
 [dependencies]
 regex = { version = "1", features = ["perf"] }

@@ -57,7 +57,7 @@ describe("Memoization & left recursion", () => {
     });
 
     it("should sS from BBNF", () => {
-        const grammar = fs.readFileSync("./grammar/sS.bbnf", "utf-8");
+        const grammar = fs.readFileSync("../grammar/sS.bbnf", "utf-8");
         const [nonterminals, ast] = BBNFToParser(grammar);
 
         nonterminals.sS = nonterminals.sS.mergeMemos().memoize();
@@ -70,7 +70,7 @@ describe("Memoization & left recursion", () => {
     });
 
     it("should math from BBNF", () => {
-        const grammar = fs.readFileSync("./grammar/math-ambiguous.bbnf", "utf-8");
+        const grammar = fs.readFileSync("../grammar/math-ambiguous.bbnf", "utf-8");
         const [nonterminals, ast] = BBNFToParser(grammar);
 
         nonterminals.expression = nonterminals.expression.memoize().trim();

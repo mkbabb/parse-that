@@ -1,7 +1,7 @@
-pub mod parse_that;
+pub mod parse;
 pub mod pretty;
 
-use parse_that::*;
+use parse::*;
 use pretty::*;
 
 use std::{collections::HashMap, fs, time::SystemTime};
@@ -111,11 +111,10 @@ pub fn parse_csv(src: &str) -> Vec<Vec<&str>> {
 
 pub fn main() {
     let first_now = SystemTime::now();
-    
-    let csv_file_path = "data/active_charter_schools_report.csv";
+
+    let csv_file_path = "../data/active_charter_schools_report.csv";
     let csv_string = fs::read_to_string(csv_file_path).unwrap();
     let rows = parse_csv(&csv_string);
-
 
     // let json_file_path = "data/canada.json";
     // let json_string = fs::read_to_string(json_file_path).unwrap();
@@ -133,9 +132,15 @@ pub fn main() {
     // test hashmap with 10 items:
 
     let mut map0 = HashMap::new();
-    map0.insert("my vibes", vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-    map0.insert("thats vibes", vec![1, 2, 3, ]);
-    map0.insert("ok", vec![1, 2, 3, ]);
+    map0.insert(
+        "my vibes",
+        vec![
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8,
+            9, 10,
+        ],
+    );
+    map0.insert("thats vibes", vec![1, 2, 3]);
+    map0.insert("ok", vec![1, 2, 3]);
 
     let mut map2 = HashMap::new();
     map2.insert("my vibes", map0.clone());
@@ -156,7 +161,7 @@ pub fn main() {
 
     println!("Elapsed: {:?}", elapsed);
 
-    fs::write("pretty.json", pretty).expect("Unable to write file");
+    fs::write("../data/pretty.json", pretty).expect("Unable to write file");
 
     let elapsed = first_now.elapsed().unwrap();
 
