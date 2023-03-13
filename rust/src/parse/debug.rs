@@ -121,6 +121,10 @@ pub fn state_print(
 
 impl<'a, Output> Parser<'a, Output> {
     pub fn debug(self, name: &'a str) -> Parser<'a, Output> {
+        if cfg!(feature = "perf") {
+            return self;
+        }
+
         let debug = move |state: &ParserState<'a>| match (self.parser_fn)(state) {
             Ok((new_state, value)) => {
                 println!("{}", state_print(Ok(&new_state), name, ""));

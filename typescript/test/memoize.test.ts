@@ -1,14 +1,4 @@
-import {
-    whitespace,
-    regex,
-    string,
-    all,
-    Parser,
-    eof,
-    lookBehind,
-    lazy,
-    any,
-} from "../src/parse";
+import { whitespace, regex, string, all, Parser, any } from "../src/parse";
 
 import { expect, describe, it } from "vitest";
 import fs from "fs";

@@ -41,22 +41,20 @@ pub fn json<'a>() -> Parser<'a, JsonValue<'a>> {
         || regex(r#"-?\d+(\.\d+)?"#).map(|s| JsonValue::Number(s.parse().unwrap_or(f64::NAN)));
 
     let json_string = || {
-        let string_char = regex(r#"([^"\\]|\\["\\/bfnrt]|\\u[a-fA-F0-9]{4})+"#);
+        let string_char = regex(r#"([^"\\]|\\["\\/bfnrt]|\\u[a-fA-F0-9]{4})*"#);
         string_char
-            .opt()
             .wrap(string("\""), string("\""))
             .map(JsonValue::String)
-        // .debug("json_string")
     };
 
     let json_array = lazy(Box::new(|| {
         let comma = string(",").trim_whitespace();
         json()
             .sep_by(comma, None, None)
-            .opt()
+            .or_else(|| vec![])
             .trim_whitespace()
             .wrap(string("["), string("]"))
-            .map(|v| JsonValue::Array(v))
+            .map(JsonValue::Array)
     }));
 
     let json_object = lazy(Box::new(move || {
@@ -64,10 +62,10 @@ pub fn json<'a>() -> Parser<'a, JsonValue<'a>> {
             .skip(string(":").trim_whitespace())
             .then(json());
 
-        let comma = regex(r"\s*,\s*");
+        let comma = string(",").trim_whitespace();
         key_value
             .sep_by(comma, None, None)
-            .opt()
+            .or_else(|| vec![])
             .trim_whitespace()
             .wrap(string("{"), string("}"))
             .map(|pairs| {
@@ -83,7 +81,8 @@ pub fn json<'a>() -> Parser<'a, JsonValue<'a>> {
             })
     }));
 
-    (json_object | json_array | json_string() | json_number() | json_bool() | json_null()).trim_whitespace()
+    (json_object | json_array | json_string() | json_number() | json_bool() | json_null())
+        .trim_whitespace()
 }
 
 pub fn parse_csv(src: &str) -> Vec<Vec<&str>> {
@@ -112,11 +111,11 @@ pub fn parse_csv(src: &str) -> Vec<Vec<&str>> {
 pub fn main() {
     let first_now = SystemTime::now();
 
-    let csv_file_path = "../data/active_charter_schools_report.csv";
-    let csv_string = fs::read_to_string(csv_file_path).unwrap();
-    let rows = parse_csv(&csv_string);
+    // let csv_file_path = "../data/active_charter_schools_report.csv";
+    // let csv_string = fs::read_to_string(csv_file_path).unwrap();
+    // let rows = parse_csv(&csv_string);
 
-    let json_file_path = "../data/canada.json";
+    let json_file_path = "../data/data-l.json";
     let json_string = fs::read_to_string(json_file_path).unwrap();
 
     let parser = json();
@@ -124,10 +123,6 @@ pub fn main() {
     let now = SystemTime::now();
 
     let map = parser.parse(&json_string).unwrap();
-    let context = parser.context.borrow();
-    let state = &context.as_ref().unwrap().state;
-
-    println!("{}", state_print(Ok(state), "", ""));
 
     let elapsed = now.elapsed().unwrap();
 

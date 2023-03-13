@@ -10,10 +10,17 @@ path = "./src/main.rs"
 [dependencies]
 regex = { version = "1", features = ["perf"] }
 colored = "2.0.0"
+pest = "2.5.6"
+pest_grammars = "2.5.6"
+fnv = "1.0.7"
+bencher = "0.1.5"
+tikv-jemallocator = "0.5.0"
 
 [unstable]
+let_chains = true
 bench = true
 
 [features]
+
 debug = []
 perf = []
