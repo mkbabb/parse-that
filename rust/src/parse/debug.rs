@@ -119,24 +119,24 @@ pub fn state_print(
     PRINTER.pretty(header_body)
 }
 
-impl<'a, Output> Parser<'a, Output> {
-    pub fn debug(self, name: &'a str) -> Parser<'a, Output> {
-        if cfg!(feature = "perf") {
-            return self;
-        }
+// impl<'a, Output> Parser<'a, Output> {
+//     pub fn debug(self, name: &'a str) -> Parser<'a, Output> {
+//         if cfg!(feature = "perf") {
+//             return self;
+//         }
 
-        let debug = move |state: &ParserState<'a>| match (self.parser_fn)(state) {
-            Ok((new_state, value)) => {
-                println!("{}", state_print(Ok(&new_state), name, ""));
+//         let debug = move |state: &ParserState<'a>| match (self.parser_fn)(state) {
+//             Ok((new_state, value)) => {
+//                 println!("{}", state_print(Ok(&new_state), name, ""));
 
-                return Ok((new_state, value));
-            }
-            Err(()) => {
-                println!("{}", state_print(Err(&state), name, ""));
-                return Err(());
-            }
-        };
+//                 return Ok((new_state, value));
+//             }
+//             Err(()) => {
+//                 println!("{}", state_print(Err(&state), name, ""));
+//                 return Err(());
+//             }
+//         };
 
-        Parser::new(Box::new(debug), Some(self.context.clone()))
-    }
-}
+//         Parser::new(Box::new(debug), Some(self.context.clone()))
+//     }
+// }

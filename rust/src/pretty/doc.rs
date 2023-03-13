@@ -98,7 +98,7 @@ where
     }
 }
 
-impl<'a, K, V> Into<Doc<'a>> for HashMap<K, V>
+impl<'a, K, V, R> Into<Doc<'a>> for HashMap<K, V, R>
 where
     K: Into<Doc<'a>>,
     V: Into<Doc<'a>>,
