@@ -18,6 +18,7 @@ wasm-bindgen = "0.2"
 regex = "1"
 js-sys = "0.3"
 lazy_static = "1.4.0"
+colored = "2.0.0"
 
 [unstable]
 bench = true

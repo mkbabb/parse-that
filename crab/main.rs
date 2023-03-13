@@ -135,7 +135,7 @@ pub fn main() {
     // let mut map = HashMap::new();
     // map.insert("ok", map3.clone());
 
-    let mut printer = Printer::new(80, 1, true, true);
+    let printer = Printer::new(80, 1, true, true);
 
     let now = SystemTime::now();
 
