@@ -1,25 +1,23 @@
 pub mod parse_that;
+pub mod pretty;
+
 use parse_that::*;
-
-use std::fmt::*;
-
-pub mod doc;
-use doc::*;
+use pretty::*;
 
 use std::{collections::HashMap, fs, time::SystemTime};
 
 #[derive(Debug, Clone)]
-pub enum JsonValue {
+pub enum JsonValue<'a> {
     Null,
     Bool(bool),
     Number(f64),
-    String(String),
-    Array(Vec<JsonValue>),
-    Object(HashMap<String, JsonValue>),
+    String(&'a str),
+    Array(Vec<JsonValue<'a>>),
+    Object(HashMap<String, JsonValue<'a>>),
 }
 
 // Doc<'a> impl for JsonValue:
-impl<'a> Into<Doc<'a>> for JsonValue {
+impl<'a> Into<Doc<'a>> for JsonValue<'a> {
     fn into(self) -> Doc<'a> {
         match self {
             JsonValue::Null => "null".into(),
@@ -32,7 +30,7 @@ impl<'a> Into<Doc<'a>> for JsonValue {
     }
 }
 
-pub fn json<'a>() -> Parser<'a, JsonValue> {
+pub fn json<'a>() -> Parser<'a, JsonValue<'a>> {
     let json_null = || string("null").map(|_| JsonValue::Null);
     let json_bool = || {
         string("true").map(|_| JsonValue::Bool(true))
@@ -40,14 +38,15 @@ pub fn json<'a>() -> Parser<'a, JsonValue> {
     };
 
     let json_number =
-        || regex(r#"-?(0|[1-9]\d*)(\.\d+)?"#).map(|s| JsonValue::Number(s.parse().unwrap()));
+        || regex(r#"-?\d+(\.\d+)?"#).map(|s| JsonValue::Number(s.parse().unwrap_or(f64::NAN)));
 
     let json_string = || {
-        let string_char = regex(r#"[^"\\]+"#);
+        let string_char = regex(r#"([^"\\]|\\["\\/bfnrt]|\\u[a-fA-F0-9]{4})+"#);
         string_char
-            .many(None, None)
+            .opt()
             .wrap(string("\""), string("\""))
-            .map(|s| JsonValue::String(s.join("")))
+            .map(JsonValue::String)
+        // .debug("json_string")
     };
 
     let json_array = lazy(Box::new(|| {
@@ -65,7 +64,7 @@ pub fn json<'a>() -> Parser<'a, JsonValue> {
             .skip(string(":").trim_whitespace())
             .then(json());
 
-        let comma = string(",").trim_whitespace();
+        let comma = regex(r"\s*,\s*");
         key_value
             .sep_by(comma, None, None)
             .opt()
@@ -75,8 +74,8 @@ pub fn json<'a>() -> Parser<'a, JsonValue> {
                 let mut obj = HashMap::new();
 
                 for pair in pairs {
-                    if let (JsonValue::String(key), Some(value)) = pair {
-                        obj.insert(format!("\"{}\"", key), value);
+                    if let (JsonValue::String(s), Some(value)) = pair {
+                        obj.insert(format!(r#""{}""#, s), value);
                     }
                 }
 
@@ -84,7 +83,7 @@ pub fn json<'a>() -> Parser<'a, JsonValue> {
             })
     }));
 
-    json_null() | json_bool() | json_number() | json_string() | json_array | json_object
+    json_object | json_array | json_string() | json_number() | json_bool() | json_null()
 }
 
 pub fn parse_csv(src: &str) -> Vec<Vec<&str>> {
@@ -111,29 +110,42 @@ pub fn parse_csv(src: &str) -> Vec<Vec<&str>> {
 }
 
 pub fn main() {
-    // let csv_file_path = "data/active_charter_schools_report.csv";
-    // let csv_string = fs::read_to_string(csv_file_path).unwrap();
-    // let rows = parse_csv(&csv_string);
+    let first_now = SystemTime::now();
+    
+    let csv_file_path = "data/active_charter_schools_report.csv";
+    let csv_string = fs::read_to_string(csv_file_path).unwrap();
+    let rows = parse_csv(&csv_string);
 
-    let json_file_path = "data/data-l.json";
-    let json_string = fs::read_to_string(json_file_path).unwrap();
-    let map = json().parse(&json_string).unwrap();
+
+    // let json_file_path = "data/canada.json";
+    // let json_string = fs::read_to_string(json_file_path).unwrap();
+
+    // let parser = json();
+
+    // let now = SystemTime::now();
+
+    // let map = parser.parse(&json_string).unwrap();
+
+    // let elapsed = now.elapsed().unwrap();
+
+    // println!("Elapsed: {:?}", elapsed);
 
     // test hashmap with 10 items:
 
-    // let mut map0 = HashMap::new();
-    // map0.insert("my vibes", vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-    // map0.insert("thats vibes", vec![1, 2, 3, ]);
-    // map0.insert("ok", vec![1, 2, 3, ]);
+    let mut map0 = HashMap::new();
+    map0.insert("my vibes", vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    map0.insert("thats vibes", vec![1, 2, 3, ]);
+    map0.insert("ok", vec![1, 2, 3, ]);
 
-    // let mut map2 = HashMap::new();
-    // map2.insert("my vibes", map0.clone());
-    // let mut map3 = HashMap::new();
-    // map3.insert("thats vibes", map2.clone());
-    // map3.insert("ok", map2.clone());
+    let mut map2 = HashMap::new();
+    map2.insert("my vibes", map0.clone());
+    let mut map3 = HashMap::new();
+    map3.insert("thats vibes", map2.clone());
+    map3.insert("ok", map2.clone());
 
-    // let mut map = HashMap::new();
-    // map.insert("ok", map3.clone());
+    let mut map = HashMap::new();
+    map.insert("ok", map3.clone());
+    map.insert("thats vibes", map3.clone());
 
     let printer = Printer::new(80, 1, true, true);
 
@@ -145,4 +157,8 @@ pub fn main() {
     println!("Elapsed: {:?}", elapsed);
 
     fs::write("pretty.json", pretty).expect("Unable to write file");
+
+    let elapsed = first_now.elapsed().unwrap();
+
+    println!("Total Elapsed: {:?}", elapsed);
 }

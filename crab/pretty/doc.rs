@@ -68,8 +68,8 @@ pub fn group<'a>(doc: Doc<'a>) -> Doc<'a> {
     Doc::Group(Box::new(doc))
 }
 
-pub fn concat<'a>(docs: Vec<Doc<'a>>) -> Doc<'a> {
-    Doc::Concat(docs)
+pub fn concat<'a>(docs: Vec<impl Into<Doc<'a>>>) -> Doc<'a> {
+    Doc::Concat(docs.into_iter().map(|d| d.into()).collect())
 }
 
 pub fn join<'a>(sep: Doc<'a>, docs: Vec<Doc<'a>>) -> Doc<'a> {
@@ -312,12 +312,13 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
 
                 let joined = join_fn(*&sep, docs, printer);
                 let length: usize = joined.iter().map(|d| count_text_length(d, printer)).sum();
+                let indent_delta_m1 = indent_delta.saturating_sub(printer.indent);
 
                 let needs_breaking =
-                    length + ((indent_delta - 1) * printer.indent) > printer.max_width;
+                    length + (indent_delta_m1 * printer.indent) > printer.max_width;
 
                 if needs_breaking {
-                    push_hardline(&mut stack, indent_delta);
+                    push_hardline(&mut stack, indent_delta_m1);
                 }
                 for d in joined.into_iter().rev() {
                     stack.push(PrintItem {
@@ -382,7 +383,7 @@ pub struct Printer {
     pub use_tabs: bool,
 }
 
-impl<'a> Default for Printer {
+impl Default for Printer {
     fn default() -> Self {
         Printer {
             max_width: 80,
@@ -394,7 +395,12 @@ impl<'a> Default for Printer {
 }
 
 impl Printer {
-    pub fn new(max_width: usize, indent: usize, break_long_text: bool, use_tabs: bool) -> Self {
+    pub const fn new(
+        max_width: usize,
+        indent: usize,
+        break_long_text: bool,
+        use_tabs: bool,
+    ) -> Self {
         Printer {
             max_width,
             indent,
@@ -408,6 +414,8 @@ impl Printer {
     }
 }
 
+pub const PRINTER: Printer = Printer::new(80, 2, true, false);
+
 impl<'a, T> Into<Doc<'a>> for Vec<T>
 where
     T: Into<Doc<'a>>,
@@ -416,7 +424,7 @@ where
         let doc_vec: Vec<Doc> = self.into_iter().map(|item| item.into()).collect();
 
         if !doc_vec.is_empty() {
-            let doc = str("[") + indent(smart_join(str(", "), doc_vec)) + Doc::Softline + str("]");
+            let doc = str("[") + indent(smart_join(str(", "), doc_vec)) + str("]");
 
             return doc;
         } else {
@@ -441,7 +449,7 @@ where
         if !doc_vec.is_empty() {
             let doc = str("{")
                 + indent(join(str(", ") + Doc::Hardline, doc_vec))
-                + Doc::Hardline
+                + Doc::Softline
                 + str("}");
 
             return doc;

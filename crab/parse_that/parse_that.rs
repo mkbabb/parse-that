@@ -1,13 +1,15 @@
 use regex::Regex;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 #[derive(Debug, Clone, Copy)]
 pub struct ParserState<'a> {
-    src: &'a str,
-    offset: usize,
+    pub src: &'a str,
+    pub offset: usize,
 }
 
 impl<'a> ParserState<'a> {
-    fn from(&self, offset: usize) -> ParserState<'a> {
+    pub fn from(&self, offset: usize) -> ParserState<'a> {
         let offset = self.offset + offset;
         ParserState {
             src: self.src,
@@ -15,15 +17,18 @@ impl<'a> ParserState<'a> {
         }
     }
 
-    #[allow(dead_code)]
-    fn get_column_number(&self) -> usize {
+    pub fn get_column_number(&self) -> usize {
         let offset = self.offset;
         let last_newline = self.src[..offset].rfind('\n').unwrap_or(0);
-        offset - last_newline - 1
+
+        if offset <= last_newline {
+            0
+        } else {
+            offset - last_newline
+        }
     }
 
-    #[allow(dead_code)]
-    fn get_line_number(&self) -> usize {
+    pub fn get_line_number(&self) -> usize {
         self.src[..self.offset]
             .as_bytes()
             .iter()
@@ -41,14 +46,20 @@ where
     Self: Sized + 'a,
     Output: 'a,
 {
-    parser_fn: ParserFunction<'a, Output>,
+    pub parser_fn: ParserFunction<'a, Output>,
 }
 
 impl<'a, Output> Parser<'a, Output> {
-    pub fn parse(&self, src: &'a str) -> Option<Output> {
+    pub fn parse_return_state(
+        &self,
+        src: &'a str,
+    ) -> Result<(ParserState<'a>, Option<Output>), ()> {
         let state = ParserState { src, offset: 0 };
+        return (self.parser_fn)(&state);
+    }
 
-        match (self.parser_fn)(&state) {
+    pub fn parse(&self, src: &'a str) -> Option<Output> {
+        match self.parse_return_state(src) {
             Ok((_, value)) => value,
             Err(_) => None,
         }
@@ -92,11 +103,9 @@ impl<'a, Output> Parser<'a, Output> {
             if let Ok(_) = (parser.parser_fn)(state) {
                 return Err(());
             }
-
             if let Ok(result) = (self.parser_fn)(state) {
                 return Ok(result);
             }
-
             Err(())
         };
 
@@ -106,12 +115,9 @@ impl<'a, Output> Parser<'a, Output> {
     }
 
     pub fn negate(self) -> Parser<'a, Option<Output>> {
-        let negate = move |state: &ParserState<'a>| {
-            if let Ok(_) = (self.parser_fn)(state) {
-                return Err(());
-            }
-
-            Ok((state.from(0), None))
+        let negate = move |state: &ParserState<'a>| match (self.parser_fn)(state) {
+            Err(_) => Ok((state.from(0), None)),
+            Ok(_) => Err(()),
         };
         Parser {
             parser_fn: Box::new(negate),
@@ -119,11 +125,10 @@ impl<'a, Output> Parser<'a, Output> {
     }
 
     pub fn map<Output2>(self, f: fn(Output) -> Output2) -> Parser<'a, Output2> {
-        let map = move |state: &ParserState<'a>| {
-            if let Ok((state1, Some(value1))) = (self.parser_fn)(state) {
-                return Ok((state1, Some(f(value1))));
-            }
-            Err(())
+        let map = move |state: &ParserState<'a>| match (self.parser_fn)(state) {
+            Err(_) => return Err(()),
+            Ok((state1, Some(value1))) => return Ok((state1, Some(f(value1)))),
+            Ok((state1, None)) => return Ok((state1, None)),
         };
         Parser {
             parser_fn: Box::new(map),
@@ -173,7 +178,7 @@ impl<'a, Output> Parser<'a, Output> {
                 }
             }
 
-            Ok((state1.from(0), Some(values)))
+            Ok((state1, Some(values)))
         };
 
         Parser {
@@ -214,7 +219,25 @@ impl<'a, Output> Parser<'a, Output> {
     }
 
     pub fn trim_whitespace(self) -> Parser<'a, Output> {
-        self.trim(regex(r"\s*"))
+        let trim_leading_whitespace = move |state: &ParserState<'a>| {
+            let slc = &state.src[state.offset..];
+            slc.chars().take_while(|c| c.is_whitespace()).count()
+        };
+
+        let trim_whitespace = move |state: &ParserState<'a>| {
+            let offset = trim_leading_whitespace(state);
+
+            let state1 = state.from(offset);
+            let (state2, value2) = (self.parser_fn)(&state1)?;
+
+            let offset = trim_leading_whitespace(&state2);
+
+            Ok((state2.from(offset), value2))
+        };
+
+        Parser {
+            parser_fn: Box::new(trim_whitespace),
+        }
     }
 
     pub fn sep_by<Output2>(
@@ -257,7 +280,7 @@ impl<'a, Output, Output2> std::ops::Add<Parser<'a, Output2>> for Parser<'a, Outp
 
 pub fn eof<'a>() -> Parser<'a, ()> {
     let eof = move |state: &ParserState<'a>| {
-        if state.offset == state.src.len() {
+        if state.offset >= state.src.len() {
             Ok((state.from(0), Some(())))
         } else {
             Err(())
@@ -268,9 +291,6 @@ pub fn eof<'a>() -> Parser<'a, ()> {
         parser_fn: Box::new(eof),
     }
 }
-
-use std::cell::RefCell;
-use std::rc::Rc;
 
 type LazyParserFn<'a, Output> = Box<dyn Fn() -> Parser<'a, Output>>;
 
@@ -317,17 +337,12 @@ pub fn lazy<'a, Output>(f: LazyParserFn<'a, Output>) -> Parser<'a, Output> {
 
 pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
     let string = move |state: &ParserState<'a>| {
-        state
-            .src
-            .get(state.offset..)
-            .and_then(|src| {
-                if src.starts_with(s) {
-                    Some((state.from(s.len()), Some(s)))
-                } else {
-                    None
-                }
-            })
-            .ok_or(())
+        let slc = &state.src[state.offset..];
+        if slc.starts_with(s) {
+            Ok((state.from(s.len()), Some(s)))
+        } else {
+            Err(())
+        }
     };
 
     Parser {
@@ -339,12 +354,10 @@ pub fn regex<'a>(r: &str) -> Parser<'a, &'a str> {
     let re = Regex::new(r).expect(&format!("Failed to compile regex: {}", r));
 
     let regex = move |state: &ParserState<'a>| {
-        let slc = state.src.get(state.offset..).unwrap_or("");
-        if let Some(m) = re.find(slc) {
-            if m.start() == 0 {
+        if let Some(m) = re.find_at(state.src, state.offset) {
+            if m.start() == state.offset {
                 let value = m.as_str();
-                let offset = m.end();
-                return Ok((state.from(offset), Some(value)));
+                return Ok((state.from(value.len()), Some(value)));
             }
         }
 
