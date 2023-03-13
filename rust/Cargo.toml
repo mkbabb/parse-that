@@ -13,3 +13,7 @@ colored = "2.0.0"
 
 [unstable]
 bench = true
+
+[features]
+debug = []
+perf = []

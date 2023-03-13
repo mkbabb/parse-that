@@ -25,8 +25,18 @@ pub fn count_text_length<'a>(doc: &'a Doc, printer: &Printer) -> usize {
     }
 }
 
-pub fn join_impl<'a>(sep: &'a Doc<'a>, docs: &'a Vec<Doc>, _: &Printer) -> Vec<&'a Doc<'a>> {
-    docs.iter()
+pub fn join_impl<'a>(
+    sep: &'a Doc<'a>,
+    docs: &'a Vec<Doc>,
+    printer: &Printer,
+) -> (usize, Vec<&'a Doc<'a>>) {
+    let sep_length = count_text_length(sep, printer);
+    let doc_length: usize = docs.iter().map(|d| count_text_length(d, printer)).sum();
+
+    let total_length = doc_length + sep_length * (docs.len() - 1);
+
+    let joined = docs
+        .iter()
         .enumerate()
         .fold(Vec::new(), |mut acc, (i, doc)| {
             if i > 0 {
@@ -34,22 +44,31 @@ pub fn join_impl<'a>(sep: &'a Doc<'a>, docs: &'a Vec<Doc>, _: &Printer) -> Vec<&
             }
             acc.push(doc);
             acc
-        })
+        });
+
+    (total_length, joined)
 }
 
 pub fn smart_join_impl<'a>(
     sep: &'a Doc<'a>,
     docs: &'a Vec<Doc>,
     printer: &Printer,
-) -> Vec<&'a Doc<'a>> {
+) -> (usize, Vec<&'a Doc<'a>>) {
     let max_width = (printer.max_width / 4).max(2);
 
     let sep_length = count_text_length(sep, printer);
     let doc_lengths: Vec<_> = docs.iter().map(|d| count_text_length(d, printer)).collect();
 
+    let mut total_length = doc_lengths.iter().sum::<usize>() + sep_length * (docs.len() - 1);
+
     let breaks = text_justify(sep_length, &doc_lengths, max_width);
 
-    docs.into_iter()
+    if !breaks.is_empty() {
+        total_length += printer.max_width;
+    }
+
+    let joined = docs
+        .into_iter()
         .enumerate()
         .fold(Vec::new(), |mut acc, (i, doc)| {
             if i > 0 {
@@ -60,7 +79,9 @@ pub fn smart_join_impl<'a>(
             }
             acc.push(doc);
             acc
-        })
+        });
+
+    (total_length, joined)
 }
 
 #[allow(dead_code)]
@@ -186,8 +207,8 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
                     join_impl
                 };
 
-                let joined = join_fn(*&sep, docs, printer);
-                let length: usize = joined.iter().map(|d| count_text_length(d, printer)).sum();
+                let (length, joined) = join_fn(*&sep, docs, printer);
+
                 let indent_delta_m1 = indent_delta.saturating_sub(printer.indent);
 
                 let needs_breaking =

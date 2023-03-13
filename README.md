@@ -1,17 +1,30 @@
-# Parse That [Thang](https://oldinterneticons.tumblr.com/post/679136268174688256/go-mouse-fuck-that-thang)
+# `parse[that]`
 
-Parser combinators for TypeScript. Write your language in BBNF (better backus-naur form)
-and parse with ease. Handles left recursion and left factoring. Performance focused
-whilst maintaining readability and ease of use.
+Parser combinators for TypeScript and Rust.
+
+Write your language in [`BBNF`](https://github.com/mkbabb/bbnf-language-support) (better
+backus-naur form) <img src="assets/bbnf-small.png" width=16>.
+
+Handles left recursion and left factoring. Performance focused whilst maintaining
+readability and ease of use.
 
 ## Usage
 
-Simple example:
+TypeScript:
 
 ```ts
 import { string, match } from "@mkbabb/parse-that";
 
 const heyy = match(/hey+t/);
+heyy.parse("heyyyyyyyyyt"); // => "heyyyyyyyyyt"
+```
+
+Rust:
+
+```rust
+use parse_that::string;
+
+let heyy = string("heyyyyyyyyyt");
 heyy.parse("heyyyyyyyyyt"); // => "heyyyyyyyyyt"
 ```
 
@@ -37,28 +50,33 @@ nice.
 
 ## Table of Contents
 
-- [Parse That Thang](#parse-that-thang)
+- [`parse[that]`](#parsethat)
   - [Usage](#usage)
   - [Table of Contents](#table-of-contents)
   - [Performance](#performance)
-    - [Results](#results)
+    - [TypeScript](#typescript)
+      - [Results](#results)
         - [hz: ops/sec - higher is better](#hz-opssec---higher-is-better)
+    - [Rust](#rust)
+      - [Results](#results-1)
   - [Debugging](#debugging)
-        - [Thanks to chalk for the colors!](#thanks-to-chalk-for-the-colors)
+        - [Thanks to chalk and colored for the colors!](#thanks-to-chalk-and-colored-for-the-colors)
   - [BBNF and the Great Parser Generator](#bbnf-and-the-great-parser-generator)
     - [Key differences with EBNF](#key-differences-with-ebnf)
   - [Left recursion \& more](#left-recursion--more)
       - [Using BBNF](#using-bbnf)
       - [Combinator support](#combinator-support)
       - [Caveats](#caveats)
+  - [`pretty`](#pretty)
   - [API \& examples](#api--examples)
   - [Sources, acknowledgements, \& c.](#sources-acknowledgements--c)
 
 ## Performance
 
-Parser combinators using closures like this are always going to be "slow" - at least in
-JavaScript. But it's perhaps not as bad as you think. Here's a benchmark comparing the
-following libraries, all parsing the same `JSON` grammar:
+### TypeScript
+
+Here's a benchmark comparing the following libraries, all parsing the same `JSON`
+grammar:
 
 -   [Chevrotain](https://github.com/chevrotain/chevrotain)
 -   [Parsimmon](https://github.com/jneen/parsimmon)
@@ -69,7 +87,7 @@ The file used is a 3.8 MB `JSON` file, containing ~10K lines of `JSON`. Whitespa
 randomly inserted to make the file a bit more difficult to parse (makes the file about
 5x the size). Benchmark is run 100 times.
 
-### Results
+#### Results
 
 | name       | hz     | min    | max    | mean   | p75    | p99    | p995   | p999   | rme    | samples |
 | ---------- | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------- |
@@ -89,6 +107,16 @@ Probably not the most scientific comparison, but it's generally about 10-30% fas
 what I've tested it against.
 
 Have a look inside [benchmarks](./test/benchmarks) if you're curious.
+
+### Rust
+
+The approach taken in the Rust implementation is almost identical to that of the
+TypeScript one - there's much to improve here. The benchmark is run on a 2.3 MB `JSON`
+file (`canada.json`), containing ~10K lines of `JSON`. Benchmark is run 100 times.
+
+#### Results
+
+TODO: but it averages around 80 MB/s on my machine.
 
 ## Debugging
 
@@ -112,7 +140,7 @@ As output, you'll see a few things:
 The `blue` color indicates that that variable is an BBNF nonterminal - `yellow` is the
 stringified parser.
 
-##### Thanks to [chalk](https://github.com/chalk/chalk) for the colors!
+##### Thanks to [chalk](https://github.com/chalk/chalk) and [colored](https://github.com/mackwic/colored) for the colors!
 
 ## BBNF and the Great Parser Generator
 
@@ -258,6 +286,13 @@ out via the BBNF parser generator generally the performance will quite fine, but
 cannot you may run into some performance issues. This stems, among other things,
 primarily from JavaScript's lack of tail call optimization. Again, see the
 [left recursion](./docs/left-recursion.md) document for more information.
+
+## `pretty`
+
+A pretty-printing submodule, inspired by Prettier, is included in the Rust
+implementation. I wanted to have something similar in Rust for my own projects, but I
+couldn't find anything that was simple enough to use. So I wrote my own. Check out the
+`pretty` docs for more information.
 
 ## API & examples
 

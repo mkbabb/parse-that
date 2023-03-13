@@ -83,7 +83,7 @@ pub fn json<'a>() -> Parser<'a, JsonValue<'a>> {
             })
     }));
 
-    json_object | json_array | json_string() | json_number() | json_bool() | json_null()
+    (json_object | json_array | json_string() | json_number() | json_bool() | json_null()).trim_whitespace()
 }
 
 pub fn parse_csv(src: &str) -> Vec<Vec<&str>> {
@@ -116,43 +116,47 @@ pub fn main() {
     let csv_string = fs::read_to_string(csv_file_path).unwrap();
     let rows = parse_csv(&csv_string);
 
-    // let json_file_path = "data/canada.json";
-    // let json_string = fs::read_to_string(json_file_path).unwrap();
+    let json_file_path = "../data/canada.json";
+    let json_string = fs::read_to_string(json_file_path).unwrap();
 
-    // let parser = json();
+    let parser = json();
 
-    // let now = SystemTime::now();
+    let now = SystemTime::now();
 
-    // let map = parser.parse(&json_string).unwrap();
+    let map = parser.parse(&json_string).unwrap();
+    let context = parser.context.borrow();
+    let state = &context.as_ref().unwrap().state;
 
-    // let elapsed = now.elapsed().unwrap();
+    println!("{}", state_print(Ok(state), "", ""));
 
-    // println!("Elapsed: {:?}", elapsed);
+    let elapsed = now.elapsed().unwrap();
+
+    println!("Elapsed: {:?}", elapsed);
 
     // test hashmap with 10 items:
 
-    let mut map0 = HashMap::new();
-    map0.insert(
-        "my vibes",
-        vec![
-            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8,
-            9, 10,
-        ],
-    );
-    map0.insert("thats vibes", vec![1, 2, 3]);
-    map0.insert("ok", vec![1, 2, 3]);
+    // let mut map0 = HashMap::new();
+    // map0.insert(
+    //     "my vibes",
+    //     vec![
+    //         1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8,
+    //         9, 10,
+    //     ],
+    // );
+    // map0.insert("thats vibes", vec![1, 2, 3]);
+    // map0.insert("ok", vec![1, 2, 3]);
 
-    let mut map2 = HashMap::new();
-    map2.insert("my vibes", map0.clone());
-    let mut map3 = HashMap::new();
-    map3.insert("thats vibes", map2.clone());
-    map3.insert("ok", map2.clone());
+    // let mut map2 = HashMap::new();
+    // map2.insert("my vibes", map0.clone());
+    // let mut map3 = HashMap::new();
+    // map3.insert("thats vibes", map2.clone());
+    // map3.insert("ok", map2.clone());
 
-    let mut map = HashMap::new();
-    map.insert("ok", map3.clone());
-    map.insert("thats vibes", map3.clone());
+    // let mut map = HashMap::new();
+    // map.insert("ok", map3.clone());
+    // map.insert("thats vibes", map3.clone());
 
-    let printer = Printer::new(80, 1, true, true);
+    let printer = Printer::new(80, 1, false, true);
 
     let now = SystemTime::now();
 

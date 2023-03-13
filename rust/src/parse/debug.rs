@@ -4,6 +4,7 @@ use crate::pretty::{concat, indent, Doc, PRINTER};
 use colored::{Color, Colorize};
 
 const MAX_LINES: usize = 5;
+const MAX_LINE_WIDTH: usize = 80;
 
 pub fn add_cursor(state: &ParserState, cursor: &str, error: bool) -> String {
     let color_fn = if error { Color::Red } else { Color::Green };
@@ -14,7 +15,17 @@ pub fn add_cursor(state: &ParserState, cursor: &str, error: bool) -> String {
     let start_idx = line_idx.saturating_sub(MAX_LINES).max(0);
     let end_idx = (line_idx + MAX_LINES + 1).min(lines.len());
 
-    let line_summaries = &lines[start_idx..end_idx];
+    let line_summaries: Vec<_> = lines[start_idx..end_idx]
+        .into_iter()
+        .map(|line| {
+            let line = line.trim_end();
+            if line.len() > MAX_LINE_WIDTH {
+                format!("{}...", &line[..MAX_LINE_WIDTH])
+            } else {
+                line.to_string()
+            }
+        })
+        .collect();
 
     let mut result_lines = Vec::new();
 
@@ -49,7 +60,7 @@ pub fn add_cursor(state: &ParserState, cursor: &str, error: bool) -> String {
     result_lines.join("\n")
 }
 
-fn state_print(
+pub fn state_print(
     state_result: Result<&ParserState, &ParserState>,
     name: &str,
     parser_string: &str,
@@ -122,8 +133,6 @@ impl<'a, Output> Parser<'a, Output> {
             }
         };
 
-        Parser {
-            parser_fn: Box::new(debug),
-        }
+        Parser::new(Box::new(debug), Some(self.context.clone()))
     }
 }

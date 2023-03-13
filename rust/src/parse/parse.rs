@@ -1,6 +1,8 @@
 use regex::Regex;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
+use std::sync::atomic::AtomicUsize;
 
 #[derive(Debug, Clone, Copy)]
 pub struct ParserState<'a> {
@@ -41,20 +43,91 @@ impl<'a> ParserState<'a> {
 type ParserFunction<'a, Output> =
     Box<dyn Fn(&ParserState<'a>) -> Result<(ParserState<'a>, Option<Output>), ()> + 'a>;
 
+pub struct ParserContext<'a> {
+    pub state: ParserState<'a>,
+    pub memo: HashMap<usize, ParserState<'a>>,
+    pub left_recursion_counts: HashMap<usize, usize>,
+}
+
+impl<'a> Default for ParserContext<'a> {
+    fn default() -> Self {
+        ParserContext {
+            state: ParserState { src: "", offset: 0 },
+            memo: HashMap::new(),
+            left_recursion_counts: HashMap::new(),
+        }
+    }
+}
+
+type ParserContextRef<'a> = Rc<RefCell<Option<ParserContext<'a>>>>;
+
+pub fn merge_error_state<'a>(context: ParserContextRef<'a>, state: ParserState<'a>) {
+    let mut context = context.borrow_mut();
+    if let Some(context) = context.as_mut() {
+        if context.state.offset < state.offset {
+            context.state = state;
+        }
+    }
+}
+
 pub struct Parser<'a, Output>
 where
     Self: Sized + 'a,
     Output: 'a,
 {
+    pub id: usize,
     pub parser_fn: ParserFunction<'a, Output>,
+    pub context: ParserContextRef<'a>,
 }
 
+static OBJECT_COUNTER: AtomicUsize = AtomicUsize::new(0);
+
 impl<'a, Output> Parser<'a, Output> {
+    pub fn new(
+        parser_fn: ParserFunction<'a, Output>,
+        context: Option<ParserContextRef<'a>>,
+    ) -> Parser<'a, Output> {
+        let parser = Parser {
+            id: OBJECT_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
+            parser_fn,
+            context: context.unwrap_or(Rc::new(RefCell::new(None))),
+        };
+
+        if cfg!(feature = "perf") {
+            return parser;
+        } else {
+            return parser._merge_error_state();
+        }
+    }
+
+    pub fn _merge_error_state(self) -> Parser<'a, Output> {
+        let context = self.context.clone();
+        let _merge_error_state = move |state: &ParserState<'a>| match (self.parser_fn)(state) {
+            Ok((state, value)) => {
+                merge_error_state(self.context.clone(), state.clone());
+                return Ok((state, value));
+            }
+            Err(_) => {
+                merge_error_state(self.context.clone(), state.clone());
+                return Err(());
+            }
+        };
+
+        Parser {
+            id: OBJECT_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
+            parser_fn: Box::new(_merge_error_state),
+            context,
+        }
+    }
+
     pub fn parse_return_state(
         &self,
         src: &'a str,
     ) -> Result<(ParserState<'a>, Option<Output>), ()> {
         let state = ParserState { src, offset: 0 };
+
+        self.context.replace(Some(ParserContext::default()));
+
         return (self.parser_fn)(&state);
     }
 
@@ -76,9 +149,7 @@ impl<'a, Output> Parser<'a, Output> {
             Err(())
         };
 
-        Parser {
-            parser_fn: Box::new(then),
-        }
+        Parser::new(Box::new(then), Some(self.context.clone()))
     }
 
     pub fn or(self, other: Parser<'a, Output>) -> Parser<'a, Output> {
@@ -93,9 +164,7 @@ impl<'a, Output> Parser<'a, Output> {
             Err(())
         };
 
-        Parser {
-            parser_fn: Box::new(or),
-        }
+        Parser::new(Box::new(or), Some(self.context.clone()))
     }
 
     pub fn not<Output2>(self, parser: Parser<'a, Output2>) -> Parser<'a, Output> {
@@ -109,9 +178,7 @@ impl<'a, Output> Parser<'a, Output> {
             Err(())
         };
 
-        Parser {
-            parser_fn: Box::new(not),
-        }
+        Parser::new(Box::new(not), Some(self.context.clone()))
     }
 
     pub fn negate(self) -> Parser<'a, Option<Output>> {
@@ -119,9 +186,8 @@ impl<'a, Output> Parser<'a, Output> {
             Err(_) => Ok((state.from(0), None)),
             Ok(_) => Err(()),
         };
-        Parser {
-            parser_fn: Box::new(negate),
-        }
+
+        Parser::new(Box::new(negate), Some(self.context.clone()))
     }
 
     pub fn map<Output2>(self, f: fn(Output) -> Output2) -> Parser<'a, Output2> {
@@ -130,9 +196,21 @@ impl<'a, Output> Parser<'a, Output> {
             Ok((state1, Some(value1))) => return Ok((state1, Some(f(value1)))),
             Ok((state1, None)) => return Ok((state1, None)),
         };
-        Parser {
-            parser_fn: Box::new(map),
-        }
+
+        Parser::new(Box::new(map), Some(self.context.clone()))
+    }
+
+    pub fn map_state(self, f: fn(ParserState<'a>) -> ParserState<'a>) -> Parser<'a, Output> {
+        let context = self.context.clone();
+        let map_state = move |state: &ParserState<'a>| match (self.parser_fn)(state) {
+            Ok((state1, value)) => {
+                return Ok((f(state1), value));
+            }
+            Err(_) => {
+                return Err(());
+            }
+        };
+        Parser::new(Box::new(map_state), Some(context))
     }
 
     pub fn opt(self) -> Parser<'a, Output> {
@@ -141,9 +219,7 @@ impl<'a, Output> Parser<'a, Output> {
             Ok(result) => return Ok(result),
         };
 
-        Parser {
-            parser_fn: Box::new(opt),
-        }
+        Parser::new(Box::new(opt), Some(self.context.clone()))
     }
 
     pub fn skip<Output2>(self, next: Parser<'a, Output2>) -> Parser<'a, Output> {
@@ -181,9 +257,7 @@ impl<'a, Output> Parser<'a, Output> {
             Ok((state1, Some(values)))
         };
 
-        Parser {
-            parser_fn: Box::new(many),
-        }
+        Parser::new(Box::new(many), Some(self.context.clone()))
     }
 
     pub fn wrap<Output2, Output3>(
@@ -199,9 +273,7 @@ impl<'a, Output> Parser<'a, Output> {
             Ok((state3, value2))
         };
 
-        Parser {
-            parser_fn: Box::new(wrap),
-        }
+        Parser::new(Box::new(wrap), Some(self.context.clone()))
     }
 
     pub fn trim<Output2>(self, trimmer: Parser<'a, Output2>) -> Parser<'a, Output> {
@@ -213,9 +285,7 @@ impl<'a, Output> Parser<'a, Output> {
             Ok((state3, value2))
         };
 
-        Parser {
-            parser_fn: Box::new(trim),
-        }
+        Parser::new(Box::new(trim), Some(self.context.clone()))
     }
 
     pub fn trim_whitespace(self) -> Parser<'a, Output> {
@@ -235,9 +305,7 @@ impl<'a, Output> Parser<'a, Output> {
             Ok((state2.from(offset), value2))
         };
 
-        Parser {
-            parser_fn: Box::new(trim_whitespace),
-        }
+        Parser::new(Box::new(trim_whitespace), Some(self.context.clone()))
     }
 
     pub fn sep_by<Output2>(
@@ -258,9 +326,7 @@ impl<'a, Output> Parser<'a, Output> {
             Ok((state1, value1))
         };
 
-        Parser {
-            parser_fn: Box::new(look_ahead),
-        }
+        Parser::new(Box::new(look_ahead), Some(self.context.clone()))
     }
 }
 
@@ -287,9 +353,7 @@ pub fn eof<'a>() -> Parser<'a, ()> {
         }
     };
 
-    Parser {
-        parser_fn: Box::new(eof),
-    }
+    Parser::new(Box::new(eof), None)
 }
 
 type LazyParserFn<'a, Output> = Box<dyn Fn() -> Parser<'a, Output>>;
@@ -323,16 +387,14 @@ impl<'a, Output> LazyParser<'a, Output> {
 }
 
 pub fn lazy<'a, Output>(f: LazyParserFn<'a, Output>) -> Parser<'a, Output> {
-    let lazy_parser = Rc::new(RefCell::new(LazyParser::new(f)));
+    let lazy_parser = RefCell::new(LazyParser::new(f));
 
     let lazy = move |state: &ParserState<'a>| {
         let parser = lazy_parser.borrow_mut().get();
         (parser.parser_fn)(state)
     };
 
-    Parser {
-        parser_fn: Box::new(lazy),
-    }
+    Parser::new(Box::new(lazy), None)
 }
 
 pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
@@ -345,9 +407,7 @@ pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
         }
     };
 
-    Parser {
-        parser_fn: Box::new(string),
-    }
+    Parser::new(Box::new(string), None)
 }
 
 pub fn regex<'a>(r: &str) -> Parser<'a, &'a str> {
@@ -364,7 +424,5 @@ pub fn regex<'a>(r: &str) -> Parser<'a, &'a str> {
         return Err(());
     };
 
-    Parser {
-        parser_fn: Box::new(regex),
-    }
+    Parser::new(Box::new(regex), None)
 }
