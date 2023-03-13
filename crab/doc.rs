@@ -1,6 +1,6 @@
-use std::{cmp::min, collections::HashMap};
+use std::{borrow::BorrowMut, collections::HashMap};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub enum Doc<'a> {
     String(String),
     Str(&'a str),
@@ -41,13 +41,14 @@ impl<'a> std::ops::Add for Doc<'a> {
     }
 }
 
-pub fn count_text_length(doc: &Doc, printer: &Printer) -> usize {
-    match doc {
+pub fn count_text_length<'a, 'b>(doc: &'a Doc, printer: &'b mut Printer<'a>) -> usize {
+    if let Some(length) = printer._doc_lengths.get(doc) {
+        return *length;
+    }
+
+    let length = match doc {
         Doc::Str(s) => s.len(),
-        Doc::Concat(docs) => docs
-            .into_iter()
-            .map(|d| count_text_length(d, printer))
-            .sum(),
+        Doc::Concat(docs) => docs.iter().map(|d| count_text_length(d, printer)).sum(),
         Doc::Group(d) => count_text_length(d, printer),
         Doc::Indent(d) => count_text_length(d, printer) + printer.indent,
         Doc::Dedent(d) => count_text_length(d, printer) - printer.indent,
@@ -64,7 +65,10 @@ pub fn count_text_length(doc: &Doc, printer: &Printer) -> usize {
         Doc::Hardline | Doc::Mediumline | Doc::Line => printer.max_width,
         Doc::Softline => printer.max_width / 2,
         _ => 0,
-    }
+    };
+
+    printer._doc_lengths.insert(doc, length);
+    length
 }
 
 pub fn group<'a>(doc: Doc<'a>) -> Doc<'a> {
@@ -107,7 +111,14 @@ pub fn if_break<'a>(doc: Doc<'a>, other: Doc<'a>) -> Doc<'a> {
     Doc::IfBreak(Box::new(doc), Box::new(other))
 }
 
-pub fn join_impl<'a>(sep: &'a Doc<'a>, docs: &'a Vec<Doc>, _: &Printer) -> Vec<&'a Doc<'a>> {
+pub fn join_impl<'a, 'b>(
+    sep: &'a Doc<'a>,
+    docs: &'a Vec<Doc>,
+    _: &'b mut Printer<'a>,
+) -> Vec<&'a Doc<'a>>
+where
+    'a: 'b,
+{
     docs.iter()
         .enumerate()
         .fold(Vec::new(), |mut acc, (i, doc)| {
@@ -164,11 +175,14 @@ pub fn text_justify(sep_length: usize, doc_lengths: &Vec<usize>, max_width: usiz
     breaks
 }
 
-pub fn smart_join_impl<'a>(
+pub fn smart_join_impl<'a, 'b>(
     sep: &'a Doc<'a>,
     docs: &'a Vec<Doc>,
-    printer: &Printer,
-) -> Vec<&'a Doc<'a>> {
+    printer: &'b mut Printer<'a>,
+) -> Vec<&'a Doc<'a>>
+where
+    'a: 'b,
+{
     let max_width = (printer.max_width / 4).max(2);
 
     let sep_length = count_text_length(sep, printer);
@@ -191,7 +205,7 @@ pub fn smart_join_impl<'a>(
 }
 
 #[allow(dead_code)]
-pub fn string_impl<'a>(s: &'a str, indent_delta: usize, printer: &Printer) -> String {
+pub fn string_impl<'a>(s: &'a str, indent_delta: usize, printer: &mut Printer) -> String {
     let indent = printer.indent * indent_delta;
 
     if printer.break_long_text && s.len() + indent > printer.max_width {
@@ -210,7 +224,10 @@ pub fn string_impl<'a>(s: &'a str, indent_delta: usize, printer: &Printer) -> St
     }
 }
 
-pub fn pretty_print<'a>(doc: &Doc<'a>, printer: &Printer) -> String {
+pub fn pretty_print<'a, 'b>(doc: &'a Doc<'a>, printer: &'b mut Printer<'a>) -> String
+where
+    'a: 'b,
+{
     struct PrintItem<'a> {
         doc: &'a Doc<'a>,
         indent_delta: usize,
@@ -236,6 +253,8 @@ pub fn pretty_print<'a>(doc: &Doc<'a>, printer: &Printer) -> String {
     let mut is_group = false;
     let mut group_broken = false;
 
+    let mut hardlines = HashMap::new();
+
     while let Some(PrintItem { doc, indent_delta }) = stack.pop() {
         match &doc {
             Doc::Str(s) => {
@@ -255,7 +274,7 @@ pub fn pretty_print<'a>(doc: &Doc<'a>, printer: &Printer) -> String {
             }
 
             Doc::Group(d) => {
-                let needs_breaking = count_text_length(d, printer) > printer.max_width;
+                let needs_breaking = count_text_length(d, printer.borrow_mut()) > printer.max_width;
 
                 let indent_delta = if needs_breaking {
                     indent_delta + 1
@@ -311,14 +330,17 @@ pub fn pretty_print<'a>(doc: &Doc<'a>, printer: &Printer) -> String {
                     join_impl
                 };
 
-                let joined = join_fn(*&sep, docs, printer);
-                let length: usize = joined.iter().map(|d| count_text_length(d, printer)).sum();
+                let joined = join_fn(*&sep, docs, printer.borrow_mut());
+                let length: usize = joined
+                    .iter()
+                    .map(|d| count_text_length(d, printer.borrow_mut()))
+                    .sum();
 
                 let needs_breaking =
                     length + ((indent_delta - 1) * printer.indent) > printer.max_width;
 
                 if needs_breaking {
-                    push_hardline(&mut stack, indent_delta - printer.indent);
+                    push_hardline(&mut stack, indent_delta);
                 }
                 for d in joined.into_iter().rev() {
                     stack.push(PrintItem {
@@ -348,7 +370,11 @@ pub fn pretty_print<'a>(doc: &Doc<'a>, printer: &Printer) -> String {
                 current_line.clear();
 
                 let space = if printer.use_tabs { "\t" } else { " " };
-                current_line.push_str(&space.repeat(indent_delta));
+                let line = hardlines
+                    .entry(indent_delta)
+                    .or_insert_with(|| space.repeat(indent_delta));
+
+                current_line.push_str(line);
             }
 
             Doc::Mediumline => {
@@ -371,27 +397,45 @@ pub fn pretty_print<'a>(doc: &Doc<'a>, printer: &Printer) -> String {
     output
 }
 
-pub struct Printer {
+#[derive(Debug, Clone)]
+pub struct Printer<'a> {
     pub max_width: usize,
     pub indent: usize,
     pub break_long_text: bool,
     pub use_tabs: bool,
+
+    pub _doc_lengths: HashMap<&'a Doc<'a>, usize>,
 }
 
-impl Default for Printer {
+impl<'a> Default for Printer<'a> {
     fn default() -> Self {
         Printer {
             max_width: 80,
             indent: 2,
             break_long_text: true,
             use_tabs: false,
+
+            _doc_lengths: HashMap::new(),
         }
     }
 }
 
-impl<'a> Printer {
-    pub fn pretty(&self, doc: impl Into<Doc<'a>>) -> String {
-        pretty_print(&doc.into(), self)
+impl<'a> Printer<'a> {
+    pub fn new(max_width: usize, indent: usize, break_long_text: bool, use_tabs: bool) -> Self {
+        Printer {
+            max_width,
+            indent,
+            break_long_text,
+            use_tabs,
+
+            _doc_lengths: HashMap::new(),
+        }
+    }
+
+    pub fn pretty(self, doc: impl Into<Doc<'a>>) -> String {
+        let mut m = self.clone();
+        let s = pretty_print(&doc.into(), m.borrow_mut());
+        return s;
     }
 }
 

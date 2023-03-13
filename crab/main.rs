@@ -126,29 +126,22 @@ pub fn main() {
     // map0.insert("thats vibes", vec![1, 2, 3, ]);
     // map0.insert("ok", vec![1, 2, 3, ]);
 
-
     // let mut map2 = HashMap::new();
     // map2.insert("my vibes", map0.clone());
     // let mut map3 = HashMap::new();
     // map3.insert("thats vibes", map2.clone());
     // map3.insert("ok", map2.clone());
 
-
     // let mut map = HashMap::new();
     // map.insert("ok", map3.clone());
 
-    let printer = Printer {
-        max_width: 80,
-        indent: 1,
-        break_long_text: true,
-        use_tabs: true,
-    };
+    let mut printer = Printer::new(80, 1, true, true);
 
     let now = SystemTime::now();
-    
+
     let pretty = printer.pretty(map);
     let elapsed = now.elapsed().unwrap();
-    
+
     println!("Elapsed: {:?}", elapsed);
 
     fs::write("pretty.json", pretty).expect("Unable to write file");
