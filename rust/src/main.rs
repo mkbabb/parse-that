@@ -88,6 +88,7 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
 
     json_object | json_array | json_string() | json_number() | json_bool() | json_null()
 }
+
 pub fn parse_csv(src: &str) -> Vec<Vec<&str>> {
     let parser = || {
         let double_quotes = || string("\"");
@@ -142,7 +143,9 @@ pub fn main() {
 
     // println!("Elapsed: {:?}", elapsed);
 
-    let json_file_path = "../data/data-l.json";
+    // check if the filepath is valid at compiletime with macro:
+
+    let json_file_path = "../data/json/data-l.json";
     let json_string = fs::read_to_string(json_file_path).unwrap();
 
     let parser = json_value();

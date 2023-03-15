@@ -169,6 +169,7 @@ dependencies = [
  "colored",
  "fnv",
  "lazy-regex",
+ "lazy_static",
  "pest",
  "pest_grammars",
  "regex",

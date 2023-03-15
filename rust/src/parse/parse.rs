@@ -1,18 +1,39 @@
-use regex::Regex;
+use regex::bytes::Regex as BytesRegex;
 use std::cell::RefCell;
 use std::rc::Rc;
+
+#[inline(always)]
+pub fn trim_leading_whitespace<'a>(state: &ParserState<'a>) -> usize {
+    state.src_bytes[state.offset..]
+        .iter()
+        .take_while(|&b| u8::is_ascii_whitespace(b))
+        .count()
+}
 
 #[derive(Debug, Clone)]
 pub struct ParserState<'a> {
     pub src: &'a str,
+    pub src_bytes: &'a [u8],
     pub offset: usize,
     pub state_stack: Vec<usize>,
+}
+
+impl Default for ParserState<'_> {
+    fn default() -> Self {
+        ParserState {
+            src: "",
+            src_bytes: &[],
+            offset: 0,
+            state_stack: vec![],
+        }
+    }
 }
 
 impl<'a> ParserState<'a> {
     pub fn new(src: &'a str) -> ParserState<'a> {
         ParserState {
             src,
+            src_bytes: src.as_bytes(),
             offset: 0,
             state_stack: vec![],
         }
@@ -132,7 +153,6 @@ where
         return Parser::new(save_state);
     }
 
-    #[inline]
     pub fn then<Output2>(self, next: Parser<'a, Output2>) -> Parser<'a, (Output, Option<Output2>)>
     where
         Output2: 'a,
@@ -162,9 +182,7 @@ where
         Parser::new(with)
     }
 
-    #[inline(always)]
     pub fn or(self, other: Parser<'a, Output>) -> Parser<'a, Output> {
-              
         let or = move |state: &mut ParserState<'a>| {
             if let Ok(value) = self.parser_fn.call(state) {
                 return Ok(value);
@@ -207,7 +225,6 @@ where
                 Ok(result) => return Ok(result),
             };
         };
-
         Parser::new(opt)
     }
 
@@ -215,46 +232,55 @@ where
     where
         Output2: 'a,
     {
-        self.then(next).map(|(x, _)| x)
+        let skip = move |state: &mut ParserState<'a>| {
+            if let Ok(value) = (self.parser_fn).call(state) {
+                let _ = (next.parser_fn).call(state)?;
+                return Ok(value);
+            }
+            Err(())
+        };
+        Parser::new(skip)
     }
 
     pub fn next<Output2>(self, next: Parser<'a, Output2>) -> Parser<'a, Output2>
     where
         Output2: 'a,
     {
-        self.then(next).map(|(_, x)| {
-            if let Some(x) = x {
-                x
-            } else {
-                panic!("Expected value");
+        let next = move |state: &mut ParserState<'a>| {
+            if let Ok(_) = (self.parser_fn).call(state) {
+                return (next.parser_fn).call(state);
             }
-        })
+            Err(())
+        };
+        Parser::new(next)
     }
 
-    #[inline(always)]
     pub fn many(self, lower: Option<usize>, upper: Option<usize>) -> Parser<'a, Vec<Output>> {
         let many = move |state: &mut ParserState<'a>| {
             let mut values = Vec::new();
 
-            for i in 0..upper.unwrap_or(std::usize::MAX) {
+            loop {
                 if let Ok(value) = self.parser_fn.call(state) {
                     if let Some(value) = value {
                         values.push(value);
                     }
-                } else if i < lower.unwrap_or(0) {
-                    return Err(());
                 } else {
                     break;
                 }
             }
 
-            Ok(Some(values))
+            if lower.map_or(true, |min| values.len() >= min)
+                && upper.map_or(true, |max| values.len() <= max)
+            {
+                Ok(Some(values))
+            } else {
+                Err(())
+            }
         };
 
         Parser::new(many)
     }
 
-    #[inline(always)]
     pub fn wrap<Output2, Output3>(
         self,
         left: Parser<'a, Output2>,
@@ -290,18 +316,10 @@ where
         Parser::new(trim)
     }
 
-    #[inline(always)]
     pub fn trim_whitespace(self) -> Parser<'a, Output> {
-        let trim_leading_whitespace = |state: &ParserState<'a>| {
-            let slc = &state.src[state.offset..];
-            slc.chars().take_while(|c| c.is_whitespace()).count()
-        };
-
         let trim_whitespace = move |state: &mut ParserState<'a>| {
             state.offset += trim_leading_whitespace(state);
-
             let value = self.parser_fn.call(state)?;
-
             state.offset += trim_leading_whitespace(state);
             Ok(value)
         };
@@ -355,7 +373,7 @@ where
             Ok(value)
         };
 
-        Parser::new(look_ahead)
+        Parser::new(look_ahead).save_state()
     }
 }
 
@@ -426,8 +444,7 @@ impl<'a, Output> LazyParser<'a, Output> {
     }
 }
 
-// type LazyParserFn<'a, Output> = Box<dyn Fn(Rc<Parser<'a>>) -> Parser<'a, Output>>;
-
+#[inline(always)]
 pub fn lazy<'a, F, Output>(f: F) -> Parser<'a, Output>
 where
     Output: 'a,
@@ -444,32 +461,40 @@ where
 }
 
 pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
+    let s_bytes = s.as_bytes();
+    let end = s_bytes.len();
+
     let string = move |state: &mut ParserState<'a>| {
-        let slc = &state.src[state.offset..];
-        if slc.starts_with(s) {
-            state.offset += s.len();
+        let slc = &state.src_bytes[state.offset..];
+
+        if slc.starts_with(s_bytes) {
+            state.offset += end;
             Ok(Some(s))
         } else {
             Err(())
         }
     };
-
     Parser::new(string)
 }
 
-pub fn regex<'a>(r: &str) -> Parser<'a, &'a str> {
-    let re = Regex::new(r).expect(&format!("Failed to compile regex: {}", r));
+
+pub fn regex<'a>(r: &'a str) -> Parser<'a, &'a str> {
+    let re = BytesRegex::new(r).expect(&format!("Failed to compile regex: {}", r));
 
     let regex = move |state: &mut ParserState<'a>| {
-        let slc = &state.src[state.offset..];
+        let slc = &state.src_bytes[state.offset..];
 
         match re.find(slc) {
             Some(m) => {
                 if m.start() != 0 {
                     return Err(());
                 }
-                state.offset += m.end();
-                Ok(Some(m.as_str()))
+
+                let end = m.end();
+                let value = &state.src[..end];
+                state.offset += end;
+
+                Ok(Some(value))
             }
             None => Err(()),
         }

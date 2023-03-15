@@ -17,6 +17,7 @@ fnv = "1.0.7"
 bencher = "0.1.5"
 tikv-jemallocator = "0.5.0"
 lazy-regex = "2.5.0"
+lazy_static = "1.4.0"
 
 [unstable]
 let_chains = true

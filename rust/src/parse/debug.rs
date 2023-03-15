@@ -114,13 +114,7 @@ pub fn state_print(
         format!(
             "\t{}\t{}",
             name,
-            state_result
-                .unwrap_or(&ParserState {
-                    offset: 0,
-                    src: "",
-                    state_stack: vec![]
-                })
-                .offset,
+            state_result.unwrap_or(&Default::default()).offset,
         )
         .color(state_color)
         .bold()
