@@ -142,7 +142,7 @@ pub fn main() {
 
     // println!("Elapsed: {:?}", elapsed);
 
-    let json_file_path = "../data/canada.json";
+    let json_file_path = "../data/data-l.json";
     let json_string = fs::read_to_string(json_file_path).unwrap();
 
     let parser = json_value();
