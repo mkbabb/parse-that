@@ -78,7 +78,7 @@ where
             parser_fn: parser_fn,
             lifetime: std::marker::PhantomData,
         };
-        return parser._save_state();
+        return parser.save_state();
     }
 
     pub fn parse_return_state(&self, src: &'a str) -> ParserResult<'a, Output> {
@@ -89,12 +89,13 @@ where
     pub fn parse(&self, src: &'a str) -> Option<Output> {
         match self.parse_return_state(src) {
             Ok(value) => value,
+
             Err(_) => None,
         }
     }
 
-    pub fn _save_state(self) -> Parser<'a, Output, impl ParserFn<'a, Output>> {
-        let _save_state = move |state: &mut ParserState<'a>| {
+    pub fn save_state(self) -> Parser<'a, Output, impl ParserFn<'a, Output>> {
+        let save_state = move |state: &mut ParserState<'a>| {
             state.save();
 
             let result = self.parser_fn.call(state);
@@ -107,7 +108,7 @@ where
         };
 
         return Parser {
-            parser_fn: _save_state,
+            parser_fn: save_state,
             lifetime: std::marker::PhantomData,
         };
     }

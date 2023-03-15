@@ -141,6 +141,8 @@ pub fn parse_csv(src: &str) -> Vec<Vec<&str>> {
 pub fn main() {
     let first_now = SystemTime::now();
 
+    print!("Parsing CSV... ");
+
     let csv_file_path = "../data/active_charter_schools_report.csv";
     let csv_string = fs::read_to_string(csv_file_path).unwrap();
 
