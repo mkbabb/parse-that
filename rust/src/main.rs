@@ -151,18 +151,20 @@ pub fn main() {
 
     // println!("Elapsed: {:?}", elapsed);
 
-    // let csv_file_path = "../data/active_charter_schools_report.csv";
-    // let csv_string = fs::read_to_string(csv_file_path).unwrap();
-    // let rows = parse_csv(&csv_string);
-
-    let json_file_path = "../data/canada.json";
-    let json_string = fs::read_to_string(json_file_path).unwrap();
-
-    let parser = json_value();
-
+    let csv_file_path = "../data/active_charter_schools_report.csv";
+    let csv_string = fs::read_to_string(csv_file_path).unwrap();
+    
     let now = SystemTime::now();
+    let rows = parse_csv(&csv_string);
 
-    let map = parser.parse(&json_string).unwrap();
+    // let json_file_path = "../data/canada.json";
+    // let json_string = fs::read_to_string(json_file_path).unwrap();
+
+    // let parser = json_value();
+
+    // let now = SystemTime::now();
+
+    // let map = parser.parse(&json_string).unwrap();
 
     let elapsed = now.elapsed().unwrap();
 
@@ -195,7 +197,7 @@ pub fn main() {
 
     let now = SystemTime::now();
 
-    let pretty = printer.pretty(map);
+    let pretty = printer.pretty(rows);
     let elapsed = now.elapsed().unwrap();
 
     println!("Elapsed: {:?}", elapsed);
