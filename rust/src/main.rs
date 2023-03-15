@@ -106,7 +106,7 @@ pub fn parse_csv(src: &str) -> Vec<Vec<&str>> {
         let double_quotes = || string("\"");
         let single_quotes = || string("'");
 
-        let token: Parser<_, _> = regex("[^\"]+").wrap(double_quotes(), double_quotes())
+        let token: Parser<_> = regex("[^\"]+").wrap(double_quotes(), double_quotes())
             | regex("[^']+").wrap(single_quotes(), single_quotes())
             | regex(r"[^,\r\n]+")
             | string("").look_ahead(string(",")).save_state();

@@ -149,12 +149,12 @@ pub fn state_print(
     PRINTER.pretty(header_body)
 }
 
-impl<'a, Output, F> Parser<'a, Output, F>
+impl<'a, Output> Parser<'a, Output>
 where
+    Self: Sized + Sync + Send + 'a,
     Output: 'a,
-    F: ParserFn<'a, Output> + 'a,
 {
-    pub fn debug(self, name: &'a str) -> Parser<'a, Output, impl ParserFn<'a, Output>> {
+    pub fn debug(self, name: &'a str) -> Parser<'a, Output> {
         let debug = move |state: &mut ParserState<'a>| match (self.parser_fn).call(state) {
             Ok(value) => {
                 println!("{}", state_print(Ok(state), name, ""));
