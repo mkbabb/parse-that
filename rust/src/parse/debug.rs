@@ -115,7 +115,11 @@ pub fn state_print(
             "\t{}\t{}",
             name,
             state_result
-                .unwrap_or(&ParserState { offset: 0, src: "" })
+                .unwrap_or(&ParserState {
+                    offset: 0,
+                    src: "",
+                    state_stack: vec![]
+                })
                 .offset,
         )
         .color(state_color)
@@ -148,16 +152,17 @@ pub fn state_print(
 impl<'a, Output, F> Parser<'a, Output, F>
 where
     Output: 'a,
-    F: ParserFunction<'a, Output> + 'a,
+    F: ParserFn<'a, Output> + 'a,
 {
-    pub fn debug(self, name: &'a str) -> Parser<'a, Output, impl ParserFunction<'a, Output>> {
-        let debug = move |state: &ParserState<'a>| match (self.parser_fn).call(state) {
-            Ok((new_state, value)) => {
-                println!("{}", state_print(Ok(&new_state), name, ""));
-                return Ok((new_state, value));
+    pub fn debug(self, name: &'a str) -> Parser<'a, Output, impl ParserFn<'a, Output>> {
+        let debug = move |state: &mut ParserState<'a>| match (self.parser_fn).call(state) {
+            Ok(value) => {
+                println!("{}", state_print(Ok(state), name, ""));
+                return Ok(value);
             }
+
             Err(()) => {
-                println!("{}", state_print(Err(&state), name, ""));
+                println!("{}", state_print(Err(state), name, ""));
                 return Err(());
             }
         };
