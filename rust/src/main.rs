@@ -109,7 +109,7 @@ pub fn parse_csv(src: &str) -> Vec<Vec<&str>> {
         let token: Parser<_, _> = regex("[^\"]+").wrap(double_quotes(), double_quotes())
             | regex("[^']+").wrap(single_quotes(), single_quotes())
             | regex(r"[^,\r\n]+")
-            | string("").look_ahead(string(","));
+            | string("").look_ahead(string(",")).save_state();
 
         let delim = string(",");
 
@@ -118,7 +118,10 @@ pub fn parse_csv(src: &str) -> Vec<Vec<&str>> {
         csv
     };
 
-    parser().parse(src).expect("failed to parse csv")
+    let p = parser();
+    let rows = p.parse(src).expect("failed to parse csv");
+
+    return rows;
 }
 
 // pub fn csv_fsm() -> FSMParser {
