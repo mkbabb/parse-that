@@ -43,64 +43,51 @@ impl<'a> Into<Doc<'a>> for JsonValue<'a> {
     }
 }
 
-// pub fn json_value<'a>(
-//     cached: Rc<Option<Parser<'a, JsonValue<'a>, impl ParserFunction<'a, JsonValue<'a>> + 'a>>>,
-// ) -> Rc<Option<Parser<'a, JsonValue<'a>, impl ParserFunction<'a, JsonValue<'a>> + 'a>>> {
-//     let parse_json_value = |state: &ParserState<'a>| {
-//         let json_null = string("null").map(|_| JsonValue::Null);
-//         let json_bool = string("true").map(|_| JsonValue::Bool(true))
-//             | string("false").map(|_| JsonValue::Bool(false));
+pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
+    let string_char = || regex(r#"([^"\\]|\\["\\/bfnrt]|\\u[a-fA-F0-9]{4})*"#);
 
-//         let json_number =
-//             regex(r#"-?\d+(\.\d+)?"#).map(|s| JsonValue::Number(s.parse().unwrap_or(f64::NAN)));
+    let json_null = || string("null").map(|_| JsonValue::Null);
+    let json_bool = || {
+        string("true").map(|_| JsonValue::Bool(true))
+            | string("false").map(|_| JsonValue::Bool(false))
+    };
 
-//         let json_string = regex(r#"([^"\\]|\\["\\/bfnrt]|\\u[a-fA-F0-9]{4})*"#)
-//             .wrap(string("\""), string("\""))
-//             .map(JsonValue::String);
+    let json_number =
+        || regex(r#"-?\d+(\.\d+)?"#).map(|s| JsonValue::Number(s.parse().unwrap_or(f64::NAN)));
 
-//         let json_array = {
-//             let comma = string(",").trim_whitespace();
-//             cached
-//                 .clone()
-//                 .as_ref()
-//                 .unwrap()
-//                 .sep_by(comma, None, None)
-//                 .or_else(|| vec![])
-//                 .trim_whitespace()
-//                 .wrap(string("["), string("]"))
-//                 .map(JsonValue::Array)
-//         };
+    let json_string = move || {
+        string_char()
+            .wrap(string("\""), string("\""))
+            .map(JsonValue::String)
+    };
 
-//         let json_object = {
-//             let colon = string(":").trim_whitespace();
-//             let key = regex(r#""([^"\\]|\\["\\/bfnrt]|\\u[a-fA-F0-9]{4})*""#);
-//             let key_value = key.skip(colon).with(cached.clone().as_ref().unwrap());
+    let json_array = lazy(|| {
+        let comma = string(",").trim_whitespace();
+        json_value()
+            .sep_by(comma, None, None)
+            .or_else(|| vec![])
+            .trim_whitespace()
+            .wrap(string("["), string("]"))
+            .map(JsonValue::Array)
+    });
 
-//             let comma = string(",").trim_whitespace();
+    let json_object = lazy(move || {
+        let json_key = regex(r#""([^"\\]|\\["\\/bfnrt]|\\u[a-fA-F0-9]{4})*""#);
+        let key_value = json_key
+            .skip(string(":").trim_whitespace())
+            .with(json_value());
 
-//             key_value
-//                 .sep_by(comma, None, None)
-//                 .or_else(|| vec![])
-//                 .trim_whitespace()
-//                 .wrap(string("{"), string("}"))
-//                 .map(|pairs| JsonValue::Object(pairs.into_iter().collect()))
-//         };
+        let comma = string(",").trim_whitespace();
+        key_value
+            .sep_by(comma, None, None)
+            .or_else(|| vec![])
+            .trim_whitespace()
+            .wrap(string("{"), string("}"))
+            .map(|pairs| JsonValue::Object(pairs.into_iter().collect()))
+    });
 
-//         let json_value: Parser<_, _> =
-//             json_object | json_array | json_string | json_number | json_bool | json_null;
-//         json_value.parser_fn.call(state)
-//     };
-
-//     if cached.is_some() {
-//         return cached;
-//     } else {
-//         let parser = Parser::new(parse_json_value);
-//         cached.replace(parser);
-
-//         return cached;
-//     }
-// }
-
+    json_object | json_array | json_string() | json_number() | json_bool() | json_null()
+}
 pub fn parse_csv(src: &str) -> Vec<Vec<&str>> {
     let parser = || {
         let double_quotes = || string("\"");
@@ -144,29 +131,29 @@ pub fn parse_csv(src: &str) -> Vec<Vec<&str>> {
 pub fn main() {
     let first_now = SystemTime::now();
 
-    print!("Parsing CSV... ");
+    // print!("Parsing CSV... ");
 
-    let csv_file_path = "../data/active_charter_schools_report.csv";
-    let csv_string = fs::read_to_string(csv_file_path).unwrap();
-
-    let now = SystemTime::now();
-    let rows = parse_csv(&csv_string);
-    let elapsed = now.elapsed().unwrap();
-
-    println!("Elapsed: {:?}", elapsed);
-
-    // let json_file_path = "../data/canada.json";
-    // let json_string = fs::read_to_string(json_file_path).unwrap();
-
-    // let parser = json_value(Rc::new(None as Option<Parser<JsonValue, impl ParserFunction<'a     >>));
+    // let csv_file_path = "../data/active_charter_schools_report.csv";
+    // let csv_string = fs::read_to_string(csv_file_path).unwrap();
 
     // let now = SystemTime::now();
-
-    // let map = parser.unwrap().parse(&json_string).unwrap();
-
+    // let rows = parse_csv(&csv_string);
     // let elapsed = now.elapsed().unwrap();
 
-    // println!("dElapsed: {:?}", elapsed);
+    // println!("Elapsed: {:?}", elapsed);
+
+    let json_file_path = "../data/canada.json";
+    let json_string = fs::read_to_string(json_file_path).unwrap();
+
+    let parser = json_value();
+
+    let now = SystemTime::now();
+
+    let map = parser.parse(&json_string).unwrap();
+
+    let elapsed = now.elapsed().unwrap();
+
+    println!("dElapsed: {:?}", elapsed);
 
     // test hashmap with 10 items:
 
@@ -195,7 +182,7 @@ pub fn main() {
 
     let now = SystemTime::now();
 
-    let pretty = printer.pretty(rows);
+    let pretty = printer.pretty(map);
     let elapsed = now.elapsed().unwrap();
 
     println!("Elapsed: {:?}", elapsed);
