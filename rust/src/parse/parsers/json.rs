@@ -26,7 +26,8 @@ impl<'a> Into<Doc<'a>> for JsonValue<'a> {
 }
 
 pub fn json_parser<'a>() -> Parser<'a, JsonValue<'a>> {
-    let string_char = || regex(r#"([^"\\]|\\["\\/bfnrt]|\\u[a-fA-F0-9]{4})*"#);
+    let string_char =
+        || regex(r#"([^"\\]|\\["\\/bfnrt]|\\u[a-fA-F0-9]{4})*"#).wrap(string("\""), string("\""));
 
     let json_null = || string("null").map(|_| JsonValue::Null);
     let json_bool = || {
@@ -37,11 +38,7 @@ pub fn json_parser<'a>() -> Parser<'a, JsonValue<'a>> {
     let json_number =
         || regex(r#"-?\d+(\.\d+)?"#).map(|s| JsonValue::Number(s.parse().unwrap_or(f64::NAN)));
 
-    let json_string = move || {
-        string_char()
-            .wrap(string("\""), string("\""))
-            .map(JsonValue::String)
-    };
+    let json_string = move || string_char().map(JsonValue::String);
 
     let json_array = lazy(|| {
         let comma = string(",").trim_whitespace();
@@ -54,8 +51,7 @@ pub fn json_parser<'a>() -> Parser<'a, JsonValue<'a>> {
     });
 
     let json_object = lazy(move || {
-        let json_key = regex(r#""([^"\\]|\\["\\/bfnrt]|\\u[a-fA-F0-9]{4})*""#);
-        let key_value = json_key
+        let key_value = string_char()
             .skip(string(":").trim_whitespace())
             .with(json_parser());
 

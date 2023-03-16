@@ -85,6 +85,16 @@ pub fn if_break<'a>(doc: Doc<'a>, other: Doc<'a>) -> Doc<'a> {
     Doc::IfBreak(Box::new(doc), Box::new(other))
 }
 
+pub trait Indent {
+    fn indent(self) -> Self;
+}
+
+impl Indent for Doc<'_> {
+    fn indent(self) -> Self {
+        indent(self)
+    }
+}
+
 pub trait Join<'a> {
     fn join(self, sep: Doc<'a>) -> Doc<'a>;
 }
@@ -123,7 +133,10 @@ where
         let doc_vec: Vec<_> = self.into_iter().map(|item| item.into()).collect();
 
         if !doc_vec.is_empty() {
-            let doc = indent(doc_vec.smart_join(str(", "))).wrap(str("["), str("]"));
+            let doc = doc_vec
+                .smart_join(str(", "))
+                .wrap(str("["), str("]"))
+                .indent();
             return doc;
         } else {
             return str("[]");
@@ -143,8 +156,9 @@ where
             .collect();
 
         if !doc_vec.is_empty() {
-            let doc = (indent(doc_vec.join(str(", ") + Doc::Hardline)) + Doc::Softline)
-                .wrap(str("{"), str("}"));
+            let doc = (doc_vec.join(str(", ") + Doc::Hardline) + Doc::Softline)
+                .wrap(str("{"), str("}"))
+                .indent();
             return doc;
         } else {
             return str("{}");
