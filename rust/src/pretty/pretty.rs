@@ -2,6 +2,16 @@ use crate::pretty::doc::Doc;
 use crate::pretty::utils::text_justify;
 use std::collections::HashMap;
 
+pub fn count_join_length<'a>(sep: &'a Doc<'a>, docs: &'a Vec<Doc<'a>>, printer: &Printer) -> usize {
+    if docs.is_empty() {
+        return 0;
+    }
+    let doc_length: usize = docs.iter().map(|d| count_text_length(d, printer)).sum();
+    let separator_length = count_text_length(sep, printer);
+
+    doc_length + separator_length * (docs.len() - 1)
+}
+
 pub fn count_text_length<'a>(doc: &'a Doc, printer: &Printer) -> usize {
     match doc {
         Doc::Str(s) => s.len(),
@@ -9,15 +19,15 @@ pub fn count_text_length<'a>(doc: &'a Doc, printer: &Printer) -> usize {
         Doc::Group(d) => count_text_length(d, printer),
         Doc::Indent(d) => count_text_length(d, printer) + printer.indent,
         Doc::Dedent(d) => count_text_length(d, printer) - printer.indent,
-        Doc::Join(sep, docs) | Doc::SmartJoin(sep, docs) => {
-            if docs.is_empty() {
-                return 0;
+        Doc::Join(sep, docs) => count_join_length(sep, docs, printer),
+        Doc::IfBreak(t, f) => count_text_length(t, printer).max(count_text_length(f, printer)),
+        Doc::SmartJoin(sep, docs) => {
+            let length = count_join_length(sep, docs, printer);
+            if length * docs.len() >= printer.max_width {
+                length + printer.max_width
+            } else {
+                length
             }
-
-            let doc_length: usize = docs.iter().map(|d| count_text_length(d, printer)).sum();
-            let separator_length = count_text_length(sep, printer);
-
-            doc_length + separator_length * (docs.len() - 1)
         }
         Doc::Hardline | Doc::Mediumline | Doc::Line => printer.max_width,
         Doc::Softline => printer.max_width / 2,
@@ -127,9 +137,6 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
         indent_delta: 0,
     }];
 
-    let mut is_group = false;
-    let mut group_broken = false;
-
     let mut hardlines = HashMap::new();
 
     while let Some(PrintItem { doc, indent_delta }) = stack.pop() {
@@ -153,22 +160,18 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
             Doc::Group(d) => {
                 let needs_breaking = count_text_length(d, printer) > printer.max_width;
 
-                let indent_delta = if needs_breaking {
-                    indent_delta + 1
-                } else {
-                    indent_delta
-                };
+                if needs_breaking {
+                    push_hardline(&mut stack, indent_delta - 1);
+                }
 
                 stack.push(PrintItem {
                     doc: d,
                     indent_delta,
                 });
+
                 if needs_breaking {
                     push_hardline(&mut stack, indent_delta);
                 }
-
-                is_group = true;
-                group_broken = false;
             }
 
             Doc::IfBreak(doc, other) => {
@@ -207,24 +210,13 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
                     join_impl
                 };
 
-                let (length, joined) = join_fn(*&sep, docs, printer);
+                let (_, joined) = join_fn(*&sep, docs, printer);
 
-                let indent_delta_m1 = indent_delta.saturating_sub(printer.indent);
-
-                let needs_breaking =
-                    length + (indent_delta_m1 * printer.indent) > printer.max_width;
-
-                if needs_breaking {
-                    push_hardline(&mut stack, indent_delta_m1);
-                }
                 for d in joined.into_iter().rev() {
                     stack.push(PrintItem {
                         doc: d,
                         indent_delta,
                     });
-                }
-                if needs_breaking {
-                    push_hardline(&mut stack, indent_delta);
                 }
             }
 
@@ -233,13 +225,6 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
             }
 
             Doc::Hardline => {
-                if prev_was_hardline {
-                    prev_was_hardline = false;
-                    continue;
-                }
-
-                group_broken = is_group;
-
                 output.push_str(&current_line);
                 output.push('\n');
                 current_line.clear();

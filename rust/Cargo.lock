@@ -145,6 +145,7 @@ dependencies = [
  "bencher",
  "colored",
  "fnv",
+ "lazy_static",
  "pest",
  "pest_grammars",
  "regex",

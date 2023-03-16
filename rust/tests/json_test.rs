@@ -1,12 +1,9 @@
 use parse_that::parse::parsers::json::json_parser;
 use parse_that::parse::parsers::json::JsonValue;
+use std::fs;
 
 #[cfg(test)]
-// write 5 unit tests for testing the json parser. Use data from the data/json directory.
-
 mod tests {
-    use std::fs;
-
     use super::*;
 
     #[test]
@@ -37,11 +34,11 @@ mod tests {
         let json_file_path = "../data/json/data-l.json";
         let json_string = fs::read_to_string(json_file_path).unwrap();
 
-        let map = json_parser().parse(&json_string).unwrap();
+        let arr = json_parser().parse(&json_string).unwrap();
 
-        match map {
-            JsonValue::Object(map) => {
-                assert_eq!(map.len(), 4784);
+        match arr {
+            JsonValue::Array(arr) => {
+                assert_eq!(arr.len(), 4784);
             }
             _ => panic!("Expected JsonValue::Object"),
         }

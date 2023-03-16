@@ -7,6 +7,18 @@ edition = "2021"
 name = "parse_that"
 path = "./src/main.rs"
 test = false
+bench = false
+
+[[test]]
+name = "parse_that"
+path = "./src/lib.rs"
+bench = false
+
+
+[[bench]]
+name = "parse_that"
+harness = false
+
 
 [lib]
 name = "parse_that"
@@ -19,11 +31,15 @@ doc = true
 [dependencies]
 regex = { version = "1", features = ["perf"] }
 colored = "2.0.0"
+fnv = "1.0.7"
+tikv-jemallocator = "0.5.0"
+lazy_static = "1.4.0"
+
+[dev-dependencies]
+bencher = "0.1.5"
 pest = "2.5.6"
 pest_grammars = "2.5.6"
-fnv = "1.0.7"
-bencher = "0.1.5"
-tikv-jemallocator = "0.5.0"
+
 
 [unstable]
 let_chains = true

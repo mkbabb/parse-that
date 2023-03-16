@@ -1,25 +1,22 @@
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+#[macro_use]
+extern crate bencher;
+use std::path::Path;
+
+use bencher::{black_box, Bencher};
 
 extern crate pest;
 extern crate pest_grammars;
 
-#[macro_use]
-extern crate bencher;
-
-extern crate fnv;
-
-use bencher::{black_box, Bencher};
-
 use pest::iterators::Pair;
-use pest::Parser;
-use pest::Span;
+use pest::{Parser, Span};
 
 use pest_grammars::json::*;
 
 use fnv::FnvHashMap as HashMap;
 
-enum Json<'i> {
+pub enum Json<'i> {
     Null,
     Bool(bool),
     Number(f64),
@@ -28,7 +25,7 @@ enum Json<'i> {
     Object(HashMap<Span<'i>, Json<'i>>),
 }
 
-fn consume(pair: Pair<Rule>) -> Json {
+pub fn consume(pair: Pair<Rule>) -> Json {
     fn value(pair: Pair<Rule>) -> Json {
         let pair = pair.into_inner().next().unwrap();
 
@@ -40,13 +37,13 @@ fn consume(pair: Pair<Rule>) -> Json {
                 _ => unreachable!(),
             },
             Rule::number => Json::Number(pair.as_str().parse().unwrap()),
-            Rule::string => Json::String(pair.into_span()),
+            Rule::string => Json::String(pair.as_span()),
             Rule::array => Json::Array(pair.into_inner().map(value).collect()),
             Rule::object => {
                 let pairs = pair.into_inner().map(|pos| {
                     let mut pair = pos.into_inner();
 
-                    let key = pair.next().unwrap().into_span();
+                    let key = pair.next().unwrap().as_span();
                     let value = value(pair.next().unwrap());
 
                     (key, value)
@@ -61,50 +58,34 @@ fn consume(pair: Pair<Rule>) -> Json {
     value(pair)
 }
 
-fn basic(b: &mut Bencher) {
-    let data = &"  { \"a\"\t: 42,
-  \"b\": [ \"x\", \"y\", 12 ] ,
-  \"c\": { \"hello\" : \"world\"
-  }
-  }  ";
-
-    b.bytes = data.len() as u64;
-    parse(b, data)
-}
+const DATA_DIR_PATH: &str = "../data/json";
 
 fn data(b: &mut Bencher) {
-    let data = include_str!("./data.json");
-    b.bytes = data.len() as u64;
-    parse(b, data)
+    parse(b, "data.json")
 }
 
 fn canada(b: &mut Bencher) {
-    let data = include_str!("./canada.json");
-    b.bytes = data.len() as u64;
-    parse(b, data)
+    parse(b, "canada.json")
 }
 
 fn apache(b: &mut Bencher) {
-    let data = include_str!("./apache_builds.json");
-    b.bytes = data.len() as u64;
-    parse(b, data)
+    parse(b, "apache-builds.json")
 }
 
-fn parse(b: &mut Bencher, buffer: &str) {
+fn data_xl(b: &mut Bencher) {
+    parse(b, "data-xl.json")
+}
+
+fn parse(b: &mut Bencher, filepath: &str) {
+    let filepath = Path::new(DATA_DIR_PATH).join(filepath);
+    let data = std::fs::read_to_string(filepath).unwrap();
+    b.bytes = data.len() as u64;
+
     b.iter(|| {
-        let mut buf = black_box(buffer);
-        JsonParser::parse(Rule::json, buf).unwrap()
+        let buf = black_box(&data);
+        JsonParser::parse(Rule::json, buf).unwrap();
     })
 }
 
-benchmark_group!(json, basic, data, canada, apache);
-benchmark_main!(json);
-
-/*
-fn main() {
-  let data = include_str!("../../canada.json");
-  loop {
-    JsonParser::parse(Rule::json, data).unwrap();
-  }
-}
-*/
+benchmark_group!(pest_json, data, canada, apache, data_xl);
+benchmark_main!(pest_json);

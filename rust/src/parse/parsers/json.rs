@@ -1,3 +1,6 @@
+use lazy_static::lazy_static;
+use regex::bytes::Regex as BytesRegex;
+
 use fnv::FnvHashMap;
 
 use crate::{parse::*, pretty::Doc};
@@ -25,24 +28,28 @@ impl<'a> Into<Doc<'a>> for JsonValue<'a> {
     }
 }
 
-pub fn json_parser<'a>() -> Parser<'a, JsonValue<'a>> {
-    let string_char =
-        || regex(r#"([^"\\]|\\["\\/bfnrt]|\\u[a-fA-F0-9]{4})*"#).wrap(string("\""), string("\""));
+lazy_static! {
+    static ref NUMBER_RE: BytesRegex = BytesRegex::new(r#"-?\d+(\.\d+)?"#).unwrap();
+    static ref STRING_RE: BytesRegex =
+        BytesRegex::new(r#"([^"\\]|\\["\\/bfnrt]|\\u[a-fA-F0-9]{4})*"#).unwrap();
+}
 
-    let json_null = || string("null").map(|_| JsonValue::Null);
-    let json_bool = || {
-        string("true").map(|_| JsonValue::Bool(true))
-            | string("false").map(|_| JsonValue::Bool(false))
-    };
+pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
+    let string_char = || regex(r#"([^"\\]|\\["\\/bfnrt]|\\u[a-fA-F0-9]{4})*"#).wrap(string("\""), string("\""));
+
+    let json_null = string("null").map(|_| JsonValue::Null);
+    let json_bool = string("true").map(|_| JsonValue::Bool(true))
+        | string("false").map(|_| JsonValue::Bool(false));
 
     let json_number =
-        || regex(r#"-?\d+(\.\d+)?"#).map(|s| JsonValue::Number(s.parse().unwrap_or(f64::NAN)));
+        regex(r#"-?\d+(\.\d+)?"#).map(|s| JsonValue::Number(s.parse().unwrap_or(f64::NAN)));
 
-    let json_string = move || string_char().map(JsonValue::String);
+    let json_string = || string_char().map(JsonValue::String);
 
     let json_array = lazy(|| {
         let comma = string(",").trim_whitespace();
-        json_parser()
+
+        json_value()
             .sep_by(comma, None, None)
             .or_else(|| vec![])
             .trim_whitespace()
@@ -51,11 +58,11 @@ pub fn json_parser<'a>() -> Parser<'a, JsonValue<'a>> {
     });
 
     let json_object = lazy(move || {
-        let key_value = string_char()
-            .skip(string(":").trim_whitespace())
-            .with(json_parser());
-
+        let colon = string(":").trim_whitespace();
         let comma = string(",").trim_whitespace();
+
+        let key_value = string_char().skip(colon).with(json_value());
+
         key_value
             .sep_by(comma, None, None)
             .or_else(|| vec![])
@@ -64,5 +71,9 @@ pub fn json_parser<'a>() -> Parser<'a, JsonValue<'a>> {
             .map(|pairs| JsonValue::Object(pairs.into_iter().collect()))
     });
 
-    json_object | json_array | json_string() | json_number() | json_bool() | json_null()
+    json_object | json_array | json_string() | json_number | json_bool | json_null
+}
+
+pub fn json_parser<'a>() -> Parser<'a, JsonValue<'a>> {
+    json_value().trim_whitespace()
 }
