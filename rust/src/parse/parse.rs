@@ -72,13 +72,13 @@ impl<'a> ParserState<'a> {
 
 type ParserResult<'a, Output> = Result<Option<Output>, ()>;
 
-pub trait ParserFn<'a, Output>: 'a + Send + Sync {
+pub trait ParserFn<'a, Output>: 'a{
     fn call(&self, state: &mut ParserState<'a>) -> ParserResult<'a, Output>;
 }
 
 impl<'a, Output, F> ParserFn<'a, Output> for F
 where
-    F: Fn(&mut ParserState<'a>) -> ParserResult<'a, Output> + 'a + Send + Sync,
+    F: Fn(&mut ParserState<'a>) -> ParserResult<'a, Output> + 'a,
 {
     fn call(&self, state: &mut ParserState<'a>) -> ParserResult<'a, Output> {
         self(state)
@@ -86,7 +86,7 @@ where
 }
 
 pub struct Parser<'a, Output> {
-    pub parser_fn: Box<dyn ParserFn<'a, Output> + 'a + Send + Sync>,
+    pub parser_fn: Box<dyn ParserFn<'a, Output> + 'a>,
 }
 
 impl<'a, Output> Parser<'a, Output>
@@ -95,7 +95,7 @@ where
 {
     pub fn new<F>(parser_fn: F) -> Parser<'a, Output>
     where
-        F: ParserFn<'a, Output> + 'a + Send + Sync,
+        F: ParserFn<'a, Output> + 'a,
     {
         let parser = Parser {
             parser_fn: Box::new(parser_fn),
@@ -384,8 +384,6 @@ pub fn eof<'a>() -> Parser<'a, ()> {
     Parser::new(eof)
 }
 
-use std::sync::Arc;
-
 pub trait LazyParserFn<'a, Output>: 'a {
     fn call(&self) -> Parser<'a, Output>;
 }
@@ -393,7 +391,7 @@ pub trait LazyParserFn<'a, Output>: 'a {
 impl<'a, Output, F> LazyParserFn<'a, Output> for F
 where
     Output: 'a,
-    F: Fn() -> Parser<'a, Output> + 'a + Send + Sync,
+    F: Fn() -> Parser<'a, Output> + 'a,
 {
     fn call(&self) -> Parser<'a, Output> {
         (self)()
@@ -401,33 +399,31 @@ where
 }
 
 pub struct LazyParser<'a, Output> {
-    parser_fn: Arc<dyn LazyParserFn<'a, Output> + 'a + Send + Sync>,
-    cached_parser: RwLock<Option<Arc<RwLock<Parser<'a, Output>>>>>,
+    parser_fn: Box<dyn LazyParserFn<'a, Output>>,
+    cached_parser: Option<Rc<Parser<'a, Output>>>,
 }
 
 impl<'a, Output> LazyParser<'a, Output> {
     pub fn new<F>(parser_fn: F) -> LazyParser<'a, Output>
     where
-        F: LazyParserFn<'a, Output> + 'a + Send + Sync,
+        F: LazyParserFn<'a, Output> + 'a,
     {
         LazyParser {
-            parser_fn: Arc::new(parser_fn),
-            cached_parser: RwLock::new(None),
+            parser_fn: Box::new(parser_fn),
+            cached_parser: None,
         }
     }
 
-    pub fn get(&self) -> Arc<RwLock<Parser<'a, Output>>>
+    pub fn get(&mut self) -> Rc<Parser<'a, Output>>
     where
         Output: 'a,
         Self: 'a,
     {
-        let mut cached_parser = self.cached_parser.write().unwrap();
-
-        if let Some(ref parser) = *cached_parser {
-            Arc::clone(parser)
+        if let Some(parser) = self.cached_parser.as_ref() {
+            parser.clone()
         } else {
-            let parser = Arc::new(RwLock::new(self.parser_fn.call()));
-            *cached_parser = Some(Arc::clone(&parser));
+            let parser = Rc::new(self.parser_fn.call());
+            self.cached_parser = Some(parser.clone());
             parser
         }
     }
@@ -437,13 +433,12 @@ impl<'a, Output> LazyParser<'a, Output> {
 pub fn lazy<'a, F, Output>(f: F) -> Parser<'a, Output>
 where
     Output: 'a,
-    F: LazyParserFn<'a, Output> + 'a + Send + Sync,
+    F: LazyParserFn<'a, Output> + 'a,
 {
-    let lazy_parser = Arc::new(LazyParser::new(f));
+    let lazy_parser = RefCell::new(LazyParser::new(f));
 
     let lazy = move |state: &mut ParserState<'a>| {
-        let arc = lazy_parser.get();
-        let parser = arc.read().unwrap();
+        let parser = lazy_parser.borrow_mut().get();
         parser.parser_fn.call(state)
     };
 
@@ -467,10 +462,7 @@ pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
     Parser::new(string)
 }
 
-pub fn regex_compiled<'a, 'b>(re: &'b BytesRegex) -> Parser<'a, &'a str>
-where
-    'b: 'a,
-{
+pub fn regex_compiled<'a>(re: BytesRegex) -> Parser<'a, &'a str> {
     let regex = move |state: &mut ParserState<'a>| {
         let slc = &state.src_bytes[state.offset..];
 
@@ -495,24 +487,5 @@ where
 
 pub fn regex<'a>(r: &'a str) -> Parser<'a, &'a str> {
     let re = BytesRegex::new(r).expect(&format!("Failed to compile regex: {}", r));
-    let regex = move |state: &mut ParserState<'a>| {
-        let slc = &state.src_bytes[state.offset..];
-
-        match re.find(slc) {
-            Some(m) => {
-                if m.start() != 0 {
-                    return Err(());
-                }
-
-                let end = m.end();
-                let value = &state.src[state.offset..state.offset + end];
-                state.offset += end;
-
-                Ok(Some(value))
-            }
-            None => Err(()),
-        }
-    };
-
-    Parser::new(regex)
+    regex_compiled(re)
 }
