@@ -477,7 +477,6 @@ pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
     Parser::new(string)
 }
 
-
 pub fn regex<'a>(r: &'a str) -> Parser<'a, &'a str> {
     let re = BytesRegex::new(r).expect(&format!("Failed to compile regex: {}", r));
 
@@ -491,7 +490,7 @@ pub fn regex<'a>(r: &'a str) -> Parser<'a, &'a str> {
                 }
 
                 let end = m.end();
-                let value = &state.src[..end];
+                let value = &state.src[state.offset..state.offset + end];
                 state.offset += end;
 
                 Ok(Some(value))

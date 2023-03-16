@@ -49,6 +49,10 @@ pub fn concat<'a>(docs: Vec<impl Into<Doc<'a>>>) -> Doc<'a> {
     Doc::Concat(docs.into_iter().map(|d| d.into()).collect())
 }
 
+pub fn wrap<'a>(left: Doc<'a>, doc: Doc<'a>, right: Doc<'a>) -> Doc<'a> {
+    concat(vec![left, doc, right])
+}
+
 pub fn join<'a>(sep: Doc<'a>, docs: Vec<Doc<'a>>) -> Doc<'a> {
     Doc::Join(Box::new(sep), docs)
 }
@@ -81,16 +85,45 @@ pub fn if_break<'a>(doc: Doc<'a>, other: Doc<'a>) -> Doc<'a> {
     Doc::IfBreak(Box::new(doc), Box::new(other))
 }
 
+pub trait Join<'a> {
+    fn join(self, sep: Doc<'a>) -> Doc<'a>;
+}
+
+impl<'a> Join<'a> for Vec<Doc<'a>> {
+    fn join(self, sep: Doc<'a>) -> Doc<'a> {
+        join(sep, self)
+    }
+}
+
+pub trait SmartJoin<'a> {
+    fn smart_join(self, sep: Doc<'a>) -> Doc<'a>;
+}
+
+impl<'a> SmartJoin<'a> for Vec<Doc<'a>> {
+    fn smart_join(self, sep: Doc<'a>) -> Doc<'a> {
+        smart_join(sep, self)
+    }
+}
+
+pub trait Wrap<'a> {
+    fn wrap(self, left: Doc<'a>, right: Doc<'a>) -> Doc<'a>;
+}
+
+impl<'a> Wrap<'a> for Doc<'a> {
+    fn wrap(self, left: Doc<'a>, right: Doc<'a>) -> Doc<'a> {
+        concat(vec![left, self, right])
+    }
+}
+
 impl<'a, T> Into<Doc<'a>> for Vec<T>
 where
     T: Into<Doc<'a>>,
 {
     fn into(self) -> Doc<'a> {
-        let doc_vec: Vec<Doc> = self.into_iter().map(|item| item.into()).collect();
+        let doc_vec: Vec<_> = self.into_iter().map(|item| item.into()).collect();
 
         if !doc_vec.is_empty() {
-            let doc = str("[") + indent(smart_join(str(", "), doc_vec)) + str("]");
-
+            let doc = indent(doc_vec.smart_join(str(", "))).wrap(str("["), str("]"));
             return doc;
         } else {
             return str("[]");
@@ -104,19 +137,14 @@ where
     V: Into<Doc<'a>>,
 {
     fn into(self) -> Doc<'a> {
-        let mut doc_vec: Vec<Doc> = Vec::new();
-
-        for (key, value) in self {
-            let doc = key.into() + str(": ") + value.into();
-            doc_vec.push(doc);
-        }
+        let doc_vec: Vec<_> = self
+            .into_iter()
+            .map(|(key, value)| key.into() + str(": ") + value.into())
+            .collect();
 
         if !doc_vec.is_empty() {
-            let doc = str("{")
-                + indent(join(str(", ") + Doc::Hardline, doc_vec))
-                + Doc::Softline
-                + str("}");
-
+            let doc = (indent(doc_vec.join(str(", ") + Doc::Hardline)) + Doc::Softline)
+                .wrap(str("{"), str("}"));
             return doc;
         } else {
             return str("{}");
@@ -126,13 +154,13 @@ where
 
 impl<'a> Into<Doc<'a>> for &'a str {
     fn into(self) -> Doc<'a> {
-        Doc::Str(self)
+        Doc::Str(self).wrap(str("\""), str("\""))
     }
 }
 
 impl<'a> Into<Doc<'a>> for String {
     fn into(self) -> Doc<'a> {
-        Doc::String(self)
+        Doc::String(self).wrap(str("\""), str("\""))
     }
 }
 

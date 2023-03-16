@@ -145,7 +145,7 @@ pub fn state_print(
 
 impl<'a, Output> Parser<'a, Output>
 where
-    Self: Sized + Sync + Send + 'a,
+    Self: 'a,
     Output: 'a,
 {
     pub fn debug(self, name: &'a str) -> Parser<'a, Output> {
