@@ -1,13 +1,18 @@
 use regex::bytes::Regex as BytesRegex;
+use regex::Regex;
 use std::cell::RefCell;
 use std::rc::Rc;
 
 #[inline(always)]
 pub fn trim_leading_whitespace<'a>(state: &ParserState<'a>) -> usize {
-    state.src_bytes[state.offset..]
-        .iter()
-        .take_while(|&b| u8::is_ascii_whitespace(b))
-        .count()
+    unsafe {
+        state
+            .src_bytes
+            .get_unchecked(state.offset..)
+            .iter()
+            .take_while(|&b| u8::is_ascii_whitespace(b))
+            .count()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -452,8 +457,8 @@ pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
     let s_bytes = s.as_bytes();
     let end = s_bytes.len();
 
-    let string = move |state: &mut ParserState<'a>| {
-        let slc = &state.src_bytes[state.offset..];
+    let string = move |state: &mut ParserState<'a>| unsafe {
+        let slc = &state.src_bytes.get_unchecked(state.offset..);
 
         if slc[0] == s_bytes[0] && slc[1..end] == s_bytes[1..] {
             state.offset += end;
@@ -466,21 +471,17 @@ pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
 }
 
 #[inline(always)]
-pub fn regex_compiled<'a>(re: BytesRegex) -> Parser<'a, &'a str> {
-    let regex = move |state: &mut ParserState<'a>| {
-        let slc = &state.src_bytes[state.offset..];
+pub fn regex_compiled<'a>(re: Regex) -> Parser<'a, &'a str> {
+    let regex = move |state: &mut ParserState<'a>| unsafe {
+        let slc = &state.src.get_unchecked(state.offset..);
 
         match re.find(slc) {
             Some(m) => {
                 if m.start() != 0 {
                     return Err(());
                 }
-
-                let end = m.end();
-                let value = &state.src[state.offset..state.offset + end];
-                state.offset += end;
-
-                Ok(Some(value))
+                state.offset += m.end();
+                Ok(Some(m.as_str()))
             }
             None => Err(()),
         }
@@ -490,6 +491,6 @@ pub fn regex_compiled<'a>(re: BytesRegex) -> Parser<'a, &'a str> {
 }
 
 pub fn regex<'a>(r: &'a str) -> Parser<'a, &'a str> {
-    let re = BytesRegex::new(r).expect(&format!("Failed to compile regex: {}", r));
+    let re = Regex::new(r).expect(&format!("Failed to compile regex: {}", r));
     regex_compiled(re)
 }
