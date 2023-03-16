@@ -1,8 +1,6 @@
 use regex::bytes::Regex as BytesRegex;
-use std::borrow::{Borrow, BorrowMut};
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::RwLock;
 
 #[inline(always)]
 pub fn trim_leading_whitespace<'a>(state: &ParserState<'a>) -> usize {
@@ -72,7 +70,7 @@ impl<'a> ParserState<'a> {
 
 type ParserResult<'a, Output> = Result<Option<Output>, ()>;
 
-pub trait ParserFn<'a, Output>: 'a{
+pub trait ParserFn<'a, Output>: 'a {
     fn call(&self, state: &mut ParserState<'a>) -> ParserResult<'a, Output>;
 }
 
@@ -354,11 +352,27 @@ where
         let look_ahead = move |state: &mut ParserState<'a>| {
             let value = self.parser_fn.call(state)?;
             parser.parser_fn.call(state)?;
+
             state.restore();
+
             Ok(value)
         };
 
         Parser::new(look_ahead).save_state()
+    }
+
+    pub fn eof(self) -> Parser<'a, Output> {
+        let eof = move |state: &mut ParserState<'a>| {
+            let value = self.parser_fn.call(state)?;
+
+            if state.offset >= state.src.len() {
+                Ok(value)
+            } else {
+                Err(())
+            }
+        };
+
+        Parser::new(eof)
     }
 }
 
@@ -371,17 +385,6 @@ where
     fn bitor(self, other: Parser<'a, Output2>) -> Self::Output {
         self.or(other)
     }
-}
-
-pub fn eof<'a>() -> Parser<'a, ()> {
-    let eof = move |state: &mut ParserState<'a>| {
-        if state.offset >= state.src.len() {
-            Ok(Some(()))
-        } else {
-            Err(())
-        }
-    };
-    Parser::new(eof)
 }
 
 pub trait LazyParserFn<'a, Output>: 'a {
@@ -419,8 +422,8 @@ impl<'a, Output> LazyParser<'a, Output> {
         Output: 'a,
         Self: 'a,
     {
-        if let Some(parser) = self.cached_parser.as_ref() {
-            parser.clone()
+        if let Some(parser) = self.cached_parser.clone() {
+            parser
         } else {
             let parser = Rc::new(self.parser_fn.call());
             self.cached_parser = Some(parser.clone());
@@ -429,7 +432,6 @@ impl<'a, Output> LazyParser<'a, Output> {
     }
 }
 
-#[inline(always)]
 pub fn lazy<'a, F, Output>(f: F) -> Parser<'a, Output>
 where
     Output: 'a,
@@ -445,6 +447,7 @@ where
     Parser::new(lazy)
 }
 
+#[inline(always)]
 pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
     let s_bytes = s.as_bytes();
     let end = s_bytes.len();
@@ -452,7 +455,7 @@ pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
     let string = move |state: &mut ParserState<'a>| {
         let slc = &state.src_bytes[state.offset..];
 
-        if slc.starts_with(s_bytes) {
+        if slc[0] == s_bytes[0] && slc[1..end] == s_bytes[1..] {
             state.offset += end;
             Ok(Some(s))
         } else {
@@ -462,6 +465,7 @@ pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
     Parser::new(string)
 }
 
+#[inline(always)]
 pub fn regex_compiled<'a>(re: BytesRegex) -> Parser<'a, &'a str> {
     let regex = move |state: &mut ParserState<'a>| {
         let slc = &state.src_bytes[state.offset..];

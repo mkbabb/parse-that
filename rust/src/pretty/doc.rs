@@ -191,6 +191,12 @@ impl<'a> Into<Doc<'a>> for String {
     }
 }
 
+impl<'a> Into<Doc<'a>> for bool {
+    fn into(self) -> Doc<'a> {
+        Doc::String(self.to_string())
+    }
+}
+
 macro_rules! impl_into_doc_for_number {
     ($($t:ty),*) => {
         $(
@@ -203,3 +209,15 @@ macro_rules! impl_into_doc_for_number {
     };
 }
 impl_into_doc_for_number!(i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize, f32, f64);
+
+impl<'a, T> Into<Doc<'a>> for Option<T>
+where
+    T: Into<Doc<'a>>,
+{
+    fn into(self) -> Doc<'a> {
+        match self {
+            Some(value) => value.into(),
+            None => str("null"),
+        }
+    }
+}

@@ -11,6 +11,19 @@ use pretty::*;
 
 use std::{collections::HashMap, fs, time::SystemTime};
 
+impl<'a> Into<Doc<'a>> for JsonValue<'a> {
+    fn into(self) -> Doc<'a> {
+        match self {
+            JsonValue::Null => "null".into(),
+            JsonValue::Bool(b) => b.to_string().into(),
+            JsonValue::Number(n) => n.into(),
+            JsonValue::String(s) => s.into(),
+            JsonValue::Array(a) => a.into(),
+            JsonValue::Object(o) => o.into(),
+        }
+    }
+}
+
 pub fn main() {
     let first_now = SystemTime::now();
 
@@ -26,16 +39,16 @@ pub fn main() {
 
     // println!("Elapsed: {:?}", elapsed);
 
-    // let json_file_path = "../data/json/data-xl.json";
-    // let json_string = fs::read_to_string(json_file_path).unwrap();
+    let json_file_path = "../data/json/data-xl.json";
+    let json_string = fs::read_to_string(json_file_path).unwrap();
 
-    // let parser = json_parser();
+    let parser = json_parser();
 
-    // let now = SystemTime::now();
+    let now = SystemTime::now();
 
-    // let map = parser.parse(&json_string).unwrap();
+    let map = parser.parse(&json_string).unwrap();
 
-    // let elapsed = now.elapsed().unwrap();
+    let elapsed = now.elapsed().unwrap();
 
     // println!("dElapsed: {:?}", elapsed);
 
@@ -62,18 +75,18 @@ pub fn main() {
     // map.insert("ok", map3.clone());
     // map.insert("thats vibes", map3.clone());
 
-    // let printer = Printer::new(80, 1, false, true);
+    let printer = Printer::new(80, 1, false, true);
 
-    // let now = SystemTime::now();
+    let now = SystemTime::now();
 
-    // let pretty = printer.pretty(map);
-    // let elapsed = now.elapsed().unwrap();
+    let pretty = printer.pretty(map);
+    let elapsed = now.elapsed().unwrap();
 
-    // println!("Elapsed: {:?}", elapsed);
+    println!("Elapsed: {:?}", elapsed);
 
-    // fs::write("../data/pretty.json", pretty).expect("Unable to write file");
+    fs::write("../data/pretty.json", pretty).expect("Unable to write file");
 
-    // let elapsed = first_now.elapsed().unwrap();
+    let elapsed = first_now.elapsed().unwrap();
 
-    // println!("Total Elapsed: {:?}", elapsed);
+    println!("Total Elapsed: {:?}", elapsed);
 }

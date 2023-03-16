@@ -31,6 +31,9 @@ fn parse(b: &mut Bencher, filepath: &str) {
     let data = std::fs::read_to_string(filepath).unwrap();
     b.bytes = data.len() as u64;
 
+    // replace all whitespace with a single space
+    let data = data.replace(|c: char| c.is_whitespace(), "");
+
     let parser = json_parser();
 
     b.iter(|| {
