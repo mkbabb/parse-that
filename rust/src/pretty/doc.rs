@@ -181,13 +181,13 @@ where
 
 impl<'a> Into<Doc<'a>> for &'a str {
     fn into(self) -> Doc<'a> {
-        Doc::Str(self).wrap(str("\""), str("\""))
+        Doc::Str(self)
     }
 }
 
 impl<'a> Into<Doc<'a>> for String {
     fn into(self) -> Doc<'a> {
-        Doc::String(self).wrap(str("\""), str("\""))
+        Doc::String(self)
     }
 }
 

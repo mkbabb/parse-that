@@ -1,3 +1,5 @@
+#![feature(negative_impls)]
+
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 

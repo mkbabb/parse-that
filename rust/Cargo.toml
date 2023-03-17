@@ -35,6 +35,8 @@ fnv = "1.0.7"
 tikv-jemallocator = "0.5.0"
 lazy_static = "1.4.0"
 pest = "2.5.6"
+memchr = "2.5.0"
+smallvec = "1.10.0"
 
 [dev-dependencies]
 bencher = "0.1.5"

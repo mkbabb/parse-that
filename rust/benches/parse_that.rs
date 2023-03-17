@@ -22,9 +22,9 @@ fn apache(b: &mut Bencher) {
     parse(b, "apache-builds.json")
 }
 
-// fn data_xl(b: &mut Bencher) {
-//     parse(b, "data-l.json")
-// }
+fn data_xl(b: &mut Bencher) {
+    parse(b, "data-l.json")
+}
 
 fn parse(b: &mut Bencher, filepath: &str) {
     let filepath = Path::new(DATA_DIR_PATH).join(filepath);
@@ -32,7 +32,7 @@ fn parse(b: &mut Bencher, filepath: &str) {
     b.bytes = data.len() as u64;
 
     // replace all whitespace with a single space
-    let data = data.replace(|c: char| c.is_whitespace(), "");
+    // let data = data.replace(|c: char| c.is_whitespace(), "");
 
     let parser = json_parser();
 
