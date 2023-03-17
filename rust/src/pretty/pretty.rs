@@ -248,6 +248,8 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
                     push_hardline(&mut stack, indent_delta);
                 }
             }
+
+            Doc::Null => {}
         }
 
         prev_was_hardline = matches!(doc, Doc::Hardline);

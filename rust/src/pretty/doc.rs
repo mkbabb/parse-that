@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub enum Doc<'a> {
+    Null,
     String(String),
     Str(&'a str),
 
@@ -41,32 +42,42 @@ impl<'a> std::ops::Add for Doc<'a> {
     }
 }
 
-pub fn group<'a>(doc: Doc<'a>) -> Doc<'a> {
-    Doc::Group(Box::new(doc))
+pub fn group<'a>(doc: impl Into<Doc<'a>>) -> Doc<'a> {
+    Doc::Group(Box::new(doc.into()))
 }
 
 pub fn concat<'a>(docs: Vec<impl Into<Doc<'a>>>) -> Doc<'a> {
     Doc::Concat(docs.into_iter().map(|d| d.into()).collect())
 }
 
-pub fn wrap<'a>(left: Doc<'a>, doc: Doc<'a>, right: Doc<'a>) -> Doc<'a> {
-    concat(vec![left, doc, right])
+pub fn wrap<'a>(
+    left: impl Into<Doc<'a>>,
+    doc: impl Into<Doc<'a>>,
+    right: impl Into<Doc<'a>>,
+) -> Doc<'a> {
+    concat(vec![left.into(), doc.into(), right.into()])
 }
 
-pub fn join<'a>(sep: Doc<'a>, docs: Vec<Doc<'a>>) -> Doc<'a> {
-    Doc::Join(Box::new(sep), docs)
+pub fn join<'a>(sep: impl Into<Doc<'a>>, docs: Vec<impl Into<Doc<'a>>>) -> Doc<'a> {
+    Doc::Join(
+        Box::new(sep.into()),
+        docs.into_iter().map(|d| d.into()).collect(),
+    )
 }
 
-pub fn smart_join<'a>(sep: Doc<'a>, docs: Vec<Doc<'a>>) -> Doc<'a> {
-    Doc::SmartJoin(Box::new(sep), docs)
+pub fn smart_join<'a>(sep: impl Into<Doc<'a>>, docs: Vec<impl Into<Doc<'a>>>) -> Doc<'a> {
+    Doc::SmartJoin(
+        Box::new(sep.into()),
+        docs.into_iter().map(|d| d.into()).collect(),
+    )
 }
 
-pub fn indent<'a>(doc: Doc<'a>) -> Doc<'a> {
-    Doc::Indent(Box::new(doc))
+pub fn indent<'a>(doc: impl Into<Doc<'a>>) -> Doc<'a> {
+    Doc::Indent(Box::new(doc.into()))
 }
 
-pub fn dedent<'a>(doc: Doc<'a>) -> Doc<'a> {
-    Doc::Dedent(Box::new(doc))
+pub fn dedent<'a>(doc: impl Into<Doc<'a>>) -> Doc<'a> {
+    Doc::Dedent(Box::new(doc.into()))
 }
 
 pub fn str<'a>(s: impl Into<&'a str>) -> Doc<'a> {
@@ -106,32 +117,32 @@ impl Indent for Doc<'_> {
 }
 
 pub trait Join<'a> {
-    fn join(self, sep: Doc<'a>) -> Doc<'a>;
+    fn join(self, sep: impl Into<Doc<'a>>) -> Doc<'a>;
 }
 
 impl<'a> Join<'a> for Vec<Doc<'a>> {
-    fn join(self, sep: Doc<'a>) -> Doc<'a> {
+    fn join(self, sep: impl Into<Doc<'a>>) -> Doc<'a> {
         join(sep, self)
     }
 }
 
 pub trait SmartJoin<'a> {
-    fn smart_join(self, sep: Doc<'a>) -> Doc<'a>;
+    fn smart_join(self, sep: impl Into<Doc<'a>>) -> Doc<'a>;
 }
 
 impl<'a> SmartJoin<'a> for Vec<Doc<'a>> {
-    fn smart_join(self, sep: Doc<'a>) -> Doc<'a> {
+    fn smart_join(self, sep: impl Into<Doc<'a>>) -> Doc<'a> {
         smart_join(sep, self)
     }
 }
 
 pub trait Wrap<'a> {
-    fn wrap(self, left: Doc<'a>, right: Doc<'a>) -> Doc<'a>;
+    fn wrap(self, left: impl Into<Doc<'a>>, right: impl Into<Doc<'a>>) -> Doc<'a>;
 }
 
 impl<'a> Wrap<'a> for Doc<'a> {
-    fn wrap(self, left: Doc<'a>, right: Doc<'a>) -> Doc<'a> {
-        concat(vec![left, self, right])
+    fn wrap(self, left: impl Into<Doc<'a>>, right: impl Into<Doc<'a>>) -> Doc<'a> {
+        concat(vec![left.into(), self, right.into()])
     }
 }
 
@@ -221,3 +232,5 @@ where
         }
     }
 }
+
+// create into impl for IntoIter

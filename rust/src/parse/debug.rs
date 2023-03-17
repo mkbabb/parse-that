@@ -1,5 +1,5 @@
 use crate::parse::*;
-use crate::pretty::{concat, indent, Doc, PRINTER};
+use crate::pretty::{concat, indent, str, Doc, Indent, PRINTER};
 
 use colored::{Color, Colorize};
 
@@ -134,7 +134,7 @@ pub fn state_print(
         Err(state) => add_cursor(state, "^", true),
     };
 
-    let header_body = concat(vec![header, Doc::Hardline, indent(body.into())]);
+    let header_body = concat(vec![header, Doc::Hardline, indent(body)]);
 
     PRINTER.pretty(header_body)
 }

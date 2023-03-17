@@ -12,15 +12,17 @@ pub fn main() {
 
     print!("Parsing CSV... ");
 
-    let csv_file_path = "../data/csv/active_charter_schools_report.csv";
+    let csv_file_path = "../data/csv/data.csv";
     let csv_string = fs::read_to_string(csv_file_path).unwrap();
 
     let now = SystemTime::now();
+    
     let parser = csv_parser();
-    let rows = parser.parse(&csv_string).unwrap().to_vec();
+    let rows = parser.parse(&csv_string).unwrap();
+    
     let elapsed = now.elapsed().unwrap();
 
-    // println!("Elapsed: {:?}", elapsed);
+    println!("Elapsed: {:?}", elapsed);
 
     // let json_file_path = "../data/json/data-xl.json";
     // let json_string = fs::read_to_string(json_file_path).unwrap();

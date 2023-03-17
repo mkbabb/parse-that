@@ -1,18 +1,56 @@
-use crate::parse::*;
+use crate::{
+    parse::*,
+    pretty::{str, Doc, Join, Wrap},
+};
 
-pub fn csv_parser<'a>() -> Parser<'a, Vec<Vec<&'a str>>> {
-    let double_quotes = || string("\"");
-    let single_quotes = || string("'");
+// define CSV enum:
 
-    let token = regex("[^\"]+").wrap(double_quotes(), double_quotes())
-        | regex("[^']+").wrap(single_quotes(), single_quotes())
-        | regex(r"[^,\r\n]+")
-        | string("").look_ahead(string(","));
+#[derive(Debug, PartialEq)]
+pub enum CSV<'a> {
+    Lines(Vec<Vec<&'a str>>),
+}
 
-    let delim = string(",");
+impl<'a> Into<Doc<'a>> for CSV<'a> {
+    fn into(self) -> Doc<'a> {
+        let CSV::Lines(lines) = self;
 
-    let line = token.sep_by(delim, ..).skip(regex(r"\s")).trim_whitespace();
-    let csv = line.many(1..);
+        return lines
+            .into_iter()
+            .map(|line| {
+                line.into_iter()
+                    .map(|s| {
+                        if s.contains(',') {
+                            str(s).wrap(str("\""), str("\""))
+                        } else {
+                            str(s)
+                        }
+                    })
+                    .collect::<Vec<_>>()
+                    .join(",")
+            })
+            .collect::<Vec<_>>()
+            .join(Doc::Hardline);
+    }
+}
 
-    csv.trim_whitespace()
+pub fn csv_parser<'a>() -> Parser<'a, CSV<'a>> {
+    let delim = || string_span(",");
+
+    let double_quotes = (string_span("\"\"") | escaped_span() | take_while_span(|c| c != '"'))
+        .many_span(..)
+        .wrap_span(string_span("\""), string_span("\""));
+
+    let no_quotes = take_while_span(|c| c != ',' && c != '"' && c != '\r' && c != '\n');
+
+    let empty = string_span("").look_ahead(delim());
+
+    let token = (double_quotes | no_quotes | empty).map(|span| span.as_str());
+
+    let line = token.sep_by(delim(), ..);
+
+    let csv = line
+        .debug("csv")
+        .sep_by(regex(r"\s+"), ..);
+
+    csv.trim_whitespace().map(CSV::Lines)
 }

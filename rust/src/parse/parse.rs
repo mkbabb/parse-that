@@ -235,6 +235,21 @@ where
         Parser::new(opt)
     }
 
+    pub fn not<Output2>(self, next: Parser<'a, Output2>) -> Parser<'a, Output>
+    where
+        Output2: 'a,
+    {
+        let not = move |state: &mut ParserState<'a>| {
+            if let Some(value) = self.parser_fn.call(state) {
+                if next.parser_fn.call(state).is_none() {
+                    return Some(value);
+                }
+            }
+            None
+        };
+        Parser::new(not)
+    }
+
     pub fn map<Output2>(self, f: fn(Output) -> Output2) -> Parser<'a, Output2>
     where
         Output2: 'a,
@@ -401,7 +416,6 @@ where
             if let None = parser.parser_fn.call(state) {
                 return None;
             }
-
             state.restore();
             Some(value)
         };
@@ -626,6 +640,21 @@ where
     Parser::new(take_while)
 }
 
+pub fn escaped_span<'a>() -> Parser<'a, Span<'a>> {
+    return string_span("\\").then_span({
+        string_span("b")
+            | string_span("f")
+            | string_span("n")
+            | string_span("r")
+            | string_span("t")
+            | string_span("\"")
+            | string_span("'")
+            | string_span("\\")
+            | string_span("/")
+            | string_span("u").then_span(take_while_span(|c| c.is_digit(16)).many_span(4..4))
+    });
+}
+
 pub trait ParserSpan<'a> {
     type Output;
 
@@ -731,5 +760,3 @@ impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
         return ParserSpan::many(self, bounds);
     }
 }
-
-// impl plus for parserspan:
