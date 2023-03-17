@@ -1,12 +1,13 @@
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
-use parse_that::parse::parsers::json::json_parser;
 use std::path::Path;
 
 #[macro_use]
 extern crate bencher;
 use bencher::{black_box, Bencher};
+
+use parse_that::parse::parsers::json::json_parser;
 
 const DATA_DIR_PATH: &str = "../data/json";
 
@@ -31,9 +32,6 @@ fn parse(b: &mut Bencher, filepath: &str) {
     let data = std::fs::read_to_string(filepath).unwrap();
     b.bytes = data.len() as u64;
 
-    // replace all whitespace with a single space
-    // let data = data.replace(|c: char| c.is_whitespace(), "");
-
     let parser = json_parser();
 
     b.iter(|| {
@@ -42,6 +40,6 @@ fn parse(b: &mut Bencher, filepath: &str) {
     })
 }
 
-benchmark_group!(json, data, canada, apache);
+benchmark_group!(json, data, canada, apache, data_xl);
 
 benchmark_main!(json);

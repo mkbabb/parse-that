@@ -1,107 +1,184 @@
-// use crate::parse::{ lazy, regex, string, Parser};
-// use std::collections::HashMap;
+use crate::parse::{
+    escaped_span, lazy, regex, string, string_span, take_while_span, Parser, ParserSpan, Span,
+};
+use std::collections::HashMap;
 
-// #[derive(Debug, Clone, PartialEq)]
-// pub enum Expression {
-//     Literal(String),
-//     Nonterminal(String),
-//     Group(Box<Expression>),
-//     Regex(regex::Regex),
-//     Optional(Box<Expression>),
-//     Minus(Box<Expression>, Box<Expression>),
-//     Many(Box<Expression>),
-//     Many1(Box<Expression>),
-//     Skip(Box<Expression>, Box<Expression>),
-//     Next(Box<Expression>, Box<Expression>),
-//     Concatenation(Vec<Expression>),
-//     Alteration(Vec<Expression>),
-//     Epsilon,
-//     OptionalWhitespace,
-// }
+#[derive(Debug, Clone)]
+pub enum Comment<'a> {
+    Line(&'a str),
+    Block(&'a str),
+}
 
-// #[derive(Debug, Clone, PartialEq)]
-// pub struct ProductionRule {
-//     name: String,
-//     expression: Expression,
-//     comment: (Vec<String>, Vec<String>),
-// }
+#[derive(Debug, Clone)]
+pub struct Comments<'a> {
+    pub left: Vec<Comment<'a>>,
+    pub right: Vec<Comment<'a>>,
+}
 
-// pub type AST = HashMap<String, ProductionRule>;
+impl<'a> Default for Comments<'a> {
+    fn default() -> Self {
+        Comments {
+            left: vec![],
+            right: vec![],
+        }
+    }
+}
 
-// pub struct BBNFGrammar;
+type TokenExpression<'a, T = Expression<'a>> = Box<Token<'a, T>>;
 
-// impl BBNFGrammar {
-//     pub fn grammar(input: &str) -> Result<AST, String> {
-//         Parser::new(move |input| {
-//             let (input, rules) = Self::production_rules().parse(input)?;
-//             let (input, _) = eof().parse(input)?;
-//             Ok((input, rules))
-//         })
-//         .parse(input)
-//         .map(|(_, rules)| rules.into_iter().map(|rule| (rule.name.clone(), rule)).collect())
-//     }
+#[derive(Debug, Clone)]
+pub enum Expression<'a> {
+    Literal(Token<'a, &'a str>),
+    Nonterminal(Token<'a, &'a str>),
+    Group(TokenExpression<'a>),
+    Regex(Token<'a, regex::Regex>),
+    Optional(TokenExpression<'a>),
+    Minus(TokenExpression<'a>),
+    Many(TokenExpression<'a>),
+    Many1(TokenExpression<'a>),
+    Skip(TokenExpression<'a>, TokenExpression<'a>),
+    Next(TokenExpression<'a>, TokenExpression<'a>),
+    Concatenation(TokenExpression<'a, Vec<Expression<'a>>>),
+    Alteration(TokenExpression<'a, Vec<Expression<'a>>>),
 
-//     fn identifier() -> Parser<String> {
-//         regex(r#"[_a-zA-Z][_a-zA-Z0-9-]*"#)
-//     }
+    Epsilon,
+    OptionalWhitespace,
+}
 
-//     fn literal() -> Parser<Expression> {
-//         (string("\"")
-//             .then(regex(r#"(?:[^\\"]|\\(?:[bfnrtv"\\/]|u[0-9a-fA-F]{4}))*"#))
-//             .then(string("\"")))
-//             .map(|(_, s, _)| Expression::Literal(s))
-//         | (string("'")
-//             .then(regex(r#"(?:[^\\']|\\(?:[bfnrtv'\\/]|u[0-9a-fA-F]{4}))*"#))
-//             .then(string("'")))
-//             .map(|(_, s, _)| Expression::Literal(s))
-//     }
+#[derive(Debug, Clone)]
+pub struct Token<'a, T> {
+    pub value: T,
+    pub span: Span<'a>,
+    // pub comments: Comments<'a>,
+}
 
-//     fn epsilon() -> Parser<Expression> {
-//         string("epsilon").map(|_| Expression::Epsilon)
-//     }
+#[derive(Debug, Clone)]
+pub struct ProductionRule<'a> {
+    name: Expression<'a>,
+    expression: Expression<'a>,
+}
 
-//     fn nonterminal() -> Parser<Expression> {
-//         Self::identifier().map(Expression::Nonterminal)
-//     }
+pub type AST<'a> = HashMap<String, ProductionRule<'a>>;
 
-//     fn group() -> Parser<Expression> {
-//         string("(")
-//             .skip_whitespace()
-//             .then(Self::rhs())
-//             .skip_whitespace()
-//             .then(string(")"))
-//             .map(|(_, expr, _)| Expression::Group(Box::new(expr)))
-//     }
+pub struct BBNFGrammar<'a> {
+    _marker: std::marker::PhantomData<&'a ()>,
+}
 
-//     fn optional_group() -> Parser<Expression> {
-//         string("[")
-//             .skip_whitespace()
-//             .then(Self::rhs())
-//             .skip_whitespace()
-//             .then(string("]"))
-//             .map(|(_, expr, _)| {
-//                 Expression::Optional(Box::new(Expression::Group(Box::new(expr))))
-//             })
-//     }
+impl<'a> BBNFGrammar<'a> {
+    fn block_comment() -> Parser<'a, Comment<'a>> {
+        let not_star = take_while_span(|c| c != '*');
+        let not_slash = take_while_span(|c| c != '/');
 
-//     fn many_group() -> Parser<Expression> {
-//         string("{")
-//             .skip_whitespace()
-//             .then(Self::rhs())
-//             .skip_whitespace()
-//             .then(string("}"))
-//             .map(|(_, expr, _)| {
-//                 Expression::Many(Box::new(Expression::Group(Box::new(expr))))
-//             })
-//     }
+        let comment = (not_star | not_slash).many_span(..);
 
-//     fn term() -> Parser<Expression> {
-//         Self::epsilon()
-//             | Self::group()
-//             | Self::optional_group()
-//             | Self::many_group()
-//             | Self::nonterminal()
-//             | Self::literal()
-//             | Self::regex()
-//     }
+        return comment
+            .wrap_span(string_span("/*"), string_span("*/"))
+            .map(|s| Comment::Block(s.as_str()));
+    }
 
+    fn identifier() -> Parser<'a, &'a str> {
+        regex(r#"[_a-zA-Z][_a-zA-Z0-9-]*"#)
+    }
+
+    fn literal() -> Parser<'a, Expression<'a>> {
+        let not_quote = take_while_span(|c| c != '"' && c != '\\');
+
+        let string = (not_quote | escaped_span())
+            .many_span(..)
+            .wrap_span(string_span("\""), string_span("\""));
+
+        return string.map(|s| Expression::Literal(s.as_str()));
+    }
+
+    fn epsilon() -> Parser<'a, Expression<'a>> {
+        string("epsilon").map(|_| Expression::Epsilon)
+    }
+
+    fn nonterminal() -> Parser<'a, Expression<'a>> {
+        Self::identifier().map(Expression::Nonterminal)
+    }
+
+    fn regex() -> Parser<'a, Expression<'a>> {
+        let not_quote = take_while_span(|c| c != '"' && c != '\\');
+
+        let string = (not_quote | escaped_span())
+            .many_span(..)
+            .wrap_span(string_span("\""), string_span("\""));
+
+        return string.map(|s| Expression::Regex(regex::Regex::new(s.as_str()).unwrap()));
+    }
+
+    fn group() -> Parser<'a, Expression<'a>> {
+        Self::rhs()
+            .trim_whitespace()
+            .wrap(string("("), string(")"))
+            .map(|expr| Expression::Group(Box::new(expr)))
+    }
+
+    fn optional_group() -> Parser<'a, Expression<'a>> {
+        Self::rhs()
+            .trim_whitespace()
+            .wrap(string("["), string("]"))
+            .map(|expr| Expression::Optional(Box::new(Expression::Group(Box::new(expr)))))
+    }
+
+    fn many_group() -> Parser<'a, Expression<'a>> {
+        Self::rhs()
+            .trim_whitespace()
+            .wrap(string("{"), string("}"))
+            .map(|expr| Expression::Many(Box::new(Expression::Group(Box::new(expr)))))
+    }
+
+    fn term() -> Parser<'a, Expression<'a>> {
+        Self::epsilon()
+            | Self::group()
+            | Self::optional_group()
+            | Self::many_group()
+            | Self::nonterminal()
+            | Self::literal()
+            | Self::regex()
+    }
+
+    fn concatenation() -> Parser<'a, Expression<'a>> {
+        Self::term().sep_by(string(" "), ..).map(|exprs| {
+            if exprs.len() == 1 {
+                exprs.into_iter().next().unwrap()
+            } else {
+                Expression::Concatenation(exprs)
+            }
+        })
+    }
+
+    fn alternation() -> Parser<'a, Expression<'a>> {
+        Self::concatenation().sep_by(string("|"), ..).map(|exprs| {
+            if exprs.len() == 1 {
+                exprs.into_iter().next().unwrap()
+            } else {
+                Expression::Alteration(exprs)
+            }
+        })
+    }
+
+    fn lhs() -> Parser<'a, Expression<'a>> {
+        Self::nonterminal()
+    }
+
+    fn rhs() -> Parser<'a, Expression<'a>> {
+        Self::alternation()
+    }
+
+    fn production_rule() -> Parser<'a, ProductionRule<'a>> {
+        let eq = string("=").trim_whitespace();
+        let terminator = (string(";") | string(".")).trim_whitespace();
+
+        Self::lhs()
+            .skip(eq)
+            .with(Self::rhs())
+            .skip(terminator)
+            .map(|(lhs, rhs)| ProductionRule {
+                name: lhs,
+                expression: rhs,
+                comment: (vec![], vec![]),
+            })
+    }
+}

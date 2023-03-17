@@ -19,6 +19,7 @@ pub fn trim_leading_whitespace<'a>(state: &ParserState<'a>) -> usize {
     }
 }
 
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Span<'a> {
     pub start: usize,
     pub end: usize,
@@ -40,6 +41,7 @@ pub struct ParserState<'a> {
     pub end: usize,
 
     pub offset: usize,
+    pub furthest_offset: usize,
 
     pub state_stack: Vec<usize>,
 }
@@ -50,7 +52,10 @@ impl<'a> Default for ParserState<'a> {
             src: "",
             src_bytes: &[],
             end: 0,
+
             offset: 0,
+            furthest_offset: 0,
+
             state_stack: Vec::new(),
         }
     }
@@ -144,6 +149,19 @@ where
 
     pub fn parse(&self, src: &'a str) -> Option<Output> {
         self.parse_return_state(src)
+    }
+
+    #[inline(always)]
+    pub fn merge_context(self) -> Parser<'a, Output> {
+        let merge_context = #[inline(always)]
+        move |state: &mut ParserState<'a>| {
+            let result = self.parser_fn.call(state);
+            state.furthest_offset = state.furthest_offset.max(state.offset);
+            return result;
+        };
+        Parser {
+            parser_fn: Box::new(merge_context),
+        }
     }
 
     pub fn save_state(self) -> Parser<'a, Output> {
@@ -373,7 +391,7 @@ where
 
     pub fn sep_by<Output2>(
         self,
-        delim: Parser<'a, Output2>,
+        sep: Parser<'a, Output2>,
         bounds: impl RangeBounds<usize> + 'a,
     ) -> Parser<'a, Vec<Output>>
     where
@@ -390,7 +408,7 @@ where
                 } else {
                     break;
                 }
-                if let Some(_) = delim.parser_fn.call(state) {
+                if let Some(_) = sep.parser_fn.call(state) {
                 } else {
                     break;
                 }
@@ -522,16 +540,10 @@ where
 
 #[inline(always)]
 fn string_impl<'a>(s_bytes: &[u8], end: &usize, state: &mut ParserState<'a>) -> Option<Span<'a>> {
-    if *end == 0 {
-        return Some(Span::new(state.offset, state.offset, &state.src));
-    }
-    if state.is_at_end() {
-        return None;
-    }
     let Some(slc) = &state.src_bytes.get(state.offset..) else {
         return None;
     };
-    if slc[0] == s_bytes[0] && slc[1..*end].starts_with(&s_bytes[1..]) {
+    if slc.len() >= *end && slc[0] == s_bytes[0] && slc[1..*end].starts_with(&s_bytes[1..]) {
         let start = state.offset;
         state.offset += end;
 
@@ -556,7 +568,6 @@ fn regex_impl<'a>(re: &Regex, state: &mut ParserState<'a>) -> Option<Span<'a>> {
             }
             let start = state.offset;
             state.offset += m.end();
-
             Some(Span::new(start, state.offset, &state.src))
         }
         None => None,
@@ -642,27 +653,14 @@ pub fn any_span<'a>(patterns: &[&'a str]) -> Parser<'a, Span<'a>> {
     Parser::new(any)
 }
 
+static ESCAPE_PATTERNS: &[&str] = &["b", "f", "n", "r", "t", "\"", "'", "\\", "/"];
+
 pub fn escaped_span<'a>() -> Parser<'a, Span<'a>> {
     return string_span("\\").then_span(
-        any_span(&["b", "f", "n", "r", "t", "\"", "'", "\\", "/"])
+        any_span(&ESCAPE_PATTERNS)
             | string_span("u").then_span(take_while_span(|c| c.is_digit(16))),
     );
 }
-
-// pub fn escaped_span<'a>() -> Parser<'a, Span<'a>> {
-//     return string_span("\\").then_span(
-//         string_span("b")
-//             | string_span("f")
-//             | string_span("n")
-//             | string_span("r")
-//             | string_span("t")
-//             | string_span("\"")
-//             | string_span("'")
-//             | string_span("\\")
-//             | string_span("/")
-//             | string_span("u").then_span(take_while_span(|c| c.is_digit(16)).many_span(4..4)),
-//     );
-// }
 
 pub trait ParserSpan<'a> {
     type Output;
@@ -678,6 +676,9 @@ pub trait ParserSpan<'a> {
 
     fn many(self, bounds: impl RangeBounds<usize> + 'a) -> Self::Output;
     fn many_span(self, bounds: impl RangeBounds<usize> + 'a) -> Self::Output;
+
+    fn sep_by(self, sep: Self::Output, bounds: impl RangeBounds<usize> + 'a) -> Self::Output;
+    fn sep_by_span(self, sep: Self::Output, bounds: impl RangeBounds<usize> + 'a) -> Self::Output;
 }
 
 impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
@@ -719,16 +720,16 @@ impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
 
     fn wrap(self, left: Self::Output, right: Self::Output) -> Self::Output {
         let wrap = move |state: &mut ParserState<'a>| {
-            let Some(left) = left.parser_fn.call(state) else {
+            let Some(_) = left.parser_fn.call(state) else {
                 return None
             };
-            let Some(_) = self.parser_fn.call(state) else {
+            let Some(middle) = self.parser_fn.call(state) else {
                 return None
             };
-            let Some(right) = right.parser_fn.call(state) else {
+            let Some(_) = right.parser_fn.call(state) else {
                 return None
             };
-            Some(Span::new(left.start, right.end, &state.src))
+            Some(Span::new(middle.start, middle.end, &state.src))
         };
         Parser::new(wrap)
     }
@@ -767,5 +768,40 @@ impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
 
     fn many_span(self, bounds: impl RangeBounds<usize> + 'a) -> Self::Output {
         return ParserSpan::many(self, bounds);
+    }
+
+    fn sep_by(self, sep: Self::Output, bounds: impl RangeBounds<usize> + 'a) -> Self::Output {
+        let (lower_bound, upper_bound) = extract_bounds(bounds);
+
+        let sep_by = move |state: &mut ParserState<'a>| {
+            let start = state.offset;
+            let mut end = state.offset;
+
+            let mut count = 0;
+
+            while count < upper_bound {
+                if let Some(value) = self.parser_fn.call(state) {
+                    end = value.end;
+                    count += 1;
+                } else {
+                    break;
+                }
+                if let Some(_) = sep.parser_fn.call(state) {
+                } else {
+                    break;
+                }
+            }
+
+            if count >= lower_bound {
+                Some(Span::new(start, end, &state.src))
+            } else {
+                None
+            }
+        };
+        Parser::new(sep_by)
+    }
+
+    fn sep_by_span(self, sep: Self::Output, bounds: impl RangeBounds<usize> + 'a) -> Self::Output {
+        return ParserSpan::sep_by(self, sep, bounds);
     }
 }

@@ -13,9 +13,9 @@ readability and ease of use.
 TypeScript:
 
 ```ts
-import { string, match } from "@mkbabb/parse-that";
+import { string, regex } from "@mkbabb/parse-that";
 
-const heyy = match(/hey+t/);
+const heyy = regex(/hey+t/);
 heyy.parse("heyyyyyyyyyt"); // => "heyyyyyyyyyt"
 ```
 
@@ -316,3 +316,5 @@ Other great parsing libraries 🎉:
 -   [bread-n-butter](https://github.com/wavebeem/bread-n-butter)
 -   [parsy](https://github.com/python-parsy/parsy)
 -   [Chevrotain](https://github.com/chevrotain/chevrotain)
+-   [nom](https://github.com/rust-bakery/nom)
+-   [pest] (https://github.com/pest-parser/pest)

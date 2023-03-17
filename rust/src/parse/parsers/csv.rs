@@ -3,8 +3,6 @@ use crate::{
     pretty::{str, Doc, Join, Wrap},
 };
 
-// define CSV enum:
-
 #[derive(Debug, PartialEq)]
 pub enum CSV<'a> {
     Lines(Vec<Vec<&'a str>>),
@@ -48,9 +46,7 @@ pub fn csv_parser<'a>() -> Parser<'a, CSV<'a>> {
 
     let line = token.sep_by(delim(), ..);
 
-    let csv = line
-        .debug("csv")
-        .sep_by(regex(r"\s+"), ..);
+    let csv = line.debug("csv").sep_by(regex(r"\s+"), ..);
 
     csv.trim_whitespace().map(CSV::Lines)
 }

@@ -19,7 +19,7 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
         let not_quote = take_while_span(|c| c != '"' && c != '\\');
 
         let string = (not_quote | escaped_span())
-            .many_span(0..)
+            .many_span(..)
             .wrap_span(string_span("\""), string_span("\""));
 
         return string.map(|s| s.as_str());
