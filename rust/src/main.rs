@@ -1,8 +1,8 @@
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
-use parse_that::parse::parsers::json::json_parser;
 use parse_that::parse::parsers::csv::csv_parser;
+use parse_that::parse::parsers::json::json_parser;
 use parse_that::pretty::Printer;
 
 use std::{fs, time::SystemTime};
@@ -10,32 +10,31 @@ use std::{fs, time::SystemTime};
 pub fn main() {
     let first_now = SystemTime::now();
 
-    print!("Parsing CSV... ");
+    // let csv_file_path = "../data/csv/data.csv";
+    // let csv_string = fs::read_to_string(csv_file_path).unwrap();
 
-    let csv_file_path = "../data/csv/data.csv";
-    let csv_string = fs::read_to_string(csv_file_path).unwrap();
-
-    let now = SystemTime::now();
-    
-    let parser = csv_parser();
-    let rows = parser.parse(&csv_string).unwrap();
-    
-    let elapsed = now.elapsed().unwrap();
-
-    println!("Elapsed: {:?}", elapsed);
-
-    // let json_file_path = "../data/json/data-xl.json";
-    // let json_string = fs::read_to_string(json_file_path).unwrap();
-
-    // let parser = json_parser();
+    // let parser = csv_parser();
 
     // let now = SystemTime::now();
 
-    // let map = parser.parse(&json_string).unwrap();
+    // let data = parser.parse(&csv_string).unwrap();
 
     // let elapsed = now.elapsed().unwrap();
 
-    // println!("dElapsed: {:?}", elapsed);
+    // println!("CSV Elapsed: {:?}", elapsed);
+
+    let json_file_path = "../data/json/large-file.json";
+    let json_string = fs::read_to_string(json_file_path).unwrap();
+
+    let parser = json_parser();
+
+    let now = SystemTime::now();
+
+    let data = parser.parse(&json_string).unwrap();
+
+    let elapsed = now.elapsed().unwrap();
+
+    println!("JSON Elapsed: {:?}", elapsed);
 
     // test hashmap with 10 items:
 
@@ -56,18 +55,18 @@ pub fn main() {
     // map3.insert("thats vibes", map2.clone());
     // map3.insert("ok", map2.clone());
 
-    // let mut map = HashMap::new();
-    // map.insert("ok", map3.clone());
-    // map.insert("thats vibes", map3.clone());
+    // let mut data = HashMap::new();
+    // data.insert("ok", map3.clone());
+    // data.insert("thats vibes", map3.clone());
 
     let printer = Printer::new(80, 1, false, true);
 
     let now = SystemTime::now();
 
-    let pretty = printer.pretty(rows);
+    let pretty = printer.pretty(data);
     let elapsed = now.elapsed().unwrap();
 
-    println!("Elapsed: {:?}", elapsed);
+    println!("Printing Elapsed: {:?}", elapsed);
 
     fs::write("../data/pretty.json", pretty).expect("Unable to write file");
 
