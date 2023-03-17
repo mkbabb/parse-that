@@ -4,8 +4,6 @@ use crate::{parse::*, pretty::Doc};
 
 use parse::ParserSpan;
 
-extern crate pest;
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum JsonValue<'a> {
     Null,
@@ -16,35 +14,11 @@ pub enum JsonValue<'a> {
     Object(FnvHashMap<&'a str, JsonValue<'a>>),
 }
 
-impl<'a> Into<Doc<'a>> for JsonValue<'a> {
-    fn into(self) -> Doc<'a> {
-        match self {
-            JsonValue::Null => "null".into(),
-            JsonValue::Bool(b) => b.into(),
-            JsonValue::Number(n) => n.into(),
-            JsonValue::String(s) => s.into(),
-            JsonValue::Array(a) => a.into(),
-            JsonValue::Object(o) => o.into(),
-        }
-    }
-}
-
 pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
     let string_char = || {
         let not_quote = take_while_span(|c| c != '"' && c != '\\');
-        let escape: Parser<Span> = string_span("\\").then_span({
-            string_span("b")
-                | string_span("f")
-                | string_span("n")
-                | string_span("r")
-                | string_span("t")
-                | string_span("\"")
-                | string_span("'")
-                | string_span("\\")
-                | string_span("/")
-                | string_span("u").then_span(take_while_span(|c| c.is_digit(16)).many_span(4..4))
-        });
-        let string = (not_quote | escape)
+
+        let string = (not_quote | escaped_span())
             .many_span(0..)
             .wrap_span(string_span("\""), string_span("\""));
 
@@ -104,4 +78,17 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
 
 pub fn json_parser<'a>() -> Parser<'a, JsonValue<'a>> {
     json_value().trim_whitespace()
+}
+
+impl<'a> Into<Doc<'a>> for JsonValue<'a> {
+    fn into(self) -> Doc<'a> {
+        match self {
+            JsonValue::Null => "null".into(),
+            JsonValue::Bool(b) => b.into(),
+            JsonValue::Number(n) => n.into(),
+            JsonValue::String(s) => s.into(),
+            JsonValue::Array(a) => a.into(),
+            JsonValue::Object(o) => o.into(),
+        }
+    }
 }

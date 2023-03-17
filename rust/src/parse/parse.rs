@@ -1,13 +1,11 @@
 use regex::Regex;
 
-use std::any::Any;
 use std::cell::RefCell;
 
-use std::ops::Bound;
 use std::ops::RangeBounds;
 use std::rc::Rc;
 
-use super::extract_bounds;
+use crate::parse::utils::extract_bounds;
 
 #[inline(always)]
 pub fn trim_leading_whitespace<'a>(state: &ParserState<'a>) -> usize {
@@ -593,24 +591,6 @@ pub fn string_span<'a>(s: &'a str) -> Parser<'a, Span<'a>> {
     Parser::new(string)
 }
 
-pub fn take_span<'a>(n: usize) -> Parser<'a, Span<'a>> {
-    let take = move |state: &mut ParserState<'a>| {
-        let Some(slc) = &state.src.get(state.offset..) else {
-            return None;
-        };
-
-        if slc.len() >= n {
-            let start = state.offset;
-            state.offset += n;
-
-            Some(Span::new(start, state.offset, &state.src))
-        } else {
-            None
-        }
-    };
-    Parser::new(take)
-}
-
 pub fn take_while_span<'a, F>(f: F) -> Parser<'a, Span<'a>>
 where
     F: Fn(char) -> bool + 'a,
@@ -640,20 +620,49 @@ where
     Parser::new(take_while)
 }
 
-pub fn escaped_span<'a>() -> Parser<'a, Span<'a>> {
-    return string_span("\\").then_span({
-        string_span("b")
-            | string_span("f")
-            | string_span("n")
-            | string_span("r")
-            | string_span("t")
-            | string_span("\"")
-            | string_span("'")
-            | string_span("\\")
-            | string_span("/")
-            | string_span("u").then_span(take_while_span(|c| c.is_digit(16)).many_span(4..4))
-    });
+use aho_corasick::{AhoCorasickBuilder, MatchKind};
+
+pub fn any_span<'a>(patterns: &[&'a str]) -> Parser<'a, Span<'a>> {
+    let ac = AhoCorasickBuilder::new()
+        .match_kind(MatchKind::LeftmostFirst)
+        .build(patterns);
+
+    let any = move |state: &mut ParserState<'a>| {
+        let Some(slc) = state.src.get(state.offset..) else {
+            return None;
+        };
+        let Some(m) = ac.find(slc) else {
+            return None;
+            };
+        let start = state.offset;
+        state.offset += m.end();
+        Some(Span::new(start, state.offset, &state.src))
+    };
+
+    Parser::new(any)
 }
+
+pub fn escaped_span<'a>() -> Parser<'a, Span<'a>> {
+    return string_span("\\").then_span(
+        any_span(&["b", "f", "n", "r", "t", "\"", "'", "\\", "/"])
+            | string_span("u").then_span(take_while_span(|c| c.is_digit(16))),
+    );
+}
+
+// pub fn escaped_span<'a>() -> Parser<'a, Span<'a>> {
+//     return string_span("\\").then_span(
+//         string_span("b")
+//             | string_span("f")
+//             | string_span("n")
+//             | string_span("r")
+//             | string_span("t")
+//             | string_span("\"")
+//             | string_span("'")
+//             | string_span("\\")
+//             | string_span("/")
+//             | string_span("u").then_span(take_while_span(|c| c.is_digit(16)).many_span(4..4)),
+//     );
+// }
 
 pub trait ParserSpan<'a> {
     type Output;

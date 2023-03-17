@@ -16,7 +16,7 @@ bench = false
 
 
 [[bench]]
-name = "pest"
+name = "parse_that"
 harness = false
 
 
@@ -33,12 +33,12 @@ regex = { version = "1", features = ["perf"] }
 colored = "2.0.0"
 fnv = "1.0.7"
 tikv-jemallocator = "0.5.0"
-lazy_static = "1.4.0"
-pest = "2.5.6"
 memchr = "2.5.0"
-smallvec = "1.10.0"
+aho-corasick = "0.7.20"
 
 [dev-dependencies]
+serde_json = "1.0.94"
+serde = "1.0.156"
 bencher = "0.1.5"
 pest = "2.5.6"
 pest_grammars = "2.5.6"
