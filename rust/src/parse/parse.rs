@@ -30,6 +30,7 @@ impl<'a> Span<'a> {
     pub fn new(start: usize, end: usize, src: &'a str) -> Self {
         Span { start, end, src }
     }
+
     pub fn as_str(&self) -> &'a str {
         unsafe { self.src.get_unchecked(self.start..self.end) }
     }
@@ -278,6 +279,26 @@ where
         };
 
         Parser::new(map)
+    }
+
+    pub fn map_with_state<Output2>(
+        self,
+        f: fn(Output, usize, &mut ParserState<'a>) -> Output2,
+    ) -> Parser<'a, Output2>
+    where
+        Output2: 'a,
+    {
+        let map_with_state = move |state: &mut ParserState<'a>| {
+            let offset = state.offset;
+
+            let Some(result) = self.parser_fn.call(state) else {
+                    return None;
+            };
+
+            return Some(f(result, offset, state));
+        };
+
+        Parser::new(map_with_state)
     }
 
     pub fn skip<Output2>(self, next: Parser<'a, Output2>) -> Parser<'a, Output>
@@ -554,6 +575,27 @@ fn string_impl<'a>(s_bytes: &[u8], end: &usize, state: &mut ParserState<'a>) -> 
 }
 
 #[inline(always)]
+pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
+    let s_bytes = s.as_bytes();
+    let end = s_bytes.len();
+    let string = move |state: &mut ParserState<'a>| {
+        return string_impl(s_bytes, &end, state).map(|span| span.as_str());
+    };
+    Parser::new(string)
+}
+
+#[inline(always)]
+pub fn string_span<'a>(s: &'a str) -> Parser<'a, Span<'a>> {
+    let s_bytes = s.as_bytes();
+    let end = s_bytes.len();
+
+    let string = move |state: &mut ParserState<'a>| {
+        return string_impl(s_bytes, &end, state);
+    };
+    Parser::new(string)
+}
+
+#[inline(always)]
 fn regex_impl<'a>(re: &Regex, state: &mut ParserState<'a>) -> Option<Span<'a>> {
     if state.is_at_end() {
         return None;
@@ -575,16 +617,6 @@ fn regex_impl<'a>(re: &Regex, state: &mut ParserState<'a>) -> Option<Span<'a>> {
 }
 
 #[inline(always)]
-pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
-    let s_bytes = s.as_bytes();
-    let end = s_bytes.len();
-    let string = move |state: &mut ParserState<'a>| {
-        return string_impl(s_bytes, &end, state).map(|span| span.as_str());
-    };
-    Parser::new(string)
-}
-
-#[inline(always)]
 pub fn regex<'a>(r: &'a str) -> Parser<'a, &'a str> {
     let re = Regex::new(r).unwrap_or_else(|_| panic!("Failed to compile regex: {}", r));
     let regex = move |state: &mut ParserState<'a>| regex_impl(&re, state).map(|span| span.as_str());
@@ -592,14 +624,10 @@ pub fn regex<'a>(r: &'a str) -> Parser<'a, &'a str> {
 }
 
 #[inline(always)]
-pub fn string_span<'a>(s: &'a str) -> Parser<'a, Span<'a>> {
-    let s_bytes = s.as_bytes();
-    let end = s_bytes.len();
-
-    let string = move |state: &mut ParserState<'a>| {
-        return string_impl(s_bytes, &end, state);
-    };
-    Parser::new(string)
+pub fn regex_span<'a>(r: &'a str) -> Parser<'a, Span<'a>> {
+    let re = Regex::new(r).unwrap_or_else(|_| panic!("Failed to compile regex: {}", r));
+    let regex = move |state: &mut ParserState<'a>| regex_impl(&re, state);
+    Parser::new(regex)
 }
 
 pub fn take_while_span<'a, F>(f: F) -> Parser<'a, Span<'a>>

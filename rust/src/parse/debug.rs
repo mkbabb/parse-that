@@ -50,7 +50,7 @@ pub fn add_cursor(state: &ParserState, cursor: &str, error: bool) -> String {
         .take(2 * MAX_LINES)
         .collect::<Vec<_>>();
 
-    let indent = " ".repeat(6);
+    let indent = " ".repeat(0);
 
     let result_lines = lines
         .into_iter()
@@ -63,11 +63,11 @@ pub fn add_cursor(state: &ParserState, cursor: &str, error: bool) -> String {
             } else {
                 line.color(Color::White)
             };
-            let padded_line = format!("{}{}| {}", indent, padded_line_num, line);
+            let padded_line = format!("{}| {}", padded_line_num, line);
 
             if line_num_i == line_num - 1 {
-                let offset = indent.len() + padded_line_num.len();
-                let cursor_pos = column_num + offset;
+                let offset = padded_line_num.len();
+                let cursor_pos = column_num + offset + 2;
 
                 let cursor_line = " ".repeat(cursor_pos) + &cursor.color(color_fn);
 

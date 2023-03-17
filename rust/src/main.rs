@@ -5,7 +5,9 @@ use parse_that::parse::parsers::csv::csv_parser;
 use parse_that::parse::parsers::json::json_parser;
 use parse_that::pretty::Printer;
 
-use std::{fs, time::SystemTime, collections::HashMap};
+use parse_that::bbnf::grammar::BBNFGrammar;
+
+use std::{collections::HashMap, fs, time::SystemTime};
 
 pub fn main() {
     let first_now = SystemTime::now();
@@ -23,18 +25,18 @@ pub fn main() {
 
     // println!("CSV Elapsed: {:?}", elapsed);
 
-    let json_file_path = "../data/json/large-file.json";
-    let json_string = fs::read_to_string(json_file_path).unwrap();
+    // let json_file_path = "../data/json/large-file.json";
+    // let json_string = fs::read_to_string(json_file_path).unwrap();
 
-    let parser = json_parser();
+    // let parser = json_parser();
 
-    let now = SystemTime::now();
+    // let now = SystemTime::now();
 
-    let data = parser.parse(&json_string).unwrap();
+    // let data = parser.parse(&json_string).unwrap();
 
-    let elapsed = now.elapsed().unwrap();
+    // let elapsed = now.elapsed().unwrap();
 
-    println!("JSON Elapsed: {:?}", elapsed);
+    // println!("JSON Elapsed: {:?}", elapsed);
 
     // let toml_file_path = "./Cargo.toml";
     // let toml_string = fs::read_to_string(toml_file_path).unwrap();
@@ -51,7 +53,18 @@ pub fn main() {
 
     // println!("TOML Elapsed: {:?}", elapsed);
 
+    let bbnf_filepath = "../grammar/math.bbnf";
+    let bbnf_string = fs::read_to_string(bbnf_filepath).unwrap();
 
+    let parser = BBNFGrammar::grammar();
+
+    let now = SystemTime::now();
+
+    let data = parser.parse(&bbnf_string).unwrap();
+
+    let elapsed = now.elapsed().unwrap();
+
+    println!("BBNF Elapsed: {:?}", elapsed);
 
     let mut map0 = HashMap::new();
     map0.insert(
