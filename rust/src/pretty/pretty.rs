@@ -35,18 +35,8 @@ pub fn count_text_length<'a>(doc: &'a Doc, printer: &Printer) -> usize {
     }
 }
 
-pub fn join_impl<'a>(
-    sep: &'a Doc<'a>,
-    docs: &'a Vec<Doc>,
-    printer: &Printer,
-) -> (usize, Vec<&'a Doc<'a>>) {
-    let sep_length = count_text_length(sep, printer);
-    let doc_length: usize = docs.iter().map(|d| count_text_length(d, printer)).sum();
-
-    let total_length = doc_length + sep_length * (docs.len() - 1);
-
-    let joined = docs
-        .iter()
+pub fn join_impl<'a>(sep: &'a Doc<'a>, docs: &'a Vec<Doc>, _: &Printer) -> Vec<&'a Doc<'a>> {
+    docs.iter()
         .enumerate()
         .fold(Vec::new(), |mut acc, (i, doc)| {
             if i > 0 {
@@ -54,31 +44,22 @@ pub fn join_impl<'a>(
             }
             acc.push(doc);
             acc
-        });
-
-    (total_length, joined)
+        })
 }
 
 pub fn smart_join_impl<'a>(
     sep: &'a Doc<'a>,
     docs: &'a Vec<Doc>,
     printer: &Printer,
-) -> (usize, Vec<&'a Doc<'a>>) {
+) -> Vec<&'a Doc<'a>> {
     let max_width = (printer.max_width / 4).max(2);
 
     let sep_length = count_text_length(sep, printer);
     let doc_lengths: Vec<_> = docs.iter().map(|d| count_text_length(d, printer)).collect();
 
-    let mut total_length = doc_lengths.iter().sum::<usize>() + sep_length * (docs.len() - 1);
-
     let breaks = text_justify(sep_length, &doc_lengths, max_width);
 
-    if !breaks.is_empty() {
-        total_length += printer.max_width;
-    }
-
-    let joined = docs
-        .into_iter()
+    docs.into_iter()
         .enumerate()
         .fold(Vec::new(), |mut acc, (i, doc)| {
             if i > 0 {
@@ -89,29 +70,7 @@ pub fn smart_join_impl<'a>(
             }
             acc.push(doc);
             acc
-        });
-
-    (total_length, joined)
-}
-
-#[allow(dead_code)]
-pub fn string_impl<'a>(s: &'a str, indent_delta: usize, printer: &Printer) -> String {
-    let indent = printer.indent * indent_delta;
-
-    if printer.break_long_text && s.len() + indent > printer.max_width {
-        let mut docs: Vec<String> = s.split(" ").map(|s| s.to_string()).collect();
-        let doc_lengths = docs.iter().map(|s| s.len()).collect();
-
-        let breaks = text_justify(0, &doc_lengths, printer.max_width - indent);
-
-        for i in breaks.iter() {
-            docs[*i] = format!("\n{}{}", " ".repeat(indent), docs[*i]);
-        }
-
-        docs.join(" ")
-    } else {
-        s.to_string()
-    }
+        })
 }
 
 pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
@@ -121,9 +80,7 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
     }
 
     let mut output = String::new();
-    let mut current_line = String::new();
-
-    let mut prev_was_hardline = false;
+    let mut current_line_len = 0;
 
     let push_hardline = |stack: &mut Vec<_>, indent_delta: usize| {
         stack.push(PrintItem {
@@ -139,13 +96,17 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
 
     let mut hardlines = HashMap::new();
 
+    let space = if printer.use_tabs { "\t" } else { " " };
+
     while let Some(PrintItem { doc, indent_delta }) = stack.pop() {
         match &doc {
             Doc::Str(s) => {
-                current_line.push_str(s);
+                current_line_len += s.len();
+                output.push_str(s);
             }
             Doc::String(s) => {
-                current_line.push_str(s);
+                current_line_len += s.len();
+                output.push_str(s);
             }
 
             Doc::Concat(docs) => {
@@ -175,7 +136,7 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
             }
 
             Doc::IfBreak(doc, other) => {
-                let mut is_or_was_broken = prev_was_hardline;
+                let mut is_or_was_broken = false;
                 if let Some(last) = stack.last() {
                     is_or_was_broken =
                         matches!(last.doc, &Doc::Hardline) || matches!(last.doc, &Doc::Softline);
@@ -210,7 +171,7 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
                     join_impl
                 };
 
-                let (_, joined) = join_fn(*&sep, docs, printer);
+                let joined = join_fn(*&sep, docs, printer);
 
                 for d in joined.into_iter().rev() {
                     stack.push(PrintItem {
@@ -221,41 +182,34 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
             }
 
             Doc::Line => {
+                current_line_len = 0;
                 output.push('\n');
             }
 
             Doc::Hardline => {
-                output.push_str(&current_line);
-                output.push('\n');
-                current_line.clear();
-
-                let space = if printer.use_tabs { "\t" } else { " " };
                 let line = hardlines
                     .entry(indent_delta)
                     .or_insert_with(|| space.repeat(indent_delta));
 
-                current_line.push_str(line);
+                output.push('\n');
+                output.push_str(line);
+
+                current_line_len = line.len();
             }
 
-            Doc::Mediumline => {
-                if current_line.len() > printer.max_width / 2 {
-                    push_hardline(&mut stack, indent_delta);
-                }
+            Doc::Mediumline if current_line_len > printer.max_width / 2 => {
+                push_hardline(&mut stack, indent_delta);
             }
 
-            Doc::Softline => {
-                if current_line.len() > printer.max_width {
-                    push_hardline(&mut stack, indent_delta);
-                }
+            Doc::Softline if current_line_len > printer.max_width => {
+                push_hardline(&mut stack, indent_delta);
             }
 
-            Doc::Null => {}
+            _ => {}
+
+            
         }
-
-        prev_was_hardline = matches!(doc, Doc::Hardline);
     }
-
-    output.push_str(&current_line);
     output
 }
 

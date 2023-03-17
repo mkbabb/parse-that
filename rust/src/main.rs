@@ -64,6 +64,7 @@ pub fn main() {
     let now = SystemTime::now();
 
     let pretty = printer.pretty(data);
+    
     let elapsed = now.elapsed().unwrap();
 
     println!("Printing Elapsed: {:?}", elapsed);
@@ -71,6 +72,5 @@ pub fn main() {
     fs::write("../data/pretty.json", pretty).expect("Unable to write file");
 
     let elapsed = first_now.elapsed().unwrap();
-
     println!("Total Elapsed: {:?}", elapsed);
 }
