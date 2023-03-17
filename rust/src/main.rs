@@ -1,56 +1,37 @@
-#![feature(negative_impls)]
-
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
-pub mod parse;
-pub mod pretty;
-
-use parse::*;
 use parse_that::parse::parsers::json::json_parser;
-use parse_that::parse::parsers::json::*;
-use pretty::*;
+use parse_that::parse::parsers::csv::csv_parser;
+use parse_that::pretty::Printer;
 
-use std::{collections::HashMap, fs, time::SystemTime};
-
-impl<'a> Into<Doc<'a>> for JsonValue<'a> {
-    fn into(self) -> Doc<'a> {
-        match self {
-            JsonValue::Null => "null".into(),
-            JsonValue::Bool(b) => b.to_string().into(),
-            JsonValue::Number(n) => n.into(),
-            JsonValue::String(s) => s.into(),
-            JsonValue::Array(a) => a.into(),
-            JsonValue::Object(o) => o.into(),
-        }
-    }
-}
+use std::{fs, time::SystemTime};
 
 pub fn main() {
     let first_now = SystemTime::now();
 
     print!("Parsing CSV... ");
 
-    // let csv_file_path = "../data/csv/active_charter_schools_report.csv";
-    // let csv_string = fs::read_to_string(csv_file_path).unwrap();
+    let csv_file_path = "../data/csv/active_charter_schools_report.csv";
+    let csv_string = fs::read_to_string(csv_file_path).unwrap();
 
-    // let now = SystemTime::now();
-    // let parser = parsers::csv::csv_parser();
-    // let rows = parser.parse(&csv_string).unwrap().to_vec();
-    // let elapsed = now.elapsed().unwrap();
+    let now = SystemTime::now();
+    let parser = csv_parser();
+    let rows = parser.parse(&csv_string).unwrap().to_vec();
+    let elapsed = now.elapsed().unwrap();
 
     // println!("Elapsed: {:?}", elapsed);
 
-    let json_file_path = "../data/json/data-xl.json";
-    let json_string = fs::read_to_string(json_file_path).unwrap();
+    // let json_file_path = "../data/json/data-xl.json";
+    // let json_string = fs::read_to_string(json_file_path).unwrap();
 
-    let parser = json_parser();
+    // let parser = json_parser();
 
-    let now = SystemTime::now();
+    // let now = SystemTime::now();
 
-    let map = parser.parse(&json_string).unwrap();
+    // let map = parser.parse(&json_string).unwrap();
 
-    let elapsed = now.elapsed().unwrap();
+    // let elapsed = now.elapsed().unwrap();
 
     // println!("dElapsed: {:?}", elapsed);
 
@@ -81,7 +62,7 @@ pub fn main() {
 
     let now = SystemTime::now();
 
-    let pretty = printer.pretty(map);
+    let pretty = printer.pretty(rows);
     let elapsed = now.elapsed().unwrap();
 
     println!("Elapsed: {:?}", elapsed);

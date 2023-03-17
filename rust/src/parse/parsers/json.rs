@@ -2,6 +2,8 @@ use fnv::FnvHashMap;
 
 use crate::{parse::*, pretty::Doc};
 
+use parse::ParserSpan;
+
 extern crate pest;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -30,7 +32,7 @@ impl<'a> Into<Doc<'a>> for JsonValue<'a> {
 pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
     let string_char = || {
         let not_quote = take_while_span(|c| c != '"' && c != '\\');
-        let escape = string_span("\\").then_span({
+        let escape: Parser<Span> = string_span("\\").then_span({
             string_span("b")
                 | string_span("f")
                 | string_span("n")
@@ -76,7 +78,7 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
         let comma = string_span(",").trim_whitespace();
 
         json_value()
-            .sep_by(comma, None, None)
+            .sep_by(comma, ..)
             .or_else(|| vec![])
             .trim_whitespace()
             .wrap(string_span("["), string_span("]"))
@@ -90,7 +92,7 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
         let key_value = string_char().skip(colon).with(json_value());
 
         key_value
-            .sep_by(comma, None, None)
+            .sep_by(comma, ..)
             .or_else(|| vec![])
             .trim_whitespace()
             .wrap(string_span("{"), string_span("}"))

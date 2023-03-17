@@ -3,8 +3,11 @@ use regex::Regex;
 use std::any::Any;
 use std::cell::RefCell;
 
-use std::ops::{Range, RangeBounds};
+use std::ops::Bound;
+use std::ops::RangeBounds;
 use std::rc::Rc;
+
+use super::extract_bounds;
 
 #[inline(always)]
 pub fn trim_leading_whitespace<'a>(state: &ParserState<'a>) -> usize {
@@ -28,7 +31,6 @@ impl<'a> Span<'a> {
     pub fn new(start: usize, end: usize, src: &'a str) -> Self {
         Span { start, end, src }
     }
-
     pub fn as_str(&self) -> &'a str {
         unsafe { self.src.get_unchecked(self.start..self.end) }
     }
@@ -37,6 +39,7 @@ impl<'a> Span<'a> {
 pub struct ParserState<'a> {
     pub src: &'a str,
     pub src_bytes: &'a [u8],
+    pub end: usize,
 
     pub offset: usize,
 
@@ -48,6 +51,7 @@ impl<'a> Default for ParserState<'a> {
         ParserState {
             src: "",
             src_bytes: &[],
+            end: 0,
             offset: 0,
             state_stack: Vec::new(),
         }
@@ -59,9 +63,15 @@ impl<'a> ParserState<'a> {
         ParserState {
             src,
             src_bytes: src.as_bytes(),
+            end: src.len(),
             ..Default::default()
         }
     }
+
+    pub fn is_at_end(&self) -> bool {
+        self.offset >= self.end
+    }
+
     pub fn save(&mut self) {
         self.state_stack.push(self.offset);
     }
@@ -70,6 +80,9 @@ impl<'a> ParserState<'a> {
         if let Some(offset) = self.state_stack.pop() {
             self.offset = offset;
         }
+    }
+    pub fn pop(&mut self) {
+        self.state_stack.pop();
     }
 
     pub fn get_column_number(&self) -> usize {
@@ -96,7 +109,6 @@ type ParserResult<'a, Output> = Option<Output>;
 
 pub trait ParserFn<'a, Output>: 'a {
     fn call(&self, state: &mut ParserState<'a>) -> ParserResult<'a, Output>;
-    fn as_any(&self) -> &(dyn Any + 'a);
 }
 
 impl<'a, Output, F> ParserFn<'a, Output> for F
@@ -105,10 +117,6 @@ where
 {
     fn call(&self, state: &mut ParserState<'a>) -> ParserResult<'a, Output> {
         self(state)
-    }
-
-    fn as_any(&self) -> &(dyn Any + 'a) {
-        self
     }
 }
 
@@ -170,11 +178,11 @@ where
         Output2: 'a,
     {
         let then = move |state: &mut ParserState<'a>| {
-            if let Some(value1) = (self.parser_fn).call(state) {
-                let value2 = (next.parser_fn).call(state);
-                return Some((value1, value2));
-            }
-            None
+            let Some(value1)  = self.parser_fn.call(state) else {
+                return None;
+            };
+            let value2 = next.parser_fn.call(state);
+            return Some((value1, value2));
         };
 
         Parser::new(then)
@@ -185,8 +193,8 @@ where
         Output2: 'a,
     {
         let with = move |state: &mut ParserState<'a>| {
-            if let Some(value1) = (self.parser_fn).call(state) {
-                if let Some(value2) = (next.parser_fn).call(state) {
+            if let Some(value1) = self.parser_fn.call(state) {
+                if let Some(value2) = next.parser_fn.call(state) {
                     return Some((value1, value2));
                 }
             }
@@ -246,8 +254,8 @@ where
         Output2: 'a,
     {
         let skip = move |state: &mut ParserState<'a>| {
-            if let Some(value) = (self.parser_fn).call(state) {
-                let _ = (next.parser_fn).call(state)?;
+            if let Some(value) = self.parser_fn.call(state) {
+                let _ = next.parser_fn.call(state)?;
                 return Some(value);
             }
             None
@@ -260,31 +268,31 @@ where
         Output2: 'a,
     {
         let next = move |state: &mut ParserState<'a>| {
-            if let Some(_) = (self.parser_fn).call(state) {
-                return (next.parser_fn).call(state);
+            if let Some(_) = self.parser_fn.call(state) {
+                return next.parser_fn.call(state);
             }
             None
         };
         Parser::new(next)
     }
 
-    pub fn many(self, lower: Option<usize>, upper: Option<usize>) -> Parser<'a, Vec<Output>> {
+    pub fn many(self, bounds: impl RangeBounds<usize> + 'a) -> Parser<'a, Vec<Output>> {
+        let (lower_bound, upper_bound) = extract_bounds(bounds);
+
         let many = move |state: &mut ParserState<'a>| {
             let mut values = Vec::new();
 
-            loop {
+            while values.len() < upper_bound {
                 if let Some(value) = self.parser_fn.call(state) {
                     values.push(value);
                 } else {
                     break;
                 }
             }
-            if lower.map_or(true, |min| values.len() >= min)
-                && upper.map_or(true, |max| values.len() <= max)
-            {
-                Some(values)
+            if values.len() >= lower_bound {
+                return Some(values);
             } else {
-                None
+                return None;
             }
         };
 
@@ -353,16 +361,17 @@ where
     pub fn sep_by<Output2>(
         self,
         delim: Parser<'a, Output2>,
-        lower: Option<usize>,
-        upper: Option<usize>,
+        bounds: impl RangeBounds<usize> + 'a,
     ) -> Parser<'a, Vec<Output>>
     where
         Output2: 'a,
     {
+        let (lower_bound, upper_bound) = extract_bounds(bounds);
+
         let sep_by = move |state: &mut ParserState<'a>| {
             let mut values = Vec::new();
 
-            loop {
+            while values.len() < upper_bound {
                 if let Some(value) = self.parser_fn.call(state) {
                     values.push(value);
                 } else {
@@ -374,9 +383,7 @@ where
                 }
             }
 
-            if lower.map_or(true, |min| values.len() >= min)
-                && upper.map_or(true, |max| values.len() <= max)
-            {
+            if values.len() >= lower_bound {
                 Some(values)
             } else {
                 None
@@ -396,7 +403,6 @@ where
             }
 
             state.restore();
-
             Some(value)
         };
 
@@ -427,6 +433,18 @@ where
 
     fn bitor(self, other: Parser<'a, Output2>) -> Self::Output {
         self.or(other)
+    }
+}
+
+impl<'a, Output, Output2> std::ops::Add<Parser<'a, Output2>> for Parser<'a, Output>
+where
+    Output: 'a,
+    Output2: 'a,
+{
+    type Output = Parser<'a, (Output, Output2)>;
+
+    fn add(self, other: Parser<'a, Output2>) -> Self::Output {
+        self.with(other)
     }
 }
 
@@ -491,57 +509,62 @@ where
 }
 
 #[inline(always)]
+fn string_impl<'a>(s_bytes: &[u8], end: &usize, state: &mut ParserState<'a>) -> Option<Span<'a>> {
+    if *end == 0 {
+        return Some(Span::new(state.offset, state.offset, &state.src));
+    }
+    if state.is_at_end() {
+        return None;
+    }
+    let Some(slc) = &state.src_bytes.get(state.offset..) else {
+        return None;
+    };
+    if slc[0] == s_bytes[0] && slc[1..*end].starts_with(&s_bytes[1..]) {
+        let start = state.offset;
+        state.offset += end;
+
+        Some(Span::new(start, state.offset, &state.src))
+    } else {
+        None
+    }
+}
+
+#[inline(always)]
+fn regex_impl<'a>(re: &Regex, state: &mut ParserState<'a>) -> Option<Span<'a>> {
+    if state.is_at_end() {
+        return None;
+    }
+    let Some(slc) = &state.src.get(state.offset..) else {
+        return None;
+    };
+    match re.find_at(slc, 0) {
+        Some(m) => {
+            if m.start() != 0 {
+                return None;
+            }
+            let start = state.offset;
+            state.offset += m.end();
+
+            Some(Span::new(start, state.offset, &state.src))
+        }
+        None => None,
+    }
+}
+
+#[inline(always)]
 pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
     let s_bytes = s.as_bytes();
     let end = s_bytes.len();
-
     let string = move |state: &mut ParserState<'a>| {
-        let Some(slc) = &state.src_bytes.get(state.offset..) else {
-            return None;
-        };
-
-        if slc[0] == s_bytes[0] && slc[1..end].starts_with(&s_bytes[1..]) {
-            state.offset += end;
-            Some(s)
-        } else {
-            None
-        }
+        return string_impl(s_bytes, &end, state).map(|span| span.as_str());
     };
     Parser::new(string)
 }
 
-pub fn take<'a>(n: usize) -> Parser<'a, &'a str> {
-    let take = move |state: &mut ParserState<'a>| unsafe {
-        let slc = &state.src.get_unchecked(state.offset..);
-
-        if slc.len() >= n {
-            let result = &slc[..n];
-            state.offset += n;
-            Some(result)
-        } else {
-            None
-        }
-    };
-    Parser::new(take)
-}
-
+#[inline(always)]
 pub fn regex<'a>(r: &'a str) -> Parser<'a, &'a str> {
     let re = Regex::new(r).unwrap_or_else(|_| panic!("Failed to compile regex: {}", r));
-
-    let regex = move |state: &mut ParserState<'a>| unsafe {
-        let slc = &state.src.get_unchecked(state.offset..);
-
-        match re.find_at(slc, 0) {
-            Some(m) => {
-                if m.start() != 0 {
-                    return None;
-                }
-                state.offset += m.end();
-                Some(m.as_str())
-            }
-            None => None,
-        }
-    };
+    let regex = move |state: &mut ParserState<'a>| regex_impl(&re, state).map(|span| span.as_str());
     Parser::new(regex)
 }
 
@@ -551,17 +574,7 @@ pub fn string_span<'a>(s: &'a str) -> Parser<'a, Span<'a>> {
     let end = s_bytes.len();
 
     let string = move |state: &mut ParserState<'a>| {
-        let Some(slc) = &state.src_bytes.get(state.offset..) else {
-            return None;
-        };
-
-        if slc[0] == s_bytes[0] && slc[1..end].starts_with(&s_bytes[1..]) {
-            let start = state.offset;
-            state.offset += end;
-            Some(Span::new(start, state.offset, &state.src))
-        } else {
-            None
-        }
+        return string_impl(s_bytes, &end, state);
     };
     Parser::new(string)
 }
@@ -613,8 +626,26 @@ where
     Parser::new(take_while)
 }
 
-impl<'a> Parser<'a, Span<'a>> {
-    pub fn opt_span(self) -> Parser<'a, Span<'a>> {
+pub trait ParserSpan<'a> {
+    type Output;
+
+    fn opt(self) -> Self::Output;
+    fn opt_span(self) -> Self::Output;
+
+    fn then(self, next: Self::Output) -> Self::Output;
+    fn then_span(self, next: Self::Output) -> Self::Output;
+
+    fn wrap(self, left: Self::Output, right: Self::Output) -> Self::Output;
+    fn wrap_span(self, left: Self::Output, right: Self::Output) -> Self::Output;
+
+    fn many(self, bounds: impl RangeBounds<usize> + 'a) -> Self::Output;
+    fn many_span(self, bounds: impl RangeBounds<usize> + 'a) -> Self::Output;
+}
+
+impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
+    type Output = Parser<'a, Span<'a>>;
+
+    fn opt(self) -> Self::Output {
         let opt = move |state: &mut ParserState<'a>| {
             let start = state.offset;
 
@@ -624,11 +655,14 @@ impl<'a> Parser<'a, Span<'a>> {
 
             Some(Span::new(start, state.offset, &state.src))
         };
-
         Parser::new(opt)
     }
 
-    pub fn then_span(self, other: Parser<'a, Span<'a>>) -> Parser<'a, Span<'a>> {
+    fn opt_span(self) -> Self::Output {
+        return ParserSpan::opt(self);
+    }
+
+    fn then(self, other: Self::Output) -> Self::Output {
         let then = move |state: &mut ParserState<'a>| {
             let Some(start) = self.parser_fn.call(state) else {
                 return None
@@ -641,11 +675,11 @@ impl<'a> Parser<'a, Span<'a>> {
         Parser::new(then)
     }
 
-    pub fn wrap_span(
-        self,
-        left: Parser<'a, Span<'a>>,
-        right: Parser<'a, Span<'a>>,
-    ) -> Parser<'a, Span<'a>> {
+    fn then_span(self, other: Self::Output) -> Self::Output {
+        return ParserSpan::then(self, other);
+    }
+
+    fn wrap(self, left: Self::Output, right: Self::Output) -> Self::Output {
         let wrap = move |state: &mut ParserState<'a>| {
             let Some(left) = left.parser_fn.call(state) else {
                 return None
@@ -661,14 +695,20 @@ impl<'a> Parser<'a, Span<'a>> {
         Parser::new(wrap)
     }
 
-    pub fn many_span(self, bounds: impl RangeBounds<usize> + 'a) -> Parser<'a, Span<'a>> {
+    fn wrap_span(self, left: Self::Output, right: Self::Output) -> Self::Output {
+        return ParserSpan::wrap(self, left, right);
+    }
+
+    fn many(self, bounds: impl RangeBounds<usize> + 'a) -> Self::Output {
+        let (lower_bound, upper_bound) = extract_bounds(bounds);
+
         let many = move |state: &mut ParserState<'a>| {
             let start = state.offset;
             let mut end = state.offset;
 
             let mut count = 0;
 
-            while bounds.contains(&count) {
+            while count < upper_bound {
                 match self.parser_fn.call(state) {
                     Some(span) => {
                         end = span.end;
@@ -677,13 +717,19 @@ impl<'a> Parser<'a, Span<'a>> {
                     None => break,
                 }
             }
-            if bounds.contains(&count) {
+
+            if count >= lower_bound {
                 Some(Span::new(start, end, &state.src))
             } else {
                 None
             }
         };
-
         Parser::new(many)
     }
+
+    fn many_span(self, bounds: impl RangeBounds<usize> + 'a) -> Self::Output {
+        return ParserSpan::many(self, bounds);
+    }
 }
+
+// impl plus for parserspan:

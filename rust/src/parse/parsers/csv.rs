@@ -11,11 +11,8 @@ pub fn csv_parser<'a>() -> Parser<'a, Vec<Vec<&'a str>>> {
 
     let delim = string(",");
 
-    let line = token
-        .sep_by(delim, None, None)
-        .skip(regex(r"\s"))
-        .trim_whitespace();
-    let csv = line.many(Some(1), None);
+    let line = token.sep_by(delim, ..).skip(regex(r"\s")).trim_whitespace();
+    let csv = line.many(1..);
 
     csv.trim_whitespace()
 }
