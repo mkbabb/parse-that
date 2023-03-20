@@ -397,6 +397,30 @@ where
         Parser::new(trim)
     }
 
+    pub fn trim_keep<Output2>(
+        self,
+        trimmer: Parser<'a, Output2>,
+    ) -> Parser<'a, (Output2, Output, Output2)>
+    where
+        Output2: 'a,
+    {
+        let trim = move |state: &mut ParserState<'a>| {
+            let Some(trim1) = trimmer.parser_fn.call(state) else {
+                return None;
+            };
+            let Some(value) = self.parser_fn.call(state) else {
+                return None;
+            };
+            let Some(trim2) = trimmer.parser_fn.call(state) else {
+                return None;
+            };
+
+            Some((trim1, value, trim2))
+        };
+
+        Parser::new(trim)
+    }
+
     pub fn trim_whitespace(self) -> Parser<'a, Output> {
         let trim_whitespace = move |state: &mut ParserState<'a>| {
             state.offset += trim_leading_whitespace(state);
@@ -664,6 +688,7 @@ use aho_corasick::{AhoCorasickBuilder, MatchKind};
 pub fn any_span<'a>(patterns: &[&'a str]) -> Parser<'a, Span<'a>> {
     let ac = AhoCorasickBuilder::new()
         .match_kind(MatchKind::LeftmostFirst)
+        .anchored(true)
         .build(patterns);
 
     let any = move |state: &mut ParserState<'a>| {
@@ -673,6 +698,7 @@ pub fn any_span<'a>(patterns: &[&'a str]) -> Parser<'a, Span<'a>> {
         let Some(m) = ac.find(slc) else {
             return None;
             };
+
         let start = state.offset;
         state.offset += m.end();
         Some(Span::new(start, state.offset, &state.src))

@@ -53,7 +53,7 @@ pub fn main() {
 
     // println!("TOML Elapsed: {:?}", elapsed);
 
-    let bbnf_filepath = "../grammar/math.bbnf";
+    let bbnf_filepath = "../grammar/css-keyframes.bbnf";
     let bbnf_string = fs::read_to_string(bbnf_filepath).unwrap();
 
     let parser = BBNFGrammar::grammar();
