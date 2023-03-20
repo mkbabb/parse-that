@@ -1,8 +1,11 @@
-use crate::parse::{
-    any_span, escaped_span, lazy, regex, regex_span, string, string_span, take_while_span, Parser,
-    ParserSpan, ParserState, Span,
+use crate::{
+    parse::{
+        any_span, escaped_span, lazy, string, string_span, take_while_span, Parser, ParserSpan,
+        ParserState, Span,
+    },
+    pretty::Doc,
 };
-use std::{borrow::BorrowMut, collections::HashMap};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub enum Comment<'a> {
@@ -141,27 +144,32 @@ pub struct BBNFGrammar<'a> {
 
 impl<'a> BBNFGrammar<'a> {
     fn block_comment() -> Parser<'a, Comment<'a>> {
-        let not_star = take_while_span(|c| c != '*');
-        let not_slash = take_while_span(|c| c != '/');
+        let not_comment = take_while_span(|c| c != '*' && c != '/');
 
-        let comment = (not_star | not_slash).many_span(..);
+        let comment = not_comment.many_span(1..);
 
-        return comment
+        comment
             .wrap_span(string_span("/*"), string_span("*/"))
-            .map(|s| Comment::Block(s.as_str()));
+            .trim_whitespace()
+            .map(|s| Comment::Block(s.as_str()))
+            .debug("block")
     }
 
     fn line_comment() -> Parser<'a, Comment<'a>> {
         let not_newline = take_while_span(|c| c != '\n');
         let end = string_span("\r").opt_span().then_span(string_span("\n"));
 
-        return not_newline
+        not_newline
             .wrap_span(string_span("//"), end)
-            .map(|s| Comment::Line(s.as_str()));
+            .map(|s| Comment::Line(s.as_str()))
     }
 
     fn identifier() -> Parser<'a, Span<'a>> {
-        regex_span(r#"[_a-zA-Z][_a-zA-Z0-9-]*"#).debug("identifier")
+        let first_part = take_while_span(|c| c.is_alphabetic() || c == '_');
+        let rest_part =
+            take_while_span(|c| c.is_alphanumeric() || c == '_' || c == '-' || c == '.')
+                .many_span(..);
+        first_part.then_span(rest_part)
     }
 
     fn literal() -> Parser<'a, Expression<'a>> {
@@ -171,10 +179,10 @@ impl<'a> BBNFGrammar<'a> {
             .many_span(..)
             .wrap_span(string_span("\""), string_span("\""));
 
-        return string.map(|s| {
+        string.map(|s| {
             let token = Token::new(s.as_str(), s);
             Expression::Literal(token)
-        });
+        })
     }
 
     fn epsilon() -> Parser<'a, Expression<'a>> {
@@ -194,7 +202,7 @@ impl<'a> BBNFGrammar<'a> {
     fn regex() -> Parser<'a, Expression<'a>> {
         let not_slash = take_while_span(|c| c != '/');
 
-        let escaped_span = string_span("\\").then_span(string_span("/"));
+        let escaped_span = string_span(r"\").then_span(string_span("/"));
 
         let string = (escaped_span | not_slash)
             .many_span(..)
@@ -210,7 +218,7 @@ impl<'a> BBNFGrammar<'a> {
         lazy(|| {
             Self::rhs()
                 .trim_whitespace()
-                .wrap(string("("), string(")"))
+                .wrap(string_span("("), string_span(")"))
                 .map_with_state(|expr, prev_offset, state| {
                     let token = Token::new(expr, Span::new(prev_offset, state.offset, state.src));
                     Expression::Group(Box::new(token))
@@ -222,7 +230,7 @@ impl<'a> BBNFGrammar<'a> {
         lazy(|| {
             Self::rhs()
                 .trim_whitespace()
-                .wrap(string("["), string("]"))
+                .wrap(string_span("["), string_span("]"))
                 .map_with_state(|expr, prev_offset, state| {
                     let token = Token::new(expr, Span::new(prev_offset, state.offset, state.src));
                     Expression::Optional(Box::new(token))
@@ -234,7 +242,7 @@ impl<'a> BBNFGrammar<'a> {
         lazy(|| {
             Self::rhs()
                 .trim_whitespace()
-                .wrap(string("{"), string("}"))
+                .wrap(string_span("{"), string_span("}"))
                 .map_with_state(|expr, prev_offset, state| {
                     let token = Token::new(expr, Span::new(prev_offset, state.offset, state.src));
                     Expression::Many(Box::new(token))
@@ -328,7 +336,7 @@ impl<'a> BBNFGrammar<'a> {
     fn production_rule() -> Parser<'a, Expression<'a>> {
         let comment = Self::block_comment() | Self::line_comment();
         let eq = string("=").trim_whitespace();
-        let terminator = (string(";") | string(".")).trim_whitespace();
+        let terminator = (any_span(&[";", "."])).trim_whitespace();
 
         let production_rule = Self::lhs()
             .skip(eq)

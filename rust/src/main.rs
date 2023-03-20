@@ -62,6 +62,8 @@ pub fn main() {
 
     let data = parser.parse(&bbnf_string).unwrap();
 
+    dbg!(data.get("ONG "));
+
     let elapsed = now.elapsed().unwrap();
 
     println!("BBNF Elapsed: {:?}", elapsed);
