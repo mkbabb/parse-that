@@ -1,5 +1,5 @@
-use crate::pretty::doc::Doc;
-use crate::pretty::utils::text_justify;
+use crate::doc::Doc;
+use crate::utils::text_justify;
 use std::collections::HashMap;
 
 pub fn count_join_length<'a>(sep: &'a Doc<'a>, docs: &'a Vec<Doc<'a>>, printer: &Printer) -> usize {

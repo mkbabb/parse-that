@@ -1,7 +1,7 @@
-use crate::{
-    parse::*,
-    pretty::{str, Doc, Join, Wrap},
-};
+use crate::parse::*;
+
+extern crate pretty;
+use pretty::{str, Doc, Join};
 
 #[derive(Debug, PartialEq)]
 pub enum CSV<'a> {
@@ -16,13 +16,7 @@ impl<'a> Into<Doc<'a>> for CSV<'a> {
             .into_iter()
             .map(|line| {
                 line.into_iter()
-                    .map(|s| {
-                        if s.contains(',') {
-                            str(s).wrap(str("\""), str("\""))
-                        } else {
-                            str(s)
-                        }
-                    })
+                    .map(|s| str(s))
                     .collect::<Vec<_>>()
                     .join(",")
             })
@@ -44,9 +38,9 @@ pub fn csv_parser<'a>() -> Parser<'a, CSV<'a>> {
 
     let token = (double_quotes | no_quotes | empty).map(|span| span.as_str());
 
-    let line = token.sep_by(delim(), ..);
+    let line = token.sep_by(delim(), 1..);
 
-    let csv = line.debug("csv").sep_by(regex(r"\s+"), ..);
+    let csv = line.sep_by(regex_span(r"\s+"), ..);
 
     csv.trim_whitespace().map(CSV::Lines)
 }

@@ -5,7 +5,7 @@ use std::cell::RefCell;
 use std::ops::RangeBounds;
 use std::rc::Rc;
 
-use crate::parse::utils::extract_bounds;
+use crate::utils::extract_bounds;
 
 #[inline(always)]
 pub fn trim_leading_whitespace<'a>(state: &ParserState<'a>) -> usize {
@@ -585,6 +585,10 @@ where
 
 #[inline(always)]
 fn string_impl<'a>(s_bytes: &[u8], end: &usize, state: &mut ParserState<'a>) -> Option<Span<'a>> {
+    if *end == 0 {
+        return Some(Span::new(state.offset, state.offset, &state.src));
+    }
+
     let Some(slc) = &state.src_bytes.get(state.offset..) else {
         return None;
     };

@@ -23,6 +23,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bbnf"
+version = "0.1.0"
+dependencies = [
+ "parse_that",
+ "pretty",
+ "regex",
+]
+
+[[package]]
 name = "bencher"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -172,6 +181,7 @@ dependencies = [
  "nom",
  "pest",
  "pest_grammars",
+ "pretty",
  "regex",
  "serde",
  "serde_json",
@@ -231,6 +241,10 @@ dependencies = [
  "pest",
  "sha2",
 ]
+
+[[package]]
+name = "pretty"
+version = "0.1.0"
 
 [[package]]
 name = "proc-macro2"
@@ -299,6 +313,15 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
+]
+
+[[package]]
+name = "src"
+version = "0.1.0"
+dependencies = [
+ "bbnf",
+ "parse_that",
+ "pretty",
 ]
 
 [[package]]

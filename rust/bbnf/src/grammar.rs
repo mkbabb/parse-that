@@ -1,10 +1,11 @@
-use crate::{
-    parse::{
-        any_span, escaped_span, lazy, string, string_span, take_while_span, Parser, ParserSpan,
-        ParserState, Span,
-    },
-    pretty::Doc,
+extern crate parse_that;
+
+use parse_that::{
+    any_span, escaped_span, lazy, string, string_span, take_while_span, Parser, ParserSpan,
+    ParserState, Span,
 };
+extern crate pretty;
+
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]

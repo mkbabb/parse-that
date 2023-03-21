@@ -1,8 +1,9 @@
-use parse_that::parse::parsers::csv::csv_parser;
+use parse_that::parsers::csv::csv_parser;
+use std::fs;
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
+    use parse_that::csv::CSV;
 
     use super::*;
 
@@ -12,9 +13,10 @@ mod tests {
             "a","b","c"
             "d","e","f"
             "g","h","i"
-        "#;
+"#;
 
         let rows = csv_parser().parse(csv).unwrap();
+        let CSV::Lines(rows) = rows;
 
         assert_eq!(rows.len(), 3);
         assert_eq!(rows[0].len(), 3);
@@ -36,10 +38,11 @@ mod tests {
 
     #[test]
     fn test_csv_file() {
-        let csv_file_path = "../data/csv/active_charter_schools_report.csv";
+        let csv_file_path = "../../data/csv/active_charter_schools_report.csv";
         let csv_string = fs::read_to_string(csv_file_path).unwrap();
 
         let rows = csv_parser().parse(&csv_string).unwrap();
+        let CSV::Lines(rows) = rows;
 
         assert_eq!(rows.len(), 62928);
     }

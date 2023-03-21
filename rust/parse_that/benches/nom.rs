@@ -15,7 +15,7 @@ use nom::{
     bytes::complete::{escaped, tag, take_while, take_while1},
     character::complete::{char, one_of},
     combinator::{cut, iterator, map, opt},
-    multi::{separated_list0, separated_list1},
+    multi::separated_list1,
     number::complete::double,
     sequence::{delimited, pair, preceded, separated_pair, terminated},
     IResult,

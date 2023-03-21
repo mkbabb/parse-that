@@ -1,8 +1,11 @@
+use crate::parse::*;
+
+extern crate pretty;
+use pretty::{str, Doc, Join, Wrap};
+
+use crate::parse::ParserSpan;
+
 use fnv::FnvHashMap;
-
-use crate::{parse::*, pretty::Doc};
-
-use parse::ParserSpan;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum JsonValue<'a> {

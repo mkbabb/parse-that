@@ -7,7 +7,7 @@ use std::path::Path;
 extern crate bencher;
 use bencher::{black_box, Bencher};
 
-use parse_that::parse::parsers::json::json_parser;
+use parse_that::json::json_parser;
 
 const DATA_DIR_PATH: &str = "../data/json";
 

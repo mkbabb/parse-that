@@ -1,0 +1,13 @@
+[package]
+name = "src"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "main"
+path = "main.rs"
+
+[dependencies]
+pretty = { path = "../pretty" }
+parse_that = { path = "../parse_that" }
+bbnf = { path = "../bbnf" }

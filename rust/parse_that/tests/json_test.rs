@@ -1,5 +1,5 @@
-use parse_that::parse::parsers::json::json_parser;
-use parse_that::parse::parsers::json::JsonValue;
+use parse_that::parsers::json::json_parser;
+use parse_that::parsers::json::JsonValue;
 use std::fs;
 
 #[cfg(test)]
@@ -31,7 +31,7 @@ mod tests {
 
     #[test]
     fn test_json_file() {
-        let json_file_path = "../data/json/data-l.json";
+        let json_file_path = "../../data/json/data-l.json";
         let json_string = fs::read_to_string(json_file_path).unwrap();
 
         let arr = json_parser().parse(&json_string).unwrap();

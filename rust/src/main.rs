@@ -1,11 +1,7 @@
-#[global_allocator]
-static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
-
-use parse_that::parse::parsers::csv::csv_parser;
-use parse_that::parse::parsers::json::json_parser;
-use parse_that::pretty::Printer;
-
-use parse_that::bbnf::grammar::BBNFGrammar;
+use bbnf::grammar::BBNFGrammar;
+use parse_that::csv::csv_parser;
+use parse_that::json::json_parser;
+use pretty::Printer;
 
 use std::{collections::HashMap, fs, time::SystemTime};
 
