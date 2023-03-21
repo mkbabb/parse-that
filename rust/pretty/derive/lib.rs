@@ -27,11 +27,11 @@ pub fn pretty_derive(input: TokenStream) -> TokenStream {
             let variant_match = data_enum.variants.iter().map(|variant| {
                 let variant_name = &variant.ident;
                 let constructor = quote! { #name::#variant_name };
-                generate_variant_match(&constructor, &variant.fields)
+                generate_variant_match(&constructor, &variant_name, &variant.fields)
             });
             quote! {
                 match self {
-                    #(#variant_match,)*
+                   #(#variant_match,)*
                 }
             }
         }
@@ -39,8 +39,8 @@ pub fn pretty_derive(input: TokenStream) -> TokenStream {
     };
 
     let expanded = quote! {
-        impl #impl_generics Into<Doc> for #name #ty_generics #where_clause {
-            fn into(self) -> Doc {
+        impl<'a> Into<Doc<'a>> for #name #ty_generics #where_clause {
+            fn into(self) -> Doc<'a> {
                 #doc_match
             }
         }
@@ -49,23 +49,35 @@ pub fn pretty_derive(input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-fn generate_variant_match(constructor: &proc_macro2::TokenStream, fields: &Fields) -> proc_macro2::TokenStream {
+fn generate_variant_match(
+    constructor: &proc_macro2::TokenStream,
+    name: &syn::Ident,
+    fields: &Fields,
+) -> proc_macro2::TokenStream {
     match fields {
         Fields::Unnamed(fields) => {
-            let field_bindings = fields.unnamed.iter().enumerate().map(|(i, _)| syn::Ident::new(&format!("x{}", i), proc_macro2::Span::call_site()));
+            let field_bindings =
+                fields.unnamed.iter().enumerate().map(|(i, _)| {
+                    syn::Ident::new(&format!("x{}", i), proc_macro2::Span::call_site())
+                });
+            let field_bindings_2 = field_bindings.clone();
             quote! {
-                #constructor(#(#field_bindings),*) => Doc::from((#(#field_bindings.into()),*))
+                #constructor(#(#field_bindings),*) => Doc::from((#(#field_bindings_2.into()),*))
             }
         }
         Fields::Named(fields) => {
-            let field_bindings = fields.named.iter().map(|field| field.ident.as_ref().unwrap());
+            let field_bindings = fields
+                .named
+                .iter()
+                .map(|field| field.ident.as_ref().unwrap());
+
             quote! {
-                #constructor { #(#field_bindings),* } => Doc::from((#(#field_bindings.into()),*))
+                #constructor => #(#field_bindings.into()),*
             }
         }
         Fields::Unit => {
             quote! {
-                #constructor => Doc::from(())
+                #constructor =>  format!("{}", stringify!(#name)).into()
             }
         }
     }

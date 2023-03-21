@@ -6,3 +6,6 @@ pub use print::*;
 
 pub mod utils;
 pub use utils::*;
+
+extern crate pretty_derive;
+pub use pretty_derive::*;

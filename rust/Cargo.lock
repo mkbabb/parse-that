@@ -245,6 +245,18 @@ dependencies = [
 [[package]]
 name = "pretty"
 version = "0.1.0"
+dependencies = [
+ "pretty_derive",
+]
+
+[[package]]
+name = "pretty_derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "proc-macro2"
@@ -322,6 +334,7 @@ dependencies = [
  "bbnf",
  "parse_that",
  "pretty",
+ "pretty_derive",
 ]
 
 [[package]]

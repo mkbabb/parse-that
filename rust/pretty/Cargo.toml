@@ -6,3 +6,6 @@ edition = "2021"
 [lib]
 name = "pretty"
 path = "src/lib.rs"
+
+[dependencies]
+pretty_derive = { path = "./derive" }

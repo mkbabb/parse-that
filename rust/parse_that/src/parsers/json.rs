@@ -1,15 +1,15 @@
 use crate::parse::*;
 
 extern crate pretty;
-use pretty::{str, Doc, Join, Wrap};
+use pretty::{str, Doc, Join, Pretty, Wrap};
 
 use crate::parse::ParserSpan;
 
 use fnv::FnvHashMap;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Pretty, Debug, Clone, PartialEq)]
 pub enum JsonValue<'a> {
-    Null,
+    null,
     Bool(bool),
     Number(f64),
     String(&'a str),
@@ -28,7 +28,7 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
         return string.map(|s| s.as_str());
     };
 
-    let json_null = string_span("null").map(|_| JsonValue::Null);
+    let json_null = string_span("null").map(|_| JsonValue::null);
     let json_bool = (string_span("true") | string_span("false")).map(|_| JsonValue::Bool(false));
 
     let json_number = || {
@@ -81,17 +81,4 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
 
 pub fn json_parser<'a>() -> Parser<'a, JsonValue<'a>> {
     json_value().trim_whitespace()
-}
-
-impl<'a> Into<Doc<'a>> for JsonValue<'a> {
-    fn into(self) -> Doc<'a> {
-        match self {
-            JsonValue::Null => "null".into(),
-            JsonValue::Bool(b) => b.into(),
-            JsonValue::Number(n) => n.into(),
-            JsonValue::String(s) => s.into(),
-            JsonValue::Array(a) => a.into(),
-            JsonValue::Object(o) => o.into(),
-        }
-    }
 }
