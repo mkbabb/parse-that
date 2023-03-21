@@ -4,7 +4,9 @@ use parse_that::{
     any_span, escaped_span, lazy, string, string_span, take_while_span, Parser, ParserSpan,
     ParserState, Span,
 };
+
 extern crate pretty;
+use pretty::{Doc, PrettyIgnore};
 
 use std::collections::HashMap;
 

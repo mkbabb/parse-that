@@ -32,7 +32,6 @@ impl<T> From<T> for PrettyIgnore<T> {
     }
 }
 
-
 impl<'a> std::ops::Add for Doc<'a> {
     type Output = Doc<'a>;
 
@@ -241,5 +240,3 @@ where
         }
     }
 }
-
-// create into impl for IntoIter

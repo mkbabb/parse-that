@@ -1,7 +1,7 @@
 use bbnf::grammar::BBNFGrammar;
 use parse_that::csv::csv_parser;
 use parse_that::json::json_parser;
-use pretty::{concat, Doc, Pretty, Printer, PrettyIgnore};
+use pretty::{concat, Doc, Pretty, PrettyIgnore, Printer};
 
 use std::{collections::HashMap, fs, time::SystemTime};
 
@@ -12,9 +12,19 @@ pub enum Hey<'a> {
 }
 
 #[derive(Pretty)]
-pub struct Strumct<'a> {
+pub struct InnerStrumct<'a, T>
+{
     x: &'a str,
     y: Hey<'a>,
+    zz: T,
+}
+
+#[derive(Pretty)]
+pub struct Strumct<'a, T>
+{
+    x: &'a str,
+    y: Hey<'a>,
+    z: InnerStrumct<'a, T>,
 }
 
 pub fn main() {
@@ -104,15 +114,20 @@ pub fn main() {
     let data = Strumct {
         x: "hello",
         y: Hey::There("there").into(),
+        z: InnerStrumct {
+            x: "hello",
+            y: Hey::There("there").into(),
+            zz: 1,
+        },
     };
 
     let pretty = printer.pretty(data);
 
     println!("{}", pretty);
 
-    // let elapsed = now.elapsed().unwrap();
+    let elapsed = now.elapsed().unwrap();
 
-    // println!("Printing Elapsed: {:?}", elapsed);
+    println!("Printing Elapsed: {:?}", elapsed);
 
     // fs::write("../data/pretty.json", pretty).expect("Unable to write file");
 

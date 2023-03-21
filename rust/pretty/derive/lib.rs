@@ -30,8 +30,26 @@ pub fn pretty_derive(input: TokenStream) -> TokenStream {
         _ => panic!("Only structs and enums are supported."),
     };
 
+    let where_clause_predicates = where_clause.map(|wc| &wc.predicates);
+
+    let new_where_clause_predicates: Vec<_> = generics
+        .type_params()
+        .map(|tp| {
+            let ident = &tp.ident;
+            quote! { #ident : Into<Doc<'a>> }
+        })
+        .collect();
+
+    let all_where_clause_predicates = quote! {
+        #where_clause_predicates
+        #(#new_where_clause_predicates,)*
+    };
+
     let expanded = quote! {
-        impl #impl_generics Into<Doc<'a>> for #name #ty_generics #where_clause {
+        impl #impl_generics Into<Doc<'a>> for #name #ty_generics
+        where
+            #all_where_clause_predicates
+        {
             fn into(self) -> Doc<'a> {
                 use pretty::{concat, indent, wrap, join, str, Doc, Join, Wrap, Group, Indent};
                 #doc_match
