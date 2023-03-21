@@ -1,7 +1,7 @@
 use bbnf::grammar::BBNFGrammar;
 use parse_that::csv::csv_parser;
 use parse_that::json::json_parser;
-use pretty::{Doc, Pretty, Printer};
+use pretty::{concat, Doc, Pretty, Printer, PrettyIgnore};
 
 use std::{collections::HashMap, fs, time::SystemTime};
 
@@ -9,6 +9,12 @@ use std::{collections::HashMap, fs, time::SystemTime};
 pub enum Hey<'a> {
     There(&'a str),
     A,
+}
+
+#[derive(Pretty)]
+pub struct Strumct<'a> {
+    x: &'a str,
+    y: Hey<'a>,
 }
 
 pub fn main() {
@@ -27,18 +33,18 @@ pub fn main() {
 
     // println!("CSV Elapsed: {:?}", elapsed);
 
-    let json_file_path = "../data/json/large-file.json";
-    let json_string = fs::read_to_string(json_file_path).unwrap();
+    // let json_file_path = "../data/json/large-file.json";
+    // let json_string = fs::read_to_string(json_file_path).unwrap();
 
-    let parser = json_parser();
+    // let parser = json_parser();
 
-    let now = SystemTime::now();
+    // let now = SystemTime::now();
 
-    let data = parser.parse(&json_string).unwrap();
+    // let data = parser.parse(&json_string).unwrap();
 
-    let elapsed = now.elapsed().unwrap();
+    // let elapsed = now.elapsed().unwrap();
 
-    println!("JSON Elapsed: {:?}", elapsed);
+    // println!("JSON Elapsed: {:?}", elapsed);
 
     // let toml_file_path = "./Cargo.toml";
     // let toml_string = fs::read_to_string(toml_file_path).unwrap();
@@ -95,14 +101,21 @@ pub fn main() {
 
     let now = SystemTime::now();
 
+    let data = Strumct {
+        x: "hello",
+        y: Hey::There("there").into(),
+    };
+
     let pretty = printer.pretty(data);
 
-    let elapsed = now.elapsed().unwrap();
+    println!("{}", pretty);
 
-    println!("Printing Elapsed: {:?}", elapsed);
+    // let elapsed = now.elapsed().unwrap();
 
-    fs::write("../data/pretty.json", pretty).expect("Unable to write file");
+    // println!("Printing Elapsed: {:?}", elapsed);
 
-    let elapsed = first_now.elapsed().unwrap();
-    println!("Total Elapsed: {:?}", elapsed);
+    // fs::write("../data/pretty.json", pretty).expect("Unable to write file");
+
+    // let elapsed = first_now.elapsed().unwrap();
+    // println!("Total Elapsed: {:?}", elapsed);
 }

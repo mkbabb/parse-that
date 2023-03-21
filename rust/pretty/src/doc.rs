@@ -24,6 +24,15 @@ pub enum Doc<'a> {
     Line,
 }
 
+pub struct PrettyIgnore<T>(pub T);
+
+impl<T> From<T> for PrettyIgnore<T> {
+    fn from(value: T) -> Self {
+        PrettyIgnore(value)
+    }
+}
+
+
 impl<'a> std::ops::Add for Doc<'a> {
     type Output = Doc<'a>;
 
