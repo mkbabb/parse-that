@@ -122,7 +122,7 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
                 let needs_breaking = count_text_length(d, printer) > printer.max_width;
 
                 if needs_breaking {
-                    push_hardline(&mut stack, indent_delta - 1);
+                    push_hardline(&mut stack, indent_delta.saturating_sub(printer.indent));
                 }
 
                 stack.push(PrintItem {
@@ -153,14 +153,14 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
             Doc::Indent(d) => {
                 stack.push(PrintItem {
                     doc: d,
-                    indent_delta: indent_delta + printer.indent,
+                    indent_delta: indent_delta.saturating_add(printer.indent),
                 });
             }
 
             Doc::Dedent(d) => {
                 stack.push(PrintItem {
                     doc: d,
-                    indent_delta: indent_delta - printer.indent,
+                    indent_delta: indent_delta.saturating_sub(printer.indent),
                 });
             }
 
@@ -206,8 +206,6 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
             }
 
             _ => {}
-
-            
         }
     }
     output

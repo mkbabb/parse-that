@@ -75,7 +75,7 @@ fn generate_struct_match(name: &syn::Ident, fields: &Fields) -> proc_macro2::Tok
                 concat(vec![
                     format!("{} ", stringify!(#name)).into(),
                     body,
-                ])
+                ]).group()
             }
         }
         Fields::Unit => {
