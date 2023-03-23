@@ -6,7 +6,7 @@ use parse_that::{
 };
 
 extern crate pretty;
-use pretty::{Doc, PrettyIgnore};
+use pretty::Doc;
 
 use std::collections::HashMap;
 

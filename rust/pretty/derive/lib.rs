@@ -2,9 +2,9 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, Data, DeriveInput, Fields};
+use syn::{parse_macro_input, Attribute, Data, DeriveInput, Fields, Meta, NestedMeta};
 
-#[proc_macro_derive(Pretty)]
+#[proc_macro_derive(Pretty, attributes(pretty))]
 pub fn pretty_derive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
@@ -20,7 +20,6 @@ pub fn pretty_derive(input: TokenStream) -> TokenStream {
                 let constructor = quote! { #name::#variant_ident };
                 generate_variant_match(&constructor, &variant_ident, &variant.fields)
             });
-
             quote! {
                 match self {
                    #(#variant_match,)*
@@ -46,12 +45,13 @@ pub fn pretty_derive(input: TokenStream) -> TokenStream {
     };
 
     let expanded = quote! {
-        impl #impl_generics Into<Doc<'a>> for #name #ty_generics
+
+        impl #impl_generics Into<pretty::Doc<'a>> for #name #ty_generics
         where
             #all_where_clause_predicates
         {
-            fn into(self) -> Doc<'a> {
-                use pretty::{concat, indent, wrap, join, str, Doc, Join, Wrap, Group, Indent};
+            fn into(self) -> pretty::Doc<'a> {
+                use pretty::{concat, indent, wrap, join, Doc, str, Join, Wrap, Group, Indent};
                 #doc_match
             }
         }
@@ -86,6 +86,49 @@ fn generate_struct_match(name: &syn::Ident, fields: &Fields) -> proc_macro2::Tok
     }
 }
 
+fn get_pretty_attrs(attrs: &[Attribute]) -> (bool, bool) {
+    let mut ignore = false;
+    let mut indent = false;
+
+    for meta in attrs
+        .into_iter()
+        .filter(|attr| attr.path.is_ident("pretty"))
+        .filter_map(|attr| match attr.parse_meta() {
+            Ok(Meta::List(meta)) => Some(meta),
+            _ => None,
+        })
+    {
+        for nested_meta in meta.nested.iter() {
+            let NestedMeta::Meta(Meta::NameValue(name_value)) = nested_meta else {
+                continue;
+            };
+
+            if name_value.path.is_ident("ignore") {
+                if let syn::Lit::Bool(lit_bool) = &name_value.lit {
+                    ignore = lit_bool.value;
+                }
+            } else if name_value.path.is_ident("indent") {
+                if let syn::Lit::Bool(lit_bool) = &name_value.lit {
+                    indent = lit_bool.value;
+                }
+            }
+        }
+    }
+
+    (ignore, indent)
+}
+
+fn generate_field_doc(
+    field_doc: proc_macro2::TokenStream,
+    indent: bool,
+) -> proc_macro2::TokenStream {
+    if indent {
+        quote! { Doc::from(#field_doc).indent() }
+    } else {
+        field_doc
+    }
+}
+
 fn generate_struct_fields_match(fields: &Fields) -> Vec<proc_macro2::TokenStream> {
     let format_key_value = |key: &Option<syn::Ident>, value: &proc_macro2::TokenStream| {
         return quote! {
@@ -103,10 +146,11 @@ fn generate_struct_fields_match(fields: &Fields) -> Vec<proc_macro2::TokenStream
             .iter()
             .filter_map(|field| {
                 let field_name = &field.ident;
-                let field_doc = quote! { self.#field_name.into() };
-                if is_print_ignore(&field.ty) {
+                let (ignore, indent) = get_pretty_attrs(&field.attrs);
+                if ignore {
                     return None;
                 }
+                let field_doc = generate_field_doc(quote! { self.#field_name.into() }, indent);
                 Some(format_key_value(&field_name, &field_doc))
             })
             .collect(),
@@ -116,10 +160,11 @@ fn generate_struct_fields_match(fields: &Fields) -> Vec<proc_macro2::TokenStream
             .enumerate()
             .filter_map(|(i, field)| {
                 let field_name = Some(format_ident!("field_{}", i));
-                let field_doc = quote! { self.#field_name.into() };
-                if is_print_ignore(&field.ty) {
+                let (ignore, indent) = get_pretty_attrs(&field.attrs);
+                if ignore {
                     return None;
                 }
+                let field_doc = generate_field_doc(quote! { self.#field_name.into() }, indent);
                 Some(format_key_value(&field_name, &field_doc))
             })
             .collect(),
@@ -160,13 +205,4 @@ fn generate_variant_match(
             }
         }
     }
-}
-
-fn is_print_ignore(ty: &syn::Type) -> bool {
-    if let syn::Type::Path(type_path) = ty {
-        if let Some(segment) = type_path.path.segments.first() {
-            return segment.ident == "PrettyIgnore";
-        }
-    }
-    false
 }

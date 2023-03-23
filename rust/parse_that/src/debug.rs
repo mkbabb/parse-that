@@ -1,7 +1,8 @@
 extern crate pretty;
 
-use crate::parse::*;
-use pretty::{concat, indent, str, Doc, Indent, PRINTER};
+use crate::parse::Parser;
+use crate::state::ParserState;
+use pretty::{concat, indent, Doc, PRINTER};
 
 use colored::{Color, Colorize};
 

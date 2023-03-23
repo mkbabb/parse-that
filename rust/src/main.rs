@@ -1,7 +1,7 @@
 use bbnf::grammar::BBNFGrammar;
 use parse_that::csv::csv_parser;
 use parse_that::json::json_parser;
-use pretty::{concat, Doc, Pretty, PrettyIgnore, Printer};
+use pretty::{concat, Doc, Pretty, Printer};
 
 use std::{collections::HashMap, fs, time::SystemTime};
 
@@ -12,17 +12,17 @@ pub enum Hey<'a> {
 }
 
 #[derive(Pretty)]
-pub struct InnerStrumct<'a, T>
-{
+pub struct InnerStrumct<'a, T> {
     x: &'a str,
     y: Hey<'a>,
     zz: T,
 }
 
 #[derive(Pretty)]
-pub struct Strumct<'a, T>
-{
+pub struct Strumct<'a, T> {
+    #[pretty(ignore = true)]
     x: &'a str,
+
     y: Hey<'a>,
     z: InnerStrumct<'a, T>,
 }
@@ -113,7 +113,7 @@ pub fn main() {
 
     let data = Strumct {
         x: "hello",
-        y: Hey::There("there").into(),
+        y: Hey::A.into(),
         z: InnerStrumct {
             x: "hello",
             y: Hey::There("there").into(),

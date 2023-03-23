@@ -1,7 +1,7 @@
 use crate::parse::*;
 
 extern crate pretty;
-use pretty::{str, Doc, Join, Pretty, Wrap};
+use pretty::Pretty;
 
 use crate::parse::ParserSpan;
 

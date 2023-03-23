@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{borrow::Borrow, collections::HashMap};
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub enum Doc<'a> {
@@ -22,14 +22,6 @@ pub enum Doc<'a> {
     Softline,
     Mediumline,
     Line,
-}
-
-pub struct PrettyIgnore<T>(pub T);
-
-impl<T> From<T> for PrettyIgnore<T> {
-    fn from(value: T) -> Self {
-        PrettyIgnore(value)
-    }
 }
 
 impl<'a> std::ops::Add for Doc<'a> {
@@ -238,5 +230,17 @@ where
             Some(value) => value.into(),
             None => str("null"),
         }
+    }
+}
+
+impl<'a, T> Into<Doc<'a>> for &[T]
+where
+    T: Into<Doc<'a>> + Copy,
+{
+    fn into(self) -> Doc<'a> {
+        self.into_iter()
+            .map(|item| (*item).into())
+            .collect::<Vec<_>>()
+            .into()
     }
 }
