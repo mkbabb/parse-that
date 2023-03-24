@@ -2,7 +2,74 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, Attribute, Data, DeriveInput, Fields, Meta, NestedMeta};
+use syn::{
+    parse_macro_input, token::Comma, Attribute, Data, DeriveInput, Field, Fields, Meta, NestedMeta,
+    Variant,
+};
+
+struct PrettyAttributes {
+    ignore: bool,
+    indent: bool,
+}
+
+impl Default for PrettyAttributes {
+    fn default() -> Self {
+        PrettyAttributes {
+            ignore: false,
+            indent: false,
+        }
+    }
+}
+
+fn get_pretty_attrs(attrs: &[Attribute]) -> PrettyAttributes {
+    let mut pretty_attr = PrettyAttributes::default();
+
+    for meta in attrs
+        .into_iter()
+        .filter(|attr| attr.path.is_ident("pretty"))
+        .filter_map(|attr| match attr.parse_meta() {
+            Ok(Meta::List(meta)) => Some(meta),
+            _ => None,
+        })
+    {
+        for nested_meta in meta.nested.iter() {
+            let NestedMeta::Meta(Meta::NameValue(name_value)) = nested_meta else {
+                continue;
+            };
+
+            if name_value.path.is_ident("ignore") {
+                if let syn::Lit::Bool(lit_bool) = &name_value.lit {
+                    pretty_attr.ignore = lit_bool.value;
+                }
+            } else if name_value.path.is_ident("indent") {
+                if let syn::Lit::Bool(lit_bool) = &name_value.lit {
+                    pretty_attr.indent = lit_bool.value;
+                }
+            }
+        }
+    }
+
+    return pretty_attr;
+}
+
+fn generate_field_doc(
+    field_doc: &proc_macro2::TokenStream,
+    attrs: &[Attribute],
+) -> Option<proc_macro2::TokenStream> {
+    let pretty_attr = get_pretty_attrs(attrs);
+
+    if pretty_attr.ignore {
+        return None;
+    }
+
+    let mut doc = quote! { #field_doc };
+
+    if pretty_attr.indent {
+        doc = quote! { (#doc).indent() };
+    }
+
+    Some(doc)
+}
 
 #[proc_macro_derive(Pretty, attributes(pretty))]
 pub fn pretty_derive(input: TokenStream) -> TokenStream {
@@ -14,18 +81,7 @@ pub fn pretty_derive(input: TokenStream) -> TokenStream {
 
     let doc_match = match &input.data {
         Data::Struct(data_struct) => generate_struct_match(&name, &data_struct.fields),
-        Data::Enum(data_enum) => {
-            let variant_match = data_enum.variants.iter().map(|variant| {
-                let variant_ident = &variant.ident;
-                let constructor = quote! { #name::#variant_ident };
-                generate_variant_match(&constructor, &variant_ident, &variant.fields)
-            });
-            quote! {
-                match self {
-                   #(#variant_match,)*
-                }
-            }
-        }
+        Data::Enum(data_enum) => generate_enum_match(&name, &data_enum.variants),
         _ => panic!("Only structs and enums are supported."),
     };
 
@@ -45,13 +101,13 @@ pub fn pretty_derive(input: TokenStream) -> TokenStream {
     };
 
     let expanded = quote! {
-
         impl #impl_generics Into<pretty::Doc<'a>> for #name #ty_generics
         where
             #all_where_clause_predicates
         {
             fn into(self) -> pretty::Doc<'a> {
-                use pretty::{concat, indent, wrap, join, Doc, str, Join, Wrap, Group, Indent};
+                use pretty::{concat, indent, wrap, join, str, Doc, Join, Wrap, Group, Indent};
+
                 #doc_match
             }
         }
@@ -60,13 +116,51 @@ pub fn pretty_derive(input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
+fn generate_struct_fields_match(fields: &Fields) -> Vec<proc_macro2::TokenStream> {
+    let format_key_value = |field_name: &Option<syn::Ident>, field: &Field| {
+        let field_doc = quote! { self.#field_name.into() };
+        let Some(field_doc) = generate_field_doc(&field_doc, &field.attrs) else {
+            return None;
+        };
+
+        Some(quote! {
+            concat(vec![
+                stringify!(#field_name).into(),
+                Doc::Str(": "),
+                #field_doc,
+            ])
+        })
+    };
+
+    match fields {
+        Fields::Named(fields) => fields
+            .named
+            .iter()
+            .filter_map(|field| {
+                let field_name = &field.ident;
+                format_key_value(&field_name, &field)
+            })
+            .collect(),
+        Fields::Unnamed(fields) => fields
+            .unnamed
+            .iter()
+            .enumerate()
+            .filter_map(|(i, field)| {
+                let field_name = Some(format_ident!("field_{}", i));
+                format_key_value(&field_name, &field)
+            })
+            .collect(),
+        Fields::Unit => vec![],
+    }
+}
+
 fn generate_struct_match(name: &syn::Ident, fields: &Fields) -> proc_macro2::TokenStream {
-    let field_match = generate_struct_fields_match(fields);
+    let fields_match = generate_struct_fields_match(fields);
 
     match fields {
         Fields::Named(_) | Fields::Unnamed(_) => {
             quote! {
-                let body = vec![#(#field_match,)*]
+                let body = vec![#(#fields_match,)*]
                         .join(str(", ") + Doc::Hardline)
                         .group()
                         .wrap(str("{"), str("}"))
@@ -80,129 +174,79 @@ fn generate_struct_match(name: &syn::Ident, fields: &Fields) -> proc_macro2::Tok
         }
         Fields::Unit => {
             quote! {
-                format!("{}", stringify!(#name)).into()
+                stringify!(#name).into()
             }
         }
     }
 }
 
-fn get_pretty_attrs(attrs: &[Attribute]) -> (bool, bool) {
-    let mut ignore = false;
-    let mut indent = false;
-
-    for meta in attrs
-        .into_iter()
-        .filter(|attr| attr.path.is_ident("pretty"))
-        .filter_map(|attr| match attr.parse_meta() {
-            Ok(Meta::List(meta)) => Some(meta),
-            _ => None,
-        })
-    {
-        for nested_meta in meta.nested.iter() {
-            let NestedMeta::Meta(Meta::NameValue(name_value)) = nested_meta else {
-                continue;
-            };
-
-            if name_value.path.is_ident("ignore") {
-                if let syn::Lit::Bool(lit_bool) = &name_value.lit {
-                    ignore = lit_bool.value;
-                }
-            } else if name_value.path.is_ident("indent") {
-                if let syn::Lit::Bool(lit_bool) = &name_value.lit {
-                    indent = lit_bool.value;
-                }
-            }
-        }
-    }
-
-    (ignore, indent)
-}
-
-fn generate_field_doc(
-    field_doc: proc_macro2::TokenStream,
-    indent: bool,
-) -> proc_macro2::TokenStream {
-    if indent {
-        quote! { Doc::from(#field_doc).indent() }
-    } else {
-        field_doc
-    }
-}
-
-fn generate_struct_fields_match(fields: &Fields) -> Vec<proc_macro2::TokenStream> {
-    let format_key_value = |key: &Option<syn::Ident>, value: &proc_macro2::TokenStream| {
-        return quote! {
-            concat(vec![
-                stringify!(#key).into(),
-                Doc::Str(": "),
-                #value,
-            ])
-        };
-    };
-
-    match fields {
+fn generate_variants_match(
+    variant: &syn::Variant,
+    constructor: &proc_macro2::TokenStream,
+) -> Option<proc_macro2::TokenStream> {
+    let field_bindings = match &variant.fields {
         Fields::Named(fields) => fields
             .named
             .iter()
-            .filter_map(|field| {
-                let field_name = &field.ident;
-                let (ignore, indent) = get_pretty_attrs(&field.attrs);
-                if ignore {
-                    return None;
-                }
-                let field_doc = generate_field_doc(quote! { self.#field_name.into() }, indent);
-                Some(format_key_value(&field_name, &field_doc))
-            })
+            .map(|field| quote! { #field.ident })
             .collect(),
         Fields::Unnamed(fields) => fields
             .unnamed
             .iter()
             .enumerate()
-            .filter_map(|(i, field)| {
-                let field_name = Some(format_ident!("field_{}", i));
-                let (ignore, indent) = get_pretty_attrs(&field.attrs);
-                if ignore {
-                    return None;
-                }
-                let field_doc = generate_field_doc(quote! { self.#field_name.into() }, indent);
-                Some(format_key_value(&field_name, &field_doc))
+            .map(|(i, _)| {
+                let ident = format_ident!("field_{}", i);
+                quote! { #ident }
             })
             .collect(),
-        Fields::Unit => vec![],
-    }
-}
+        Fields::Unit => {
+            vec![quote! {
+               format!("{}", stringify!(#variant))
+            }]
+        }
+    };
 
-fn generate_variant_match(
-    constructor: &proc_macro2::TokenStream,
-    name: &syn::Ident,
-    fields: &Fields,
-) -> proc_macro2::TokenStream {
-    match fields {
-        Fields::Unnamed(fields) => {
-            let field_bindings = fields
-                .unnamed
-                .iter()
-                .enumerate()
-                .map(|(i, _)| format_ident!("field_{}", i));
-            let field_bindings_2 = field_bindings.clone();
+    let field_doc = quote! {
+        Doc::from((#(#field_bindings.into()),*))
+    };
+    let Some(field_doc) = generate_field_doc(&field_doc, &variant.attrs) else {
+        return None;
+    };
+    let match_arms = match &variant.fields {
+        Fields::Named(_) => {
             quote! {
-                #constructor(#(#field_bindings),*) => Doc::from((#(#field_bindings_2.into()),*))
+                #constructor { #(#field_bindings),* } => #field_doc
             }
         }
-        Fields::Named(fields) => {
-            let field_bindings = fields
-                .named
-                .iter()
-                .map(|field| field.ident.as_ref().unwrap());
-            let field_bindings_2 = field_bindings.clone();
+        Fields::Unnamed(_) => {
             quote! {
-                #constructor { #(#field_bindings),* } => Doc::from((#(#field_bindings_2.into()),*))
+                #constructor(#(#field_bindings),*) => #field_doc
             }
         }
         Fields::Unit => {
             quote! {
-                #constructor =>  format!("{}", stringify!(#name)).into()
+                #constructor =>  #field_doc
             }
+        }
+    };
+    Some(match_arms)
+}
+
+fn generate_enum_match(
+    name: &syn::Ident,
+    variants: &syn::punctuated::Punctuated<Variant, Comma>,
+) -> proc_macro2::TokenStream {
+    let format_variant = |variant: &Variant| {
+        let variant_ident = &variant.ident;
+        let constructor = quote! { #name::#variant_ident };
+        generate_variants_match(variant, &constructor)
+    };
+    let variants_match = variants.into_iter().filter_map(format_variant);
+
+    quote! {
+        match self {
+           #(#variants_match,)*
+           _ => Doc::Null
         }
     }
 }
