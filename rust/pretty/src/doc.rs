@@ -126,8 +126,6 @@ impl<'a> Join<'a> for Vec<Doc<'a>> {
     }
 }
 
-
-
 pub trait SmartJoin<'a> {
     fn smart_join(self, sep: impl Into<Doc<'a>>) -> Doc<'a>;
 }
@@ -258,18 +256,18 @@ impl_from_tuple_to_doc!(T1, T2, T3, T4, T5);
 impl_from_tuple_to_doc!(T1, T2, T3, T4, T5, T6);
 impl_from_tuple_to_doc!(T1, T2, T3, T4, T5, T6, T7);
 
-// impl<'a, T> From<&[T]> for Doc<'a>
-// where
-//     T: Into<Doc<'a>> + Copy,
-// {
-//     fn from(slice: &[T]) -> Doc<'a> {
-//         slice
-//             .iter()
-//             .map(|item| (*item).into())
-//             .collect::<Vec<_>>()
-//             .into()
-//     }
-// }
+impl<'a, T> From<&[T]> for Doc<'a>
+where
+    T: Into<Doc<'a>> + Copy,
+{
+    fn from(slice: &[T]) -> Doc<'a> {
+        slice
+            .iter()
+            .map(|item| (*item).into())
+            .collect::<Vec<_>>()
+            .into()
+    }
+}
 
 impl From<()> for Doc<'_> {
     fn from(_: ()) -> Self {
@@ -282,6 +280,15 @@ where
     T: Into<Doc<'a>> + Copy,
 {
     fn from(value: &T) -> Self {
+        (*value).into()
+    }
+}
+
+impl<'a, T> From<Box<T>> for Doc<'a>
+where
+    T: Into<Doc<'a>>,
+{
+    fn from(value: Box<T>) -> Self {
         (*value).into()
     }
 }

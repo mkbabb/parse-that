@@ -1,5 +1,5 @@
 [workspace]
-members = ["pretty", "src"]
+members = ["pretty", "src", "parse_that"]
 
 [unstable]
 bench = true

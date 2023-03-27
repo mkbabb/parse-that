@@ -8,17 +8,21 @@ use std::{collections::HashMap, fs, time::SystemTime};
 #[derive(Pretty)]
 pub enum Hey<'a> {
     There(&'a str),
+    #[pretty(rename = "my vibes")]
     A,
 }
 
 #[derive(Pretty)]
 pub enum Toast<'a, T> {
     There(&'a str),
+    #[pretty(rename = "my vibes")]
+    B,
     A(T, T),
 }
 
 #[derive(Pretty)]
 pub struct InnerStrumct<'a, T> {
+    #[pretty(skip)]
     x: &'a str,
     y: Hey<'a>,
     zz: (T, T),
@@ -26,7 +30,7 @@ pub struct InnerStrumct<'a, T> {
 
 #[derive(Pretty)]
 pub struct Strumct<'a, T> {
-    // #[pretty(skip)]
+    #[pretty(rename = "my vibes")]
     x: &'a str,
     y: Hey<'a>,
     z: InnerStrumct<'a, T>,
@@ -118,15 +122,13 @@ pub fn main() {
 
     let data = Strumct {
         x: "hellow",
-        y: Hey::A.into(),
+        y: Hey::A,
         z: InnerStrumct {
             x: "hello",
-            y: Hey::There("there").into(),
+            y: Hey::There("there"),
             zz: (1, 1),
         },
     };
-
-
 
     let pretty = printer.pretty(data);
 
