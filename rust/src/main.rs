@@ -1,6 +1,6 @@
-use bbnf::grammar::BBNFGrammar;
-use parse_that::csv::csv_parser;
-use parse_that::json::json_parser;
+// use bbnf::grammar::BBNFGrammar;
+// use parse_that::csv::csv_parser;
+// use parse_that::json::json_parser;
 use pretty::{concat, Doc, Pretty, Printer};
 
 use std::{collections::HashMap, fs, time::SystemTime};
@@ -12,17 +12,22 @@ pub enum Hey<'a> {
 }
 
 #[derive(Pretty)]
+pub enum Toast<'a, T> {
+    There(&'a str),
+    A(T, T),
+}
+
+#[derive(Pretty)]
 pub struct InnerStrumct<'a, T> {
     x: &'a str,
     y: Hey<'a>,
-    zz: T,
+    zz: (T, T),
 }
 
 #[derive(Pretty)]
 pub struct Strumct<'a, T> {
-    #[pretty(ignore = true)]
+    // #[pretty(skip)]
     x: &'a str,
-
     y: Hey<'a>,
     z: InnerStrumct<'a, T>,
 }
@@ -107,17 +112,17 @@ pub fn main() {
     // data.insert("ok", map3.clone());
     // data.insert("thats vibes", map3.clone());
 
-    let printer = Printer::new(80, 1, false, true);
+    let printer = Printer::new(30, 1, false, true);
 
     let now = SystemTime::now();
 
     let data = Strumct {
-        x: "hello",
+        x: "hellow",
         y: Hey::A.into(),
         z: InnerStrumct {
             x: "hello",
             y: Hey::There("there").into(),
-            zz: 1,
+            zz: (1, 1),
         },
     };
 

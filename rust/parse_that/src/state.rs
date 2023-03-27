@@ -5,6 +5,8 @@ use pretty::Pretty;
 pub struct Span<'a> {
     pub start: usize,
     pub end: usize,
+
+    #[pretty(skip)]
     pub src: &'a str,
 }
 
@@ -20,14 +22,17 @@ impl<'a> Span<'a> {
 
 #[derive(Pretty)]
 pub struct ParserState<'a> {
+    #[pretty(skip)]
     pub src: &'a str,
+    #[pretty(skip)]
     pub src_bytes: &'a [u8],
+
     pub end: usize,
 
-    #[pretty(ignore = true, indent = true)]
     pub offset: usize,
     pub furthest_offset: usize,
 
+    #[pretty(skip)]
     pub state_stack: Vec<usize>,
 }
 

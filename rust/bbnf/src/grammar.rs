@@ -6,17 +6,17 @@ use parse_that::{
 };
 
 extern crate pretty;
-use pretty::Doc;
+use pretty::{Doc, Pretty};
 
 use std::collections::HashMap;
 
-#[derive(Debug, Clone)]
+#[derive(Pretty, Debug, Clone)]
 pub enum Comment<'a> {
     Line(&'a str),
     Block(&'a str),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Pretty, Debug, Clone)]
 pub struct Comments<'a> {
     pub left: Option<Comment<'a>>,
     pub right: Option<Comment<'a>>,
@@ -28,6 +28,7 @@ type TokenExpression<'a, T = Expression<'a>> = Box<Token<'a, T>>;
 pub enum Expression<'a> {
     Literal(Token<'a, &'a str>),
     Nonterminal(Token<'a, &'a str>),
+
     Regex(Token<'a, regex::Regex>),
 
     Group(TokenExpression<'a>),
@@ -48,7 +49,7 @@ pub enum Expression<'a> {
     OptionalWhitespace,
 }
 
-#[derive(Debug)]
+#[derive(Pretty, Debug)]
 pub struct Token<'a, T> {
     pub value: T,
     pub span: Span<'a>,

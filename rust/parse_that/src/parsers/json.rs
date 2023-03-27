@@ -29,7 +29,8 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
     };
 
     let json_null = string_span("null").map(|_| JsonValue::null);
-    let json_bool = (string_span("true") | string_span("false")).map(|_| JsonValue::Bool(false));
+    let json_bool = string_span("true").map(|_| JsonValue::Bool(true))
+        | string_span("false").map(|_| JsonValue::Bool(false));
 
     let json_number = || {
         let sign = || string_span("-").opt_span();
