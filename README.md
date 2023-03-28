@@ -1,4 +1,4 @@
-# `parse[that]`
+# parse`[that]`
 
 Parser combinators for TypeScript and Rust.
 
@@ -50,7 +50,7 @@ nice.
 
 ## Table of Contents
 
-- [`parse[that]`](#parsethat)
+- [parse`[that]`](#parsethat)
   - [Usage](#usage)
   - [Table of Contents](#table-of-contents)
   - [Performance](#performance)
