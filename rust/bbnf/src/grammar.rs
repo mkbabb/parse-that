@@ -24,7 +24,7 @@ pub struct Comments<'a> {
 
 type TokenExpression<'a, T = Expression<'a>> = Box<Token<'a, T>>;
 
-#[derive(Debug)]
+#[derive(Pretty, Debug)]
 pub enum Expression<'a> {
     Literal(Token<'a, &'a str>),
     Nonterminal(Token<'a, &'a str>),

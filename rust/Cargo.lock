@@ -23,6 +23,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bbnf"
+version = "0.1.0"
+dependencies = [
+ "parse_that",
+ "pretty",
+ "regex",
+]
+
+[[package]]
 name = "bencher"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -238,6 +247,7 @@ name = "pretty"
 version = "0.1.0"
 dependencies = [
  "pretty_derive",
+ "regex",
 ]
 
 [[package]]
@@ -324,6 +334,7 @@ version = "0.1.0"
 dependencies = [
  "pretty",
  "pretty_derive",
+ "regex",
 ]
 
 [[package]]

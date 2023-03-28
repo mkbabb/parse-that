@@ -12,6 +12,7 @@ struct PrettyAttributes {
     skip: bool,
     indent: bool,
     rename: Option<String>,
+    getter: Option<String>,
 }
 
 impl Default for PrettyAttributes {
@@ -20,6 +21,7 @@ impl Default for PrettyAttributes {
             skip: false,
             indent: false,
             rename: None,
+            getter: None,
         }
     }
 }
@@ -44,6 +46,11 @@ fn get_pretty_attrs(attrs: &[Attribute]) -> PrettyAttributes {
                 if nested_meta.path().is_ident("rename") {
                     if let Lit::Str(rename) = &_name_value.lit {
                         pretty_attr.rename = Some(rename.value());
+                    }
+                }
+                if nested_meta.path().is_ident("getter") {
+                    if let Lit::Str(getter) = &_name_value.lit {
+                        pretty_attr.getter = Some(getter.value());
                     }
                 }
             } else {
@@ -94,7 +101,7 @@ pub fn pretty_derive(input: TokenStream) -> TokenStream {
 
     let new_where_clause_predicates = generics.type_params().map(|tp| -> WherePredicate {
         let ident = &tp.ident;
-        parse_quote! { #ident : Into<Doc<#doc_lifetime>> }
+        parse_quote! { #ident : Into<Doc<#doc_lifetime>> + std::fmt::Debug  }
     });
 
     new_where_clause.extend(new_where_clause_predicates);
@@ -134,12 +141,12 @@ fn generate_struct_fields_match(fields: &Fields) -> Vec<proc_macro2::TokenStream
             syn::Type::Path(_) => true,
             _ => false,
         };
+
         let field_doc = if is_generic_type {
             quote! { _self.#field_name.into() }
         } else {
             quote! { Doc::from(_self.#field_name) }
         };
-
         let field_doc = generate_field_doc(&field_doc, &pretty_attr);
 
         Some(quote! {
@@ -193,7 +200,7 @@ fn generate_struct_match(name: &syn::Ident, fields: &Fields) -> proc_macro2::Tok
                 concat(vec![
                     Doc::from(format!("{} ", stringify!(#name))),
                     body,
-                ]).group()
+                ])
             }
         }
         Fields::Unit => {
@@ -247,10 +254,18 @@ fn generate_variants_match(
         quote! { (#(#field_bindings),*) }
     };
 
-    let field_doc = quote! {
-        Doc::from(#field_bindings_tup)
+    let field_doc = match pretty_attr.getter.clone() {
+        Some(getter) => {
+            let getter = syn::parse_str::<syn::Expr>(&getter).unwrap();
+            quote! {
+                #getter(&#field_bindings_tup)
+            }
+        }
+        None => field_bindings_tup,
     };
-
+    let field_doc = quote! {
+        Doc::from(#field_doc)
+    };
     let field_doc = generate_field_doc(&field_doc, &pretty_attr);
 
     let match_arms = match &variant.fields {

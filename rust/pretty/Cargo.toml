@@ -9,3 +9,4 @@ path = "src/lib.rs"
 
 [dependencies]
 pretty_derive = { path = "./derive" }
+regex = "1.7.3"

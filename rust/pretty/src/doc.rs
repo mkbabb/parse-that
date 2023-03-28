@@ -1,6 +1,8 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug, fmt::Display, rc::Rc};
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+use regex::Regex;
+
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Doc<'a> {
     Null,
     String(String),
@@ -235,6 +237,7 @@ where
 
 macro_rules! impl_from_tuple_to_doc {
     ($($t:ident),*) => {
+        #[allow(non_snake_case)]
         impl<'a, $($t),*> From<($($t),*)> for Doc<'a>
         where
             $($t: Into<Doc<'a>>),*
@@ -290,5 +293,22 @@ where
 {
     fn from(value: Box<T>) -> Self {
         (*value).into()
+    }
+}
+
+impl<'a, T> From<Rc<T>> for Doc<'a>
+where
+    T: Into<Doc<'a>>,
+{
+    fn from(value: Rc<T>) -> Self {
+        value.clone().into()
+    }
+}
+
+
+// impl for regex:
+impl<'a> From<Regex> for Doc<'a> {
+    fn from(regex: Regex) -> Self {
+        regex.as_str().to_owned().into()
     }
 }

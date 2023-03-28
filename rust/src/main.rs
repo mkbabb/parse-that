@@ -10,6 +10,7 @@ pub enum Hey<'a> {
     There(&'a str),
     #[pretty(rename = "my vibes")]
     A,
+    B(regex::Regex),
 }
 
 #[derive(Pretty)]
