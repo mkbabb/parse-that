@@ -1,41 +1,9 @@
-// use bbnf::grammar::BBNFGrammar;
-// use parse_that::csv::csv_parser;
-// use parse_that::json::json_parser;
+use bbnf::grammar::BBNFGrammar;
+use parse_that::csv::csv_parser;
+use parse_that::json::json_parser;
 use pretty::{concat, Doc, Pretty, Printer};
 
 use std::{collections::HashMap, fs, time::SystemTime};
-
-#[derive(Pretty)]
-pub enum Hey<'a> {
-    There(&'a str),
-    #[pretty(rename = "my vibes")]
-    A,
-    B(regex::Regex),
-}
-
-#[derive(Pretty)]
-pub enum Toast<'a, T> {
-    There(&'a str),
-    #[pretty(rename = "my vibes")]
-    B,
-    A(T, T),
-}
-
-#[derive(Pretty)]
-pub struct InnerStrumct<'a, T> {
-    #[pretty(skip)]
-    x: &'a str,
-    y: Hey<'a>,
-    zz: (T, T),
-}
-
-#[derive(Pretty)]
-pub struct Strumct<'a, T> {
-    #[pretty(rename = "my vibes")]
-    x: &'a str,
-    y: Hey<'a>,
-    z: InnerStrumct<'a, T>,
-}
 
 pub fn main() {
     let first_now = SystemTime::now();
@@ -81,14 +49,14 @@ pub fn main() {
 
     // println!("TOML Elapsed: {:?}", elapsed);
 
-    // let bbnf_filepath = "../grammar/css-keyframes.bbnf";
-    // let bbnf_string = fs::read_to_string(bbnf_filepath).unwrap();
+    let bbnf_filepath = "../../grammar/g4.bbnf";
+    let bbnf_string = fs::read_to_string(bbnf_filepath).unwrap();
 
-    // let parser = BBNFGrammar::grammar();
+    let parser = BBNFGrammar::grammar();
 
-    // let now = SystemTime::now();
+    let now = SystemTime::now();
 
-    // let data = parser.parse(&bbnf_string).unwrap();
+    let data = parser.parse(&bbnf_string).unwrap();
 
     // dbg!(data.get("ONG "));
 
@@ -120,16 +88,6 @@ pub fn main() {
     let printer = Printer::new(30, 1, false, true);
 
     let now = SystemTime::now();
-
-    let data = Strumct {
-        x: "hellow",
-        y: Hey::A,
-        z: InnerStrumct {
-            x: "hello",
-            y: Hey::There("there"),
-            zz: (1, 1),
-        },
-    };
 
     let pretty = printer.pretty(data);
 

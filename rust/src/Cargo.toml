@@ -11,8 +11,8 @@ path = "main.rs"
 pretty_derive ={ path = "../pretty/derive" }
 pretty = { path = "../pretty" }
 regex = "1.7.3"
-# parse_that = { path = "../parse_that" }
-# bbnf = { path = "../bbnf" }
+parse_that = { path = "../parse_that" }
+bbnf = { path = "../bbnf" }
 
 [features]
 pretty = []

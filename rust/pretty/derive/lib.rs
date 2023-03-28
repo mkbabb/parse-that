@@ -267,6 +267,13 @@ fn generate_variants_match(
         Doc::from(#field_doc)
     };
     let field_doc = generate_field_doc(&field_doc, &pretty_attr);
+    let field_doc = quote! {
+        concat(vec![
+            Doc::from(#variant_name),
+            Doc::from(#field_doc)
+            .wrap(Doc::Str("("), Doc::Str(")"))
+        ])
+    };
 
     let match_arms = match &variant.fields {
         Fields::Named(_) => {

@@ -230,7 +230,7 @@ where
     fn from(opt: Option<T>) -> Doc<'a> {
         match opt {
             Some(value) => value.into(),
-            None => str("null"),
+            None => str("None"),
         }
     }
 }
@@ -245,7 +245,8 @@ macro_rules! impl_from_tuple_to_doc {
             fn from(tuple: ($($t),*)) -> Self {
                 let ($($t),*) = tuple;
                 vec![$($t.into()),*]
-                    .join(str(", "))
+                    .smart_join(str(", "))
+                    .group()
                     .wrap(str("("), str(")"))
             }
         }
@@ -304,7 +305,6 @@ where
         value.clone().into()
     }
 }
-
 
 // impl for regex:
 impl<'a> From<Regex> for Doc<'a> {

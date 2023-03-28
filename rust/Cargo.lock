@@ -246,6 +246,7 @@ dependencies = [
 name = "pretty"
 version = "0.1.0"
 dependencies = [
+ "colored",
  "pretty_derive",
  "regex",
 ]
@@ -254,6 +255,7 @@ dependencies = [
 name = "pretty_derive"
 version = "0.1.0"
 dependencies = [
+ "colored",
  "proc-macro2",
  "quote",
  "syn 1.0.109",
@@ -332,6 +334,8 @@ dependencies = [
 name = "src"
 version = "0.1.0"
 dependencies = [
+ "bbnf",
+ "parse_that",
  "pretty",
  "pretty_derive",
  "regex",
