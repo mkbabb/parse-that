@@ -1,0 +1,14 @@
+[package]
+name = "bbnf"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "bbnf"
+path = "src/lib.rs"
+
+[dependencies]
+pretty = { path = "../pretty" }
+parse_that ={ path = "../parse_that" }
+regex = { version = "1", features = ["perf"] }
+

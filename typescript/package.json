@@ -1,0 +1,58 @@
+{
+    "name": "@mkbabb/parse-that",
+    "version": "0.5.1",
+    "description": "Parser combinators for TypeScript",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/parse.js",
+            "require": "./dist/parse.cjs",
+            "node": "./dist/parse.cjs"
+        },
+        "./bbnf": {
+            "import": "./dist/bbnf.js",
+            "require": "./dist/bbnf.cjs",
+            "node": "./dist/bbnf.cjs"
+        }
+    },
+    "typesVersions": {
+        "*": {
+            "*": [
+                "dist/parse/index.d.ts"
+            ],
+            "bbnf": [
+                "dist/bbnf/index.d.ts"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "vitest --mode development",
+        "test:coverage": "vitest --mode development --coverage",
+        "test:watch": "vitest --mode development --watch",
+        "test:bench": "vitest bench",
+        "test:production": "vitest",
+        "build": "vite build",
+        "build:debug": "vite build --mode development"
+    },
+    "files": [
+        "./dist"
+    ],
+    "devDependencies": {
+        "@rollup/plugin-commonjs": "^24.0.1",
+        "@rollup/plugin-node-resolve": "^15.0.1",
+        "@types/node": "^18.14.0",
+        "@types/prettier": "^2.7.2",
+        "@vitest/coverage-c8": "^0.28.5",
+        "autoprefixer": "^10.4.13",
+        "chevrotain": "^10.4.2",
+        "parsimmon": "^1.18.1",
+        "typescript": "^4.9.5",
+        "vite": "^4.1.4",
+        "vite-plugin-dts": "^2.0.0-beta.3",
+        "vitest": "^0.28.5"
+    },
+    "dependencies": {
+        "prettier": "^2.8.4",
+        "chalk": "^4.1.2"
+    }
+}

@@ -1,0 +1,42 @@
+identifier = /[_a-zA-Z][_a-zA-Z0-9-]*/ ;
+
+literal = "\"" , /(\\.|[^"\\])*/  , "\""
+        | "'"  , /(\\.|[^'\\])*/  , "'"
+        | "`"  , /(\\.|[^`\\])*/  , "`" ;
+
+big_comment = ( "/*" , /[^\*]*/ , "*/" ) ?w ;
+comment = ( "//" , /.*/ ) ?w ;
+
+regex = "/" , /(\\.|[^\/])+/ , "/" ;
+
+lhs = identifier ;
+
+term = "ε"
+     | identifier
+     | literal 
+     | regex
+     | "(" , rhs ?w , ")" 
+     | "[" , rhs ?w , "]"
+     | "{" , rhs ?w , "}" ;
+
+
+factor = big_comment ? , (
+      term ?w , "?w"
+    | term ?w , "?"
+    | term ?w , "*"
+    | term ?w , "+"
+    | term  
+) , big_comment ? ;
+
+binary_operators = "<<" | ">>" | "-" ;
+
+binary_factor = factor , ( binary_operators ?w , factor ) * ;
+
+concatenation = ( binary_factor ?w , "," ? ) + ;
+alternation = ( concatenation ?w , "|" ? ) + ;
+
+rhs = alternation ;
+
+rule = lhs, "=" ?w, rhs ?w, ( ";" | "." ) ;
+
+grammar =  ( comment ? , rule ?w , comment ? ) * ;
