@@ -213,14 +213,13 @@ fn generate_struct_match(
                         .wrap(Doc::Str("{"), Doc::Str("}"))
                         .indent()
             };
-
             let doc_match = if pretty_container_attrs.verbose {
                 quote! {
                     concat(vec![
                         Doc::from(stringify!(#ident)),
                         Doc::Str(" "),
                         #body,
-                    ])
+                    ]).group()
                 }
             } else {
                 body

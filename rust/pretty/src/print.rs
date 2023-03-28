@@ -81,6 +81,7 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
 
     let mut output = String::new();
     let mut current_line_len = 0;
+    let mut prev_was_hardline = false;
 
     let push_hardline = |stack: &mut Vec<_>, indent_delta: usize| {
         stack.push(PrintItem {
@@ -187,6 +188,10 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
             }
 
             Doc::Hardline => {
+                if prev_was_hardline {
+                    continue;
+                }
+
                 let line = hardlines
                     .entry(indent_delta)
                     .or_insert_with(|| space.repeat(indent_delta));
@@ -207,6 +212,8 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
 
             _ => {}
         }
+
+        prev_was_hardline = matches!(doc, &Doc::Hardline);
     }
     output
 }

@@ -5,6 +5,7 @@ mod tests {
     use std::collections::HashMap;
 
     #[derive(Pretty)]
+    #[pretty(verbose)]
     pub enum HeyEnum<'a> {
         There(&'a str),
         #[pretty(rename = "my vibes")]
@@ -13,6 +14,7 @@ mod tests {
     }
 
     #[derive(Pretty)]
+    #[pretty(verbose)]
     pub struct InnerStrumct<'a> {
         x: &'a str,
         y: HeyEnum<'a>,
@@ -20,6 +22,7 @@ mod tests {
     }
 
     #[derive(Pretty)]
+    #[pretty(verbose)]
     pub struct Strumct<'a> {
         a: Vec<usize>,
         b: HashMap<String, HeyEnum<'a>>,

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Debug, fmt::Display, rc::Rc};
+use std::collections::HashMap;
 
 use regex::Regex;
 
@@ -297,16 +297,6 @@ where
     }
 }
 
-impl<'a, T> From<Rc<T>> for Doc<'a>
-where
-    T: Into<Doc<'a>>,
-{
-    fn from(value: Rc<T>) -> Self {
-        value.clone().into()
-    }
-}
-
-// impl for regex:
 impl<'a> From<Regex> for Doc<'a> {
     fn from(regex: Regex) -> Self {
         regex.as_str().to_owned().into()
