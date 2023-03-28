@@ -9,7 +9,8 @@ use fnv::FnvHashMap;
 
 #[derive(Pretty, Debug, Clone, PartialEq)]
 pub enum JsonValue<'a> {
-    null,
+    #[pretty(rename = "null")]
+    Null,
     Bool(bool),
     Number(f64),
     String(&'a str),
@@ -28,7 +29,7 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
         return string.map(|s| s.as_str());
     };
 
-    let json_null = string_span("null").map(|_| JsonValue::null);
+    let json_null = string_span("null").map(|_| JsonValue::Null);
     let json_bool = string_span("true").map(|_| JsonValue::Bool(true))
         | string_span("false").map(|_| JsonValue::Bool(false));
 

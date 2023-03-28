@@ -5,6 +5,15 @@ use pretty::{concat, Doc, Pretty, Printer};
 
 use std::{collections::HashMap, fs, time::SystemTime};
 
+#[derive(Pretty)]
+#[pretty(verbose)]
+pub enum HeyEnum<'a, 'b> {
+    There(&'a str),
+    #[pretty(rename = "my vibes")]
+    A(&'b str),
+    B(regex::Regex),
+}
+
 pub fn main() {
     let first_now = SystemTime::now();
 
@@ -49,14 +58,16 @@ pub fn main() {
 
     // println!("TOML Elapsed: {:?}", elapsed);
 
-    let bbnf_filepath = "../../grammar/g4.bbnf";
-    let bbnf_string = fs::read_to_string(bbnf_filepath).unwrap();
+    // let bbnf_filepath = "../grammar/g4.bbnf";
+    // let bbnf_string = fs::read_to_string(bbnf_filepath).unwrap();
 
-    let parser = BBNFGrammar::grammar();
+    // let parser = BBNFGrammar::grammar();
 
-    let now = SystemTime::now();
+    // let now = SystemTime::now();
 
-    let data = parser.parse(&bbnf_string).unwrap();
+    // let data = parser.parse(&bbnf_string).unwrap();
+
+    let data = HeyEnum::There("hey");
 
     // dbg!(data.get("ONG "));
 

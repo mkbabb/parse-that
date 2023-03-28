@@ -1,10 +1,8 @@
-use parse_that::parsers::json::json_parser;
-use parse_that::parsers::json::JsonValue;
-use std::fs;
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use parse_that::parsers::json::json_parser;
+    use parse_that::parsers::json::JsonValue;
+    use std::fs;
 
     #[test]
     fn test_json() {
@@ -42,5 +40,22 @@ mod tests {
             }
             _ => panic!("Expected JsonValue::Object"),
         }
+    }
+
+    #[test]
+    fn test_json_file_print() {
+        extern crate pretty;
+        use pretty::Printer;
+
+        let printer = Printer::default();
+
+        let json_file_path = "../../data/json/data-l.json";
+        let json_string = fs::read_to_string(json_file_path).unwrap();
+
+        let arr = json_parser().parse(&json_string).unwrap();
+
+        let pretty = printer.pretty(arr);
+
+        println!("{}", pretty);
     }
 }
