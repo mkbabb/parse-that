@@ -49,7 +49,7 @@ mod tests {
 
         let printer = Printer::default();
 
-        let json_file_path = "../../data/json/data-l.json";
+        let json_file_path = "../../data/json/data.json";
         let json_string = fs::read_to_string(json_file_path).unwrap();
 
         let arr = json_parser().parse(&json_string).unwrap();

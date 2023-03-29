@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use pretty::{concat, Doc, Pretty, Printer};
+    use pretty::{Pretty, Printer};
 
     use std::collections::HashMap;
 
@@ -8,13 +8,13 @@ mod tests {
     #[pretty(verbose)]
     pub enum HeyEnum<'a> {
         There(&'a str),
-        #[pretty(rename = "my vibes")]
+        #[pretty(rename = "MyEnum::A")]
         A,
         B(regex::Regex),
     }
 
     #[derive(Pretty)]
-    #[pretty(verbose)]
+    #[pretty(verbose, rename = "Inner")]
     pub struct InnerStrumct<'a> {
         x: &'a str,
         y: HeyEnum<'a>,

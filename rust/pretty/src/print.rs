@@ -15,10 +15,11 @@ pub fn count_join_length<'a>(sep: &'a Doc<'a>, docs: &'a Vec<Doc<'a>>, printer: 
 pub fn count_text_length<'a>(doc: &'a Doc, printer: &Printer) -> usize {
     match doc {
         Doc::Str(s) => s.len(),
+        Doc::String(s) => s.len(),
         Doc::Concat(docs) => docs.iter().map(|d| count_text_length(d, printer)).sum(),
         Doc::Group(d) => count_text_length(d, printer),
-        Doc::Indent(d) => count_text_length(d, printer) + printer.indent,
-        Doc::Dedent(d) => count_text_length(d, printer) - printer.indent,
+        Doc::Indent(d) => count_text_length(d, printer).saturating_add(printer.indent),
+        Doc::Dedent(d) => count_text_length(d, printer).saturating_sub(printer.indent),
         Doc::Join(sep, docs) => count_join_length(sep, docs, printer),
         Doc::IfBreak(t, f) => count_text_length(t, printer).max(count_text_length(f, printer)),
         Doc::SmartJoin(sep, docs) => {
@@ -81,7 +82,6 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
 
     let mut output = String::new();
     let mut current_line_len = 0;
-    let mut prev_was_hardline = false;
 
     let push_hardline = |stack: &mut Vec<_>, indent_delta: usize| {
         stack.push(PrintItem {
@@ -188,10 +188,6 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
             }
 
             Doc::Hardline => {
-                if prev_was_hardline {
-                    continue;
-                }
-
                 let line = hardlines
                     .entry(indent_delta)
                     .or_insert_with(|| space.repeat(indent_delta));
@@ -212,8 +208,6 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
 
             _ => {}
         }
-
-        prev_was_hardline = matches!(doc, &Doc::Hardline);
     }
     output
 }
@@ -231,7 +225,7 @@ impl Default for Printer {
         Printer {
             max_width: 80,
             indent: 2,
-            break_long_text: true,
+            break_long_text: false,
             use_tabs: false,
         }
     }

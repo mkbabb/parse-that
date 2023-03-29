@@ -118,6 +118,16 @@ impl Indent for Doc<'_> {
     }
 }
 
+pub trait Dedent {
+    fn dedent(self) -> Self;
+}
+
+impl Dedent for Doc<'_> {
+    fn dedent(self) -> Self {
+        dedent(self)
+    }
+}
+
 pub trait Join<'a> {
     fn join(self, sep: impl Into<Doc<'a>>) -> Doc<'a>;
 }
@@ -145,50 +155,6 @@ pub trait Wrap<'a> {
 impl<'a> Wrap<'a> for Doc<'a> {
     fn wrap(self, left: impl Into<Doc<'a>>, right: impl Into<Doc<'a>>) -> Doc<'a> {
         concat(vec![left.into(), self, right.into()])
-    }
-}
-
-impl<'a, T> From<Vec<T>> for Doc<'a>
-where
-    T: Into<Doc<'a>>,
-{
-    fn from(vec: Vec<T>) -> Doc<'a> {
-        let doc_vec: Vec<_> = vec.into_iter().map(|item| item.into()).collect();
-
-        if !doc_vec.is_empty() {
-            let doc = doc_vec
-                .smart_join(str(", "))
-                .group()
-                .wrap(str("["), str("]"))
-                .indent();
-            return doc;
-        } else {
-            return str("[]");
-        }
-    }
-}
-
-impl<'a, K, V, R> From<HashMap<K, V, R>> for Doc<'a>
-where
-    K: Into<Doc<'a>>,
-    V: Into<Doc<'a>>,
-{
-    fn from(map: HashMap<K, V, R>) -> Doc<'a> {
-        let doc_vec: Vec<_> = map
-            .into_iter()
-            .map(|(key, value)| key.into() + str(": ") + value.into())
-            .collect();
-
-        if !doc_vec.is_empty() {
-            let doc = doc_vec
-                .join(str(", ") + Doc::Hardline)
-                .group()
-                .wrap(str("{"), str("}"))
-                .indent();
-            return doc;
-        } else {
-            return str("{}");
-        }
     }
 }
 
@@ -235,31 +201,6 @@ where
     }
 }
 
-macro_rules! impl_from_tuple_to_doc {
-    ($($t:ident),*) => {
-        #[allow(non_snake_case)]
-        impl<'a, $($t),*> From<($($t),*)> for Doc<'a>
-        where
-            $($t: Into<Doc<'a>>),*
-        {
-            fn from(tuple: ($($t),*)) -> Self {
-                let ($($t),*) = tuple;
-                vec![$($t.into()),*]
-                    .smart_join(str(", "))
-                    .group()
-                    .wrap(str("("), str(")"))
-            }
-        }
-    };
-}
-
-impl_from_tuple_to_doc!(T1, T2);
-impl_from_tuple_to_doc!(T1, T2, T3);
-impl_from_tuple_to_doc!(T1, T2, T3, T4);
-impl_from_tuple_to_doc!(T1, T2, T3, T4, T5);
-impl_from_tuple_to_doc!(T1, T2, T3, T4, T5, T6);
-impl_from_tuple_to_doc!(T1, T2, T3, T4, T5, T6, T7);
-
 impl<'a, T> From<&[T]> for Doc<'a>
 where
     T: Into<Doc<'a>> + Copy,
@@ -300,5 +241,79 @@ where
 impl<'a> From<Regex> for Doc<'a> {
     fn from(regex: Regex) -> Self {
         regex.as_str().to_owned().into()
+    }
+}
+
+macro_rules! impl_from_tuple_to_doc {
+    ($($t:ident),*) => {
+        #[allow(non_snake_case)]
+        impl<'a, $($t),*> From<($($t),*)> for Doc<'a>
+        where
+            $($t: Into<Doc<'a>>),*
+        {
+            fn from(tuple: ($($t),*)) -> Self {
+                let ($($t),*) = tuple;
+                vec![$($t.into()),*]
+                    .smart_join(str(", "))
+                    .group()
+                    .wrap(str("("), str(")"))
+            }
+        }
+    };
+}
+
+impl_from_tuple_to_doc!(T1, T2);
+impl_from_tuple_to_doc!(T1, T2, T3);
+impl_from_tuple_to_doc!(T1, T2, T3, T4);
+impl_from_tuple_to_doc!(T1, T2, T3, T4, T5);
+impl_from_tuple_to_doc!(T1, T2, T3, T4, T5, T6);
+impl_from_tuple_to_doc!(T1, T2, T3, T4, T5, T6, T7);
+impl_from_tuple_to_doc!(T1, T2, T3, T4, T5, T6, T7, T8);
+impl_from_tuple_to_doc!(T1, T2, T3, T4, T5, T6, T7, T8, T9);
+impl_from_tuple_to_doc!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
+impl_from_tuple_to_doc!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11);
+impl_from_tuple_to_doc!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12);
+
+impl<'a, T> From<Vec<T>> for Doc<'a>
+where
+    T: Into<Doc<'a>>,
+{
+    fn from(vec: Vec<T>) -> Doc<'a> {
+        let doc_vec: Vec<_> = vec.into_iter().map(|item| item.into()).collect();
+
+        if !doc_vec.is_empty() {
+            let doc = doc_vec
+                .smart_join(str(", "))
+                .group()
+                .wrap(str("["), str("]"))
+                .indent();
+            return doc;
+        } else {
+            return str("[]");
+        }
+    }
+}
+
+impl<'a, K, V, R> From<HashMap<K, V, R>> for Doc<'a>
+where
+    K: Into<Doc<'a>>,
+    V: Into<Doc<'a>>,
+{
+    fn from(map: HashMap<K, V, R>) -> Doc<'a> {
+        let doc_vec: Vec<_> = map
+            .into_iter()
+            .map(|(key, value)| key.into() + str(": ") + value.into())
+            .collect();
+
+        if !doc_vec.is_empty() {
+            let doc = doc_vec
+                .join(str(", ") + Doc::Hardline)
+                .group()
+                .wrap(str("{"), str("}"))
+                .indent();
+            return doc;
+        } else {
+            return str("{}");
+        }
     }
 }
