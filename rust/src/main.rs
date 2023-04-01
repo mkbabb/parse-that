@@ -1,21 +1,36 @@
 use bbnf::grammar::BBNFGrammar;
+use bbnf_derive::Parser;
 use parse_that::csv::csv_parser;
 use parse_that::json::json_parser;
 use pretty::{concat, Doc, Pretty, Printer};
 
+use parse_that::parse::*;
+
 use std::{collections::HashMap, fs, time::SystemTime};
 
-#[derive(Pretty)]
-#[pretty(verbose)]
-pub enum HeyEnum<'a, 'b> {
-    There(&'a str),
-    #[pretty(rename = "my vibes")]
-    A(&'b str),
-    B(regex::Regex),
-}
+// #[derive(Pretty)]
+// #[pretty(verbose)]
+// pub enum HeyEnum<'a, 'b> {
+//     There(&'a str),
+//     #[pretty(rename = "my vibes")]
+//     A(&'b str),
+//     B(regex::Regex),
+// }
+
+#[derive(Parser)]
+#[parser(path = "../grammar/math.bbnf")]
+pub struct MathParser {}
+
+
+
+
 
 pub fn main() {
     let first_now = SystemTime::now();
+
+    let x = Some("");
+
+    // let m = MathParser::number().parse("1");
 
     // let csv_file_path = "../data/csv/data.csv";
     // let csv_string = fs::read_to_string(csv_file_path).unwrap();
@@ -67,8 +82,6 @@ pub fn main() {
 
     // let data = parser.parse(&bbnf_string).unwrap();
 
-    let data = HeyEnum::There("hey");
-
     // dbg!(data.get("ONG "));
 
     // let elapsed = now.elapsed().unwrap();
@@ -96,17 +109,17 @@ pub fn main() {
     // data.insert("ok", map3.clone());
     // data.insert("thats vibes", map3.clone());
 
-    let printer = Printer::new(30, 1, false, true);
+    // let printer = Printer::new(30, 1, false, true);
 
-    let now = SystemTime::now();
+    // let now = SystemTime::now();
 
-    let pretty = printer.pretty(data);
+    // let pretty = printer.pretty(data);
 
-    println!("{}", pretty);
+    // println!("{}", pretty);
 
-    let elapsed = now.elapsed().unwrap();
+    // let elapsed = now.elapsed().unwrap();
 
-    println!("Printing Elapsed: {:?}", elapsed);
+    // println!("Printing Elapsed: {:?}", elapsed);
 
     // fs::write("../data/pretty.json", pretty).expect("Unable to write file");
 

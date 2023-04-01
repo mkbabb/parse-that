@@ -8,12 +8,12 @@ name = "main"
 path = "main.rs"
 
 [dependencies]
-pretty_derive ={ path = "../pretty/derive" }
+pretty_derive = { path = "../pretty/derive" }
 pretty = { path = "../pretty" }
 regex = "1.7.3"
 parse_that = { path = "../parse_that" }
 bbnf = { path = "../bbnf" }
+bbnf_derive = { path = "../bbnf/derive" }
 
 [features]
 pretty = []
-

@@ -1,3 +1,5 @@
 expr = term, { ("+" | "-"), term };
 term = factor, { ("*" | "/"), factor };
 factor = number | "(", expr, ")";
+
+number = /\d+/ ;

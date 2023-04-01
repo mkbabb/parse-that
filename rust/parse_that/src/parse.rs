@@ -44,10 +44,7 @@ where
     Self: 'a,
     Output: 'a,
 {
-    pub fn new<F>(parser_fn: F) -> Parser<'a, Output>
-    where
-        F: ParserFn<'a, Output> + 'a,
-    {
+    pub fn new(parser_fn: impl ParserFn<'a, Output>) -> Parser<'a, Output> {
         let parser = Parser {
             parser_fn: Box::new(parser_fn),
         };
@@ -141,7 +138,25 @@ where
             }
             None
         };
+        Parser::new(or)
+    }
 
+    pub fn or_opt<Output2>(
+        self,
+        other: Parser<'a, Output2>,
+    ) -> Parser<'a, (Option<Output>, Option<Output2>)>
+    where
+        Output2: 'a,
+    {
+        let or = move |state: &mut ParserState<'a>| {
+            if let Some(value) = self.parser_fn.call(state) {
+                return Some((Some(value), None));
+            }
+            if let Some(value) = other.parser_fn.call(state) {
+                return Some((None, Some(value)));
+            }
+            None
+        };
         Parser::new(or)
     }
 

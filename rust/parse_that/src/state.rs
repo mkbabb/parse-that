@@ -1,7 +1,7 @@
 extern crate pretty;
 use pretty::Pretty;
 
-#[derive(Pretty, Debug, PartialEq, Clone, Copy)]
+#[derive(Pretty, Debug, PartialEq, Clone, Copy, Hash, Eq)]
 pub struct Span<'a> {
     pub start: usize,
     pub end: usize,
@@ -20,7 +20,7 @@ impl<'a> Span<'a> {
     }
 }
 
-#[derive(Pretty)]
+#[derive(Pretty, Debug, PartialEq, Clone, Hash, Eq)]
 pub struct ParserState<'a> {
     #[pretty(skip)]
     pub src: &'a str,

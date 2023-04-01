@@ -1,5 +1,5 @@
 [workspace]
-members = ["pretty", "src", "parse_that", "bbnf"]
+members = ["pretty", "src", "parse_that", "bbnf", "bbnf/derive"]
 
 [unstable]
 bench = true

@@ -28,7 +28,21 @@ version = "0.1.0"
 dependencies = [
  "parse_that",
  "pretty",
+ "proc-macro2",
+ "quote",
  "regex",
+ "syn 2.0.11",
+]
+
+[[package]]
+name = "bbnf_derive"
+version = "0.1.0"
+dependencies = [
+ "bbnf",
+ "pretty",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -261,9 +275,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.52"
+version = "1.0.54"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d0e1ae9e836cc3beddd63db0df682593d7e2d3d891ae8c9083d2113e1744224"
+checksum = "e472a104799c74b514a57226160104aa483546de37e839ec50e3c2e41dd87534"
 dependencies = [
  "unicode-ident",
 ]
@@ -333,6 +347,7 @@ name = "src"
 version = "0.1.0"
 dependencies = [
  "bbnf",
+ "bbnf_derive",
  "parse_that",
  "pretty",
  "pretty_derive",
@@ -352,9 +367,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.10"
+version = "2.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aad1363ed6d37b84299588d62d3a7d95b5a5c2d9aad5c85609fda12afaa1f40"
+checksum = "21e3787bb71465627110e7d87ed4faaa36c1f61042ee67badb9e2ef173accc40"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -378,7 +393,7 @@ checksum = "f9456a42c5b0d803c8cd86e73dd7cc9edd429499f37a3550d286d5e86720569f"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.10",
+ "syn 2.0.11",
 ]
 
 [[package]]

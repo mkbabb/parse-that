@@ -10,13 +10,13 @@ use pretty::{Doc, Pretty};
 
 use std::collections::HashMap;
 
-#[derive(Pretty, Debug, Clone)]
+#[derive(Pretty, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Comment<'a> {
     Line(&'a str),
     Block(&'a str),
 }
 
-#[derive(Pretty, Debug, Clone)]
+#[derive(Pretty, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Comments<'a> {
     pub left: Option<Comment<'a>>,
     pub right: Option<Comment<'a>>,
@@ -24,15 +24,17 @@ pub struct Comments<'a> {
 
 type TokenExpression<'a, T = Expression<'a>> = Box<Token<'a, T>>;
 
-#[derive(Pretty, Debug)]
+#[derive(Pretty, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expression<'a> {
     Literal(Token<'a, &'a str>),
     Nonterminal(Token<'a, &'a str>),
 
-    Regex(Token<'a, regex::Regex>),
+    Regex(Token<'a, &'a str>),
 
     Group(TokenExpression<'a>),
     Optional(TokenExpression<'a>),
+    OptionalWhitespace(TokenExpression<'a>),
+
     Many(TokenExpression<'a>),
     Many1(TokenExpression<'a>),
 
@@ -41,15 +43,14 @@ pub enum Expression<'a> {
     Minus(TokenExpression<'a>, TokenExpression<'a>),
 
     Concatenation(TokenExpression<'a, Vec<Expression<'a>>>),
-    Alteration(TokenExpression<'a, Vec<Expression<'a>>>),
+    Alternation(TokenExpression<'a, Vec<Expression<'a>>>),
 
     ProductionRule(Box<Expression<'a>>, Box<Expression<'a>>),
 
     Epsilon(Token<'a, ()>),
-    OptionalWhitespace,
 }
 
-#[derive(Pretty, Debug)]
+#[derive(Pretty, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Token<'a, T> {
     pub value: T,
     pub span: Span<'a>,
@@ -86,7 +87,7 @@ pub fn set_expression_comments<'a>(expr: &mut Expression<'a>, comments: Comments
         | Expression::Next(token, _)
         | Expression::Minus(token, _) => token.comments = Some(comments),
 
-        Expression::Concatenation(token) | Expression::Alteration(token) => {
+        Expression::Concatenation(token) | Expression::Alternation(token) => {
             token.comments = Some(comments)
         }
 
@@ -103,9 +104,9 @@ fn map_factor<'a>(
         (expr, Some(op)) => {
             let token = Token::new(expr, Span::new(prev_offset, state.offset, state.src));
             match op.as_str() {
-                "?w" => Expression::OptionalWhitespace,
                 "*" => Expression::Many(Box::new(token)),
                 "+" => Expression::Many1(Box::new(token)),
+                "?w" => Expression::OptionalWhitespace(Box::new(token)),
                 "?" => Expression::Optional(Box::new(token)),
                 _ => unreachable!(
                     "unhandled factor: {:?}, {:?}",
@@ -213,7 +214,11 @@ impl<'a> BBNFGrammar<'a> {
             .wrap_span(string_span("/"), string_span("/"));
 
         string.map(|s| {
-            let token = Token::new(regex::Regex::new(s.as_str()).unwrap(), s);
+            match regex::Regex::new(s.as_str()) {
+                Ok(_) => {}
+                Err(e) => panic!("invalid regex: {:?}, {:?}", s.as_str(), e),
+            }
+            let token = Token::new(s.as_str(), s);
             Expression::Regex(token)
         })
     }
@@ -323,7 +328,7 @@ impl<'a> BBNFGrammar<'a> {
                     exprs.into_iter().next().unwrap()
                 } else {
                     let token = Token::new(exprs, Span::new(prev_offset, state.offset, state.src));
-                    Expression::Alteration(Box::new(token))
+                    Expression::Alternation(Box::new(token))
                 }
             })
             .debug("alternation")
