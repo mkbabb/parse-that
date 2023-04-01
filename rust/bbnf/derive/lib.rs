@@ -122,8 +122,9 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
             pub fn #ident<'a>() -> Parser<'a, #boxed_enum_ident> {
                 lazy(||
                     #parser
+                        .trim_whitespace()
                         .map(|x| Box::new(#enum_ident::#ident( x )) )
-                        .debug(#name)
+                        // .debug(#name)
                 )
             }
         }

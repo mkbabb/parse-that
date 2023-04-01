@@ -15,5 +15,7 @@ parse_that = { path = "../parse_that" }
 bbnf = { path = "../bbnf" }
 bbnf_derive = { path = "../bbnf/derive" }
 
+fnv = "1"
+
 [features]
 pretty = []

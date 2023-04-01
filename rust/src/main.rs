@@ -3,36 +3,76 @@
 
 use bbnf::grammar::BBNFGrammar;
 use bbnf_derive::Parser;
-use parse_that::csv::csv_parser;
 use parse_that::json::json_parser;
+use parse_that::{csv::csv_parser, json::JsonValue};
 use pretty::{concat, Doc, Pretty, Printer, PRINTER};
 
 use parse_that::parse::*;
 
 use std::{collections::HashMap, fs, time::SystemTime};
 
+use fnv::FnvHashMap;
+
+// #[derive(Parser)]
+// #[parser(path = "../grammar/math.bbnf")]
+// pub struct Math {}
+
+// pub fn consume(p: &MathEnum) -> f64 {
+//     pub fn recurse(p: &MathEnum) -> f64 {
+//         let fold_expression = |acc, (op, rest): &(&str, Box<MathEnum>)| match *op {
+//             "+" => acc + recurse(rest),
+//             "-" => acc - recurse(rest),
+//             "*" => acc * recurse(rest),
+//             "/" => acc / recurse(rest),
+//             _ => unreachable!(),
+//         };
+
+//         match p {
+//             MathEnum::expr((term, rest)) => rest.into_iter().fold(recurse(term), fold_expression),
+//             MathEnum::term((factor, rest)) => {
+//                 rest.into_iter().fold(recurse(factor), fold_expression)
+//             }
+//             MathEnum::wrapped((_, expr, _)) => recurse(expr),
+//             MathEnum::factor(num) => recurse(num),
+//             MathEnum::number(num) => num.parse().unwrap(),
+//         }
+//     }
+
+//     recurse(p)
+// }
+
 #[derive(Parser)]
-#[parser(path = "../grammar/math.bbnf")]
-pub struct Math {}
+#[parser(path = "../grammar/json.bbnf")]
+pub struct Json {}
 
-pub fn consume(p: &MathEnum) -> f64 {
-    pub fn recurse(p: &MathEnum) -> f64 {
-        let fold_expression = |acc, (op, rest): &(&str, Box<MathEnum>)| match *op {
-            "+" => acc + recurse(rest),
-            "-" => acc - recurse(rest),
-            "*" => acc * recurse(rest),
-            "/" => acc / recurse(rest),
-            _ => unreachable!(),
-        };
-
+pub fn consume<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
+    pub fn recurse<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
         match p {
-            MathEnum::expr((term, rest)) => rest.into_iter().fold(recurse(term), fold_expression),
-            MathEnum::term((factor, rest)) => {
-                rest.into_iter().fold(recurse(factor), fold_expression)
+            JsonEnum::null(_) => JsonValue::Null,
+            JsonEnum::bool(b) => JsonValue::Bool(b.as_str().parse().unwrap()),
+            JsonEnum::number(n) => JsonValue::Number(n.as_str().parse().unwrap()),
+            JsonEnum::char(c) => JsonValue::String(c.as_str()),
+            JsonEnum::string(s) => recurse(s),
+            JsonEnum::array(values) => {
+                JsonValue::Array(values.into_iter().map(|v| recurse(v)).collect())
             }
-            MathEnum::wrapped((_, expr, _)) => recurse(expr),
-            MathEnum::factor(num) => recurse(num),
-            MathEnum::number(num) => num.parse().unwrap(),
+            JsonEnum::object(pairs) => {
+                let map = pairs
+                    .into_iter()
+                    .map(|pair| match pair.as_ref() {
+                        JsonEnum::pair((key, value)) => {
+                            let JsonValue::String(key) = recurse(key) else {
+                                panic!("Expected string key");
+                            };
+                            (key, recurse(value))
+                        }
+                        _ => unreachable!(),
+                    })
+                    .collect();
+                JsonValue::Object(map)
+            }
+            JsonEnum::value(v) => recurse(v),
+            _ => unimplemented!(),
         }
     }
 
@@ -42,12 +82,23 @@ pub fn consume(p: &MathEnum) -> f64 {
 pub fn main() {
     let first_now = SystemTime::now();
 
-    let x = Math::expr().parse("1 + 2 + 3 * 3").unwrap();
+    let json_file_path = "../data/json/data.json";
+    let json_string = fs::read_to_string(json_file_path).unwrap();
+
+    let x = Json::value().parse(json_string.as_str()).unwrap();
     let tmp = consume(&x);
+    let elapsed = first_now.elapsed().unwrap();
+    
+    println!("JSON2 Elapsed: {:?}", elapsed);
 
-    println!("{:?}", tmp);
+    // println!("{:?}", Doc::from(tmp));
 
-    println!("{:?}", Doc::from(x));
+    // let x = Math::expr().parse("1 + 2 + 3 * 3").unwrap();
+    // let tmp = consume(&x);
+
+    // println!("{:?}", tmp);
+
+    // println!("{:?}", Doc::from(x));
 
     // let x = Json::value().parse("[1, 2, 3]").unwrap();
 
@@ -66,18 +117,18 @@ pub fn main() {
 
     // println!("CSV Elapsed: {:?}", elapsed);
 
-    // let json_file_path = "../data/json/large-file.json";
-    // let json_string = fs::read_to_string(json_file_path).unwrap();
+    let json_file_path = "../data/json/data.json";
+    let json_string = fs::read_to_string(json_file_path).unwrap();
 
-    // let parser = json_parser();
+    let parser = json_parser();
 
-    // let now = SystemTime::now();
+    let now = SystemTime::now();
 
-    // let data = parser.parse(&json_string).unwrap();
+    let data = parser.parse(&json_string).unwrap();
 
-    // let elapsed = now.elapsed().unwrap();
+    let elapsed = now.elapsed().unwrap();
 
-    // println!("JSON Elapsed: {:?}", elapsed);
+    println!("JSON Elapsed: {:?}", elapsed);
 
     // let toml_file_path = "./Cargo.toml";
     // let toml_string = fs::read_to_string(toml_file_path).unwrap();

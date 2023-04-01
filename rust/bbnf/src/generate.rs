@@ -107,9 +107,9 @@ pub fn calculate_nonterminal_types<'a>(
         }
 
         let ty = match expr {
-            Expression::Literal(_) => parse_quote!(&'a str),
+            Expression::Literal(_) => parse_quote!(::parse_that::Span<'a>),
             Expression::Nonterminal(_) => boxed_enum_ident.clone(),
-            Expression::Regex(_) => parse_quote!(&'a str),
+            Expression::Regex(_) => parse_quote!(::parse_that::Span<'a>),
             Expression::Group(inner_expr) => {
                 let inner_expr = get_inner_expression(inner_expr);
                 recurse(inner_expr, ast, boxed_enum_ident, nonterminal_types, cache)
@@ -210,7 +210,7 @@ pub fn generate_parser_from_ast(expr: &Expression) -> proc_macro2::TokenStream {
     let parser_match = match expr {
         Expression::Literal(token) => {
             let value = token.value;
-            quote! { ::parse_that::string(#value) }
+            quote! { ::parse_that::string_span(#value) }
         }
         Expression::Nonterminal(token) => {
             let ident = syn::Ident::new(token.value, proc_macro2::Span::call_site());
@@ -218,7 +218,7 @@ pub fn generate_parser_from_ast(expr: &Expression) -> proc_macro2::TokenStream {
         }
         Expression::Regex(token) => {
             let regex_str = token.value;
-            quote! { ::parse_that::regex(#regex_str) }
+            quote! { ::parse_that::regex_span(#regex_str) }
         }
         Expression::Group(inner_expr) => {
             let inner_expr = get_inner_expression(inner_expr);

@@ -348,6 +348,7 @@ version = "0.1.0"
 dependencies = [
  "bbnf",
  "bbnf_derive",
+ "fnv",
  "parse_that",
  "pretty",
  "pretty_derive",
