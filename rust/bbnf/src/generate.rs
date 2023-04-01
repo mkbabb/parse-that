@@ -107,9 +107,9 @@ pub fn calculate_nonterminal_types<'a>(
         }
 
         let ty = match expr {
-            Expression::Literal(_) => parse_quote!(parse_that::Span<'a>),
+            Expression::Literal(_) => parse_quote!(&'a str),
             Expression::Nonterminal(_) => boxed_enum_ident.clone(),
-            Expression::Regex(_) => parse_quote!(parse_that::Span<'a>),
+            Expression::Regex(_) => parse_quote!(&'a str),
             Expression::Group(inner_expr) => {
                 let inner_expr = get_inner_expression(inner_expr);
                 recurse(inner_expr, ast, boxed_enum_ident, nonterminal_types, cache)
@@ -149,14 +149,17 @@ pub fn calculate_nonterminal_types<'a>(
             }
             Expression::Concatenation(inner_exprs) => {
                 let inner_exprs = get_inner_expression(inner_exprs);
-                inner_exprs
-                    .iter()
+
+                let tys = inner_exprs
+                    .into_iter()
                     .map(|expr| recurse(expr, ast, boxed_enum_ident, nonterminal_types, cache))
-                    .fold(None, |acc, ty| match acc {
-                        None => Some(ty),
-                        Some(acc) => Some(parse_quote!((#acc, #ty))),
-                    })
-                    .unwrap()
+                    .collect::<Vec<_>>();
+
+                if tys.len() == 1 {
+                    return tys[0].clone();
+                } else {
+                    return parse_quote!((#(#tys),*));
+                }
             }
             Expression::Alternation(inner_exprs) => {
                 let inner_exprs = get_inner_expression(inner_exprs);
@@ -207,7 +210,7 @@ pub fn generate_parser_from_ast(expr: &Expression) -> proc_macro2::TokenStream {
     let parser_match = match expr {
         Expression::Literal(token) => {
             let value = token.value;
-            quote! { string_span(#value) }
+            quote! { ::parse_that::string(#value) }
         }
         Expression::Nonterminal(token) => {
             let ident = syn::Ident::new(token.value, proc_macro2::Span::call_site());
@@ -215,7 +218,7 @@ pub fn generate_parser_from_ast(expr: &Expression) -> proc_macro2::TokenStream {
         }
         Expression::Regex(token) => {
             let regex_str = token.value;
-            quote! { regex_span(#regex_str) }
+            quote! { ::parse_that::regex(#regex_str) }
         }
         Expression::Group(inner_expr) => {
             let inner_expr = get_inner_expression(inner_expr);
@@ -257,8 +260,7 @@ pub fn generate_parser_from_ast(expr: &Expression) -> proc_macro2::TokenStream {
 
             let left_parser = generate_parser_from_ast(left_expr);
             let right_parser = generate_parser_from_ast(right_expr);
-
-            quote! { #left_parser.then(#right_parser) }
+            quote! { #left_parser.next(#right_parser) }
         }
         Expression::Minus(left_expr, right_expr) => {
             let left_expr = get_inner_expression(left_expr);
@@ -270,14 +272,21 @@ pub fn generate_parser_from_ast(expr: &Expression) -> proc_macro2::TokenStream {
         }
         Expression::Concatenation(inner_exprs) => {
             let inner_exprs = get_inner_expression(inner_exprs);
-            inner_exprs
-                .iter()
-                .map(generate_parser_from_ast)
-                .fold(None, |acc, parser| match acc {
+            let mut acc = None;
+
+            for (n, parser) in inner_exprs.iter().map(generate_parser_from_ast).enumerate() {
+                acc = match acc {
                     None => Some(parser),
-                    Some(acc) => Some(quote! { #acc.with( #parser ) }),
-                })
-                .unwrap()
+                    Some(acc) => {
+                        if n > 1 {
+                            Some(quote! { #acc.then_flat( #parser ) })
+                        } else {
+                            Some(quote! { #acc.then( #parser ) })
+                        }
+                    }
+                }
+            }
+            acc.unwrap()
         }
         Expression::Alternation(inner_exprs) => {
             let inner_exprs = get_inner_expression(inner_exprs);
@@ -286,11 +295,15 @@ pub fn generate_parser_from_ast(expr: &Expression) -> proc_macro2::TokenStream {
                 .map(generate_parser_from_ast)
                 .fold(None, |acc, parser| match acc {
                     None => Some(parser),
-                    Some(acc) => Some(quote! { #acc.or( #parser )  }),
+                    Some(acc) => Some(quote! { #acc | #parser  }),
                 })
                 .unwrap();
 
-            quote! { #parser }
+            if inner_exprs.len() > 1 {
+                quote! { ( #parser ) }
+            } else {
+                parser
+            }
         }
 
         Expression::ProductionRule(_lhs, rhs) => generate_parser_from_ast(rhs),

@@ -1,6 +1,7 @@
-expr = term, { ("+" | "-"), term };
-term = factor, { ("*" | "/"), factor };
-vibe = "(", expr, ")" ;
-factor = number | vibe;
+expr = term ?w, { ("+" | "-"), term };
+term = factor ?w, { ("*" | "/"), factor };
+wrapped = "(", expr, ")" ;
+
+factor = ( number | wrapped ) ?w;
 
 number = /\d+/ ;

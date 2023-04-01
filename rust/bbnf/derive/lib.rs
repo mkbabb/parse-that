@@ -83,7 +83,13 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         .expect("path contains invalid unicode")
         .to_string();
 
-    let file_string = std::fs::read_to_string(relative_path).expect("Unable to read file");
+    let grammar_arr = quote! {
+        const Grammarge: [&'static str; 1] = [
+            include_str!(#relative_path),
+        ];
+    };
+
+    let file_string = std::fs::read_to_string(relative_path.clone()).expect("Unable to read file");
     let ast = BBNFGrammar::grammar()
         .parse(&file_string)
         .expect("Unable to parse grammar");
@@ -124,6 +130,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     });
 
     let expanded = quote! {
+        #grammar_arr
 
         #[derive(pretty::Pretty, Debug)]
         pub enum #enum_ident<'a> {

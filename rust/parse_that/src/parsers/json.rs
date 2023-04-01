@@ -68,7 +68,7 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
         let colon = string_span(":").trim_whitespace();
         let comma = string_span(",").trim_whitespace();
 
-        let key_value = string_char().skip(colon).with(json_value());
+        let key_value = string_char().skip(colon).then(json_value());
 
         key_value
             .sep_by(comma, ..)

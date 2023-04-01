@@ -98,22 +98,7 @@ where
         };
     }
 
-    pub fn then<Output2>(self, next: Parser<'a, Output2>) -> Parser<'a, (Output, Option<Output2>)>
-    where
-        Output2: 'a,
-    {
-        let then = move |state: &mut ParserState<'a>| {
-            let Some(value1)  = self.parser_fn.call(state) else {
-                return None;
-            };
-            let value2 = next.parser_fn.call(state);
-            return Some((value1, value2));
-        };
-
-        Parser::new(then)
-    }
-
-    pub fn with<Output2>(self, next: Parser<'a, Output2>) -> Parser<'a, (Output, Output2)>
+    pub fn then<Output2>(self, next: Parser<'a, Output2>) -> Parser<'a, (Output, Output2)>
     where
         Output2: 'a,
     {
@@ -135,25 +120,6 @@ where
             }
             if let Some(value) = other.parser_fn.call(state) {
                 return Some(value);
-            }
-            None
-        };
-        Parser::new(or)
-    }
-
-    pub fn or_opt<Output2>(
-        self,
-        other: Parser<'a, Output2>,
-    ) -> Parser<'a, (Option<Output>, Option<Output2>)>
-    where
-        Output2: 'a,
-    {
-        let or = move |state: &mut ParserState<'a>| {
-            if let Some(value) = self.parser_fn.call(state) {
-                return Some((Some(value), None));
-            }
-            if let Some(value) = other.parser_fn.call(state) {
-                return Some((None, Some(value)));
             }
             None
         };
@@ -445,7 +411,7 @@ where
     type Output = Parser<'a, (Output, Output2)>;
 
     fn add(self, other: Parser<'a, Output2>) -> Self::Output {
-        self.with(other)
+        self.then(other)
     }
 }
 
@@ -789,3 +755,53 @@ impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
         return ParserSpan::sep_by(self, sep, bounds);
     }
 }
+
+pub trait ParserFlat<'a, First, Last> {
+    type Output;
+
+    fn then(self, next: Parser<'a, Last>) -> Self::Output;
+    fn then_flat(self, next: Parser<'a, Last>) -> Self::Output;
+}
+
+macro_rules! impl_parser_flat {
+    ($($T:ident),*) => {
+        #[allow(non_snake_case)]
+        impl<'a, $($T,)* Last> ParserFlat<'a, ($($T,)*), Last> for Parser<'a, ($($T,)*)>
+        where
+            $($T: 'a,)*
+            Last: 'a,
+        {
+            type Output = Parser<'a, ($($T,)* Last)>;
+
+            fn then(self, other: Parser<'a, Last>) -> Self::Output {
+                let then = move |state: &mut ParserState<'a>| {
+                    let Some(($($T,)*)) = self.parser_fn.call(state) else {
+                        return None
+                    };
+                    let Some(last) = other.parser_fn.call(state) else {
+                        return None
+                    };
+                    Some(($($T,)* last))
+                };
+                Parser::new(then)
+            }
+
+            fn then_flat(self, other: Parser<'a, Last>) -> Self::Output {
+                return ParserFlat::then(self, other);
+            }
+        }
+    };
+}
+
+impl_parser_flat!(B, C);
+impl_parser_flat!(B, C, D);
+impl_parser_flat!(B, C, D, E);
+impl_parser_flat!(B, C, D, E, F);
+impl_parser_flat!(B, C, D, E, F, G);
+impl_parser_flat!(B, C, D, E, F, G, H);
+impl_parser_flat!(B, C, D, E, F, G, H, I);
+impl_parser_flat!(B, C, D, E, F, G, H, I, J);
+impl_parser_flat!(B, C, D, E, F, G, H, I, J, K);
+impl_parser_flat!(B, C, D, E, F, G, H, I, J, K, L);
+impl_parser_flat!(B, C, D, E, F, G, H, I, J, K, L, M);
+impl_parser_flat!(B, C, D, E, F, G, H, I, J, K, L, M, N);

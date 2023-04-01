@@ -136,7 +136,7 @@ fn reduce_binary_expression<'a>(
 
         match op.as_str() {
             "<<" => Expression::Skip(Box::new(acc_token), Box::new(right_token)),
-            ">>" => Expression::Skip(Box::new(right_token), Box::new(acc_token)),
+            ">>" => Expression::Next(Box::new(acc_token), Box::new(right_token)),
             "-" => Expression::Minus(Box::new(acc_token), Box::new(right_token)),
             _ => unreachable!(),
         }
@@ -288,7 +288,7 @@ impl<'a> BBNFGrammar<'a> {
     fn factor() -> Parser<'a, Expression<'a>> {
         Self::trim_comment(
             Self::term()
-                .with(any_span(&["?w", "*", "+", "?"]).trim_whitespace().opt())
+                .then(any_span(&["?w", "*", "+", "?"]).trim_whitespace().opt())
                 .map_with_state(map_factor),
             Self::block_comment().opt(),
         )
@@ -296,10 +296,10 @@ impl<'a> BBNFGrammar<'a> {
 
     fn binary_factor() -> Parser<'a, Expression<'a>> {
         Self::factor()
-            .with(
+            .then(
                 any_span(&["<<", ">>", "-"])
                     .trim_whitespace()
-                    .with(Self::factor())
+                    .then(Self::factor())
                     .many(..),
             )
             .map_with_state(reduce_binary_expression)
@@ -352,7 +352,7 @@ impl<'a> BBNFGrammar<'a> {
 
         let production_rule = Self::lhs()
             .skip(eq)
-            .with(Self::rhs())
+            .then(Self::rhs())
             .skip(terminator)
             .map(|(lhs, rhs)| Expression::ProductionRule(Box::new(lhs), Box::new(rhs)));
 

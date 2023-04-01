@@ -1,6 +1,7 @@
 use crate::doc::Doc;
 use crate::utils::text_justify;
 use std::collections::HashMap;
+use std::fmt::Pointer;
 
 pub fn count_join_length<'a>(sep: &'a Doc<'a>, docs: &'a Vec<Doc<'a>>, printer: &Printer) -> usize {
     if docs.is_empty() {
@@ -220,14 +221,16 @@ pub struct Printer {
     pub use_tabs: bool,
 }
 
+pub const PRINTER: Printer = Printer {
+    max_width: 80,
+    indent: 2,
+    break_long_text: false,
+    use_tabs: false,
+};
+
 impl Default for Printer {
     fn default() -> Self {
-        Printer {
-            max_width: 80,
-            indent: 2,
-            break_long_text: false,
-            use_tabs: false,
-        }
+        PRINTER.clone()
     }
 }
 
@@ -251,4 +254,16 @@ impl Printer {
     }
 }
 
-pub const PRINTER: Printer = Printer::new(80, 2, true, false);
+impl std::fmt::Debug for Doc<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = PRINTER.pretty(self.clone());
+        f.write_str(&s)
+    }
+}
+
+impl std::fmt::Display for Doc<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = PRINTER.pretty(self.clone());
+        f.write_str(&s)
+    }
+}

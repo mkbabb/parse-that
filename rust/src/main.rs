@@ -1,25 +1,57 @@
+#![feature(box_patterns)]
+#![feature(once_cell)]
+
 use bbnf::grammar::BBNFGrammar;
 use bbnf_derive::Parser;
 use parse_that::csv::csv_parser;
 use parse_that::json::json_parser;
-use pretty::{concat, Doc, Pretty, Printer};
+use pretty::{concat, Doc, Pretty, Printer, PRINTER};
 
 use parse_that::parse::*;
 
 use std::{collections::HashMap, fs, time::SystemTime};
 
 #[derive(Parser)]
-#[parser(path = "../grammar/css-value-unit.bbnf")]
-pub struct MathParser {}
+#[parser(path = "../grammar/math.bbnf")]
+pub struct Math {}
+
+pub fn consume(p: &MathEnum) -> f64 {
+    pub fn recurse(p: &MathEnum) -> f64 {
+        let fold_expression = |acc, (op, rest): &(&str, Box<MathEnum>)| match *op {
+            "+" => acc + recurse(rest),
+            "-" => acc - recurse(rest),
+            "*" => acc * recurse(rest),
+            "/" => acc / recurse(rest),
+            _ => unreachable!(),
+        };
+
+        match p {
+            MathEnum::expr((term, rest)) => rest.into_iter().fold(recurse(term), fold_expression),
+            MathEnum::term((factor, rest)) => {
+                rest.into_iter().fold(recurse(factor), fold_expression)
+            }
+            MathEnum::wrapped((_, expr, _)) => recurse(expr),
+            MathEnum::factor(num) => recurse(num),
+            MathEnum::number(num) => num.parse().unwrap(),
+        }
+    }
+
+    recurse(p)
+}
 
 pub fn main() {
     let first_now = SystemTime::now();
 
-    let x = MathParser::valueUnit().map(|x| x).parse("1px");
+    let x = Math::expr().parse("1 + 2 + 3 * 3").unwrap();
+    let tmp = consume(&x);
 
-    println!("x: {:?}", x);
+    println!("{:?}", tmp);
 
-    // let m = MathParser::number().parse("1");
+    println!("{:?}", Doc::from(x));
+
+    // let x = Json::value().parse("[1, 2, 3]").unwrap();
+
+    // println!("{:?}", Doc::from(x));
 
     // let csv_file_path = "../data/csv/data.csv";
     // let csv_string = fs::read_to_string(csv_file_path).unwrap();
@@ -97,6 +129,8 @@ pub fn main() {
     // let mut data = HashMap::new();
     // data.insert("ok", map3.clone());
     // data.insert("thats vibes", map3.clone());
+
+    // println!("{}", Doc::from(data));
 
     // let printer = Printer::new(30, 1, false, true);
 
