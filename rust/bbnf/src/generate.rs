@@ -179,7 +179,6 @@ pub fn calculate_nonterminal_types<'a>(
             Expression::ProductionRule(_, rhs) => {
                 recurse(rhs, ast, enum_ident, nonterminal_types, cache)
             }
-
             _ => panic!("Unimplemented expression type"),
         };
         cache.insert(expr, ty.clone());

@@ -19,9 +19,8 @@ use std::{collections::HashMap, fs, time::SystemTime};
 
 #[derive(Parser)]
 #[parser(path = "../grammar/math.bbnf")]
+
 pub struct MathParser {}
-
-
 
 
 

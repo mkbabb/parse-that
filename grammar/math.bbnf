@@ -1,5 +1,6 @@
 expr = term, { ("+" | "-"), term };
 term = factor, { ("*" | "/"), factor };
-factor = number | "(", expr, ")";
+vibe = "(", expr, ")" ;
+factor = number | vibe;
 
 number = /\d+/ ;

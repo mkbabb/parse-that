@@ -110,8 +110,8 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         let parser = generate_parser_from_ast(&expr);
 
         quote! {
-            pub fn #ident<'a>() -> Parser<'a, #enum_ident<'a>> {
-                #parser.map(|x| #enum_ident::#ident( x ) )
+            pub fn #ident<'a>() -> Parser<'a, Box<#enum_ident<'a>>> {
+                #parser.map(|x| Box::new(#enum_ident::#ident( x )) )
             }
         }
     });

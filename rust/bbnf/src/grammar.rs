@@ -156,6 +156,7 @@ impl<'a> BBNFGrammar<'a> {
         comment
             .wrap_span(string_span("/*"), string_span("*/"))
             .trim_whitespace()
+            .many_span(1..)
             .map(|s| Comment::Block(s.as_str()))
             .debug("block")
     }
@@ -166,6 +167,7 @@ impl<'a> BBNFGrammar<'a> {
 
         not_newline
             .wrap_span(string_span("//"), end)
+            .many_span(1..)
             .map(|s| Comment::Line(s.as_str()))
     }
 
@@ -178,13 +180,14 @@ impl<'a> BBNFGrammar<'a> {
     }
 
     fn literal() -> Parser<'a, Expression<'a>> {
-        let not_quote = take_while_span(|c| c != '"' && c != '\\');
+        let quoted = |quote: &'a str| {
+            let not_quote = take_while_span(|c| c != quote.chars().nth(0).unwrap() && c != '\\');
+            (not_quote | escaped_span())
+                .many_span(..)
+                .wrap_span(string_span(quote), string_span(quote))
+        };
 
-        let string = (not_quote | escaped_span())
-            .many_span(..)
-            .wrap_span(string_span("\""), string_span("\""));
-
-        string.map(|s| {
+        (quoted("\"") | quoted("'") | quoted("`")).map(|s| {
             let token = Token::new(s.as_str(), s);
             Expression::Literal(token)
         })
