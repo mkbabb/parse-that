@@ -5,7 +5,7 @@ use crate::grammar::*;
 use pretty::{Doc, PRINTER};
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{parse_quote, Expr};
+use syn::{parse_quote, Expr, Type};
 
 pub fn topological_sort<'a>(ast: &'a AST) -> AST<'a> {
     let mut order = Vec::new();
@@ -25,7 +25,9 @@ pub fn topological_sort<'a>(ast: &'a AST) -> AST<'a> {
 
         match expr {
             Expression::Nonterminal(Token { value, .. }) => {
-                let expr = ast.get(value).unwrap();
+                let expr = ast
+                    .get(value)
+                    .expect(&format!(r#""{}"" not found in ast"#, value));
                 visit(value, expr, ast, order, vistied);
             }
             Expression::Alternation(inner_exprs) => {
@@ -49,6 +51,7 @@ pub fn topological_sort<'a>(ast: &'a AST) -> AST<'a> {
                 visit(name, left_expr, ast, order, vistied);
                 visit(name, right_expr, ast, order, vistied);
             }
+
             Expression::Group(inner_expr)
             | Expression::Optional(inner_expr)
             | Expression::Many(inner_expr)
@@ -73,8 +76,9 @@ pub fn topological_sort<'a>(ast: &'a AST) -> AST<'a> {
 
     let mut new_ast = AST::new();
     for name in order {
-        println!("name: {}", name);
-        let expr = ast.get(name).unwrap();
+        let expr = ast
+            .get(name)
+            .expect(&format!(r#""{}"" not found in ast"#, name));
         new_ast.insert(name, expr.clone());
     }
     new_ast
@@ -86,15 +90,15 @@ fn get_inner_expression<'a, T>(inner_expr: &'a Box<Token<'a, T>>) -> &'a T {
 
 pub fn calculate_nonterminal_types<'a>(
     ast: &'a AST,
-    enum_ident: &syn::Ident,
-) -> HashMap<&'a str, syn::Type> {
+    boxed_enum_ident: &Type,
+) -> HashMap<&'a str, Type> {
     fn recurse<'a, 'b>(
         expr: &'a Expression<'a>,
         ast: &'a AST,
-        enum_ident: &syn::Ident,
-        nonterminal_types: &'b mut HashMap<&'a str, syn::Type>,
-        cache: &'b mut HashMap<&'a Expression<'a>, syn::Type>,
-    ) -> syn::Type
+        boxed_enum_ident: &Type,
+        nonterminal_types: &'b mut HashMap<&'a str, Type>,
+        cache: &'b mut HashMap<&'a Expression<'a>, Type>,
+    ) -> Type
     where
         'a: 'b,
     {
@@ -103,55 +107,51 @@ pub fn calculate_nonterminal_types<'a>(
         }
 
         let ty = match expr {
-            Expression::Literal(_) => parse_quote!(&'a str),
-            Expression::Nonterminal(_) => {
-                parse_quote!(Box<#enum_ident<'a>>)
-            }
-            Expression::Regex(_) => parse_quote!(&'a str),
+            Expression::Literal(_) => parse_quote!(parse_that::Span<'a>),
+            Expression::Nonterminal(_) => boxed_enum_ident.clone(),
+            Expression::Regex(_) => parse_quote!(parse_that::Span<'a>),
             Expression::Group(inner_expr) => {
                 let inner_expr = get_inner_expression(inner_expr);
-                recurse(inner_expr, ast, enum_ident, nonterminal_types, cache)
+                recurse(inner_expr, ast, boxed_enum_ident, nonterminal_types, cache)
             }
             Expression::Optional(inner_expr) => {
                 let inner_expr = get_inner_expression(inner_expr);
-                let inner_type = recurse(inner_expr, ast, enum_ident, nonterminal_types, cache);
-
+                let inner_type =
+                    recurse(inner_expr, ast, boxed_enum_ident, nonterminal_types, cache);
                 parse_quote!(Option<#inner_type>)
             }
             Expression::OptionalWhitespace(inner_expr) => {
                 let inner_expr = get_inner_expression(inner_expr);
-                recurse(inner_expr, ast, enum_ident, nonterminal_types, cache)
+                recurse(inner_expr, ast, boxed_enum_ident, nonterminal_types, cache)
             }
-            Expression::Many(inner_expr) => {
+            Expression::Many(inner_expr) | Expression::Many1(inner_expr) => {
                 let inner_expr = get_inner_expression(inner_expr);
-                let inner_type = recurse(inner_expr, ast, enum_ident, nonterminal_types, cache);
+                let inner_type =
+                    recurse(inner_expr, ast, boxed_enum_ident, nonterminal_types, cache);
                 parse_quote!(Vec<#inner_type>)
             }
-            Expression::Many1(inner_expr) => {
-                let inner_expr = get_inner_expression(inner_expr);
-                let inner_type = recurse(inner_expr, ast, enum_ident, nonterminal_types, cache);
-                parse_quote!(Vec<#inner_type>)
-            }
+
             Expression::Skip(left_expr, _) => {
                 let left_expr = get_inner_expression(left_expr);
-                let left_type = recurse(left_expr, ast, enum_ident, nonterminal_types, cache);
+                let left_type = recurse(left_expr, ast, boxed_enum_ident, nonterminal_types, cache);
                 return left_type;
             }
             Expression::Next(_, right_expr) => {
                 let right_expr = get_inner_expression(right_expr);
-                let right_type = recurse(right_expr, ast, enum_ident, nonterminal_types, cache);
+                let right_type =
+                    recurse(right_expr, ast, boxed_enum_ident, nonterminal_types, cache);
                 return right_type;
             }
             Expression::Minus(left_expr, _) => {
                 let left_expr = get_inner_expression(left_expr);
-                let left_type = recurse(left_expr, ast, enum_ident, nonterminal_types, cache);
+                let left_type = recurse(left_expr, ast, boxed_enum_ident, nonterminal_types, cache);
                 return left_type;
             }
             Expression::Concatenation(inner_exprs) => {
                 let inner_exprs = get_inner_expression(inner_exprs);
                 inner_exprs
                     .iter()
-                    .map(|expr| recurse(expr, ast, enum_ident, nonterminal_types, cache))
+                    .map(|expr| recurse(expr, ast, boxed_enum_ident, nonterminal_types, cache))
                     .fold(None, |acc, ty| match acc {
                         None => Some(ty),
                         Some(acc) => Some(parse_quote!((#acc, #ty))),
@@ -160,15 +160,16 @@ pub fn calculate_nonterminal_types<'a>(
             }
             Expression::Alternation(inner_exprs) => {
                 let inner_exprs = get_inner_expression(inner_exprs);
-                let mut ty: Option<syn::Type> = None;
+                let mut ty: Option<Type> = None;
 
                 for inner_expr in inner_exprs {
-                    let new_ty = recurse(inner_expr, ast, enum_ident, nonterminal_types, cache);
+                    let new_ty =
+                        recurse(inner_expr, ast, boxed_enum_ident, nonterminal_types, cache);
                     match &ty {
                         None => ty = Some(new_ty),
                         Some(ty) => {
                             if !quote!(#ty).to_string().eq(&quote!(#new_ty).to_string()) {
-                                return parse_quote!(Box<#enum_ident<'a>>);
+                                return boxed_enum_ident.clone();
                             }
                         }
                     }
@@ -177,7 +178,7 @@ pub fn calculate_nonterminal_types<'a>(
                 ty.unwrap()
             }
             Expression::ProductionRule(_, rhs) => {
-                recurse(rhs, ast, enum_ident, nonterminal_types, cache)
+                recurse(rhs, ast, boxed_enum_ident, nonterminal_types, cache)
             }
             _ => panic!("Unimplemented expression type"),
         };
@@ -189,7 +190,13 @@ pub fn calculate_nonterminal_types<'a>(
     let mut cache = HashMap::new();
 
     for (name, expr) in ast {
-        let ty = recurse(expr, ast, enum_ident, &mut nonterminal_types, &mut cache);
+        let ty = recurse(
+            expr,
+            ast,
+            boxed_enum_ident,
+            &mut nonterminal_types,
+            &mut cache,
+        );
         nonterminal_types.insert(name, ty);
     }
 
@@ -200,7 +207,7 @@ pub fn generate_parser_from_ast(expr: &Expression) -> proc_macro2::TokenStream {
     let parser_match = match expr {
         Expression::Literal(token) => {
             let value = token.value;
-            quote! { string(#value) }
+            quote! { string_span(#value) }
         }
         Expression::Nonterminal(token) => {
             let ident = syn::Ident::new(token.value, proc_macro2::Span::call_site());
@@ -208,7 +215,7 @@ pub fn generate_parser_from_ast(expr: &Expression) -> proc_macro2::TokenStream {
         }
         Expression::Regex(token) => {
             let regex_str = token.value;
-            quote! { regex(#regex_str) }
+            quote! { regex_span(#regex_str) }
         }
         Expression::Group(inner_expr) => {
             let inner_expr = get_inner_expression(inner_expr);

@@ -16,6 +16,9 @@ time = number , timeUnit ;
 resolution = number , resolutionUnit ;
 percentage = integer , percentageUnit ;
 
+number = /\d+(\.\d+)?/ ;
+integer = /\d+/ ;
+
 unitless = number ;
 
-valueUnit = length | angle | time | resolution | percentage | color | (number, unitless?) ;
+valueUnit = length | angle | time | resolution | percentage | unitless ;

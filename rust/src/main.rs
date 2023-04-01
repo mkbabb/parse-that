@@ -8,26 +8,16 @@ use parse_that::parse::*;
 
 use std::{collections::HashMap, fs, time::SystemTime};
 
-// #[derive(Pretty)]
-// #[pretty(verbose)]
-// pub enum HeyEnum<'a, 'b> {
-//     There(&'a str),
-//     #[pretty(rename = "my vibes")]
-//     A(&'b str),
-//     B(regex::Regex),
-// }
-
 #[derive(Parser)]
-#[parser(path = "../grammar/math.bbnf")]
-
+#[parser(path = "../grammar/css-value-unit.bbnf")]
 pub struct MathParser {}
-
-
 
 pub fn main() {
     let first_now = SystemTime::now();
 
-    let x = Some("");
+    let x = MathParser::valueUnit().map(|x| x).parse("1px");
+
+    println!("x: {:?}", x);
 
     // let m = MathParser::number().parse("1");
 

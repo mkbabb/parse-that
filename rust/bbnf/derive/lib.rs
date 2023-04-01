@@ -4,10 +4,10 @@ use std::collections::HashMap;
 
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::NestedMeta;
+
 use syn::{
     parse_macro_input, parse_quote, token::Comma, Attribute, Data, DeriveInput, Field, Fields, Lit,
-    Meta, Variant, WherePredicate,
+    Meta, NestedMeta, Type, Variant, WherePredicate,
 };
 
 extern crate bbnf;
@@ -84,17 +84,20 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         .to_string();
 
     let file_string = std::fs::read_to_string(relative_path).expect("Unable to read file");
-    let ast = BBNFGrammar::grammar().parse(&file_string).unwrap();
+    let ast = BBNFGrammar::grammar()
+        .parse(&file_string)
+        .expect("Unable to parse grammar");
     let ast = topological_sort(&ast);
 
     let enum_ident = format_ident!("{}Enum", name);
+    let boxed_enum_ident: Type = parse_quote!(Box<#enum_ident<'a>> );
 
     let nonterminal_names: Vec<_> = ast
         .keys()
         .cloned()
         .map(|name| format_ident!("{}", name))
         .collect();
-    let nonterminal_types = calculate_nonterminal_types(&ast, &enum_ident);
+    let nonterminal_types = calculate_nonterminal_types(&ast, &boxed_enum_ident);
 
     let enum_values = nonterminal_names
         .iter()
@@ -110,13 +113,19 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         let parser = generate_parser_from_ast(&expr);
 
         quote! {
-            pub fn #ident<'a>() -> Parser<'a, Box<#enum_ident<'a>>> {
-                #parser.map(|x| Box::new(#enum_ident::#ident( x )) )
+            pub fn #ident<'a>() -> Parser<'a, #boxed_enum_ident> {
+                lazy(||
+                    #parser
+                        .map(|x| Box::new(#enum_ident::#ident( x )) )
+                        .debug(#name)
+                )
             }
         }
     });
 
     let expanded = quote! {
+
+        #[derive(pretty::Pretty, Debug)]
         pub enum #enum_ident<'a> {
             #(#enum_values),*
         }
