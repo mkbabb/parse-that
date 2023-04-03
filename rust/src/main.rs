@@ -7,7 +7,7 @@ use parse_that::json::json_parser;
 use parse_that::{csv::csv_parser, json::JsonValue};
 use pretty::{concat, Doc, Pretty, Printer, PRINTER};
 
-use parse_that::parse::*;
+use parse_that::{parse::*, Span};
 
 use std::{collections::HashMap, fs, time::SystemTime};
 
@@ -19,7 +19,7 @@ use fnv::FnvHashMap;
 
 // pub fn consume(p: &MathEnum) -> f64 {
 //     pub fn recurse(p: &MathEnum) -> f64 {
-//         let fold_expression = |acc, (op, rest): &(&str, Box<MathEnum>)| match *op {
+//         let fold_expression = |acc, (op, rest): &(Span, Box<MathEnum>)| match op.as_str() {
 //             "+" => acc + recurse(rest),
 //             "-" => acc - recurse(rest),
 //             "*" => acc * recurse(rest),
@@ -34,7 +34,7 @@ use fnv::FnvHashMap;
 //             }
 //             MathEnum::wrapped((_, expr, _)) => recurse(expr),
 //             MathEnum::factor(num) => recurse(num),
-//             MathEnum::number(num) => num.parse().unwrap(),
+//             MathEnum::number(num) => num.as_str().parse().unwrap(),
 //         }
 //     }
 
@@ -42,7 +42,7 @@ use fnv::FnvHashMap;
 // }
 
 #[derive(Parser)]
-#[parser(path = "../grammar/json.bbnf")]
+#[parser(path = "../grammar/json.bbnf", ignore_whitespace)]
 pub struct Json {}
 
 pub fn consume<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
@@ -51,8 +51,8 @@ pub fn consume<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
             JsonEnum::null(_) => JsonValue::Null,
             JsonEnum::bool(b) => JsonValue::Bool(b.as_str().parse().unwrap()),
             JsonEnum::number(n) => JsonValue::Number(n.as_str().parse().unwrap()),
-            JsonEnum::char(c) => JsonValue::String(c.as_str()),
-            JsonEnum::string(s) => recurse(s),
+
+            JsonEnum::string(s) => JsonValue::String(s.as_str()),
             JsonEnum::array(values) => {
                 JsonValue::Array(values.into_iter().map(|v| recurse(v)).collect())
             }
@@ -82,13 +82,15 @@ pub fn consume<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
 pub fn main() {
     let first_now = SystemTime::now();
 
-    let json_file_path = "../data/json/data.json";
+    let json_file_path = "../../data/json/canada.json";
     let json_string = fs::read_to_string(json_file_path).unwrap();
 
+    let now = SystemTime::now();
+
     let x = Json::value().parse(json_string.as_str()).unwrap();
+    let elapsed = now.elapsed().unwrap();
     let tmp = consume(&x);
-    let elapsed = first_now.elapsed().unwrap();
-    
+
     println!("JSON2 Elapsed: {:?}", elapsed);
 
     // println!("{:?}", Doc::from(tmp));
@@ -117,7 +119,7 @@ pub fn main() {
 
     // println!("CSV Elapsed: {:?}", elapsed);
 
-    let json_file_path = "../data/json/data.json";
+    let json_file_path = "../../data/json/canada.json";
     let json_string = fs::read_to_string(json_file_path).unwrap();
 
     let parser = json_parser();
@@ -197,6 +199,6 @@ pub fn main() {
 
     // fs::write("../data/pretty.json", pretty).expect("Unable to write file");
 
-    // let elapsed = first_now.elapsed().unwrap();
-    // println!("Total Elapsed: {:?}", elapsed);
+    let elapsed = first_now.elapsed().unwrap();
+    println!("Total Elapsed: {:?}", elapsed);
 }

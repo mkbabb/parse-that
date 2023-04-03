@@ -3,8 +3,7 @@ bool = "true" | "false" ;
 
 number =  /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ ;
 
-char = /[^"'\\]+/ | /\\"/ | /\\'/ | /\\\\/ ; 
-string = '"' >> char << '"' | "'" >> char << "'" ;
+string = '"' >> /[^"\\]/ * << '"' ;
 array = "[" >> ( value << ","? ) * << "]" ;
 
 pair = string, ":" >> value ;

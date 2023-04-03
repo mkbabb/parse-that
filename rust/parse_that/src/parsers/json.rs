@@ -1,5 +1,7 @@
 use crate::parse::*;
 
+use super::utils::{escaped_span, number_span};
+
 extern crate pretty;
 use pretty::Pretty;
 
@@ -34,21 +36,9 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
         | string_span("false").map(|_| JsonValue::Bool(false));
 
     let json_number = || {
-        let sign = || string_span("-").opt_span();
-        let digits = || take_while_span(|c| c.is_digit(10));
-
-        let integer = digits();
-        let fraction = string_span(".").then_span(digits());
-        let exponent = (string_span("e") | string_span("E"))
-            .then_span(sign())
-            .then_span(digits());
-
-        return sign()
-            .then_span(integer)
-            .then_span(fraction.opt_span())
-            .then_span(exponent.opt_span())
+        number_span()
             .map(|s| s.as_str().parse().unwrap_or(f64::NAN))
-            .map(JsonValue::Number);
+            .map(JsonValue::Number)
     };
 
     let json_string = || string_char().map(JsonValue::String);

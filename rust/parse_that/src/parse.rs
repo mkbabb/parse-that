@@ -603,15 +603,6 @@ pub fn any_span<'a>(patterns: &[&'a str]) -> Parser<'a, Span<'a>> {
     Parser::new(any)
 }
 
-static ESCAPE_PATTERNS: &[&str] = &["b", "f", "n", "r", "t", "\"", "'", "\\", "/"];
-
-pub fn escaped_span<'a>() -> Parser<'a, Span<'a>> {
-    return string_span("\\").then_span(
-        any_span(&ESCAPE_PATTERNS)
-            | string_span("u").then_span(take_while_span(|c| c.is_digit(16))),
-    );
-}
-
 pub trait ParserSpan<'a> {
     type Output;
 

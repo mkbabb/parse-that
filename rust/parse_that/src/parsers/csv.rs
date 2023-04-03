@@ -1,5 +1,7 @@
 use crate::parse::*;
 
+use super::utils::escaped_span;
+
 extern crate pretty;
 use pretty::{str, Doc, Join};
 

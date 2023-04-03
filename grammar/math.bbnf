@@ -1,7 +1,7 @@
-expr = term ?w, { ("+" | "-"), term };
-term = factor ?w, { ("*" | "/"), factor };
+expr = term, { ("+" | "-"), term };
+term = factor, { ("*" | "/"), factor };
 wrapped = "(", expr, ")" ;
 
-factor = ( number | wrapped ) ?w;
+factor = number | wrapped;
 
 number = /\d+/ ;

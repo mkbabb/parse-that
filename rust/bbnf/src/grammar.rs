@@ -1,8 +1,8 @@
 extern crate parse_that;
 
+use parse_that::parsers::utils::{escaped_span, number_span};
 use parse_that::{
-    any_span, escaped_span, lazy, string, string_span, take_while_span, Parser, ParserSpan,
-    ParserState, Span,
+    any_span, lazy, string, string_span, take_while_span, Parser, ParserSpan, ParserState, Span,
 };
 
 extern crate pretty;
@@ -67,7 +67,7 @@ impl<'a, T> Token<'a, T> {
     }
 }
 
-pub type AST<'a> = HashMap<&'a str, Expression<'a>>;
+pub type AST<'a> = HashMap<String, Expression<'a>>;
 
 pub fn set_expression_comments<'a>(expr: &mut Expression<'a>, comments: Comments<'a>) {
     match expr {
@@ -374,7 +374,7 @@ impl<'a> BBNFGrammar<'a> {
                             unreachable!();
                         };
 
-                        (lhs.value, rule)
+                        (lhs.value.to_string(), rule)
                     })
                     .collect()
             })
