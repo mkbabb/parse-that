@@ -14,3 +14,4 @@ pretty = {path = "../../pretty"}
 syn = { version = "1", features = ["full"] }
 quote = "1"
 proc-macro2 = "1"
+indexmap = "1"

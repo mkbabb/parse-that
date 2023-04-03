@@ -60,11 +60,8 @@ pub fn consume<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
                 let map = pairs
                     .into_iter()
                     .map(|pair| match pair.as_ref() {
-                        JsonEnum::pair((key, value)) => {
-                            let JsonValue::String(key) = recurse(key) else {
-                                panic!("Expected string key");
-                            };
-                            (key, recurse(value))
+                        JsonEnum::pair((box JsonEnum::string(key), value)) => {
+                            (key.as_str(), recurse(value))
                         }
                         _ => unreachable!(),
                     })
@@ -87,9 +84,10 @@ pub fn main() {
 
     let now = SystemTime::now();
 
-    let x = Json::value().parse(json_string.as_str()).unwrap();
-    let elapsed = now.elapsed().unwrap();
+    let x = Json::value().parse(&json_string).unwrap();
     let tmp = consume(&x);
+
+    let elapsed = now.elapsed().unwrap();
 
     println!("JSON2 Elapsed: {:?}", elapsed);
 

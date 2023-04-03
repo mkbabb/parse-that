@@ -1,10 +1,14 @@
 extern crate proc_macro;
 
+use std::borrow::BorrowMut;
 use std::collections::HashMap;
+use std::collections::HashSet;
+
+use indexmap::{IndexMap, IndexSet};
 
 use proc_macro::TokenStream;
+use quote::ToTokens;
 use quote::{format_ident, quote};
-
 use syn::{
     parse_macro_input, parse_quote, token::Comma, Attribute, Data, DeriveInput, Field, Fields, Lit,
     Meta, NestedMeta, Type, Variant, WherePredicate,
@@ -85,7 +89,7 @@ fn generate_enum(
     });
 
     quote! {
-        #[derive(pretty::Pretty, Debug)]
+        // #[derive(pretty::Pretty, Debug)]
         pub enum #enum_ident<'a> {
             #(#enum_values),*
         }
@@ -112,20 +116,21 @@ fn generate_grammar_arr(
     }
 }
 
-fn generate_parsers(
-    ast: &AST,
+fn generate_parsers<'a, 'b>(
+    ast: &'a AST,
+    acyclic_deps: &HashMap<String, HashSet<String>>,
+    type_cache: &'b mut HashMap<&'a Expression<'a>, Type>,
     enum_ident: &syn::Ident,
     boxed_enum_type: &Type,
-    nonterminal_types: &HashMap<String, Type>,
     parser_container_attrs: &ParserAttributes,
-) -> proc_macro2::TokenStream {
+) -> proc_macro2::TokenStream
+where
+    'a: 'b,
+{
+    let mut generated_parsers: HashMap<&Expression, proc_macro2::TokenStream> = HashMap::new();
     let mut cache = HashMap::new();
 
-    let generated_parsers = ast.iter().map(|(name, expr)| {
-        let ident = format_ident!("{}", name);
-
-        let mut parser =
-            generate_parser_from_ast(&expr, &boxed_enum_type, &nonterminal_types, &mut cache);
+    let format_parser = |mut parser: proc_macro2::TokenStream, name: &str| {
         if parser_container_attrs.ignore_whitespace {
             parser = quote! {
                 #parser.trim_whitespace()
@@ -136,12 +141,81 @@ fn generate_parsers(
                 #parser.debug(#name)
             };
         }
+        parser
+    };
+
+    let box_parser = |parser: proc_macro2::TokenStream, ident: &syn::Ident| {
+        quote! {
+            #parser.map(|x| Box::new( #enum_ident::#ident( x ) ) )
+        }
+    };
+
+    let mut counter = 0;
+
+    while counter < MAX_AST_ITERATIONS {
+        let t_generated_parsers: HashMap<_, _> = ast
+            .iter()
+            .map(|(_, expr)| {
+                let Expression::ProductionRule(lhs, _) = expr else {
+                    panic!("Expected production rule");
+                };
+                let Expression::Nonterminal(Token { value: name, ..}) = lhs.as_ref() else {
+                    panic!("Expected nonterminal");
+                };
+                let parser =
+                    generate_parser_from_ast(&expr, &boxed_enum_type, &mut cache, type_cache);
+
+                if needs_boxing(name, &acyclic_deps) {
+                    return (lhs.as_ref(), parser);
+                } else {
+                    return (
+                        lhs.as_ref(),
+                        box_parser(format_parser(parser, name), &format_ident!("{}", name)),
+                    );
+                }
+            })
+            .collect();
+
+        cache = t_generated_parsers
+            .iter()
+            .filter(|(expr, _)| {
+                if let Expression::Nonterminal(Token { value: name, .. }) = expr {
+                    acyclic_deps.contains_key(name.to_owned())
+                } else {
+                    false
+                }
+            })
+            .map(|(expr, parser)| (expr.clone(), parser.clone()))
+            .collect();
+
+        if t_generated_parsers.iter().all(|(k, v)| {
+            if let Some(v2) = generated_parsers.get(k) {
+                return v.to_string() == v2.to_string();
+            }
+            false
+        }) {
+            break;
+        } else {
+            generated_parsers = t_generated_parsers;
+        }
+
+        counter += 1;
+    }
+
+    let generated_parsers = generated_parsers.into_iter().map(|(expr, mut parser)| {
+        let Expression::Nonterminal(Token { value: name, ..}) = expr else {
+            panic!("Expected nonterminal");
+        };
+        let ident = format_ident!("{}", name);
+
+        if needs_boxing(name, &acyclic_deps) {
+            parser = format_parser(box_parser(parser, &ident), name);
+        }
 
         quote! {
             pub fn #ident<'a>() -> Parser<'a, #boxed_enum_type> {
                 lazy(||
                     #parser
-                        .map(|x| Box::new( #enum_ident::#ident( x ) ) )
                 )
             }
         }
@@ -188,24 +262,28 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
                 .parse(file_string)
                 .expect("Unable to parse grammar")
         })
-        .fold(HashMap::new(), |mut acc, ast| {
+        .fold(IndexMap::new(), |mut acc, ast| {
             for (name, expr) in ast {
                 acc.insert(name, expr);
             }
             acc
         });
 
-    let ast = topological_sort(&ast);
+    let (ast, deps) = topological_sort(&ast);
+    let acylic_deps = calculate_acyclic_deps(&deps);
 
-    let nonterminal_types = calculate_nonterminal_types(&ast, &boxed_enum_ident);
+    let (nonterminal_types, mut type_cache) =
+        calculate_nonterminal_types(&ast, &acylic_deps, &boxed_enum_ident);
 
     let grammar_arr = generate_grammar_arr(&ident, &parser_container_attrs);
     let grammar_enum = generate_enum(&enum_ident, &nonterminal_types);
+
     let generated_parsers = generate_parsers(
         &ast,
+        &acylic_deps,
+        &mut type_cache,
         &enum_ident,
         &boxed_enum_ident,
-        &nonterminal_types,
         &parser_container_attrs,
     );
 

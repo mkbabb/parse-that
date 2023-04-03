@@ -8,15 +8,15 @@ use parse_that::{
 extern crate pretty;
 use pretty::{Doc, Pretty};
 
-use std::collections::HashMap;
+use indexmap::IndexMap;
 
-#[derive(Pretty, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Pretty, Debug, Clone, Eq, PartialEq)]
 pub enum Comment<'a> {
     Line(&'a str),
     Block(&'a str),
 }
 
-#[derive(Pretty, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Pretty, Debug, Clone, Eq, PartialEq)]
 pub struct Comments<'a> {
     pub left: Option<Comment<'a>>,
     pub right: Option<Comment<'a>>,
@@ -24,7 +24,7 @@ pub struct Comments<'a> {
 
 type TokenExpression<'a, T = Expression<'a>> = Box<Token<'a, T>>;
 
-#[derive(Pretty, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Pretty, Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Expression<'a> {
     Literal(Token<'a, &'a str>),
     Nonterminal(Token<'a, &'a str>),
@@ -50,11 +50,24 @@ pub enum Expression<'a> {
     Epsilon(Token<'a, ()>),
 }
 
-#[derive(Pretty, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Pretty, Debug, Clone, Eq)]
 pub struct Token<'a, T> {
     pub value: T,
     pub span: Span<'a>,
     pub comments: Option<Comments<'a>>,
+}
+
+impl<'a, T: PartialEq> PartialEq for Token<'a, T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.value == other.value
+    }
+}
+
+// impl hash for Token
+impl<'a, T: std::hash::Hash> std::hash::Hash for Token<'a, T> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.value.hash(state);
+    }
 }
 
 impl<'a, T> Token<'a, T> {
@@ -67,7 +80,7 @@ impl<'a, T> Token<'a, T> {
     }
 }
 
-pub type AST<'a> = HashMap<String, Expression<'a>>;
+pub type AST<'a> = IndexMap<String, Expression<'a>>;
 
 pub fn set_expression_comments<'a>(expr: &mut Expression<'a>, comments: Comments<'a>) {
     match expr {

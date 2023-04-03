@@ -3,10 +3,17 @@ bool = "true" | "false" ;
 
 number =  /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ ;
 
-string = '"' >> /[^"\\]/ * << '"' ;
+gay =  (( chargerge << ","? )) *,  chargerge;
+
+chargerge = /[^"\\]/ ;
+charger = chargerge ;
+charge = charger ;
+char = charge    ;
+
+string = '"' >> char * << '"' ;
 array = "[" >> ( value << ","? ) * << "]" ;
 
 pair = string, ":" >> value ;
 object = "{" >> ( pair << ","? ) * << "}" ;
 
-value = null | bool | number | string | array | object ;
+value = object | array | string | number | bool | null ;   
