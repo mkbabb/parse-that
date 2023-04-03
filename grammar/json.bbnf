@@ -1,16 +1,17 @@
 null = "null" ;
 bool = "true" | "false" ;
 
-number =  /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ ;
+number = NUMBER ;
 
-gay =  (( chargerge << ","? )) *,  chargerge;
+gay =  (( chargerge << ","? )) *,  chargerge, NUMBER;
 
 chargerge = /[^"\\]/ ;
 charger = chargerge ;
 charge = charger ;
 char = charge    ;
 
-string = '"' >> char * << '"' ;
+stringge = '"' >> char * << '"' ;
+string = DOUBLE_QUOTED_STRING ;
 array = "[" >> ( value << ","? ) * << "]" ;
 
 pair = string, ":" >> value ;

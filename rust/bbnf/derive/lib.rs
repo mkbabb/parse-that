@@ -120,6 +120,7 @@ fn generate_parsers<'a, 'b>(
     ast: &'a AST,
     acyclic_deps: &HashMap<String, HashSet<String>>,
     type_cache: &'b mut HashMap<&'a Expression<'a>, Type>,
+    default_parsers: &'a HashMap<&'a str, GeneratedParser<'a>>,
     enum_ident: &syn::Ident,
     boxed_enum_type: &Type,
     parser_container_attrs: &ParserAttributes,
@@ -162,8 +163,13 @@ where
                 let Expression::Nonterminal(Token { value: name, ..}) = lhs.as_ref() else {
                     panic!("Expected nonterminal");
                 };
-                let parser =
-                    generate_parser_from_ast(&expr, &boxed_enum_type, &mut cache, type_cache);
+                let parser = generate_parser_from_ast(
+                    &expr,
+                    &boxed_enum_type,
+                    default_parsers,
+                    &mut cache,
+                    type_cache,
+                );
 
                 if needs_boxing(name, &acyclic_deps) {
                     return (lhs.as_ref(), parser);
@@ -198,28 +204,30 @@ where
         } else {
             generated_parsers = t_generated_parsers;
         }
-
         counter += 1;
     }
 
-    let generated_parsers = generated_parsers.into_iter().map(|(expr, mut parser)| {
-        let Expression::Nonterminal(Token { value: name, ..}) = expr else {
+    let generated_parsers: Vec<_> = generated_parsers
+        .into_iter()
+        .map(|(expr, mut parser)| {
+            let Expression::Nonterminal(Token { value: name, ..}) = expr else {
             panic!("Expected nonterminal");
         };
-        let ident = format_ident!("{}", name);
+            let ident = format_ident!("{}", name);
 
-        if needs_boxing(name, &acyclic_deps) {
-            parser = format_parser(box_parser(parser, &ident), name);
-        }
-
-        quote! {
-            pub fn #ident<'a>() -> Parser<'a, #boxed_enum_type> {
-                lazy(||
-                    #parser
-                )
+            if needs_boxing(name, &acyclic_deps) {
+                parser = format_parser(box_parser(parser, &ident), name);
             }
-        }
-    });
+
+            quote! {
+                pub fn #ident<'a>() -> Parser<'a, #boxed_enum_type> {
+                    lazy(||
+                        #parser
+                    )
+                }
+            }
+        })
+        .collect();
 
     quote! {
         #(#generated_parsers)*
@@ -268,12 +276,13 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
             }
             acc
         });
+    let default_parsers = generate_default_parsers();
 
     let (ast, deps) = topological_sort(&ast);
     let acylic_deps = calculate_acyclic_deps(&deps);
 
     let (nonterminal_types, mut type_cache) =
-        calculate_nonterminal_types(&ast, &acylic_deps, &boxed_enum_ident);
+        calculate_nonterminal_types(&ast, &acylic_deps, &boxed_enum_ident, &default_parsers);
 
     let grammar_arr = generate_grammar_arr(&ident, &parser_container_attrs);
     let grammar_enum = generate_enum(&enum_ident, &nonterminal_types);
@@ -282,6 +291,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         &ast,
         &acylic_deps,
         &mut type_cache,
+        &default_parsers,
         &enum_ident,
         &boxed_enum_ident,
         &parser_container_attrs,

@@ -9,6 +9,21 @@ pub fn escaped_span<'a>() -> Parser<'a, Span<'a>> {
     );
 }
 
+pub fn quoted_span<'a>(quote_string: &'a str) -> Parser<'a, Span<'a>> {
+    let string_char = || {
+        let quote_char = quote_string.chars().nth(0).unwrap();
+        let not_quote = take_while_span(move |c| c != quote_char && c != '\\');
+
+        let string = (not_quote | escaped_span())
+            .many_span(..)
+            .wrap_span(string_span(&quote_string), string_span(&quote_string));
+
+        return string;
+    };
+
+    return string_char();
+}
+
 pub fn number_span<'a>() -> Parser<'a, Span<'a>> {
     let sign = || string_span("-").opt_span();
     let digits = || take_while_span(|c| c.is_digit(10));

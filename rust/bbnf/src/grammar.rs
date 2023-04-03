@@ -57,19 +57,6 @@ pub struct Token<'a, T> {
     pub comments: Option<Comments<'a>>,
 }
 
-impl<'a, T: PartialEq> PartialEq for Token<'a, T> {
-    fn eq(&self, other: &Self) -> bool {
-        self.value == other.value
-    }
-}
-
-// impl hash for Token
-impl<'a, T: std::hash::Hash> std::hash::Hash for Token<'a, T> {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.value.hash(state);
-    }
-}
-
 impl<'a, T> Token<'a, T> {
     pub fn new(value: T, span: Span<'a>) -> Self {
         Self {
@@ -171,7 +158,6 @@ impl<'a> BBNFGrammar<'a> {
             .trim_whitespace()
             .many_span(1..)
             .map(|s| Comment::Block(s.as_str()))
-            .debug("block")
     }
 
     fn line_comment() -> Parser<'a, Comment<'a>> {
@@ -331,7 +317,6 @@ impl<'a> BBNFGrammar<'a> {
                     Expression::Concatenation(Box::new(token))
                 }
             })
-            .debug("concatenation")
     }
 
     fn alternation() -> Parser<'a, Expression<'a>> {
@@ -347,7 +332,6 @@ impl<'a> BBNFGrammar<'a> {
                     Expression::Alternation(Box::new(token))
                 }
             })
-            .debug("alternation")
     }
 
     fn lhs() -> Parser<'a, Expression<'a>> {
@@ -355,12 +339,17 @@ impl<'a> BBNFGrammar<'a> {
     }
 
     fn rhs() -> Parser<'a, Expression<'a>> {
-        Self::alternation().debug("rhs")
+        Self::alternation()
     }
+
+    // fn mapper_expr() -> Parser<'a, Expression<'a>> {
+    //     // string("=>").trim_whitespace().then(
+    // }
 
     fn production_rule() -> Parser<'a, Expression<'a>> {
         let comment = Self::block_comment() | Self::line_comment();
         let eq = string("=").trim_whitespace();
+
         let terminator = (any_span(&[";", "."])).trim_whitespace();
 
         let production_rule = Self::lhs()
@@ -375,22 +364,30 @@ impl<'a> BBNFGrammar<'a> {
     pub fn grammar() -> Parser<'a, AST<'a>> {
         let rule = Self::production_rule().trim_whitespace().many(..);
 
-        return rule
-            .trim_whitespace()
-            .map(|rules| {
-                rules
-                    .into_iter()
-                    .map(|rule| {
-                        let Expression::ProductionRule(
+        return rule.trim_whitespace().map(|rules| {
+            rules
+                .into_iter()
+                .map(|rule| {
+                    let Expression::ProductionRule(
                            box Expression::Nonterminal(lhs), _
                         ) = &rule else {
                             unreachable!();
                         };
 
-                        (lhs.value.to_string(), rule)
-                    })
-                    .collect()
-            })
-            .debug("grammar");
+                    (lhs.value.to_string(), rule)
+                })
+                .collect()
+        });
+    }
+}
+
+impl<'a, T: PartialEq> PartialEq for Token<'a, T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.value == other.value
+    }
+}
+impl<'a, T: std::hash::Hash> std::hash::Hash for Token<'a, T> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.value.hash(state);
     }
 }

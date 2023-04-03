@@ -12,6 +12,36 @@ use syn::{parse_quote, Expr, Type};
 
 use indexmap::{IndexMap, IndexSet};
 
+pub struct GeneratedParser<'a> {
+    pub name: &'a str,
+    pub ty: Type,
+    pub parser: TokenStream,
+}
+
+pub fn generate_default_parsers<'a>() -> HashMap<&'a str, GeneratedParser<'a>> {
+    let mut default_parsers = HashMap::new();
+
+    default_parsers.insert(
+        "NUMBER",
+        GeneratedParser {
+            name: "NUMBER",
+            ty: parse_quote! { ::parse_that::Span<'a> },
+            parser: quote! { ::parse_that::parsers::utils::number_span() },
+        },
+    );
+
+    default_parsers.insert(
+        "DOUBLE_QUOTED_STRING",
+        GeneratedParser {
+            name: "DOUBLE_QUOTED_STRING",
+            ty: parse_quote! { ::parse_that::Span<'a> },
+            parser: quote! { ::parse_that::parsers::utils::quoted_span(r#"""#) },
+        },
+    );
+
+    default_parsers
+}
+
 fn get_inner_expression<'a, T>(inner_expr: &'a Box<Token<'a, T>>) -> &'a T {
     &inner_expr.as_ref().value
 }
@@ -124,8 +154,10 @@ pub fn topological_sort<'a>(ast: &'a AST) -> (AST<'a>, HashMap<String, HashSet<S
             let len: usize = sub_deps
                 .into_iter()
                 .map(|sub_name| {
-                    let sub_deps = deps.get(sub_name).unwrap();
-                    sub_deps.len()
+                    if let Some(sub_deps) = deps.get(sub_name) {
+                        return sub_deps.len();
+                    }
+                    0
                 })
                 .sum();
             (name, len)
@@ -135,8 +167,9 @@ pub fn topological_sort<'a>(ast: &'a AST) -> (AST<'a>, HashMap<String, HashSet<S
 
     let mut new_ast = AST::new();
     for (name, _) in order {
-        let expr = ast.get(name).unwrap();
-        new_ast.insert(name.clone(), expr.clone());
+        if let Some(expr) = ast.get(name) {
+            new_ast.insert(name.clone(), expr.clone());
+        }
     }
 
     (new_ast, deps)
@@ -180,6 +213,7 @@ pub fn calculate_acyclic_deps(
 pub fn calculate_parser_type<'a, 'b>(
     expr: &'a Expression<'a>,
     boxed_enum_ident: &Type,
+    default_parsers: &'a HashMap<&'a str, GeneratedParser<'a>>,
     cache: &'b mut HashMap<&'a Expression<'a>, Type>,
 ) -> Type
 where
@@ -191,17 +225,23 @@ where
 
     let ty = match expr {
         Expression::Literal(_) => parse_quote!(::parse_that::Span<'a>),
-        Expression::Nonterminal(_) => boxed_enum_ident.clone(),
+        Expression::Nonterminal(Token { value, .. }) => {
+            if let Some(parser) = default_parsers.get(value) {
+                return parser.ty.clone();
+            }
+            parse_quote!(#boxed_enum_ident)
+        }
         Expression::Regex(_) => parse_quote!(::parse_that::Span<'a>),
 
         Expression::Group(inner_expr) => {
             let inner_expr = get_inner_expression(inner_expr);
-            calculate_parser_type(inner_expr, boxed_enum_ident, cache)
+            calculate_parser_type(inner_expr, boxed_enum_ident, default_parsers, cache)
         }
 
         Expression::Optional(inner_expr) => {
             let inner_expr = get_inner_expression(inner_expr);
-            let inner_type = calculate_parser_type(inner_expr, boxed_enum_ident, cache);
+            let inner_type =
+                calculate_parser_type(inner_expr, boxed_enum_ident, default_parsers, cache);
 
             if type_is_span(&inner_type) {
                 return inner_type;
@@ -210,11 +250,12 @@ where
         }
         Expression::OptionalWhitespace(inner_expr) => {
             let inner_expr = get_inner_expression(inner_expr);
-            calculate_parser_type(inner_expr, boxed_enum_ident, cache)
+            calculate_parser_type(inner_expr, boxed_enum_ident, default_parsers, cache)
         }
         Expression::Many(inner_expr) | Expression::Many1(inner_expr) => {
             let inner_expr = get_inner_expression(inner_expr);
-            let inner_type = calculate_parser_type(inner_expr, boxed_enum_ident, cache);
+            let inner_type =
+                calculate_parser_type(inner_expr, boxed_enum_ident, default_parsers, cache);
 
             if type_is_span(&inner_type) {
                 return inner_type;
@@ -223,18 +264,21 @@ where
         }
         Expression::Skip(left_expr, _) => {
             let left_expr = get_inner_expression(left_expr);
-            let left_type = calculate_parser_type(left_expr, boxed_enum_ident, cache);
+            let left_type =
+                calculate_parser_type(left_expr, boxed_enum_ident, default_parsers, cache);
             return left_type;
         }
 
         Expression::Next(_, right_expr) => {
             let right_expr = get_inner_expression(right_expr);
-            let right_type = calculate_parser_type(right_expr, boxed_enum_ident, cache);
+            let right_type =
+                calculate_parser_type(right_expr, boxed_enum_ident, default_parsers, cache);
             return right_type;
         }
         Expression::Minus(left_expr, _) => {
             let left_expr = get_inner_expression(left_expr);
-            let left_type = calculate_parser_type(left_expr, boxed_enum_ident, cache);
+            let left_type =
+                calculate_parser_type(left_expr, boxed_enum_ident, default_parsers, cache);
             return left_type;
         }
 
@@ -243,7 +287,7 @@ where
 
             let tys = inner_exprs
                 .into_iter()
-                .map(|expr| calculate_parser_type(expr, boxed_enum_ident, cache))
+                .map(|expr| calculate_parser_type(expr, boxed_enum_ident, default_parsers, cache))
                 .collect::<Vec<_>>();
 
             if tys.iter().all(type_is_span) || tys.len() == 1 {
@@ -257,7 +301,7 @@ where
 
             let tys = inner_exprs
                 .into_iter()
-                .map(|expr| calculate_parser_type(expr, boxed_enum_ident, cache))
+                .map(|expr| calculate_parser_type(expr, boxed_enum_ident, default_parsers, cache))
                 .collect::<Vec<_>>();
 
             if tys.iter().all(type_is_span) {
@@ -272,7 +316,9 @@ where
             }
         }
 
-        Expression::ProductionRule(_, rhs) => calculate_parser_type(rhs, boxed_enum_ident, cache),
+        Expression::ProductionRule(_, rhs) => {
+            calculate_parser_type(rhs, boxed_enum_ident, default_parsers, cache)
+        }
 
         _ => panic!("Unimplemented expression type"),
     };
@@ -297,6 +343,7 @@ pub fn calculate_nonterminal_types<'a>(
     ast: &'a AST,
     acyclic_deps: &HashMap<String, HashSet<String>>,
     boxed_enum_ident: &Type,
+    default_parsers: &'a HashMap<&'a str, GeneratedParser<'a>>,
 ) -> (HashMap<String, Type>, HashMap<&'a Expression<'a>, Type>) {
     let mut generated_types: HashMap<&Expression, Type> = HashMap::new();
     let mut cache = HashMap::new();
@@ -307,7 +354,7 @@ pub fn calculate_nonterminal_types<'a>(
         let t_generated_types: HashMap<_, _> = ast
             .into_iter()
             .map(|(_, expr)| {
-                let ty = calculate_parser_type(expr, boxed_enum_ident, &mut cache);
+                let ty = calculate_parser_type(expr, boxed_enum_ident, default_parsers, &mut cache);
                 let Expression::ProductionRule(lhs, _) = expr else {
                     panic!("Expected production rule");
                 };
@@ -358,6 +405,7 @@ pub fn calculate_nonterminal_types<'a>(
 pub fn check_for_sep_by<'a, 'b>(
     expr: &'a Expression<'a>,
     boxed_enum_ident: &Type,
+    default_parsers: &'a HashMap<&'a str, GeneratedParser<'a>>,
     cache: &'b mut HashMap<&'a Expression<'a>, TokenStream>,
     type_cache: &'b mut HashMap<&'a Expression<'a>, Type>,
 ) -> Option<TokenStream>
@@ -366,7 +414,7 @@ where
 {
     match expr {
         Expression::Group(box Token { value, .. }) => {
-            check_for_sep_by(value, boxed_enum_ident, cache, type_cache)
+            check_for_sep_by(value, boxed_enum_ident, default_parsers, cache, type_cache)
         }
         Expression::Skip(
             left_expr,
@@ -378,13 +426,25 @@ where
             let left_expr = get_inner_expression(left_expr);
             let right_expr = get_inner_expression(right_expr);
 
-            let left_parser =
-                generate_parser_from_ast(left_expr, boxed_enum_ident, cache, type_cache);
-            let right_parser =
-                generate_parser_from_ast(right_expr, boxed_enum_ident, cache, type_cache);
+            let left_parser = generate_parser_from_ast(
+                left_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            );
+            let right_parser = generate_parser_from_ast(
+                right_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            );
 
-            let left_type = calculate_parser_type(left_expr, boxed_enum_ident, type_cache);
-            let right_type = calculate_parser_type(right_expr, boxed_enum_ident, type_cache);
+            let left_type =
+                calculate_parser_type(left_expr, boxed_enum_ident, default_parsers, type_cache);
+            let right_type =
+                calculate_parser_type(right_expr, boxed_enum_ident, default_parsers, type_cache);
 
             if type_is_span(&left_type) && type_is_span(&right_type) {
                 return Some(quote! {
@@ -404,6 +464,7 @@ pub fn check_for_wrapped<'a, 'b>(
     left_expr: &'a Expression<'a>,
     right_expr: &'a Expression<'a>,
     boxed_enum_ident: &Type,
+    default_parsers: &'a HashMap<&'a str, GeneratedParser<'a>>,
     cache: &'b mut HashMap<&'a Expression<'a>, TokenStream>,
     type_cache: &'b mut HashMap<&'a Expression<'a>, Type>,
 ) -> Option<TokenStream>
@@ -411,23 +472,46 @@ where
     'a: 'b,
 {
     match left_expr {
-        Expression::Group(box Token { value, .. }) => {
-            check_for_wrapped(left_expr, value, boxed_enum_ident, cache, type_cache)
-        }
+        Expression::Group(box Token { value, .. }) => check_for_wrapped(
+            left_expr,
+            value,
+            boxed_enum_ident,
+            default_parsers,
+            cache,
+            type_cache,
+        ),
         Expression::Next(left_expr, middle_expr) => {
             let left_expr = get_inner_expression(left_expr);
             let middle_expr = get_inner_expression(middle_expr);
 
-            let left_parser =
-                generate_parser_from_ast(left_expr, boxed_enum_ident, cache, type_cache);
-            let middle_parser =
-                generate_parser_from_ast(middle_expr, boxed_enum_ident, cache, type_cache);
-            let right_parser =
-                generate_parser_from_ast(right_expr, boxed_enum_ident, cache, type_cache);
+            let left_parser = generate_parser_from_ast(
+                left_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            );
+            let middle_parser = generate_parser_from_ast(
+                middle_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            );
+            let right_parser = generate_parser_from_ast(
+                right_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            );
 
-            let left_type = calculate_parser_type(left_expr, boxed_enum_ident, type_cache);
-            let middle_type = calculate_parser_type(middle_expr, boxed_enum_ident, type_cache);
-            let right_type = calculate_parser_type(right_expr, boxed_enum_ident, type_cache);
+            let left_type =
+                calculate_parser_type(left_expr, boxed_enum_ident, default_parsers, type_cache);
+            let middle_type =
+                calculate_parser_type(middle_expr, boxed_enum_ident, default_parsers, type_cache);
+            let right_type =
+                calculate_parser_type(right_expr, boxed_enum_ident, default_parsers, type_cache);
 
             if type_is_span(&left_type) && type_is_span(&middle_type) && type_is_span(&right_type) {
                 return Some(quote! {
@@ -471,6 +555,7 @@ pub fn check_for_any_span<'a>(exprs: &Vec<Expression>) -> Option<TokenStream> {
 pub fn generate_parser_from_ast<'a, 'b>(
     expr: &'a Expression<'a>,
     boxed_enum_ident: &Type,
+    default_parsers: &'a HashMap<&'a str, GeneratedParser<'a>>,
     cache: &'b mut HashMap<&'a Expression<'a>, TokenStream>,
     type_cache: &'b mut HashMap<&'a Expression<'a>, Type>,
 ) -> TokenStream
@@ -478,9 +563,7 @@ where
     'a: 'b,
 {
     if let Some(parser) = cache.get(expr) {
-        return quote! {
-            #parser
-        };
+        return parser.clone();
     }
 
     match expr {
@@ -489,6 +572,10 @@ where
             quote! { ::parse_that::string_span(#value) }
         }
         Expression::Nonterminal(Token { value, .. }) => {
+            if let Some(parser) = default_parsers.get(value) {
+                return parser.parser.clone();
+            }
+
             let ident = syn::Ident::new(value, proc_macro2::Span::call_site());
             quote! { Self::#ident() }
         }
@@ -498,12 +585,25 @@ where
         }
         Expression::Group(inner_expr) => {
             let inner_expr = get_inner_expression(inner_expr);
-            generate_parser_from_ast(inner_expr, boxed_enum_ident, cache, type_cache)
+            generate_parser_from_ast(
+                inner_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            )
         }
         Expression::Optional(inner_expr) => {
             let inner_expr = get_inner_expression(inner_expr);
-            let parser = generate_parser_from_ast(inner_expr, boxed_enum_ident, cache, type_cache);
-            let ty = calculate_parser_type(inner_expr, boxed_enum_ident, type_cache);
+            let parser = generate_parser_from_ast(
+                inner_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            );
+            let ty =
+                calculate_parser_type(inner_expr, boxed_enum_ident, default_parsers, type_cache);
 
             if type_is_span(&ty) {
                 return quote! { #parser.opt_span() };
@@ -512,20 +612,38 @@ where
         }
         Expression::OptionalWhitespace(inner_expr) => {
             let inner_expr = get_inner_expression(inner_expr);
-            let parser = generate_parser_from_ast(inner_expr, boxed_enum_ident, cache, type_cache);
+            let parser = generate_parser_from_ast(
+                inner_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            );
 
             quote! { #parser.trim_whitespace() }
         }
         Expression::Many(inner_expr) => {
             let inner_expr = get_inner_expression(inner_expr);
 
-            if let Some(parser) = check_for_sep_by(inner_expr, boxed_enum_ident, cache, type_cache)
-            {
+            if let Some(parser) = check_for_sep_by(
+                inner_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            ) {
                 return parser;
             }
 
-            let parser = generate_parser_from_ast(inner_expr, boxed_enum_ident, cache, type_cache);
-            let ty = calculate_parser_type(inner_expr, boxed_enum_ident, type_cache);
+            let parser = generate_parser_from_ast(
+                inner_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            );
+            let ty =
+                calculate_parser_type(inner_expr, boxed_enum_ident, default_parsers, type_cache);
 
             if type_is_span(&ty) {
                 return quote! { #parser.many_span(..) };
@@ -534,8 +652,15 @@ where
         }
         Expression::Many1(inner_expr) => {
             let inner_expr = get_inner_expression(inner_expr);
-            let parser = generate_parser_from_ast(inner_expr, boxed_enum_ident, cache, type_cache);
-            let ty = calculate_parser_type(inner_expr, boxed_enum_ident, type_cache);
+            let parser = generate_parser_from_ast(
+                inner_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            );
+            let ty =
+                calculate_parser_type(inner_expr, boxed_enum_ident, default_parsers, type_cache);
 
             if type_is_span(&ty) {
                 return quote! { #parser.many_span(1..) };
@@ -546,16 +671,31 @@ where
             let left_expr = get_inner_expression(left_expr);
             let right_expr = get_inner_expression(right_expr);
 
-            if let Some(parser) =
-                check_for_wrapped(left_expr, right_expr, boxed_enum_ident, cache, type_cache)
-            {
+            if let Some(parser) = check_for_wrapped(
+                left_expr,
+                right_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            ) {
                 return parser;
             }
 
-            let left_parser =
-                generate_parser_from_ast(left_expr, boxed_enum_ident, cache, type_cache);
-            let right_parser =
-                generate_parser_from_ast(right_expr, boxed_enum_ident, cache, type_cache);
+            let left_parser = generate_parser_from_ast(
+                left_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            );
+            let right_parser = generate_parser_from_ast(
+                right_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            );
 
             quote! { #left_parser.skip(#right_parser) }
         }
@@ -563,10 +703,20 @@ where
             let left_expr = get_inner_expression(left_expr);
             let right_expr = get_inner_expression(right_expr);
 
-            let left_parser =
-                generate_parser_from_ast(left_expr, boxed_enum_ident, cache, type_cache);
-            let right_parser =
-                generate_parser_from_ast(right_expr, boxed_enum_ident, cache, type_cache);
+            let left_parser = generate_parser_from_ast(
+                left_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            );
+            let right_parser = generate_parser_from_ast(
+                right_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            );
 
             quote! { #left_parser.next(#right_parser) }
         }
@@ -575,23 +725,41 @@ where
             let left_expr = get_inner_expression(left_expr);
             let right_expr = get_inner_expression(right_expr);
 
-            let left_parser =
-                generate_parser_from_ast(left_expr, boxed_enum_ident, cache, type_cache);
-            let right_parser =
-                generate_parser_from_ast(right_expr, boxed_enum_ident, cache, type_cache);
+            let left_parser = generate_parser_from_ast(
+                left_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            );
+            let right_parser = generate_parser_from_ast(
+                right_expr,
+                boxed_enum_ident,
+                default_parsers,
+                cache,
+                type_cache,
+            );
 
             quote! { #left_parser.not(#right_parser) }
         }
 
         Expression::Concatenation(inner_exprs) => {
             let inner_exprs = get_inner_expression(inner_exprs);
-            let ty = calculate_parser_type(expr, boxed_enum_ident, type_cache);
+            let ty = calculate_parser_type(expr, boxed_enum_ident, default_parsers, type_cache);
             let is_span = type_is_span(&ty);
 
             let mut acc = None;
             for (n, parser) in inner_exprs
                 .iter()
-                .map(|parser| generate_parser_from_ast(parser, boxed_enum_ident, cache, type_cache))
+                .map(|parser| {
+                    generate_parser_from_ast(
+                        parser,
+                        boxed_enum_ident,
+                        default_parsers,
+                        cache,
+                        type_cache,
+                    )
+                })
                 .enumerate()
             {
                 acc = match acc {
@@ -620,7 +788,15 @@ where
 
             let parser = inner_exprs
                 .iter()
-                .map(|parser| generate_parser_from_ast(parser, boxed_enum_ident, cache, type_cache))
+                .map(|parser| {
+                    generate_parser_from_ast(
+                        parser,
+                        boxed_enum_ident,
+                        default_parsers,
+                        cache,
+                        type_cache,
+                    )
+                })
                 .fold(None, |acc, parser| match acc {
                     None => Some(parser),
                     Some(acc) => Some(quote! { #acc | #parser  }),
@@ -635,7 +811,7 @@ where
         }
 
         Expression::ProductionRule(_lhs, rhs) => {
-            generate_parser_from_ast(rhs, boxed_enum_ident, cache, type_cache)
+            generate_parser_from_ast(rhs, boxed_enum_ident, default_parsers, cache, type_cache)
         }
 
         _ => unimplemented!("Expression not implemented: {:?}", expr),

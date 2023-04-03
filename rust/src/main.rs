@@ -13,39 +13,39 @@ use std::{collections::HashMap, fs, time::SystemTime};
 
 use fnv::FnvHashMap;
 
-// #[derive(Parser)]
-// #[parser(path = "../grammar/math.bbnf")]
-// pub struct Math {}
+#[derive(Parser)]
+#[parser(path = "../grammar/math.bbnf", ignore_whitespace)]
+pub struct Math {}
 
-// pub fn consume(p: &MathEnum) -> f64 {
-//     pub fn recurse(p: &MathEnum) -> f64 {
-//         let fold_expression = |acc, (op, rest): &(Span, Box<MathEnum>)| match op.as_str() {
-//             "+" => acc + recurse(rest),
-//             "-" => acc - recurse(rest),
-//             "*" => acc * recurse(rest),
-//             "/" => acc / recurse(rest),
-//             _ => unreachable!(),
-//         };
+pub fn consume_math(p: &MathEnum) -> f64 {
+    pub fn recurse(p: &MathEnum) -> f64 {
+        let fold_expression = |acc, (op, rest): &(Span, Box<MathEnum>)| match op.as_str() {
+            "+" => acc + recurse(rest),
+            "-" => acc - recurse(rest),
+            "*" => acc * recurse(rest),
+            "/" => acc / recurse(rest),
+            _ => unreachable!(),
+        };
 
-//         match p {
-//             MathEnum::expr((term, rest)) => rest.into_iter().fold(recurse(term), fold_expression),
-//             MathEnum::term((factor, rest)) => {
-//                 rest.into_iter().fold(recurse(factor), fold_expression)
-//             }
-//             MathEnum::wrapped((_, expr, _)) => recurse(expr),
-//             MathEnum::factor(num) => recurse(num),
-//             MathEnum::number(num) => num.as_str().parse().unwrap(),
-//         }
-//     }
+        match p {
+            MathEnum::expr((term, rest)) => rest.into_iter().fold(recurse(term), fold_expression),
+            MathEnum::term((factor, rest)) => {
+                rest.into_iter().fold(recurse(factor), fold_expression)
+            }
+            MathEnum::wrapped((_, expr, _)) => recurse(expr),
+            MathEnum::factor(num) => recurse(num),
+            MathEnum::number(num) => num.as_str().parse().unwrap(),
+        }
+    }
 
-//     recurse(p)
-// }
+    recurse(p)
+}
 
 #[derive(Parser)]
 #[parser(path = "../grammar/json.bbnf", ignore_whitespace)]
 pub struct Json {}
 
-pub fn consume<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
+pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
     pub fn recurse<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
         match p {
             JsonEnum::null(_) => JsonValue::Null,
@@ -79,14 +79,18 @@ pub fn consume<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
 pub fn main() {
     let first_now = SystemTime::now();
 
+    let math = Math::expr().parse("1 + 2 + 3 * 3 / 12").unwrap();
+    let tmp = consume_math(&math);
+    println!("{:?}", tmp);
+
     let json_file_path = "../../data/json/canada.json";
     let json_string = fs::read_to_string(json_file_path).unwrap();
 
     let now = SystemTime::now();
 
     let x = Json::value().parse(&json_string).unwrap();
-    let tmp = consume(&x);
 
+    let tmp = consume_json(&x);
     let elapsed = now.elapsed().unwrap();
 
     println!("JSON2 Elapsed: {:?}", elapsed);
@@ -117,7 +121,7 @@ pub fn main() {
 
     // println!("CSV Elapsed: {:?}", elapsed);
 
-    let json_file_path = "../../data/json/canada.json";
+    // let json_file_path = "../../data/json/data.json";
     let json_string = fs::read_to_string(json_file_path).unwrap();
 
     let parser = json_parser();
