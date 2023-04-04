@@ -1,19 +1,19 @@
 extern crate proc_macro;
 
-use std::borrow::BorrowMut;
+
 use std::collections::HashMap;
-use std::collections::HashSet;
+
 use std::env;
 
-use indexmap::{IndexMap, IndexSet};
+use indexmap::{IndexMap};
 
 use pretty::Doc;
 use proc_macro::TokenStream;
-use quote::ToTokens;
+
 use quote::{format_ident, quote};
 use syn::{
-    parse_macro_input, parse_quote, token::Comma, Attribute, Data, DeriveInput, Field, Fields, Lit,
-    Meta, NestedMeta, Type, Variant, WherePredicate,
+    parse_macro_input, parse_quote, Attribute, DeriveInput, Lit,
+    Meta, NestedMeta, Type,
 };
 
 extern crate bbnf;
@@ -21,27 +21,20 @@ use bbnf::generate::*;
 use bbnf::grammar::*;
 
 #[derive(Clone, Debug)]
+#[derive(Default)]
 struct ParserAttributes {
     paths: Vec<std::path::PathBuf>,
     ignore_whitespace: bool,
     debug: bool,
 }
 
-impl Default for ParserAttributes {
-    fn default() -> Self {
-        ParserAttributes {
-            paths: vec![],
-            ignore_whitespace: false,
-            debug: false,
-        }
-    }
-}
+
 
 fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
     let mut parser_attr = ParserAttributes::default();
 
     for meta in attrs
-        .into_iter()
+        .iter()
         .filter(|attr| attr.path.is_ident("parser"))
         .filter_map(|attr| match attr.parse_meta() {
             Ok(Meta::List(meta)) => Some(meta),
@@ -70,7 +63,7 @@ fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
             }
         }
     }
-    return parser_attr;
+    parser_attr
 }
 
 fn generate_enum(
@@ -175,7 +168,7 @@ where
                             }
 
                             if let Some(parser) = cache.get(dep) {
-                                if let Some(sub_deps) = acyclic_deps.get(dep) {
+                                if let Some(_sub_deps) = acyclic_deps.get(dep) {
                                     let name = get_nonterminal_name(dep);
                                     let ident = format_ident!("{}", name);
                                     let boxed_parser = box_parser(parser.clone(), &ident);
@@ -195,8 +188,8 @@ where
                 }
 
                 let parser = generate_parser_from_ast(
-                    &expr,
-                    &boxed_enum_type,
+                    expr,
+                    boxed_enum_type,
                     default_parsers,
                     &mut cache,
                     type_cache,
@@ -318,7 +311,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         &default_parsers,
     );
 
-    let grammar_arr = generate_grammar_arr(&ident, &parser_container_attrs);
+    let grammar_arr = generate_grammar_arr(ident, &parser_container_attrs);
     let grammar_enum = generate_enum(&enum_ident, &nonterminal_types);
 
     let generated_parsers = generate_parsers(

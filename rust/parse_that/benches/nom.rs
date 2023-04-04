@@ -79,7 +79,7 @@ fn hash(i: &str) -> IResult<&str, HashMap<&str, JsonValue>> {
 
     match key_value(i) {
         Err(_) => preceded(sp, char('}'))(i).map(|(i, _)| (i, res)),
-        Ok((i, first)) => {
+        Ok((i, _first)) => {
             let mut it = iterator(i, preceded(pair(sp, char(',')), key_value));
             res.extend(&mut it);
 
@@ -137,7 +137,7 @@ fn parse(b: &mut Bencher, filepath: &str) {
         let buf = black_box(&data);
         match root(buf) {
             Ok((_, o)) => {
-                return o;
+                o
             }
             Err(err) => {
                 panic!("got err: {:?}", err)

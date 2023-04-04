@@ -5,17 +5,17 @@ extern crate bbnf;
 extern crate parse_that;
 extern crate pretty;
 
-use bbnf::grammar::BBNFGrammar;
+
 use bbnf_derive::Parser;
 use parse_that::json::json_parser;
-use parse_that::{csv::csv_parser, json::JsonValue};
-use pretty::{concat, Doc, Pretty, Printer, PRINTER};
+use parse_that::{json::JsonValue};
 
-use parse_that::{parse::*, Span};
 
-use std::{collections::HashMap, fs, time::SystemTime};
+use parse_that::{parse::*};
 
-use fnv::FnvHashMap;
+use std::{fs, time::SystemTime};
+
+
 
 #[derive(Parser)]
 #[parser(path = "../../grammar/math.bbnf", ignore_whitespace)]
@@ -133,7 +133,7 @@ pub fn main() {
 
     let now = SystemTime::now();
 
-    let data = parser.parse(&json_string).unwrap();
+    let _data = parser.parse(&json_string).unwrap();
 
     let elapsed = now.elapsed().unwrap();
 

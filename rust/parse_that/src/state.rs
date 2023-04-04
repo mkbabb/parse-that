@@ -2,6 +2,7 @@ extern crate pretty;
 use pretty::Pretty;
 
 #[derive(Pretty, Debug, PartialEq, Clone, Copy, Hash, Eq)]
+#[derive(Default)]
 pub struct Span<'a> {
     pub start: usize,
     pub end: usize,
@@ -20,17 +21,10 @@ impl<'a> Span<'a> {
     }
 }
 
-impl Default for Span<'_> {
-    fn default() -> Self {
-        Span {
-            start: 0,
-            end: 0,
-            src: "",
-        }
-    }
-}
+
 
 #[derive(Pretty, Debug, PartialEq, Clone, Hash, Eq)]
+#[derive(Default)]
 pub struct ParserState<'a> {
     #[pretty(skip)]
     pub src: &'a str,
@@ -46,20 +40,7 @@ pub struct ParserState<'a> {
     pub state_stack: Vec<usize>,
 }
 
-impl<'a> Default for ParserState<'a> {
-    fn default() -> Self {
-        ParserState {
-            src: "",
-            src_bytes: &[],
-            end: 0,
 
-            offset: 0,
-            furthest_offset: 0,
-
-            state_stack: Vec::new(),
-        }
-    }
-}
 
 impl<'a> ParserState<'a> {
     pub fn new(src: &'a str) -> ParserState<'a> {

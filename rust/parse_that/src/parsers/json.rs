@@ -48,7 +48,7 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
 
         json_value()
             .sep_by(comma, ..)
-            .or_else(|| vec![])
+            .or_else(std::vec::Vec::new)
             .trim_whitespace()
             .wrap(string_span("["), string_span("]"))
             .map(JsonValue::Array)
@@ -62,7 +62,7 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
 
         key_value
             .sep_by(comma, ..)
-            .or_else(|| vec![])
+            .or_else(std::vec::Vec::new)
             .trim_whitespace()
             .wrap(string_span("{"), string_span("}"))
             .map(|pairs| JsonValue::Object(pairs.into_iter().collect()))

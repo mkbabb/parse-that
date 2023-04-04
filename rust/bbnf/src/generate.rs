@@ -1,5 +1,4 @@
 use std::{
-    borrow::Borrow,
     cell::RefCell,
     collections::{HashMap, HashSet},
     rc::Rc,
@@ -7,12 +6,12 @@ use std::{
 
 use crate::grammar::*;
 
-use pretty::{Doc, PRINTER};
-use proc_macro2::TokenStream;
-use quote::{format_ident, quote, ToTokens};
-use syn::{parse_quote, Expr, Type};
 
-use indexmap::{IndexMap, IndexSet};
+use proc_macro2::TokenStream;
+use quote::{quote, ToTokens};
+use syn::{parse_quote, Type};
+
+use indexmap::{IndexMap};
 
 pub struct GeneratedParser<'a> {
     pub name: &'a str,
@@ -66,7 +65,7 @@ fn type_is_span(ty: &Type) -> bool {
 
         first_segment.ident == "parse_that" && second_segment.ident == "Span"
     } else {
-        return false;
+        false
     }
 }
 
@@ -158,9 +157,9 @@ pub fn topological_sort<'a>(ast: &AST<'a>, deps: &Dependencies<'a>) -> AST<'a> {
         .iter()
         .map(|(expr, sub_deps)| {
             let len: usize = sub_deps
-                .into_iter()
+                .iter()
                 .map(|sub_name| {
-                    if let Some(sub_deps) = deps.get(&sub_name) {
+                    if let Some(sub_deps) = deps.get(sub_name) {
                         return sub_deps.len();
                     }
                     0
@@ -203,9 +202,9 @@ pub fn calculate_acyclic_deps<'a>(deps: &'a Dependencies<'a>) -> Dependencies<'a
                     return false;
                 }
             }
-            return true;
+            true
         } else {
-            return true;
+            true
         }
     }
 
@@ -294,7 +293,7 @@ where
             let inner_exprs = get_inner_expression(inner_exprs);
 
             let tys = inner_exprs
-                .into_iter()
+                .iter()
                 .map(|expr| calculate_parser_type(expr, boxed_enum_ident, default_parsers, cache))
                 .collect::<Vec<_>>();
 
@@ -308,7 +307,7 @@ where
             let inner_exprs = get_inner_expression(inner_exprs);
 
             let tys = inner_exprs
-                .into_iter()
+                .iter()
                 .map(|expr| calculate_parser_type(expr, boxed_enum_ident, default_parsers, cache))
                 .collect::<Vec<_>>();
 
@@ -347,7 +346,7 @@ pub type NonterminalTypeMap = IndexMap<String, Type>;
 pub const MAX_AST_ITERATIONS: usize = 1000;
 
 pub fn needs_boxing(expr: &Expression, deps: &Dependencies) -> bool {
-    if let Some(sub_deps) = deps.get(expr) {
+    if let Some(_sub_deps) = deps.get(expr) {
         if deps.values().any(|v| v.contains(expr)) {
             return true;
         }
@@ -383,7 +382,7 @@ pub fn calculate_nonterminal_types<'a>(
                             }
 
                             if let Some(ty) = cache.get(dep) {
-                                if let Some(sub_deps) = acyclic_deps.get(dep) {
+                                if let Some(_sub_deps) = acyclic_deps.get(dep) {
                                     boxed_types.insert(dep, ty.clone());
                                     cache.insert(dep, boxed_enum_ident.clone());
                                 }
@@ -410,9 +409,9 @@ pub fn calculate_nonterminal_types<'a>(
 
         if t_generated_types.iter().all(|(k, v)| {
             if let Some(v2) = generated_types.get(k) {
-                return v.to_token_stream().to_string() == v2.to_token_stream().to_string();
+                v.to_token_stream().to_string() == v2.to_token_stream().to_string()
             } else {
-                return false;
+                false
             }
         }) {
             break;
@@ -423,7 +422,7 @@ pub fn calculate_nonterminal_types<'a>(
 
     let generated_types = generated_types
         .into_iter()
-        .map(|(k, v)| (get_nonterminal_name(k).to_owned(), v.clone()))
+        .map(|(k, v)| (get_nonterminal_name(k).to_owned(), v))
         .collect();
 
     (generated_types, cache)
@@ -474,13 +473,13 @@ where
                 calculate_parser_type(right_expr, boxed_enum_ident, default_parsers, type_cache);
 
             if type_is_span(&left_type) && type_is_span(&right_type) {
-                return Some(quote! {
+                Some(quote! {
                     #left_parser.sep_by_span(#right_parser, ..)
-                });
+                })
             } else {
-                return Some(quote! {
+                Some(quote! {
                     #left_parser.sep_by(#right_parser, ..)
-                });
+                })
             }
         }
         _ => None,
@@ -541,13 +540,13 @@ where
                 calculate_parser_type(right_expr, boxed_enum_ident, default_parsers, type_cache);
 
             if type_is_span(&left_type) && type_is_span(&middle_type) && type_is_span(&right_type) {
-                return Some(quote! {
+                Some(quote! {
                     #middle_parser.wrap_span(#left_parser, #right_parser)
-                });
+                })
             } else {
-                return Some(quote! {
+                Some(quote! {
                     #middle_parser.wrap(#left_parser, #right_parser)
-                });
+                })
             }
         }
         _ => None,
@@ -571,11 +570,11 @@ pub fn check_for_any_span<'a>(exprs: &Vec<Expression>) -> Option<TokenStream> {
             })
             .collect::<Vec<_>>();
 
-        return Some(quote! {
+        Some(quote! {
             ::parse_that::any_span(&[#(#literal_arr),*])
-        });
+        })
     } else {
-        return None;
+        None
     }
 }
 
@@ -793,12 +792,10 @@ where
                     Some(acc) => {
                         if is_span {
                             Some(quote! { #acc.then_span( #parser ) })
+                        } else if n > 1 {
+                            Some(quote! { #acc.then_flat( #parser ) })
                         } else {
-                            if n > 1 {
-                                Some(quote! { #acc.then_flat( #parser ) })
-                            } else {
-                                Some(quote! { #acc.then( #parser ) })
-                            }
+                            Some(quote! { #acc.then( #parser ) })
                         }
                     }
                 }

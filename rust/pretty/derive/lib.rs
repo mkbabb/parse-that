@@ -8,6 +8,7 @@ use syn::{
 };
 
 #[derive(Clone, Debug)]
+#[derive(Default)]
 struct PrettyAttributes {
     // Field: Skip this field - don't include it in the output
     skip: bool,
@@ -21,23 +22,13 @@ struct PrettyAttributes {
     verbose: bool,
 }
 
-impl Default for PrettyAttributes {
-    fn default() -> Self {
-        PrettyAttributes {
-            skip: false,
-            indent: false,
-            rename: None,
-            getter: None,
-            verbose: false,
-        }
-    }
-}
+
 
 fn parse_pretty_attrs(attrs: &[Attribute]) -> PrettyAttributes {
     let mut pretty_attr = PrettyAttributes::default();
 
     for meta in attrs
-        .into_iter()
+        .iter()
         // Filter out attributes that aren't #[pretty(...)]
         .filter(|attr| attr.path.is_ident("pretty"))
         .filter_map(|attr| match attr.parse_meta() {
@@ -74,7 +65,7 @@ fn parse_pretty_attrs(attrs: &[Attribute]) -> PrettyAttributes {
             }
         }
     }
-    return pretty_attr;
+    pretty_attr
 }
 
 fn apply_pretty_doc_attributes(
@@ -123,10 +114,10 @@ pub fn pretty_derive(input: TokenStream) -> TokenStream {
 
     let doc_match = match &input.data {
         Data::Struct(data_struct) => {
-            generate_struct_match(&name, &data_struct.fields, &pretty_container_attrs)
+            generate_struct_match(name, &data_struct.fields, &pretty_container_attrs)
         }
         Data::Enum(data_enum) => {
-            generate_enum_match(&name, &data_enum.variants, &pretty_container_attrs)
+            generate_enum_match(name, &data_enum.variants, &pretty_container_attrs)
         }
         _ => panic!("Only structs and enums are supported."),
     };
@@ -134,7 +125,7 @@ pub fn pretty_derive(input: TokenStream) -> TokenStream {
     // If there's a where clause extant, we want to preserve it, else we want to create a new one
     let mut new_where_clause = where_clause
         .map(|wc| wc.predicates.clone())
-        .unwrap_or_else(|| syn::punctuated::Punctuated::new());
+        .unwrap_or_else(syn::punctuated::Punctuated::new);
 
     // Every generic type needs to be constrained to Into<Doc<'a>>
     let new_generic_predicates = generics.type_params().map(|tp| -> WherePredicate {
@@ -207,7 +198,7 @@ fn generate_struct_fields_match(fields: &Fields) -> Vec<proc_macro2::TokenStream
             .iter()
             .filter_map(|field| {
                 let field_ident = &field.ident;
-                format_key_value(&field_ident, &field)
+                format_key_value(field_ident, field)
             })
             .collect(),
         // If it's unnamed, we need to generate a field name for each field
@@ -217,7 +208,7 @@ fn generate_struct_fields_match(fields: &Fields) -> Vec<proc_macro2::TokenStream
             .enumerate()
             .filter_map(|(i, field)| {
                 let field_ident = Some(format_ident!("field_{}", i));
-                format_key_value(&field_ident, &field)
+                format_key_value(&field_ident, field)
             })
             .collect(),
         Fields::Unit => vec![],

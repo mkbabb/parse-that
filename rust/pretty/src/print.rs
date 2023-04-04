@@ -1,7 +1,7 @@
 use crate::doc::Doc;
 use crate::utils::text_justify;
 use std::collections::HashMap;
-use std::fmt::Pointer;
+
 
 pub fn count_join_length<'a>(sep: &'a Doc<'a>, docs: &'a Vec<Doc<'a>>, printer: &Printer) -> usize {
     if docs.is_empty() {
@@ -13,7 +13,7 @@ pub fn count_join_length<'a>(sep: &'a Doc<'a>, docs: &'a Vec<Doc<'a>>, printer: 
     doc_length + separator_length * (docs.len() - 1)
 }
 
-pub fn count_text_length<'a>(doc: &'a Doc, printer: &Printer) -> usize {
+pub fn count_text_length(doc: &Doc, printer: &Printer) -> usize {
     match doc {
         Doc::Str(s) => s.len(),
         Doc::String(s) => s.len(),
@@ -61,7 +61,7 @@ pub fn smart_join_impl<'a>(
 
     let breaks = text_justify(sep_length, &doc_lengths, max_width);
 
-    docs.into_iter()
+    docs.iter()
         .enumerate()
         .fold(Vec::new(), |mut acc, (i, doc)| {
             if i > 0 {
@@ -112,7 +112,7 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
             }
 
             Doc::Concat(docs) => {
-                for d in docs.into_iter().rev() {
+                for d in docs.iter().rev() {
                     stack.push(PrintItem {
                         doc: d,
                         indent_delta,
@@ -173,7 +173,7 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
                     join_impl
                 };
 
-                let joined = join_fn(*&sep, docs, printer);
+                let joined = join_fn(sep, docs, printer);
 
                 for d in joined.into_iter().rev() {
                     stack.push(PrintItem {

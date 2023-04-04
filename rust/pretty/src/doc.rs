@@ -287,7 +287,7 @@ where
                 .group()
                 .wrap(str("["), str("]"))
                 .indent();
-            return doc;
+            doc
         } else {
             return str("[]");
         }
@@ -311,7 +311,7 @@ where
                 .group()
                 .wrap(str("{"), str("}"))
                 .indent();
-            return doc;
+            doc
         } else {
             return str("{}");
         }
@@ -331,7 +331,7 @@ where
                 .group()
                 .wrap(str("{"), str("}"))
                 .indent();
-            return doc;
+            doc
         } else {
             return str("{}");
         }

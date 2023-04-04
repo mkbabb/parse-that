@@ -10,15 +10,15 @@ pub enum CSV<'a> {
     Lines(Vec<Vec<&'a str>>),
 }
 
-impl<'a> Into<Doc<'a>> for CSV<'a> {
-    fn into(self) -> Doc<'a> {
-        let CSV::Lines(lines) = self;
+impl<'a> From<CSV<'a>> for Doc<'a> {
+    fn from(val: CSV<'a>) -> Self {
+        let CSV::Lines(lines) = val;
 
         return lines
             .into_iter()
             .map(|line| {
                 line.into_iter()
-                    .map(|s| str(s))
+                    .map(str)
                     .collect::<Vec<_>>()
                     .join(",")
             })

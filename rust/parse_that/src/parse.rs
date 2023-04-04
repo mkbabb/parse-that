@@ -9,7 +9,7 @@ use crate::state::{ParserState, Span};
 use crate::utils::extract_bounds;
 
 #[inline(always)]
-pub fn trim_leading_whitespace<'a>(state: &ParserState<'a>) -> usize {
+pub fn trim_leading_whitespace(state: &ParserState<'_>) -> usize {
     unsafe {
         state
             .src_bytes
@@ -45,15 +45,15 @@ where
     Output: 'a,
 {
     pub fn new(parser_fn: impl ParserFn<'a, Output>) -> Parser<'a, Output> {
-        let parser = Parser {
+        
+        Parser {
             parser_fn: Box::new(parser_fn),
-        };
-        return parser;
+        }
     }
 
     pub fn parse_return_state(&self, src: &'a str) -> ParserResult<'a, Output> {
         let mut state = ParserState::new(src);
-        return self.parser_fn.call(&mut state);
+        self.parser_fn.call(&mut state)
     }
 
     pub fn parse(&self, src: &'a str) -> Option<Output> {
@@ -66,7 +66,7 @@ where
         move |state: &mut ParserState<'a>| {
             let result = self.parser_fn.call(state);
             state.furthest_offset = state.furthest_offset.max(state.offset);
-            return result;
+            result
         };
         Parser {
             parser_fn: Box::new(merge_context),
@@ -93,9 +93,9 @@ where
             result
         };
 
-        return Parser {
+        Parser {
             parser_fn: Box::new(save_state),
-        };
+        }
     }
 
     pub fn then<Output2>(self, next: Parser<'a, Output2>) -> Parser<'a, (Output, Output2)>
@@ -128,8 +128,8 @@ where
 
     pub fn or_else(self, f: fn() -> Output) -> Parser<'a, Output> {
         let or_else = move |state: &mut ParserState<'a>| match self.parser_fn.call(state) {
-            Some(value) => return Some(value),
-            None => return Some(f()),
+            Some(value) => Some(value),
+            None => Some(f()),
         };
         Parser::new(or_else)
     }
@@ -174,10 +174,7 @@ where
         Output2: 'a,
     {
         let map = move |state: &mut ParserState<'a>| {
-            match self.parser_fn.call(state) {
-                Some(value) => return Some(f(value)),
-                None => return None,
-            };
+            self.parser_fn.call(state).map(f)
         };
 
         Parser::new(map)
@@ -196,7 +193,7 @@ where
             let Some(result) = self.parser_fn.call(state) else {
                     return None;
             };
-            return Some(f(result, offset, state));
+            Some(f(result, offset, state))
         };
 
         Parser::new(map_with_state)
@@ -243,9 +240,9 @@ where
                 }
             }
             if values.len() >= lower_bound {
-                return Some(values);
+                Some(values)
             } else {
-                return None;
+                None
             }
         };
 
@@ -262,15 +259,11 @@ where
         Output3: 'a,
     {
         let wrap = move |state: &mut ParserState<'a>| {
-            if let None = left.parser_fn.call(state) {
-                return None;
-            }
+            left.parser_fn.call(state)?;
             let Some(value) = self.parser_fn.call(state) else {
                 return None;
             };
-            if let None = right.parser_fn.call(state) {
-                return None;
-            }
+            right.parser_fn.call(state)?;
 
             Some(value)
         };
@@ -283,15 +276,11 @@ where
         Output2: 'a,
     {
         let trim = move |state: &mut ParserState<'a>| {
-            if let None = trimmer.parser_fn.call(state) {
-                return None;
-            }
+            trimmer.parser_fn.call(state)?;
             let Some(value) = self.parser_fn.call(state) else {
                 return None;
             };
-            if let None = trimmer.parser_fn.call(state) {
-                return None;
-            }
+            trimmer.parser_fn.call(state)?;
             Some(value)
         };
 
@@ -378,9 +367,7 @@ where
             let Some(value) = self.parser_fn.call(state)  else {
                 return None;
             };
-            if let None = parser.parser_fn.call(state) {
-                return None;
-            }
+            parser.parser_fn.call(state)?;
             Some(value)
         };
 
@@ -489,7 +476,7 @@ where
 #[inline(always)]
 fn string_impl<'a>(s_bytes: &[u8], end: &usize, state: &mut ParserState<'a>) -> Option<Span<'a>> {
     if *end == 0 {
-        return Some(Span::new(state.offset, state.offset, &state.src));
+        return Some(Span::new(state.offset, state.offset, state.src));
     }
 
     let Some(slc) = &state.src_bytes.get(state.offset..) else {
@@ -499,7 +486,7 @@ fn string_impl<'a>(s_bytes: &[u8], end: &usize, state: &mut ParserState<'a>) -> 
         let start = state.offset;
         state.offset += end;
 
-        Some(Span::new(start, state.offset, &state.src))
+        Some(Span::new(start, state.offset, state.src))
     } else {
         None
     }
@@ -541,7 +528,7 @@ fn regex_impl<'a>(re: &Regex, state: &mut ParserState<'a>) -> Option<Span<'a>> {
             }
             let start = state.offset;
             state.offset += m.end();
-            Some(Span::new(start, state.offset, &state.src))
+            Some(Span::new(start, state.offset, state.src))
         }
         None => None,
     }
@@ -584,7 +571,7 @@ where
 
         let start = state.offset;
         state.offset += len;
-        Some(Span::new(start, state.offset, &state.src))
+        Some(Span::new(start, state.offset, state.src))
     };
 
     Parser::new(take_while)
@@ -597,7 +584,7 @@ pub fn next_span<'a>(amount: usize) -> Parser<'a, Span<'a>> {
         }
         let start = state.offset;
         state.offset += amount;
-        Some(Span::new(start, state.offset, &state.src))
+        Some(Span::new(start, state.offset, state.src))
     };
     Parser::new(next)
 }
@@ -620,7 +607,7 @@ pub fn any_span<'a>(patterns: &[&'a str]) -> Parser<'a, Span<'a>> {
 
         let start = state.offset;
         state.offset += m.end();
-        Some(Span::new(start, state.offset, &state.src))
+        Some(Span::new(start, state.offset, state.src))
     };
 
     Parser::new(any)
@@ -653,10 +640,10 @@ impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
             let start = state.offset;
 
             let Some(_) = self.parser_fn.call(state) else {
-                return Some(Span::new(start, start, &state.src));
+                return Some(Span::new(start, start, state.src));
             };
 
-            Some(Span::new(start, state.offset, &state.src))
+            Some(Span::new(start, state.offset, state.src))
         };
         Parser::new(opt)
     }
@@ -673,7 +660,7 @@ impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
             let Some(end) = other.parser_fn.call(state) else {
                 return None
             };
-            Some(Span::new(start.start, end.end, &state.src))
+            Some(Span::new(start.start, end.end, state.src))
         };
         Parser::new(then)
     }
@@ -693,7 +680,7 @@ impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
             let Some(_) = right.parser_fn.call(state) else {
                 return None
             };
-            Some(Span::new(middle.start, middle.end, &state.src))
+            Some(Span::new(middle.start, middle.end, state.src))
         };
         Parser::new(wrap)
     }
@@ -722,7 +709,7 @@ impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
             }
 
             if count >= lower_bound {
-                Some(Span::new(start, end, &state.src))
+                Some(Span::new(start, end, state.src))
             } else {
                 None
             }
@@ -750,14 +737,14 @@ impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
                 } else {
                     break;
                 }
-                if let Some(_) = sep.parser_fn.call(state) {
+                if sep.parser_fn.call(state).is_some() {
                 } else {
                     break;
                 }
             }
 
             if count >= lower_bound {
-                Some(Span::new(start, end, &state.src))
+                Some(Span::new(start, end, state.src))
             } else {
                 None
             }

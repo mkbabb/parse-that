@@ -1,8 +1,8 @@
 extern crate parse_that;
 
-use parse_that::parsers::utils::{escaped_span, number_span};
+use parse_that::parsers::utils::{escaped_span};
 use parse_that::{
-    any_span, lazy, next_span, regex_span, string, string_span, take_while_span, Parser,
+    any_span, lazy, next_span, string, string_span, take_while_span, Parser,
     ParserFlat, ParserSpan, ParserState, Span,
 };
 
@@ -190,7 +190,7 @@ impl<'a> BBNFGrammar<'a> {
 
     fn literal() -> Parser<'a, Expression<'a>> {
         let quoted = |quote: &'a str| {
-            let not_quote = take_while_span(|c| c != quote.chars().nth(0).unwrap() && c != '\\');
+            let not_quote = take_while_span(|c| c != quote.chars().next().unwrap() && c != '\\');
             (not_quote | escaped_span())
                 .many_span(..)
                 .wrap_span(string_span(quote), string_span(quote))
@@ -290,7 +290,7 @@ impl<'a> BBNFGrammar<'a> {
                 let comments = Comments { left, right };
                 set_expression_comments(&mut expr, comments);
             }
-            return expr;
+            expr
         })
     }
 
