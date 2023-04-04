@@ -131,9 +131,6 @@ fn generate_parsers<'a, 'b>(
 where
     'a: 'b,
 {
-    let mut generated_parsers: HashMap<&Expression, proc_macro2::TokenStream> = HashMap::new();
-    let mut cache: HashMap<&Expression, proc_macro2::TokenStream> = HashMap::new();
-
     let format_parser = |mut parser: proc_macro2::TokenStream, name: &str| {
         if parser_container_attrs.ignore_whitespace {
             parser = quote! {
@@ -154,41 +151,43 @@ where
         }
     };
 
+    println!("deps: {:?}", Doc::from(deps.clone()));
     println!("acyclic_deps: {:?}", Doc::from(acyclic_deps.clone()));
 
-    loop {
-        let mut was_boxed = HashSet::new();
+    let mut generated_parsers: HashMap<&Expression, proc_macro2::TokenStream> = HashMap::new();
+    let mut cache: HashMap<&Expression, proc_macro2::TokenStream> = HashMap::new();
 
+    loop {
         let t_generated_parsers: HashMap<_, _> = ast
             .iter()
             .map(|(_, expr)| {
                 let Expression::ProductionRule(lhs, ..) = expr else {
-                    panic!("Expected production rule");
-                };
-                let lhs = lhs.as_ref();
-                
+                panic!("Expected production rule");
+            };
+                let mut boxed_parsers = HashMap::new();
+                let mut boxed_types = HashMap::new();
 
                 if !acyclic_deps.contains_key(lhs) {
                     if let Some(deps) = deps.get(lhs) {
                         for dep in deps.iter().filter(|dep| acyclic_deps.contains_key(*dep)) {
-                            if was_boxed.contains(dep) {
+                            if boxed_parsers.contains_key(dep) {
                                 continue;
                             }
-                            // if !needs_boxing(dep, acyclic_deps) {
-                            //     continue;
-                            // }
 
                             if let Some(parser) = cache.get(dep) {
-
                                 if let Some(sub_deps) = acyclic_deps.get(dep) {
                                     let name = get_nonterminal_name(dep);
                                     let ident = format_ident!("{}", name);
                                     let boxed_parser = box_parser(parser.clone(), &ident);
 
+                                    boxed_parsers.insert(dep, parser.clone());
                                     cache.insert(dep, boxed_parser);
 
-                                    was_boxed.insert(dep);
-                                    // was_boxed.extend(sub_deps);
+                                    if type_cache.contains_key(dep) {
+                                        let boxed_type = type_cache.get(dep).unwrap().clone();
+                                        boxed_types.insert(dep, boxed_type);
+                                        type_cache.insert(dep, boxed_enum_type.clone());
+                                    }
                                 }
                             }
                         }
@@ -203,7 +202,14 @@ where
                     type_cache,
                 );
 
-                (lhs, parser)
+                for (dep, parser) in boxed_parsers {
+                    cache.insert(dep, parser);
+                }
+                for (dep, ty) in boxed_types {
+                    type_cache.insert(dep, ty);
+                }
+
+                (lhs.as_ref(), parser)
             })
             .collect();
 
@@ -304,8 +310,13 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     let ast = topological_sort(&ast, &deps);
     let acylic_deps = calculate_acyclic_deps(&deps);
 
-    let (nonterminal_types, mut type_cache) =
-        calculate_nonterminal_types(&ast, &acylic_deps, &boxed_enum_ident, &default_parsers);
+    let (nonterminal_types, mut type_cache) = calculate_nonterminal_types(
+        &ast,
+        &deps,
+        &acylic_deps,
+        &boxed_enum_ident,
+        &default_parsers,
+    );
 
     let grammar_arr = generate_grammar_arr(&ident, &parser_container_attrs);
     let grammar_enum = generate_enum(&enum_ident, &nonterminal_types);

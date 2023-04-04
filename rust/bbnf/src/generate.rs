@@ -357,30 +357,54 @@ pub fn needs_boxing(expr: &Expression, deps: &Dependencies) -> bool {
 
 pub fn calculate_nonterminal_types<'a>(
     ast: &'a AST,
-    acyclic_deps: &Dependencies<'a>,
+    deps: &'a Dependencies<'a>,
+    acyclic_deps: &'a Dependencies<'a>,
     boxed_enum_ident: &Type,
     default_parsers: &'a HashMap<&'a str, GeneratedParser<'a>>,
 ) -> (HashMap<String, Type>, HashMap<&'a Expression<'a>, Type>) {
     let mut generated_types: HashMap<&Expression, Type> = HashMap::new();
-    let mut cache = HashMap::new();
+    let mut cache: HashMap<&Expression, Type> = HashMap::new();
 
     loop {
         let t_generated_types: HashMap<_, _> = ast
-            .into_iter()
+            .iter()
             .map(|(_, expr)| {
-                let ty = calculate_parser_type(expr, boxed_enum_ident, default_parsers, &mut cache);
                 let Expression::ProductionRule(lhs, ..) = expr else {
                     panic!("Expected production rule");
                 };
+
+                let mut boxed_types = HashMap::new();
+
+                if !acyclic_deps.contains_key(lhs) {
+                    if let Some(deps) = deps.get(lhs) {
+                        for dep in deps.iter().filter(|dep| acyclic_deps.contains_key(*dep)) {
+                            if boxed_types.contains_key(dep) {
+                                continue;
+                            }
+
+                            if let Some(ty) = cache.get(dep) {
+                                if let Some(sub_deps) = acyclic_deps.get(dep) {
+                                    boxed_types.insert(dep, ty.clone());
+                                    cache.insert(dep, boxed_enum_ident.clone());
+                                }
+                            }
+                        }
+                    }
+                }
+
+                let ty = calculate_parser_type(expr, boxed_enum_ident, default_parsers, &mut cache);
+
+                for (expr, ty) in boxed_types {
+                    cache.insert(expr, ty);
+                }
+
                 (lhs.as_ref(), ty)
             })
             .collect();
 
         cache = t_generated_types
             .iter()
-            .filter(|(expr, _)| {
-                acyclic_deps.contains_key(*expr) && needs_boxing(expr, acyclic_deps)
-            })
+            .filter(|(expr, _)| acyclic_deps.contains_key(*expr))
             .map(|(expr, ty)| (expr.clone(), ty.clone()))
             .collect();
 
@@ -399,12 +423,7 @@ pub fn calculate_nonterminal_types<'a>(
 
     let generated_types = generated_types
         .into_iter()
-        .map(|(k, v)| {
-            let Expression::Nonterminal(Token { value: name, .. }) = k else {
-                panic!("Expected nonterminal");
-            };
-            (name.to_string(), v.clone())
-        })
+        .map(|(k, v)| (get_nonterminal_name(k).to_owned(), v.clone()))
         .collect();
 
     (generated_types, cache)
@@ -583,7 +602,6 @@ where
             if let Some(parser) = default_parsers.get(value) {
                 return parser.parser.clone();
             }
-
             let ident = syn::Ident::new(value, proc_macro2::Span::call_site());
             quote! { Self::#ident() }
         }
@@ -759,9 +777,9 @@ where
             let mut acc = None;
             for (n, parser) in inner_exprs
                 .iter()
-                .map(|parser| {
+                .map(|expr| {
                     generate_parser_from_ast(
-                        parser,
+                        expr,
                         boxed_enum_ident,
                         default_parsers,
                         cache,
@@ -796,9 +814,9 @@ where
 
             let parser = inner_exprs
                 .iter()
-                .map(|parser| {
+                .map(|expr| {
                     generate_parser_from_ast(
-                        parser,
+                        expr,
                         boxed_enum_ident,
                         default_parsers,
                         cache,
