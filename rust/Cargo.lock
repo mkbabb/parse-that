@@ -33,6 +33,7 @@ name = "bbnf"
 version = "0.1.0"
 dependencies = [
  "indexmap",
+ "lazy_static",
  "parse_that",
  "pretty",
  "proc-macro2",

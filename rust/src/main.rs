@@ -5,77 +5,74 @@ extern crate bbnf;
 extern crate parse_that;
 extern crate pretty;
 
-
 use bbnf_derive::Parser;
 use parse_that::json::json_parser;
-use parse_that::{json::JsonValue};
+use parse_that::json::JsonValue;
+use parse_that::Span;
 
-
-use parse_that::{parse::*};
+use parse_that::parse::*;
 
 use std::{fs, time::SystemTime};
-
-
 
 #[derive(Parser)]
 #[parser(path = "../../grammar/math.bbnf", ignore_whitespace)]
 pub struct Math {}
 
-// pub fn consume_math(p: &MathEnum) -> f64 {
-//     pub fn recurse(p: &MathEnum) -> f64 {
-//         let fold_expression = |acc, (op, rest): &(Span, Box<MathEnum>)| match op.as_str() {
-//             "+" => acc + recurse(rest),
-//             "-" => acc - recurse(rest),
-//             "*" => acc * recurse(rest),
-//             "/" => acc / recurse(rest),
-//             _ => unreachable!(),
-//         };
-//         match p {
-//             MathEnum::expr((term, rest)) => rest.into_iter().fold(recurse(term), fold_expression),
-//             MathEnum::term((factor, rest)) => {
-//                 rest.into_iter().fold(recurse(factor), fold_expression)
-//             }
-//             MathEnum::wrapped((_, expr, _)) => recurse(expr),
-//             MathEnum::factor(num) => recurse(num),
-//             MathEnum::number(num) => num.as_str().parse().unwrap(),
-//         }
-//     }
-//     recurse(p)
-// }
+pub fn consume_math(p: &MathEnum) -> f64 {
+    pub fn recurse(p: &MathEnum) -> f64 {
+        let fold_expression = |acc, (op, rest): &(Span, Box<MathEnum>)| match op.as_str() {
+            "+" => acc + recurse(rest),
+            "-" => acc - recurse(rest),
+            "*" => acc * recurse(rest),
+            "/" => acc / recurse(rest),
+            _ => unreachable!(),
+        };
+        match p {
+            MathEnum::expr((term, rest)) => rest.into_iter().fold(recurse(term), fold_expression),
+            MathEnum::term((factor, rest)) => {
+                rest.into_iter().fold(recurse(factor), fold_expression)
+            }
+            MathEnum::wrapped((_, expr, _)) => recurse(expr),
+            MathEnum::factor(num) => recurse(num),
+            MathEnum::number(num) => num.as_str().parse().unwrap(),
+        }
+    }
+    recurse(p)
+}
 
 #[derive(Parser)]
 #[parser(path = "../../grammar/json.bbnf", ignore_whitespace)]
 pub struct Json;
 
-// pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
-//     pub fn recurse<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
-//         match p {
-//             JsonEnum::null(_) => JsonValue::Null,
-//             JsonEnum::bool(b) => JsonValue::Bool(b.as_str().parse().unwrap()),
-//             JsonEnum::number(n) => n.clone(),
-//             JsonEnum::string(s) => JsonValue::String(s.as_str()),
-//             JsonEnum::array(values) => {
-//                 JsonValue::Array(values.into_iter().map(|v| recurse(v)).collect())
-//             }
-//             JsonEnum::object(pairs) => {
-//                 let map = pairs
-//                     .into_iter()
-//                     .map(|pair| match pair.as_ref() {
-//                         JsonEnum::pair((box JsonEnum::string(key), value)) => {
-//                             (key.as_str(), recurse(value))
-//                         }
-//                         _ => unreachable!(),
-//                     })
-//                     .collect();
-//                 JsonValue::Object(map)
-//             }
-//             JsonEnum::value(v) => recurse(v),
-//             _ => unimplemented!(),
-//         }
-//     }
+pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
+    pub fn recurse<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
+        match p {
+            JsonEnum::null(_) => JsonValue::Null,
+            JsonEnum::bool(b) => JsonValue::Bool(b.as_str().parse().unwrap()),
+            JsonEnum::number(n) => n.clone(),
+            JsonEnum::string(s) => JsonValue::String(s.as_str()),
+            JsonEnum::array(values) => {
+                JsonValue::Array(values.into_iter().map(|v| recurse(v)).collect())
+            }
+            JsonEnum::object(pairs) => {
+                let map = pairs
+                    .into_iter()
+                    .map(|pair| match pair.as_ref() {
+                        JsonEnum::pair((box JsonEnum::string(key), value)) => {
+                            (key.as_str(), recurse(value))
+                        }
+                        _ => unreachable!(),
+                    })
+                    .collect();
+                JsonValue::Object(map)
+            }
+            JsonEnum::value(v) => recurse(v),
+            _ => unimplemented!(),
+        }
+    }
 
-//     recurse(p)
-// }
+    recurse(p)
+}
 
 #[derive(Parser)]
 #[parser(path = "../../grammar/css-keyframes.bbnf", ignore_whitespace)]

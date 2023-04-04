@@ -1,34 +1,27 @@
 extern crate proc_macro;
 
-
 use std::collections::HashMap;
 
 use std::env;
 
-use indexmap::{IndexMap};
+use indexmap::IndexMap;
 
 use pretty::Doc;
 use proc_macro::TokenStream;
 
 use quote::{format_ident, quote};
-use syn::{
-    parse_macro_input, parse_quote, Attribute, DeriveInput, Lit,
-    Meta, NestedMeta, Type,
-};
+use syn::{parse_macro_input, parse_quote, Attribute, DeriveInput, Lit, Meta, NestedMeta, Type};
 
 extern crate bbnf;
 use bbnf::generate::*;
 use bbnf::grammar::*;
 
-#[derive(Clone, Debug)]
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 struct ParserAttributes {
     paths: Vec<std::path::PathBuf>,
     ignore_whitespace: bool,
     debug: bool,
 }
-
-
 
 fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
     let mut parser_attr = ParserAttributes::default();
@@ -209,7 +202,7 @@ where
         cache = t_generated_parsers
             .iter()
             .filter(|(expr, _)| acyclic_deps.contains_key(*expr))
-            .map(|(expr, parser)| (expr.clone(), parser.clone()))
+            .map(|(expr, parser)| (*expr, parser.clone()))
             .collect();
 
         if t_generated_parsers.iter().all(|(k, v)| {

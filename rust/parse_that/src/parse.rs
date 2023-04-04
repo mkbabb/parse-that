@@ -218,7 +218,7 @@ where
         Output2: 'a,
     {
         let next = move |state: &mut ParserState<'a>| {
-            if let Some(_) = self.parser_fn.call(state) {
+            if self.parser_fn.call(state).is_some() {
                 return next.parser_fn.call(state);
             }
             None

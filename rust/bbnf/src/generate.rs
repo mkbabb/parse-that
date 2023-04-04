@@ -6,12 +6,11 @@ use std::{
 
 use crate::grammar::*;
 
-
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{parse_quote, Type};
 
-use indexmap::{IndexMap};
+use indexmap::IndexMap;
 
 pub struct GeneratedParser<'a> {
     pub name: &'a str,
@@ -138,11 +137,8 @@ pub fn calculate_ast_deps<'a>(ast: &'a AST<'a>) -> Dependencies<'a> {
             let mut deps = deps.borrow_mut();
             let sub_deps = deps.entry(nonterminal.clone()).or_insert(HashSet::new());
 
-            match expr {
-                Expression::Nonterminal(_) => {
-                    sub_deps.insert(expr.clone());
-                }
-                _ => {}
+            if let Expression::Nonterminal(_) = expr {
+                sub_deps.insert(expr.clone());
             }
         }
     };
@@ -311,12 +307,12 @@ where
                 .map(|expr| calculate_parser_type(expr, boxed_enum_ident, default_parsers, cache))
                 .collect::<Vec<_>>();
 
-            if tys.iter().all(type_is_span) {
-                return tys[0].clone();
-            } else if tys
+            let is_all_span = tys.iter().all(type_is_span);
+            let is_all_same = tys
                 .iter()
-                .all(|ty| ty.to_token_stream().to_string() == tys[0].to_token_stream().to_string())
-            {
+                .all(|ty| ty.to_token_stream().to_string() == tys[0].to_token_stream().to_string());
+
+            if is_all_span || is_all_same {
                 return tys[0].clone();
             } else {
                 parse_quote!(#boxed_enum_ident)
@@ -404,7 +400,7 @@ pub fn calculate_nonterminal_types<'a>(
         cache = t_generated_types
             .iter()
             .filter(|(expr, _)| acyclic_deps.contains_key(*expr))
-            .map(|(expr, ty)| (expr.clone(), ty.clone()))
+            .map(|(expr, ty)| (*expr, ty.clone()))
             .collect();
 
         if t_generated_types.iter().all(|(k, v)| {
@@ -553,7 +549,7 @@ where
     }
 }
 
-pub fn check_for_any_span<'a>(exprs: &Vec<Expression>) -> Option<TokenStream> {
+pub fn check_for_any_span(exprs: &[Expression]) -> Option<TokenStream> {
     let all_literals = exprs
         .iter()
         .all(|expr| matches!(expr, Expression::Literal(_)));

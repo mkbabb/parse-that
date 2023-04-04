@@ -2,7 +2,6 @@ use crate::doc::Doc;
 use crate::utils::text_justify;
 use std::collections::HashMap;
 
-
 pub fn count_join_length<'a>(sep: &'a Doc<'a>, docs: &'a Vec<Doc<'a>>, printer: &Printer) -> usize {
     if docs.is_empty() {
         return 0;
@@ -37,7 +36,7 @@ pub fn count_text_length(doc: &Doc, printer: &Printer) -> usize {
     }
 }
 
-pub fn join_impl<'a>(sep: &'a Doc<'a>, docs: &'a Vec<Doc>, _: &Printer) -> Vec<&'a Doc<'a>> {
+pub fn join_impl<'a>(sep: &'a Doc<'a>, docs: &'a [Doc], _: &Printer) -> Vec<&'a Doc<'a>> {
     docs.iter()
         .enumerate()
         .fold(Vec::new(), |mut acc, (i, doc)| {
@@ -51,7 +50,7 @@ pub fn join_impl<'a>(sep: &'a Doc<'a>, docs: &'a Vec<Doc>, _: &Printer) -> Vec<&
 
 pub fn smart_join_impl<'a>(
     sep: &'a Doc<'a>,
-    docs: &'a Vec<Doc>,
+    docs: &'a [Doc],
     printer: &Printer,
 ) -> Vec<&'a Doc<'a>> {
     let max_width = (printer.max_width / 4).max(2);

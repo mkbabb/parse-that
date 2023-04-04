@@ -7,8 +7,7 @@ use syn::{
     Meta, NestedMeta, Variant, WherePredicate,
 };
 
-#[derive(Clone, Debug)]
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 struct PrettyAttributes {
     // Field: Skip this field - don't include it in the output
     skip: bool,
@@ -21,8 +20,6 @@ struct PrettyAttributes {
     // Container: Verbose output - include field names in output
     verbose: bool,
 }
-
-
 
 fn parse_pretty_attrs(attrs: &[Attribute]) -> PrettyAttributes {
     let mut pretty_attr = PrettyAttributes::default();
@@ -169,10 +166,7 @@ fn generate_struct_fields_match(fields: &Fields) -> Vec<proc_macro2::TokenStream
                 .unwrap_or_else(|| "".to_string())
         });
 
-        let is_generic_type = match &field.ty {
-            syn::Type::Path(_) => true,
-            _ => false,
-        };
+        let is_generic_type = matches!(field.ty, syn::Type::Path(_));
         // If the type is a generic type, we need to call into() on it to convert it to a Doc
         let field_doc = if is_generic_type {
             quote! { _self.#field_ident.into() }
