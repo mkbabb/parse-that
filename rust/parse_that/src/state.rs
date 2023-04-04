@@ -20,6 +20,16 @@ impl<'a> Span<'a> {
     }
 }
 
+impl Default for Span<'_> {
+    fn default() -> Self {
+        Span {
+            start: 0,
+            end: 0,
+            src: "",
+        }
+    }
+}
+
 #[derive(Pretty, Debug, PartialEq, Clone, Hash, Eq)]
 pub struct ParserState<'a> {
     #[pretty(skip)]

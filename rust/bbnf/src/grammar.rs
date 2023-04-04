@@ -2,7 +2,8 @@ extern crate parse_that;
 
 use parse_that::parsers::utils::{escaped_span, number_span};
 use parse_that::{
-    any_span, lazy, string, string_span, take_while_span, Parser, ParserSpan, ParserState, Span,
+    any_span, lazy, next_span, regex_span, string, string_span, take_while_span, Parser,
+    ParserFlat, ParserSpan, ParserState, Span,
 };
 
 extern crate pretty;
@@ -10,13 +11,13 @@ use pretty::{Doc, Pretty};
 
 use indexmap::IndexMap;
 
-#[derive(Pretty, Debug, Clone, Eq, PartialEq)]
+#[derive(Pretty, Debug, Clone, Copy, Eq, PartialEq)]
 pub enum Comment<'a> {
     Line(&'a str),
     Block(&'a str),
 }
 
-#[derive(Pretty, Debug, Clone, Eq, PartialEq)]
+#[derive(Pretty, Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Comments<'a> {
     pub left: Option<Comment<'a>>,
     pub right: Option<Comment<'a>>,
@@ -30,6 +31,8 @@ pub enum Expression<'a> {
     Nonterminal(Token<'a, &'a str>),
 
     Regex(Token<'a, &'a str>),
+
+    MapperExpression(Token<'a, &'a str>),
 
     Group(TokenExpression<'a>),
     Optional(TokenExpression<'a>),
@@ -45,15 +48,22 @@ pub enum Expression<'a> {
     Concatenation(TokenExpression<'a, Vec<Expression<'a>>>),
     Alternation(TokenExpression<'a, Vec<Expression<'a>>>),
 
-    ProductionRule(Box<Expression<'a>>, Box<Expression<'a>>),
+    ProductionRule(
+        Box<Expression<'a>>,
+        Box<Expression<'a>>,
+        Option<Box<Expression<'a>>>,
+    ),
 
     Epsilon(Token<'a, ()>),
 }
 
-#[derive(Pretty, Debug, Clone, Eq)]
+#[derive(Pretty, Debug, Clone, Copy, Eq)]
 pub struct Token<'a, T> {
     pub value: T,
+    
+    #[pretty(skip)]
     pub span: Span<'a>,
+    #[pretty(skip)]
     pub comments: Option<Comments<'a>>,
 }
 
@@ -342,9 +352,24 @@ impl<'a> BBNFGrammar<'a> {
         Self::alternation()
     }
 
-    // fn mapper_expr() -> Parser<'a, Expression<'a>> {
-    //     // string("=>").trim_whitespace().then(
-    // }
+    fn mapper_expr() -> Parser<'a, Option<Box<Expression<'a>>>> {
+        let lhs = string_span(";").skip(Self::lhs().trim_whitespace().skip(string_span("=")));
+        let not_lhs = next_span(1).look_ahead(lhs.negate());
+
+        string_span("=>")
+            .trim_whitespace()
+            .next(not_lhs.many_span(..).then_span(next_span(1)))
+            .map(|s| {
+                let token = Token::new(s.as_str(), s);
+                match syn::parse_str::<syn::ExprClosure>(s.as_str()) {
+                    Ok(_) => {}
+                    Err(e) => panic!("invalid mapper expression: {:?}, {:?}", s.as_str(), e),
+                }
+
+                Box::new(Expression::MapperExpression(token))
+            })
+            .opt()
+    }
 
     fn production_rule() -> Parser<'a, Expression<'a>> {
         let comment = Self::block_comment() | Self::line_comment();
@@ -355,8 +380,11 @@ impl<'a> BBNFGrammar<'a> {
         let production_rule = Self::lhs()
             .skip(eq)
             .then(Self::rhs())
+            .then_flat(Self::mapper_expr())
             .skip(terminator)
-            .map(|(lhs, rhs)| Expression::ProductionRule(Box::new(lhs), Box::new(rhs)));
+            .map(|(lhs, rhs, mapper_expr)| {
+                Expression::ProductionRule(Box::new(lhs), Box::new(rhs), mapper_expr)
+            });
 
         Self::trim_comment(production_rule, comment.opt())
     }
@@ -369,7 +397,7 @@ impl<'a> BBNFGrammar<'a> {
                 .into_iter()
                 .map(|rule| {
                     let Expression::ProductionRule(
-                           box Expression::Nonterminal(lhs), _
+                           box Expression::Nonterminal(lhs), ..
                         ) = &rule else {
                             unreachable!();
                         };

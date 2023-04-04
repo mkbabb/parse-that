@@ -1,13 +1,15 @@
 use std::{
     borrow::Borrow,
+    cell::RefCell,
     collections::{HashMap, HashSet},
+    rc::Rc,
 };
 
 use crate::grammar::*;
 
 use pretty::{Doc, PRINTER};
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use quote::{format_ident, quote, ToTokens};
 use syn::{parse_quote, Expr, Type};
 
 use indexmap::{IndexMap, IndexSet};
@@ -46,6 +48,14 @@ fn get_inner_expression<'a, T>(inner_expr: &'a Box<Token<'a, T>>) -> &'a T {
     &inner_expr.as_ref().value
 }
 
+pub fn get_nonterminal_name<'a>(expr: &'a Expression<'a>) -> &'a str {
+    if let Expression::Nonterminal(Token { value, .. }) = expr {
+        value
+    } else {
+        panic!("Expected nonterminal");
+    }
+}
+
 fn type_is_span(ty: &Type) -> bool {
     if let Type::Path(type_path) = ty {
         if type_path.path.segments.len() < 2 {
@@ -60,35 +70,27 @@ fn type_is_span(ty: &Type) -> bool {
     }
 }
 
-type Visitor<'a> = dyn FnMut(&'a str, &'a Expression<'a>) + 'a;
+type Visitor<'a> = dyn FnMut(&'a Expression<'a>, &'a Expression<'a>) + 'a;
 
-pub fn traverse_ast<'a>(
-    ast: &'a AST,
-    before_visitor: Option<&mut Visitor<'a>>,
-    after_visitor: Option<&mut Visitor<'a>>,
-) {
-    fn visit<'a, 'b>(
-        name: &'a str,
+pub fn traverse_ast<'a>(ast: &'a AST, visitor: Option<&mut Visitor<'a>>) {
+    fn visit<'a>(
+        nonterminal: &'a Expression<'a>,
         expr: &'a Expression<'a>,
-        before_visitor: &mut Visitor<'a>,
-        after_visitor: &mut Visitor<'a>,
-    ) where
-        'a: 'b,
-    {
-        before_visitor(name, expr);
+        visitor: &mut Visitor<'a>,
+    ) {
+        visitor(nonterminal, expr);
 
         match expr {
-            Expression::Nonterminal(_) => {}
             Expression::Alternation(inner_exprs) => {
                 let inner_exprs = get_inner_expression(inner_exprs);
                 for inner_expr in inner_exprs {
-                    visit(name, inner_expr, before_visitor, after_visitor)
+                    visit(nonterminal, inner_expr, visitor)
                 }
             }
             Expression::Concatenation(inner_exprs) => {
                 let inner_exprs = get_inner_expression(inner_exprs);
                 for inner_expr in inner_exprs {
-                    visit(name, inner_expr, before_visitor, after_visitor)
+                    visit(nonterminal, inner_expr, visitor)
                 }
             }
 
@@ -97,8 +99,8 @@ pub fn traverse_ast<'a>(
             | Expression::Minus(left_expr, right_expr) => {
                 let left_expr = get_inner_expression(left_expr);
                 let right_expr = get_inner_expression(right_expr);
-                visit(name, left_expr, before_visitor, after_visitor);
-                visit(name, right_expr, before_visitor, after_visitor);
+                visit(nonterminal, left_expr, visitor);
+                visit(nonterminal, right_expr, visitor);
             }
 
             Expression::Group(inner_expr)
@@ -107,89 +109,95 @@ pub fn traverse_ast<'a>(
             | Expression::Many1(inner_expr)
             | Expression::OptionalWhitespace(inner_expr) => {
                 let inner_expr = get_inner_expression(inner_expr);
-                visit(name, inner_expr, before_visitor, after_visitor);
+                visit(nonterminal, inner_expr, visitor);
             }
 
             _ => {}
         }
-
-        after_visitor(name, expr);
     }
 
-    let mut before_visitor_default = |_, _| {};
-    let mut after_visitor_default = |_, _| {};
+    let mut visitor_default = |_, _| {};
+    let visitor = visitor.unwrap_or(&mut visitor_default);
 
-    let before_visitor = before_visitor.unwrap_or(&mut before_visitor_default);
-    let after_visitor = after_visitor.unwrap_or(&mut after_visitor_default);
-
-    ast.into_iter().for_each(|(name, expr)| {
-        let Expression::ProductionRule(_, rhs) = expr else {
+    ast.into_iter().for_each(|(_, expr)| {
+        let Expression::ProductionRule(lhs, rhs, ..) = expr else {
             return;
         };
-        visit(name, rhs, before_visitor, after_visitor)
+        visit(lhs, rhs, visitor)
     });
 }
 
-pub fn topological_sort<'a>(ast: &'a AST) -> (AST<'a>, HashMap<String, HashSet<String>>) {
-    let mut deps = HashMap::new();
+pub type Dependencies<'a> = HashMap<Expression<'a>, HashSet<Expression<'a>>>;
 
-    let mut after_visitor = |name: &str, expr: &Expression| {
-        let sub_deps = deps
-            .entry(name.to_string())
-            .or_insert_with(|| HashSet::new());
+pub fn calculate_ast_deps<'a>(ast: &'a AST<'a>) -> Dependencies<'a> {
+    let deps = Rc::new(RefCell::new(HashMap::new()));
 
-        match expr {
-            Expression::Nonterminal(Token { value, .. }) => {
-                sub_deps.insert(value.to_string());
+    let mut visitor = {
+        let deps = deps.clone();
+
+        move |nonterminal: &'a Expression, expr: &'a Expression| {
+            let mut deps = deps.borrow_mut();
+            let sub_deps = deps.entry(nonterminal.clone()).or_insert(HashSet::new());
+
+            match expr {
+                Expression::Nonterminal(_) => {
+                    sub_deps.insert(expr.clone());
+                }
+                _ => {}
             }
-            _ => {}
         }
     };
 
-    traverse_ast(ast, None, Some(&mut after_visitor));
+    traverse_ast(ast, Some(&mut visitor));
 
+    deps.take()
+}
+
+pub fn topological_sort<'a>(ast: &AST<'a>, deps: &Dependencies<'a>) -> AST<'a> {
     let mut order = deps
         .iter()
-        .map(|(name, sub_deps)| {
+        .map(|(expr, sub_deps)| {
             let len: usize = sub_deps
                 .into_iter()
                 .map(|sub_name| {
-                    if let Some(sub_deps) = deps.get(sub_name) {
+                    if let Some(sub_deps) = deps.get(&sub_name) {
                         return sub_deps.len();
                     }
                     0
                 })
                 .sum();
-            (name, len)
+            (expr, len)
         })
         .collect::<Vec<_>>();
     order.sort_by(|(_, a), (_, b)| a.cmp(b));
 
     let mut new_ast = AST::new();
-    for (name, _) in order {
+    for (expr, _) in order {
+        let name = get_nonterminal_name(expr);
         if let Some(expr) = ast.get(name) {
-            new_ast.insert(name.clone(), expr.clone());
+            new_ast.insert(name.to_string(), expr.clone());
         }
     }
 
-    (new_ast, deps)
+    new_ast
 }
 
-pub fn calculate_acyclic_deps(
-    deps: &HashMap<String, HashSet<String>>,
-) -> HashMap<String, HashSet<String>> {
-    fn is_acyclic(
-        name: &str,
-        deps: &HashMap<String, HashSet<String>>,
-        visited: &mut HashSet<String>,
-    ) -> bool {
-        if visited.contains(name) {
+pub fn calculate_acyclic_deps<'a>(deps: &'a Dependencies<'a>) -> Dependencies<'a> {
+    fn is_acyclic<'a, 'b>(
+        expr: &'a Expression,
+        deps: &'a Dependencies<'a>,
+        visited: &'b mut HashSet<&'a Expression<'a>>,
+    ) -> bool
+    where
+        'a: 'b,
+    {
+        if visited.contains(expr) {
             return false;
         }
 
-        visited.insert(name.to_string());
+        visited.insert(expr);
 
-        if let Some(sub_deps) = deps.get(name) {
+        if let Some(sub_deps) = deps.get(expr) {
             for sub_name in sub_deps {
                 if !is_acyclic(sub_name, deps, visited) {
                     return false;
@@ -197,7 +205,7 @@ pub fn calculate_acyclic_deps(
             }
             return true;
         } else {
-            return false;
+            return true;
         }
     }
 
@@ -316,7 +324,15 @@ where
             }
         }
 
-        Expression::ProductionRule(_, rhs) => {
+        Expression::ProductionRule(_, rhs, mapper_expr) => {
+            if let Some(box Expression::MapperExpression(Token { value, .. })) = mapper_expr {
+                let parsed = syn::parse_str::<syn::ExprClosure>(value).unwrap();
+                let syn::ReturnType::Type(_, ty) = &parsed.output  else {
+                    panic!("Mapper expression must have a return type");
+                };
+
+                return ty.as_ref().clone();
+            }
             calculate_parser_type(rhs, boxed_enum_ident, default_parsers, cache)
         }
 
@@ -326,36 +342,34 @@ where
     ty
 }
 
-pub type NonterminalTypes = IndexMap<String, Type>;
+pub type NonterminalTypeMap = IndexMap<String, Type>;
 
-pub fn needs_boxing(name: &str, deps: &HashMap<String, HashSet<String>>) -> bool {
-    if let Some(_) = deps.get(name) {
-        if deps.values().any(|v| v.contains(name)) {
+pub const MAX_AST_ITERATIONS: usize = 1000;
+
+pub fn needs_boxing(expr: &Expression, deps: &Dependencies) -> bool {
+    if let Some(sub_deps) = deps.get(expr) {
+        if deps.values().any(|v| v.contains(expr)) {
             return true;
         }
     }
     false
 }
 
-pub const MAX_AST_ITERATIONS: usize = 100;
-
 pub fn calculate_nonterminal_types<'a>(
     ast: &'a AST,
-    acyclic_deps: &HashMap<String, HashSet<String>>,
+    acyclic_deps: &Dependencies<'a>,
     boxed_enum_ident: &Type,
     default_parsers: &'a HashMap<&'a str, GeneratedParser<'a>>,
 ) -> (HashMap<String, Type>, HashMap<&'a Expression<'a>, Type>) {
     let mut generated_types: HashMap<&Expression, Type> = HashMap::new();
     let mut cache = HashMap::new();
 
-    let mut counter = 0;
-
-    while counter < MAX_AST_ITERATIONS {
+    loop {
         let t_generated_types: HashMap<_, _> = ast
             .into_iter()
             .map(|(_, expr)| {
                 let ty = calculate_parser_type(expr, boxed_enum_ident, default_parsers, &mut cache);
-                let Expression::ProductionRule(lhs, _) = expr else {
+                let Expression::ProductionRule(lhs, ..) = expr else {
                     panic!("Expected production rule");
                 };
                 (lhs.as_ref(), ty)
@@ -365,11 +379,7 @@ pub fn calculate_nonterminal_types<'a>(
         cache = t_generated_types
             .iter()
             .filter(|(expr, _)| {
-                if let Expression::Nonterminal(Token { value: name, .. }) = expr {
-                    return acyclic_deps.contains_key(name.to_owned())
-                        && needs_boxing(name, acyclic_deps);
-                }
-                false
+                acyclic_deps.contains_key(*expr) && needs_boxing(expr, acyclic_deps)
             })
             .map(|(expr, ty)| (expr.clone(), ty.clone()))
             .collect();
@@ -385,8 +395,6 @@ pub fn calculate_nonterminal_types<'a>(
         } else {
             generated_types = t_generated_types;
         }
-
-        counter += 1;
     }
 
     let generated_types = generated_types
@@ -810,8 +818,16 @@ where
             }
         }
 
-        Expression::ProductionRule(_lhs, rhs) => {
-            generate_parser_from_ast(rhs, boxed_enum_ident, default_parsers, cache, type_cache)
+        Expression::ProductionRule(_lhs, rhs, mapper_expr) => {
+            let parser =
+                generate_parser_from_ast(rhs, boxed_enum_ident, default_parsers, cache, type_cache);
+
+            if let Some(box Expression::MapperExpression(Token { value, .. })) = mapper_expr {
+                let parsed = syn::parse_str::<syn::ExprClosure>(value).unwrap();
+                quote! { #parser.map(#parsed) }
+            } else {
+                parser
+            }
         }
 
         _ => unimplemented!("Expression not implemented: {:?}", expr),

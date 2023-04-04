@@ -1,6 +1,10 @@
 #![feature(box_patterns)]
 #![feature(once_cell)]
 
+extern crate bbnf;
+extern crate parse_that;
+extern crate pretty;
+
 use bbnf::grammar::BBNFGrammar;
 use bbnf_derive::Parser;
 use parse_that::json::json_parser;
@@ -14,7 +18,7 @@ use std::{collections::HashMap, fs, time::SystemTime};
 use fnv::FnvHashMap;
 
 #[derive(Parser)]
-#[parser(path = "../grammar/math.bbnf", ignore_whitespace)]
+#[parser(path = "../../grammar/math.bbnf", ignore_whitespace)]
 pub struct Math {}
 
 pub fn consume_math(p: &MathEnum) -> f64 {
@@ -26,7 +30,6 @@ pub fn consume_math(p: &MathEnum) -> f64 {
             "/" => acc / recurse(rest),
             _ => unreachable!(),
         };
-
         match p {
             MathEnum::expr((term, rest)) => rest.into_iter().fold(recurse(term), fold_expression),
             MathEnum::term((factor, rest)) => {
@@ -37,21 +40,19 @@ pub fn consume_math(p: &MathEnum) -> f64 {
             MathEnum::number(num) => num.as_str().parse().unwrap(),
         }
     }
-
     recurse(p)
 }
 
 #[derive(Parser)]
-#[parser(path = "../grammar/json.bbnf", ignore_whitespace)]
-pub struct Json {}
+#[parser(path = "../../grammar/json.bbnf", ignore_whitespace)]
+pub struct Json;
 
 pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
     pub fn recurse<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
         match p {
             JsonEnum::null(_) => JsonValue::Null,
             JsonEnum::bool(b) => JsonValue::Bool(b.as_str().parse().unwrap()),
-            JsonEnum::number(n) => JsonValue::Number(n.as_str().parse().unwrap()),
-
+            JsonEnum::number(n) => n.clone(),
             JsonEnum::string(s) => JsonValue::String(s.as_str()),
             JsonEnum::array(values) => {
                 JsonValue::Array(values.into_iter().map(|v| recurse(v)).collect())
@@ -75,6 +76,10 @@ pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
 
     recurse(p)
 }
+
+#[derive(Parser)]
+#[parser(path = "../../grammar/css-keyframes.bbnf", ignore_whitespace)]
+pub struct CSSKeyframes;
 
 pub fn main() {
     let first_now = SystemTime::now();

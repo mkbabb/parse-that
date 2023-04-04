@@ -17,5 +17,7 @@ bbnf_derive = { path = "../bbnf/derive" }
 
 fnv = "1"
 
+const-default = { version = "1.0", features = ["derive"] }
+
 [features]
 pretty = []

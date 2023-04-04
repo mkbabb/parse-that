@@ -159,6 +159,16 @@ where
         Parser::new(not)
     }
 
+    pub fn negate(self) -> Parser<'a, ()> {
+        let negate = move |state: &mut ParserState<'a>| {
+            if self.parser_fn.call(state).is_none() {
+                return Some(());
+            }
+            None
+        };
+        Parser::new(negate)
+    }
+
     pub fn map<Output2>(self, f: fn(Output) -> Output2) -> Parser<'a, Output2>
     where
         Output2: 'a,
@@ -186,7 +196,6 @@ where
             let Some(result) = self.parser_fn.call(state) else {
                     return None;
             };
-
             return Some(f(result, offset, state));
         };
 
@@ -361,7 +370,10 @@ where
         Parser::new(sep_by)
     }
 
-    pub fn look_ahead(self, parser: Parser<'a, Output>) -> Parser<'a, Output> {
+    pub fn look_ahead<Output2>(self, parser: Parser<'a, Output2>) -> Parser<'a, Output>
+    where
+        Output2: 'a,
+    {
         let look_ahead = move |state: &mut ParserState<'a>| {
             let Some(value) = self.parser_fn.call(state)  else {
                 return None;
@@ -369,7 +381,6 @@ where
             if let None = parser.parser_fn.call(state) {
                 return None;
             }
-            state.restore();
             Some(value)
         };
 
@@ -577,6 +588,18 @@ where
     };
 
     Parser::new(take_while)
+}
+
+pub fn next_span<'a>(amount: usize) -> Parser<'a, Span<'a>> {
+    let next = move |state: &mut ParserState<'a>| {
+        if state.is_at_end() {
+            return None;
+        }
+        let start = state.offset;
+        state.offset += amount;
+        Some(Span::new(start, state.offset, &state.src))
+    };
+    Parser::new(next)
 }
 
 use aho_corasick::{AhoCorasickBuilder, MatchKind};

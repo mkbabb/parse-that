@@ -1,9 +1,9 @@
-null = "null" ;
+null = "null" => |x| -> &'a str { return "vibeage"; };
 bool = "true" | "false" ;
 
-number = NUMBER ;
+number = NUMBER => |x| -> JsonValue<'a> { JsonValue::Number(x.as_str().parse().unwrap()) } ;
 
-gay =  (( chargerge << ","? )) *,  chargerge, NUMBER;
+heyy =  (( chargerge << ","? )) *,  chargerge, NUMBER;
 
 chargerge = /[^"\\]/ ;
 charger = chargerge ;
@@ -11,7 +11,7 @@ charge = charger ;
 char = charge    ;
 
 stringge = '"' >> char * << '"' ;
-string = DOUBLE_QUOTED_STRING ;
+string = stringge;
 array = "[" >> ( value << ","? ) * << "]" ;
 
 pair = string, ":" >> value ;

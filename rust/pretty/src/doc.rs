@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use regex::Regex;
 
@@ -308,6 +308,26 @@ where
         if !doc_vec.is_empty() {
             let doc = doc_vec
                 .join(str(", ") + Doc::Hardline)
+                .group()
+                .wrap(str("{"), str("}"))
+                .indent();
+            return doc;
+        } else {
+            return str("{}");
+        }
+    }
+}
+
+impl<'a, T> From<HashSet<T>> for Doc<'a>
+where
+    T: Into<Doc<'a>>,
+{
+    fn from(set: HashSet<T>) -> Self {
+        let doc_vec: Vec<_> = set.into_iter().map(|item| item.into()).collect();
+
+        if !doc_vec.is_empty() {
+            let doc = doc_vec
+                .smart_join(str(", "))
                 .group()
                 .wrap(str("{"), str("}"))
                 .indent();
