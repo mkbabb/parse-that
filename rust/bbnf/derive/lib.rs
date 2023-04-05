@@ -89,7 +89,7 @@ fn generate_enum(
     let enum_ident = &grammar_attrs.enum_ident;
 
     quote! {
-        #[derive(::pretty::Pretty, Debug, Clone)]
+        // #[derive(::pretty::Pretty, Debug, Clone)]
         pub enum #enum_ident<'a> {
             #(#enum_values),*
         }

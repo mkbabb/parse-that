@@ -1,4 +1,4 @@
-expr = term, { ("+" | "-"), term };
+expr = term, { ("+" | "-"), term }, "b", "e";
 term = factor, { ("*" | "/"), factor };
 wrapped = "(", expr, ")" ;
 

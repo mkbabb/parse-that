@@ -796,6 +796,7 @@ macro_rules! impl_parser_flat {
     };
 }
 
+impl_parser_flat!(B);
 impl_parser_flat!(B, C);
 impl_parser_flat!(B, C, D);
 impl_parser_flat!(B, C, D, E);
