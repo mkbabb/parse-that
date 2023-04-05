@@ -16,32 +16,32 @@ use pretty::Doc;
 
 use std::{fs, time::SystemTime};
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/math.bbnf", ignore_whitespace)]
-pub struct Math {}
+// #[derive(Parser)]
+// #[parser(path = "../../grammar/math.bbnf", ignore_whitespace, use_string)]
+// pub struct Math {}
 
-pub fn consume_math(p: &MathEnum) -> f64 {
-    pub fn recurse(p: &MathEnum) -> f64 {
-        let fold_expression = |acc, (op, rest): &(Span, Box<MathEnum>)| match op.as_str() {
-            "+" => acc + recurse(rest),
-            "-" => acc - recurse(rest),
-            "*" => acc * recurse(rest),
-            "/" => acc / recurse(rest),
-            _ => unreachable!(),
-        };
-        match p {
-            MathEnum::expr((term, rest, ..)) => rest.iter().fold(recurse(term), fold_expression),
-            MathEnum::term((factor, rest)) => rest.iter().fold(recurse(factor), fold_expression),
-            MathEnum::wrapped((_, expr, _)) => recurse(expr),
-            MathEnum::factor(num) => recurse(num),
-            MathEnum::number(num) => num.as_str().parse().unwrap(),
-        }
-    }
-    recurse(p)
-}
+// pub fn consume_math(p: &MathEnum) -> f64 {
+//     pub fn recurse(p: &MathEnum) -> f64 {
+//         let fold_expression = |acc, (op, rest): &(&str, MathEnum)| match *op {
+//             "+" => acc + recurse(rest),
+//             "-" => acc - recurse(rest),
+//             "*" => acc * recurse(rest),
+//             "/" => acc / recurse(rest),
+//             _ => unreachable!(),
+//         };
+//         match p {
+//             MathEnum::expr((term, rest, ..)) => rest.iter().fold(recurse(term), fold_expression),
+//             MathEnum::term((factor, rest)) => rest.iter().fold(recurse(factor), fold_expression),
+//             MathEnum::wrapped((_, expr, _)) => recurse(expr),
+//             MathEnum::factor(num) => recurse(num),
+//             MathEnum::number(num) => num.parse().unwrap(),
+//         }
+//     }
+//     recurse(p)
+// }
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/json.bbnf", ignore_whitespace)]
+#[parser(path = "../../grammar/json.bbnf")]
 pub struct Json;
 
 pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
@@ -128,9 +128,10 @@ pub fn main() {
     let elapsed = now.elapsed().unwrap();
 
     println!("JSON2 Elapsed: {:?}", elapsed);
+    // println!("{:?}", tmp);
 
-    let tmp = G4::sentence().parse("the fat woman ate the fat man");
-    println!("{:?}", Doc::from(tmp));
+    // let tmp = G4::sentence().parse("the fat woman ate the fat man");
+    // println!("{:?}", Doc::from(tmp));
 
     // println!("{:?}", Doc::from(tmp));
 

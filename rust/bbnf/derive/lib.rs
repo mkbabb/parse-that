@@ -68,6 +68,7 @@ fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
                         parser_attr.ignore_whitespace = true
                     }
                     path if path.is_ident("debug") => parser_attr.debug = true,
+                    path if path.is_ident("use_string") => parser_attr.use_string = true,
                     _ => {}
                 }
             }
@@ -91,7 +92,7 @@ fn generate_enum(
     let enum_ident = &grammar_attrs.enum_ident;
 
     quote! {
-        #[derive(::pretty::Pretty, Debug, Clone)]
+        // #[derive(::pretty::Pretty, Debug, Clone)]
         pub enum #enum_ident<'a> {
             #(#enum_values),*
         }
@@ -206,6 +207,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         ident,
         enum_ident: &enum_ident,
         boxed_enum_type: &boxed_enum_type,
+        parser_container_attrs: &parser_container_attrs,
     };
 
     let (nonterminal_types, mut type_cache) = calculate_nonterminal_types(&grammar_attrs);
@@ -217,7 +219,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         &grammar_attrs,
         &parser_container_attrs,
         &mut type_cache,
-        2,
+        1,
     );
 
     let generated_parsers =

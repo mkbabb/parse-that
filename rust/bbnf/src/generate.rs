@@ -1,4 +1,5 @@
 use std::{
+    borrow::Cow,
     cell::RefCell,
     collections::{HashMap, HashSet},
     rc::Rc,
@@ -15,46 +16,79 @@ pub struct ParserAttributes {
     pub paths: Vec<std::path::PathBuf>,
     pub ignore_whitespace: bool,
     pub debug: bool,
+    pub use_string: bool,
 }
 
-pub struct GeneratedNonterminalParser<'a> {
-    pub name: &'a str,
-    pub ty: &'a str,
-    pub parser: &'a str,
+pub struct GeneratedNonterminalParser {
+    pub name: String,
+    pub ty: String,
+    pub parser: String,
+}
+
+impl GeneratedNonterminalParser {
+    pub fn new(name: impl Into<String>, ty: impl Into<String>, parser: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            ty: ty.into(),
+            parser: parser.into(),
+        }
+    }
 }
 
 pub struct GeneratedGrammarAttributes<'a> {
     pub ast: &'a AST<'a>,
+
     pub deps: &'a Dependencies<'a>,
     pub non_acyclic_deps: &'a Dependencies<'a>,
     pub acyclic_deps: &'a Dependencies<'a>,
     pub ident: &'a syn::Ident,
+
     pub enum_ident: &'a syn::Ident,
     pub boxed_enum_type: &'a Type,
+
+    pub parser_container_attrs: &'a ParserAttributes,
 }
 
 lazy_static::lazy_static! {
-     static ref  DEFAULT_PARSERS: HashMap<&'static str, GeneratedNonterminalParser<'static>> = {
+     static ref  DEFAULT_PARSERS: HashMap<&'static str, GeneratedNonterminalParser> = {
         let mut default_parsers = HashMap::new();
+
+        let name = "LITERAL";
+        default_parsers.insert(
+            name,
+            GeneratedNonterminalParser::new(
+                name,
+                "::parse_that::Span<'a>",
+                "::parse_that::parse::string_span")
+        );
+
+        let name = "REGEX";
+        default_parsers.insert(
+            name,
+            GeneratedNonterminalParser::new(
+                name,
+                "::parse_that::Span<'a>",
+                "::parse_that::parse::regex_span")
+        );
 
         let name = "NUMBER";
         default_parsers.insert(
             name,
-            GeneratedNonterminalParser {
+            GeneratedNonterminalParser::new(
                 name,
-                ty: "::parse_that::Span<'a>",
-                parser: "::parse_that::parsers::utils::number_span()",
-            },
+                "::parse_that::Span<'a>",
+                "::parse_that::parsers::utils::number_span()",
+            ),
         );
 
         let name = "DOUBLE_QUOTED_STRING";
         default_parsers.insert(
             name,
-            GeneratedNonterminalParser {
+            GeneratedNonterminalParser::new(
                 name,
-                ty: "::parse_that::Span<'a>",
-                parser: r##":parse_that::parsers::utils::quoted_span(r#"""#)"##,
-            },
+                "::parse_that::Span<'a>",
+                 r##":parse_that::parsers::utils::quoted_span(r#"""#)"##,
+            ),
         );
 
         default_parsers
@@ -255,18 +289,36 @@ pub fn calculate_expression_type<'a, 'b>(
 where
     'a: 'b,
 {
+    fn get_and_parse_default_parser_ty<'a>(
+        name: &str,
+        grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
+    ) -> Option<Type> {
+        let Some(GeneratedNonterminalParser { ty, ..}) = DEFAULT_PARSERS.get(name) else {
+            return None;
+        };
+        let Ok(ty) = syn::parse_str::<Type>(ty) else {
+            return None;
+        };
+        if grammar_attrs.parser_container_attrs.use_string && type_is_span(&ty) {
+            Some(parse_quote! { &'a str })
+        } else {
+            Some(ty)
+        }
+    }
+
     if let Some(ty) = cache.get(expr) {
         return ty.clone();
     }
 
     let ty = match expr {
-        Expression::Literal(_) => parse_quote!(::parse_that::Span<'a>),
-        Expression::Regex(_) => parse_quote!(::parse_that::Span<'a>),
+        Expression::Literal(_) => {
+            get_and_parse_default_parser_ty("LITERAL", grammar_attrs).unwrap()
+        }
+        Expression::Regex(_) => get_and_parse_default_parser_ty("REGEX", grammar_attrs).unwrap(),
         Expression::Epsilon(_) => parse_quote!(()),
-
         Expression::Nonterminal(Token { value, .. }) => {
-            if let Some(GeneratedNonterminalParser { ty, .. }) = DEFAULT_PARSERS.get(value) {
-                syn::parse_str(ty).unwrap_or_else(|_| panic!("Invalid type: {}", ty))
+            if let Some(ty) = get_and_parse_default_parser_ty(value, grammar_attrs) {
+                ty
             } else {
                 grammar_attrs.boxed_enum_type.clone()
             }
@@ -868,7 +920,7 @@ pub fn calculate_alternation_expression<'a>(
     type_cache: &mut TypeCache<'a>,
 ) -> TokenStream {
     if let Some(parser) = check_for_any_span(inner_exprs) {
-        return parser;
+        return map_span_if_needed(parser, true, grammar_attrs);
     }
     let parser = inner_exprs
         .iter()
@@ -886,6 +938,21 @@ pub fn calculate_alternation_expression<'a>(
     }
 }
 
+pub fn map_span_if_needed<'a>(
+    parser: TokenStream,
+    is_span: bool,
+    GeneratedGrammarAttributes {
+        parser_container_attrs,
+        ..
+    }: &'a GeneratedGrammarAttributes<'a>,
+) -> TokenStream {
+    if parser_container_attrs.use_string && is_span {
+        quote! { #parser.map(|x| x.as_str()) }
+    } else {
+        parser
+    }
+}
+
 pub fn calculate_parser_from_expression<'a, 'b>(
     expr: &'a Expression<'a>,
     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
@@ -895,30 +962,50 @@ pub fn calculate_parser_from_expression<'a, 'b>(
 where
     'a: 'b,
 {
+    fn get_and_parse_default_parser<'a>(
+        name: &str,
+        args: Option<TokenStream>,
+        grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
+    ) -> Option<TokenStream> {
+        let Some(GeneratedNonterminalParser {parser, ty,  ..}) = DEFAULT_PARSERS.get(name) else {
+            return None;
+        };
+        let Ok(ty) = syn::parse_str::<syn::Type>(ty) else {
+            return None;
+        };
+
+        let parser = syn::parse_str::<syn::Expr>(parser)
+            .unwrap()
+            .to_token_stream();
+        let parser = if let Some(args) = args {
+            quote! { #parser(#args) }
+        } else {
+            parser
+        };
+
+        Some(map_span_if_needed(parser, type_is_span(&ty), grammar_attrs))
+    }
+
     if let Some(parser) = cache.get(expr) {
         return parser.clone();
     }
 
     let parser = match expr {
         Expression::Literal(Token { value, .. }) => {
-            quote! { ::parse_that::string_span(#value) }
+            get_and_parse_default_parser("LITERAL", Some(quote! {#value}), grammar_attrs).unwrap()
+        }
+        Expression::Regex(Token { value, .. }) => {
+            get_and_parse_default_parser("LITERAL", Some(quote! {#value}), grammar_attrs).unwrap()
         }
         Expression::Nonterminal(Token { value, .. }) => {
-            if let Some(GeneratedNonterminalParser { parser, .. }) = DEFAULT_PARSERS.get(value) {
-                syn::parse_str::<syn::Expr>(parser)
-                    .unwrap()
-                    .to_token_stream()
+            if let Some(parser) = get_and_parse_default_parser(value, None, grammar_attrs) {
+                parser
             } else {
                 let ident = format_ident!("{}", value);
                 quote! { Self::#ident() }
             }
         }
-        Expression::Regex(Token { value, .. }) => {
-            quote! { ::parse_that::regex_span(#value) }
-        }
-
         Expression::Epsilon(_) => quote! { ::parse_that::parse::epsilon() },
-
         Expression::Group(inner_expr) => {
             let inner_expr = get_inner_expression(inner_expr);
             calculate_parser_from_expression(inner_expr, grammar_attrs, cache, type_cache)
