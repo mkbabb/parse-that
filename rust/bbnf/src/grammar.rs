@@ -1,9 +1,9 @@
 extern crate parse_that;
 
-use parse_that::parsers::utils::{escaped_span};
+use parse_that::parsers::utils::escaped_span;
 use parse_that::{
-    any_span, lazy, next_span, string, string_span, take_while_span, Parser,
-    ParserFlat, ParserSpan, ParserState, Span,
+    any_span, lazy, next_span, string, string_span, take_while_span, Parser, ParserFlat,
+    ParserSpan, ParserState, Span,
 };
 
 extern crate pretty;
@@ -32,7 +32,8 @@ pub enum Expression<'a> {
 
     Regex(Token<'a, &'a str>),
 
-    MapperExpression(Token<'a, &'a str>),
+    MappingFn(Token<'a, &'a str>),
+    MappedExpression((TokenExpression<'a>, TokenExpression<'a>)),
 
     Group(TokenExpression<'a>),
     Optional(TokenExpression<'a>),
@@ -60,7 +61,7 @@ pub enum Expression<'a> {
 #[derive(Pretty, Debug, Clone, Copy, Eq)]
 pub struct Token<'a, T> {
     pub value: T,
-    
+
     #[pretty(skip)]
     pub span: Span<'a>,
     #[pretty(skip)]
@@ -352,7 +353,7 @@ impl<'a> BBNFGrammar<'a> {
         Self::alternation()
     }
 
-    fn mapper_expr() -> Parser<'a, Option<Box<Expression<'a>>>> {
+    fn mapper_fn() -> Parser<'a, Option<Box<Expression<'a>>>> {
         let lhs = string_span(";").skip(Self::lhs().trim_whitespace().skip(string_span("=")));
         let not_lhs = next_span(1).look_ahead(lhs.negate());
 
@@ -366,7 +367,7 @@ impl<'a> BBNFGrammar<'a> {
                     Err(e) => panic!("invalid mapper expression: {:?}, {:?}", s.as_str(), e),
                 }
 
-                Box::new(Expression::MapperExpression(token))
+                Box::new(Expression::MappingFn(token))
             })
             .opt()
     }
@@ -380,10 +381,10 @@ impl<'a> BBNFGrammar<'a> {
         let production_rule = Self::lhs()
             .skip(eq)
             .then(Self::rhs())
-            .then_flat(Self::mapper_expr())
+            .then_flat(Self::mapper_fn())
             .skip(terminator)
-            .map(|(lhs, rhs, mapper_expr)| {
-                Expression::ProductionRule(Box::new(lhs), Box::new(rhs), mapper_expr)
+            .map(|(lhs, rhs, mapper_fn)| {
+                Expression::ProductionRule(Box::new(lhs), Box::new(rhs), mapper_fn)
             });
 
         Self::trim_comment(production_rule, comment.opt())

@@ -423,12 +423,12 @@ where
             }
         }
 
-        Expression::ProductionRule(_, rhs, mapper_expr) => {
-            if let Some(box Expression::MapperExpression(Token { value, .. })) = mapper_expr {
-                let Ok(mapper_expr) = syn::parse_str::<syn::ExprClosure>(value) else {
+        Expression::ProductionRule(_, rhs, mapper_fn) => {
+            if let Some(box Expression::MappingFn(Token { value, .. })) = mapper_fn {
+                let Ok(mapper_fn) = syn::parse_str::<syn::ExprClosure>(value) else {
                     panic!("Mapper expression must be a closure");
                 };
-                let syn::ReturnType::Type(_, ty) = &mapper_expr.output else {
+                let syn::ReturnType::Type(_, ty) = &mapper_fn.output else {
                     panic!("Mapper expression must have a return type");
                 };
                 return ty.as_ref().clone();
@@ -1006,6 +1006,23 @@ where
             }
         }
         Expression::Epsilon(_) => quote! { ::parse_that::parse::epsilon() },
+        Expression::MappedExpression((inner_expr, mapper_fn)) => {
+            let inner_expr = get_inner_expression(inner_expr);
+            let mapper_fn = get_inner_expression(mapper_fn);
+
+            let parser =
+                calculate_parser_from_expression(inner_expr, grammar_attrs, cache, type_cache);
+
+            if let Expression::MappingFn(Token { value, .. }) = mapper_fn {
+                let Ok(mapper_fn) = syn::parse_str::<syn::ExprClosure>(value) else  {
+                panic!("Invalid mapper expression: {}", value);
+            };
+                quote! { #parser.map(#mapper_fn) }
+            } else {
+                parser
+            }
+        }
+
         Expression::Group(inner_expr) => {
             let inner_expr = get_inner_expression(inner_expr);
             calculate_parser_from_expression(inner_expr, grammar_attrs, cache, type_cache)
@@ -1102,14 +1119,14 @@ where
             let inner_exprs = get_inner_expression(inner_exprs);
             calculate_alternation_expression(inner_exprs, grammar_attrs, cache, type_cache)
         }
-        Expression::ProductionRule(_lhs, rhs, mapper_expr) => {
+        Expression::ProductionRule(_lhs, rhs, mapper_fn) => {
             let parser = calculate_parser_from_expression(rhs, grammar_attrs, cache, type_cache);
 
-            if let Some(box Expression::MapperExpression(Token { value, .. })) = mapper_expr {
-                let Ok(mapper_expr) = syn::parse_str::<syn::ExprClosure>(value) else  {
+            if let Some(box Expression::MappingFn(Token { value, .. })) = mapper_fn {
+                let Ok(mapper_fn) = syn::parse_str::<syn::ExprClosure>(value) else  {
                     panic!("Invalid mapper expression: {}", value);
                 };
-                quote! { #parser.map(#mapper_expr) }
+                quote! { #parser.map(#mapper_fn) }
             } else {
                 parser
             }
