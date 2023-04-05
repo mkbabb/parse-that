@@ -26,6 +26,7 @@ pub struct GeneratedNonterminalParser<'a> {
 pub struct GeneratedGrammarAttributes<'a> {
     pub ast: &'a AST<'a>,
     pub deps: &'a Dependencies<'a>,
+    pub non_acyclic_deps: &'a Dependencies<'a>,
     pub acyclic_deps: &'a Dependencies<'a>,
     pub ident: &'a syn::Ident,
     pub enum_ident: &'a syn::Ident,
@@ -199,6 +200,16 @@ pub fn calculate_acyclic_deps<'a>(deps: &'a Dependencies<'a>) -> Dependencies<'a
             is_acyclic(name, deps, &mut visited)
         })
         .map(|(name, sub_deps)| (name.clone(), sub_deps.clone()))
+        .collect()
+}
+
+pub fn calculate_non_acyclic_deps<'a>(
+    deps: &'a Dependencies<'a>,
+    acyclic_deps: &'a Dependencies,
+) -> Dependencies<'a> {
+    deps.iter()
+        .filter(|(lhs, _)| !acyclic_deps.contains_key(*lhs))
+        .map(|(lhs, deps)| (lhs.clone(), deps.clone()))
         .collect()
 }
 
@@ -524,6 +535,7 @@ pub fn calculate_nonterminal_generated_parsers<'a, 'b>(
     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
     parser_container_attrs: &ParserAttributes,
     type_cache: &'b mut TypeCache<'a>,
+    max_inline_iterations: usize,
 ) -> (GeneratedParserCache<'a>, GeneratedParserCache<'a>)
 where
     'a: 'b,
@@ -536,7 +548,7 @@ where
         boxed_types_cache: TypeCache<'a>,
     }
 
-    fn box_deps_parsers<'a, 'b>(
+    fn box_deps_parsers<'a>(
         lhs: &'a Expression<'a>,
         grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
         Caches {
@@ -544,10 +556,9 @@ where
             boxed_parsers_cache,
             type_cache,
             boxed_types_cache,
-        }: &mut Caches<'a, 'b>,
-    ) where
-        'a: 'b,
-    {
+            ..
+        }: &mut Caches<'a, '_>,
+    ) {
         if grammar_attrs.acyclic_deps.contains_key(lhs) {
             return;
         }
@@ -580,17 +591,32 @@ where
         }
     }
 
-    fn reset_boxed_parsers<'a, 'b>(
+    fn box_non_acyclic_deps_parsers<'a>(
+        grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
+        Caches {
+            cache,
+            boxed_parsers_cache,
+            ..
+        }: &mut Caches<'a, '_>,
+    ) {
+        for dep in grammar_attrs.non_acyclic_deps.keys() {
+            if let Some(parser) = cache.get(dep) {
+                let boxed_parser = box_generated_parser(dep, parser, grammar_attrs.enum_ident);
+                boxed_parsers_cache.insert(dep, parser.clone());
+                cache.insert(dep, boxed_parser);
+            }
+        }
+    }
+
+    fn reset_boxed_parsers(
         Caches {
             cache,
             boxed_parsers_cache,
             type_cache,
             boxed_types_cache,
             ..
-        }: &mut Caches<'a, 'b>,
-    ) where
-        'a: 'b,
-    {
+        }: &mut Caches<'_, '_>,
+    ) {
         for (expr, parser) in boxed_parsers_cache.iter() {
             cache.insert(expr, parser.clone());
         }
@@ -611,6 +637,8 @@ where
     };
 
     let mut generated_parsers = GeneratedParserCache::new();
+    let mut i = 0;
+    let mut do_recursive_inlining = false;
 
     loop {
         let t_generated_parsers: HashMap<_, _> = grammar_attrs
@@ -621,6 +649,9 @@ where
                     panic!("Expected production rule");
                 };
 
+                if do_recursive_inlining {
+                    box_non_acyclic_deps_parsers(grammar_attrs, &mut caches);
+                }
                 box_deps_parsers(lhs, grammar_attrs, &mut caches);
 
                 let parser = calculate_parser_from_expression(
@@ -636,24 +667,35 @@ where
             })
             .collect();
 
-        let changed = t_generated_parsers.iter().all(|(k, v)| {
+        let not_changed = t_generated_parsers.iter().all(|(k, v)| {
             if let Some(v2) = generated_parsers.get(k) {
                 v.to_string() == v2.to_string()
             } else {
                 false
             }
         });
-        if changed {
-            return (t_generated_parsers, caches.cache.to_owned());
+
+        if not_changed {
+            do_recursive_inlining = true;
+        }
+        if do_recursive_inlining {
+            i += 1;
+        }
+        if i == max_inline_iterations {
+            break;
         }
 
         generated_parsers = t_generated_parsers;
         caches.cache = generated_parsers
             .iter()
-            .filter(|(expr, _)| grammar_attrs.acyclic_deps.contains_key(*expr))
+            .filter(|(expr, _)| {
+                do_recursive_inlining || grammar_attrs.acyclic_deps.contains_key(*expr)
+            })
             .map(|(expr, parser)| (*expr, format_parser(expr, parser, parser_container_attrs)))
             .collect();
     }
+
+    (generated_parsers, caches.cache)
 }
 
 pub fn check_for_sep_by<'a, 'b>(

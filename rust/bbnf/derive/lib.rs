@@ -2,6 +2,7 @@ extern crate proc_macro;
 
 use std::collections::HashMap;
 
+use std::collections::HashSet;
 use std::env;
 use std::path::Path;
 use std::path::PathBuf;
@@ -9,6 +10,7 @@ use std::path::PathBuf;
 use bbnf::box_generated_parser;
 use bbnf::calculate_acyclic_deps;
 use bbnf::calculate_ast_deps;
+use bbnf::calculate_non_acyclic_deps;
 use bbnf::calculate_nonterminal_generated_parsers;
 use bbnf::calculate_nonterminal_types;
 use bbnf::format_parser;
@@ -89,7 +91,7 @@ fn generate_enum(
     let enum_ident = &grammar_attrs.enum_ident;
 
     quote! {
-        // #[derive(::pretty::Pretty, Debug, Clone)]
+        #[derive(::pretty::Pretty, Debug, Clone)]
         pub enum #enum_ident<'a> {
             #(#enum_values),*
         }
@@ -133,7 +135,8 @@ where
             let ident = format_ident!("{}", name);
 
             let boxed_parser = format_parser(expr, parser, parser_container_attrs);
-            let formatted_parser = box_generated_parser(expr, &boxed_parser, grammar_attrs.enum_ident);
+            let formatted_parser =
+                box_generated_parser(expr, &boxed_parser, grammar_attrs.enum_ident);
 
             let boxed_enum_type = &grammar_attrs.boxed_enum_type;
 
@@ -193,11 +196,13 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
 
     let ast = topological_sort(&ast, &deps);
     let acyclic_deps = calculate_acyclic_deps(&deps);
+    let non_acyclic_deps = calculate_non_acyclic_deps(&deps, &acyclic_deps);
 
     let grammar_attrs = GeneratedGrammarAttributes {
         ast: &ast,
         deps: &deps,
         acyclic_deps: &acyclic_deps,
+        non_acyclic_deps: &non_acyclic_deps,
         ident,
         enum_ident: &enum_ident,
         boxed_enum_type: &boxed_enum_type,
@@ -212,6 +217,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         &grammar_attrs,
         &parser_container_attrs,
         &mut type_cache,
+        2,
     );
 
     let generated_parsers =

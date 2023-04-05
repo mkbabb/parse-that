@@ -130,7 +130,7 @@ pub fn main() {
     println!("JSON2 Elapsed: {:?}", elapsed);
 
     let tmp = G4::sentence().parse("the fat woman ate the fat man");
-    // println!("{:?}", Doc::from(tmp));
+    println!("{:?}", Doc::from(tmp));
 
     // println!("{:?}", Doc::from(tmp));
 
