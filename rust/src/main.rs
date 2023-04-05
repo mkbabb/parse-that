@@ -6,11 +6,13 @@ extern crate parse_that;
 extern crate pretty;
 
 use bbnf_derive::Parser;
+use parse_that::get_cargo_root_path;
 use parse_that::json::json_parser;
 use parse_that::json::JsonValue;
 use parse_that::Span;
 
 use parse_that::parse::*;
+use pretty::Doc;
 
 use std::{fs, time::SystemTime};
 
@@ -28,10 +30,8 @@ pub fn consume_math(p: &MathEnum) -> f64 {
             _ => unreachable!(),
         };
         match p {
-            MathEnum::expr((term, rest)) => rest.into_iter().fold(recurse(term), fold_expression),
-            MathEnum::term((factor, rest)) => {
-                rest.into_iter().fold(recurse(factor), fold_expression)
-            }
+            MathEnum::expr((term, rest)) => rest.iter().fold(recurse(term), fold_expression),
+            MathEnum::term((factor, rest)) => rest.iter().fold(recurse(factor), fold_expression),
             MathEnum::wrapped((_, expr, _)) => recurse(expr),
             MathEnum::factor(num) => recurse(num),
             MathEnum::number(num) => num.as_str().parse().unwrap(),
@@ -52,11 +52,11 @@ pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
             JsonEnum::number(n) => n.clone(),
             JsonEnum::string(s) => JsonValue::String(s.as_str()),
             JsonEnum::array(values) => {
-                JsonValue::Array(values.into_iter().map(|v| recurse(v)).collect())
+                JsonValue::Array(values.iter().map(|v| recurse(v)).collect())
             }
             JsonEnum::object(pairs) => {
                 let map = pairs
-                    .into_iter()
+                    .iter()
                     .map(|pair| match pair.as_ref() {
                         JsonEnum::pair((box JsonEnum::string(key), value)) => {
                             (key.as_str(), recurse(value))
@@ -78,6 +78,36 @@ pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
 #[parser(path = "../../grammar/css-keyframes.bbnf", ignore_whitespace)]
 pub struct CSSKeyframes;
 
+#[derive(Parser)]
+#[parser(path = "../../grammar/g4.bbnf", ignore_whitespace)]
+pub struct G4;
+
+// pub fn consume_g4<'a>(p: &'a G4Enum) -> String {
+//     pub fn recurse<'a>(p: &'a G4Enum) -> String {
+//         match p {
+//             G4Enum::sentence((subject, verb, object, with_clause)) => {
+//                 let mut s = String::new();
+//                 s.push_str(recurse(subject).as_str());
+//                 s.push_str(recurse(verb).as_str());
+//                 s.push_str(recurse(object).as_str());
+
+//                 if let Some(with_clause) = with_clause {
+//                     s.push_str(recurse(with_clause).as_str());
+//                 }
+//                 s
+//             }
+//             G4Enum::subject((article, noun)) => {
+//                 let mut s = String::new();
+//                 s.push_str(recurse(article).as_str());
+//                 s.push_str(recurse(noun).as_str());
+//                 s
+//             }
+//         }
+//     }
+
+//     recurse(p)
+// }
+
 pub fn main() {
     let first_now = SystemTime::now();
 
@@ -85,17 +115,22 @@ pub fn main() {
     // let tmp = consume_math(&math);
     // println!("{:?}", tmp);
 
-    let json_file_path = "../../data/json/canada.json";
-    // let json_string = fs::read_to_string(json_file_path).unwrap();
+    let root_path = get_cargo_root_path();
+    let json_file_path = root_path.join("../../data/json/canada.json");
 
-    // let now = SystemTime::now();
+    let json_string = fs::read_to_string(&json_file_path).unwrap();
 
-    // let x = Json::value().parse(&json_string).unwrap();
+    let now = SystemTime::now();
 
-    // let tmp = consume_json(&x);
-    // let elapsed = now.elapsed().unwrap();
+    let x = Json::value().parse(&json_string).unwrap();
 
-    // println!("JSON2 Elapsed: {:?}", elapsed);
+    let tmp = consume_json(&x);
+    let elapsed = now.elapsed().unwrap();
+
+    println!("JSON2 Elapsed: {:?}", elapsed);
+
+    let tmp = G4::sentence().parse("the fat woman ate the fat man");
+    println!("{:?}", Doc::from(tmp));
 
     // println!("{:?}", Doc::from(tmp));
 
@@ -124,7 +159,7 @@ pub fn main() {
     // println!("CSV Elapsed: {:?}", elapsed);
 
     // let json_file_path = "../../data/json/data.json";
-    let json_string = fs::read_to_string(json_file_path).unwrap();
+    let json_string = fs::read_to_string(&json_file_path).unwrap();
 
     let parser = json_parser();
 

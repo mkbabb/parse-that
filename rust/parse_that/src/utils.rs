@@ -13,3 +13,7 @@ pub fn extract_bounds<'a>(bounds: impl RangeBounds<usize> + 'a) -> (usize, usize
     };
     (start, end)
 }
+
+pub fn get_cargo_root_path() -> std::path::PathBuf {
+    std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".into()))
+}

@@ -10,6 +10,7 @@ proc-macro = true
 [dependencies]
 bbnf = { path = "../" }
 pretty = {path = "../../pretty"}
+parse_that = {path = "../../parse_that"}
 
 syn = { version = "1", features = ["full"] }
 quote = "1"

@@ -45,7 +45,6 @@ where
     Output: 'a,
 {
     pub fn new(parser_fn: impl ParserFn<'a, Output>) -> Parser<'a, Output> {
-        
         Parser {
             parser_fn: Box::new(parser_fn),
         }
@@ -173,9 +172,7 @@ where
     where
         Output2: 'a,
     {
-        let map = move |state: &mut ParserState<'a>| {
-            self.parser_fn.call(state).map(f)
-        };
+        let map = move |state: &mut ParserState<'a>| self.parser_fn.call(state).map(f);
 
         Parser::new(map)
     }
@@ -411,6 +408,11 @@ where
     fn add(self, other: Parser<'a, Output2>) -> Self::Output {
         self.then(other)
     }
+}
+
+pub fn epsilon<'a>() -> Parser<'a, ()> {
+    let epsilon = move |_: &mut ParserState<'a>| Some(());
+    Parser::new(epsilon)
 }
 
 pub trait LazyParserFn<'a, Output>: 'a {
