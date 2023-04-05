@@ -245,7 +245,7 @@ where
     'a: 'b,
 {
     if let Some(ty) = cache.get(expr) {
-        // return ty.clone();
+        return ty.clone();
     }
 
     let ty = match expr {
@@ -255,15 +255,11 @@ where
 
         Expression::Nonterminal(Token { value, .. }) => {
             if let Some(GeneratedNonterminalParser { ty, .. }) = DEFAULT_PARSERS.get(value) {
-                let Ok(ty) = syn::parse_str(ty) else {
-                    panic!("Invalid type: {}", ty);
-                };
-                ty
+                syn::parse_str(ty).unwrap_or_else(|_| panic!("Invalid type: {}", ty))
             } else {
                 grammar_attrs.boxed_enum_type.clone()
             }
         }
-
         Expression::Group(inner_expr) => {
             let inner_expr = get_inner_expression(inner_expr);
             calculate_expression_type(inner_expr, grammar_attrs, cache)
@@ -773,6 +769,81 @@ pub fn check_for_any_span(exprs: &[Expression]) -> Option<TokenStream> {
     }
 }
 
+pub fn calculate_concatenation_expression<'a>(
+    inner_exprs: &'a [Expression<'a>],
+    grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
+    cache: &mut GeneratedParserCache<'a>,
+    type_cache: &mut TypeCache<'a>,
+) -> TokenStream {
+    let tys = inner_exprs
+        .iter()
+        .map(|expr| calculate_expression_type(expr, grammar_attrs, type_cache))
+        .collect::<Vec<_>>();
+
+    let mut chains: Vec<(bool, Vec<TokenStream>)> = Vec::new();
+
+    for (parser, ty) in inner_exprs
+        .iter()
+        .map(|expr| calculate_parser_from_expression(expr, grammar_attrs, cache, type_cache))
+        .zip(tys.iter())
+    {
+        let is_span = type_is_span(ty);
+
+        if let Some((last_is_span, last_chain)) = chains.last_mut() {
+            if is_span && *last_is_span {
+                last_chain.push(parser);
+                continue;
+            }
+        }
+        chains.push((is_span, vec![parser]));
+    }
+
+    let mut acc = None;
+    for (n, (_, chain)) in chains.iter().enumerate() {
+        let chain_acc = chain.iter().fold(None, |acc, parser| match acc {
+            None => Some(parser.clone()),
+            Some(acc) => Some(quote! { #acc.then_span(#parser) }),
+        });
+
+        acc = match acc {
+            None => chain_acc,
+            Some(acc) => {
+                if n > 1 {
+                    Some(quote! { #acc.then_flat(#chain_acc) })
+                } else {
+                    Some(quote! { #acc.then(#chain_acc) })
+                }
+            }
+        };
+    }
+    acc.unwrap()
+}
+
+pub fn calculate_alternation_expression<'a>(
+    inner_exprs: &'a [Expression<'a>],
+    grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
+    cache: &mut GeneratedParserCache<'a>,
+    type_cache: &mut TypeCache<'a>,
+) -> TokenStream {
+    if let Some(parser) = check_for_any_span(inner_exprs) {
+        return parser;
+    }
+    let parser = inner_exprs
+        .iter()
+        .map(|expr| calculate_parser_from_expression(expr, grammar_attrs, cache, type_cache))
+        .fold(None, |acc, parser| match acc {
+            None => Some(parser),
+            Some(acc) => Some(quote! { #acc | #parser  }),
+        })
+        .unwrap();
+
+    if inner_exprs.len() > 1 {
+        quote! { ( #parser ) }
+    } else {
+        parser
+    }
+}
+
 pub fn calculate_parser_from_expression<'a, 'b>(
     expr: &'a Expression<'a>,
     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
@@ -883,7 +954,6 @@ where
 
             quote! { #left_parser.next(#right_parser) }
         }
-
         Expression::Minus(left_expr, right_expr) => {
             let left_expr = get_inner_expression(left_expr);
             let right_expr = get_inner_expression(right_expr);
@@ -895,77 +965,14 @@ where
 
             quote! { #left_parser.not(#right_parser) }
         }
-
         Expression::Concatenation(inner_exprs) => {
             let inner_exprs = get_inner_expression(inner_exprs);
-
-            let tys = inner_exprs
-                .iter()
-                .map(|expr| calculate_expression_type(expr, grammar_attrs, type_cache))
-                .collect::<Vec<_>>();
-
-            let mut non_span_counter = -1;
-            let mut span_counter = -1;
-
-            let mut span_acc = None;
-            let mut acc = None;
-
-            for (parser, ty) in inner_exprs
-                .iter()
-                .map(|expr| {
-                    calculate_parser_from_expression(expr, grammar_attrs, cache, type_cache)
-                })
-                .zip(tys.iter())
-            {
-                let is_span = type_is_span(ty);
-
-                acc = match acc {
-                    None => Some(parser),
-                    Some(acc) => {
-                        if is_span && span_counter > 0 {
-                            Some(quote! { #acc.then_span(#parser) })
-                        } else if non_span_counter > 0 {
-                            Some(quote! { #acc.then_flat(#parser) })
-                        } else {
-                            Some(quote! { #acc.then(#parser) })
-                        }
-                    }
-                };
-
-                if is_span {
-                    span_counter += 1;
-                    non_span_counter = 0;
-                } else {
-                    span_counter = 0;
-                    non_span_counter += 1;
-                }
-            }
-            acc.unwrap()
+            calculate_concatenation_expression(inner_exprs, grammar_attrs, cache, type_cache)
         }
         Expression::Alternation(inner_exprs) => {
             let inner_exprs = get_inner_expression(inner_exprs);
-
-            if let Some(parser) = check_for_any_span(inner_exprs) {
-                return parser;
-            }
-            let parser = inner_exprs
-                .iter()
-                .map(|expr| {
-                    calculate_parser_from_expression(expr, grammar_attrs, cache, type_cache)
-                })
-                .fold(None, |acc, parser| match acc {
-                    None => Some(parser),
-                    Some(acc) => Some(quote! { #acc | #parser  }),
-                })
-                .unwrap();
-
-            if inner_exprs.len() > 1 {
-                quote! { ( #parser ) }
-            } else {
-                parser
-            }
+            calculate_alternation_expression(inner_exprs, grammar_attrs, cache, type_cache)
         }
-
         Expression::ProductionRule(_lhs, rhs, mapper_expr) => {
             let parser = calculate_parser_from_expression(rhs, grammar_attrs, cache, type_cache);
 

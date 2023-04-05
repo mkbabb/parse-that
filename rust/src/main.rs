@@ -30,7 +30,7 @@ pub fn consume_math(p: &MathEnum) -> f64 {
             _ => unreachable!(),
         };
         match p {
-            MathEnum::expr((term, rest)) => rest.iter().fold(recurse(term), fold_expression),
+            MathEnum::expr((term, rest, ..)) => rest.iter().fold(recurse(term), fold_expression),
             MathEnum::term((factor, rest)) => rest.iter().fold(recurse(factor), fold_expression),
             MathEnum::wrapped((_, expr, _)) => recurse(expr),
             MathEnum::factor(num) => recurse(num),
@@ -130,7 +130,7 @@ pub fn main() {
     println!("JSON2 Elapsed: {:?}", elapsed);
 
     let tmp = G4::sentence().parse("the fat woman ate the fat man");
-    println!("{:?}", Doc::from(tmp));
+    // println!("{:?}", Doc::from(tmp));
 
     // println!("{:?}", Doc::from(tmp));
 
