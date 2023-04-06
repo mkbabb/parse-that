@@ -592,14 +592,6 @@ pub fn calculate_nonterminal_generated_parsers<'a, 'b>(
 where
     'a: 'b,
 {
-    struct Caches<'a, 'b> {
-        cache: HashMap<&'b Expression<'a>, TokenStream>,
-        // boxed_parsers_cache: GeneratedParserCache<'a>,
-
-        // type_cache: &'b mut TypeCache<'a>,
-        // boxed_types_cache: TypeCache<'a>,
-    }
-
     // fn box_deps_parsers<'a>(
     //     lhs: &'a Expression<'a>,
     //     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
@@ -689,6 +681,7 @@ where
     // };
 
     let mut cache = HashMap::new();
+    let mut type_cache = type_cache.clone();
 
     let mut generated_parsers = GeneratedParserCache::new();
     let mut i = 0;
@@ -733,6 +726,7 @@ where
                     expr,
                     grammar_attrs,
                     &mut cache,
+                    &mut type_cache,
                     &inline_cache,
                 );
 
@@ -998,6 +992,7 @@ pub fn calculate_parser_from_expression<'a, 'b, 'c, 'd>(
     expr: &'a Expression<'a>,
     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
     cache: &'d mut HashMap<&'c Expression<'c>, TokenStream>,
+    type_cache: &'d mut HashMap<&'c Expression<'c>, syn::Type>,
     inline_cache: &'b HashMap<&'a Expression<'a>, &'b Expression<'a>>,
 ) -> TokenStream
 where
@@ -1035,7 +1030,13 @@ where
     }
 
     if let Some(cached_expr) = inline_cache.get(expr) {
-        return calculate_parser_from_expression(cached_expr, grammar_attrs, cache, inline_cache);
+        return calculate_parser_from_expression(
+            cached_expr,
+            grammar_attrs,
+            cache,
+            type_cache,
+            inline_cache,
+        );
     }
 
     let parser = match expr {
