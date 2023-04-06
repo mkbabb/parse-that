@@ -76,6 +76,14 @@ impl<'a, T> Token<'a, T> {
             comments: None,
         }
     }
+
+    pub fn new_without_span(value: T) -> Self {
+        Self {
+            value,
+            span: Span::new(0, 0, ""),
+            comments: None,
+        }
+    }
 }
 
 pub type AST<'a> = IndexMap<String, Expression<'a>>;

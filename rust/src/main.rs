@@ -16,9 +16,9 @@ use pretty::Doc;
 
 use std::{fs, time::SystemTime};
 
-// #[derive(Parser)]
-// #[parser(path = "../../grammar/math.bbnf", ignore_whitespace, use_string)]
-// pub struct Math {}
+#[derive(Parser)]
+#[parser(path = "../../grammar/math.bbnf", ignore_whitespace)]
+pub struct Math {}
 
 // pub fn consume_math(p: &MathEnum) -> f64 {
 //     pub fn recurse(p: &MathEnum) -> f64 {

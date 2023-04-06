@@ -1,5 +1,4 @@
 use std::{
-    borrow::Cow,
     cell::RefCell,
     collections::{HashMap, HashSet},
     rc::Rc,
@@ -8,7 +7,7 @@ use std::{
 use crate::grammar::*;
 use pretty::Doc;
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote, quote_spanned, ToTokens};
+use quote::{format_ident, quote, ToTokens};
 use syn::{parse_quote, Type};
 
 #[derive(Clone, Debug, Default)]
@@ -582,115 +581,136 @@ pub fn format_parser(
 }
 
 pub type GeneratedParserCache<'a> = HashMap<&'a Expression<'a>, proc_macro2::TokenStream>;
+pub type TmpCache<'a> = HashMap<&'a Expression<'a>, &'a Expression<'a>>;
 
 pub fn calculate_nonterminal_generated_parsers<'a, 'b>(
     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
     parser_container_attrs: &ParserAttributes,
     type_cache: &'b mut TypeCache<'a>,
     max_inline_iterations: usize,
-) -> (GeneratedParserCache<'a>, GeneratedParserCache<'a>)
+) -> GeneratedParserCache<'a>
 where
     'a: 'b,
 {
     struct Caches<'a, 'b> {
-        cache: GeneratedParserCache<'a>,
-        boxed_parsers_cache: GeneratedParserCache<'a>,
+        cache: HashMap<&'b Expression<'a>, TokenStream>,
+        // boxed_parsers_cache: GeneratedParserCache<'a>,
 
-        type_cache: &'b mut TypeCache<'a>,
-        boxed_types_cache: TypeCache<'a>,
+        // type_cache: &'b mut TypeCache<'a>,
+        // boxed_types_cache: TypeCache<'a>,
     }
 
-    fn box_deps_parsers<'a>(
-        lhs: &'a Expression<'a>,
-        grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-        Caches {
-            cache,
-            boxed_parsers_cache,
-            type_cache,
-            boxed_types_cache,
-            ..
-        }: &mut Caches<'a, '_>,
-    ) {
-        if grammar_attrs.acyclic_deps.contains_key(lhs) {
-            return;
-        }
+    // fn box_deps_parsers<'a>(
+    //     lhs: &'a Expression<'a>,
+    //     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
+    //     Caches {
+    //         cache,
+    //         boxed_parsers_cache,
+    //         type_cache,
+    //         boxed_types_cache,
+    //         ..
+    //     }: &mut Caches<'a, '_>,
+    // ) {
+    //     if grammar_attrs.acyclic_deps.contains_key(lhs) {
+    //         return;
+    //     }
 
-        let Some(deps) = grammar_attrs.deps.get(lhs) else {
-            return;
-        };
+    //     let Some(deps) = grammar_attrs.deps.get(lhs) else {
+    //         return;
+    //     };
 
-        for dep in deps
-            .iter()
-            .filter(|dep| grammar_attrs.acyclic_deps.contains_key(*dep))
-        {
-            if boxed_parsers_cache.contains_key(dep) {
-                continue;
-            }
+    //     for dep in deps
+    //         .iter()
+    //         .filter(|dep| grammar_attrs.acyclic_deps.contains_key(*dep))
+    //     {
+    //         if boxed_parsers_cache.contains_key(dep) {
+    //             continue;
+    //         }
 
-            if let Some(parser) = cache.get(dep) {
-                if let Some(_sub_deps) = grammar_attrs.acyclic_deps.get(dep) {
-                    let boxed_parser = box_generated_parser(dep, parser, grammar_attrs.enum_ident);
+    //         if let Some(parser) = cache.get(dep) {
+    //             if let Some(_sub_deps) = grammar_attrs.acyclic_deps.get(dep) {
+    //                 let boxed_parser = box_generated_parser(dep, parser, grammar_attrs.enum_ident);
 
-                    boxed_parsers_cache.insert(dep, parser.clone());
-                    cache.insert(dep, boxed_parser);
+    //                 boxed_parsers_cache.insert(dep, parser.clone());
+    //                 cache.insert(dep, boxed_parser);
 
-                    if let Some(boxed_type) = type_cache.get(dep) {
-                        boxed_types_cache.insert(dep, boxed_type.clone());
-                        type_cache.insert(dep, grammar_attrs.boxed_enum_type.clone());
-                    }
-                }
-            }
-        }
-    }
+    //                 if let Some(boxed_type) = type_cache.get(dep) {
+    //                     boxed_types_cache.insert(dep, boxed_type.clone());
+    //                     type_cache.insert(dep, grammar_attrs.boxed_enum_type.clone());
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
-    fn box_non_acyclic_deps_parsers<'a>(
-        grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-        Caches {
-            cache,
-            boxed_parsers_cache,
-            ..
-        }: &mut Caches<'a, '_>,
-    ) {
-        for dep in grammar_attrs.non_acyclic_deps.keys() {
-            if let Some(parser) = cache.get(dep) {
-                let boxed_parser = box_generated_parser(dep, parser, grammar_attrs.enum_ident);
-                boxed_parsers_cache.insert(dep, parser.clone());
-                cache.insert(dep, boxed_parser);
-            }
-        }
-    }
+    // fn box_non_acyclic_deps_parsers<'a>(
+    //     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
+    //     Caches {
+    //         cache,
+    //         boxed_parsers_cache,
+    //         ..
+    //     }: &mut Caches<'a, '_>,
+    // ) {
+    //     for dep in grammar_attrs.non_acyclic_deps.keys() {
+    //         if let Some(parser) = cache.get(dep) {
+    //             let boxed_parser = box_generated_parser(dep, parser, grammar_attrs.enum_ident);
+    //             boxed_parsers_cache.insert(dep, parser.clone());
+    //             cache.insert(dep boxed_parser);
+    //         }
+    //     }
+    // }
 
-    fn reset_boxed_parsers(
-        Caches {
-            cache,
-            boxed_parsers_cache,
-            type_cache,
-            boxed_types_cache,
-            ..
-        }: &mut Caches<'_, '_>,
-    ) {
-        for (expr, parser) in boxed_parsers_cache.iter() {
-            cache.insert(expr, parser.clone());
-        }
-        boxed_parsers_cache.clear();
+    // fn reset_boxed_parsers(
+    //     Caches {
+    //         cache,
+    //         boxed_parsers_cache,
+    //         type_cache,
+    //         boxed_types_cache,
+    //         ..
+    //     }: &mut Caches<'_, '_>,
+    // ) {
+    //     for (expr, parser) in boxed_parsers_cache.iter() {
+    //         cache.insert(expr, parser.clone());
+    //     }
+    //     boxed_parsers_cache.clear();
 
-        for (expr, ty) in boxed_types_cache.iter() {
-            type_cache.insert(expr, ty.clone());
-        }
-        boxed_types_cache.clear();
-    }
+    //     for (expr, ty) in boxed_types_cache.iter() {
+    //         type_cache.insert(expr, ty.clone());
+    //     }
+    //     boxed_types_cache.clear();
+    // }
 
-    let mut caches = Caches {
-        cache: GeneratedParserCache::new(),
-        boxed_parsers_cache: GeneratedParserCache::new(),
+    // let mut caches = Caches {
+    //     cache: HashMap::new(),
+    //     // boxed_parsers_cache: GeneratedParserCache::new(),
 
-        type_cache,
-        boxed_types_cache: TypeCache::new(),
-    };
+    //     // type_cache,
+    //     // boxed_types_cache: TypeCache::new(),
+    // };
+
+    let mut cache = HashMap::new();
 
     let mut generated_parsers = GeneratedParserCache::new();
     let mut i = 0;
     let mut do_recursive_inlining = false;
+
+    let tmp: HashMap<_, _> = grammar_attrs
+        .ast
+        .iter()
+        .map(|(_, expr)| {
+            let Expression::ProductionRule(lhs, rhs, ..) = expr else {
+            panic!("Expected production rule");
+        };
+
+            (lhs.as_ref().clone(), rhs.as_ref().clone())
+        })
+        .collect();
+
+    let mut inline_cache = HashMap::new();
+
+    for (k, v) in tmp.iter() {
+        inline_cache.insert(k, v);
+    }
 
     loop {
         let t_generated_parsers: HashMap<_, _> = grammar_attrs
@@ -701,19 +721,28 @@ where
                     panic!("Expected production rule");
                 };
 
-                if do_recursive_inlining {
-                    box_non_acyclic_deps_parsers(grammar_attrs, &mut caches);
-                }
-                box_deps_parsers(lhs, grammar_attrs, &mut caches);
+                // if do_recursive_inlining {
+                //     box_non_acyclic_deps_parsers(grammar_attrs, &mut caches);
+                // }
+                // box_deps_parsers(lhs, grammar_attrs, &mut caches);
+
+                // inline_cache.remove(expr);
+                // inline_cache.remove(lhs.as_ref());
 
                 let parser = calculate_parser_from_expression(
                     expr,
                     grammar_attrs,
-                    &mut caches.cache,
-                    caches.type_cache,
+                    &mut cache,
+                    &inline_cache,
                 );
 
-                reset_boxed_parsers(&mut caches);
+                // if let Some(deps) = grammar_attrs.acyclic_deps.get(lhs) {
+                //     for dep in deps {
+                //         inline_cache.remove(dep);
+                //     }
+                // }
+
+                // reset_boxed_parsers(&mut caches);
 
                 (lhs.as_ref(), parser)
             })
@@ -728,215 +757,227 @@ where
         });
 
         if not_changed {
-            do_recursive_inlining = true;
-        }
-        if do_recursive_inlining {
-            i += 1;
-        }
-        if i == max_inline_iterations {
             break;
         }
 
-        generated_parsers = t_generated_parsers;
-        caches.cache = generated_parsers
-            .iter()
-            .filter(|(expr, _)| {
-                do_recursive_inlining || grammar_attrs.acyclic_deps.contains_key(*expr)
-            })
-            .map(|(expr, parser)| (*expr, format_parser(expr, parser, parser_container_attrs)))
-            .collect();
+        // if not_changed {
+        //     do_recursive_inlining = true;
+        // }
+        // if do_recursive_inlining {
+        //     i += 1;
+        // }
+        // if i == max_inline_iterations {
+        //     break;
+        // }
+
+        //     generated_parsers = t_generated_parsers;
+        //     caches.cache = generated_parsers
+        //         .iter()
+        //         .filter(|(expr, _)| {
+        //             do_recursive_inlining || grammar_attrs.acyclic_deps.contains_key(*expr)
+        //         })
+        //         .map(|(expr, parser)| (*expr, format_parser(expr, parser, parser_container_attrs)))
+        //         .collect();
+
+        //     i += 1;
     }
 
-    (generated_parsers, caches.cache)
+    generated_parsers
 }
 
-pub fn check_for_sep_by<'a, 'b>(
-    expr: &'a Expression<'a>,
-    grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-    cache: &'b mut GeneratedParserCache<'a>,
-    type_cache: &'b mut TypeCache<'a>,
-) -> Option<TokenStream>
-where
-    'a: 'b,
-{
-    match expr {
-        Expression::Group(box Token { value, .. }) => {
-            check_for_sep_by(value, grammar_attrs, cache, type_cache)
-        }
-        Expression::Skip(
-            left_expr,
-            box Token {
-                value: Expression::Optional(right_expr),
-                ..
-            },
-        ) => {
-            let left_expr = get_inner_expression(left_expr);
-            let right_expr = get_inner_expression(right_expr);
+// pub fn check_for_sep_by<'a, 'b>(
+//     expr: &'a Expression<'a>,
+//     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
+//     cache: &'b mut GeneratedParserCache<'a>,
+//     type_cache: &'b mut TypeCache<'a>,
+// ) -> Option<TokenStream>
+// where
+//     'a: 'b,
+// {
+//     match expr {
+//         Expression::Group(box Token { value, .. }) => {
+//             check_for_sep_by(value, grammar_attrs, cache, type_cache)
+//         }
+//         Expression::Skip(
+//             left_expr,
+//             box Token {
+//                 value: Expression::Optional(right_expr),
+//                 ..
+//             },
+//         ) => {
+//             let left_expr = get_inner_expression(left_expr);
+//             let right_expr = get_inner_expression(right_expr);
 
-            let left_parser =
-                calculate_parser_from_expression(left_expr, grammar_attrs, cache, type_cache);
-            let right_parser =
-                calculate_parser_from_expression(right_expr, grammar_attrs, cache, type_cache);
+//             let left_parser =
+//                 calculate_parser_from_expression(left_expr, grammar_attrs, cache, type_cache);
+//             let right_parser =
+//                 calculate_parser_from_expression(right_expr, grammar_attrs, cache, type_cache);
 
-            let left_type = calculate_expression_type(left_expr, grammar_attrs, type_cache);
-            let right_type = calculate_expression_type(right_expr, grammar_attrs, type_cache);
+//             let left_type = calculate_expression_type(left_expr, grammar_attrs, type_cache);
+//             let right_type = calculate_expression_type(right_expr, grammar_attrs, type_cache);
 
-            if type_is_span(&left_type) && type_is_span(&right_type) {
-                Some(quote! {
-                    #left_parser.sep_by_span(#right_parser, ..)
-                })
-            } else {
-                Some(quote! {
-                    #left_parser.sep_by(#right_parser, ..)
-                })
-            }
-        }
-        _ => None,
-    }
-}
+//             if type_is_span(&left_type) && type_is_span(&right_type) {
+//                 Some(quote! {
+//                     #left_parser.sep_by_span(#right_parser, ..)
+//                 })
+//             } else {
+//                 Some(quote! {
+//                     #left_parser.sep_by(#right_parser, ..)
+//                 })
+//             }
+//         }
+//         _ => None,
+//     }
+// }
 
-pub fn check_for_wrapped<'a, 'b>(
-    left_expr: &'a Expression<'a>,
-    right_expr: &'a Expression<'a>,
-    grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-    cache: &'b mut GeneratedParserCache<'a>,
-    type_cache: &'b mut TypeCache<'a>,
-) -> Option<TokenStream>
-where
-    'a: 'b,
-{
-    match left_expr {
-        Expression::Group(box Token { value, .. }) => {
-            check_for_wrapped(left_expr, value, grammar_attrs, cache, type_cache)
-        }
-        Expression::Next(left_expr, middle_expr) => {
-            let left_expr = get_inner_expression(left_expr);
-            let middle_expr = get_inner_expression(middle_expr);
+// pub fn check_for_wrapped<'a, 'b>(
+//     left_expr: &'a Expression<'a>,
+//     right_expr: &'a Expression<'a>,
+//     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
+//     cache: &'b mut GeneratedParserCache<'a>,
+//     type_cache: &'b mut TypeCache<'a>,
+// ) -> Option<TokenStream>
+// where
+//     'a: 'b,
+// {
+//     match left_expr {
+//         Expression::Group(box Token { value, .. }) => {
+//             check_for_wrapped(left_expr, value, grammar_attrs, cache, type_cache)
+//         }
+//         Expression::Next(left_expr, middle_expr) => {
+//             let left_expr = get_inner_expression(left_expr);
+//             let middle_expr = get_inner_expression(middle_expr);
 
-            let left_parser =
-                calculate_parser_from_expression(left_expr, grammar_attrs, cache, type_cache);
-            let middle_parser =
-                calculate_parser_from_expression(middle_expr, grammar_attrs, cache, type_cache);
-            let right_parser =
-                calculate_parser_from_expression(right_expr, grammar_attrs, cache, type_cache);
+//             let left_parser =
+//                 calculate_parser_from_expression(left_expr, grammar_attrs, cache, type_cache);
+//             let middle_parser =
+//                 calculate_parser_from_expression(middle_expr, grammar_attrs, cache, type_cache);
+//             let right_parser =
+//                 calculate_parser_from_expression(right_expr, grammar_attrs, cache, type_cache);
 
-            let left_type = calculate_expression_type(left_expr, grammar_attrs, type_cache);
-            let middle_type = calculate_expression_type(middle_expr, grammar_attrs, type_cache);
-            let right_type = calculate_expression_type(right_expr, grammar_attrs, type_cache);
+//             let left_type = calculate_expression_type(left_expr, grammar_attrs, type_cache);
+//             let middle_type = calculate_expression_type(middle_expr, grammar_attrs, type_cache);
+//             let right_type = calculate_expression_type(right_expr, grammar_attrs, type_cache);
 
-            if type_is_span(&left_type) && type_is_span(&middle_type) && type_is_span(&right_type) {
-                Some(quote! {
-                    #middle_parser.wrap_span(#left_parser, #right_parser)
-                })
-            } else {
-                Some(quote! {
-                    #middle_parser.wrap(#left_parser, #right_parser)
-                })
-            }
-        }
-        _ => None,
-    }
-}
+//             if type_is_span(&left_type) && type_is_span(&middle_type) && type_is_span(&right_type) {
+//                 Some(quote! {
+//                     #middle_parser.wrap_span(#left_parser, #right_parser)
+//                 })
+//             } else {
+//                 Some(quote! {
+//                     #middle_parser.wrap(#left_parser, #right_parser)
+//                 })
+//             }
+//         }
+//         _ => None,
+//     }
+// }
 
-pub fn check_for_any_span(exprs: &[Expression]) -> Option<TokenStream> {
-    let all_literals = exprs
-        .iter()
-        .all(|expr| matches!(expr, Expression::Literal(_)));
+// pub fn check_for_any_span(exprs: &[Expression]) -> Option<TokenStream> {
+//     let all_literals = exprs
+//         .iter()
+//         .all(|expr| matches!(expr, Expression::Literal(_)));
 
-    if all_literals {
-        let literal_arr = exprs
-            .iter()
-            .map(|expr| {
-                if let Expression::Literal(token) = expr {
-                    token.value
-                } else {
-                    panic!("Expected literal");
-                }
-            })
-            .collect::<Vec<_>>();
+//     if all_literals {
+//         let literal_arr = exprs
+//             .iter()
+//             .map(|expr| {
+//                 if let Expression::Literal(token) = expr {
+//                     token.value
+//                 } else {
+//                     panic!("Expected literal");
+//                 }
+//             })
+//             .collect::<Vec<_>>();
 
-        Some(quote! {
-            ::parse_that::any_span(&[#(#literal_arr),*])
-        })
-    } else {
-        None
-    }
-}
+//         Some(quote! {
+//             ::parse_that::any_span(&[#(#literal_arr),*])
+//         })
+//     } else {
+//         None
+//     }
+// }
 
-pub fn calculate_concatenation_expression<'a>(
-    inner_exprs: &'a [Expression<'a>],
-    grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-    cache: &mut GeneratedParserCache<'a>,
-    type_cache: &mut TypeCache<'a>,
-) -> TokenStream {
-    let tys = inner_exprs
-        .iter()
-        .map(|expr| calculate_expression_type(expr, grammar_attrs, type_cache))
-        .collect::<Vec<_>>();
+// pub fn calculate_concatenation_expression<'a>(
+//     inner_exprs: &'a [Expression<'a>],
+//     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
+//     cache: &mut GeneratedParserCache<'a>,
+//     type_cache: &mut TypeCache<'a>,
+//     inline_cache: &'_ TmpCache<'a>,
+// ) -> TokenStream {
+//     let tys = inner_exprs
+//         .iter()
+//         .map(|expr| calculate_expression_type(expr, grammar_attrs, type_cache))
+//         .collect::<Vec<_>>();
 
-    let mut chains: Vec<(bool, Vec<TokenStream>)> = Vec::new();
+//     let mut chains: Vec<(bool, Vec<TokenStream>)> = Vec::new();
 
-    for (parser, ty) in inner_exprs
-        .iter()
-        .map(|expr| calculate_parser_from_expression(expr, grammar_attrs, cache, type_cache))
-        .zip(tys.iter())
-    {
-        let is_span = type_is_span(ty);
+//     for (parser, ty) in inner_exprs
+//         .iter()
+//         .map(|expr| {
+//             calculate_parser_from_expression(expr, grammar_attrs, cache, type_cache, inline_cache)
+//         })
+//         .zip(tys.iter())
+//     {
+//         let is_span = type_is_span(ty);
 
-        if let Some((last_is_span, last_chain)) = chains.last_mut() {
-            if is_span && *last_is_span {
-                last_chain.push(parser);
-                continue;
-            }
-        }
-        chains.push((is_span, vec![parser]));
-    }
+//         if let Some((last_is_span, last_chain)) = chains.last_mut() {
+//             if is_span && *last_is_span {
+//                 last_chain.push(parser);
+//                 continue;
+//             }
+//         }
+//         chains.push((is_span, vec![parser]));
+//     }
 
-    let mut acc = None;
-    for (n, (_, chain)) in chains.iter().enumerate() {
-        let chain_acc = chain.iter().fold(None, |acc, parser| match acc {
-            None => Some(parser.clone()),
-            Some(acc) => Some(quote! { #acc.then_span(#parser) }),
-        });
+//     let mut acc = None;
+//     for (n, (_, chain)) in chains.iter().enumerate() {
+//         let chain_acc = chain.iter().fold(None, |acc, parser| match acc {
+//             None => Some(parser.clone()),
+//             Some(acc) => Some(quote! { #acc.then_span(#parser) }),
+//         });
 
-        acc = match acc {
-            None => chain_acc,
-            Some(acc) => {
-                if n > 1 {
-                    Some(quote! { #acc.then_flat(#chain_acc) })
-                } else {
-                    Some(quote! { #acc.then(#chain_acc) })
-                }
-            }
-        };
-    }
-    acc.unwrap()
-}
+//         acc = match acc {
+//             None => chain_acc,
+//             Some(acc) => {
+//                 if n > 1 {
+//                     Some(quote! { #acc.then_flat(#chain_acc) })
+//                 } else {
+//                     Some(quote! { #acc.then(#chain_acc) })
+//                 }
+//             }
+//         };
+//     }
+//     acc.unwrap()
+// }
 
-pub fn calculate_alternation_expression<'a>(
-    inner_exprs: &'a [Expression<'a>],
-    grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-    cache: &mut GeneratedParserCache<'a>,
-    type_cache: &mut TypeCache<'a>,
-) -> TokenStream {
-    if let Some(parser) = check_for_any_span(inner_exprs) {
-        return map_span_if_needed(parser, true, grammar_attrs);
-    }
-    let parser = inner_exprs
-        .iter()
-        .map(|expr| calculate_parser_from_expression(expr, grammar_attrs, cache, type_cache))
-        .fold(None, |acc, parser| match acc {
-            None => Some(parser),
-            Some(acc) => Some(quote! { #acc | #parser  }),
-        })
-        .unwrap();
+// pub fn calculate_alternation_expression<'a>(
+//     inner_exprs: &'a [Expression<'a>],
+//     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
+//     cache: &mut GeneratedParserCache<'a>,
+//     type_cache: &mut TypeCache<'a>,
+//     inline_cache: &'_ TmpCache<'a>,
+// ) -> TokenStream {
+//     // if let Some(parser) = check_for_any_span(inner_exprs) {
+//     //     return map_span_if_needed(parser, true, grammar_attrs);
+//     // }
+//     let parser = inner_exprs
+//         .iter()
+//         .map(|expr| {
+//             calculate_parser_from_expression(expr, grammar_attrs, cache, type_cache, inline_cache)
+//         })
+//         .fold(None, |acc, parser| match acc {
+//             None => Some(parser),
+//             Some(acc) => Some(quote! { #acc | #parser  }),
+//         })
+//         .unwrap();
 
-    if inner_exprs.len() > 1 {
-        quote! { ( #parser ) }
-    } else {
-        parser
-    }
-}
+//     if inner_exprs.len() > 1 {
+//         quote! { ( #parser ) }
+//     } else {
+//         parser
+//     }
+// }
 
 pub fn map_span_if_needed<'a>(
     parser: TokenStream,
@@ -953,14 +994,17 @@ pub fn map_span_if_needed<'a>(
     }
 }
 
-pub fn calculate_parser_from_expression<'a, 'b>(
+pub fn calculate_parser_from_expression<'a, 'b, 'c, 'd>(
     expr: &'a Expression<'a>,
     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-    cache: &'b mut GeneratedParserCache<'a>,
-    type_cache: &'b mut TypeCache<'a>,
+    cache: &'d mut HashMap<&'c Expression<'c>, TokenStream>,
+    inline_cache: &'b HashMap<&'a Expression<'a>, &'b Expression<'a>>,
 ) -> TokenStream
 where
     'a: 'b,
+    'a: 'c,
+    'a: 'd,
+    'b: 'c,
 {
     fn get_and_parse_default_parser<'a>(
         name: &str,
@@ -990,6 +1034,10 @@ where
         return parser.clone();
     }
 
+    if let Some(cached_expr) = inline_cache.get(expr) {
+        return calculate_parser_from_expression(cached_expr, grammar_attrs, cache, inline_cache);
+    }
+
     let parser = match expr {
         Expression::Literal(Token { value, .. }) => {
             get_and_parse_default_parser("LITERAL", Some(quote! {#value}), grammar_attrs).unwrap()
@@ -1005,133 +1053,208 @@ where
                 quote! { Self::#ident() }
             }
         }
+        _ => panic!("Invalid expression: {:?}", expr),
         Expression::Epsilon(_) => quote! { ::parse_that::parse::epsilon() },
-        Expression::MappedExpression((inner_expr, mapper_fn)) => {
-            let inner_expr = get_inner_expression(inner_expr);
-            let mapper_fn = get_inner_expression(mapper_fn);
+        // Expression::MappedExpression((inner_expr, mapper_fn)) => {
+        //     let inner_expr = get_inner_expression(inner_expr);
+        //     let mapper_fn = get_inner_expression(mapper_fn);
 
-            let parser =
-                calculate_parser_from_expression(inner_expr, grammar_attrs, cache, type_cache);
+        //     let parser = calculate_parser_from_expression(
+        //         inner_expr,
+        //         grammar_attrs,
+        //         cache,
+        //         type_cache,
+        //         inline_cache,
+        //     );
 
-            if let Expression::MappingFn(Token { value, .. }) = mapper_fn {
-                let Ok(mapper_fn) = syn::parse_str::<syn::ExprClosure>(value) else  {
-                panic!("Invalid mapper expression: {}", value);
-            };
-                quote! { #parser.map(#mapper_fn) }
-            } else {
-                parser
-            }
-        }
+        //     if let Expression::MappingFn(Token { value, .. }) = mapper_fn {
+        //         let Ok(mapper_fn) = syn::parse_str::<syn::ExprClosure>(value) else  {
+        //         panic!("Invalid mapper expression: {}", value);
+        //     };
+        //         quote! { #parser.map(#mapper_fn) }
+        //     } else {
+        //         parser
+        //     }
+        // }
 
-        Expression::Group(inner_expr) => {
-            let inner_expr = get_inner_expression(inner_expr);
-            calculate_parser_from_expression(inner_expr, grammar_attrs, cache, type_cache)
-        }
-        Expression::Optional(inner_expr) => {
-            let inner_expr = get_inner_expression(inner_expr);
-            let parser =
-                calculate_parser_from_expression(inner_expr, grammar_attrs, cache, type_cache);
-            let ty = calculate_expression_type(inner_expr, grammar_attrs, type_cache);
+        // Expression::Group(inner_expr) => {
+        //     let inner_expr = get_inner_expression(inner_expr);
+        //     calculate_parser_from_expression(
+        //         inner_expr,
+        //         grammar_attrs,
+        //         cache,
+        //         type_cache,
+        //         inline_cache,
+        //     )
+        // }
+        // Expression::Optional(inner_expr) => {
+        //     let inner_expr = get_inner_expression(inner_expr);
+        //     let parser = calculate_parser_from_expression(
+        //         inner_expr,
+        //         grammar_attrs,
+        //         cache,
+        //         type_cache,
+        //         inline_cache,
+        //     );
+        //     let ty = calculate_expression_type(inner_expr, grammar_attrs, type_cache);
 
-            if type_is_span(&ty) {
-                return quote! { #parser.opt_span() };
-            }
-            quote! { #parser.opt() }
-        }
-        Expression::OptionalWhitespace(inner_expr) => {
-            let inner_expr = get_inner_expression(inner_expr);
-            let parser =
-                calculate_parser_from_expression(inner_expr, grammar_attrs, cache, type_cache);
+        //     if type_is_span(&ty) {
+        //         return quote! { #parser.opt_span() };
+        //     }
+        //     quote! { #parser.opt() }
+        // }
+        // Expression::OptionalWhitespace(inner_expr) => {
+        //     let inner_expr = get_inner_expression(inner_expr);
+        //     let parser = calculate_parser_from_expression(
+        //         inner_expr,
+        //         grammar_attrs,
+        //         cache,
+        //         type_cache,
+        //         inline_cache,
+        //     );
 
-            quote! { #parser.trim_whitespace() }
-        }
-        Expression::Many(inner_expr) => {
-            let inner_expr = get_inner_expression(inner_expr);
+        //     quote! { #parser.trim_whitespace() }
+        // }
+        // Expression::Many(inner_expr) => {
+        //     let inner_expr = get_inner_expression(inner_expr);
 
-            if let Some(parser) = check_for_sep_by(inner_expr, grammar_attrs, cache, type_cache) {
-                return parser;
-            }
+        //     // if let Some(parser) = check_for_sep_by(inner_expr, grammar_attrs, cache, type_cache, inline_cache) {
+        //     //     return parser;
+        //     // }
 
-            let parser =
-                calculate_parser_from_expression(inner_expr, grammar_attrs, cache, type_cache);
-            let ty = calculate_expression_type(inner_expr, grammar_attrs, type_cache);
+        //     let parser = calculate_parser_from_expression(
+        //         inner_expr,
+        //         grammar_attrs,
+        //         cache,
+        //         type_cache,
+        //         inline_cache,
+        //     );
+        //     let ty = calculate_expression_type(inner_expr, grammar_attrs, type_cache);
 
-            if type_is_span(&ty) {
-                return quote! { #parser.many_span(..) };
-            }
-            quote! { #parser.many(..) }
-        }
-        Expression::Many1(inner_expr) => {
-            let inner_expr = get_inner_expression(inner_expr);
-            let parser =
-                calculate_parser_from_expression(inner_expr, grammar_attrs, cache, type_cache);
-            let ty = calculate_expression_type(inner_expr, grammar_attrs, type_cache);
+        //     if type_is_span(&ty) {
+        //         return quote! { #parser.many_span(..) };
+        //     }
+        //     quote! { #parser.many(..) }
+        // }
+        // Expression::Many1(inner_expr) => {
+        //     let inner_expr = get_inner_expression(inner_expr);
+        //     let parser = calculate_parser_from_expression(
+        //         inner_expr,
+        //         grammar_attrs,
+        //         cache,
+        //         type_cache,
+        //         inline_cache,
+        //     );
+        //     let ty = calculate_expression_type(inner_expr, grammar_attrs, type_cache);
 
-            if type_is_span(&ty) {
-                return quote! { #parser.many_span(1..) };
-            }
-            quote! { #parser.many(1..) }
-        }
-        Expression::Skip(left_expr, right_expr) => {
-            let left_expr = get_inner_expression(left_expr);
-            let right_expr = get_inner_expression(right_expr);
+        //     if type_is_span(&ty) {
+        //         return quote! { #parser.many_span(1..) };
+        //     }
+        //     quote! { #parser.many(1..) }
+        // }
+        // Expression::Skip(left_expr, right_expr) => {
+        //     let left_expr = get_inner_expression(left_expr);
+        //     let right_expr = get_inner_expression(right_expr);
 
-            if let Some(parser) =
-                check_for_wrapped(left_expr, right_expr, grammar_attrs, cache, type_cache)
-            {
-                return parser;
-            }
+        //     // if let Some(parser) =
+        //     //     check_for_wrapped(left_expr, right_expr, grammar_attrs, cache, type_cache, inline_cache)
+        //     // {
+        //     //     return parser;
+        //     // }
 
-            let left_parser =
-                calculate_parser_from_expression(left_expr, grammar_attrs, cache, type_cache);
-            let right_parser =
-                calculate_parser_from_expression(right_expr, grammar_attrs, cache, type_cache);
+        //     let left_parser = calculate_parser_from_expression(
+        //         left_expr,
+        //         grammar_attrs,
+        //         cache,
+        //         type_cache,
+        //         inline_cache,
+        //     );
+        //     let right_parser = calculate_parser_from_expression(
+        //         right_expr,
+        //         grammar_attrs,
+        //         cache,
+        //         type_cache,
+        //         inline_cache,
+        //     );
 
-            quote! { #left_parser.skip(#right_parser) }
-        }
-        Expression::Next(left_expr, right_expr) => {
-            let left_expr = get_inner_expression(left_expr);
-            let right_expr = get_inner_expression(right_expr);
+        //     quote! { #left_parser.skip(#right_parser) }
+        // }
+        // Expression::Next(left_expr, right_expr) => {
+        //     let left_expr = get_inner_expression(left_expr);
+        //     let right_expr = get_inner_expression(right_expr);
 
-            let left_parser =
-                calculate_parser_from_expression(left_expr, grammar_attrs, cache, type_cache);
-            let right_parser =
-                calculate_parser_from_expression(right_expr, grammar_attrs, cache, type_cache);
+        //     let left_parser = calculate_parser_from_expression(
+        //         left_expr,
+        //         grammar_attrs,
+        //         cache,
+        //         type_cache,
+        //         inline_cache,
+        //     );
+        //     let right_parser = calculate_parser_from_expression(
+        //         right_expr,
+        //         grammar_attrs,
+        //         cache,
+        //         type_cache,
+        //         inline_cache,
+        //     );
 
-            quote! { #left_parser.next(#right_parser) }
-        }
-        Expression::Minus(left_expr, right_expr) => {
-            let left_expr = get_inner_expression(left_expr);
-            let right_expr = get_inner_expression(right_expr);
+        //     quote! { #left_parser.next(#right_parser) }
+        // }
+        // Expression::Minus(left_expr, right_expr) => {
+        //     let left_expr = get_inner_expression(left_expr);
+        //     let right_expr = get_inner_expression(right_expr);
 
-            let left_parser =
-                calculate_parser_from_expression(left_expr, grammar_attrs, cache, type_cache);
-            let right_parser =
-                calculate_parser_from_expression(right_expr, grammar_attrs, cache, type_cache);
+        //     let left_parser = calculate_parser_from_expression(
+        //         left_expr,
+        //         grammar_attrs,
+        //         cache,
+        //         type_cache,
+        //         inline_cache,
+        //     );
+        //     let right_parser = calculate_parser_from_expression(
+        //         right_expr,
+        //         grammar_attrs,
+        //         cache,
+        //         type_cache,
+        //         inline_cache,
+        //     );
 
-            quote! { #left_parser.not(#right_parser) }
-        }
-        Expression::Concatenation(inner_exprs) => {
-            let inner_exprs = get_inner_expression(inner_exprs);
-            calculate_concatenation_expression(inner_exprs, grammar_attrs, cache, type_cache)
-        }
-        Expression::Alternation(inner_exprs) => {
-            let inner_exprs = get_inner_expression(inner_exprs);
-            calculate_alternation_expression(inner_exprs, grammar_attrs, cache, type_cache)
-        }
-        Expression::ProductionRule(_lhs, rhs, mapper_fn) => {
-            let parser = calculate_parser_from_expression(rhs, grammar_attrs, cache, type_cache);
+        //     quote! { #left_parser.not(#right_parser) }
+        // }
+        // Expression::Concatenation(inner_exprs) => {
+        //     let inner_exprs = get_inner_expression(inner_exprs);
+        //     calculate_concatenation_expression(
+        //         inner_exprs,
+        //         grammar_attrs,
+        //         cache,
+        //         type_cache,
+        //         inline_cache,
+        //     )
+        // }
+        // Expression::Alternation(inner_exprs) => {
+        //     let inner_exprs = get_inner_expression(inner_exprs);
+        //     calculate_alternation_expression(
+        //         inner_exprs,
+        //         grammar_attrs,
+        //         cache,
+        //         type_cache,
+        //         inline_cache,
+        //     )
+        // }
+        //     Expression::ProductionRule(_lhs, rhs, mapper_fn) => {
+        //         let parser =
+        //             calculate_parser_from_expression(rhs, grammar_attrs, cache, type_cache, inline_cache);
 
-            if let Some(box Expression::MappingFn(Token { value, .. })) = mapper_fn {
-                let Ok(mapper_fn) = syn::parse_str::<syn::ExprClosure>(value) else  {
-                    panic!("Invalid mapper expression: {}", value);
-                };
-                quote! { #parser.map(#mapper_fn) }
-            } else {
-                parser
-            }
-        }
-        _ => unimplemented!("Expression not implemented: {:?}", expr),
+        //         if let Some(box Expression::MappingFn(Token { value, .. })) = mapper_fn {
+        //             let Ok(mapper_fn) = syn::parse_str::<syn::ExprClosure>(value) else  {
+        //                 panic!("Invalid mapper expression: {}", value);
+        //             };
+        //             quote! { #parser.map(#mapper_fn) }
+        //         } else {
+        //             parser
+        //         }
+        //     }
+        //     _ => unimplemented!("Expression not implemented: {:?}", expr),
     };
 
     cache.insert(expr, parser.clone());
