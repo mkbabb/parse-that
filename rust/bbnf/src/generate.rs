@@ -581,7 +581,17 @@ pub fn format_parser(
 }
 
 pub type GeneratedParserCache<'a> = HashMap<&'a Expression<'a>, proc_macro2::TokenStream>;
-pub type TmpCache<'a> = HashMap<&'a Expression<'a>, &'a Expression<'a>>;
+pub type InlineCache<'a, 'b> = HashMap<&'a Expression<'a>, &'b Expression<'a>>;
+
+pub struct CacheBundle<'a, 'b>
+where
+    'a: 'b,
+{
+    pub parser_cache: Rc<RefCell<GeneratedParserCache<'a>>>,
+    pub type_cache: Rc<RefCell<TypeCache<'a>>>,
+
+    pub inline_cache: Rc<RefCell<InlineCache<'a, 'b>>>,
+}
 
 pub fn calculate_nonterminal_generated_parsers<'a, 'b>(
     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
@@ -680,8 +690,16 @@ where
     //     // boxed_types_cache: TypeCache::new(),
     // };
 
-    let mut cache = HashMap::new();
-    let mut type_cache = type_cache.clone();
+    // let mut parser_cache = HashMap::new();
+    // let mut type_cache = type_cache.clone();
+
+    // let mut inline_cache = HashMap::new();
+
+    let cache = CacheBundle {
+        parser_cache: Rc::new(RefCell::new(HashMap::new())),
+        type_cache: Rc::new(RefCell::new(type_cache.clone())),
+        inline_cache: Rc::new(RefCell::new(HashMap::new())),
+    };
 
     let mut generated_parsers = GeneratedParserCache::new();
     let mut i = 0;
@@ -699,10 +717,8 @@ where
         })
         .collect();
 
-    let mut inline_cache = HashMap::new();
-
     for (k, v) in tmp.iter() {
-        inline_cache.insert(k, v);
+        cache.inline_cache.borrow_mut().insert(k, v);
     }
 
     loop {
@@ -722,13 +738,7 @@ where
                 // inline_cache.remove(expr);
                 // inline_cache.remove(lhs.as_ref());
 
-                let parser = calculate_parser_from_expression(
-                    expr,
-                    grammar_attrs,
-                    &mut cache,
-                    &mut type_cache,
-                    &inline_cache,
-                );
+                let parser = calculate_parser_from_expression(expr, grammar_attrs, &cache);
 
                 // if let Some(deps) = grammar_attrs.acyclic_deps.get(lhs) {
                 //     for dep in deps {
@@ -988,18 +998,13 @@ pub fn map_span_if_needed<'a>(
     }
 }
 
-pub fn calculate_parser_from_expression<'a, 'b, 'c, 'd>(
+pub fn calculate_parser_from_expression<'a, 'b>(
     expr: &'a Expression<'a>,
     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-    cache: &'d mut HashMap<&'c Expression<'c>, TokenStream>,
-    type_cache: &'d mut HashMap<&'c Expression<'c>, syn::Type>,
-    inline_cache: &'b HashMap<&'a Expression<'a>, &'b Expression<'a>>,
+    cache: &'a CacheBundle<'a, 'b>,
 ) -> TokenStream
 where
     'a: 'b,
-    'a: 'c,
-    'a: 'd,
-    'b: 'c,
 {
     fn get_and_parse_default_parser<'a>(
         name: &str,
@@ -1025,18 +1030,12 @@ where
         Some(map_span_if_needed(parser, type_is_span(&ty), grammar_attrs))
     }
 
-    if let Some(parser) = cache.get(expr) {
+    if let Some(parser) = cache.parser_cache.borrow().get(expr) {
         return parser.clone();
     }
 
-    if let Some(cached_expr) = inline_cache.get(expr) {
-        return calculate_parser_from_expression(
-            cached_expr,
-            grammar_attrs,
-            cache,
-            type_cache,
-            inline_cache,
-        );
+    if let Some(cached_expr) = cache.inline_cache.borrow().get(expr) {
+        return calculate_parser_from_expression(cached_expr, grammar_attrs, cache);
     }
 
     let parser = match expr {
@@ -1258,6 +1257,6 @@ where
         //     _ => unimplemented!("Expression not implemented: {:?}", expr),
     };
 
-    cache.insert(expr, parser.clone());
+    cache.parser_cache.borrow_mut().insert(expr, parser.clone());
     parser
 }
