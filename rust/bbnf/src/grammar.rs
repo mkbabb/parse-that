@@ -32,7 +32,7 @@ pub enum Expression<'a> {
 
     Regex(Token<'a, &'a str>),
 
-    MappingFn(Token<'a, &'a str>),
+    MappingFn(Token<'a, String>),
     MappedExpression((TokenExpression<'a>, TokenExpression<'a>)),
 
     Group(TokenExpression<'a>),
@@ -369,7 +369,7 @@ impl<'a> BBNFGrammar<'a> {
             .trim_whitespace()
             .next(not_lhs.many_span(..).then_span(next_span(1)))
             .map(|s| {
-                let token = Token::new(s.as_str(), s);
+                let token = Token::new(s.as_str().to_string(), s);
                 match syn::parse_str::<syn::ExprClosure>(s.as_str()) {
                     Ok(_) => {}
                     Err(e) => panic!("invalid mapper expression: {:?}, {:?}", s.as_str(), e),

@@ -1,4 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    borrow::Borrow,
+    collections::{HashMap, HashSet},
+};
 
 use regex::Regex;
 
@@ -203,12 +206,12 @@ where
 
 impl<'a, T> From<&[T]> for Doc<'a>
 where
-    T: Into<Doc<'a>> + Copy,
+    T: Into<Doc<'a>> + Clone,
 {
     fn from(slice: &[T]) -> Doc<'a> {
         slice
             .iter()
-            .map(|item| (*item).into())
+            .map(|item| item.clone().into())
             .collect::<Vec<_>>()
             .into()
     }
@@ -222,10 +225,10 @@ impl From<()> for Doc<'_> {
 
 impl<'a, T> From<&T> for Doc<'a>
 where
-    T: Into<Doc<'a>> + Copy,
+    T: Into<Doc<'a>> + Clone,
 {
     fn from(value: &T) -> Self {
-        (*value).into()
+        value.clone().into()
     }
 }
 
