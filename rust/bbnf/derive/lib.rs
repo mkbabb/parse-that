@@ -210,16 +210,16 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         parser_container_attrs: &parser_container_attrs,
     };
 
-    let (nonterminal_types, mut type_cache) = calculate_nonterminal_types(&grammar_attrs);
+    let nonterminal_types = calculate_nonterminal_types(&grammar_attrs);
 
     let grammar_arr = generate_grammar_arr(&grammar_attrs, &parser_container_attrs);
     let grammar_enum = generate_enum(&grammar_attrs, &nonterminal_types);
 
-    let (generated_parsers, mut _parser_cache) = calculate_nonterminal_generated_parsers(
+    let generated_parsers = calculate_nonterminal_generated_parsers(
         &grammar_attrs,
         &parser_container_attrs,
-        &mut type_cache,
-        1,
+        &nonterminal_types,
+        32,
     );
 
     let generated_parsers =

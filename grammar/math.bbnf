@@ -1,6 +1,15 @@
 expr = term, { ("+" | "-"), term }, "b", "e", term, "a", "b";
 term = factor, { ("*" | "/"), factor };
-wrapped = "(", expr, ")" ;
+
+
+p = "(" ;
+pp = p ;
+ppp = pp ;
+pppp = ppp ;
+ppppp = pppp ;
+pppppp = ppppp ;
+
+wrapped = pppppp, expr, ")" ;
 
 factor = number | wrapped;
 
