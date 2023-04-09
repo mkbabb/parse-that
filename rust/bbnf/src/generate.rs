@@ -620,7 +620,7 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
     let mut acyclic_deps_degree = calculate_acyclic_deps_degree(grammar_attrs.acyclic_deps);
     calculate_non_acyclic_deps_degree(grammar_attrs.deps, &mut acyclic_deps_degree);
 
-    let boxed_nonterminals: HashMap<_, _> = grammar_attrs
+    let formatted = grammar_attrs
         .ast
         .iter()
         .map(|(lhs, rhs)| {
@@ -628,8 +628,23 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
                 Some(name) => {
                     let formatted_expr =
                         format_parser(name, rhs, grammar_attrs.parser_container_attrs);
+                    formatted_expr
+                }
+                None => rhs.clone(),
+            };
+            (lhs.clone(), rhs)
+        })
+        .collect::<HashMap<_, _>>();
+
+    let boxed: HashMap<_, _> = grammar_attrs
+        .ast
+        .iter()
+        .map(|(lhs, rhs)| {
+            let rhs = match get_nonterminal_name(lhs) {
+                Some(name) => {
+                    let formatted_expr = formatted.get(lhs).unwrap_or(rhs);
                     let boxed_expr =
-                        box_generated_parser(name, &formatted_expr, grammar_attrs.enum_ident);
+                        box_generated_parser(name, formatted_expr, grammar_attrs.enum_ident);
                     boxed_expr
                 }
                 None => rhs.clone(),
@@ -639,8 +654,7 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
         })
         .collect();
 
-    grammar_attrs
-        .ast
+    formatted
         .iter()
         .filter(|(lhs, _)| grammar_attrs.acyclic_deps.contains_key(lhs))
         .for_each(|(lhs, rhs)| {
@@ -653,7 +667,7 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
         .map(|(lhs, rhs)| {
             let max_depth = *acyclic_deps_degree.get(lhs).unwrap_or(&1);
 
-            let rhs = boxed_nonterminals.get(lhs).unwrap_or(rhs);
+            let rhs = boxed.get(lhs).unwrap_or(rhs);
 
             if grammar_attrs.acyclic_deps.contains_key(lhs) {
                 let parser = calculate_parser_from_expression(
@@ -671,7 +685,7 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
                         .iter()
                         .filter(|dep| grammar_attrs.acyclic_deps.contains_key(dep))
                     {
-                        if let Some(rhs) = boxed_nonterminals.get(dep) {
+                        if let Some(rhs) = boxed.get(dep) {
                             cache_bundle.inline_cache.borrow_mut().insert(dep, rhs);
 
                             cache_bundle
