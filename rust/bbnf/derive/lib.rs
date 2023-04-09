@@ -15,7 +15,7 @@ use bbnf::calculate_nonterminal_generated_parsers;
 use bbnf::calculate_nonterminal_types;
 use bbnf::format_parser;
 use bbnf::get_nonterminal_name;
-use bbnf::topological_sort;
+
 use bbnf::BBNFGrammar;
 use bbnf::Expression;
 use bbnf::GeneratedGrammarAttributes;
@@ -23,6 +23,7 @@ use bbnf::GeneratedParserCache;
 use bbnf::ParserAttributes;
 use bbnf::Token;
 use bbnf::TypeCache;
+use bbnf::topological_sort;
 use indexmap::IndexMap;
 
 use pretty::Doc;
@@ -179,6 +180,8 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         })
         .collect();
 
+    
+
     let ast = file_strings
         .iter()
         .map(|file_string| {
@@ -193,11 +196,15 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
             acc
         });
 
+        
+
     let deps = calculate_ast_deps(&ast);
 
     let ast = topological_sort(&ast, &deps);
     let acyclic_deps = calculate_acyclic_deps(&deps);
     let non_acyclic_deps = calculate_non_acyclic_deps(&deps, &acyclic_deps);
+
+   
 
     let grammar_attrs = GeneratedGrammarAttributes {
         ast: &ast,
@@ -211,9 +218,11 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     };
 
     let nonterminal_types = calculate_nonterminal_types(&grammar_attrs);
+    
 
     let grammar_arr = generate_grammar_arr(&grammar_attrs, &parser_container_attrs);
     let grammar_enum = generate_enum(&grammar_attrs, &nonterminal_types);
+
 
     let generated_parsers = calculate_nonterminal_generated_parsers(
         &grammar_attrs,

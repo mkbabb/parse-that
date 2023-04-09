@@ -49,11 +49,9 @@ pub enum Expression<'a> {
     Concatenation(TokenExpression<'a, Vec<Expression<'a>>>),
     Alternation(TokenExpression<'a, Vec<Expression<'a>>>),
 
-    ProductionRule(
-        Box<Expression<'a>>,
-        Box<Expression<'a>>,
-        Option<Box<Expression<'a>>>,
-    ),
+    Rule(Box<Expression<'a>>, Option<Box<Expression<'a>>>),
+
+    ProductionRule(Box<Expression<'a>>, Box<Expression<'a>>),
 
     Epsilon(Token<'a, ()>),
 }
@@ -86,7 +84,7 @@ impl<'a, T> Token<'a, T> {
     }
 }
 
-pub type AST<'a> = IndexMap<String, Expression<'a>>;
+pub type AST<'a> = IndexMap<Expression<'a>, Expression<'a>>;
 
 pub fn set_expression_comments<'a>(expr: &mut Expression<'a>, comments: Comments<'a>) {
     match expr {
@@ -361,7 +359,7 @@ impl<'a> BBNFGrammar<'a> {
         Self::alternation()
     }
 
-    fn mapper_fn() -> Parser<'a, Option<Box<Expression<'a>>>> {
+    fn mapping_fn() -> Parser<'a, Option<Box<Expression<'a>>>> {
         let lhs = string_span(";").skip(Self::lhs().trim_whitespace().skip(string_span("=")));
         let not_lhs = next_span(1).look_ahead(lhs.negate());
 
@@ -389,10 +387,13 @@ impl<'a> BBNFGrammar<'a> {
         let production_rule = Self::lhs()
             .skip(eq)
             .then(Self::rhs())
-            .then_flat(Self::mapper_fn())
+            .then_flat(Self::mapping_fn())
             .skip(terminator)
-            .map(|(lhs, rhs, mapper_fn)| {
-                Expression::ProductionRule(Box::new(lhs), Box::new(rhs), mapper_fn)
+            .map(|(lhs, rhs, mapping_fn)| {
+                Expression::ProductionRule(
+                    lhs.into(),
+                    Expression::Rule(Box::new(rhs), mapping_fn).into(),
+                )
             });
 
         Self::trim_comment(production_rule, comment.opt())
@@ -404,14 +405,9 @@ impl<'a> BBNFGrammar<'a> {
         return rule.trim_whitespace().map(|rules| {
             rules
                 .into_iter()
-                .map(|rule| {
-                    let Expression::ProductionRule(
-                           box Expression::Nonterminal(lhs), ..
-                        ) = &rule else {
-                            unreachable!();
-                        };
-
-                    (lhs.value.to_string(), rule)
+                .map(|expr| match expr {
+                    Expression::ProductionRule(lhs, rhs) => (*lhs, *rhs),
+                    _ => unreachable!(),
                 })
                 .collect()
         });

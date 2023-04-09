@@ -161,7 +161,9 @@ pub fn traverse_ast<'a>(ast: &'a AST, visitor: Option<&mut Visitor<'a>>) {
                 let inner_expr = get_inner_expression(inner_expr);
                 visit(nonterminal, inner_expr, visitor);
             }
-
+            Expression::Rule(rhs, _) => {
+                visit(nonterminal, rhs, visitor);
+            }
             _ => {}
         }
     }
@@ -169,12 +171,8 @@ pub fn traverse_ast<'a>(ast: &'a AST, visitor: Option<&mut Visitor<'a>>) {
     let mut visitor_default = |_, _| {};
     let visitor = visitor.unwrap_or(&mut visitor_default);
 
-    ast.into_iter().for_each(|(_, expr)| {
-        let Expression::ProductionRule(lhs, rhs, ..) = expr else {
-            return;
-        };
-        visit(lhs, rhs, visitor)
-    });
+    ast.into_iter()
+        .for_each(|(lhs, rhs)| visit(lhs, rhs, visitor));
 }
 
 pub type Dependencies<'a> = HashMap<Expression<'a>, HashSet<Expression<'a>>>;
@@ -198,6 +196,34 @@ pub fn calculate_ast_deps<'a>(ast: &'a AST<'a>) -> Dependencies<'a> {
     traverse_ast(ast, Some(&mut visitor));
 
     deps.take()
+}
+
+pub fn topological_sort<'a>(ast: &AST<'a>, deps: &Dependencies<'a>) -> AST<'a> {
+    let mut order = deps
+        .iter()
+        .map(|(expr, sub_deps)| {
+            let len: usize = sub_deps
+                .iter()
+                .map(|sub_name| {
+                    if let Some(sub_deps) = deps.get(sub_name) {
+                        return sub_deps.len();
+                    }
+                    0
+                })
+                .sum();
+            (expr, len)
+        })
+        .collect::<Vec<_>>();
+
+    order.sort_by(|(_, a), (_, b)| a.cmp(b));
+
+    let mut new_ast = AST::new();
+    for (lhs, _) in order {
+        if let Some(rhs) = ast.get(lhs) {
+            new_ast.insert(lhs.clone(), rhs.clone());
+        }
+    }
+    new_ast
 }
 
 pub fn calculate_acyclic_deps<'a>(deps: &'a Dependencies<'a>) -> Dependencies<'a> {
@@ -244,38 +270,6 @@ pub fn calculate_non_acyclic_deps<'a>(
         .filter(|(lhs, _)| !acyclic_deps.contains_key(*lhs))
         .map(|(lhs, deps)| (lhs.clone(), deps.clone()))
         .collect()
-}
-
-pub fn topological_sort<'a>(ast: &AST<'a>, deps: &Dependencies<'a>) -> AST<'a> {
-    let mut order = deps
-        .iter()
-        .map(|(expr, sub_deps)| {
-            let len: usize = sub_deps
-                .iter()
-                .map(|sub_name| {
-                    if let Some(sub_deps) = deps.get(sub_name) {
-                        return sub_deps.len();
-                    }
-                    0
-                })
-                .sum();
-            (expr, len)
-        })
-        .collect::<Vec<_>>();
-
-    order.sort_by(|(_, a), (_, b)| a.cmp(b));
-
-    let mut new_ast = AST::new();
-    for (expr, _) in order {
-        let Some(name) = get_nonterminal_name(expr) else {
-            continue;
-        };
-        if let Some(expr) = ast.get(name) {
-            new_ast.insert(name.to_string(), expr.clone());
-        }
-    }
-
-    new_ast
 }
 
 pub type TypeCache<'a> = HashMap<&'a Expression<'a>, Type>;
@@ -422,18 +416,18 @@ pub fn calculate_expression_type<'a>(
             }
         }
 
-        Expression::ProductionRule(_, rhs, mapper_fn) => {
-            if let Some(box Expression::MappingFn(Token { value, .. })) = mapper_fn {
-                let Ok(mapper_fn) = syn::parse_str::<syn::ExprClosure>(value) else {
+        Expression::Rule(rhs, mapping_fn) => {
+            if let Some(box Expression::MappingFn(Token { value, .. })) = mapping_fn {
+                let Ok(mapping_fn) = syn::parse_str::<syn::ExprClosure>(value) else {
                     panic!("Mapper expression must be a closure");
                 };
-                let syn::ReturnType::Type(_, ty) = &mapper_fn.output else {
+                let syn::ReturnType::Type(_, ty) = &mapping_fn.output else {
                     panic!("Mapper expression must have a return type");
                 };
-                return ty.as_ref().clone();
+                ty.as_ref().clone()
+            } else {
+                calculate_expression_type(rhs, grammar_attrs, cache_bundle)
             }
-
-            calculate_expression_type(rhs, grammar_attrs, cache_bundle)
         }
 
         _ => panic!("Unimplemented expression type {:?}", expr),
@@ -449,101 +443,29 @@ pub fn calculate_expression_type<'a>(
 pub fn calculate_nonterminal_types<'a>(
     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
 ) -> TypeCache<'a> {
-    // struct Caches<'a, 'b> {
-    //     cache_bundle: &'a CacheBundle<'a, 'b>,
-    //     boxed_types_cache: TypeCache<'a>,
-    // }
-
-    // fn box_deps_types<'a>(
-    //     lhs: &'a Expression<'a>,
-    //     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-    //     Caches {
-    //         cache_bundle,
-    //         boxed_types_cache,
-    //     }: &'a mut Caches<'a, '_>,
-    // ) {
-    //     let mut cache = cache_bundle.type_cache.borrow_mut();
-
-    //     if grammar_attrs.acyclic_deps.contains_key(lhs) {
-    //         return;
-    //     }
-    //     let Some(deps) = grammar_attrs.deps.get(lhs) else {
-    //         return;
-    //     };
-
-    //     for dep in deps
-    //         .iter()
-    //         .filter(|dep| grammar_attrs.acyclic_deps.contains_key(*dep))
-    //     {
-    //         if boxed_types_cache.contains_key(dep) {
-    //             continue;
-    //         }
-
-    //         if let Some(ty) = cache.get(dep) {
-    //             if let Some(_sub_deps) = grammar_attrs.acyclic_deps.get(dep) {
-    //                 boxed_types_cache.insert(dep, ty.clone());
-    //                 cache.insert(dep, grammar_attrs.boxed_enum_type.clone());
-    //             }
-    //         }
-    //     }
-    // }
-
-    // fn reset_boxed_types(
-    //     Caches {
-    //         cache_bundle,
-    //         boxed_types_cache,
-    //     }: &mut Caches,
-    // ) {
-    //     let mut cache = cache_bundle.type_cache.borrow_mut();
-    //     for (expr, ty) in boxed_types_cache.iter() {
-    //         cache.insert(expr, ty.clone());
-    //     }
-    //     boxed_types_cache.clear();
-    // }
-
     let cache_bundle = CacheBundle {
         parser_cache: Rc::new(RefCell::new(HashMap::new())),
         type_cache: Rc::new(RefCell::new(HashMap::new())),
         inline_cache: Rc::new(RefCell::new(HashMap::new())),
     };
 
-    let tmp: HashMap<_, _> = grammar_attrs
-        .ast
-        .iter()
-        .map(|(_, expr)| {
-            let Expression::ProductionRule(box lhs, box rhs, ..) = expr else {
-            panic!("Expected production rule");
-        };
-            // let rhs =
-            //     Expression::OptionalWhitespace(Box::new(Token::new_without_span(rhs.clone())));
-
-            (lhs.clone(), rhs.clone())
-        })
-        .collect();
-
     let mut boxed_types_cache = TypeCache::new();
 
-    for dep in grammar_attrs.acyclic_deps.keys() {
-        if let Some(rhs) = tmp.get(dep) {
-            cache_bundle.inline_cache.borrow_mut().insert(dep, rhs);
-        }
-    }
+    //print acyclic deps
+    println!("Acyclic deps: {}", Doc::from(grammar_attrs.acyclic_deps));
 
-    // let mut caches = Caches {
-    //     cache_bundle: &cache_bundle,
-    //     boxed_types_cache: TypeCache::new(),
-    // };
+    grammar_attrs
+        .ast
+        .iter()
+        .filter(|(lhs, _)| grammar_attrs.acyclic_deps.contains_key(lhs))
+        .for_each(|(lhs, rhs)| {
+            cache_bundle.inline_cache.borrow_mut().insert(lhs, rhs);
+        });
 
-    // let mut generated_types = TypeCache::new();
-    // loop {
     return grammar_attrs
         .ast
         .iter()
-        .map(|(_, expr)| {
-            let Expression::ProductionRule(lhs, ..) = expr else {
-                    panic!("Expected production rule");
-                };
-
+        .map(|(lhs, rhs)| {
             let is_acyclic = !grammar_attrs.acyclic_deps.contains_key(lhs);
 
             if is_acyclic {
@@ -567,10 +489,9 @@ pub fn calculate_nonterminal_types<'a>(
 
             // box_deps_types(lhs, grammar_attrs, &mut caches);
 
-            let ty = calculate_expression_type(expr, grammar_attrs, &cache_bundle);
+            let ty = calculate_expression_type(rhs, grammar_attrs, &cache_bundle);
 
             // reset_boxed_types(&mut caches);
-
 
             for (expr, ty) in boxed_types_cache.iter() {
                 cache_bundle
@@ -582,28 +503,9 @@ pub fn calculate_nonterminal_types<'a>(
             // cache_bundle.parser_cache.borrow_mut().clear();
             boxed_types_cache.clear();
 
-            (lhs.as_ref(), ty)
+            (lhs, ty)
         })
         .collect();
-
-    //     let changed = t_generated_types.iter().all(|(k, v)| {
-    //         if let Some(v2) = generated_types.get(k) {
-    //             v.to_token_stream().to_string() == v2.to_token_stream().to_string()
-    //         } else {
-    //             false
-    //         }
-    //     });
-    //     if changed {
-    //         return t_generated_types;
-    //     }
-
-    //     generated_types = t_generated_types;
-    //     *cache_bundle.type_cache.borrow_mut() = generated_types
-    //         .iter()
-    //         .filter(|(expr, _)| grammar_attrs.acyclic_deps.contains_key(*expr))
-    //         .map(|(expr, ty)| (*expr, ty.clone()))
-    //         .collect();
-    // }
 }
 
 pub fn box_generated_parser(
@@ -666,94 +568,6 @@ pub fn calculate_nonterminal_generated_parsers<'a, 'b>(
     type_cache: &'a TypeCache<'a>,
     max_inline_iterations: usize,
 ) -> GeneratedParserCache<'a> {
-    // fn box_deps_parsers<'a>(
-    //     lhs: &'a Expression<'a>,
-    //     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-    //     Caches {
-    //         cache,
-    //         boxed_parsers_cache,
-    //         type_cache,
-    //         boxed_types_cache,
-    //         ..
-    //     }: &mut Caches<'a, '_>,
-    // ) {
-    //     if grammar_attrs.acyclic_deps.contains_key(lhs) {
-    //         return;
-    //     }
-
-    //     let Some(deps) = grammar_attrs.deps.get(lhs) else {
-    //         return;
-    //     };
-
-    //     for dep in deps
-    //         .iter()
-    //         .filter(|dep| grammar_attrs.acyclic_deps.contains_key(*dep))
-    //     {
-    //         if boxed_parsers_cache.contains_key(dep) {
-    //             continue;
-    //         }
-
-    //         if let Some(parser) = cache.get(dep) {
-    //             if let Some(_sub_deps) = grammar_attrs.acyclic_deps.get(dep) {
-    //                 let boxed_parser = box_generated_parser(dep, parser, grammar_attrs.enum_ident);
-
-    //                 boxed_parsers_cache.insert(dep, parser.clone());
-    //                 cache.insert(dep, boxed_parser);
-
-    //                 if let Some(boxed_type) = type_cache.get(dep) {
-    //                     boxed_types_cache.insert(dep, boxed_type.clone());
-    //                     type_cache.insert(dep, grammar_attrs.boxed_enum_type.clone());
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
-    // fn box_non_acyclic_deps_parsers<'a>(
-    //     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-    //     Caches {
-    //         cache,
-    //         boxed_parsers_cache,
-    //         ..
-    //     }: &mut Caches<'a, '_>,
-    // ) {
-    //     for dep in grammar_attrs.non_acyclic_deps.keys() {
-    //         if let Some(parser) = cache.get(dep) {
-    //             let boxed_parser = box_generated_parser(dep, parser, grammar_attrs.enum_ident);
-    //             boxed_parsers_cache.insert(dep, parser.clone());
-    //             cache.insert(dep boxed_parser);
-    //         }
-    //     }
-    // }
-
-    // fn reset_boxed_parsers(
-    //     Caches {
-    //         cache,
-    //         boxed_parsers_cache,
-    //         type_cache,
-    //         boxed_types_cache,
-    //         ..
-    //     }: &mut Caches<'_, '_>,
-    // ) {
-    //     for (expr, parser) in boxed_parsers_cache.iter() {
-    //         cache.insert(expr, parser.clone());
-    //     }
-    //     boxed_parsers_cache.clear();
-
-    //     for (expr, ty) in boxed_types_cache.iter() {
-    //         type_cache.insert(expr, ty.clone());
-    //     }
-    //     boxed_types_cache.clear();
-    // }
-
-    // let mut caches = Caches {
-    //     cache: HashMap::new(),
-    //     // boxed_parsers_cache: GeneratedParserCache::new(),
-
-    //     // type_cache,
-    //     // boxed_types_cache: TypeCache::new(),
-    // };
-
     pub fn box_generated_parser2<'a, 'b>(
         name: &str,
         expr: &Expression<'a>,
@@ -860,34 +674,27 @@ pub fn calculate_nonterminal_generated_parsers<'a, 'b>(
         Doc::from(acyclic_deps_degree.clone())
     );
 
-    let mut generated_parsers = GeneratedParserCache::new();
-    let mut i = 0;
-    let mut do_recursive_inlining = false;
-
     let tmp: HashMap<_, _> = grammar_attrs
         .ast
         .iter()
-        .map(|(_, expr)| {
-            let Expression::ProductionRule(box lhs, box rhs, ..) = expr else {
-            panic!("Expected production rule");
-        };
+        .map(|(lhs, rhs)| {
             // let rhs =
             //     Expression::OptionalWhitespace(Box::new(Token::new_without_span(rhs.clone())));
 
-            (lhs.clone(), expr)
+            (lhs.clone(), rhs)
         })
         .collect();
 
     let boxed_tmp: HashMap<_, _> = grammar_attrs
         .ast
         .iter()
-        .map(|(name, expr)| {
-            let Expression::ProductionRule(box lhs, box rhs, ..) = expr else {
-            panic!("Expected production rule");
-        };
-            let rhs = box_generated_parser2(name, expr, grammar_attrs.enum_ident);
+        .map(|(lhs, rhs)| {
+            let rhs = match get_nonterminal_name(lhs) {
+                Some(name) => box_generated_parser2(name, rhs, grammar_attrs.enum_ident),
+                None => rhs.clone(),
+            };
 
-            (lhs.clone(), rhs.clone())
+            (lhs.clone(), rhs)
         })
         .collect();
 
@@ -903,11 +710,7 @@ pub fn calculate_nonterminal_generated_parsers<'a, 'b>(
     return grammar_attrs
         .ast
         .iter()
-        .map(|(name, expr)| {
-            let Expression::ProductionRule(box lhs, ..) = expr else {
-                    panic!("Expected production rule");
-                };
-
+        .map(|(lhs, rhs)| {
             let tmpp = cache_bundle.inline_cache.borrow_mut().remove(lhs);
 
             let is_acyclic = !grammar_attrs.acyclic_deps.contains_key(lhs);
@@ -938,10 +741,10 @@ pub fn calculate_nonterminal_generated_parsers<'a, 'b>(
             let max_depth = *acyclic_deps_degree.get(lhs).unwrap_or(&1);
 
             // print name and max depth
-            println!("{}: {}", name, max_depth);
+            // println!("{}: {}", name, max_depth);
 
             let parser = calculate_parser_from_expression(
-                tmp.get(lhs).unwrap(),
+                rhs,
                 grammar_attrs,
                 &cache_bundle,
                 max_depth.saturating_sub(1),
@@ -978,21 +781,6 @@ pub fn calculate_nonterminal_generated_parsers<'a, 'b>(
             (lhs, parser)
         })
         .collect();
-    // break t_generated_parsers;
-
-    // i += 1;
-
-    // let not_changed = generated_parsers
-    //     .values()
-    //     .zip(t_generated_parsers.values())
-    //     .all(|(parser, t_parser)| parser.to_string() == t_parser.to_string());
-
-    // generated_parsers = t_generated_parsers;
-
-    // if i >= max_inline_iterations || not_changed {
-    //     break generated_parsers;
-    // }
-    // };
 }
 
 // pub fn check_for_sep_by<'a, 'b>(
@@ -1267,9 +1055,9 @@ pub fn calculate_parser_from_expression<'a>(
             }
         }
         Expression::Epsilon(_) => quote! { ::parse_that::parse::epsilon() },
-        Expression::MappedExpression((inner_expr, mapper_fn)) => {
+        Expression::MappedExpression((inner_expr, mapping_fn)) => {
             let inner_expr = get_inner_expression(inner_expr);
-            let mapper_fn = get_inner_expression(mapper_fn);
+            let mapping_fn = get_inner_expression(mapping_fn);
 
             let parser = calculate_parser_from_expression(
                 inner_expr,
@@ -1279,11 +1067,11 @@ pub fn calculate_parser_from_expression<'a>(
                 depth,
             );
 
-            if let Expression::MappingFn(Token { value, .. }) = mapper_fn {
-                let Ok(mapper_fn) = syn::parse_str::<syn::ExprClosure>(value) else  {
+            if let Expression::MappingFn(Token { value, .. }) = mapping_fn {
+                let Ok(mapping_fn) = syn::parse_str::<syn::ExprClosure>(value) else  {
                 panic!("Invalid mapper expression: {}", value);
             };
-                quote! { #parser.map(#mapper_fn) }
+                quote! { #parser.map(#mapping_fn) }
             } else {
                 parser
             }
@@ -1453,7 +1241,7 @@ pub fn calculate_parser_from_expression<'a>(
                 depth,
             )
         }
-        Expression::ProductionRule(_lhs, rhs, mapper_fn) => {
+        Expression::Rule(rhs, mapping_fn) => {
             let parser = calculate_parser_from_expression(
                 rhs,
                 grammar_attrs,
@@ -1462,11 +1250,11 @@ pub fn calculate_parser_from_expression<'a>(
                 depth,
             );
 
-            if let Some(box Expression::MappingFn(Token { value, .. })) = mapper_fn {
-                let Ok(mapper_fn) = syn::parse_str::<syn::ExprClosure>(value) else  {
+            if let Some(box Expression::MappingFn(Token { value, .. })) = mapping_fn {
+                let Ok(mapping_fn) = syn::parse_str::<syn::ExprClosure>(value) else  {
                         panic!("Invalid mapper expression: {}", value);
                     };
-                quote! { #parser.map(#mapper_fn) }
+                quote! { #parser.map(#mapping_fn) }
             } else {
                 parser
             }
