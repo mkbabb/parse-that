@@ -4,6 +4,7 @@ bool = "true" | "false" ;
 number = NUMBER => |x| -> JsonValue<'a> { JsonValue::Number(x.as_str().parse().unwrap()) } ;
 
 comma = "," ?w ;
+colon = ":" ?w ;
 
 chargerge = /[^"\\]/ ;
 charger = chargerge ;
@@ -11,10 +12,10 @@ charge = charger ;
 char = charge    ;
 
 stringge = '"' >> char * << '"' ;
-string = stringge;
+string = DOUBLE_QUOTED_STRING;
 array = "[" >> (( value << comma ? ) *)?w << "]" ;
 
-pair = string, ":" ?w >> value ;
+pair = string, colon >> value ;
 object = "{" >> (( pair << comma ? ) *)?w << "}" ;
 
 value = object | array | string | number | bool | null ;   

@@ -17,7 +17,7 @@ use pretty::Doc;
 use std::{fs, time::SystemTime};
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/math.bbnf", ignore_whitespace)]
+#[parser(path = "../../grammar/math.bbnf", ignore_whitespace, debug)]
 pub struct Math {}
 
 // pub fn consume_math(p: &MathEnum) -> f64 {
@@ -74,12 +74,12 @@ pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
     recurse(p)
 }
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/css-keyframes.bbnf", ignore_whitespace)]
-pub struct CSSKeyframes;
+// #[derive(Parser)]
+// #[parser(path = "../../grammar/css-keyframes.bbnf", ignore_whitespace)]
+// pub struct CSSKeyframes;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/g4.bbnf", ignore_whitespace)]
+#[parser(path = "../../grammar/g4.bbnf", ignore_whitespace, debug)]
 pub struct G4;
 
 // pub fn consume_g4<'a>(p: &'a G4Enum) -> String {
@@ -130,8 +130,8 @@ pub fn main() {
     println!("JSON2 Elapsed: {:?}", elapsed);
     // println!("{:?}", tmp);
 
-    // let tmp = G4::sentence().parse("the fat woman ate the fat man");
-    // println!("{:?}", Doc::from(tmp));
+    let tmp = G4::sentence().parse("the fat woman ate the fat man");
+    println!("{:?}", Doc::from(tmp));
 
     // println!("{:?}", Doc::from(tmp));
 

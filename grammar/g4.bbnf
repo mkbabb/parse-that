@@ -1,5 +1,5 @@
 sentence = subject, verb, object, with_clause ? ;
-subject = "the" ?w, (adjective *, noun) ?, epsilon ;
+subject = "the" ?w, (adjective *, noun) ? ;
 object = "the" ?w, (adjective *, noun) ? ;
 verb = transitive_verb | intransitive_verb | transitive_verb, "the" ?w, noun ;
 

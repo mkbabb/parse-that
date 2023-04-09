@@ -35,6 +35,8 @@ pub enum Expression<'a> {
     MappingFn(Token<'a, String>),
     MappedExpression((TokenExpression<'a>, TokenExpression<'a>)),
 
+    DebugExpression((TokenExpression<'a>, String)),
+
     Group(TokenExpression<'a>),
     Optional(TokenExpression<'a>),
     OptionalWhitespace(TokenExpression<'a>),

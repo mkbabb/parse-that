@@ -16,6 +16,7 @@ use bbnf::calculate_nonterminal_types;
 use bbnf::format_parser;
 use bbnf::get_nonterminal_name;
 
+use bbnf::topological_sort;
 use bbnf::BBNFGrammar;
 use bbnf::Expression;
 use bbnf::GeneratedGrammarAttributes;
@@ -23,7 +24,6 @@ use bbnf::GeneratedParserCache;
 use bbnf::ParserAttributes;
 use bbnf::Token;
 use bbnf::TypeCache;
-use bbnf::topological_sort;
 use indexmap::IndexMap;
 
 use pretty::Doc;
@@ -93,7 +93,7 @@ fn generate_enum(
     let enum_ident = &grammar_attrs.enum_ident;
 
     quote! {
-        // #[derive(::pretty::Pretty, Debug, Clone)]
+        #[derive(::pretty::Pretty, Debug, Clone)]
         pub enum #enum_ident<'a> {
             #(#enum_values),*
         }
@@ -123,7 +123,6 @@ fn generate_grammar_arr(
 fn format_generated_parsers<'a, 'b>(
     generated_parsers: &'a GeneratedParserCache<'a>,
     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-    parser_container_attrs: &ParserAttributes,
 ) -> proc_macro2::TokenStream
 where
     'a: 'b,
@@ -136,16 +135,12 @@ where
             };
             let ident = format_ident!("{}", name);
 
-            let boxed_parser = format_parser(expr, parser, parser_container_attrs);
-            let formatted_parser =
-                box_generated_parser(expr, &boxed_parser, grammar_attrs.enum_ident);
-
             let boxed_enum_type = &grammar_attrs.boxed_enum_type;
 
             quote! {
                 pub fn #ident<'a>() -> Parser<'a, #boxed_enum_type> {
                     lazy(||
-                        #formatted_parser
+                        #parser
                     )
                 }
             }
@@ -180,8 +175,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         })
         .collect();
 
-    
-
     let ast = file_strings
         .iter()
         .map(|file_string| {
@@ -196,15 +189,11 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
             acc
         });
 
-        
-
     let deps = calculate_ast_deps(&ast);
 
     let ast = topological_sort(&ast, &deps);
     let acyclic_deps = calculate_acyclic_deps(&deps);
     let non_acyclic_deps = calculate_non_acyclic_deps(&deps, &acyclic_deps);
-
-   
 
     let grammar_attrs = GeneratedGrammarAttributes {
         ast: &ast,
@@ -218,21 +207,14 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     };
 
     let nonterminal_types = calculate_nonterminal_types(&grammar_attrs);
-    
 
     let grammar_arr = generate_grammar_arr(&grammar_attrs, &parser_container_attrs);
     let grammar_enum = generate_enum(&grammar_attrs, &nonterminal_types);
 
-
-    let generated_parsers = calculate_nonterminal_generated_parsers(
-        &grammar_attrs,
-        &parser_container_attrs,
-        &nonterminal_types,
-        32,
-    );
-
     let generated_parsers =
-        format_generated_parsers(&generated_parsers, &grammar_attrs, &parser_container_attrs);
+        calculate_nonterminal_generated_parsers(&grammar_attrs, &nonterminal_types);
+
+    let generated_parsers = format_generated_parsers(&generated_parsers, &grammar_attrs);
 
     let expanded = quote! {
         #grammar_arr
