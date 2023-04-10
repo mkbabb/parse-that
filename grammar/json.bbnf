@@ -1,7 +1,7 @@
 null = "null" ;
 bool = "true" | "false" ;
 
-number = NUMBER => |x| -> JsonValue<'a> { JsonValue::Number(x.as_str().parse().unwrap()) } ;
+number = NUMBER ;
 
 comma = "," ?w ;
 colon = ":" ?w ;
@@ -15,7 +15,7 @@ stringge = '"' >> char * << '"' ;
 string = DOUBLE_QUOTED_STRING;
 array = "[" >> (( value << comma ? ) *)?w << "]" ;
 
-pair = string, colon >> value ;
-object = "{" >> (( pair << comma ? ) *)?w << "}" ;
+
+object = "{" >> (( (string, colon >> value) << comma ? ) *)?w << "}" ;
 
 value = object | array | string | number | bool | null ;   

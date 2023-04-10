@@ -20,6 +20,8 @@ use std::{fs, time::SystemTime};
 #[parser(path = "../../grammar/math.bbnf", ignore_whitespace, debug)]
 pub struct Math {}
 
+
+
 // pub fn consume_math(p: &MathEnum) -> f64 {
 //     pub fn recurse(p: &MathEnum) -> f64 {
 //         let fold_expression = |acc, (op, rest): &(&str, MathEnum)| match *op {
@@ -49,7 +51,7 @@ pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
         match p {
             JsonEnum::null(_) => JsonValue::Null,
             JsonEnum::bool(b) => JsonValue::Bool(b.as_str().parse().unwrap()),
-            JsonEnum::number(n) => n.clone(),
+            JsonEnum::number(n) => JsonValue::Number(n.as_str().parse().unwrap()),
             JsonEnum::string(s) => JsonValue::String(s.as_str()),
             JsonEnum::array(values) => {
                 JsonValue::Array(values.iter().map(|v| recurse(v)).collect())
@@ -57,11 +59,11 @@ pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
             JsonEnum::object(pairs) => {
                 let map = pairs
                     .iter()
-                    .map(|pair| match pair.as_ref() {
-                        JsonEnum::pair((box JsonEnum::string(key), value)) => {
-                            (key.as_str(), recurse(value))
-                        }
-                        _ => unreachable!(),
+                    .map(|(key, value)| {
+                        let JsonEnum::string(key) = key.as_ref() else {
+                            panic!("Expected string")
+                        };
+                        (key.as_str(), recurse(value))
                     })
                     .collect();
                 JsonValue::Object(map)

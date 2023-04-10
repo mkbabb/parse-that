@@ -642,7 +642,9 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
             })
             .collect()
     };
-    *cache_bundle.parser_cache.borrow_mut() = generate(false);
+    let acyclic_generated_parsers: HashMap<_, _> = generate(false);
+    *cache_bundle.parser_cache.borrow_mut() = acyclic_generated_parsers.clone();
+   
     boxed
         .iter()
         .filter(|(lhs, _)| grammar_attrs.non_acyclic_deps.contains_key(lhs))
@@ -650,7 +652,12 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
             cache_bundle.parser_cache.borrow_mut().remove(lhs);
             cache_bundle.inline_cache.borrow_mut().insert(lhs, rhs);
         });
-    generate(true)
+
+    let mut generated_parsers = generate(true);
+    generated_parsers.extend(acyclic_generated_parsers);
+
+    generated_parsers
+    
 }
 
 pub fn check_for_sep_by<'a>(

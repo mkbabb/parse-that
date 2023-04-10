@@ -137,11 +137,17 @@ where
 
             let boxed_enum_type = &grammar_attrs.boxed_enum_type;
 
+
+            // make the parser lazy if it's a non_acyclic dep:
+            let parser = if grammar_attrs.non_acyclic_deps.contains_key(expr) {
+                quote! { lazy(|| #parser) }
+            } else {
+                parser.clone()
+            };
+
             quote! {
                 pub fn #ident<'a>() -> Parser<'a, #boxed_enum_type> {
-                    lazy(||
-                        #parser
-                    )
+                    #parser
                 }
             }
         })
