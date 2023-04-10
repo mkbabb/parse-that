@@ -661,39 +661,31 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
             cache_bundle.inline_cache.borrow_mut().insert(lhs, rhs);
         });
 
-    grammar_attrs
-        .ast
-        .iter()
-        .map(|(lhs, rhs)| {
-            let max_depth = *acyclic_deps_degree.get(lhs).unwrap_or(&1);
+    let generate = |recursive_inline: bool| {
+        grammar_attrs
+            .ast
+            .iter()
+            .filter_map(|(lhs, rhs)| {
+                let max_depth = *acyclic_deps_degree.get(lhs).unwrap_or(&1);
+                let rhs = boxed.get(lhs).unwrap_or(rhs);
 
-            let rhs = boxed.get(lhs).unwrap_or(rhs);
-
-            if grammar_attrs.acyclic_deps.contains_key(lhs) {
-                let parser = calculate_parser_from_expression(
-                    rhs,
-                    grammar_attrs,
-                    &cache_bundle,
-                    max_depth,
-                    0,
-                );
-
-                (lhs, parser)
-            } else {
-                if let Some(deps) = grammar_attrs.deps.get(lhs) {
-                    for dep in deps
-                        .iter()
-                        .filter(|dep| grammar_attrs.acyclic_deps.contains_key(dep))
-                    {
-                        if let Some(rhs) = boxed.get(dep) {
-                            cache_bundle.inline_cache.borrow_mut().insert(dep, rhs);
-
-                            cache_bundle
-                                .type_cache
-                                .borrow_mut()
-                                .insert(dep, grammar_attrs.boxed_enum_type.clone());
+                if !grammar_attrs.acyclic_deps.contains_key(lhs) {
+                    if let Some(deps) = grammar_attrs.deps.get(lhs) {
+                        for dep in deps.iter() {
+                            if grammar_attrs.acyclic_deps.contains_key(dep) {
+                                let rhs = boxed.get(dep).unwrap_or(dep);
+                                cache_bundle.inline_cache.borrow_mut().insert(dep, rhs);
+                                cache_bundle
+                                    .type_cache
+                                    .borrow_mut()
+                                    .insert(dep, grammar_attrs.boxed_enum_type.clone());
+                            }
                         }
                     }
+
+                    // cache_bundle.inline_cache.borrow_mut().remove(lhs);
+                } else if recursive_inline {
+                    return None;
                 }
 
                 let parser = calculate_parser_from_expression(
@@ -703,10 +695,30 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
                     max_depth,
                     0,
                 );
-                (lhs, parser)
-            }
-        })
-        .collect()
+                Some((lhs, parser))
+            })
+            .collect()
+    };
+
+    let tmp: HashMap<_, _> = generate(false);
+    cache_bundle.parser_cache.borrow_mut().clear();
+    let filtered: HashMap<_, _> = tmp
+        .iter()
+        .filter(|(lhs, _)| grammar_attrs.acyclic_deps.contains_key(lhs))
+        .map(|(lhs, rhs)| (*lhs, rhs.clone()))
+        .collect();
+    // let tmp2 = tmp.clone();
+    cache_bundle.parser_cache.borrow_mut().extend(filtered);
+    // cache_bundle.inline_cache.borrow_mut().clear();
+    boxed
+        .iter()
+        .filter(|(lhs, _)| grammar_attrs.non_acyclic_deps.contains_key(lhs))
+        .for_each(|(lhs, rhs)| {
+            cache_bundle.inline_cache.borrow_mut().insert(lhs, rhs);
+        });
+
+    generate(true)
+    // tmp2
 }
 
 pub fn check_for_sep_by<'a>(
