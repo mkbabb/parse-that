@@ -1,4 +1,4 @@
-null = "null" => |x| -> &'a str { return "vibeage"; };
+null = "null" ;
 bool = "true" | "false" ;
 
 number = NUMBER => |x| -> JsonValue<'a> { JsonValue::Number(x.as_str().parse().unwrap()) } ;
