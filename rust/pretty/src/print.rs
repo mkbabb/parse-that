@@ -14,7 +14,6 @@ pub fn count_join_length<'a>(sep: &'a Doc<'a>, docs: &'a Vec<Doc<'a>>, printer: 
 
 pub fn count_text_length(doc: &Doc, printer: &Printer) -> usize {
     match doc {
-        Doc::Str(s) => s.len(),
         Doc::String(s) => s.len(),
         Doc::Concat(docs) => docs.iter().map(|d| count_text_length(d, printer)).sum(),
         Doc::Group(d) => count_text_length(d, printer),
@@ -101,10 +100,6 @@ pub fn pretty_print<'a>(doc: &'a Doc<'a>, printer: &Printer) -> String {
 
     while let Some(PrintItem { doc, indent_delta }) = stack.pop() {
         match &doc {
-            Doc::Str(s) => {
-                current_line_len += s.len();
-                output.push_str(s);
-            }
             Doc::String(s) => {
                 current_line_len += s.len();
                 output.push_str(s);

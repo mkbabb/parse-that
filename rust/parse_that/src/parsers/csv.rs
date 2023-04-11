@@ -3,7 +3,7 @@ use crate::parse::*;
 use super::utils::escaped_span;
 
 extern crate pretty;
-use pretty::{str, Doc, Join};
+use pretty::{Doc, Join};
 
 #[derive(Debug, PartialEq)]
 pub enum CSV<'a> {
@@ -18,7 +18,7 @@ impl<'a> From<CSV<'a>> for Doc<'a> {
             .into_iter()
             .map(|line| {
                 line.into_iter()
-                    .map(str)
+                    .map(Doc::from)
                     .collect::<Vec<_>>()
                     .join(",")
             })

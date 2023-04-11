@@ -1,5 +1,5 @@
 use std::{
-    borrow::{Borrow, Cow},
+    borrow::Cow,
     collections::{HashMap, HashSet},
 };
 
@@ -8,8 +8,7 @@ use regex::Regex;
 #[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Doc<'a> {
     Null,
-    String(String),
-    Str(&'a str),
+    String(Cow<'a, str>),
 
     Concat(Vec<Doc<'a>>),
 
@@ -83,10 +82,6 @@ pub fn indent<'a>(doc: impl Into<Doc<'a>>) -> Doc<'a> {
 
 pub fn dedent<'a>(doc: impl Into<Doc<'a>>) -> Doc<'a> {
     Doc::Dedent(Box::new(doc.into()))
-}
-
-pub fn str<'a>(s: impl Into<&'a str>) -> Doc<'a> {
-    Doc::Str(s.into())
 }
 
 pub fn hardline<'a>() -> Doc<'a> {
@@ -163,19 +158,19 @@ impl<'a> Wrap<'a> for Doc<'a> {
 
 impl<'a> From<&'a str> for Doc<'a> {
     fn from(s: &'a str) -> Doc<'a> {
-        Doc::Str(s)
+        Doc::String(s.into())
     }
 }
 
 impl<'a> From<String> for Doc<'a> {
     fn from(s: String) -> Doc<'a> {
-        Doc::String(s)
+        Doc::String(s.into())
     }
 }
 
 impl<'a> From<bool> for Doc<'a> {
     fn from(b: bool) -> Doc<'a> {
-        Doc::String(b.to_string())
+        Doc::String(b.to_string().into())
     }
 }
 
@@ -184,7 +179,7 @@ macro_rules! impl_from_number_to_doc {
         $(
             impl<'a> From<$t> for Doc<'a>  {
                 fn from(value: $t) -> Self {
-                    Doc::String(value.to_string())
+                    Doc::String(value.to_string().into())
                 }
             }
         )*
@@ -199,7 +194,7 @@ where
     fn from(opt: Option<T>) -> Doc<'a> {
         match opt {
             Some(value) => value.into(),
-            None => str("None"),
+            None => Doc::from("None"),
         }
     }
 }
@@ -219,7 +214,7 @@ where
 
 impl From<()> for Doc<'_> {
     fn from(_: ()) -> Self {
-        str("()")
+        Doc::from("()")
     }
 }
 
@@ -266,9 +261,9 @@ macro_rules! impl_from_tuple_to_doc {
             fn from(tuple: ($($t),*)) -> Self {
                 let ($($t),*) = tuple;
                 vec![$($t.into()),*]
-                    .smart_join(str(", "))
+                    .smart_join(", ")
                     .group()
-                    .wrap(str("("), str(")"))
+                    .wrap("(", ")")
             }
         }
     };
@@ -294,14 +289,10 @@ where
         let doc_vec: Vec<_> = vec.into_iter().map(|item| item.into()).collect();
 
         if !doc_vec.is_empty() {
-            let doc = doc_vec
-                .smart_join(str(", "))
-                .group()
-                .wrap(str("["), str("]"))
-                .indent();
+            let doc = doc_vec.smart_join(", ").group().wrap("[", "]").indent();
             doc
         } else {
-            return str("[]");
+            Doc::from("[]")
         }
     }
 }
@@ -314,18 +305,18 @@ where
     fn from(map: HashMap<K, V, R>) -> Doc<'a> {
         let doc_vec: Vec<_> = map
             .into_iter()
-            .map(|(key, value)| key.into() + str(": ") + value.into())
+            .map(|(key, value)| key.into() + Doc::from(": ") + value.into())
             .collect();
 
         if !doc_vec.is_empty() {
             let doc = doc_vec
-                .join(str(", ") + Doc::Hardline)
+                .join(Doc::from(", ") + Doc::Hardline)
                 .group()
-                .wrap(str("{"), str("}"))
+                .wrap("{", "}")
                 .indent();
             doc
         } else {
-            return str("{}");
+            Doc::from("{}")
         }
     }
 }
@@ -338,14 +329,10 @@ where
         let doc_vec: Vec<_> = set.into_iter().map(|item| item.into()).collect();
 
         if !doc_vec.is_empty() {
-            let doc = doc_vec
-                .smart_join(str(", "))
-                .group()
-                .wrap(str("{"), str("}"))
-                .indent();
+            let doc = doc_vec.smart_join(", ").group().wrap("{", "}").indent();
             doc
         } else {
-            return str("{}");
+            Doc::from("{}")
         }
     }
 }

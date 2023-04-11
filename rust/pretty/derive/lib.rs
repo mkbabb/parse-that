@@ -144,7 +144,7 @@ pub fn pretty_derive(input: TokenStream) -> TokenStream {
             #new_where_clause
         {
             fn from(_self: #name #ty_generics) -> Self {
-                use pretty::{concat, indent, wrap, join, str, Doc, Join, Wrap, Group, Indent, Dedent};
+                use pretty::{concat, indent, wrap, join, Doc, Join, Wrap, Group, Indent, Dedent};
                 #doc_match
             }
         }
@@ -177,7 +177,7 @@ fn generate_struct_fields_match(fields: &Fields) -> Vec<proc_macro2::TokenStream
         let field_doc = quote! {
             concat(vec![
                 Doc::from(#field_name),
-                Doc::Str(": "),
+                Doc::from(": "),
                 #field_doc,
             ])
         };
@@ -228,9 +228,9 @@ fn generate_struct_match(
         Fields::Named(_) | Fields::Unnamed(_) => {
             let body = quote! {
                 vec![#(#fields_match,)*]
-                        .join(Doc::Str(", ") + Doc::Hardline)
+                        .join(Doc::from(", ") + Doc::Hardline)
                         .group()
-                        .wrap(Doc::Str("{"), Doc::Str("}").dedent())
+                        .wrap("{", Doc::from("}").dedent())
                         .indent()
             };
             let header = quote! {
@@ -325,7 +325,7 @@ fn generate_variants_match(
             concat(vec![
                 Doc::from(#variant_name),
                 Doc::from(#field_doc)
-                .wrap(Doc::Str("("), Doc::Str(")"))
+                .wrap("(", ")")
             ])
         }
     } else {
