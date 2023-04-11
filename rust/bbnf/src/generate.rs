@@ -446,7 +446,8 @@ where
     let expr_token = Token::new_without_span(expr.clone());
     let mapping_fn = format!("|x| Box::new( {enum_ident}::{ident}( x ) ) ");
     let mapping_fn_token =
-        Token::new_without_span(Expression::MappingFn(Token::new_without_span(mapping_fn)));
+        Token::new_without_span(Expression::MappingFn(Token::new_without_span(mapping_fn.into())));
+    
     return Expression::MappedExpression((expr_token.into(), mapping_fn_token.into()));
 }
 
@@ -787,7 +788,7 @@ pub fn check_for_any_span(exprs: &[Expression]) -> Option<TokenStream> {
             .iter()
             .map(|expr| {
                 if let Expression::Literal(token) = expr {
-                    token.value
+                    token.value.clone()
                 } else {
                     panic!("Expected literal");
                 }

@@ -1,5 +1,5 @@
 use std::{
-    borrow::Borrow,
+    borrow::{Borrow, Cow},
     collections::{HashMap, HashSet},
 };
 
@@ -238,6 +238,15 @@ where
 {
     fn from(value: Box<T>) -> Self {
         (*value).into()
+    }
+}
+
+impl<'a> From<Cow<'a, str>> for Doc<'a> {
+    fn from(cow: Cow<'a, str>) -> Self {
+        match cow {
+            Cow::Borrowed(s) => s.into(),
+            Cow::Owned(s) => s.into(),
+        }
     }
 }
 

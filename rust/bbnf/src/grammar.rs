@@ -1,5 +1,7 @@
 extern crate parse_that;
 
+use std::borrow::Cow;
+
 use parse_that::parsers::utils::escaped_span;
 use parse_that::{
     any_span, lazy, next_span, string, string_span, take_while_span, Parser, ParserFlat,
@@ -11,13 +13,13 @@ use pretty::{Doc, Pretty};
 
 use indexmap::IndexMap;
 
-#[derive(Pretty, Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Pretty, Debug, Clone, Eq, PartialEq)]
 pub enum Comment<'a> {
-    Line(&'a str),
-    Block(&'a str),
+    Line(Cow<'a, str>),
+    Block(Cow<'a, str>),
 }
 
-#[derive(Pretty, Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Pretty, Debug, Clone, Eq, PartialEq)]
 pub struct Comments<'a> {
     pub left: Option<Comment<'a>>,
     pub right: Option<Comment<'a>>,
@@ -27,12 +29,12 @@ type TokenExpression<'a, T = Expression<'a>> = Box<Token<'a, T>>;
 
 #[derive(Pretty, Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Expression<'a> {
-    Literal(Token<'a, &'a str>),
-    Nonterminal(Token<'a, &'a str>),
+    Literal(Token<'a, Cow<'a, str>>),
+    Nonterminal(Token<'a, Cow<'a, str>>),
 
-    Regex(Token<'a, &'a str>),
+    Regex(Token<'a, Cow<'a, str>>),
 
-    MappingFn(Token<'a, String>),
+    MappingFn(Token<'a, Cow<'a, str>>),
     MappedExpression((TokenExpression<'a>, TokenExpression<'a>)),
 
     DebugExpression((TokenExpression<'a>, String)),
@@ -58,7 +60,7 @@ pub enum Expression<'a> {
     Epsilon(Token<'a, ()>),
 }
 
-#[derive(Pretty, Debug, Clone, Copy, Eq)]
+#[derive(Pretty, Debug, Clone, Eq)]
 pub struct Token<'a, T> {
     pub value: T,
 
@@ -176,7 +178,7 @@ impl<'a> BBNFGrammar<'a> {
             .wrap_span(string_span("/*"), string_span("*/"))
             .trim_whitespace()
             .many_span(1..)
-            .map(|s| Comment::Block(s.as_str()))
+            .map(|s| Comment::Block(s.as_str().into()))
     }
 
     fn line_comment() -> Parser<'a, Comment<'a>> {
@@ -186,7 +188,7 @@ impl<'a> BBNFGrammar<'a> {
         not_newline
             .wrap_span(string_span("//"), end)
             .many_span(1..)
-            .map(|s| Comment::Line(s.as_str()))
+            .map(|s| Comment::Line(s.as_str().into()))
     }
 
     fn identifier() -> Parser<'a, Span<'a>> {
@@ -206,7 +208,7 @@ impl<'a> BBNFGrammar<'a> {
         };
 
         (quoted("\"") | quoted("'") | quoted("`")).map(|s| {
-            let token = Token::new(s.as_str(), s);
+            let token = Token::new(s.as_str().into(), s);
             Expression::Literal(token)
         })
     }
@@ -220,7 +222,7 @@ impl<'a> BBNFGrammar<'a> {
 
     fn nonterminal() -> Parser<'a, Expression<'a>> {
         Self::identifier().map(|s| {
-            let token = Token::new(s.as_str(), s);
+            let token = Token::new(s.as_str().into(), s);
             Expression::Nonterminal(token)
         })
     }
@@ -239,7 +241,7 @@ impl<'a> BBNFGrammar<'a> {
                 Ok(_) => {}
                 Err(e) => panic!("invalid regex: {:?}, {:?}", s.as_str(), e),
             }
-            let token = Token::new(s.as_str(), s);
+            let token = Token::new(s.as_str().into(), s);
             Expression::Regex(token)
         })
     }
@@ -369,7 +371,7 @@ impl<'a> BBNFGrammar<'a> {
             .trim_whitespace()
             .next(not_lhs.many_span(..).then_span(next_span(1)))
             .map(|s| {
-                let token = Token::new(s.as_str().to_string(), s);
+                let token = Token::new(s.as_str().into(), s);
                 match syn::parse_str::<syn::ExprClosure>(s.as_str()) {
                     Ok(_) => {}
                     Err(e) => panic!("invalid mapper expression: {:?}, {:?}", s.as_str(), e),

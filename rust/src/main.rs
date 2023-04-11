@@ -20,8 +20,6 @@ use std::{fs, time::SystemTime};
 #[parser(path = "../../grammar/math.bbnf", ignore_whitespace, debug)]
 pub struct Math {}
 
-
-
 // pub fn consume_math(p: &MathEnum) -> f64 {
 //     pub fn recurse(p: &MathEnum) -> f64 {
 //         let fold_expression = |acc, (op, rest): &(&str, MathEnum)| match *op {
