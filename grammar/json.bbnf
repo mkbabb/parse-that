@@ -12,7 +12,7 @@ charge = charger ;
 char = charge    ;
 
 stringge = '"' >> char * << '"' ;
-string = DOUBLE_QUOTED_STRING;
+string = DOUBLE_QUOTED_STRING => |x| -> &'a str { x.as_str() } ;
 array = "[" >> (( value << comma ? ) *)?w << "]" ;
 
 

@@ -50,7 +50,7 @@ pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
             JsonEnum::null(_) => JsonValue::Null,
             JsonEnum::bool(b) => JsonValue::Bool(b.as_str().parse().unwrap()),
             JsonEnum::number(n) => JsonValue::Number(n.as_str().parse().unwrap()),
-            JsonEnum::string(s) => JsonValue::String(s.as_str()),
+            JsonEnum::string(s) => JsonValue::String(s),
             JsonEnum::array(values) => {
                 JsonValue::Array(values.iter().map(|v| recurse(v)).collect())
             }
@@ -61,7 +61,7 @@ pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
                         let JsonEnum::string(key) = key.as_ref() else {
                             panic!("Expected string")
                         };
-                        (key.as_str(), recurse(value))
+                        (*key, recurse(value))
                     })
                     .collect();
                 JsonValue::Object(map)
@@ -74,39 +74,15 @@ pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
     recurse(p)
 }
 
-// #[derive(Parser)]
-// #[parser(path = "../../grammar/css-keyframes.bbnf", ignore_whitespace)]
-// pub struct CSSKeyframes;
+#[derive(Parser)]
+#[parser(path = "../../grammar/css-keyframes.bbnf", ignore_whitespace)]
+pub struct CSSKeyframes;
 
 #[derive(Parser)]
 #[parser(path = "../../grammar/g4.bbnf", ignore_whitespace, debug)]
 pub struct G4;
 
-// pub fn consume_g4<'a>(p: &'a G4Enum) -> String {
-//     pub fn recurse<'a>(p: &'a G4Enum) -> String {
-//         match p {
-//             G4Enum::sentence((subject, verb, object, with_clause)) => {
-//                 let mut s = String::new();
-//                 s.push_str(recurse(subject).as_str());
-//                 s.push_str(recurse(verb).as_str());
-//                 s.push_str(recurse(object).as_str());
 
-//                 if let Some(with_clause) = with_clause {
-//                     s.push_str(recurse(with_clause).as_str());
-//                 }
-//                 s
-//             }
-//             G4Enum::subject((article, noun)) => {
-//                 let mut s = String::new();
-//                 s.push_str(recurse(article).as_str());
-//                 s.push_str(recurse(noun).as_str());
-//                 s
-//             }
-//         }
-//     }
-
-//     recurse(p)
-// }
 
 pub fn main() {
     let first_now = SystemTime::now();
@@ -130,8 +106,8 @@ pub fn main() {
     println!("JSON2 Elapsed: {:?}", elapsed);
     // println!("{:?}", tmp);
 
-    // let tmp = G4::sentence().parse("the fat woman ate the fat man");
-    // println!("{:?}", Doc::from(tmp));
+    let tmp = G4::sentence().parse("the fat woman ate the fat man");
+    println!("{:?}", Doc::from(tmp));
 
     // println!("{:?}", Doc::from(tmp));
 

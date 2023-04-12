@@ -35,12 +35,17 @@ impl GeneratedNonterminalParser {
 
 pub struct GeneratedGrammarAttributes<'a> {
     pub ast: &'a AST<'a>,
+
     pub deps: &'a Dependencies<'a>,
     pub non_acyclic_deps: &'a Dependencies<'a>,
     pub acyclic_deps: &'a Dependencies<'a>,
+
     pub ident: &'a syn::Ident,
     pub enum_ident: &'a syn::Ident,
+
+    pub enum_type: &'a Type,
     pub boxed_enum_type: &'a Type,
+
     pub parser_container_attrs: &'a ParserAttributes,
 }
 
@@ -434,6 +439,24 @@ pub fn calculate_nonterminal_types<'a>(
         .collect();
 }
 
+pub fn map_generated_parser<'a, 'b>(
+    name: &str,
+    expr: &Expression<'a>,
+    enum_ident: &syn::Ident,
+) -> Expression<'b>
+where
+    'a: 'b,
+{
+    let ident = format_ident!("{}", name);
+    let expr_token = Token::new_without_span(expr.clone());
+    let mapping_fn = format!("|x| {enum_ident}::{ident}( x ) ");
+    let mapping_fn_token = Token::new_without_span(Expression::MappingFn(Token::new_without_span(
+        mapping_fn.into(),
+    )));
+
+    return Expression::MappedExpression((expr_token.into(), mapping_fn_token.into()));
+}
+
 pub fn box_generated_parser<'a, 'b>(
     name: &str,
     expr: &Expression<'a>,
@@ -444,10 +467,29 @@ where
 {
     let ident = format_ident!("{}", name);
     let expr_token = Token::new_without_span(expr.clone());
-    let mapping_fn = format!("|x| Box::new( {enum_ident}::{ident}( x ) ) ");
-    let mapping_fn_token =
-        Token::new_without_span(Expression::MappingFn(Token::new_without_span(mapping_fn.into())));
-    
+    let mapping_fn = format!("|x| {enum_ident}::{ident}(Box::new(x)) ");
+    let mapping_fn_token = Token::new_without_span(Expression::MappingFn(Token::new_without_span(
+        mapping_fn.into(),
+    )));
+
+    return Expression::MappedExpression((expr_token.into(), mapping_fn_token.into()));
+}
+
+pub fn box_generated_parser2<'a, 'b>(
+    name: &str,
+    expr: &Expression<'a>,
+    enum_ident: &syn::Ident,
+) -> Expression<'b>
+where
+    'a: 'b,
+{
+    let ident = format_ident!("{}", name);
+    let expr_token = Token::new_without_span(expr.clone());
+    let mapping_fn = format!("|x| Box::new({enum_ident}::{ident}(x)) ");
+    let mapping_fn_token = Token::new_without_span(Expression::MappingFn(Token::new_without_span(
+        mapping_fn.into(),
+    )));
+
     return Expression::MappedExpression((expr_token.into(), mapping_fn_token.into()));
 }
 
@@ -581,6 +623,23 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
         })
         .collect::<HashMap<_, _>>();
 
+    let mapped: HashMap<_, _> = grammar_attrs
+        .ast
+        .iter()
+        .map(|(lhs, rhs)| {
+            let rhs = match get_nonterminal_name(lhs) {
+                Some(name) => {
+                    let formatted_expr = formatted.get(lhs).unwrap_or(rhs);
+                    let mapped_expr =
+                        map_generated_parser(name, formatted_expr, grammar_attrs.enum_ident);
+                    mapped_expr
+                }
+                None => rhs.clone(),
+            };
+            (lhs.clone(), rhs)
+        })
+        .collect();
+
     let boxed: HashMap<_, _> = grammar_attrs
         .ast
         .iter()
@@ -590,6 +649,23 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
                     let formatted_expr = formatted.get(lhs).unwrap_or(rhs);
                     let boxed_expr =
                         box_generated_parser(name, formatted_expr, grammar_attrs.enum_ident);
+                    boxed_expr
+                }
+                None => rhs.clone(),
+            };
+            (lhs.clone(), rhs)
+        })
+        .collect();
+
+    let boxed2: HashMap<_, _> = grammar_attrs
+        .ast
+        .iter()
+        .map(|(lhs, rhs)| {
+            let rhs = match get_nonterminal_name(lhs) {
+                Some(name) => {
+                    let formatted_expr = formatted.get(lhs).unwrap_or(rhs);
+                    let boxed_expr =
+                        box_generated_parser2(name, formatted_expr, grammar_attrs.enum_ident);
                     boxed_expr
                 }
                 None => rhs.clone(),
@@ -610,7 +686,9 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
             .ast
             .iter()
             .filter_map(|(lhs, rhs)| {
-                if !grammar_attrs.acyclic_deps.contains_key(lhs) {
+                let is_acyclic = grammar_attrs.acyclic_deps.contains_key(lhs);
+
+                if !is_acyclic {
                     grammar_attrs
                         .deps
                         .get(lhs)
@@ -618,7 +696,7 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
                         .iter()
                         .filter(|dep| grammar_attrs.acyclic_deps.contains_key(dep))
                         .for_each(|dep| {
-                            let rhs = boxed.get(dep).unwrap_or(dep);
+                            let rhs = boxed2.get(dep).unwrap_or(dep);
                             cache_bundle.inline_cache.borrow_mut().insert(dep, rhs);
                             cache_bundle
                                 .type_cache
@@ -630,35 +708,46 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
                 }
 
                 let max_depth = *acyclic_deps_degree.get(lhs).unwrap_or(&1);
-                let rhs = boxed.get(lhs).unwrap_or(rhs);
+
+                let rhs = mapped.get(lhs).unwrap_or(rhs);
 
                 let parser = calculate_parser_from_expression(
                     rhs,
                     grammar_attrs,
                     &cache_bundle,
-                    max_depth,
+                    max_depth + 1,
                     0,
                 );
                 Some((lhs, parser))
             })
             .collect()
     };
-    let acyclic_generated_parsers: HashMap<_, _> = generate(false);
+    let mut acyclic_generated_parsers: HashMap<_, _> = generate(false);
     *cache_bundle.parser_cache.borrow_mut() = acyclic_generated_parsers.clone();
-   
-    boxed
-        .iter()
-        .filter(|(lhs, _)| grammar_attrs.non_acyclic_deps.contains_key(lhs))
-        .for_each(|(lhs, rhs)| {
+
+    grammar_attrs.ast.iter().for_each(|(lhs, rhs)| {
+        let is_acyclic = grammar_attrs.acyclic_deps.contains_key(lhs);
+
+        if !is_acyclic {
+            let rhs = boxed2.get(lhs).unwrap_or(rhs);
+
+            acyclic_generated_parsers.remove(lhs);
             cache_bundle.parser_cache.borrow_mut().remove(lhs);
             cache_bundle.inline_cache.borrow_mut().insert(lhs, rhs);
-        });
+        } else {
+            let tmp = cache_bundle.parser_cache.borrow().get(lhs).map(|parser| {
+                quote! { #parser.map(Box::new) }
+            });
+            if let Some(parser) = tmp {
+                cache_bundle.parser_cache.borrow_mut().insert(lhs, parser);
+            }
+        }
+    });
 
     let mut generated_parsers = generate(true);
     generated_parsers.extend(acyclic_generated_parsers);
 
     generated_parsers
-    
 }
 
 pub fn check_for_sep_by<'a>(
@@ -977,7 +1066,7 @@ pub fn calculate_parser_from_expression<'a>(
                 let ident = format_ident!("{}", value);
 
                 quote! {
-                    Self:: #ident()
+                    Self::#ident().map(|x| Box::new(x))
                 }
             }
         }

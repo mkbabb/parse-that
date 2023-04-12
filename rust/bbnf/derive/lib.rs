@@ -7,7 +7,7 @@ use std::env;
 use std::path::Path;
 use std::path::PathBuf;
 
-use bbnf::box_generated_parser;
+use bbnf::map_generated_parser;
 use bbnf::calculate_acyclic_deps;
 use bbnf::calculate_ast_deps;
 use bbnf::calculate_non_acyclic_deps;
@@ -93,7 +93,7 @@ fn generate_enum(
     let enum_ident = &grammar_attrs.enum_ident;
 
     quote! {
-        // #[derive(::pretty::Pretty, Debug, Clone)]
+        #[derive(::pretty::Pretty, Debug, Clone)]
         pub enum #enum_ident<'a> {
             #(#enum_values),*
         }
@@ -135,7 +135,7 @@ where
             };
             let ident = format_ident!("{}", name);
 
-            let boxed_enum_type = &grammar_attrs.boxed_enum_type;
+            let ty = &grammar_attrs.enum_type;
 
 
             // make the parser lazy if it's a non_acyclic dep:
@@ -146,7 +146,7 @@ where
             };
 
             quote! {
-                pub fn #ident<'a>() -> Parser<'a, #boxed_enum_type> {
+                pub fn #ident<'a>() -> Parser<'a, #ty> {
                     #parser
                 }
             }
@@ -168,6 +168,8 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     let enum_ident = format_ident!("{}Enum", ident);
+
+    let enum_type: Type = parse_quote!(#enum_ident<'a>);
     let boxed_enum_type: Type = parse_quote!(Box<#enum_ident<'a>> );
 
     let parser_container_attrs = parse_parser_attrs(&input.attrs);
@@ -206,9 +208,13 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         deps: &deps,
         acyclic_deps: &acyclic_deps,
         non_acyclic_deps: &non_acyclic_deps,
+
         ident,
         enum_ident: &enum_ident,
+
+        enum_type: &enum_type,
         boxed_enum_type: &boxed_enum_type,
+
         parser_container_attrs: &parser_container_attrs,
     };
 
