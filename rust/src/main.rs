@@ -6,6 +6,7 @@ extern crate parse_that;
 extern crate pretty;
 
 use bbnf_derive::Parser;
+use parse_that::csv::csv_parser;
 use parse_that::get_cargo_root_path;
 use parse_that::json::json_parser;
 use parse_that::json::JsonValue;
@@ -122,18 +123,19 @@ pub fn main() {
 
     // println!("{:?}", Doc::from(x));
 
-    // let csv_file_path = "../data/csv/data.csv";
-    // let csv_string = fs::read_to_string(csv_file_path).unwrap();
+    let csv_file_path = "../../data/csv/active_charter_schools_report.csv";
+    let csv_string = fs::read_to_string(csv_file_path).unwrap();
 
-    // let parser = csv_parser();
+    let parser = csv_parser();
 
-    // let now = SystemTime::now();
+    let now = SystemTime::now();
 
-    // let data = parser.parse(&csv_string).unwrap();
+    let data = parser.parse(&csv_string).unwrap();
 
-    // let elapsed = now.elapsed().unwrap();
+    let elapsed = now.elapsed().unwrap();
 
-    // println!("CSV Elapsed: {:?}", elapsed);
+    println!("CSV Elapsed: {:?}", elapsed);
+    // println!("{:?}", Doc::from(data));
 
     // let json_file_path = "../../data/json/data.json";
     let json_string = fs::read_to_string(&json_file_path).unwrap();
