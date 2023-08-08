@@ -715,7 +715,7 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
                     rhs,
                     grammar_attrs,
                     &cache_bundle,
-                    max_depth + 1,
+                    max_depth,
                     0,
                 );
                 Some((lhs, parser))
@@ -1075,7 +1075,11 @@ pub fn calculate_parser_from_expression<'a>(
         },
         Expression::MappedExpression((inner_expr, mapping_fn)) => {
             let inner_expr = get_inner_expression(inner_expr);
+            
+            println!("inner_expr: {:?}", mapping_fn);
+
             let mapping_fn = get_inner_expression(mapping_fn);
+            
             let parser = calculate_parser_from_expression(
                 inner_expr,
                 grammar_attrs,
@@ -1083,6 +1087,7 @@ pub fn calculate_parser_from_expression<'a>(
                 max_depth,
                 depth,
             );
+
             if let Expression::MappingFn(Token { value, .. }) = mapping_fn {
                 let Ok(mapping_fn) = syn:: parse_str::< syn:: ExprClosure >(value) else {
                     panic!("Invalid mapper expression: {}", value);

@@ -1,7 +1,7 @@
 null = "null" ;
 bool = "true" | "false" ;
 
-number = NUMBER => |x| -> Span<'a> { x } ;
+number = NUMBER ;
 
 comma = "," ?w ;
 colon = ":" ?w ;

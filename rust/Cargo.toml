@@ -5,3 +5,6 @@ members = ["pretty", "src", "parse_that", "bbnf", "bbnf/derive"]
 bench = true
 
 
+[profile.release-lto]
+inherits = "release"
+lto = true
