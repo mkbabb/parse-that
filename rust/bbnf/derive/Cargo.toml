@@ -1,7 +1,7 @@
 [package]
 name = "bbnf_derive"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [lib]
 path = "./lib.rs"
@@ -12,7 +12,7 @@ bbnf = { path = "../" }
 pprint = { path = "/Users/mkbabb/Programming/pprint" }
 parse_that = { path = "../../parse_that" }
 
-syn = { version = "1", features = ["full"] }
+syn = { version = "2", features = ["full"] }
 quote = "1"
 proc-macro2 = "1"
 indexmap = "2"

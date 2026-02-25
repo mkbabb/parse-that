@@ -1,7 +1,7 @@
 [package]
 name = "bbnf"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [lib]
 name = "bbnf"
@@ -13,7 +13,7 @@ parse_that = { path = "../parse_that" }
 
 regex = { version = "1.11", features = ["perf"] }
 
-syn = { version = "1.0", features = ["full"] }
+syn = { version = "2", features = ["full"] }
 quote = "1"
 proc-macro2 = "1"
 indexmap = "2"

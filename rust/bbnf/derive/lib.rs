@@ -1,19 +1,12 @@
 extern crate proc_macro;
 
-use std::collections::HashMap;
-
-use std::collections::HashSet;
-use std::env;
-use std::path::Path;
 use std::path::PathBuf;
 
-use bbnf::map_generated_parser;
 use bbnf::calculate_acyclic_deps;
 use bbnf::calculate_ast_deps;
 use bbnf::calculate_non_acyclic_deps;
 use bbnf::calculate_nonterminal_generated_parsers;
 use bbnf::calculate_nonterminal_types;
-use bbnf::format_parser;
 use bbnf::get_nonterminal_name;
 
 use bbnf::topological_sort;
@@ -26,11 +19,14 @@ use bbnf::Token;
 use bbnf::TypeCache;
 use indexmap::IndexMap;
 
-use pprint::Doc;
 use proc_macro::TokenStream;
 
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, parse_quote, Attribute, DeriveInput, Lit, Meta, NestedMeta, Type};
+use syn::{
+    parse_macro_input, parse_quote,
+    punctuated::Punctuated,
+    Attribute, DeriveInput, Expr, ExprLit, Lit, Meta, Type,
+};
 
 use parse_that::utils::get_cargo_root_path;
 
@@ -38,23 +34,20 @@ fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
     let mut parser_attr = ParserAttributes::default();
     let root_path = get_cargo_root_path();
 
-    for meta in attrs
-        .iter()
-        .filter(|attr| attr.path.is_ident("parser"))
-        .filter_map(|attr| match attr.parse_meta() {
-            Ok(Meta::List(meta)) => Some(meta),
-            _ => None,
-        })
-    {
-        for nested_meta in meta.nested.iter() {
-            let NestedMeta::Meta(nested_meta)  = nested_meta else {
-                continue;
-            };
+    for attr in attrs.iter().filter(|attr| attr.path().is_ident("parser")) {
+        let Meta::List(meta_list) = &attr.meta else {
+            continue;
+        };
 
-            if let Meta::NameValue(_name_value) = nested_meta {
-                if nested_meta.path().is_ident("path") {
-                    if let Lit::Str(path) = &_name_value.lit {
-                        let path = PathBuf::from(path.value());
+        let nested = meta_list
+            .parse_args_with(Punctuated::<Meta, syn::Token![,]>::parse_terminated)
+            .expect("failed to parse #[parser(...)] attribute");
+
+        for meta in nested {
+            match &meta {
+                Meta::NameValue(nv) if nv.path.is_ident("path") => {
+                    if let Expr::Lit(ExprLit { lit: Lit::Str(s), .. }) = &nv.value {
+                        let path = PathBuf::from(s.value());
                         let path = if path.is_relative() {
                             root_path.join(path)
                         } else {
@@ -63,15 +56,16 @@ fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
                         parser_attr.paths.push(path);
                     }
                 }
-            } else {
-                match nested_meta.path() {
-                    path if path.is_ident("ignore_whitespace") => {
-                        parser_attr.ignore_whitespace = true
-                    }
-                    path if path.is_ident("debug") => parser_attr.debug = true,
-                    path if path.is_ident("use_string") => parser_attr.use_string = true,
-                    _ => {}
+                Meta::Path(p) if p.is_ident("ignore_whitespace") => {
+                    parser_attr.ignore_whitespace = true;
                 }
+                Meta::Path(p) if p.is_ident("debug") => {
+                    parser_attr.debug = true;
+                }
+                Meta::Path(p) if p.is_ident("use_string") => {
+                    parser_attr.use_string = true;
+                }
+                _ => {}
             }
         }
     }
