@@ -13,7 +13,7 @@ impl<'a> From<CSV<'a>> for Doc<'a> {
     fn from(val: CSV<'a>) -> Self {
         let CSV::Lines(lines) = val;
 
-        return lines
+        lines
             .into_iter()
             .map(|line| {
                 line.into_iter()
@@ -22,7 +22,7 @@ impl<'a> From<CSV<'a>> for Doc<'a> {
                     .join(",")
             })
             .collect::<Vec<_>>()
-            .join(Doc::Hardline);
+            .join(Doc::Hardline)
     }
 }
 

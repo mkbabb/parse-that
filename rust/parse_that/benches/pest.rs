@@ -1,6 +1,4 @@
-#[global_allocator]
-static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
-
+use std::collections::HashMap;
 use std::path::Path;
 
 #[macro_use]
@@ -14,8 +12,6 @@ use pest::iterators::Pair;
 use pest::{Parser, Span};
 
 use pest_grammars::json::*;
-
-use fnv::FnvHashMap as HashMap;
 
 pub enum Json<'i> {
     Null,

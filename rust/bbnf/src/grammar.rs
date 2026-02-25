@@ -404,7 +404,7 @@ impl<'a> BBNFGrammar<'a> {
     pub fn grammar() -> Parser<'a, AST<'a>> {
         let rule = Self::production_rule().trim_whitespace().many(..);
 
-        return rule.trim_whitespace().map(|rules| {
+        rule.trim_whitespace().map(|rules| {
             rules
                 .into_iter()
                 .map(|expr| match expr {
@@ -412,7 +412,7 @@ impl<'a> BBNFGrammar<'a> {
                     _ => unreachable!(),
                 })
                 .collect()
-        });
+        })
     }
 }
 

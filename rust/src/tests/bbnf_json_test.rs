@@ -1,5 +1,3 @@
-#![feature(box_patterns)]
-
 use bbnf_derive::Parser;
 use parse_that::parse::*;
 
@@ -19,10 +17,13 @@ mod tests {
     fn parse_null() {
         let result = Json::value().parse("null").expect("parse failed");
         match &result {
-            JsonEnum::value(box JsonEnum::null(span)) => {
-                assert_eq!(span.as_str(), "null");
-            }
-            other => panic!("expected null, got {other:?}"),
+            JsonEnum::value(inner) => match inner.as_ref() {
+                JsonEnum::null(span) => {
+                    assert_eq!(span.as_str(), "null");
+                }
+                other => panic!("expected null, got {other:?}"),
+            },
+            other => panic!("expected value, got {other:?}"),
         }
     }
 
@@ -32,10 +33,13 @@ mod tests {
     fn parse_true() {
         let result = Json::value().parse("true").expect("parse failed");
         match &result {
-            JsonEnum::value(box JsonEnum::bool(span)) => {
-                assert_eq!(span.as_str(), "true");
-            }
-            other => panic!("expected bool(true), got {other:?}"),
+            JsonEnum::value(inner) => match inner.as_ref() {
+                JsonEnum::bool(span) => {
+                    assert_eq!(span.as_str(), "true");
+                }
+                other => panic!("expected bool(true), got {other:?}"),
+            },
+            other => panic!("expected value, got {other:?}"),
         }
     }
 
@@ -43,10 +47,13 @@ mod tests {
     fn parse_false() {
         let result = Json::value().parse("false").expect("parse failed");
         match &result {
-            JsonEnum::value(box JsonEnum::bool(span)) => {
-                assert_eq!(span.as_str(), "false");
-            }
-            other => panic!("expected bool(false), got {other:?}"),
+            JsonEnum::value(inner) => match inner.as_ref() {
+                JsonEnum::bool(span) => {
+                    assert_eq!(span.as_str(), "false");
+                }
+                other => panic!("expected bool(false), got {other:?}"),
+            },
+            other => panic!("expected value, got {other:?}"),
         }
     }
 
@@ -56,10 +63,13 @@ mod tests {
     fn parse_integer() {
         let result = Json::value().parse("42").expect("parse failed");
         match &result {
-            JsonEnum::value(box JsonEnum::number(span)) => {
-                assert_eq!(span.as_str(), "42");
-            }
-            other => panic!("expected number, got {other:?}"),
+            JsonEnum::value(inner) => match inner.as_ref() {
+                JsonEnum::number(span) => {
+                    assert_eq!(span.as_str(), "42");
+                }
+                other => panic!("expected number, got {other:?}"),
+            },
+            other => panic!("expected value, got {other:?}"),
         }
     }
 
@@ -67,10 +77,13 @@ mod tests {
     fn parse_negative_number() {
         let result = Json::value().parse("-3.14").expect("parse failed");
         match &result {
-            JsonEnum::value(box JsonEnum::number(span)) => {
-                assert_eq!(span.as_str(), "-3.14");
-            }
-            other => panic!("expected number, got {other:?}"),
+            JsonEnum::value(inner) => match inner.as_ref() {
+                JsonEnum::number(span) => {
+                    assert_eq!(span.as_str(), "-3.14");
+                }
+                other => panic!("expected number, got {other:?}"),
+            },
+            other => panic!("expected value, got {other:?}"),
         }
     }
 
@@ -78,10 +91,13 @@ mod tests {
     fn parse_scientific_notation() {
         let result = Json::value().parse("1.5e10").expect("parse failed");
         match &result {
-            JsonEnum::value(box JsonEnum::number(span)) => {
-                assert_eq!(span.as_str(), "1.5e10");
-            }
-            other => panic!("expected number, got {other:?}"),
+            JsonEnum::value(inner) => match inner.as_ref() {
+                JsonEnum::number(span) => {
+                    assert_eq!(span.as_str(), "1.5e10");
+                }
+                other => panic!("expected number, got {other:?}"),
+            },
+            other => panic!("expected value, got {other:?}"),
         }
     }
 
@@ -91,10 +107,13 @@ mod tests {
     fn parse_empty_string() {
         let result = Json::value().parse(r#""""#).expect("parse failed");
         match &result {
-            JsonEnum::value(box JsonEnum::string(span)) => {
-                assert_eq!(span.as_str(), "");
-            }
-            other => panic!("expected string, got {other:?}"),
+            JsonEnum::value(inner) => match inner.as_ref() {
+                JsonEnum::string(span) => {
+                    assert_eq!(span.as_str(), "");
+                }
+                other => panic!("expected string, got {other:?}"),
+            },
+            other => panic!("expected value, got {other:?}"),
         }
     }
 
@@ -102,10 +121,13 @@ mod tests {
     fn parse_string_with_content() {
         let result = Json::value().parse(r#""hello""#).expect("parse failed");
         match &result {
-            JsonEnum::value(box JsonEnum::string(span)) => {
-                assert_eq!(span.as_str(), "hello");
-            }
-            other => panic!("expected string, got {other:?}"),
+            JsonEnum::value(inner) => match inner.as_ref() {
+                JsonEnum::string(span) => {
+                    assert_eq!(span.as_str(), "hello");
+                }
+                other => panic!("expected string, got {other:?}"),
+            },
+            other => panic!("expected value, got {other:?}"),
         }
     }
 
@@ -115,10 +137,13 @@ mod tests {
     fn parse_empty_array() {
         let result = Json::value().parse("[]").expect("parse failed");
         match &result {
-            JsonEnum::value(box JsonEnum::array(items)) => {
-                assert_eq!(items.len(), 0);
-            }
-            other => panic!("expected array, got {other:?}"),
+            JsonEnum::value(inner) => match inner.as_ref() {
+                JsonEnum::array(items) => {
+                    assert_eq!(items.len(), 0);
+                }
+                other => panic!("expected array, got {other:?}"),
+            },
+            other => panic!("expected value, got {other:?}"),
         }
     }
 
@@ -126,18 +151,24 @@ mod tests {
     fn parse_array_of_numbers() {
         let result = Json::value().parse("[1, 2, 3]").expect("parse failed");
         match &result {
-            JsonEnum::value(box JsonEnum::array(items)) => {
-                assert_eq!(items.len(), 3);
-                for (i, item) in items.iter().enumerate() {
-                    match item.as_ref() {
-                        JsonEnum::value(box JsonEnum::number(span)) => {
-                            assert_eq!(span.as_str(), &(i + 1).to_string());
+            JsonEnum::value(inner) => match inner.as_ref() {
+                JsonEnum::array(items) => {
+                    assert_eq!(items.len(), 3);
+                    for (i, item) in items.iter().enumerate() {
+                        match item.as_ref() {
+                            JsonEnum::value(inner) => match inner.as_ref() {
+                                JsonEnum::number(span) => {
+                                    assert_eq!(span.as_str(), &(i + 1).to_string());
+                                }
+                                other => panic!("expected number at index {i}, got {other:?}"),
+                            },
+                            other => panic!("expected value at index {i}, got {other:?}"),
                         }
-                        other => panic!("expected number at index {i}, got {other:?}"),
                     }
                 }
-            }
-            other => panic!("expected array, got {other:?}"),
+                other => panic!("expected array, got {other:?}"),
+            },
+            other => panic!("expected value, got {other:?}"),
         }
     }
 
@@ -145,22 +176,27 @@ mod tests {
     fn parse_nested_array() {
         let result = Json::value().parse("[[1, 2], [3]]").expect("parse failed");
         match &result {
-            JsonEnum::value(box JsonEnum::array(items)) => {
-                assert_eq!(items.len(), 2);
-                match items[0].as_ref() {
-                    JsonEnum::value(box JsonEnum::array(inner)) => {
-                        assert_eq!(inner.len(), 2);
+            JsonEnum::value(inner) => match inner.as_ref() {
+                JsonEnum::array(items) => {
+                    assert_eq!(items.len(), 2);
+                    match items[0].as_ref() {
+                        JsonEnum::value(inner) => match inner.as_ref() {
+                            JsonEnum::array(arr) => assert_eq!(arr.len(), 2),
+                            other => panic!("expected inner array, got {other:?}"),
+                        },
+                        other => panic!("expected value, got {other:?}"),
                     }
-                    other => panic!("expected inner array, got {other:?}"),
-                }
-                match items[1].as_ref() {
-                    JsonEnum::value(box JsonEnum::array(inner)) => {
-                        assert_eq!(inner.len(), 1);
+                    match items[1].as_ref() {
+                        JsonEnum::value(inner) => match inner.as_ref() {
+                            JsonEnum::array(arr) => assert_eq!(arr.len(), 1),
+                            other => panic!("expected inner array, got {other:?}"),
+                        },
+                        other => panic!("expected value, got {other:?}"),
                     }
-                    other => panic!("expected inner array, got {other:?}"),
                 }
-            }
-            other => panic!("expected array, got {other:?}"),
+                other => panic!("expected array, got {other:?}"),
+            },
+            other => panic!("expected value, got {other:?}"),
         }
     }
 
@@ -170,10 +206,13 @@ mod tests {
     fn parse_empty_object() {
         let result = Json::value().parse("{}").expect("parse failed");
         match &result {
-            JsonEnum::value(box JsonEnum::object(pairs)) => {
-                assert_eq!(pairs.len(), 0);
-            }
-            other => panic!("expected object, got {other:?}"),
+            JsonEnum::value(inner) => match inner.as_ref() {
+                JsonEnum::object(pairs) => {
+                    assert_eq!(pairs.len(), 0);
+                }
+                other => panic!("expected object, got {other:?}"),
+            },
+            other => panic!("expected value, got {other:?}"),
         }
     }
 
@@ -183,28 +222,34 @@ mod tests {
             .parse(r#"{"a": 1, "b": 2}"#)
             .expect("parse failed");
         match &result {
-            JsonEnum::value(box JsonEnum::object(pairs)) => {
-                assert_eq!(pairs.len(), 2);
+            JsonEnum::value(inner) => match inner.as_ref() {
+                JsonEnum::object(pairs) => {
+                    assert_eq!(pairs.len(), 2);
 
-                match pairs[0].as_ref() {
-                    JsonEnum::pair((key, val)) => {
-                        match key.as_ref() {
-                            JsonEnum::string(s) => {
-                                assert_eq!(s.as_str(), "a");
+                    match pairs[0].as_ref() {
+                        JsonEnum::pair((key, val)) => {
+                            match key.as_ref() {
+                                JsonEnum::string(s) => {
+                                    assert_eq!(s.as_str(), "a");
+                                }
+                                other => panic!("expected string key, got {other:?}"),
                             }
-                            other => panic!("expected string key, got {other:?}"),
-                        }
-                        match val.as_ref() {
-                            JsonEnum::value(box JsonEnum::number(n)) => {
-                                assert_eq!(n.as_str(), "1");
+                            match val.as_ref() {
+                                JsonEnum::value(inner) => match inner.as_ref() {
+                                    JsonEnum::number(n) => {
+                                        assert_eq!(n.as_str(), "1");
+                                    }
+                                    other => panic!("expected number value, got {other:?}"),
+                                },
+                                other => panic!("expected value, got {other:?}"),
                             }
-                            other => panic!("expected number value, got {other:?}"),
                         }
+                        other => panic!("expected pair, got {other:?}"),
                     }
-                    other => panic!("expected pair, got {other:?}"),
                 }
-            }
-            other => panic!("expected object, got {other:?}"),
+                other => panic!("expected object, got {other:?}"),
+            },
+            other => panic!("expected value, got {other:?}"),
         }
     }
 
@@ -213,36 +258,51 @@ mod tests {
         let input = r#"{"outer": {"inner": true}}"#;
         let result = Json::value().parse(input).expect("parse failed");
         match &result {
-            JsonEnum::value(box JsonEnum::object(pairs)) => {
-                assert_eq!(pairs.len(), 1);
-                match pairs[0].as_ref() {
-                    JsonEnum::pair((_key, val)) => match val.as_ref() {
-                        JsonEnum::value(box JsonEnum::object(inner_pairs)) => {
-                            assert_eq!(inner_pairs.len(), 1);
-                            match inner_pairs[0].as_ref() {
-                                JsonEnum::pair((inner_key, inner_val)) => {
-                                    match inner_key.as_ref() {
-                                        JsonEnum::string(s) => {
-                                            assert_eq!(s.as_str(), "inner");
+            JsonEnum::value(inner) => match inner.as_ref() {
+                JsonEnum::object(pairs) => {
+                    assert_eq!(pairs.len(), 1);
+                    match pairs[0].as_ref() {
+                        JsonEnum::pair((_key, val)) => match val.as_ref() {
+                            JsonEnum::value(inner) => match inner.as_ref() {
+                                JsonEnum::object(inner_pairs) => {
+                                    assert_eq!(inner_pairs.len(), 1);
+                                    match inner_pairs[0].as_ref() {
+                                        JsonEnum::pair((inner_key, inner_val)) => {
+                                            match inner_key.as_ref() {
+                                                JsonEnum::string(s) => {
+                                                    assert_eq!(s.as_str(), "inner");
+                                                }
+                                                other => {
+                                                    panic!("expected string key, got {other:?}")
+                                                }
+                                            }
+                                            match inner_val.as_ref() {
+                                                JsonEnum::value(inner) => match inner.as_ref() {
+                                                    JsonEnum::bool(b) => {
+                                                        assert_eq!(b.as_str(), "true");
+                                                    }
+                                                    other => panic!(
+                                                        "expected bool value, got {other:?}"
+                                                    ),
+                                                },
+                                                other => {
+                                                    panic!("expected value, got {other:?}")
+                                                }
+                                            }
                                         }
-                                        other => panic!("expected string key, got {other:?}"),
-                                    }
-                                    match inner_val.as_ref() {
-                                        JsonEnum::value(box JsonEnum::bool(b)) => {
-                                            assert_eq!(b.as_str(), "true");
-                                        }
-                                        other => panic!("expected bool value, got {other:?}"),
+                                        other => panic!("expected pair, got {other:?}"),
                                     }
                                 }
-                                other => panic!("expected pair, got {other:?}"),
-                            }
-                        }
-                        other => panic!("expected inner object, got {other:?}"),
-                    },
-                    other => panic!("expected pair, got {other:?}"),
+                                other => panic!("expected inner object, got {other:?}"),
+                            },
+                            other => panic!("expected value, got {other:?}"),
+                        },
+                        other => panic!("expected pair, got {other:?}"),
+                    }
                 }
-            }
-            other => panic!("expected object, got {other:?}"),
+                other => panic!("expected object, got {other:?}"),
+            },
+            other => panic!("expected value, got {other:?}"),
         }
     }
 
@@ -253,35 +313,42 @@ mod tests {
         let input = r#"[1, "two", true, null]"#;
         let result = Json::value().parse(input).expect("parse failed");
         match &result {
-            JsonEnum::value(box JsonEnum::array(items)) => {
-                assert_eq!(items.len(), 4);
+            JsonEnum::value(inner) => match inner.as_ref() {
+                JsonEnum::array(items) => {
+                    assert_eq!(items.len(), 4);
 
-                match items[0].as_ref() {
-                    JsonEnum::value(box JsonEnum::number(n)) => {
-                        assert_eq!(n.as_str(), "1");
+                    match items[0].as_ref() {
+                        JsonEnum::value(inner) => match inner.as_ref() {
+                            JsonEnum::number(n) => assert_eq!(n.as_str(), "1"),
+                            other => panic!("expected number, got {other:?}"),
+                        },
+                        other => panic!("expected value, got {other:?}"),
                     }
-                    other => panic!("expected number, got {other:?}"),
-                }
-                match items[1].as_ref() {
-                    JsonEnum::value(box JsonEnum::string(s)) => {
-                        assert_eq!(s.as_str(), "two");
+                    match items[1].as_ref() {
+                        JsonEnum::value(inner) => match inner.as_ref() {
+                            JsonEnum::string(s) => assert_eq!(s.as_str(), "two"),
+                            other => panic!("expected string, got {other:?}"),
+                        },
+                        other => panic!("expected value, got {other:?}"),
                     }
-                    other => panic!("expected string, got {other:?}"),
-                }
-                match items[2].as_ref() {
-                    JsonEnum::value(box JsonEnum::bool(b)) => {
-                        assert_eq!(b.as_str(), "true");
+                    match items[2].as_ref() {
+                        JsonEnum::value(inner) => match inner.as_ref() {
+                            JsonEnum::bool(b) => assert_eq!(b.as_str(), "true"),
+                            other => panic!("expected bool, got {other:?}"),
+                        },
+                        other => panic!("expected value, got {other:?}"),
                     }
-                    other => panic!("expected bool, got {other:?}"),
-                }
-                match items[3].as_ref() {
-                    JsonEnum::value(box JsonEnum::null(n)) => {
-                        assert_eq!(n.as_str(), "null");
+                    match items[3].as_ref() {
+                        JsonEnum::value(inner) => match inner.as_ref() {
+                            JsonEnum::null(n) => assert_eq!(n.as_str(), "null"),
+                            other => panic!("expected null, got {other:?}"),
+                        },
+                        other => panic!("expected value, got {other:?}"),
                     }
-                    other => panic!("expected null, got {other:?}"),
                 }
-            }
-            other => panic!("expected array, got {other:?}"),
+                other => panic!("expected array, got {other:?}"),
+            },
+            other => panic!("expected value, got {other:?}"),
         }
     }
 

@@ -1,6 +1,3 @@
-#[global_allocator]
-static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
-
 use std::path::Path;
 
 #[macro_use]

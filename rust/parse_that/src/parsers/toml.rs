@@ -3,7 +3,7 @@
 // extern crate pretty;
 // use pretty::Pretty;
 
-// use fnv::FnvHashMap;
+// use std::collections::HashMap;
 
 // #[derive(Pretty, Debug, Clone, PartialEq)]
 // pub enum TomlValue<'a> {
@@ -13,7 +13,7 @@
 //     Boolean(bool),
 //     DateTime(&'a str),
 //     Array(Vec<TomlValue<'a>>),
-//     InlineTable(FnvHashMap<&'a str, TomlValue<'a>>),
+//     InlineTable(HashMap<&'a str, TomlValue<'a>>),
 // }
 
 // type TomlKeyValue<'a> = (&'a str, TomlValue<'a>);
@@ -120,7 +120,7 @@
 //     key.skip(equals).with(toml_value())
 // }
 
-// pub fn toml_table<'a>() -> Parser<'a, (Vec<&'a str>, FnvHashMap<&'a str, TomlValue<'a>>)> {
+// pub fn toml_table<'a>() -> Parser<'a, (Vec<&'a str>, HashMap<&'a str, TomlValue<'a>>)> {
 //     let table_start = string_span("[").trim_whitespace();
 //     let table_end = string_span("]").trim_whitespace();
 //     let dot = string_span(".").trim_whitespace();
@@ -144,8 +144,8 @@
 // pub fn toml_parser<'a>() -> Parser<
 //     'a,
 //     (
-//         Vec<(Vec<&'a str>, FnvHashMap<&'a str, TomlValue<'a>>)>,
-//         FnvHashMap<&'a str, TomlValue<'a>>,
+//         Vec<(Vec<&'a str>, HashMap<&'a str, TomlValue<'a>>)>,
+//         HashMap<&'a str, TomlValue<'a>>,
 //     ),
 // > {
 //     let new_line = string_span("\n").trim_whitespace();

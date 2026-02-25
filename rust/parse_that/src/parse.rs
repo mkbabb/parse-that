@@ -229,9 +229,7 @@ where
         let map_with_state = move |state: &mut ParserState<'a>| {
             let offset = state.offset;
 
-            let Some(result) = self.parser_fn.call(state) else {
-                    return None;
-            };
+            let result = self.parser_fn.call(state)?;
             Some(f(result, offset, state))
         };
 
@@ -299,9 +297,7 @@ where
     {
         let wrap = move |state: &mut ParserState<'a>| {
             left.parser_fn.call(state)?;
-            let Some(value) = self.parser_fn.call(state) else {
-                return None;
-            };
+            let value = self.parser_fn.call(state)?;
             right.parser_fn.call(state)?;
 
             Some(value)
@@ -316,9 +312,7 @@ where
     {
         let trim = move |state: &mut ParserState<'a>| {
             trimmer.parser_fn.call(state)?;
-            let Some(value) = self.parser_fn.call(state) else {
-                return None;
-            };
+            let value = self.parser_fn.call(state)?;
             trimmer.parser_fn.call(state)?;
             Some(value)
         };
@@ -334,15 +328,9 @@ where
         Output2: 'a,
     {
         let trim = move |state: &mut ParserState<'a>| {
-            let Some(trim1) = trimmer.parser_fn.call(state) else {
-                return None;
-            };
-            let Some(value) = self.parser_fn.call(state) else {
-                return None;
-            };
-            let Some(trim2) = trimmer.parser_fn.call(state) else {
-                return None;
-            };
+            let trim1 = trimmer.parser_fn.call(state)?;
+            let value = self.parser_fn.call(state)?;
+            let trim2 = trimmer.parser_fn.call(state)?;
 
             Some((trim1, value, trim2))
         };
@@ -353,9 +341,7 @@ where
     pub fn trim_whitespace(self) -> Parser<'a, Output> {
         let trim_whitespace = move |state: &mut ParserState<'a>| {
             state.offset += trim_leading_whitespace(state);
-            let Some(value) = self.parser_fn.call(state) else {
-                return None;
-            };
+            let value = self.parser_fn.call(state)?;
             state.offset += trim_leading_whitespace(state);
             Some(value)
         };
@@ -382,8 +368,7 @@ where
                 } else {
                     break;
                 }
-                if let Some(_) = sep.parser_fn.call(state) {
-                } else {
+                if sep.parser_fn.call(state).is_none() {
                     break;
                 }
             }
@@ -403,9 +388,7 @@ where
         Output2: 'a,
     {
         let look_ahead = move |state: &mut ParserState<'a>| {
-            let Some(value) = self.parser_fn.call(state) else {
-                return None;
-            };
+            let value = self.parser_fn.call(state)?;
             // Save state before the lookahead parser so it doesn't consume input
             let offset_after_self = state.offset;
             state.save();
@@ -421,9 +404,7 @@ where
 
     pub fn eof(self) -> Parser<'a, Output> {
         let eof = move |state: &mut ParserState<'a>| {
-            let Some(value) = self.parser_fn.call(state) else {
-                return None;
-            };
+            let value = self.parser_fn.call(state)?;
             if state.offset >= state.src.len() {
                 Some(value)
             } else {
@@ -547,7 +528,7 @@ pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
     let s_bytes = s.as_bytes();
     let end = s_bytes.len();
     let string = move |state: &mut ParserState<'a>| {
-        return string_impl(s_bytes, &end, state).map(|span| span.as_str());
+        string_impl(s_bytes, &end, state).map(|span| span.as_str())
     };
     Parser::new(string)
 }
@@ -558,7 +539,7 @@ pub fn string_span<'a>(s: &'a str) -> Parser<'a, Span<'a>> {
     let end = s_bytes.len();
 
     let string = move |state: &mut ParserState<'a>| {
-        return string_impl(s_bytes, &end, state);
+        string_impl(s_bytes, &end, state)
     };
     Parser::new(string)
 }
@@ -603,16 +584,12 @@ where
     F: Fn(char) -> bool + 'a,
 {
     let take_while = move |state: &mut ParserState<'a>| {
-        let Some(slc) = state.src.get(state.offset..) else {
-            return None;
-        };
-        let Some(mut len) = slc
+        let slc = state.src.get(state.offset..)?;
+        let mut len = slc
             .char_indices()
             .take_while(|(_, c)| f(*c))
             .map(|(i, _)| i)
-            .last() else {
-            return None;
-            };
+            .last()?;
         len += 1;
 
         while len < slc.len() && !slc.is_char_boundary(len) {
@@ -649,13 +626,9 @@ pub fn any_span<'a>(patterns: &[&'a str]) -> Parser<'a, Span<'a>> {
         .expect("failed to build aho-corasick automaton");
 
     let any = move |state: &mut ParserState<'a>| {
-        let Some(slc) = state.src.get(state.offset..) else {
-            return None;
-        };
+        let slc = state.src.get(state.offset..)?;
         let input = Input::new(slc).anchored(Anchored::Yes);
-        let Some(m) = ac.find(input) else {
-            return None;
-        };
+        let m = ac.find(input)?;
 
         let start = state.offset;
         state.offset += m.end();
@@ -701,44 +674,34 @@ impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
     }
 
     fn opt_span(self) -> Self::Output {
-        return ParserSpan::opt(self);
+        ParserSpan::opt(self)
     }
 
     fn then(self, other: Self::Output) -> Self::Output {
         let then = move |state: &mut ParserState<'a>| {
-            let Some(start) = self.parser_fn.call(state) else {
-                return None
-            };
-            let Some(end) = other.parser_fn.call(state) else {
-                return None
-            };
+            let start = self.parser_fn.call(state)?;
+            let end = other.parser_fn.call(state)?;
             Some(Span::new(start.start, end.end, state.src))
         };
         Parser::new(then)
     }
 
     fn then_span(self, other: Self::Output) -> Self::Output {
-        return ParserSpan::then(self, other);
+        ParserSpan::then(self, other)
     }
 
     fn wrap(self, left: Self::Output, right: Self::Output) -> Self::Output {
         let wrap = move |state: &mut ParserState<'a>| {
-            let Some(_) = left.parser_fn.call(state) else {
-                return None
-            };
-            let Some(middle) = self.parser_fn.call(state) else {
-                return None
-            };
-            let Some(_) = right.parser_fn.call(state) else {
-                return None
-            };
+            left.parser_fn.call(state)?;
+            let middle = self.parser_fn.call(state)?;
+            right.parser_fn.call(state)?;
             Some(Span::new(middle.start, middle.end, state.src))
         };
         Parser::new(wrap)
     }
 
     fn wrap_span(self, left: Self::Output, right: Self::Output) -> Self::Output {
-        return ParserSpan::wrap(self, left, right);
+        ParserSpan::wrap(self, left, right)
     }
 
     fn many(self, bounds: impl RangeBounds<usize> + 'a) -> Self::Output {
@@ -770,7 +733,7 @@ impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
     }
 
     fn many_span(self, bounds: impl RangeBounds<usize> + 'a) -> Self::Output {
-        return ParserSpan::many(self, bounds);
+        ParserSpan::many(self, bounds)
     }
 
     fn sep_by(self, sep: Self::Output, bounds: impl RangeBounds<usize> + 'a) -> Self::Output {
@@ -805,7 +768,7 @@ impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
     }
 
     fn sep_by_span(self, sep: Self::Output, bounds: impl RangeBounds<usize> + 'a) -> Self::Output {
-        return ParserSpan::sep_by(self, sep, bounds);
+        ParserSpan::sep_by(self, sep, bounds)
     }
 }
 
@@ -828,12 +791,8 @@ macro_rules! impl_parser_flat {
 
             fn then(self, other: Parser<'a, Last>) -> Self::Output {
                 let then = move |state: &mut ParserState<'a>| {
-                    let Some(($($T,)*)) = self.parser_fn.call(state) else {
-                        return None
-                    };
-                    let Some(last) = other.parser_fn.call(state) else {
-                        return None
-                    };
+                    let ($($T,)*) = self.parser_fn.call(state)?;
+                    let last = other.parser_fn.call(state)?;
                     Some(($($T,)* last))
                 };
                 Parser::new(then)

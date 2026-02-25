@@ -70,16 +70,11 @@ impl<'a> ParserState<'a> {
     pub fn get_column_number(&self) -> usize {
         let offset = self.offset;
         let last_newline = self.src[..offset].rfind('\n').unwrap_or(0);
-        if offset <= last_newline {
-            0
-        } else {
-            offset - last_newline
-        }
+        offset.saturating_sub(last_newline)
     }
 
     pub fn get_line_number(&self) -> usize {
-        self.src[..self.offset]
-            .as_bytes()
+        self.src.as_bytes()[..self.offset]
             .iter()
             .filter(|&&c| c == b'\n')
             .count()

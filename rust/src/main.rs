@@ -1,4 +1,3 @@
-#![feature(box_patterns)]
 
 use bbnf_derive::Parser;
 use parse_that::csv::csv_parser;
@@ -7,7 +6,7 @@ use parse_that::json::json_parser;
 use parse_that::json::JsonValue;
 
 use parse_that::parse::*;
-use fnv::FnvHashMap;
+use std::collections::HashMap;
 
 use std::{fs, time::SystemTime};
 
@@ -55,7 +54,7 @@ pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
                     JsonEnum::string(s) | JsonEnum::stringge(s) => s.as_str(),
                     _ => panic!("Expected string key in pair"),
                 };
-                let mut map = FnvHashMap::default();
+                let mut map = HashMap::default();
                 map.insert(key_str, recurse(value));
                 JsonValue::Object(map)
             }
@@ -109,7 +108,7 @@ pub fn main() {
 
     let x = Json::value().parse(&json_string).unwrap();
 
-    let tmp = consume_json(&x);
+    let _tmp = consume_json(&x);
     let elapsed = now.elapsed().unwrap();
 
     println!("JSON2 Elapsed: {:?}", elapsed);
@@ -138,7 +137,7 @@ pub fn main() {
 
     let now = SystemTime::now();
 
-    let data = parser.parse(&csv_string).unwrap();
+    let _data = parser.parse(&csv_string).unwrap();
 
     let elapsed = now.elapsed().unwrap();
 

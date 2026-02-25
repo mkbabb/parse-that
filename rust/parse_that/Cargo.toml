@@ -13,8 +13,7 @@ name = "parse_that"
 [dependencies]
 pprint = { path = "/Users/mkbabb/Programming/pprint" }
 regex = { version = "1.11", features = ["perf"] }
-colored = "2.0.0"
-fnv = "1.0.7"
+colored = "3"
 memchr = "2.5.0"
 aho-corasick = "1.1"
 

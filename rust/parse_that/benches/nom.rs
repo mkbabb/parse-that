@@ -1,13 +1,9 @@
-#[global_allocator]
-static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
-
+use std::collections::HashMap;
 use std::path::Path;
 
 #[macro_use]
 extern crate bencher;
 use bencher::{black_box, Bencher};
-
-use fnv::FnvHashMap as HashMap;
 
 extern crate nom;
 use nom::{

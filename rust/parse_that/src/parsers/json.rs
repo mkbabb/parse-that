@@ -6,7 +6,7 @@ use pprint::Pretty;
 
 use crate::parse::ParserSpan;
 
-use fnv::FnvHashMap;
+use std::collections::HashMap;
 
 #[derive(Pretty, Debug, Clone, PartialEq)]
 pub enum JsonValue<'a> {
@@ -16,7 +16,7 @@ pub enum JsonValue<'a> {
     Number(f64),
     String(&'a str),
     Array(Vec<JsonValue<'a>>),
-    Object(FnvHashMap<&'a str, JsonValue<'a>>),
+    Object(HashMap<&'a str, JsonValue<'a>>),
 }
 
 pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
@@ -27,7 +27,7 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
             .many_span(..)
             .wrap_span(string_span("\""), string_span("\""));
 
-        return string.map(|s| s.as_str());
+        string.map(|s| s.as_str())
     };
 
     let json_null = string_span("null").map(|_| JsonValue::Null);

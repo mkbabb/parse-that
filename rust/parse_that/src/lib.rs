@@ -1,4 +1,3 @@
-#![feature(stmt_expr_attributes)]
 
 pub mod parse;
 pub use parse::*;

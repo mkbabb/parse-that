@@ -1,4 +1,3 @@
-#![feature(box_patterns)]
 
 use bbnf_derive::Parser;
 use parse_that::parse::*;

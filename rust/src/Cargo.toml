@@ -13,4 +13,3 @@ regex = "1.11"
 parse_that = { path = "../parse_that" }
 bbnf = { path = "../bbnf" }
 bbnf_derive = { path = "../bbnf/derive" }
-fnv = "1"

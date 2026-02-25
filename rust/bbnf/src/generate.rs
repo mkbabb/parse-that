@@ -1,5 +1,4 @@
 use crate::grammar::*;
-use pprint::Doc;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote, ToTokens};
 use std::{
@@ -49,9 +48,8 @@ pub struct GeneratedGrammarAttributes<'a> {
     pub parser_container_attrs: &'a ParserAttributes,
 }
 
-lazy_static::lazy_static! {
-    static ref DEFAULT_PARSERS: HashMap <& 'static str,
-    GeneratedNonterminalParser >= {
+static DEFAULT_PARSERS: std::sync::LazyLock<HashMap<&'static str, GeneratedNonterminalParser>> =
+    std::sync::LazyLock::new(|| {
         let mut default_parsers = HashMap::new();
         let name = "LITERAL";
         default_parsers.insert(
@@ -82,11 +80,10 @@ lazy_static::lazy_static! {
             ),
         );
         default_parsers
-    };
-}
+    });
 
-fn get_inner_expression<'a, T>(inner_expr: &'a Box<Token<'a, T>>) -> &'a T {
-    &inner_expr.as_ref().value
+fn get_inner_expression<'a, T>(inner_expr: &'a Token<'a, T>) -> &'a T {
+    &inner_expr.value
 }
 
 pub fn get_nonterminal_name<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
@@ -260,9 +257,7 @@ pub fn calculate_expression_type<'a>(
         name: &str,
         grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
     ) -> Option<Type> {
-        let Some(GeneratedNonterminalParser { ty, .. }) = DEFAULT_PARSERS.get(name) else {
-            return None;
-        };
+        let GeneratedNonterminalParser { ty, .. } = DEFAULT_PARSERS.get(name)?;
         let Ok(ty) = syn:: parse_str::< Type >(ty) else {
             return None;
         };
@@ -378,14 +373,18 @@ pub fn calculate_expression_type<'a>(
             }
         }
         Expression::Rule(rhs, mapping_fn) => {
-            if let Some(box Expression::MappingFn(Token { value, .. })) = mapping_fn {
-                let Ok(mapping_fn) = syn:: parse_str::< syn:: ExprClosure >(value) else {
-                    panic!("Mapper expression must be a closure");
-                };
-                let syn:: ReturnType:: Type(_, ty) =& mapping_fn.output else {
-                    panic!("Mapper expression must have a return type");
-                };
-                ty.as_ref().clone()
+            if let Some(inner) = mapping_fn {
+                if let Expression::MappingFn(Token { value, .. }) = inner.as_ref() {
+                    let Ok(mapping_fn) = syn:: parse_str::< syn:: ExprClosure >(value) else {
+                        panic!("Mapper expression must be a closure");
+                    };
+                    let syn:: ReturnType:: Type(_, ty) =& mapping_fn.output else {
+                        panic!("Mapper expression must have a return type");
+                    };
+                    ty.as_ref().clone()
+                } else {
+                    calculate_expression_type(rhs, grammar_attrs, cache_bundle)
+                }
             } else {
                 calculate_expression_type(rhs, grammar_attrs, cache_bundle)
             }
@@ -414,7 +413,7 @@ pub fn calculate_nonterminal_types<'a>(
         .for_each(|(lhs, rhs)| {
             cache_bundle.inline_cache.borrow_mut().insert(lhs, rhs);
         });
-    return grammar_attrs
+    grammar_attrs
         .ast
         .iter()
         .map(|(lhs, rhs)| {
@@ -436,7 +435,7 @@ pub fn calculate_nonterminal_types<'a>(
             let ty = calculate_expression_type(rhs, grammar_attrs, &cache_bundle);
             (lhs, ty)
         })
-        .collect();
+        .collect()
 }
 
 pub fn map_generated_parser<'a, 'b>(
@@ -454,7 +453,7 @@ where
         mapping_fn.into(),
     )));
 
-    return Expression::MappedExpression((expr_token.into(), mapping_fn_token.into()));
+    Expression::MappedExpression((expr_token.into(), mapping_fn_token.into()))
 }
 
 pub fn box_generated_parser<'a, 'b>(
@@ -472,7 +471,7 @@ where
         mapping_fn.into(),
     )));
 
-    return Expression::MappedExpression((expr_token.into(), mapping_fn_token.into()));
+    Expression::MappedExpression((expr_token.into(), mapping_fn_token.into()))
 }
 
 pub fn box_generated_parser2<'a, 'b>(
@@ -490,7 +489,7 @@ where
         mapping_fn.into(),
     )));
 
-    return Expression::MappedExpression((expr_token.into(), mapping_fn_token.into()));
+    Expression::MappedExpression((expr_token.into(), mapping_fn_token.into()))
 }
 
 pub fn format_parser<'a, 'b>(
@@ -613,9 +612,8 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
         .map(|(lhs, rhs)| {
             let rhs = match get_nonterminal_name(lhs) {
                 Some(name) => {
-                    let formatted_expr =
-                        format_parser(name, rhs, grammar_attrs.parser_container_attrs);
-                    formatted_expr
+                    
+                    format_parser(name, rhs, grammar_attrs.parser_container_attrs)
                 }
                 None => rhs.clone(),
             };
@@ -630,9 +628,8 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
             let rhs = match get_nonterminal_name(lhs) {
                 Some(name) => {
                     let formatted_expr = formatted.get(lhs).unwrap_or(rhs);
-                    let mapped_expr =
-                        map_generated_parser(name, formatted_expr, grammar_attrs.enum_ident);
-                    mapped_expr
+                    
+                    map_generated_parser(name, formatted_expr, grammar_attrs.enum_ident)
                 }
                 None => rhs.clone(),
             };
@@ -640,16 +637,15 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
         })
         .collect();
 
-    let boxed: HashMap<_, _> = grammar_attrs
+    let _boxed: HashMap<_, _> = grammar_attrs
         .ast
         .iter()
         .map(|(lhs, rhs)| {
             let rhs = match get_nonterminal_name(lhs) {
                 Some(name) => {
                     let formatted_expr = formatted.get(lhs).unwrap_or(rhs);
-                    let boxed_expr =
-                        box_generated_parser(name, formatted_expr, grammar_attrs.enum_ident);
-                    boxed_expr
+                    
+                    box_generated_parser(name, formatted_expr, grammar_attrs.enum_ident)
                 }
                 None => rhs.clone(),
             };
@@ -664,9 +660,8 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
             let rhs = match get_nonterminal_name(lhs) {
                 Some(name) => {
                     let formatted_expr = formatted.get(lhs).unwrap_or(rhs);
-                    let boxed_expr =
-                        box_generated_parser2(name, formatted_expr, grammar_attrs.enum_ident);
-                    boxed_expr
+                    
+                    box_generated_parser2(name, formatted_expr, grammar_attrs.enum_ident)
                 }
                 None => rhs.clone(),
             };
@@ -758,16 +753,16 @@ pub fn check_for_sep_by<'a>(
     depth: usize,
 ) -> Option<TokenStream> {
     match expr {
-        Expression::Group(box Token { value, .. }) => {
+        Expression::Group(inner) => {
+            let Token { value, .. } = inner.as_ref();
             check_for_sep_by(value, grammar_attrs, cache_bundle, max_depth, depth)
         }
-        Expression::Skip(
-            left_expr,
-            box Token {
-                value: Expression::Optional(right_expr),
-                ..
-            },
-        ) => {
+        Expression::Skip(left_expr, inner)
+            if matches!(inner.as_ref(), Token { value: Expression::Optional(_), .. }) =>
+        {
+            let Token { value: Expression::Optional(right_expr), .. } = inner.as_ref() else {
+                unreachable!()
+            };
             let left_expr = get_inner_expression(left_expr);
             let mut right_expr = get_inner_expression(right_expr);
 
@@ -819,9 +814,9 @@ pub fn check_for_wrapped<'a>(
     depth: usize,
 ) -> Option<TokenStream> {
     match left_expr {
-        Expression::Group(box Token { value, .. }) => check_for_wrapped(
+        Expression::Group(inner) => check_for_wrapped(
             left_expr,
-            value,
+            &inner.as_ref().value,
             grammar_attrs,
             cache_bundle,
             max_depth,
@@ -1005,13 +1000,11 @@ pub fn calculate_parser_from_expression<'a>(
         args: Option<TokenStream>,
         grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
     ) -> Option<TokenStream> {
-        let Some(GeneratedNonterminalParser {
+        let GeneratedNonterminalParser {
             parser,
             ty,
             ..
-        }) = DEFAULT_PARSERS.get(name) else {
-            return None;
-        };
+        } = DEFAULT_PARSERS.get(name)?;
         let Ok(ty) = syn:: parse_str::< syn:: Type >(ty) else {
             return None;
         };
@@ -1315,13 +1308,17 @@ pub fn calculate_parser_from_expression<'a>(
                 max_depth,
                 depth,
             );
-            if let Some(box Expression::MappingFn(Token { value, .. })) = mapping_fn {
-                let Ok(mapping_fn) = syn:: parse_str::< syn:: ExprClosure >(value) else {
-                    panic!("Invalid mapper expression: {}", value);
-                };
+            if let Some(inner) = mapping_fn {
+                if let Expression::MappingFn(Token { value, .. }) = inner.as_ref() {
+                    let Ok(mapping_fn) = syn:: parse_str::< syn:: ExprClosure >(value) else {
+                        panic!("Invalid mapper expression: {}", value);
+                    };
 
-                quote! {
-                    #parser.map(#mapping_fn)
+                    quote! {
+                        #parser.map(#mapping_fn)
+                    }
+                } else {
+                    parser
                 }
             } else {
                 parser
