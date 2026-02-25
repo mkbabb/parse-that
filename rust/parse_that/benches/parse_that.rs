@@ -5,27 +5,30 @@ extern crate bencher;
 use bencher::{black_box, Bencher};
 
 use parse_that::json::json_parser;
+use parse_that::csv::csv_parser;
 
-const DATA_DIR_PATH: &str = "../data/json";
+// ── JSON benchmarks ─────────────────────────────────────────────────────
 
-fn data(b: &mut Bencher) {
-    parse(b, "data.json")
+const JSON_DATA_DIR: &str = "../data/json";
+
+fn json_data(b: &mut Bencher) {
+    json_parse(b, "data.json")
 }
 
-fn canada(b: &mut Bencher) {
-    parse(b, "canada.json")
+fn json_canada(b: &mut Bencher) {
+    json_parse(b, "canada.json")
 }
 
-fn apache(b: &mut Bencher) {
-    parse(b, "apache-builds.json")
+fn json_apache(b: &mut Bencher) {
+    json_parse(b, "apache-builds.json")
 }
 
-fn data_xl(b: &mut Bencher) {
-    parse(b, "data-l.json")
+fn json_data_xl(b: &mut Bencher) {
+    json_parse(b, "data-l.json")
 }
 
-fn parse(b: &mut Bencher, filepath: &str) {
-    let filepath = Path::new(DATA_DIR_PATH).join(filepath);
+fn json_parse(b: &mut Bencher, filepath: &str) {
+    let filepath = Path::new(JSON_DATA_DIR).join(filepath);
     let data = std::fs::read_to_string(filepath).unwrap();
     b.bytes = data.len() as u64;
 
@@ -37,6 +40,37 @@ fn parse(b: &mut Bencher, filepath: &str) {
     })
 }
 
-benchmark_group!(json, data, canada, apache, data_xl);
+// ── CSV benchmarks ──────────────────────────────────────────────────────
 
-benchmark_main!(json);
+const CSV_DATA_DIR: &str = "../data/csv";
+
+fn csv_small(b: &mut Bencher) {
+    let data = r#""a","b","c"
+"d","e","f"
+"g","h","i""#;
+    b.bytes = data.len() as u64;
+    let parser = csv_parser();
+
+    b.iter(|| {
+        let buf = black_box(data);
+        parser.parse(buf).unwrap()
+    })
+}
+
+fn csv_large(b: &mut Bencher) {
+    let filepath = Path::new(CSV_DATA_DIR).join("active_charter_schools_report.csv");
+    let data = std::fs::read_to_string(filepath).unwrap();
+    b.bytes = data.len() as u64;
+
+    let parser = csv_parser();
+
+    b.iter(|| {
+        let buf = black_box(&data);
+        parser.parse(buf).unwrap()
+    })
+}
+
+benchmark_group!(json, json_data, json_canada, json_apache, json_data_xl);
+benchmark_group!(csv, csv_small, csv_large);
+
+benchmark_main!(json, csv);

@@ -1,6 +1,5 @@
-expr = term, { ("+" | "-"), term }, "b", "e", term, "a", "b";
-term = factor, { ("*" | "/"), factor };
-
+expr = term, { ("+" | "-"), term } ;
+term = factor, { ("*" | "/"), factor } ;
 
 p = "(" ;
 pp = p ;
@@ -11,6 +10,6 @@ pppppp = ppppp ;
 
 wrapped = pppppp, expr, ")" ;
 
-factor = number | wrapped;
+factor = number | wrapped ;
 
-number = /\d+/ ;
+number = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/ ;

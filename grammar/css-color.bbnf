@@ -1,13 +1,17 @@
-sep =  comma | whitespace;
-alphaSep =  div | sep;
+// Separators
+sep = comma | whitespace ;
+alphaSep = div | sep ;
 
-colorType = "rgb" | "hsl" | "hsv" | "hwb" | "lab" | "lch";
-percentage = integer << "%";
+// Color value tokens (percentage, number, none)
+percentage = integer << "%" ;
+colorPercentage = percentage ;
+colorValue = colorPercentage | number ;
 
-colorPercentage = percentage;
-colorValue = colorPercentage | number;
+// Color function names: rgb | hsl | hsv | hwb | lab | lch | oklab | oklch | xyz
+colorType = "oklab" | "oklch" | "rgb" | "hsl" | "hsv" | "hwb" | "lab" | "lch" | "xyz" ;
 
-colorFunction = 
+// Standard color function: type[a]?(c1 sep c2 sep c3 [alphaSep alpha])
+colorFunction =
     (colorType << "a"?)
     << "(",
         colorValue << sep,
@@ -16,10 +20,31 @@ colorFunction =
         (alphaSep >> colorValue)?
     << ")" ;
 
-hexDigits = 
-    (digit, digit, digit, (digit,  digit, digit              )?)
-| (digit, digit, digit,  digit, (digit, digit, digit, digit)?) ;
+// Hex color: #RGB, #RRGGBB, #RGBA, #RRGGBBAA
+hexDigits =
+    (digit, digit, digit, (digit, digit, digit)?)
+  | (digit, digit, digit, digit, (digit, digit, digit, digit)?) ;
 
-hex = "#" >> hexDigits;
+hex = "#" >> hexDigits ;
 
-color = hex | colorFunction;
+// color() function spaces
+colorSpace = "srgb-linear" | "srgb" | "display-p3" | "a98-rgb"
+           | "prophoto-rgb" | "rec2020" | "xyz-d65" | "xyz-d50" | "xyz" ;
+
+colorFn = "color" << "(",
+    colorSpace , colorValue , colorValue , colorValue , ("/" >> colorValue)?
+    << ")" ;
+
+// color-mix() function
+hueMethod = ("shorter" | "longer" | "increasing" | "decreasing") , "hue" ;
+mixSpace = "srgb-linear" | "srgb" | "display-p3" | "a98-rgb" | "prophoto-rgb" | "rec2020"
+         | "oklab" | "oklch" | "lab" | "lch" | "hsl" | "hwb" | "xyz-d65" | "xyz-d50" | "xyz" ;
+
+colorMix = "color-mix" << "(",
+    "in" , mixSpace , hueMethod? , ",",
+    color , percentage? , ",",
+    color , percentage?
+    << ")" ;
+
+// Top-level color
+color = colorMix | colorFn | hex | colorFunction ;

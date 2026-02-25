@@ -1,0 +1,35 @@
+// CSS Selectors Level 3+ grammar
+
+ident = /[a-zA-Z_][\w-]*/ ;
+string = /"[^"]*"/ | /'[^']*'/ ;
+number = /\d+/ ;
+hash = /#[\w-]+/ ;
+
+// Simple selectors
+typeSelector = ident | "*" ;
+classSelector = ".", ident ;
+idSelector = hash ;
+
+// Attribute selectors
+attrMatcher = "~=" | "|=" | "^=" | "$=" | "*=" | "=" ;
+attrSelector = "[", ident, ( attrMatcher, ( string | ident ) )?, "]" ;
+
+// Pseudo-classes and pseudo-elements
+pseudoClassArg = /[^)]+/ ;
+pseudoClass = ":", ident, ( "(", pseudoClassArg, ")" )? ;
+pseudoElement = "::", ident ;
+
+// A simple selector sequence
+simpleSelector = typeSelector | classSelector | idSelector | attrSelector | pseudoClass | pseudoElement ;
+
+// Compound selector: one or more simple selectors
+compoundSelector = simpleSelector + ;
+
+// Combinators
+combinator = /\s*>\s*/ | /\s*\+\s*/ | /\s*~\s*/ | /\s+/ ;
+
+// Complex selector: compound selectors joined by combinators
+complexSelector = compoundSelector, ( combinator, compoundSelector ) * ;
+
+// Selector list: comma-separated complex selectors
+selectorList = complexSelector, ( /\s*,\s*/, complexSelector ) * ;

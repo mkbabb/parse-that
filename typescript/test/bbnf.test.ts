@@ -129,7 +129,21 @@ const CSSValueUnitParser = (grammar: string) => {
         });
     nonterminals.integer = regex(/\d+/).map(Number);
 
-    nonterminals.valueUnit = nonterminals.valueUnit.map(([value, unit]) => {
+    // Unitless numbers produce a scalar from the grammar, not a [value, unit] tuple.
+    // Wrap them to match the expected shape.
+    nonterminals.unitless = nonterminals.number.map((value: number) => ({
+        value,
+        unit: "",
+    }));
+
+    // Dimension rules (length, angle, etc.) produce [value, unit] tuples.
+    nonterminals.valueUnit = nonterminals.valueUnit.map((v: any) => {
+        // If already an object with value/unit (from unitless override), pass through
+        if (v && typeof v === "object" && "value" in v) {
+            return v;
+        }
+        // Otherwise it's a [value, unit] tuple from a dimension rule
+        const [value, unit] = v;
         return {
             value,
             unit: unit,
@@ -173,11 +187,21 @@ const BBNFParserLeftRecursion = (grammar: string) => {
 export const JSONParser = (grammar: string) => {
     const [nonterminals, ast] = BBNFToParser(grammar);
 
-    nonterminals.string = nonterminals.string.trim();
-    nonterminals.number = nonterminals.number.map((v) => parseFloat(v));
+    // char* produces an array of individual characters — join them into a string
+    nonterminals.string = nonterminals.string.map((chars: string[]) => {
+        if (Array.isArray(chars)) {
+            return chars.join("");
+        }
+        return chars;
+    });
+
+    nonterminals.number = nonterminals.number.map((v: string) => parseFloat(v));
+
+    nonterminals.bool = nonterminals.bool.map((v: string) => v === "true");
+    nonterminals.null = nonterminals.null.map(() => null);
 
     nonterminals.pair = nonterminals.pair.trim();
-    nonterminals.object = nonterminals.object.map((pairs) => {
+    nonterminals.object = nonterminals.object.map((pairs: any) => {
         if (pairs === undefined) {
             return {};
         }
@@ -193,8 +217,7 @@ export const JSONParser = (grammar: string) => {
 };
 
 describe("BBNF Parser", () => {
-    // TODO: math grammar fails on 100-term expressions (parse returns undefined)
-    it.todo("should parse a simple math grammar", () => {
+    it("should parse a simple math grammar", () => {
         const grammar = fs.readFileSync("../grammar/math.bbnf", "utf8");
         const [nonterminals] = mathParser(grammar);
         const parser = nonterminals.expr;
@@ -228,8 +251,7 @@ describe("BBNF Parser", () => {
         }
     });
 
-    // TODO: valueUnit grammar returns non-iterable for some unit-less numbers
-    it.todo("should parse a CSS value unit grammar", () => {
+    it("should parse a CSS value unit grammar", () => {
         const grammar = fs.readFileSync("../grammar/css-value-unit.bbnf", "utf8");
         const colorGrammar = fs.readFileSync("../grammar/css-color.bbnf", "utf8");
 
@@ -314,7 +336,7 @@ describe("BBNF Parser", () => {
                         0, 0, 1, 0,
                         0, 0, 0, 1);
                 }
-                tooge {
+                to {
                     top: 200px; background-color: blue;
                     transform: matrix3d(
                         -0.6,       1.34788, 0,        0,
@@ -365,9 +387,7 @@ describe("BBNF Parser", () => {
         expect(parsed).toBeGreaterThan(0);
     });
 
-    // TODO: json.bbnf had Rust-specific syntax (=> |x| -> &'a str); fixed grammar
-    // but char* returns individual chars instead of joined string
-    it.todo("should parse JSON data", () => {
+    it("should parse JSON data", () => {
         const grammar = fs.readFileSync("../grammar/json.bbnf", "utf8");
 
         const parser = JSONParser(grammar);
@@ -449,5 +469,66 @@ describe("BBNF Parser", () => {
             expect(result).toBeTruthy();
             expect(grammar).toBeTruthy();
         }
+    });
+
+    it("should parse a CSS selectors grammar", () => {
+        const grammar = fs.readFileSync("../grammar/css-selectors.bbnf", "utf8");
+        const [nonterminals] = BBNFToParser(grammar);
+
+        const selectors = [
+            "div",
+            ".class",
+            "#id",
+            "div.class",
+            "div > p",
+            "div p",
+            "div + p",
+            "div ~ p",
+            "a:hover",
+            "p::first-line",
+            "[href]",
+            '[type="text"]',
+            "div, span, p",
+        ];
+
+        const parser = nonterminals.selectorList;
+        for (const sel of selectors) {
+            const parsed = parser.parse(sel);
+            expect(parsed).toBeTruthy();
+        }
+    });
+
+    it("should parse a CSS values grammar", () => {
+        const grammar = fs.readFileSync("../grammar/css-values.bbnf", "utf8");
+        const [nonterminals] = BBNFToParser(grammar);
+
+        const values = [
+            "10px",
+            "2.5em",
+            "100%",
+            "45deg",
+            "1.5s",
+            "#ff0000",
+            "red",
+            "transparent",
+        ];
+
+        const parser = nonterminals.value;
+        for (const val of values) {
+            const parsed = parser.parse(val);
+            expect(parsed).toBeTruthy();
+        }
+    });
+
+    it("should parse a CSV grammar", () => {
+        const grammar = fs.readFileSync("../grammar/csv.bbnf", "utf8");
+        const [nonterminals] = BBNFToParser(grammar);
+
+        const csvData = `name,age,city
+"John Doe",30,NYC`;
+
+        const parser = nonterminals.csv;
+        const parsed = parser.parse(csvData);
+        expect(parsed).toBeTruthy();
     });
 });

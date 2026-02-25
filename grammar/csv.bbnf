@@ -1,0 +1,11 @@
+// CSV grammar (simplified RFC 4180)
+
+DQUOTE = "\"" ;
+escaped = DQUOTE >> /[^"]*/ << DQUOTE ;
+textdata = /[^,"\r\n]+/ ;
+
+field = escaped | textdata ;
+
+record = field, ( "," >> field ) * ;
+
+csv = record, ( /\r?\n/ >> record ) * ;

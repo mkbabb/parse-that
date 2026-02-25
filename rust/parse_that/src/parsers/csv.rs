@@ -41,7 +41,7 @@ pub fn csv_parser<'a>() -> Parser<'a, CSV<'a>> {
 
     let line = token.sep_by(delim(), 1..);
 
-    let csv = line.sep_by(regex_span(r"\s+"), ..);
+    let csv = line.sep_by(regex_span(r"[ \t]*(\r?\n)+[ \t]*"), ..);
 
     csv.trim_whitespace().map(CSV::Lines)
 }

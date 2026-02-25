@@ -1,7 +1,7 @@
 import { BBNFToParser } from "../../src/bbnf/generate";
 import fs from "fs";
 
-const grammar = fs.readFileSync("./grammar/json.bbnf", "utf8");
+const grammar = fs.readFileSync("../grammar/json.bbnf", "utf8");
 
 const [nonterminals, ast] = BBNFToParser(grammar);
 

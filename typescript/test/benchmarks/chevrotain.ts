@@ -1,128 +1,121 @@
-// Taken directly from Chevrotain's example page at:
+// Taken directly from Chevrotain's example page, modernized for ESM:
 // https://github.com/Chevrotain/chevrotain/tree/gh-pages/performance/jsonParsers/chevrotain
 
+import { createToken, Lexer, CstParser } from "chevrotain";
+
 // ----------------- Lexer -----------------
-import chevrotain from "chevrotain";
 
-var createToken = chevrotain.createToken;
-var ChevrotainLexer = chevrotain.Lexer;
+const True = createToken({ name: "True", pattern: /true/ });
+const False = createToken({ name: "False", pattern: /false/ });
+const Null = createToken({ name: "Null", pattern: /null/ });
+const LCurly = createToken({ name: "LCurly", pattern: /{/ });
+const RCurly = createToken({ name: "RCurly", pattern: /}/ });
+const LSquare = createToken({ name: "LSquare", pattern: /\[/ });
+const RSquare = createToken({ name: "RSquare", pattern: /]/ });
+const Comma = createToken({ name: "Comma", pattern: /,/ });
+const Colon = createToken({ name: "Colon", pattern: /:/ });
+const StringLiteral = createToken({
+    name: "StringLiteral",
+    pattern: /"(?:[^\\"]|\\(?:[bfnrtv"\\/]|u[0-9a-fA-F]{4}))*"/,
+});
+const NumberLiteral = createToken({
+    name: "NumberLiteral",
+    pattern: /-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/,
+});
+const WhiteSpace = createToken({
+    name: "WhiteSpace",
+    pattern: /[ \t\n\r]+/,
+    group: Lexer.SKIPPED,
+});
 
-var True = createToken({name: "True", pattern: "true"});
-var False = createToken({name: "False", pattern: "false"});
-var Null = createToken({name: "Null", pattern: "null"});
-var LCurly = createToken({name: "LCurly", pattern: "{"});
-var RCurly = createToken({name: "RCurly", pattern: "}"});
-var LSquare = createToken({name: "LSquare", pattern: "["});
-var RSquare = createToken({name: "RSquare", pattern: "]"});
-var Comma = createToken({name: "Comma", pattern: ","});
-var Colon = createToken({name: "Colon", pattern: ":"});
+const jsonTokens = [
+    WhiteSpace,
+    StringLiteral,
+    NumberLiteral,
+    Comma,
+    Colon,
+    LCurly,
+    RCurly,
+    LSquare,
+    RSquare,
+    True,
+    False,
+    Null,
+];
 
-var stringLiteralPattern = /"(?:[^\\"]|\\(?:[bfnrtv"\\/]|u[0-9a-fA-F]{4}))*"/
-var StringLiteral = createToken({name: "StringLiteral", pattern: stringLiteralPattern});
-var NumberLiteral = createToken({name: "NumberLiteral", pattern: /-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/});
-var WhiteSpace = createToken({name: "WhiteSpace", pattern: /[ \t\n\r]+/, group: ChevrotainLexer.SKIPPED});
+const ChevJsonLexer = new Lexer(jsonTokens, { positionTracking: "onlyOffset" });
 
-var jsonTokens = [WhiteSpace, StringLiteral, NumberLiteral, Comma, Colon, LCurly, RCurly, LSquare, RSquare, True, False, Null];
-// Tracking only the offset provides a small speed boost.
-var ChevJsonLexer = new ChevrotainLexer(jsonTokens, {positionTracking: "onlyOffset"});
+// ----------------- Parser -----------------
 
+class ChevrotainJsonParser extends CstParser {
+    constructor() {
+        super(jsonTokens, { nodeLocationTracking: "none" });
+        this.performSelfAnalysis();
+    }
 
-// ----------------- parser -----------------
-
-// https://chevrotain.io/docs/guide/performance.html#using-a-singleton-parser
-// (Do not create a new Parser instance for each new input.)
-var ChevrotainCSTParser = chevrotain.CstParser;
-
-function ChevrotainJsonParser(options) {
-    ChevrotainCSTParser.call(this, jsonTokens, options);
-    const $ = this;
-
-    $.RULE("json", function () {
-        $.OR([
-            {ALT: function () { $.SUBRULE($.object) }},
-            {ALT: function () { $.SUBRULE($.array) }}
+    json = this.RULE("json", () => {
+        this.OR([
+            { ALT: () => this.SUBRULE(this.object) },
+            { ALT: () => this.SUBRULE(this.array) },
         ]);
     });
 
-    $.RULE("object", function () {
-        $.CONSUME(LCurly);
-        $.OPTION(function () {
-            $.SUBRULE($.objectItem);
-            $.MANY(function () {
-                $.CONSUME(Comma);
-                $.SUBRULE2($.objectItem);
+    object = this.RULE("object", () => {
+        this.CONSUME(LCurly);
+        this.OPTION(() => {
+            this.SUBRULE(this.objectItem);
+            this.MANY(() => {
+                this.CONSUME(Comma);
+                this.SUBRULE2(this.objectItem);
             });
         });
-        $.CONSUME(RCurly);
+        this.CONSUME(RCurly);
     });
 
-    $.RULE("objectItem", function () {
-        $.CONSUME(StringLiteral);
-        $.CONSUME(Colon);
-        $.SUBRULE($.value);
+    objectItem = this.RULE("objectItem", () => {
+        this.CONSUME(StringLiteral);
+        this.CONSUME(Colon);
+        this.SUBRULE(this.value);
     });
 
-    $.RULE("array", function () {
-        $.CONSUME(LSquare);
-        $.OPTION(function () {
-            $.SUBRULE($.value);
-            $.MANY(function () {
-                $.CONSUME(Comma);
-                $.SUBRULE2($.value);
+    array = this.RULE("array", () => {
+        this.CONSUME(LSquare);
+        this.OPTION(() => {
+            this.SUBRULE(this.value);
+            this.MANY(() => {
+                this.CONSUME(Comma);
+                this.SUBRULE2(this.value);
             });
         });
-        $.CONSUME(RSquare);
+        this.CONSUME(RSquare);
     });
 
-    $.RULE("value", function () {
-        // https://chevrotain.io/docs/guide/performance.html#caching-arrays-of-alternatives
-        // See "Avoid reinitializing large arrays of alternatives." section
-        $.OR($.c1 || ($.c1  = [
-            { ALT: function () { $.CONSUME(StringLiteral) }},
-            { ALT: function () { $.CONSUME(NumberLiteral) }},
-            { ALT: function () { $.SUBRULE($.object) }},
-            { ALT: function () { $.SUBRULE($.array) }},
-            { ALT: function () { $.CONSUME(True) }},
-            { ALT: function () { $.CONSUME(False) }},
-            { ALT: function () { $.CONSUME(Null) }}
-        ]));
+    value = this.RULE("value", () => {
+        this.OR([
+            { ALT: () => this.CONSUME(StringLiteral) },
+            { ALT: () => this.CONSUME(NumberLiteral) },
+            { ALT: () => this.SUBRULE(this.object) },
+            { ALT: () => this.SUBRULE(this.array) },
+            { ALT: () => this.CONSUME(True) },
+            { ALT: () => this.CONSUME(False) },
+            { ALT: () => this.CONSUME(Null) },
+        ]);
     });
-
-    // very important to call this after all the rules have been setup.
-    // otherwise the parser may not work correctly as it will lack information
-    // derived from the self analysis.
-    this.performSelfAnalysis();
 }
 
-ChevrotainJsonParser.prototype = Object.create(ChevrotainCSTParser.prototype);
-ChevrotainJsonParser.prototype.constructor = ChevrotainJsonParser;
+// Singleton instance — Chevrotain recommends reusing the parser instance.
+const parserInstance = new ChevrotainJsonParser();
 
-// ----------------- wrapping it all together -----------------
-var chevrotainJsonParserInstance
-export function parse(text) {
-    var lexResult = ChevJsonLexer.tokenize(text);
+export function parse(text: string) {
+    const lexResult = ChevJsonLexer.tokenize(text);
     if (lexResult.errors.length > 0) {
-        throw Error("Lexing errors detected")
+        throw Error("Lexing errors detected");
     }
 
-    // It is recommended to only initialize a Chevrotain Parser once
-    // and reset it's state instead of re-initializing it
-    if (chevrotainJsonParserInstance === undefined) {
-        chevrotainJsonParserInstance = new ChevrotainJsonParser({outputCst:false})
+    parserInstance.input = lexResult.tokens;
+    parserInstance.json();
+
+    if (parserInstance.errors.length > 0) {
+        throw Error("Parsing Errors detected");
     }
-
-    // setting a new input will RESET the parser instance's state.
-    chevrotainJsonParserInstance.input = lexResult.tokens;
-
-    // any top level rule may be used as an entry point
-    var value = chevrotainJsonParserInstance.json();
-
-    if (chevrotainJsonParserInstance.errors.length > 0) {
-        throw Error("Parsing Errors detected")
-    }
-    return {
-        value: value, // this is a pure grammar, the value will always be <undefined>
-        lexErrors: lexResult.errors,
-        parseErrors: chevrotainJsonParserInstance.errors
-    };
 }

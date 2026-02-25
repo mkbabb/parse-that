@@ -14,7 +14,7 @@ STRING = /"((?:[^"\n\r\f\\]|\\[\n\r\f\\"])*?)"/ ;
 
 FUNCTION = IDENT, "(" >> ( ( PROPERTY_VALUE ?w << COMMA ? ) + ) ?w << ")" ;
 
-FROM_TO_KEYWORD = "from" |  "tooge" | "to" ;
+FROM_TO_KEYWORD = "from" | "to" ;
 
 PROPERTY_NAME = IDENT ;
 PROPERTY_VALUE = FUNCTION | STRING | PERCENTAGE | DIMENSION | HASH | INCLUDES | DASHMATCH | UNICODE_RANGE | IMPORTANT_SYM | NUMBER | IDENT ;

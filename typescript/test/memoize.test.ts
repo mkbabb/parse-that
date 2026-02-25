@@ -59,12 +59,16 @@ describe("Memoization & left recursion", () => {
         expect(sCount).toBe(sentence.length);
     });
 
-    // TODO: stack overflow — trim() on memoized left-recursive ambiguous grammar
+    // Left-recursive ambiguous grammar with memoization:
+    // - .memoize().trim() causes stack overflow (trim wraps outside memoization boundary)
+    // - .trim().mergeMemos().memoize() prevents overflow but produces wrong parse trees
+    //   due to seed-growing algorithm limitations with ambiguous grammars.
+    // Requires proper GLL/Earley-style ambiguous parse algorithm to fix.
     it.todo("should math from BBNF", () => {
         const grammar = fs.readFileSync("../grammar/math-ambiguous.bbnf", "utf-8");
         const [nonterminals, ast] = BBNFToParser(grammar);
 
-        nonterminals.expression = nonterminals.expression.memoize().trim();
+        nonterminals.expression = nonterminals.expression.trim().mergeMemos().memoize();
 
         const parser = nonterminals.expression;
 

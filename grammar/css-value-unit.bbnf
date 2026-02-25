@@ -1,11 +1,13 @@
 absoluteLengthUnit = "cm" | "mm" | "Q" | "in" | "pc" | "pt" | "px" ;
-relativeLengthUnit = "em" | "ex" | "ch" | "rem" | "lh" | "vw" | "vh" | "vmin" | "vmax" 
-                    | "fr" | "dvh" | "dvmin" | "dvmax" | "dvw" | "vb" | "vi" | "svw" | "svh" ;
+relativeLengthUnit = "em" | "ex" | "ch" | "rem" | "lh" | "rlh"
+                    | "vw" | "vh" | "vmin" | "vmax" | "vb" | "vi"
+                    | "svw" | "svh" | "dvw" | "dvh" | "dvmin" | "dvmax"
+                    | "fr" | "cqw" | "cqh" | "cqi" | "cqb" | "cqmin" | "cqmax" ;
 
 lengthUnit = absoluteLengthUnit | relativeLengthUnit ;
 
 angleUnit = "deg" | "rad" | "grad" | "turn" ;
-timeUnit = "s" | "ms" ;
+timeUnit = "ms" | "s" ;
 resolutionUnit = "dpi" | "dpcm" | "dppx" ;
 
 percentageUnit = "%" ;
@@ -14,10 +16,12 @@ length = number , lengthUnit ;
 angle = number , angleUnit ;
 time = number , timeUnit ;
 resolution = number , resolutionUnit ;
-percentage = integer , percentageUnit ;
+percentage = number , percentageUnit ;
 
-number = /\d+(\.\d+)?/ ;
-integer = /\d+/ ;
+slash = "/" ;
+
+number = /[-+]?(\d+)?(\.\d+)?([eE][-+]?\d+)?/ ;
+integer = /[-+]?\d+/ ;
 
 unitless = number ;
 

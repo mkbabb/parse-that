@@ -1,0 +1,60 @@
+// CSS Values and Units grammar
+
+// Numbers
+integer = /[-+]?\d+/ ;
+number = /[-+]?(\d+)?(\.\d+)?([eE][-+]?\d+)?/ ;
+
+// Length units
+absoluteLengthUnit = "px" | "cm" | "mm" | "Q" | "in" | "pc" | "pt" ;
+relativeLengthUnit = "em" | "ex" | "ch" | "rem" | "lh" | "rlh"
+                   | "vw" | "vh" | "vmin" | "vmax"
+                   | "svw" | "svh" | "dvw" | "dvh"
+                   | "fr" ;
+lengthUnit = absoluteLengthUnit | relativeLengthUnit ;
+length = number, lengthUnit ;
+
+// Angle units
+angleUnit = "deg" | "rad" | "grad" | "turn" ;
+angle = number, angleUnit ;
+
+// Time units
+timeUnit = "ms" | "s" ;
+time = number, timeUnit ;
+
+// Resolution units
+resolutionUnit = "dpi" | "dpcm" | "dppx" ;
+resolution = number, resolutionUnit ;
+
+// Percentage
+percentage = number, "%" ;
+
+// Named colors (subset)
+namedColor = "transparent" | "currentcolor"
+           | "black" | "white" | "red" | "green" | "blue"
+           | "yellow" | "cyan" | "magenta" | "orange" | "purple"
+           | "pink" | "gray" | "grey" ;
+
+// Hex color
+hexColor = /#[0-9a-fA-F]{3,8}/ ;
+
+// RGB / HSL function arguments
+colorArgs = number, ( /\s*[,\/]\s*/ | /\s+/ ), number, ( /\s*[,\/]\s*/ | /\s+/ ), number, ( ( /\s*[,\/]\s*/ | /\s+/ ), number )? ;
+rgbFunction = ( "rgb" | "rgba" ), "(", colorArgs, ")" ;
+hslFunction = ( "hsl" | "hsla" ), "(", colorArgs, ")" ;
+
+// Color value
+color = rgbFunction | hslFunction | hexColor | namedColor ;
+
+// calc() function
+calcExpr = /[^)]+/ ;
+calcFunction = "calc(", calcExpr, ")" ;
+
+// var() function
+varFallback = /[^)]+/ ;
+varFunction = "var(", /--[\w-]+/, ( ",", varFallback )?, ")" ;
+
+// Dimension (generic)
+dimension = length | angle | time | resolution | percentage ;
+
+// Generic value
+value = calcFunction | varFunction | color | dimension | number | /[\w-]+/ ;

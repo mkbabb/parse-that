@@ -106,6 +106,30 @@ mod tests {
     }
 
     #[test]
+    fn parse_csv_grammar() {
+        let grammar = include_str!("../../../grammar/csv.bbnf");
+        BBNFGrammar::grammar()
+            .parse(grammar)
+            .expect("failed to parse csv.bbnf");
+    }
+
+    #[test]
+    fn parse_css_selectors_grammar() {
+        let grammar = include_str!("../../../grammar/css-selectors.bbnf");
+        BBNFGrammar::grammar()
+            .parse(grammar)
+            .expect("failed to parse css-selectors.bbnf");
+    }
+
+    #[test]
+    fn parse_css_values_grammar() {
+        let grammar = include_str!("../../../grammar/css-values.bbnf");
+        BBNFGrammar::grammar()
+            .parse(grammar)
+            .expect("failed to parse css-values.bbnf");
+    }
+
+    #[test]
     fn reject_empty_grammar() {
         // Empty string should parse as an empty grammar (0 rules), not fail
         let result = BBNFGrammar::grammar().parse("");
