@@ -17,7 +17,7 @@ export const insertRandomWhitespace = (str: string, spaces: number = 12) => {
         .join("");
 };
 
-export const evaluateMathOperator = (operator: string, a: number, b: number) => {
+export const evaluateMathOperator = (operator: string, a: number, b: number): number => {
     switch (operator) {
         case "+":
             return a + b;
@@ -27,6 +27,8 @@ export const evaluateMathOperator = (operator: string, a: number, b: number) => 
             return a * b;
         case "/":
             return a / b;
+        default:
+            throw new Error(`Unknown operator: ${operator}`);
     }
 };
 

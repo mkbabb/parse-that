@@ -64,8 +64,8 @@ const pow: Parser<number> = Parser.lazy(() =>
 );
 
 const multDiv: Parser<number> = Parser.lazy(() =>
-    all(pow, regex(/\*|\//).then(pow).many()).map(reduceMathExpression)
-);
+    all(pow, regex(/\*|\//).then(pow).many()).map(reduceMathExpression as any)
+) as any;
 
 const addSub: Parser<number> = Parser.lazy(() =>
     all(
@@ -73,8 +73,8 @@ const addSub: Parser<number> = Parser.lazy(() =>
         regex(/\+|\-|/)
             .then(multDiv)
             .many()
-    ).map(reduceMathExpression)
-);
+    ).map(reduceMathExpression as any)
+) as any;
 
 const expression = addSub;
 

@@ -1,13 +1,13 @@
-import { Parser } from ".";
-import { statePrint } from "./debug";
+import type { Parser } from "./index.js";
+import { statePrint } from "./debug.js";
 
-export class ParserState<T = any> {
+export class ParserState<T = unknown> {
     constructor(
         public src: string,
-        public value: T = undefined,
+        public value: T = undefined as T,
         public offset: number = 0,
         public isError: boolean = false,
-        public furthest: number = 0
+        public furthest: number = 0,
     ) {}
 
     ok<S>(value: S, offset: number = 0) {
@@ -16,7 +16,7 @@ export class ParserState<T = any> {
     }
 
     err<S>(value?: S, offset: number = 0) {
-        const nextState = this.ok(value, offset);
+        const nextState = this.ok(value as S, offset);
         nextState.isError = true;
         return nextState;
     }
@@ -29,7 +29,8 @@ export class ParserState<T = any> {
     getColumnNumber(): number {
         const offset = this.offset;
         const lastNewline = this.src.lastIndexOf("\n", offset);
-        const columnNumber = lastNewline === -1 ? offset : offset - (lastNewline + 1);
+        const columnNumber =
+            lastNewline === -1 ? offset : offset - (lastNewline + 1);
         return Math.max(0, columnNumber);
     }
 
@@ -41,7 +42,7 @@ export class ParserState<T = any> {
     }
 
     toString() {
-        return statePrint(this);
+        return statePrint(this as ParserState<unknown>);
     }
 }
 
@@ -76,16 +77,20 @@ export const parserNames = [
     "mapState",
 ] as const;
 
-export type ParserContext<T = any> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ParserContext = {
     name?: (typeof parserNames)[number];
-    parser?: Parser<T>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    parser?: Parser<any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     args?: any[];
 };
 
-// TODO: maybe reintroduce debug check.
-export function createParserContext<T = any>(
+export function createParserContext(
     name: (typeof parserNames)[number],
-    parser: Parser<T>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    parser: Parser<any> | undefined,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...args: any[]
 ) {
     return {

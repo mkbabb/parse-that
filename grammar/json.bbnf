@@ -1,7 +1,7 @@
 null = "null" ;
 bool = "true" | "false" ;
 
-number = NUMBER ;
+number = /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ ;
 
 comma = "," ?w ;
 colon = ":" ?w ;
@@ -12,10 +12,12 @@ charge = charger ;
 char = charge    ;
 
 stringge = '"' >> char * << '"' ;
-string = DOUBLE_QUOTED_STRING => |x| -> &'a str { x.as_str() } ;
+// NOTE: Rust embedding experiment — disabled for TS compatibility
+// string = DOUBLE_QUOTED_STRING => |x| -> &'a str { x.as_str() } ;
+string = stringge ;
 array = "[" >> (( value << comma ? ) *)?w << "]" ;
 
-
-object = "{" >> (( (string, colon >> value) << comma ? ) *)?w << "}" ;
+pair = string, colon >> value ;
+object = "{" >> (( pair << comma ? ) *)?w << "}" ;
 
 value = object | array | string | number | bool | null ;   

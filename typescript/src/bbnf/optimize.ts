@@ -1,4 +1,4 @@
-import {
+import type {
     Alteration,
     AST,
     Concatenation,
@@ -6,7 +6,7 @@ import {
     Expression,
     Nonterminal,
     ProductionRule,
-} from "./grammar";
+} from "./types.js";
 
 export function topologicalSort(ast: AST) {
     const visited = new Set<string>();
@@ -18,7 +18,7 @@ export function topologicalSort(ast: AST) {
         }
 
         stack.add(node);
-        const productionRule = ast.get(node)!;
+        const productionRule = ast.get(node);
 
         if (!productionRule) {
             return;
@@ -27,11 +27,11 @@ export function topologicalSort(ast: AST) {
         const expr = productionRule.expression;
 
         if (expr.type === "nonterminal") {
-            visit(expr.value, stack);
+            visit(expr.value as string, stack);
         } else if (expr.value instanceof Array) {
             for (const child of expr.value) {
-                if (child.type === "nonterminal") {
-                    visit(child.value, stack);
+                if ((child as Expression).type === "nonterminal") {
+                    visit((child as Nonterminal).value, stack);
                 }
             }
         }
@@ -39,14 +39,14 @@ export function topologicalSort(ast: AST) {
         visited.add(node);
         stack.delete(node);
 
-        order.unshift(ast.get(node) as ProductionRule);
+        order.unshift(ast.get(node)!);
     }
 
     for (const [name] of ast) {
         visit(name, new Set<string>());
     }
 
-    const newAST = new Map() as AST;
+    const newAST: AST = new Map();
     for (const rule of order) {
         newAST.set(rule.name.value, rule);
     }
@@ -56,8 +56,8 @@ export function topologicalSort(ast: AST) {
 
 export const findCommonPrefix = (
     e1: Expression,
-    e2: Expression
-): [Expression | null, Expression, Expression] => {
+    e2: Expression,
+): [Expression | null, Expression, Expression] | undefined => {
     if (!e1?.type || !e2?.type || e1.type !== e2.type) {
         return undefined;
     }
@@ -68,10 +68,10 @@ export const findCommonPrefix = (
             if (e1.value !== e2.value) {
                 return undefined;
             } else {
-                return [e1, { type: "epsilon" }, { type: "epsilon" }] as [
-                    Expression,
-                    Expression,
-                    Expression
+                return [
+                    e1,
+                    { type: "epsilon" } as Epsilon,
+                    { type: "epsilon" } as Epsilon,
                 ];
             }
         }
@@ -80,80 +80,81 @@ export const findCommonPrefix = (
         case "optionalWhitespace":
         case "many":
         case "many1": {
-            const common = findCommonPrefix(e1.value, e2.value as Expression);
+            const common = findCommonPrefix(
+                e1.value as Expression,
+                e2.value as Expression,
+            );
             if (!common) {
                 return undefined;
             } else {
                 return [
-                    {
-                        type: e1.type,
-                        value: common[0],
-                    },
-                    {
-                        type: e1.type,
-                        value: common[1],
-                    },
-                    {
-                        type: e1.type,
-                        value: common[2],
-                    },
-                ] as [Expression, Expression, Expression];
+                    { type: e1.type, value: common[0] } as Expression,
+                    { type: e1.type, value: common[1] } as Expression,
+                    { type: e1.type, value: common[2] } as Expression,
+                ];
             }
         }
 
         case "concatenation": {
-            const commons = e1.value.map((_, i) =>
-                findCommonPrefix(e1.value[i], e2.value[i])
+            const e1Vals = e1.value as Expression[];
+            const e2Vals = e2.value as Expression[];
+            const commons = e1Vals.map((_, i) =>
+                findCommonPrefix(e1Vals[i], e2Vals[i]),
             );
             if (commons.some((x) => x === undefined)) {
                 return undefined;
             }
 
-            const prefixes = commons.map((x) => x[0]);
-            const e1s = commons.map((x) => x[1]);
-            const e2s = commons.map((x) => x[2]);
+            const prefixes = commons.map((x) => x![0]);
+            const e1s = commons.map((x) => x![1]);
+            const e2s = commons.map((x) => x![2]);
 
             const startIx = prefixes.lastIndexOf(null);
             if (startIx === prefixes.length - 1) {
                 return undefined;
             }
-            const prefix = prefixes.slice(startIx + 1);
+            const prefix = prefixes.slice(startIx + 1) as Expression[];
             return [
                 {
                     type: "concatenation",
                     value: prefix,
-                },
+                } as Concatenation,
                 {
                     type: "concatenation",
                     value: e1s,
-                },
+                } as Concatenation,
                 {
                     type: "concatenation",
                     value: e2s,
-                },
+                } as Concatenation,
             ];
         }
 
-        case "alternation":
-            // TODO! This is not correct
-            for (const e of e1.value) {
+        case "alternation": {
+            const e1Alts = e1.value as Expression[];
+            const e2Alts = e2.value as Expression[];
+            for (const e of e1Alts) {
                 const common = findCommonPrefix(e, e2);
                 if (common) {
                     return common;
                 }
             }
-            for (const e of e2.value as Expression[]) {
+            for (const e of e2Alts) {
                 const common = findCommonPrefix(e1, e);
                 if (common) {
                     return common;
                 }
             }
             return undefined;
+        }
     }
     return undefined;
 };
 
-export const comparePrefix = (prefix: Expression, expr: Expression): boolean => {
+export const comparePrefix = (
+    prefix: Expression,
+    expr: Expression,
+): boolean => {
     if (prefix.type !== expr.type) {
         return false;
     }
@@ -165,55 +166,75 @@ export const comparePrefix = (prefix: Expression, expr: Expression): boolean => 
         case "optional":
         case "many":
         case "many1":
-            return comparePrefix(prefix.value, expr.value as Expression);
+            return comparePrefix(
+                prefix.value as Expression,
+                expr.value as Expression,
+            );
         case "minus":
         case "skip":
         case "next":
             return (
-                comparePrefix(prefix.value[0], expr.value[0]) &&
-                comparePrefix(prefix.value[1], expr.value[1])
+                comparePrefix(
+                    (prefix.value as [Expression, Expression])[0],
+                    (expr.value as [Expression, Expression])[0],
+                ) &&
+                comparePrefix(
+                    (prefix.value as [Expression, Expression])[1],
+                    (expr.value as [Expression, Expression])[1],
+                )
             );
         case "concatenation":
-            return prefix.value.every((e, i) => comparePrefix(e, expr.value[i]));
+            return (prefix.value as Expression[]).every((e, i) =>
+                comparePrefix(e, (expr.value as Expression[])[i]),
+            );
         case "alternation":
-            return prefix.value.some((e, i) => comparePrefix(e, expr.value[i]));
+            return (prefix.value as Expression[]).some((e, i) =>
+                comparePrefix(e, (expr.value as Expression[])[i]),
+            );
         case "epsilon":
             return true;
+        default:
+            return false;
     }
 };
 
 export function rewriteTreeLeftRecursion(name: string, expr: Alteration) {
     const prefixMap = new Map<Expression, Expression[]>();
     let commonPrefix: Expression | null = null;
+    const exprVals = expr.value as Expression[];
 
-    for (let i = 0; i < expr.value.length - 1; i++) {
-        const e1 = expr.value[i];
-        const e2 = expr.value[i + 1];
+    for (let i = 0; i < exprVals.length - 1; i++) {
+        const e1 = exprVals[i];
+        const e2 = exprVals[i + 1];
 
         const common = findCommonPrefix(e1, e2);
         if (common) {
             const [prefix, te1, te2] = common;
 
-            if (commonPrefix !== null && comparePrefix(prefix, commonPrefix)) {
+            if (
+                commonPrefix !== null &&
+                prefix !== null &&
+                comparePrefix(prefix, commonPrefix)
+            ) {
                 prefixMap.get(commonPrefix)!.push(te2);
-            } else {
+            } else if (prefix !== null) {
                 prefixMap.set(prefix, [te1, te2]);
                 commonPrefix = prefix;
             }
-            if (i === expr.value.length - 2) {
-                expr.value.shift();
+            if (i === exprVals.length - 2) {
+                exprVals.shift();
             }
-            expr.value.shift();
+            exprVals.shift();
             i -= 1;
         }
     }
 
     for (const [prefix, expressions] of prefixMap) {
-        const alternation = {
+        const alternation: Alteration = {
             type: "alternation",
             value: expressions,
-        } as Alteration;
-        const newExpr = {
+        };
+        const newExpr: Concatenation = {
             type: "concatenation",
             value: [
                 {
@@ -225,43 +246,48 @@ export function rewriteTreeLeftRecursion(name: string, expr: Alteration) {
                     value: prefix,
                 },
             ],
-        } as Concatenation;
+        };
 
-        expr.value.push(newExpr);
+        exprVals.push(newExpr);
     }
 }
 
 const removeDirectLeftRecursionProduction = (
     name: string,
     expr: Alteration,
-    tailName: string
+    tailName: string,
 ) => {
-    const head = [];
-    const tail = [];
+    const head: Expression[] = [];
+    const tail: Expression[] = [];
 
-    const APrime = {
+    const APrime: Nonterminal = {
         type: "nonterminal",
         value: tailName,
-    } as Nonterminal;
+    };
 
-    for (let i = 0; i < expr.value.length; i++) {
-        const e = expr.value[i];
+    const exprVals = expr.value as Expression[];
 
-        if (e.type === "concatenation" && e.value[0].value === name) {
+    for (let i = 0; i < exprVals.length; i++) {
+        const e = exprVals[i];
+
+        if (
+            e.type === "concatenation" &&
+            (e.value as Expression[])[0].value === name
+        ) {
             tail.push({
                 type: "concatenation",
-                value: [...e.value.slice(1), APrime],
-            });
+                value: [...(e.value as Expression[]).slice(1), APrime],
+            } as Concatenation);
         } else {
             head.push({
                 type: "concatenation",
                 value: [e, APrime],
-            });
+            } as Concatenation);
         }
     }
 
     if (tail.length === 0) {
-        return [undefined, undefined];
+        return [undefined, undefined] as const;
     }
 
     tail.push({
@@ -281,7 +307,7 @@ const removeDirectLeftRecursionProduction = (
 };
 
 export function removeDirectLeftRecursion(ast: AST) {
-    const newNodes = new Map() as AST;
+    const newNodes: AST = new Map();
 
     let uniqueIndex = 0;
     for (const [name, productionRule] of ast) {
@@ -292,11 +318,11 @@ export function removeDirectLeftRecursion(ast: AST) {
 
             const [head, tail] = removeDirectLeftRecursionProduction(
                 name,
-                expression,
-                tailName
+                expression as Alteration,
+                tailName,
             );
 
-            if (head) {
+            if (head && tail) {
                 newNodes.set(tailName, {
                     name: {
                         type: "nonterminal",
@@ -323,42 +349,13 @@ export function removeDirectLeftRecursion(ast: AST) {
     for (const [name, productionRule] of ast) {
         const { expression } = productionRule;
         if (expression.type === "alternation") {
-            rewriteTreeLeftRecursion(name, expression);
+            rewriteTreeLeftRecursion(name, expression as Alteration);
         }
-    }
-}
-
-export function removeIndirectLeftRecursion(ast: AST) {
-    let i = 0;
-
-    let uniqueIndex = 0;
-    const betas = new Map<string, Expression>();
-
-    const recurse = (name: string, expr: Expression) => {
-        if (expr.type === "concatenation") {
-            if (expr.value[0].type === "nonterminal" && expr.value[0].value === name) {
-                const beta = {
-                    type: "concatenation",
-                    value: expr.value.slice(1, expr.value.length),
-                } as Concatenation;
-                const aj = expr.value.shift();
-                const tailName = `${name}_${uniqueIndex++}`;
-            }
-        }
-    };
-
-    for (const [name, expression] of ast) {
-        // recurse(name, expression);
-
-        i += 1;
     }
 }
 
 export function removeAllLeftRecursion(ast: AST) {
     const newAST = topologicalSort(ast);
-
-    // removeIndirectLeftRecursion(newAST);
     removeDirectLeftRecursion(newAST);
-
     return newAST;
 }

@@ -1,29 +1,19 @@
-import { createParserContext, ParserState } from "./state";
-import { getLazyParser, Parser } from ".";
-
-import { Options, RequiredOptions } from "prettier";
-import { Doc } from "prettier";
-import { builders as b, printer } from "prettier/doc";
-import chalk from "chalk";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { createParserContext, ParserState } from "./state.js";
+import { getLazyParser, Parser } from "./index.js";
 
 const MAX_LINES = 4;
 const MAX_LINE_LENGTH = 80;
 
-const defaultGroupOptions = {};
-
-const defaultOptions = {
-    printWidth: 30,
-    tabWidth: 4,
-    useTabs: false,
-} as RequiredOptions;
-
-export function prettierPrint(doc: Doc) {
-    return printer.printDocToString(doc, defaultOptions).formatted;
-}
-
-export const summarizeLine = (line: string, maxLength: number = MAX_LINE_LENGTH) => {
+export const summarizeLine = (
+    line: string,
+    maxLength: number = MAX_LINE_LENGTH,
+) => {
     const newLine = line.indexOf("\n");
-    const length = Math.min(line.length, newLine === -1 ? line.length : newLine);
+    const length = Math.min(
+        line.length,
+        newLine === -1 ? line.length : newLine,
+    );
 
     if (length <= MAX_LINE_LENGTH) {
         return line;
@@ -33,12 +23,10 @@ export const summarizeLine = (line: string, maxLength: number = MAX_LINE_LENGTH)
 };
 
 export function addCursor(
-    state: ParserState<any>,
+    state: ParserState<unknown>,
     cursor: string = "^",
-    error: boolean = false
+    error: boolean = false,
 ): string {
-    const color = (error ? chalk.red : chalk.green).bold;
-
     const lines = state.src.split("\n");
     const lineIdx = Math.min(lines.length - 1, state.getLineNumber());
     const startIdx = Math.max(lineIdx - MAX_LINES, 0);
@@ -47,192 +35,161 @@ export function addCursor(
     const lineSummaries = lines.slice(startIdx, endIdx);
 
     if (cursor) {
-        const cursorLine = " ".repeat(state.getColumnNumber()) + color(cursor);
+        const cursorLine = " ".repeat(state.getColumnNumber()) + cursor;
         lineSummaries.splice(lineIdx - startIdx + 1, 0, cursorLine);
     }
 
     const resultLines = lineSummaries.map((line, idx) => {
         const lineNum = startIdx + idx + 1;
-        let paddedLineNum = color.reset.black(String(lineNum));
-
-        line = lineNum === lineIdx + 1 ? color(line) : line;
-        const paddedLine = `      ${paddedLineNum}| ${line}`;
-
+        const paddedLine = `      ${lineNum}| ${line}`;
         return paddedLine;
     });
 
     return resultLines.join("\n");
 }
 
-const group = (docs: Doc, groupOptions: Options = {}) => {
-    return b.group(docs, { ...defaultOptions, ...groupOptions } as any);
-};
+const PARSER_STRINGS = new Map<number, string>();
 
-const opStyle = (op: string) => chalk.gray(op);
-const PARSER_STRINGS = new Map<number, any>();
-
-export function parserPrint(parser: Parser<any>) {
+export function parserPrint(parser: Parser<unknown>): string {
     if (PARSER_STRINGS.has(parser.id)) {
-        return PARSER_STRINGS.get(parser.id);
+        return PARSER_STRINGS.get(parser.id)!;
     }
 
-    const print = (innerParser: Parser<any>, id?: number) => {
+    const print = (
+        innerParser: Parser<any>,
+        id?: number,
+    ): string => {
         if (PARSER_STRINGS.has(innerParser.id)) {
-            return PARSER_STRINGS.get(innerParser.id);
+            return PARSER_STRINGS.get(innerParser.id)!;
         }
 
         const { name, args, parser: innerInnerParser } = innerParser.context;
         const parserString =
             innerInnerParser != null
-                ? print(innerInnerParser, id)
-                : chalk.red.bold("unknown");
+                ? print(innerInnerParser as Parser<unknown>, id)
+                : "unknown";
 
-        let s = (() => {
+        const s = ((): string | undefined => {
             switch (name) {
                 case "string":
-                    return chalk.yellow(`"${args[0]}"`);
+                    return `"${args![0]}"`;
                 case "regex":
                 case "regexConcat":
                 case "regexWrap":
-                    return chalk.redBright(`${args[0]}`);
+                    return `${args![0]}`;
                 case "wrap":
                 case "trim": {
-                    const [left, right] = args;
-                    return group([
-                        print(left, id),
-                        b.indent([b.softline, parserString]),
-                        b.softline,
-                        print(right, id),
-                    ]);
+                    const [left, right] = args!;
+                    return `${print(left, id)} ${parserString} ${print(right, id)}`;
                 }
                 case "trimWhitespace":
-                    return group([parserString, opStyle("?w")]);
+                    return `${parserString}?w`;
                 case "not":
-                    return group(["!", parserString]);
+                    return `!${parserString}`;
                 case "opt":
-                    return group([parserString, opStyle("?")]);
-                case "next":
-                    const [next] = args;
-                    return group([parserString, opStyle(" >> "), print(next, id)]);
-                case "skip":
-                    const [skip] = args;
-                    return group([parserString, opStyle(" << "), print(skip, id)]);
-
+                    return `${parserString}?`;
+                case "next": {
+                    const [next] = args!;
+                    return `${parserString} >> ${print(next, id)}`;
+                }
+                case "skip": {
+                    const [skip] = args!;
+                    return `${parserString} << ${print(skip, id)}`;
+                }
                 case "map":
                     return parserString;
                 case "all":
                 case "then": {
-                    const delim = opStyle(", ");
-                    return group([
-                        "[",
-                        b.indent([
-                            b.softline,
-                            b.join(
-                                [delim, b.softline],
-                                args.map((x) => print(x, id))
-                            ),
-                        ]),
-                        b.softline,
-                        "]",
-                    ]);
+                    const items = args!.map((x: Parser<unknown>) =>
+                        print(x, id),
+                    );
+                    return `[${items.join(", ")}]`;
                 }
                 case "any":
                 case "or": {
-                    const delim = opStyle("| ");
-                    return group([
-                        [
-                            b.join(
-                                [b.softline, b.ifBreak(delim, " " + delim)],
-                                args.map((x) => print(x, id))
-                            ),
-                        ],
-                    ]);
+                    const items = args!.map((x: Parser<unknown>) =>
+                        print(x, id),
+                    );
+                    return items.join(" | ");
                 }
-                case "many":
-                    const [min, max] = args;
-                    let bounds = max === Infinity ? `${min},` : `${min},${max}`;
-                    bounds = chalk.bold.gray(` {${bounds}}`);
-                    return group([parserString, bounds]);
+                case "many": {
+                    const [min, max] = args!;
+                    const bounds =
+                        max === Infinity ? `${min},` : `${min},${max}`;
+                    return `${parserString} {${bounds}}`;
+                }
                 case "sepBy":
-                    return group([
-                        parserString,
-                        b.indent([" sepBy ", print(args[0], id)]),
-                    ]);
+                    return `${parserString} sepBy ${print(args![0], id)}`;
                 case "lazy": {
-                    const [lazy] = args;
+                    const [lazy] = args!;
                     const p = getLazyParser(lazy);
 
                     if (!id) {
-                        const s = print(p, p.id);
+                        const s = print(p as Parser<unknown>, p.id);
                         PARSER_STRINGS.set(p.id, s);
                         return s;
                     } else {
-                        return chalk.bold.blue(name);
+                        return name;
                     }
                 }
                 case "debug":
                     return parserString;
+                default:
+                    return undefined;
             }
         })();
-        s ??= chalk.red.bold(name);
+
+        const result = s ?? name ?? "unknown";
         if (id) {
-            PARSER_STRINGS.set(innerParser.id, s);
+            PARSER_STRINGS.set(innerParser.id, result);
         }
-        return s;
+        return result;
     };
 
-    const doc = print(parser);
-    const s = prettierPrint(doc);
+    const s = print(parser);
     PARSER_STRINGS.set(parser.id, s);
 
     return s;
 }
 
 export function statePrint(
-    state: ParserState<any>,
+    state: ParserState<unknown>,
     name: string = "",
-    parserString: string = ""
-) {
-    parserString = state.value;
-    const stateBgColor = !state.isError ? chalk.bgGreen : chalk.bgRed;
-    const stateColor = !state.isError ? chalk.green : chalk.red;
-
+    _parserString: string = "",
+): string {
+    const parserString = String(state.value);
     const finished = state.offset >= state.src.length;
 
-    const stateSymbol = !state.isError ? (finished ? "🎉" : "✓ ") : "ｘ";
-    const stateName = !state.isError ? (finished ? "Done" : "Ok ") : "Err";
-    const stateString = " " + stateName + " " + stateSymbol + " ";
+    const stateSymbol = !state.isError ? (finished ? "done" : "ok") : "err";
+    const stateString = `[${stateSymbol}]`;
 
-    const header = group([
-        stateBgColor.bold(stateString),
-        stateColor(`\t${name}\t${state.offset}`),
-        b.softline,
-        "\t" + chalk.yellow(parserString),
-    ]);
+    const header = `${stateString} ${name} offset=${state.offset} value=${parserString}`;
 
-    const body = (() => {
-        if (state.offset >= state.src.length) {
-            return chalk.bold.greenBright(addCursor(state, "", state.isError));
-        }
-        return addCursor(state, "^", state.isError);
-    })();
+    const body =
+        state.offset >= state.src.length
+            ? addCursor(state, "", state.isError)
+            : addCursor(state, "^", state.isError);
 
-    const headerBody = group([header, b.hardline, b.indent([body])]);
-
-    return prettierPrint(headerBody);
+    return `${header}\n${body}`;
 }
 
 export function parserDebug<T>(
     parser: Parser<T>,
     name: string = "",
     recursivePrint: boolean = false,
-    logger: (...s: any[]) => void = console.log
+    logger: (...s: unknown[]) => void = console.log,
 ) {
     const debug = (state: ParserState<T>) => {
         const newState = parser.parser(state);
 
-        const parserString = recursivePrint ? parserPrint(parser) : parser.context.name;
-        const s = statePrint(newState, name, parserString);
+        const parserString = recursivePrint
+            ? parserPrint(parser as Parser<unknown>)
+            : (parser.context.name ?? "");
+        const s = statePrint(
+            newState as ParserState<unknown>,
+            name,
+            parserString,
+        );
 
         logger(s);
 

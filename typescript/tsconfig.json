@@ -1,20 +1,18 @@
 {
     "compilerOptions": {
-        "target": "ESNext",
-        "sourceMap": false,
+        "target": "ES2022",
         "module": "ESNext",
-        "moduleResolution": "node",
-        "lib": [
-            "ESNext",
-            "DOM",
-        ],
-        "alwaysStrict": true,
-        "strict": false,
-        "allowSyntheticDefaultImports": true,
-        "experimentalDecorators": true
+        "moduleResolution": "bundler",
+        "lib": ["ES2022", "ES2023"],
+        "strict": true,
+        "verbatimModuleSyntax": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "sourceMap": false,
+        "declaration": true,
+        "declarationMap": true
     },
-    "include": [
-        "src/",
-        "test"
-    ],
+    "include": ["src/", "test/"],
+    "exclude": ["test/benchmarks/", "test/tmp.bench.ts"]
 }

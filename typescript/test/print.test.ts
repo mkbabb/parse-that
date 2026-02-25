@@ -18,7 +18,7 @@ const those = any(them, string("ok,").skip(string("no")).then(string("vibes")));
 const wrapped = those.wrap(string("{{"), string("}}")).sepBy(comma);
 
 const inner = string("this is a really long string");
-const mijn = Parser.lazy(() => any(inner, string("b"), mijn));
+const mijn: Parser<any> = Parser.lazy(() => any(inner, string("b"), mijn));
 
 describe("Printer", () => {
     it("should print vibes", () => {

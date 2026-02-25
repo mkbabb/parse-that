@@ -98,7 +98,7 @@ describe("JSON Parser", () => {
     });
 
     it("should read a JSON file", () => {
-        const input = fs.readFileSync("../data/data-l.json", "utf-8");
+        const input = fs.readFileSync("../data/json/data-l.json", "utf-8");
         const result = jsonValue.parse(input);
         expect(result).toEqual(JSON.parse(input));
     });
