@@ -8,6 +8,32 @@ use std::rc::Rc;
 use crate::state::{ParserState, Span};
 use crate::utils::extract_bounds;
 
+/// Structured error returned by `Parser::parse_or_error()` on failure.
+#[derive(Debug, Clone)]
+pub struct ParseError {
+    /// The offset where the parser stopped.
+    pub offset: usize,
+    /// The furthest offset reached by any branch before backtracking.
+    /// Useful for pointing to the "real" failure location in alternations.
+    pub furthest_offset: usize,
+    /// 1-based line number of the failure.
+    pub line: usize,
+    /// 0-based column number of the failure.
+    pub column: usize,
+}
+
+impl std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "parse error at line {}, column {} (offset {}, furthest offset reached: {})",
+            self.line, self.column, self.offset, self.furthest_offset,
+        )
+    }
+}
+
+impl std::error::Error for ParseError {}
+
 #[inline(always)]
 pub fn trim_leading_whitespace(state: &ParserState<'_>) -> usize {
     unsafe {
@@ -50,25 +76,31 @@ where
         }
     }
 
-    pub fn parse_return_state(&self, src: &'a str) -> ParserResult<'a, Output> {
+    pub fn parse_return_state(&self, src: &'a str) -> (ParserResult<'a, Output>, ParserState<'a>) {
         let mut state = ParserState::new(src);
-        self.parser_fn.call(&mut state)
+        let result = self.parser_fn.call(&mut state);
+        (result, state)
     }
 
     pub fn parse(&self, src: &'a str) -> Option<Output> {
-        self.parse_return_state(src)
+        self.parse_return_state(src).0
     }
 
-    #[inline(always)]
-    pub fn merge_context(self) -> Parser<'a, Output> {
-        let merge_context = #[inline(always)]
-        move |state: &mut ParserState<'a>| {
-            let result = self.parser_fn.call(state);
-            state.furthest_offset = state.furthest_offset.max(state.offset);
-            result
-        };
-        Parser {
-            parser_fn: Box::new(merge_context),
+    /// Parse and return a `Result` with structured error information on failure.
+    ///
+    /// On success, returns `Ok(value)`.
+    /// On failure, returns `Err(ParseError)` with the furthest offset reached
+    /// and line/column information for diagnostic messages.
+    pub fn parse_or_error(&self, src: &'a str) -> Result<Output, ParseError> {
+        let (result, state) = self.parse_return_state(src);
+        match result {
+            Some(value) => Ok(value),
+            None => Err(ParseError {
+                offset: state.offset,
+                furthest_offset: state.furthest_offset,
+                line: state.get_line_number(),
+                column: state.get_column_number(),
+            }),
         }
     }
 
@@ -114,12 +146,22 @@ where
 
     pub fn or(self, other: Parser<'a, Output>) -> Parser<'a, Output> {
         let or = move |state: &mut ParserState<'a>| {
+            state.save();
             if let Some(value) = self.parser_fn.call(state) {
+                state.pop();
                 return Some(value);
             }
+            state.furthest_offset = state.furthest_offset.max(state.offset);
+            state.restore();
+
+            state.save();
             if let Some(value) = other.parser_fn.call(state) {
+                state.pop();
                 return Some(value);
             }
+            state.furthest_offset = state.furthest_offset.max(state.offset);
+            state.restore();
+
             None
         };
         Parser::new(or)
@@ -361,14 +403,20 @@ where
         Output2: 'a,
     {
         let look_ahead = move |state: &mut ParserState<'a>| {
-            let Some(value) = self.parser_fn.call(state)  else {
+            let Some(value) = self.parser_fn.call(state) else {
                 return None;
             };
-            parser.parser_fn.call(state)?;
+            // Save state before the lookahead parser so it doesn't consume input
+            let offset_after_self = state.offset;
+            state.save();
+            let lookahead_result = parser.parser_fn.call(state);
+            state.restore();
+            state.offset = offset_after_self;
+            lookahead_result?;
             Some(value)
         };
 
-        Parser::new(look_ahead).save_state()
+        Parser::new(look_ahead)
     }
 
     pub fn eof(self) -> Parser<'a, Output> {

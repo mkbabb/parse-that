@@ -225,11 +225,12 @@ impl<'a> BBNFGrammar<'a> {
     }
 
     fn regex() -> Parser<'a, Expression<'a>> {
-        let not_slash = take_while_span(|c| c != '/');
+        let not_slash_or_backslash = take_while_span(|c| c != '/' && c != '\\');
 
-        let escaped_span = string_span(r"\").then_span(string_span("/"));
+        // Handle any escape sequence (\/, \\, \., \[, etc.)
+        let escaped_span = string_span(r"\").then_span(next_span(1));
 
-        let string = (escaped_span | not_slash)
+        let string = (escaped_span | not_slash_or_backslash)
             .many_span(..)
             .wrap_span(string_span("/"), string_span("/"));
 

@@ -51,10 +51,6 @@ pub fn add_cursor(state: &ParserState, cursor: &str, error: bool) -> String {
         .take(2 * MAX_LINES)
         .collect::<Vec<_>>();
 
-    let _indent = " ".repeat(0);
-
-    
-
     lines
         .into_iter()
         .map(|(line_num_i, line)| {
@@ -148,11 +144,11 @@ where
     pub fn debug(self, name: &'a str) -> Parser<'a, Output> {
         let debug = move |state: &mut ParserState<'a>| match (self.parser_fn).call(state) {
             Some(value) => {
-                println!("{}", state_print(Ok(state), name, ""));
+                eprintln!("{}", state_print(Ok(state), name, ""));
                 Some(value)
             }
             None => {
-                println!("{}", state_print(Err(state), name, ""));
+                eprintln!("{}", state_print(Err(state), name, ""));
                 None
             }
         };
