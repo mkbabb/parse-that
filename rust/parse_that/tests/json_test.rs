@@ -44,17 +44,14 @@ mod tests {
 
     #[test]
     fn test_json_file_print() {
-        extern crate pretty;
-        use pretty::Printer;
-
-        let printer = Printer::default();
+        use pprint::pprint;
 
         let json_file_path = "../../data/json/data.json";
         let json_string = fs::read_to_string(json_file_path).unwrap();
 
         let arr = json_parser().parse(&json_string).unwrap();
 
-        let pretty = printer.pretty(arr);
+        let pretty = pprint(arr, None);
 
         println!("{}", pretty);
     }

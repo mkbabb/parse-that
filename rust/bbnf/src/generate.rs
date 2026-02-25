@@ -1,5 +1,5 @@
 use crate::grammar::*;
-use pretty::Doc;
+use pprint::Doc;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote, ToTokens};
 use std::{

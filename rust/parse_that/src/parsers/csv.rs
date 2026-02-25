@@ -2,8 +2,7 @@ use crate::parse::*;
 
 use super::utils::escaped_span;
 
-extern crate pretty;
-use pretty::{Doc, Join};
+use pprint::{Doc, Join};
 
 #[derive(Debug, PartialEq)]
 pub enum CSV<'a> {

@@ -1,19 +1,13 @@
 #![feature(box_patterns)]
-#![feature(once_cell)]
-
-extern crate bbnf;
-extern crate parse_that;
-extern crate pretty;
 
 use bbnf_derive::Parser;
 use parse_that::csv::csv_parser;
 use parse_that::get_cargo_root_path;
 use parse_that::json::json_parser;
 use parse_that::json::JsonValue;
-use parse_that::Span;
 
 use parse_that::parse::*;
-use pretty::Doc;
+use fnv::FnvHashMap;
 
 use std::{fs, time::SystemTime};
 
@@ -51,18 +45,34 @@ pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
             JsonEnum::null(_) => JsonValue::Null,
             JsonEnum::bool(b) => JsonValue::Bool(b.as_str().parse().unwrap()),
             JsonEnum::number(n) => JsonValue::Number(n.as_str().parse().unwrap()),
-            JsonEnum::string(s) => JsonValue::String(s),
+            JsonEnum::string(s) => JsonValue::String(s.as_str()),
+            JsonEnum::stringge(s) => JsonValue::String(s.as_str()),
             JsonEnum::array(values) => {
                 JsonValue::Array(values.iter().map(|v| recurse(v)).collect())
+            }
+            JsonEnum::pair((key, value)) => {
+                let key_str = match key.as_ref() {
+                    JsonEnum::string(s) | JsonEnum::stringge(s) => s.as_str(),
+                    _ => panic!("Expected string key in pair"),
+                };
+                let mut map = FnvHashMap::default();
+                map.insert(key_str, recurse(value));
+                JsonValue::Object(map)
             }
             JsonEnum::object(pairs) => {
                 let map = pairs
                     .iter()
-                    .map(|(key, value)| {
-                        let JsonEnum::string(key) = key.as_ref() else {
-                            panic!("Expected string")
-                        };
-                        (*key, recurse(value))
+                    .map(|pair| {
+                        match pair.as_ref() {
+                            JsonEnum::pair((key, value)) => {
+                                let key_str = match key.as_ref() {
+                                    JsonEnum::string(s) | JsonEnum::stringge(s) => s.as_str(),
+                                    _ => panic!("Expected string key"),
+                                };
+                                (key_str, recurse(value))
+                            }
+                            _ => panic!("Expected pair in object"),
+                        }
                     })
                     .collect();
                 JsonValue::Object(map)

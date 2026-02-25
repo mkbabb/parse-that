@@ -1,13 +1,11 @@
-extern crate pretty;
-use pretty::Pretty;
+use pprint::Pretty;
 
-#[derive(Pretty, Debug, PartialEq, Clone, Copy, Hash, Eq)]
-#[derive(Default)]
+#[derive(Pretty, Debug, Default, PartialEq, Clone, Copy, Hash, Eq)]
 pub struct Span<'a> {
     pub start: usize,
     pub end: usize,
 
-    #[pretty(skip)]
+    #[pprint(skip)]
     pub src: &'a str,
 }
 
@@ -23,12 +21,11 @@ impl<'a> Span<'a> {
 
 
 
-#[derive(Pretty, Debug, PartialEq, Clone, Hash, Eq)]
-#[derive(Default)]
+#[derive(Pretty, Debug, Default, PartialEq, Clone, Hash, Eq)]
 pub struct ParserState<'a> {
-    #[pretty(skip)]
+    #[pprint(skip)]
     pub src: &'a str,
-    #[pretty(skip)]
+    #[pprint(skip)]
     pub src_bytes: &'a [u8],
 
     pub end: usize,
@@ -36,7 +33,7 @@ pub struct ParserState<'a> {
     pub offset: usize,
     pub furthest_offset: usize,
 
-    #[pretty(skip)]
+    #[pprint(skip)]
     pub state_stack: Vec<usize>,
 }
 

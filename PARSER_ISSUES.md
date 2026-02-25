@@ -90,7 +90,24 @@ so the left-recursion guard in `memoize()` never triggers.
 
 ---
 
-## 5. Test Data File Paths (fixed)
+## 5. Rust CSV Parser — truncated output on large files
+
+**File:** `rust/parse_that/tests/csv_test.rs` → "test_csv_file"
+**Status:** Pre-existing failure
+
+The Rust CSV parser returns 119 rows instead of 62928 from
+`active_charter_schools_report.csv`. The parser stops early, likely due to
+a whitespace/line-ending handling issue in the `sep_by(regex_span(r"\s+"), ..)`
+separator.
+
+**Root cause:** The CSV line separator `regex_span(r"\s+")` greedily consumes
+all whitespace including within quoted fields, or fails to handle CRLF properly.
+
+**Fix:** Investigate line separator handling in `csv_parser()`.
+
+---
+
+## 6. Test Data File Paths (fixed)
 
 **Files:** `test/csv.test.ts`, `test/json.test.ts`, `test/bbnf.test.ts`
 **Status:** Fixed

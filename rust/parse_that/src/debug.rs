@@ -1,8 +1,6 @@
-extern crate pretty;
-
 use crate::parse::Parser;
 use crate::state::ParserState;
-use pretty::{concat, indent, Doc, PRINTER};
+use pprint::{concat, indent, pprint, Doc};
 
 use colored::{Color, Colorize};
 
@@ -139,7 +137,7 @@ pub fn state_print(
 
     let header_body = concat(vec![header, Doc::Hardline, indent(body)]);
 
-    PRINTER.pretty(header_body)
+    pprint(header_body, None)
 }
 
 impl<'a, Output> Parser<'a, Output>

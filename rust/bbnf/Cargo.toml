@@ -8,14 +8,14 @@ name = "bbnf"
 path = "src/lib.rs"
 
 [dependencies]
-pretty = { path = "../pretty" }
+pprint = { path = "/Users/mkbabb/Programming/pprint" }
 parse_that = { path = "../parse_that" }
 
-regex = { version = "1", features = ["perf"] }
+regex = { version = "1.11", features = ["perf"] }
 
 syn = { version = "1.0", features = ["full"] }
 quote = "1"
 proc-macro2 = "1"
-indexmap = "1"
+indexmap = "2"
 
 lazy_static = "1"

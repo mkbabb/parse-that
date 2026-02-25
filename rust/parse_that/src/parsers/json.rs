@@ -2,8 +2,7 @@ use crate::parse::*;
 
 use super::utils::{escaped_span, number_span};
 
-extern crate pretty;
-use pretty::Pretty;
+use pprint::Pretty;
 
 use crate::parse::ParserSpan;
 
@@ -11,7 +10,7 @@ use fnv::FnvHashMap;
 
 #[derive(Pretty, Debug, Clone, PartialEq)]
 pub enum JsonValue<'a> {
-    #[pretty(rename = "null")]
+    #[pprint(rename = "null")]
     Null,
     Bool(bool),
     Number(f64),

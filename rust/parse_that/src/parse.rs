@@ -591,21 +591,23 @@ pub fn next_span<'a>(amount: usize) -> Parser<'a, Span<'a>> {
     Parser::new(next)
 }
 
-use aho_corasick::{AhoCorasickBuilder, MatchKind};
+use aho_corasick::{AhoCorasickBuilder, Anchored, Input, MatchKind, StartKind};
 
 pub fn any_span<'a>(patterns: &[&'a str]) -> Parser<'a, Span<'a>> {
     let ac = AhoCorasickBuilder::new()
         .match_kind(MatchKind::LeftmostFirst)
-        .anchored(true)
-        .build(patterns);
+        .start_kind(StartKind::Anchored)
+        .build(patterns)
+        .expect("failed to build aho-corasick automaton");
 
     let any = move |state: &mut ParserState<'a>| {
         let Some(slc) = state.src.get(state.offset..) else {
             return None;
         };
-        let Some(m) = ac.find(slc) else {
+        let input = Input::new(slc).anchored(Anchored::Yes);
+        let Some(m) = ac.find(input) else {
             return None;
-            };
+        };
 
         let start = state.offset;
         state.offset += m.end();

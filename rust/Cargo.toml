@@ -1,8 +1,6 @@
 [workspace]
-members = ["pretty", "src", "parse_that", "bbnf", "bbnf/derive"]
-
-[unstable]
-bench = true
+members = ["src", "parse_that", "bbnf", "bbnf/derive"]
+resolver = "2"
 
 
 [profile.release-lto]

@@ -1,5 +1,3 @@
-extern crate parse_that;
-
 use std::borrow::Cow;
 
 use parse_that::parsers::utils::escaped_span;
@@ -8,8 +6,7 @@ use parse_that::{
     ParserSpan, ParserState, Span,
 };
 
-extern crate pretty;
-use pretty::{Doc, Pretty};
+use pprint::{Doc, Pretty};
 
 use indexmap::IndexMap;
 
@@ -64,9 +61,9 @@ pub enum Expression<'a> {
 pub struct Token<'a, T> {
     pub value: T,
 
-    #[pretty(skip)]
+    #[pprint(skip)]
     pub span: Span<'a>,
-    #[pretty(skip)]
+    #[pprint(skip)]
     pub comments: Option<Comments<'a>>,
 }
 

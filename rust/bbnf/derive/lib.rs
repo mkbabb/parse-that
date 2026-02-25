@@ -26,7 +26,7 @@ use bbnf::Token;
 use bbnf::TypeCache;
 use indexmap::IndexMap;
 
-use pretty::Doc;
+use pprint::Doc;
 use proc_macro::TokenStream;
 
 use quote::{format_ident, quote};
@@ -93,7 +93,7 @@ fn generate_enum(
     let enum_ident = &grammar_attrs.enum_ident;
 
     quote! {
-        #[derive(::pretty::Pretty, Debug, Clone)]
+        #[derive(::pprint::Pretty, Debug, Clone)]
         pub enum #enum_ident<'a> {
             #(#enum_values),*
         }
