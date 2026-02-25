@@ -193,7 +193,7 @@ export const JSONParser = (grammar: string) => {
 };
 
 describe("BBNF Parser", () => {
-    // TODO: math grammar fails on 100-term expressions (parse returns undefined)
+    // BBNF math grammar fails on long expressions — parse returns undefined near end
     it.todo("should parse a simple math grammar", () => {
         const grammar = fs.readFileSync("../grammar/math.bbnf", "utf8");
         const [nonterminals] = mathParser(grammar);
@@ -228,7 +228,7 @@ describe("BBNF Parser", () => {
         }
     });
 
-    // TODO: valueUnit grammar returns non-iterable for some unit-less numbers
+    // valueUnit grammar returns non-iterable for unitless numbers
     it.todo("should parse a CSS value unit grammar", () => {
         const grammar = fs.readFileSync("../grammar/css-value-unit.bbnf", "utf8");
         const colorGrammar = fs.readFileSync("../grammar/css-color.bbnf", "utf8");
@@ -366,7 +366,7 @@ describe("BBNF Parser", () => {
     });
 
     // TODO: json.bbnf had Rust-specific syntax (=> |x| -> &'a str); fixed grammar
-    // but char* returns individual chars instead of joined string
+    // BBNF json grammar: char* produces individual chars, not joined strings
     it.todo("should parse JSON data", () => {
         const grammar = fs.readFileSync("../grammar/json.bbnf", "utf8");
 

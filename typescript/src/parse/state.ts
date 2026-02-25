@@ -10,20 +10,45 @@ export class ParserState<T = unknown> {
         public furthest: number = 0,
     ) {}
 
-    ok<S>(value: S, offset: number = 0) {
-        offset += this.offset;
-        return new ParserState<S>(this.src, value, offset, false);
+    ok<S>(value: S, offset: number = 0): ParserState<S> {
+        this.offset += offset;
+        (this as any).value = value;
+        this.isError = false;
+        return this as unknown as ParserState<S>;
     }
 
-    err<S>(value?: S, offset: number = 0) {
-        const nextState = this.ok(value as S, offset);
-        nextState.isError = true;
-        return nextState;
+    err<S>(value?: S, offset: number = 0): ParserState<S> {
+        this.offset += offset;
+        (this as any).value = value;
+        this.isError = true;
+        return this as unknown as ParserState<S>;
     }
 
-    from<S>(value: S, offset: number = 0) {
-        offset += this.offset;
-        return new ParserState<S>(this.src, value, offset, this.isError);
+    from<S>(value: S, offset: number = 0): ParserState<S> {
+        this.offset += offset;
+        (this as any).value = value;
+        return this as unknown as ParserState<S>;
+    }
+
+    save(): { offset: number; value: T } {
+        return { offset: this.offset, value: this.value };
+    }
+
+    restore(saved: { offset: number; value: any }): this {
+        this.offset = saved.offset;
+        this.value = saved.value;
+        this.isError = false;
+        return this;
+    }
+
+    clone(): ParserState<T> {
+        return new ParserState<T>(
+            this.src,
+            this.value,
+            this.offset,
+            this.isError,
+            this.furthest,
+        );
     }
 
     getColumnNumber(): number {
