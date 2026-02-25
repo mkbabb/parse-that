@@ -2,14 +2,17 @@
 name = "bbnf"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
+description = "BBNF grammar parser and code generator built on parse_that"
+repository = "https://github.com/mkbabb/parse-that"
 
 [lib]
 name = "bbnf"
 path = "src/lib.rs"
 
 [dependencies]
-pprint = { path = "/Users/mkbabb/Programming/pprint" }
-parse_that = { path = "../parse_that" }
+pprint = { version = "0.3.0", path = "/Users/mkbabb/Programming/pprint" }
+parse_that = { version = "0.1.0", path = "../parse_that" }
 
 regex = { version = "1.11", features = ["perf"] }
 

@@ -2,6 +2,9 @@
 name = "parse_that"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
+description = "Zero-copy parser combinator library for Rust"
+repository = "https://github.com/mkbabb/parse-that"
 
 [lib]
 name = "parse_that"
@@ -11,7 +14,7 @@ path = "src/lib.rs"
 name = "parse_that"
 
 [dependencies]
-pprint = { path = "/Users/mkbabb/Programming/pprint" }
+pprint = { version = "0.3.0", path = "/Users/mkbabb/Programming/pprint" }
 regex = { version = "1.11", features = ["perf"] }
 colored = "3"
 memchr = "2.5.0"
