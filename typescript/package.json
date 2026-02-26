@@ -35,6 +35,9 @@
     ],
     "devDependencies": {
         "@types/node": "^22.0.0",
+        "moo": "^0.5.2",
+        "nearley": "^2.20.1",
+        "ohm-js": "^17.5.0",
         "typescript": "^5.8.0",
         "vite": "^7.0.0",
         "vite-plugin-dts": "^4.5.0",
