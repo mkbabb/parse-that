@@ -665,23 +665,29 @@ export function regex(
             return state;
         }
 
-        sticky.lastIndex = state.offset;
-        const execResult = sticky.exec(state.src);
+        const savedOffset = state.offset;
+        sticky.lastIndex = savedOffset;
 
         if (hasCustomMatch) {
+            // Custom match functions need the full RegExpMatchArray
+            const execResult = sticky.exec(state.src);
             const match = matchFunction!(execResult);
             if (match) {
-                return state.ok(match, sticky.lastIndex - state.offset);
+                return state.ok(match, sticky.lastIndex - savedOffset);
             } else if (match === "") {
                 return state.ok(undefined);
             }
-        } else if (execResult) {
-            const match = execResult[0];
-            if (match) {
-                return state.ok(match, sticky.lastIndex - state.offset);
-            } else if (match === "") {
-                return state.ok(undefined);
+        } else if (sticky.test(state.src)) {
+            // test() advances lastIndex without allocating a RegExpMatchArray
+            const end = sticky.lastIndex;
+            if (end > savedOffset) {
+                return state.ok(
+                    state.src.substring(savedOffset, end),
+                    end - savedOffset,
+                );
             }
+            // Empty match
+            return state.ok(undefined);
         }
 
         mergeErrorState(state as ParserState<unknown>);

@@ -12,7 +12,6 @@ nonterminals.number = nonterminals.number.map(Number);
 nonterminals.string = nonterminals.string.map((s: string) =>
     s.indexOf("\\") === -1 ? s.slice(1, -1) : JSON.parse(s),
 );
-nonterminals.pair = nonterminals.pair.map(([k, v]: [string, any]) => [k, v]);
 nonterminals.object = nonterminals.object.map((pairs: [string, any][]) =>
     Object.fromEntries(pairs),
 );
