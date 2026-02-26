@@ -2,6 +2,9 @@
 pub mod parse;
 pub use parse::*;
 
+pub mod span_parser;
+pub use span_parser::*;
+
 pub mod parsers;
 pub use parsers::*;
 

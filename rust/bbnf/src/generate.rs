@@ -950,11 +950,30 @@ pub fn calculate_alternation_expression<'a>(
     if let Some(parser) = check_for_any_span(inner_exprs) {
         return map_span_if_needed(parser, true, grammar_attrs);
     }
-    let parser = inner_exprs
+
+    let parsers: Vec<TokenStream> = inner_exprs
         .iter()
         .map(|expr| {
             calculate_parser_from_expression(expr, grammar_attrs, cache_bundle, max_depth, depth)
         })
+        .collect();
+
+    // For 3+ non-span branches, emit one_of(vec![...]) for flat alternation
+    if parsers.len() >= 3 {
+        let tys: Vec<_> = inner_exprs
+            .iter()
+            .map(|expr| calculate_expression_type(expr, grammar_attrs, cache_bundle))
+            .collect();
+        let all_span = tys.iter().all(type_is_span);
+        if !all_span {
+            return quote! {
+                ::parse_that::parse::one_of(vec![#(#parsers),*])
+            };
+        }
+    }
+
+    let parser = parsers
+        .into_iter()
         .fold(None, |acc, parser| match acc {
             None => Some(parser),
             Some(acc) => Some(quote! {

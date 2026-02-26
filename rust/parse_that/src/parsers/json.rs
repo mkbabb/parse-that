@@ -1,10 +1,7 @@
 use crate::parse::*;
-
-use super::utils::{escaped_span, number_span};
+use crate::span_parser::*;
 
 use pprint::Pretty;
-
-use crate::parse::ParserSpan;
 
 use std::collections::HashMap;
 
@@ -19,31 +16,46 @@ pub enum JsonValue<'a> {
     Object(HashMap<&'a str, JsonValue<'a>>),
 }
 
+fn pairs_to_object<'a>(pairs: Vec<(&'a str, JsonValue<'a>)>) -> JsonValue<'a> {
+    let mut map = HashMap::with_capacity(pairs.len());
+    for (k, v) in pairs {
+        map.insert(k, v);
+    }
+    JsonValue::Object(map)
+}
+
 pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
-    let string_char = || {
-        let not_quote = take_while_span(|c| c != '"' && c != '\\');
+    // ── String parser using monolithic SIMD scanner ────────────
 
-        let string = (not_quote | escaped_span())
-            .many_span(..)
-            .wrap_span(string_span("\""), string_span("\""));
-
-        string.map(|s| s.as_str())
+    let json_string_content = || -> Parser<'a, &'a str> {
+        sp_json_string().map(|s| s.as_str())
     };
 
-    let json_null = string_span("null").map(|_| JsonValue::Null);
-    let json_bool = string_span("true").map(|_| JsonValue::Bool(true))
-        | string_span("false").map(|_| JsonValue::Bool(false));
+    // ── Leaf values ───────────────────────────────────────────
 
-    let json_number = || {
-        number_span()
-            .map(|s| s.as_str().parse().unwrap_or(f64::NAN))
-            .map(JsonValue::Number)
+    let json_null: Parser<'a, JsonValue<'a>> =
+        SpanParser::<'a>::from(sp_string("null")).map(|_| JsonValue::Null);
+    let json_true: Parser<'a, JsonValue<'a>> =
+        SpanParser::<'a>::from(sp_string("true")).map(|_| JsonValue::Bool(true));
+    let json_false: Parser<'a, JsonValue<'a>> =
+        SpanParser::<'a>::from(sp_string("false")).map(|_| JsonValue::Bool(false));
+
+    let json_number = || -> Parser<'a, JsonValue<'a>> {
+        let num: SpanParser<'a> = sp_json_number();
+        num.map_closure(|s| {
+            JsonValue::Number(fast_float2::parse(s.as_str()).unwrap_or(f64::NAN))
+        })
     };
 
-    let json_string = || string_char().map(JsonValue::String);
+    let json_string = || -> Parser<'a, JsonValue<'a>> {
+        json_string_content().map(JsonValue::String)
+    };
+
+    // ── Recursive structures ──────────────────────────────────
 
     let json_array = lazy(|| {
-        let comma = string_span(",").trim_whitespace();
+        let comma_sp: SpanParser<'_> = sp_string(",").trim_whitespace();
+        let comma = comma_sp.into_parser();
 
         json_value()
             .sep_by(comma, ..)
@@ -54,20 +66,38 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
     });
 
     let json_object = lazy(move || {
-        let colon = string_span(":").trim_whitespace();
-        let comma = string_span(",").trim_whitespace();
+        let colon_sp: SpanParser<'_> = sp_string(":").trim_whitespace();
+        let colon = colon_sp.into_parser();
+        let comma_sp: SpanParser<'_> = sp_string(",").trim_whitespace();
+        let comma = comma_sp.into_parser();
 
-        let key_value = string_char().skip(colon).then(json_value());
+        let key_value = json_string_content().skip(colon).then(json_value());
 
         key_value
             .sep_by(comma, ..)
             .or_else(std::vec::Vec::new)
             .trim_whitespace()
             .wrap(string_span("{"), string_span("}"))
-            .map(|pairs| JsonValue::Object(pairs.into_iter().collect()))
+            .map(pairs_to_object)
     });
 
-    json_object | json_array | json_string() | json_number() | json_bool | json_null
+    // ── First-byte dispatch ───────────────────────────────────
+
+    dispatch_byte_multi(
+        vec![
+            (&[b'{'] as &[u8], json_object),
+            (&[b'['], json_array),
+            (&[b'"'], json_string()),
+            (&[b't'], json_true),
+            (&[b'f'], json_false),
+            (&[b'n'], json_null),
+            (
+                &[b'-', b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9'],
+                json_number(),
+            ),
+        ],
+        None,
+    )
 }
 
 pub fn json_parser<'a>() -> Parser<'a, JsonValue<'a>> {

@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[macro_use]
 extern crate bencher;
@@ -55,7 +55,9 @@ pub fn consume(pair: Pair<Rule>) -> Json {
     value(pair)
 }
 
-const DATA_DIR_PATH: &str = "../data/json";
+fn data_dir() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/json")
+}
 
 fn data(b: &mut Bencher) {
     parse(b, "data.json")
@@ -74,7 +76,7 @@ fn data_xl(b: &mut Bencher) {
 }
 
 fn parse(b: &mut Bencher, filepath: &str) {
-    let filepath = Path::new(DATA_DIR_PATH).join(filepath);
+    let filepath = data_dir().join(filepath);
     let data = std::fs::read_to_string(filepath).unwrap();
     b.bytes = data.len() as u64;
 
