@@ -1,6 +1,5 @@
 import { describe, bench, BenchOptions } from "vitest";
 import fs from "fs";
-import path from "path";
 
 import { JSONParser as BBNFJsonParser } from "./bbnf";
 import { JSONParser as StandardJsonParser } from "./parse-that";
@@ -11,7 +10,7 @@ const options = {
     iterations: 10,
 } as BenchOptions;
 
-const input = fs.readFileSync(path.resolve(__dirname, "../../../data/json/data.json"), "utf-8");
+const input = fs.readFileSync("../data/json/data.json", "utf-8");
 
 // Suppress console.log from parse-that error reporting
 const origLog = console.log;

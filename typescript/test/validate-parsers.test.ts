@@ -1,8 +1,7 @@
 import { describe, it, expect } from "vitest";
 import fs from "fs";
-import path from "path";
 
-const input = fs.readFileSync(path.resolve(__dirname, "../../data/json/data.json"), "utf8");
+const input = fs.readFileSync("../data/json/data.json", "utf8");
 const expected = JSON.parse(input);
 
 describe("Benchmark parser validation", () => {

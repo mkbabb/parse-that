@@ -1,6 +1,5 @@
 import { describe, bench, BenchOptions } from "vitest";
 import fs from "fs";
-import path from "path";
 
 // parse-that parsers (value-building, same output as JSON.parse)
 import { JSONParser as BBNFParser } from "./bbnf";
@@ -28,7 +27,7 @@ const options: BenchOptions = {
 // ---------------------------------------------------------------------------
 // Datasets
 // ---------------------------------------------------------------------------
-const dataDir = path.resolve(__dirname, "../../../data/json");
+const dataDir = "../data/json";
 
 const datasets = [
     { name: "data.json (35 KB)", file: "data.json", maxCombKB: Infinity },
@@ -61,7 +60,7 @@ const parserDefs: ParserDef[] = [
 // Benchmark matrix
 // ---------------------------------------------------------------------------
 for (const dataset of datasets) {
-    const filePath = path.join(dataDir, dataset.file);
+    const filePath = `${dataDir}/${dataset.file}`;
     if (!fs.existsSync(filePath)) continue;
 
     const input = fs.readFileSync(filePath, "utf-8");
