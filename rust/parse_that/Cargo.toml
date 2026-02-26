@@ -12,6 +12,19 @@ path = "src/lib.rs"
 
 [[bench]]
 name = "parse_that"
+harness = false
+
+[[bench]]
+name = "serde"
+harness = false
+
+[[bench]]
+name = "nom"
+harness = false
+
+[[bench]]
+name = "pest"
+harness = false
 
 [dependencies]
 pprint = { version = "0.3.0", path = "/Users/mkbabb/Programming/pprint" }

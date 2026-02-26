@@ -121,7 +121,15 @@ fn apache(b: &mut Bencher) {
 }
 
 fn data_xl(b: &mut Bencher) {
-    parse(b, "data-l.json")
+    parse(b, "data-xl.json")
+}
+
+fn twitter(b: &mut Bencher) {
+    parse(b, "twitter.json")
+}
+
+fn citm_catalog(b: &mut Bencher) {
+    parse(b, "citm_catalog.json")
 }
 
 fn parse(b: &mut Bencher, filepath: &str) {
@@ -142,6 +150,6 @@ fn parse(b: &mut Bencher, filepath: &str) {
     });
 }
 
-benchmark_group!(json, data);
+benchmark_group!(json, data, canada, apache, data_xl, twitter, citm_catalog);
 
 benchmark_main!(json);
