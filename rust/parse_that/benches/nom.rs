@@ -139,6 +139,14 @@ fn data_xl(b: &mut Bencher) {
     parse(b, "data-xl.json")
 }
 
+fn twitter(b: &mut Bencher) {
+    parse(b, "twitter.json")
+}
+
+fn citm_catalog(b: &mut Bencher) {
+    parse(b, "citm_catalog.json")
+}
+
 fn parse(b: &mut Bencher, filepath: &str) {
     let filepath = data_dir().join(filepath);
     let data = std::fs::read_to_string(&filepath)
@@ -156,6 +164,6 @@ fn parse(b: &mut Bencher, filepath: &str) {
     });
 }
 
-benchmark_group!(json, data, canada, apache, data_xl);
+benchmark_group!(json, data, canada, apache, data_xl, twitter, citm_catalog);
 
 benchmark_main!(json);

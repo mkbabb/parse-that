@@ -360,4 +360,14 @@ mod tests {
     fn test_equivalence_data_xl() {
         test_equivalence_for_file("data-xl.json");
     }
+
+    #[test]
+    fn test_equivalence_twitter() {
+        test_equivalence_for_file("twitter.json");
+    }
+
+    #[test]
+    fn test_equivalence_citm_catalog() {
+        test_equivalence_for_file("citm_catalog.json");
+    }
 }

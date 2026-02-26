@@ -34,6 +34,14 @@ harness = false
 name = "simd_json"
 harness = false
 
+[[bench]]
+name = "sonic_rs"
+harness = false
+
+[[bench]]
+name = "winnow"
+harness = false
+
 [dependencies]
 pprint = { version = "0.3.0", path = "/Users/mkbabb/Programming/pprint" }
 regex = { version = "1.11", features = ["perf"] }
@@ -51,3 +59,5 @@ pest_grammars = "2.5.6"
 nom = "7.1.3"
 jiter = "0.8"
 simd-json = "0.14"
+sonic-rs = "0.5"
+winnow = "0.7"
