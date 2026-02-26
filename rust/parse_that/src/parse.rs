@@ -19,6 +19,9 @@ pub struct ParseError {
     pub line: usize,
     /// 0-based column number of the failure.
     pub column: usize,
+    /// Parser names/descriptions that were expected at the failure point.
+    /// Populated from parser context when available.
+    pub expected: Vec<String>,
 }
 
 impl std::fmt::Display for ParseError {
@@ -27,7 +30,11 @@ impl std::fmt::Display for ParseError {
             f,
             "parse error at line {}, column {} (offset {}, furthest offset reached: {})",
             self.line, self.column, self.offset, self.furthest_offset,
-        )
+        )?;
+        if !self.expected.is_empty() {
+            write!(f, ", expected: {}", self.expected.join(" | "))?;
+        }
+        Ok(())
     }
 }
 
@@ -166,6 +173,7 @@ where
                 furthest_offset: state.furthest_offset,
                 line: state.get_line_number(),
                 column: state.get_column_number(),
+                expected: Vec::new(),
             }),
         }
     }

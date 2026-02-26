@@ -35,6 +35,9 @@ enum SpanKind<'a> {
     /// Monolithic JSON string scanner: `"` ... `"` with `\`-escapes, using memchr2.
     /// Returns the span of the *content* (between the quotes, exclusive).
     JsonString,
+    /// Like JsonString but returns span including the quote delimiters.
+    /// Used by BBNF codegen where the regex captures the full quoted string.
+    JsonStringQuoted,
 
     // === Flat combinators (no nesting depth) ===
     Seq(Vec<SpanParser<'a>>),
@@ -201,6 +204,7 @@ impl<'a> SpanParser<'a> {
             SpanKind::JsonNumber => number_span_fast(state),
 
             SpanKind::JsonString => json_string_fast(state),
+            SpanKind::JsonStringQuoted => json_string_fast_quoted(state),
 
             SpanKind::Seq(parsers) => {
                 let start = state.offset;
@@ -582,6 +586,16 @@ pub fn sp_json_string<'a>() -> SpanParser<'a> {
     }
 }
 
+/// Monolithic JSON string scanner — SIMD-accelerated via memchr2.
+/// Returns span including the quote delimiters (matches regex behavior).
+#[inline]
+pub fn sp_json_string_quoted<'a>() -> SpanParser<'a> {
+    SpanParser {
+        kind: SpanKind::JsonStringQuoted,
+        flags: 0,
+    }
+}
+
 /// Wrap a boxed `ParserFn` as a SpanParser escape hatch.
 pub fn sp_boxed<'a>(inner: impl ParserFn<'a, Span<'a>>) -> SpanParser<'a> {
     SpanParser {
@@ -667,10 +681,11 @@ fn number_span_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
 
 // ── Monolithic JSON string scanner ────────────────────────────
 
-/// Scans a JSON string `"..."` with `\`-escape handling using SIMD (memchr2).
-/// Returns the span of the *content* (between the quotes, exclusive of `"`).
+/// Core JSON string scanner with configurable span bounds.
+/// When `include_quotes` is false, returns content between quotes (exclusive).
+/// When `include_quotes` is true, returns full span including delimiters.
 #[inline(always)]
-pub(crate) fn json_string_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+fn json_string_fast_inner<'a>(state: &mut ParserState<'a>, include_quotes: bool) -> Option<Span<'a>> {
     let bytes = state.src_bytes;
     let start = state.offset;
     if bytes.get(start) != Some(&b'"') {
@@ -684,11 +699,13 @@ pub(crate) fn json_string_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'
             Some(pos) => {
                 i += pos;
                 if unsafe { *bytes.get_unchecked(i) } == b'"' {
-                    let content_start = start + 1;
-                    let content_end = i;
                     i += 1; // consume closing quote
                     state.offset = i;
-                    return Some(Span::new(content_start, content_end, state.src));
+                    return if include_quotes {
+                        Some(Span::new(start, i, state.src))
+                    } else {
+                        Some(Span::new(start + 1, i - 1, state.src))
+                    };
                 }
                 // backslash: skip escape sequence
                 i += 1;
@@ -707,6 +724,20 @@ pub(crate) fn json_string_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'
             }
         }
     }
+}
+
+/// Scans a JSON string `"..."` with `\`-escape handling using SIMD (memchr2).
+/// Returns the span of the *content* (between the quotes, exclusive of `"`).
+#[inline(always)]
+pub(crate) fn json_string_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+    json_string_fast_inner(state, false)
+}
+
+/// Scans a JSON string `"..."` with `\`-escape handling using SIMD (memchr2).
+/// Returns the span including the quote delimiters (matches regex behavior).
+#[inline(always)]
+pub(crate) fn json_string_fast_quoted<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+    json_string_fast_inner(state, true)
 }
 
 // ── JSON string with full escape decoding ─────────────────────
