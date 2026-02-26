@@ -33,11 +33,7 @@ pub struct ParserState<'a> {
     pub offset: usize,
     pub furthest_offset: usize,
 
-    #[pprint(skip)]
-    pub state_stack: Vec<usize>,
 }
-
-
 
 impl<'a> ParserState<'a> {
     pub fn new(src: &'a str) -> ParserState<'a> {
@@ -51,20 +47,6 @@ impl<'a> ParserState<'a> {
 
     pub fn is_at_end(&self) -> bool {
         self.offset >= self.end
-    }
-
-    pub fn save(&mut self) {
-        self.state_stack.push(self.offset);
-    }
-
-    pub fn restore(&mut self) {
-        if let Some(offset) = self.state_stack.pop() {
-            self.offset = offset;
-        }
-    }
-
-    pub fn pop(&mut self) {
-        self.state_stack.pop();
     }
 
     pub fn get_column_number(&self) -> usize {

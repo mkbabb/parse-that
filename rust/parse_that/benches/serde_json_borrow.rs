@@ -1,12 +1,10 @@
-#[macro_use]
-extern crate bencher;
 use std::path::{Path, PathBuf};
 
+#[macro_use]
+extern crate bencher;
 use bencher::{black_box, Bencher};
 
-extern crate serde;
-extern crate serde_json;
-use serde_json::Value;
+use serde_json_borrow::Value;
 
 fn data_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/json")
@@ -38,7 +36,8 @@ fn citm_catalog(b: &mut Bencher) {
 
 fn parse(b: &mut Bencher, filepath: &str) {
     let filepath = data_dir().join(filepath);
-    let data = std::fs::read_to_string(filepath).unwrap();
+    let data = std::fs::read_to_string(&filepath)
+        .unwrap_or_else(|e| panic!("Failed to read {}: {}", filepath.display(), e));
     b.bytes = data.len() as u64;
 
     b.iter(|| {
@@ -47,5 +46,13 @@ fn parse(b: &mut Bencher, filepath: &str) {
     })
 }
 
-benchmark_group!(serde_json, data, canada, apache, data_xl, twitter, citm_catalog);
-benchmark_main!(serde_json);
+benchmark_group!(
+    serde_json_borrow,
+    data,
+    canada,
+    apache,
+    data_xl,
+    twitter,
+    citm_catalog
+);
+benchmark_main!(serde_json_borrow);

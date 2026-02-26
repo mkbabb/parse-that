@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[macro_use]
 extern crate bencher;
@@ -11,7 +11,7 @@ use nom::{
     bytes::complete::{escaped, tag, take_while, take_while1},
     character::complete::{char, one_of},
     combinator::{cut, iterator, map, opt},
-    multi::separated_list1,
+    multi::separated_list0,
     number::complete::double,
     sequence::{delimited, pair, preceded, separated_pair, terminated},
     IResult,
@@ -19,7 +19,6 @@ use nom::{
 use std::str;
 
 pub fn is_string_character(c: char) -> bool {
-    //FIXME: should validate unicode character
     c != '"' && c != '\\'
 }
 
@@ -33,6 +32,7 @@ fn sp(i: &str) -> IResult<&str, &str> {
 
 #[derive(Debug, PartialEq)]
 pub enum JsonValue<'a> {
+    Null,
     Str(&'a str),
     Boolean(bool),
     Num(f64),
@@ -40,12 +40,19 @@ pub enum JsonValue<'a> {
     Object(HashMap<&'a str, JsonValue<'a>>),
 }
 
-//FIXME: handle the cases like \u1234
 fn string(i: &str) -> IResult<&str, &str> {
     preceded(
         char('\"'),
         cut(terminated(
-            escaped(take_while1(is_string_character), '\\', one_of("\"bfnrt\\")),
+            alt((
+                escaped(
+                    take_while1(is_string_character),
+                    '\\',
+                    one_of("\"bfnrt\\/u"),
+                ),
+                // Handle empty strings
+                tag(""),
+            )),
             char('\"'),
         )),
     )(i)
@@ -55,11 +62,15 @@ fn boolean(i: &str) -> IResult<&str, bool> {
     alt((map(tag("false"), |_| false), map(tag("true"), |_| true)))(i)
 }
 
+fn null(i: &str) -> IResult<&str, ()> {
+    map(tag("null"), |_| ())(i)
+}
+
 fn array(i: &str) -> IResult<&str, Vec<JsonValue>> {
     preceded(
         char('['),
         cut(terminated(
-            separated_list1(preceded(sp, char(',')), value),
+            separated_list0(preceded(sp, char(',')), value),
             preceded(sp, char(']')),
         )),
     )(i)
@@ -75,7 +86,8 @@ fn hash(i: &str) -> IResult<&str, HashMap<&str, JsonValue>> {
 
     match key_value(i) {
         Err(_) => preceded(sp, char('}'))(i).map(|(i, _)| (i, res)),
-        Ok((i, _first)) => {
+        Ok((i, first)) => {
+            res.insert(first.0, first.1);
             let mut it = iterator(i, preceded(pair(sp, char(',')), key_value));
             res.extend(&mut it);
 
@@ -94,6 +106,7 @@ fn value(i: &str) -> IResult<&str, JsonValue> {
             map(string, JsonValue::Str),
             map(double, JsonValue::Num),
             map(boolean, JsonValue::Boolean),
+            map(null, |_| JsonValue::Null),
         )),
     )(i)
 }
@@ -106,7 +119,9 @@ fn root(i: &str) -> IResult<&str, JsonValue> {
     )(i)
 }
 
-const DATA_DIR_PATH: &str = "../data/json";
+fn data_dir() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/json")
+}
 
 fn data(b: &mut Bencher) {
     parse(b, "data.json")
@@ -133,16 +148,15 @@ fn citm_catalog(b: &mut Bencher) {
 }
 
 fn parse(b: &mut Bencher, filepath: &str) {
-    let filepath = Path::new(DATA_DIR_PATH).join(filepath);
-    let data = std::fs::read_to_string(filepath).unwrap();
+    let filepath = data_dir().join(filepath);
+    let data = std::fs::read_to_string(&filepath)
+        .unwrap_or_else(|e| panic!("Failed to read {}: {}", filepath.display(), e));
     b.bytes = data.len() as u64;
 
     b.iter(|| {
         let buf = black_box(&data);
         match root(buf) {
-            Ok((_, o)) => {
-                o
-            }
+            Ok((_, o)) => o,
             Err(err) => {
                 panic!("got err: {:?}", err)
             }

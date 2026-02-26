@@ -1,4 +1,6 @@
-use crate::{any_span, string_span, take_while_span, Parser, ParserSpan, Span};
+use crate::parse::*;
+use crate::span_parser::*;
+use crate::state::Span;
 
 static ESCAPE_PATTERNS: &[&str] = &["b", "f", "n", "r", "t", "\"", "'", "\\", "/"];
 
@@ -9,12 +11,18 @@ pub fn escaped_span<'a>() -> Parser<'a, Span<'a>> {
     )
 }
 
+/// SpanParser version of escaped_span for use in SpanParser chains.
+pub fn sp_escaped<'a>() -> SpanParser<'a> {
+    sp_string("\\").then_span(
+        sp_any(ESCAPE_PATTERNS)
+            | sp_string("u").then_span(sp_take_while_byte(|b| b.is_ascii_hexdigit())),
+    )
+}
+
 pub fn quoted_span(quote_string: &str) -> Parser<'_, Span<'_>> {
     let string_char = || {
         let quote_char = quote_string.chars().next().unwrap();
         let not_quote = take_while_span(move |c| c != quote_char && c != '\\');
-
-        
 
         (not_quote | escaped_span())
             .many_span(..)
@@ -25,17 +33,5 @@ pub fn quoted_span(quote_string: &str) -> Parser<'_, Span<'_>> {
 }
 
 pub fn number_span<'a>() -> Parser<'a, Span<'a>> {
-    let sign = || string_span("-").opt_span();
-    let digits = || take_while_span(|c| c.is_ascii_digit());
-
-    let integer = digits();
-    let fraction = string_span(".").then_span(digits());
-    let exponent = (string_span("e") | string_span("E"))
-        .then_span(sign())
-        .then_span(digits());
-
-    sign()
-        .then_span(integer)
-        .then_span(fraction.opt_span())
-        .then_span(exponent.opt_span())
+    number_span_fast_parser()
 }

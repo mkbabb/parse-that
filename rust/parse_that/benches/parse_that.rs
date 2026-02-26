@@ -4,12 +4,18 @@ use std::path::Path;
 extern crate bencher;
 use bencher::{black_box, Bencher};
 
-use parse_that::json::json_parser;
+use parse_that::json::json_parser_fast;
 use parse_that::csv::csv_parser;
 
-// ── JSON benchmarks ─────────────────────────────────────────────────────
+fn data_dir() -> std::path::PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/json")
+}
 
-const JSON_DATA_DIR: &str = "../data/json";
+fn csv_data_dir() -> std::path::PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/csv")
+}
+
+// ── JSON benchmarks ─────────────────────────────────────────────────────
 
 fn json_data(b: &mut Bencher) {
     json_parse(b, "data.json")
@@ -36,11 +42,12 @@ fn json_citm_catalog(b: &mut Bencher) {
 }
 
 fn json_parse(b: &mut Bencher, filepath: &str) {
-    let filepath = Path::new(JSON_DATA_DIR).join(filepath);
-    let data = std::fs::read_to_string(filepath).unwrap();
+    let filepath = data_dir().join(filepath);
+    let data = std::fs::read_to_string(&filepath)
+        .unwrap_or_else(|e| panic!("Failed to read {}: {}", filepath.display(), e));
     b.bytes = data.len() as u64;
 
-    let parser = json_parser();
+    let parser = json_parser_fast();
 
     b.iter(|| {
         let buf = black_box(&data);
@@ -49,8 +56,6 @@ fn json_parse(b: &mut Bencher, filepath: &str) {
 }
 
 // ── CSV benchmarks ──────────────────────────────────────────────────────
-
-const CSV_DATA_DIR: &str = "../data/csv";
 
 fn csv_small(b: &mut Bencher) {
     let data = r#""a","b","c"
@@ -66,8 +71,9 @@ fn csv_small(b: &mut Bencher) {
 }
 
 fn csv_large(b: &mut Bencher) {
-    let filepath = Path::new(CSV_DATA_DIR).join("active_charter_schools_report.csv");
-    let data = std::fs::read_to_string(filepath).unwrap();
+    let filepath = csv_data_dir().join("active_charter_schools_report.csv");
+    let data = std::fs::read_to_string(&filepath)
+        .unwrap_or_else(|e| panic!("Failed to read {}: {}", filepath.display(), e));
     b.bytes = data.len() as u64;
 
     let parser = csv_parser();
