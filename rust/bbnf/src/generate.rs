@@ -1,4 +1,5 @@
 use crate::grammar::*;
+use crate::analysis::{FirstSets, build_dispatch_table};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote, ToTokens};
 use std::{
@@ -14,6 +15,7 @@ pub struct ParserAttributes {
     pub ignore_whitespace: bool,
     pub debug: bool,
     pub use_string: bool,
+    pub remove_left_recursion: bool,
 }
 
 pub struct GeneratedNonterminalParser {
@@ -38,6 +40,20 @@ pub struct GeneratedGrammarAttributes<'a> {
     pub deps: &'a Dependencies<'a>,
     pub non_acyclic_deps: &'a Dependencies<'a>,
     pub acyclic_deps: &'a Dependencies<'a>,
+
+    pub first_sets: Option<&'a FirstSets<'a>>,
+
+    pub ref_counts: Option<&'a HashMap<&'a Expression<'a>, usize>>,
+    pub aliases: Option<&'a HashMap<&'a Expression<'a>, &'a Expression<'a>>>,
+
+    /// Rules whose enum variant is elided — their parser returns the inner
+    /// variant directly instead of wrapping in `Enum::rule_name(Box<...>)`.
+    pub transparent_rules: Option<&'a HashSet<String>>,
+
+    /// Rules whose body can be expressed entirely as a `SpanParser` (no
+    /// recursion, no heterogeneous output). Dual methods are generated:
+    /// `rule_sp() -> SpanParser` and `rule() -> Parser<Enum>`.
+    pub span_eligible_rules: Option<&'a HashSet<String>>,
 
     pub ident: &'a syn::Ident,
     pub enum_ident: &'a syn::Ident,
@@ -92,6 +108,12 @@ pub fn get_nonterminal_name<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
     } else {
         None
     }
+}
+
+fn is_transparent_rule(name: &str, grammar_attrs: &GeneratedGrammarAttributes) -> bool {
+    grammar_attrs
+        .transparent_rules
+        .map_or(false, |set| set.contains(name))
 }
 
 fn type_is_span(ty: &Type) -> bool {
@@ -174,76 +196,6 @@ pub fn calculate_ast_deps<'a>(ast: &'a AST<'a>) -> Dependencies<'a> {
     };
     traverse_ast(ast, Some(&mut visitor));
     deps.take()
-}
-
-pub fn topological_sort<'a>(ast: &AST<'a>, deps: &Dependencies<'a>) -> AST<'a> {
-    let mut order = deps
-        .iter()
-        .map(|(expr, sub_deps)| {
-            let len: usize = sub_deps
-                .iter()
-                .map(|sub_name| {
-                    if let Some(sub_deps) = deps.get(sub_name) {
-                        return sub_deps.len();
-                    }
-                    0
-                })
-                .sum();
-            (expr, len)
-        })
-        .collect::<Vec<_>>();
-    order.sort_by(|(_, a), (_, b)| a.cmp(b));
-    let mut new_ast = AST::new();
-    for (lhs, _) in order {
-        if let Some(rhs) = ast.get(lhs) {
-            new_ast.insert(lhs.clone(), rhs.clone());
-        }
-    }
-    new_ast
-}
-
-pub fn calculate_acyclic_deps<'a>(deps: &'a Dependencies<'a>) -> Dependencies<'a> {
-    fn is_acyclic<'a, 'b>(
-        expr: &'a Expression,
-        deps: &'a Dependencies<'a>,
-        visited: &'b mut HashSet<&'a Expression<'a>>,
-    ) -> bool
-    where
-        'a: 'b,
-    {
-        if visited.contains(expr) {
-            return false;
-        }
-        visited.insert(expr);
-        if let Some(sub_deps) = deps.get(expr) {
-            for sub_name in sub_deps {
-                if !is_acyclic(sub_name, deps, visited) {
-                    return false;
-                }
-            }
-            true
-        } else {
-            true
-        }
-    }
-
-    deps.iter()
-        .filter(|(name, _)| {
-            let mut visited = HashSet::new();
-            is_acyclic(name, deps, &mut visited)
-        })
-        .map(|(name, sub_deps)| (name.clone(), sub_deps.clone()))
-        .collect()
-}
-
-pub fn calculate_non_acyclic_deps<'a>(
-    deps: &'a Dependencies<'a>,
-    acyclic_deps: &'a Dependencies,
-) -> Dependencies<'a> {
-    deps.iter()
-        .filter(|(lhs, _)| !acyclic_deps.contains_key(*lhs))
-        .map(|(lhs, deps)| (lhs.clone(), deps.clone()))
-        .collect()
 }
 
 pub type TypeCache<'a> = HashMap<&'a Expression<'a>, Type>;
@@ -628,8 +580,13 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
             let rhs = match get_nonterminal_name(lhs) {
                 Some(name) => {
                     let formatted_expr = formatted.get(lhs).unwrap_or(rhs);
-                    
-                    map_generated_parser(name, formatted_expr, grammar_attrs.enum_ident)
+                    // Phase B: Transparent rules skip the enum variant wrapper.
+                    // The alternation branches already produce the correct inner type.
+                    if is_transparent_rule(name, grammar_attrs) {
+                        formatted_expr.clone()
+                    } else {
+                        map_generated_parser(name, formatted_expr, grammar_attrs.enum_ident)
+                    }
                 }
                 None => rhs.clone(),
             };
@@ -644,8 +601,11 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
             let rhs = match get_nonterminal_name(lhs) {
                 Some(name) => {
                     let formatted_expr = formatted.get(lhs).unwrap_or(rhs);
-                    
-                    box_generated_parser(name, formatted_expr, grammar_attrs.enum_ident)
+                    if is_transparent_rule(name, grammar_attrs) {
+                        formatted_expr.clone()
+                    } else {
+                        box_generated_parser(name, formatted_expr, grammar_attrs.enum_ident)
+                    }
                 }
                 None => rhs.clone(),
             };
@@ -660,8 +620,11 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
             let rhs = match get_nonterminal_name(lhs) {
                 Some(name) => {
                     let formatted_expr = formatted.get(lhs).unwrap_or(rhs);
-                    
-                    box_generated_parser2(name, formatted_expr, grammar_attrs.enum_ident)
+                    if is_transparent_rule(name, grammar_attrs) {
+                        formatted_expr.clone()
+                    } else {
+                        box_generated_parser2(name, formatted_expr, grammar_attrs.enum_ident)
+                    }
                 }
                 None => rhs.clone(),
             };
@@ -743,6 +706,95 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
     generated_parsers.extend(acyclic_generated_parsers);
 
     generated_parsers
+}
+
+/// Phase 1.4: Detect `literal >> many/many1(regex) << literal` and fuse into a single `sp_regex()`.
+///
+/// Handles both AST shapes:
+///   Shape A: Next(Literal_L, Skip(Many/Many1(Regex), Literal_R))
+///   Shape B: Skip(Next(Literal_L, Many/Many1(Regex)), Literal_R)
+pub fn check_for_regex_coalesce<'a>(
+    expr: &'a Expression<'a>,
+) -> Option<TokenStream> {
+    let (left_lit, pattern, quantifier, right_lit) = match expr {
+        // Shape A: next(literal, skip(many(regex), literal))
+        Expression::Next(left_token, right_token) => {
+            let left = get_inner_expression(left_token);
+            let right = get_inner_expression(right_token);
+            match (left, right) {
+                (Expression::Literal(l_tok), Expression::Skip(middle_token, end_token)) => {
+                    let middle = get_inner_expression(middle_token);
+                    let end = get_inner_expression(end_token);
+                    match (middle, end) {
+                        (Expression::Many(inner_token), Expression::Literal(r_tok)) => {
+                            let inner = get_inner_expression(inner_token);
+                            if let Expression::Regex(re_tok) = inner {
+                                (l_tok.value.as_ref(), re_tok.value.as_ref(), "*", r_tok.value.as_ref())
+                            } else {
+                                return None;
+                            }
+                        }
+                        (Expression::Many1(inner_token), Expression::Literal(r_tok)) => {
+                            let inner = get_inner_expression(inner_token);
+                            if let Expression::Regex(re_tok) = inner {
+                                (l_tok.value.as_ref(), re_tok.value.as_ref(), "+", r_tok.value.as_ref())
+                            } else {
+                                return None;
+                            }
+                        }
+                        _ => return None,
+                    }
+                }
+                _ => return None,
+            }
+        }
+        // Shape B: skip(next(literal, many(regex)), literal)
+        Expression::Skip(left_token, right_token) => {
+            let left = get_inner_expression(left_token);
+            let right = get_inner_expression(right_token);
+            match (left, right) {
+                (Expression::Next(start_token, middle_token), Expression::Literal(r_tok)) => {
+                    let start = get_inner_expression(start_token);
+                    let middle = get_inner_expression(middle_token);
+                    match (start, middle) {
+                        (Expression::Literal(l_tok), Expression::Many(inner_token)) => {
+                            let inner = get_inner_expression(inner_token);
+                            if let Expression::Regex(re_tok) = inner {
+                                (l_tok.value.as_ref(), re_tok.value.as_ref(), "*", r_tok.value.as_ref())
+                            } else {
+                                return None;
+                            }
+                        }
+                        (Expression::Literal(l_tok), Expression::Many1(inner_token)) => {
+                            let inner = get_inner_expression(inner_token);
+                            if let Expression::Regex(re_tok) = inner {
+                                (l_tok.value.as_ref(), re_tok.value.as_ref(), "+", r_tok.value.as_ref())
+                            } else {
+                                return None;
+                            }
+                        }
+                        _ => return None,
+                    }
+                }
+                _ => return None,
+            }
+        }
+        _ => return None,
+    };
+
+    // Escape the literals for use in a regex
+    let escaped_left = regex::escape(left_lit);
+    let escaped_right = regex::escape(right_lit);
+    let combined = format!("{}({}){}{}", escaped_left, pattern, quantifier, escaped_right);
+
+    // Validate the combined regex compiles
+    if regex::Regex::new(&combined).is_err() {
+        return None;
+    }
+
+    Some(quote! {
+        ::parse_that::sp_regex(#combined)
+    })
 }
 
 pub fn check_for_sep_by<'a>(
@@ -863,6 +915,30 @@ pub fn check_for_wrapped<'a>(
     }
 }
 
+/// Detect the canonical JSON string regex pattern and return true if it matches.
+/// The JSON grammar uses `/"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/`
+/// which compiles to a general-purpose NFA via `sp_regex(...)`. The fast-path
+/// `sp_json_string()` uses `memchr2(b'"', b'\\')` SIMD scanning instead.
+pub fn is_json_string_regex(pattern: &str) -> bool {
+    // Check for the distinctive substrings that identify the JSON string regex.
+    // We look for the character class `[^"\\]` (match non-quote, non-backslash)
+    // and the escape sequence group `\\(?:` which handles JSON escape sequences.
+    pattern.contains(r#"[^"\\]"#) && pattern.contains(r"\\(?:")
+        && pattern.starts_with('"') && pattern.ends_with('"')
+}
+
+/// Detect the canonical JSON number regex and return true if it matches.
+/// The JSON grammar uses `/-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/` which
+/// compiles to a general-purpose NFA. The fast-path `sp_json_number()` uses a
+/// monolithic byte loop that is dramatically faster for number-heavy inputs.
+pub fn is_json_number_regex(pattern: &str) -> bool {
+    // JSON number regex starts with optional minus, contains the integer part
+    // (0 or [1-9] followed by digits), and contains an exponent group [eE].
+    pattern.starts_with("-?")
+        && (pattern.contains("(0|[1-9]\\d*)") || pattern.contains("(0|[1-9][0-9]*)"))
+        && pattern.contains("[eE]")
+}
+
 pub fn check_for_any_span(exprs: &[Expression]) -> Option<TokenStream> {
     let all_literals = exprs
         .iter()
@@ -957,6 +1033,142 @@ pub fn calculate_alternation_expression<'a>(
             calculate_parser_from_expression(expr, grammar_attrs, cache_bundle, max_depth, depth)
         })
         .collect();
+
+    // Phase 1.3: Dispatch table generation — O(1) byte dispatch for alternations
+    // with disjoint FIRST sets. Each branch parser is coerced to the alternation's
+    // overall output type before being placed in the dispatch table.
+    if let Some(first_sets) = grammar_attrs.first_sets {
+        let alt_refs: Vec<&Expression<'a>> = inner_exprs.iter().collect();
+        if let Some(dispatch) = build_dispatch_table(&alt_refs, first_sets, grammar_attrs.ast) {
+            // Compute per-branch types to detect Span vs Box<Enum> mismatches.
+            let branch_tys: Vec<Type> = inner_exprs
+                .iter()
+                .map(|expr| calculate_expression_type(expr, grammar_attrs, cache_bundle))
+                .collect();
+            let overall_ty = {
+                let all_span = branch_tys.iter().all(type_is_span);
+                let all_same = branch_tys.iter().all(|ty| {
+                    ty.to_token_stream().to_string()
+                        == branch_tys[0].to_token_stream().to_string()
+                });
+                if all_span || all_same {
+                    branch_tys[0].clone()
+                } else {
+                    grammar_attrs.boxed_enum_type.clone()
+                }
+            };
+            let overall_is_boxed_enum = !type_is_span(&overall_ty)
+                && overall_ty.to_token_stream().to_string()
+                    == grammar_attrs.boxed_enum_type.to_token_stream().to_string();
+
+            // Coerce each branch parser to the overall type if needed.
+            let coerced_parsers: Vec<TokenStream> = parsers
+                .iter()
+                .zip(branch_tys.iter())
+                .map(|(parser, branch_ty)| {
+                    if overall_is_boxed_enum && type_is_span(branch_ty) {
+                        // Span branch in a Box<Enum> alternation — wrap it.
+                        // The parser is already generated with proper type from
+                        // boxed2, so just box the result.
+                        quote! { #parser.map(|x| Box::new(x)) }
+                    } else {
+                        parser.clone()
+                    }
+                })
+                .collect();
+
+            // Phase C+D: Inline match dispatch with SpanParser fast-path.
+            // For span-eligible branches, call Self::rule_sp() directly to avoid
+            // vtable hops. For other branches, hoist parsers into let bindings.
+            let mut branch_bindings: Vec<TokenStream> = Vec::new();
+            let mut match_arms: Vec<TokenStream> = Vec::new();
+            let mut used: Vec<bool> = vec![false; coerced_parsers.len()];
+
+            // Detect which branches are span-eligible nonterminals with _sp methods.
+            let branch_sp_info: Vec<Option<(String, TokenStream)>> = inner_exprs
+                .iter()
+                .map(|expr| {
+                    // Resolve through inline cache to find the original nonterminal
+                    if let Some(cached) = cache_bundle.inline_cache.borrow().get(expr) {
+                        // Check if this is a MappedExpression wrapping a nonterminal
+                        if let Expression::MappedExpression((inner_token, mapping_token)) = cached {
+                            let inner = get_inner_expression(inner_token);
+                            let mapping = get_inner_expression(mapping_token);
+                            if let Expression::Nonterminal(Token { value: nt_name, .. }) = inner {
+                                if let Some(span_rules) = grammar_attrs.span_eligible_rules {
+                                    if span_rules.contains(nt_name.as_ref()) {
+                                        // Extract the mapping function for enum wrapping
+                                        if let Expression::MappingFn(Token { value: map_fn, .. }) = mapping {
+                                            let sp_ident = format_ident!("{}_sp", nt_name.as_ref());
+                                            let map_closure: syn::ExprClosure = syn::parse_str(map_fn).ok()?;
+                                            return Some((
+                                                nt_name.as_ref().to_string(),
+                                                quote! {
+                                                    Self::#sp_ident().call(state).map(#map_closure)
+                                                },
+                                            ));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    None
+                })
+                .collect();
+
+            for (idx, parser) in coerced_parsers.iter().enumerate() {
+                if used[idx] { continue; }
+                used[idx] = true;
+                let bytes: Vec<u8> = (0u8..128)
+                    .filter(|&c| dispatch.lookup(c) == Some(idx))
+                    .collect();
+                if bytes.is_empty() { continue; }
+
+                // Build byte match patterns (e.g. b'{' | b'[' | b'"')
+                let byte_patterns: Vec<proc_macro2::TokenStream> = bytes.iter()
+                    .map(|&b| {
+                        let b_lit = proc_macro2::Literal::byte_character(b);
+                        quote! { #b_lit }
+                    })
+                    .collect();
+
+                // Phase D: Use SpanParser fast-path if available
+                if let Some(Some((_, sp_call))) = branch_sp_info.get(idx) {
+                    // Inline the SpanParser call — no vtable hop, no let binding needed.
+                    // If the overall type is Box<Enum>, wrap the result.
+                    let call = if overall_is_boxed_enum {
+                        quote! { (#sp_call).map(Box::new) }
+                    } else {
+                        sp_call.clone()
+                    };
+                    match_arms.push(quote! {
+                        #(#byte_patterns)|* => { #call },
+                    });
+                } else {
+                    let branch_ident = format_ident!("_branch_{}", idx);
+                    branch_bindings.push(quote! { let #branch_ident = #parser; });
+                    match_arms.push(quote! {
+                        #(#byte_patterns)|* => #branch_ident.call(state),
+                    });
+                }
+            }
+
+            match_arms.push(quote! { _ => None, });
+
+            return quote! {
+                {
+                    #(#branch_bindings)*
+                    ::parse_that::Parser::new(move |state: &mut ::parse_that::ParserState<'a>| {
+                        let byte = *state.src_bytes.get(state.offset)?;
+                        match byte {
+                            #(#match_arms)*
+                        }
+                    })
+                }
+            };
+        }
+    }
 
     // For 3+ non-span branches, emit one_of(vec![...]) for flat alternation
     if parsers.len() >= 3 {
@@ -1063,22 +1275,57 @@ pub fn calculate_parser_from_expression<'a>(
             grammar_attrs,
         )
         .unwrap(),
-        Expression::Regex(Token { value, .. }) => get_and_parse_default_parser(
-            "REGEX",
-            Some(quote! {
-                #value
-            }),
-            grammar_attrs,
-        )
-        .unwrap(),
+        Expression::Regex(Token { value, .. }) => {
+            // Phase 2.1: Detect JSON string regex and emit sp_json_string() fast path.
+            // The JSON grammar's string regex uses memchr2-based SIMD scanning which is
+            // dramatically faster than the general-purpose NFA for string-heavy workloads.
+            if is_json_string_regex(value) {
+                let parser = quote! { ::parse_that::sp_json_string_quoted() };
+                map_span_if_needed(parser, true, grammar_attrs)
+            } else if is_json_number_regex(value) {
+                let parser = quote! { ::parse_that::sp_json_number() };
+                map_span_if_needed(parser, true, grammar_attrs)
+            } else {
+                get_and_parse_default_parser(
+                    "REGEX",
+                    Some(quote! {
+                        #value
+                    }),
+                    grammar_attrs,
+                )
+                .unwrap()
+            }
+        }
         Expression::Nonterminal(Token { value, .. }) => {
             if let Some(parser) = get_and_parse_default_parser(value, None, grammar_attrs) {
                 parser
             } else {
-                let ident = format_ident!("{}", value);
+                // Phase 4.2: Resolve aliases — if this nonterminal aliases another,
+                // emit the target's method instead to eliminate indirection.
+                let resolved_name = if let Some(aliases) = grammar_attrs.aliases {
+                    let canonical = aliases.iter().find(|(k, _)| {
+                        matches!(k, Expression::Nonterminal(t) if t.value.as_ref() == value.as_ref())
+                    });
+                    if let Some((_, target)) = canonical {
+                        if let Expression::Nonterminal(t) = target {
+                            t.value.as_ref().to_string()
+                        } else {
+                            value.to_string()
+                        }
+                    } else {
+                        value.to_string()
+                    }
+                } else {
+                    value.to_string()
+                };
+                let ident = format_ident!("{}", resolved_name);
 
-                quote! {
-                    Self::#ident().map(|x| Box::new(x))
+                // Phase B: Transparent rules already return Box<Enum>,
+                // so skip the extra .map(|x| Box::new(x)) wrapping.
+                if is_transparent_rule(&resolved_name, grammar_attrs) {
+                    quote! { Self::#ident() }
+                } else {
+                    quote! { Self::#ident().map(|x| Box::new(x)) }
                 }
             }
         }
@@ -1087,9 +1334,6 @@ pub fn calculate_parser_from_expression<'a>(
         },
         Expression::MappedExpression((inner_expr, mapping_fn)) => {
             let inner_expr = get_inner_expression(inner_expr);
-            
-            println!("inner_expr: {:?}", mapping_fn);
-
             let mapping_fn = get_inner_expression(mapping_fn);
             
             let parser = calculate_parser_from_expression(
@@ -1216,6 +1460,10 @@ pub fn calculate_parser_from_expression<'a>(
             }
         }
         Expression::Skip(left_expr, right_expr) => {
+            // Phase 1.4: Try regex coalescing first
+            if let Some(parser) = check_for_regex_coalesce(expr) {
+                return map_span_if_needed(parser, true, grammar_attrs);
+            }
             let left_expr = get_inner_expression(left_expr);
             let right_expr = get_inner_expression(right_expr);
             if let Some(parser) = check_for_wrapped(
@@ -1248,6 +1496,10 @@ pub fn calculate_parser_from_expression<'a>(
             }
         }
         Expression::Next(left_expr, right_expr) => {
+            // Phase 1.4: Try regex coalescing first
+            if let Some(parser) = check_for_regex_coalesce(expr) {
+                return map_span_if_needed(parser, true, grammar_attrs);
+            }
             let mut left_expr = get_inner_expression(left_expr);
 
             if let Some(Expression::MappedExpression((t_left_expr, _))) =
