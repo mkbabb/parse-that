@@ -90,7 +90,11 @@ fn parse(b: &mut Bencher, filepath: &str) {
 
     b.iter(|| {
         let buf = black_box(&data);
-        JsonParser::parse(Rule::json, buf).unwrap();
+        let pair = JsonParser::parse(Rule::json, buf)
+            .unwrap()
+            .next()
+            .unwrap();
+        consume(pair)
     })
 }
 
