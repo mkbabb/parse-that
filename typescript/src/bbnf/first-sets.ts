@@ -293,7 +293,16 @@ function parseCharClass(inner: string): CharSet | null {
                 i += 2;
                 continue;
             }
-            code = next.charCodeAt(0);
+            // Map common escape sequences to their actual char codes
+            const escapeMap: Record<string, number> = {
+                n: 10,
+                r: 13,
+                t: 9,
+                f: 12,
+                v: 11,
+                "0": 0,
+            };
+            code = escapeMap[next] ?? next.charCodeAt(0);
             i += 2;
         } else {
             code = inner.charCodeAt(i);

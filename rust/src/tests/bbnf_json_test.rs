@@ -109,7 +109,8 @@ mod tests {
         match &result {
             JsonEnum::value(inner) => match inner.as_ref() {
                 JsonEnum::string(span) => {
-                    assert_eq!(span.as_str(), "");
+                    // The json.bbnf string regex captures surrounding quotes
+                    assert_eq!(span.as_str(), r#""""#);
                 }
                 other => panic!("expected string, got {other:?}"),
             },
@@ -123,7 +124,8 @@ mod tests {
         match &result {
             JsonEnum::value(inner) => match inner.as_ref() {
                 JsonEnum::string(span) => {
-                    assert_eq!(span.as_str(), "hello");
+                    // The json.bbnf string regex captures surrounding quotes
+                    assert_eq!(span.as_str(), r#""hello""#);
                 }
                 other => panic!("expected string, got {other:?}"),
             },
@@ -230,7 +232,7 @@ mod tests {
                         JsonEnum::pair((key, val)) => {
                             match key.as_ref() {
                                 JsonEnum::string(s) => {
-                                    assert_eq!(s.as_str(), "a");
+                                    assert_eq!(s.as_str(), r#""a""#);
                                 }
                                 other => panic!("expected string key, got {other:?}"),
                             }
@@ -270,7 +272,7 @@ mod tests {
                                         JsonEnum::pair((inner_key, inner_val)) => {
                                             match inner_key.as_ref() {
                                                 JsonEnum::string(s) => {
-                                                    assert_eq!(s.as_str(), "inner");
+                                                    assert_eq!(s.as_str(), r#""inner""#);
                                                 }
                                                 other => {
                                                     panic!("expected string key, got {other:?}")
@@ -326,7 +328,7 @@ mod tests {
                     }
                     match items[1].as_ref() {
                         JsonEnum::value(inner) => match inner.as_ref() {
-                            JsonEnum::string(s) => assert_eq!(s.as_str(), "two"),
+                            JsonEnum::string(s) => assert_eq!(s.as_str(), r#""two""#),
                             other => panic!("expected string, got {other:?}"),
                         },
                         other => panic!("expected value, got {other:?}"),

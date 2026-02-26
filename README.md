@@ -38,109 +38,108 @@ const grammar = `
     term = factor, { ("*" | "/"), factor };
     factor = number | "(", expr, ")";
     number = /[0-9]+/;
-    whatzupwitu = "whatzupwitu";
 `;
 
 const [nonterminals, ast] = generateParserFromBBNF(grammar);
 const expr = nonterminals.expr;
-expr.parse("1 + whatzupwitu * 3"); // => [1, "+", ["whatzupwitu", "*", 3]]
+expr.parse("1 + 2 * 3"); // => [1, "+", [2, "*", 3]]
 ```
-
-nice.
 
 ## Table of Contents
 
-- [parse`[that]`](#parsethat)
-  - [Usage](#usage)
-  - [Table of Contents](#table-of-contents)
-  - [Performance](#performance)
-    - [TypeScript](#typescript)
-      - [Results](#results)
-        - [hz: ops/sec - higher is better](#hz-opssec---higher-is-better)
-    - [Rust](#rust)
-      - [Results](#results-1)
-  - [Debugging](#debugging)
-        - [Thanks to chalk and colored for the colors!](#thanks-to-chalk-and-colored-for-the-colors)
-  - [BBNF and the Great Parser Generator](#bbnf-and-the-great-parser-generator)
-    - [Key differences with EBNF](#key-differences-with-ebnf)
-  - [Left recursion \& more](#left-recursion--more)
-      - [Using BBNF](#using-bbnf)
-      - [Combinator support](#combinator-support)
-      - [Caveats](#caveats)
-  - [`pretty`](#pretty)
-  - [API \& examples](#api--examples)
-  - [Sources, acknowledgements, \& c.](#sources-acknowledgements--c)
+- [Performance](#performance)
+  - [Rust](#rust)
+  - [TypeScript](#typescript)
+- [Debugging](#debugging)
+- [BBNF and the Great Parser Generator](#bbnf-and-the-great-parser-generator)
+- [Left Recursion](#left-recursion--more)
+- [API & Examples](#api--examples)
+- [Sources](#sources-acknowledgements--c)
 
 ## Performance
 
-### TypeScript
-
-Here's a benchmark comparing the following libraries, all parsing the same `JSON`
-grammar:
-
--   [Chevrotain](https://github.com/chevrotain/chevrotain)
--   [Parsimmon](https://github.com/jneen/parsimmon)
--   this library, with standard combinators: [here](test/json.test.ts)
--   this library, using a generated parser from BBNF: [here](test/bbnf.test.ts)
-
-The file used is a 3.8 MB `JSON` file, containing ~10K lines of `JSON`. Whitespace is
-randomly inserted to make the file a bit more difficult to parse (makes the file about
-5x the size). Benchmark is run 100 times.
-
-#### Results
-
-| name       | hz     | min    | max    | mean   | p75    | p99    | p995   | p999   | rme    | samples |
-| ---------- | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------- |
-| Standard   | 8.1013 | 119.20 | 127.90 | 123.44 | 127.08 | 127.90 | 127.90 | 127.90 | ±2.64% | 10      |
-| BBNF       | 5.1979 | 183.18 | 216.12 | 192.38 | 195.59 | 216.12 | 216.12 | 216.12 | ±3.97% | 10      |
-| Chevrotain | 6.8699 | 129.91 | 167.46 | 145.56 | 158.21 | 167.46 | 167.46 | 167.46 | ±5.70% | 10      |
-| Parsimmon  | 4.0256 | 246.69 | 250.34 | 248.41 | 249.09 | 250.34 | 250.34 | 250.34 | ±1.54% | 10      |
-
-##### hz: ops/sec - higher is better
-
-    Standard - test/benchmarks/json.bench.ts > JSON Parser
-        1.18x faster than Chevrotain
-        1.56x faster than BBNF
-        2.01x faster than Parsimmon
-
-Probably not the most scientific comparison, but it's generally about 10-30% faster than
-what I've tested it against.
-
-Have a look inside [benchmarks](./test/benchmarks) if you're curious.
+All benchmarks run on Apple M-series (AArch64). JSON parsing with full DOM
+materialization and string escape decoding. Higher is better.
 
 ### Rust
 
-The approach taken in the Rust implementation is almost identical to that of the
-TypeScript one - there's much to improve here. The benchmark is run on a 2.3 MB `JSON`
-file (`canada.json`), containing ~10K lines of `JSON`. Benchmark is run 100 times.
+MB/s throughput. `bencher` crate with `black_box` on inputs and `b.bytes` set.
 
-#### Results
+#### parse_that (fast) vs. the field
 
-TODO: but it averages around 80 MB/s on my machine.
+| Dataset | parse_that (fast) | serde_json | nom | pest |
+|---|---:|---:|---:|---:|
+| **data.json** (35 KB) | **1,607** | 601 | 611 | 259 |
+| **apache-builds** (127 KB) | **1,680** | 548 | 724 | 281 |
+| **canada** (2.1 MB) | **641** | 568 | 401 | 158 |
+| **twitter** (632 KB) | **1,716** | 579 | 516 | 243 |
+| **citm_catalog** (1.7 MB) | **1,572** | 842 | 629 | 255 |
+| **data-xl** (39 MB) | **1,708** | 623 | 626 | 267 |
+
+#### All parsers (prior benchmark run, 11-parser matrix)
+
+| Parser | data.json | canada | apache | twitter | citm_catalog | data-xl |
+|---|---:|---:|---:|---:|---:|---:|
+| sonic-rs | 2,307 | 1,520 | 1,892 | 2,511 | 3,019 | 2,769 |
+| **parse_that (fast)** | **1,609** | **646** | **1,709** | **1,732** | **1,599** | **1,730** |
+| simd-json | 1,395 | 498 | 1,456 | 1,530 | 1,327 | 1,655 |
+| jiter | 1,341 | 579 | 1,137 | 1,027 | 992 | 1,402 |
+| serde_json_borrow | 1,219 | 623 | 1,140 | 1,340 | 1,309 | 1,245 |
+| parse_that (combinator) | 1,037 | 452 | 1,008 | 921 | 827 | 1,174 |
+| nom | 615 | 399 | 722 | 514 | 627 | 619 |
+| serde_json | 607 | 569 | 546 | 582 | 864 | 624 |
+| winnow | 550 | 392 | 635 | 540 | 597 | 594 |
+| pest | 259 | 160 | 283 | 244 | 257 | 268 |
+| parse_that (BBNF) | 14 | -- | -- | -- | -- | -- |
+
+The fast path is a monolithic recursive parser with: SIMD string scanning
+(`memchr2`), integer fast path (`madd` + `ucvtf`), `Vec` objects (no HashMap),
+`u32` keyword loads, `Cow<str>` zero-copy strings, and `#[cold]` escape decoding.
+
+See [docs/perf-optimization-rust.md](docs/perf-optimization-rust.md) for the full
+optimization chronicle.
+
+### TypeScript
+
+ops/s on data.json (35 KB). Vitest bench with 5 iterations, 5s warmup.
+
+| Parser | ops/s | vs. native |
+|---|---:|---:|
+| JSON.parse (native) | 22,361 | 1.0x |
+| **parse-that (hand-written)** | **5,499** | **4.1x** |
+| **parse-that (BBNF-generated)** | **4,728** | **4.7x** |
+| Chevrotain | 4,099 | 5.5x |
+| Parsimmon | 965 | 23.2x |
+
+#### Multi-dataset results (prior benchmark run)
+
+| Dataset | JSON.parse | Hand | BBNF | Chevrotain | Peggy | Parsimmon | Nearley |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **data.json** (35 KB) | 24,738 | 5,480 | 4,779 | 4,100 | 1,107 | 985 | 386 |
+| **apache-builds** (124 KB) | 7,149 | 1,477 | 1,328 | 1,035 | 299 | 243 | 82 |
+| **twitter** (555 KB) | 1,566 | 243 | 213 | 166 | 63 | 44 | 21 |
+| **citm_catalog** (1.7 MB) | 680 | 117 | 102 | 76 | 24 | 17 | 8 |
+| **canada** (2.1 MB) | 133 | 56 | 44 | 29 | 15 | 7 | 4 |
+
+Key optimizations: mutable `ParserState` (zero-alloc), Tarjan's SCC for minimal
+lazy wrappers, FIRST-set dispatch tables (O(1) alternation), regex
+`test()`+`substring()` (no `RegExpMatchArray` alloc), inline `wrap()`.
+
+See [docs/perf-optimization-ts.md](docs/perf-optimization-ts.md) for the full
+optimization chronicle.
 
 ## Debugging
 
-Debugging is made 🌈pretty🌈 by using the `debug` combinator - but you must run in
-`development` mode (`vite build --mode development`) to see the output.
+Debugging is made pretty by using the `debug` combinator.
 
 ![image](./assets/debug.png)
 
-As output, you'll see a few things:
+As output, you'll see:
 
--   A header containing:
-    -   parsing status (`Ok` or `Err`)
-    -   current offset into the input string
-    -   debug node's name
-    -   stringified current parser - a bit like the BBNF format
--   A body containing:
-    -   A maximum of 10 lines of the input string, with the current offset into the
-        parse string denoted by `^`
-    -   Line numbers for each line currently displayed
+- **Header**: parsing status (`Ok`/`Err`), current offset, node name, stringified parser
+- **Body**: up to 10 lines of input with the current offset denoted by `^`, with line numbers
 
-The `blue` color indicates that that variable is an BBNF nonterminal - `yellow` is the
-stringified parser.
-
-##### Thanks to [chalk](https://github.com/chalk/chalk) and [colored](https://github.com/mackwic/colored) for the colors!
+The `blue` color indicates a BBNF nonterminal; `yellow` is the stringified parser.
 
 ## BBNF and the Great Parser Generator
 
@@ -149,51 +148,44 @@ Better Backus-Naur Form is a simple and readable way to describe a language. A
 
 See the BBNF for BBNF (meta right) at [bbnf.bbnf](./grammar/bbnf.bbnf).
 
-With your grammar in hand, call the `generateParserFromBBNF` function within
-[bbnf.ts](./src/bbnf.ts) and you'll be returned two objects:
+With your grammar in hand, call `generateParserFromBBNF` (TypeScript) or use
+`#[derive(Parser)]` (Rust):
 
 ```ts
-[nonterminals, ast]: [BBNFNonterminals, BBNFAST] = generateParserFromBBNF(grammar);
+const [nonterminals, ast] = generateParserFromBBNF(grammar);
 ```
 
-a JavaScript object containing all of the parsed nonterminals in your language, and the
-AST for your language. Each nonterminal is a `Parser` object - use it as you would any
-other parser.
+```rust
+#[derive(Parser)]
+#[parser(path = "grammar/json.bbnf")]
+pub struct Json;
 
-Fully featured, and self-parsing, so the BBNF parser-generator is written in BBNF.
-Checkout the self-parsing example (+ formatting), at
-[bbnf.test.ts](./test/bbnf.test.ts).
+let result = Json::value().parse(input);
+```
 
-### Key differences with EBNF
+Each nonterminal is a `Parser` object. Fully featured and self-parsing — the BBNF
+parser-generator is written in BBNF. See [bbnf.test.ts](./typescript/test/bbnf.test.ts).
 
-It's a mesh between your run-of-the-mill EBNF and
-[W3C's EBNF](https://www.w3.org/TR/REC-xml/#sec-notation). So stuff like `?` and `*` are
-allowed - but it also supports `[ ]` and `{ }` for optional and repeated elements.
+### Operators
 
-Set-like subtraction is supported, so you can do things like `a - b` to mean "a, but not
-b".
+| Syntax | Meaning |
+|---|---|
+| `A?` / `[ A ]` | Optional A |
+| `A*` / `{ A }` | Repeated A (0 or more) |
+| `A+` | Repeated A (1 or more) |
+| `A \| B` | A or B (higher precedence than `,`) |
+| `A, B` | A followed by B |
+| `A - B` | A, but not B |
+| `A >> B` | A then B, return B only |
+| `A << B` | A then B, return A only |
+| `( A )` | Grouping |
 
-Here's a list of operators:
-
--   `A?` | `[ A ]`: optional A
--   `A*` | `{ A }`: repeated A (0 or more)
--   `A+`: repeated A (1 or more)
--   `A | B`: A or B - higher precedence than `A, B`
--   `A, B`: A followed by B
--   `A - B`: A, but not B
--   `A >> B`: A, then B, but only return B
--   `A << B`: A, then B, but only return A
--   `( A )`: grouping - maximum precedence
-
-And yes emojis are supported. Epsilon even has a special value for it - `ε` (or just use
-the word epsilon).
+Emojis supported. Epsilon has a special value: `ε`.
 
 ## Left recursion & more
 
-This library fully supports left recursion (either direct or indirect) - highly
-ambiguous grammars.
-
-So grammars like (trivial direct left recursion):
+This library fully supports left recursion (direct or indirect) and highly
+ambiguous grammars:
 
 ```bbnf
 expr = expr , "+" , expr
@@ -201,120 +193,54 @@ expr = expr , "+" , expr
      | string ;
 ```
 
-and like (highly ambiguous):
+### Using BBNF
 
-```bbnf
-ms = "s";
-mSL = ( mSL , mSL , ms ) ? ;
+The BBNF compiler optimizes the grammar automatically:
+1. Topological sort via Tarjan's SCC
+2. Remove indirect left recursion
+3. Remove direct left recursion
+4. Left factorize
 
-mz = "z" ;
-mZ = mZ | mY | mz ;
+### Combinator support
 
-mY = mZ, mSL ;
-```
-
-are supported.
-
-Our scheme is multifaceted and optimized depending upon a few factors:
-
-#### Using BBNF
-
-Since BBNF allows for one to easily grab ahold of the AST, we can optimize its structure
-rather easily. Left recursion is "removed" (it's actually just factored out) using a
-four-pass algorithm:
-
--   1. Sort the nonterminals topologically
--   2. Remove indirect left recursion
--   3. Remove left recursion
--   4. Factorize
-
-For the above example each pass would look something like this:
-
-Input grammar:
-
-```bbnf
-expr = expr , "+" , expr
-     | integer
-     | string ;
-```
-
-Sorted & removed left recursion:
-
-```bbnf
-expr = integer, expr_0
-     | string, expr_0 ;
-expr_0 = "+" , expr , expr_0
-        | ε ;
-```
-
-Factorized:
-
-```bbnf
-expr = (integer | string) , expr_0 ;
-expr_0 = "+" , expr , expr_0
-        | ε
-```
-
-If any remaining left recursion is found, it's handled via the combinators.
-
-#### Combinator support
-
-Left recursion can be handled via two combinators: `memoize` and `mergeMemos`.
-`mergeMemos` must be applied directly one's left-recursive call, and `memoize` must be
-applied to the entire parser.
-
-Here's an example:
+Left recursion via `memoize` and `mergeMemos`:
 
 ```ts
-...
 const expression = Parser.lazy(() =>
     all(expression, operators.then(expression).opt()).mergeMemos().or(number)
-)
-    .memoize();
-...
+).memoize();
 ```
 
-How this is done under the hood is by using a memoization table and a few clever tricks
-to detect if the current parser is in a left-recursive call. See the
-[left recursion](./docs/left-recursion.md) document for more information, and the
-[memoization tests](./test/memoize.test.ts) for examples.
+See [left-recursion.md](./docs/left-recursion.md) and
+[memoize.test.ts](./typescript/test/memoize.test.ts) for details.
 
-#### Caveats
+### Caveats
 
-Though left recursion is supported, it's absolutely not optimal. If it can be factored
-out via the BBNF parser generator generally the performance will quite fine, but if it
-cannot you may run into some performance issues. This stems, among other things,
-primarily from JavaScript's lack of tail call optimization. Again, see the
-[left recursion](./docs/left-recursion.md) document for more information.
-
-## `pretty`
-
-A pretty-printing submodule, inspired by Prettier, is included in the Rust
-implementation. I wanted to have something similar in Rust for my own projects, but I
-couldn't find anything that was simple enough to use. So I wrote my own. Check out the
-`pretty` docs for more information.
+Left recursion works but is not optimal. If it can be factored out via BBNF the
+performance will be fine; otherwise you may see slowdowns due to JavaScript's lack
+of tail call optimization.
 
 ## API & examples
 
-See [api.md](./docs/api.md) for all of the API information.
+See [api.md](./docs/api.md) for API information.
 
-See the [test](./test/) directory for fully explained and working examples.
+See the [TypeScript tests](./typescript/test/) and [Rust tests](./rust/parse_that/tests/)
+for working examples.
 
 ## Sources, acknowledgements, & c.
 
--   [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form)
--   [Left recursion information](https://en.wikipedia.org/wiki/Left_recursion)
--   [Notes On Parsing Ebnf](https://www.cs.umd.edu/class/spring2003/cmsc330/Notes/bbnf/bbnf.html)
--   [Notes On The Formal Theory Of Parsing](http://www.cs.may.ie/~jpower/Courses/parsing/parsing.pdf#search='indirect%20left%20recursion')
--   [Removing Left Recursion From Context Free Grammars](http://research.microsoft.com/pubs/68869/naacl2k-proc-rev.pdf)
--   [A new top-down parsing algorithm to accommodate ambiguity and left recursion in polynomial time](https://dl.acm.org/doi/10.1145/1149982.1149988)
--   [Modular and efficient top-down parsing for ambiguous left-recursive grammars](https://www.researchgate.net/profile/Richard-Frost-5/publication/30053225_Modular_and_efficient_top-down_parsing_for_ambiguous_left-recursive_grammars/links/00463518a68a2a7a6b000000/Modular-and-efficient-top-down-parsing-for-ambiguous-left-recursive-grammars.pdf?origin=publication_detail)
+- [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form)
+- [Left recursion](https://en.wikipedia.org/wiki/Left_recursion)
+- [Notes on parsing EBNF](https://www.cs.umd.edu/class/spring2003/cmsc330/Notes/bbnf/bbnf.html)
+- [Formal theory of parsing](http://www.cs.may.ie/~jpower/Courses/parsing/parsing.pdf)
+- [Removing left recursion from CFGs](http://research.microsoft.com/pubs/68869/naacl2k-proc-rev.pdf)
+- [Top-down parsing for ambiguous left-recursive grammars](https://dl.acm.org/doi/10.1145/1149982.1149988)
+- [Modular top-down parsing for ambiguous left-recursive grammars](https://www.researchgate.net/profile/Richard-Frost-5/publication/30053225)
 
-Other great parsing libraries 🎉:
+Parser libraries:
 
--   [Parsimmon](https://github.com/jneen/parsimmon)
--   [bread-n-butter](https://github.com/wavebeem/bread-n-butter)
--   [parsy](https://github.com/python-parsy/parsy)
--   [Chevrotain](https://github.com/chevrotain/chevrotain)
--   [nom](https://github.com/rust-bakery/nom)
--   [pest] (https://github.com/pest-parser/pest)
+- [Parsimmon](https://github.com/jneen/parsimmon)
+- [Chevrotain](https://github.com/chevrotain/chevrotain)
+- [nom](https://github.com/rust-bakery/nom)
+- [pest](https://github.com/pest-parser/pest)
+- [winnow](https://github.com/winnow-rs/winnow)
