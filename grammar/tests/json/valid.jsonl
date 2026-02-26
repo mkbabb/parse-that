@@ -1,0 +1,33 @@
+42
+-1
+0
+3.14
+1e10
+-2.5E+3
+0.123
+"hello"
+""
+"hello world"
+"escaped \"quotes\""
+"backslash \\"
+"unicode \u0041"
+"newline \n tab \t"
+"slash \/"
+true
+false
+null
+[]
+[1]
+[1, 2, 3]
+["a", "b"]
+[true, false, null]
+[[1, 2], [3, 4]]
+[1, "two", true, null, 3.14]
+{}
+{"a": 1}
+{"name": "test", "value": 42}
+{"nested": {"inner": "value"}}
+{"array": [1, 2, 3]}
+{"mixed": {"nums": [1, 2], "str": "hello", "bool": true}}
+{"empty_array": [], "empty_object": {}}
+[{"id": 1, "name": "first"}, {"id": 2, "name": "second"}]
