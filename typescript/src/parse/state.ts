@@ -98,6 +98,7 @@ export const parserNames = [
     "eof",
     "regexConcat",
     "regexWrap",
+    "dispatch",
     "debug",
     "mapState",
 ] as const;

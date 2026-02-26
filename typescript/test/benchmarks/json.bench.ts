@@ -13,10 +13,8 @@ const options = {
 } as BenchOptions;
 
 const whitespace = /\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/g;
-let input = fs.readFileSync("data/data.json", "utf-8");
+let input = fs.readFileSync("../data/json/data.json", "utf-8");
 input = insertRandomWhitespace(input, 10);
-
-fs.writeFileSync("data/tmp.json", input);
 // input = input.replaceAll(whitespace, "");
 
 describe("JSON Parser", () => {

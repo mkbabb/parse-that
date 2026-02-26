@@ -2,10 +2,7 @@
 // https://github.com/Chevrotain/chevrotain/tree/gh-pages/performance/jsonParsers/chevrotain
 
 // ----------------- Lexer -----------------
-import chevrotain from "chevrotain";
-
-var createToken = chevrotain.createToken;
-var ChevrotainLexer = chevrotain.Lexer;
+import { createToken, Lexer as ChevrotainLexer, CstParser as ChevrotainCSTParser } from "chevrotain";
 
 var True = createToken({name: "True", pattern: "true"});
 var False = createToken({name: "False", pattern: "false"});
@@ -31,7 +28,7 @@ var ChevJsonLexer = new ChevrotainLexer(jsonTokens, {positionTracking: "onlyOffs
 
 // https://chevrotain.io/docs/guide/performance.html#using-a-singleton-parser
 // (Do not create a new Parser instance for each new input.)
-var ChevrotainCSTParser = chevrotain.CstParser;
+// ChevrotainCSTParser imported above
 
 function ChevrotainJsonParser(options) {
     ChevrotainCSTParser.call(this, jsonTokens, options);
