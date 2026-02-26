@@ -173,20 +173,15 @@ const BBNFParserLeftRecursion = (grammar: string) => {
 export const JSONParser = (grammar: string) => {
     const [nonterminals, ast] = BBNFToParser(grammar);
 
-    nonterminals.string = nonterminals.string.trim();
-    nonterminals.number = nonterminals.number.map((v) => parseFloat(v));
-
-    nonterminals.pair = nonterminals.pair.trim();
-    nonterminals.object = nonterminals.object.map((pairs) => {
-        if (pairs === undefined) {
-            return {};
-        }
-        const obj: Record<string, any> = {};
-        for (const [key, value] of pairs) {
-            obj[key] = value;
-        }
-        return obj;
-    });
+    nonterminals.null = nonterminals.null.map(() => null);
+    nonterminals.bool = nonterminals.bool.map((v: string) => v === "true");
+    nonterminals.number = nonterminals.number.map(Number);
+    nonterminals.string = nonterminals.string.map((s: string) =>
+        s.indexOf("\\") === -1 ? s.slice(1, -1) : JSON.parse(s),
+    );
+    nonterminals.object = nonterminals.object.map(
+        (pairs: [string, any][]) => Object.fromEntries(pairs),
+    );
 
     nonterminals.value = nonterminals.value.trim();
     return nonterminals.value;
@@ -365,9 +360,7 @@ describe("BBNF Parser", () => {
         expect(parsed).toBeGreaterThan(0);
     });
 
-    // TODO: json.bbnf had Rust-specific syntax (=> |x| -> &'a str); fixed grammar
-    // BBNF json grammar: char* produces individual chars, not joined strings
-    it.todo("should parse JSON data", () => {
+    it("should parse JSON data", () => {
         const grammar = fs.readFileSync("../grammar/json.bbnf", "utf8");
 
         const parser = JSONParser(grammar);

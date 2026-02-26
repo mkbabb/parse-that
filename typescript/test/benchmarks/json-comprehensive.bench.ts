@@ -33,8 +33,8 @@ const datasets = [
     { name: "data.json (35 KB)", file: "data.json", maxCombKB: Infinity },
     { name: "apache-builds.json (124 KB)", file: "apache-builds.json", maxCombKB: Infinity },
     { name: "twitter.json (617 KB)", file: "twitter.json", maxCombKB: Infinity },
-    { name: "citm_catalog.json (1.7 MB)", file: "citm_catalog.json", maxCombKB: 500 },
-    { name: "canada.json (2.1 MB)", file: "canada.json", maxCombKB: 500 },
+    { name: "citm_catalog.json (1.7 MB)", file: "citm_catalog.json", maxCombKB: Infinity },
+    { name: "canada.json (2.1 MB)", file: "canada.json", maxCombKB: Infinity },
 ];
 
 // ---------------------------------------------------------------------------

@@ -9,7 +9,9 @@ const [nonterminals, ast] = BBNFToParser(grammar);
 nonterminals.null = nonterminals.null.map(() => null);
 nonterminals.bool = nonterminals.bool.map((v: string) => v === "true");
 nonterminals.number = nonterminals.number.map(Number);
-nonterminals.string = nonterminals.string.map((s: string) => JSON.parse(s));
+nonterminals.string = nonterminals.string.map((s: string) =>
+    s.indexOf("\\") === -1 ? s.slice(1, -1) : JSON.parse(s),
+);
 nonterminals.pair = nonterminals.pair.map(([k, v]: [string, any]) => [k, v]);
 nonterminals.object = nonterminals.object.map((pairs: [string, any][]) =>
     Object.fromEntries(pairs),

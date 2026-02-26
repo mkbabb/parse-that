@@ -8,7 +8,7 @@ const jsonBool = string("true").or(string("false")).map((v) => v === "true");
 
 const jsonNumber = regex(/-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/).map(Number);
 const jsonString = regex(/"(?:[^"\\]|\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))*"/).map(
-    (s) => JSON.parse(s),
+    (s) => (s.indexOf("\\") === -1 ? s.slice(1, -1) : JSON.parse(s)),
 );
 const jsonArray = Parser.lazy(() =>
     jsonValue.sepBy(comma).trim().wrap(string("["), string("]"))

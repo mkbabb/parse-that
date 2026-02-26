@@ -439,6 +439,7 @@ export class Parser<T = string> {
                     state.isError = false;
                     break;
                 }
+                if (state.offset === savedOffset) break;
                 matches.push(state.value);
             }
 
@@ -469,6 +470,7 @@ export class Parser<T = string> {
                     state.isError = false;
                     break;
                 }
+                if (state.offset === savedOffset) break;
                 matches.push(state.value);
 
                 const sepOffset = state.offset;
