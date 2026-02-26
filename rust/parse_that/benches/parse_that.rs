@@ -4,7 +4,7 @@ use std::path::Path;
 extern crate bencher;
 use bencher::{black_box, Bencher};
 
-use parse_that::json::json_parser;
+use parse_that::json::json_parser_fast;
 
 fn data_dir() -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/json")
@@ -40,7 +40,7 @@ fn parse(b: &mut Bencher, filepath: &str) {
         .unwrap_or_else(|e| panic!("Failed to read {}: {}", filepath.display(), e));
     b.bytes = data.len() as u64;
 
-    let parser = json_parser();
+    let parser = json_parser_fast();
 
     b.iter(|| {
         let buf = black_box(&data);
