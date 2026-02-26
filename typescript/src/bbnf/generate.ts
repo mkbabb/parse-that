@@ -180,6 +180,8 @@ export function ASTToParser(
                 return string(expr.value as string);
             case "nonterminal": {
                 const refName = expr.value as string;
+                // Always use lazy — users may override nonterminals after
+                // generation (e.g. nonterminals.S = regex(/\s*/)).
                 const l = Parser.lazy(() => nonterminals[refName]);
                 l.context.name = refName as any;
                 return l;
@@ -240,6 +242,39 @@ export function ASTToParser(
                 if (parsers.at(-1)?.context?.name === "eof") {
                     parsers.pop();
                 }
+                // Specialize: 2-element concatenation avoids the loop in all()
+                // Must preserve all()'s undefined-skipping semantics.
+                if (parsers.length === 2) {
+                    const [p1, p2] = parsers;
+                    const all2 = (state: ParserState<any>) => {
+                        const savedOffset = state.offset;
+                        p1.parser(state);
+                        if (state.isError) {
+                            state.offset = savedOffset;
+                            return state;
+                        }
+                        const v1 = state.value;
+                        p2.parser(state);
+                        if (state.isError) {
+                            state.offset = savedOffset;
+                            state.isError = true;
+                            return state;
+                        }
+                        const v2 = state.value;
+                        if (v1 !== undefined) {
+                            return v2 !== undefined
+                                ? state.ok([v1, v2])
+                                : state.ok([v1]);
+                        }
+                        return v2 !== undefined
+                            ? state.ok([v2])
+                            : state.ok([]);
+                    };
+                    return new Parser(
+                        all2,
+                        createParserContext("all", undefined, p1, p2),
+                    );
+                }
                 return all(...parsers);
             }
             case "alternation": {
@@ -290,6 +325,22 @@ export function ASTToParser(
     for (const [name, rule] of ast) {
         if (!nonterminals[name]) {
             nonterminals[name] = generateParser(name, rule.expression);
+        }
+    }
+
+    // Collapse alias chains: if a rule is just a nonterminal reference
+    // (e.g. charger = chargerge; charge = charger; char = charge),
+    // replace with the resolved parser to eliminate indirection.
+    for (const [name, rule] of ast) {
+        if (cyclicRules.has(name)) continue;
+        let expr = rule.expression;
+        // Unwrap groups
+        while (expr.type === "group") expr = expr.value as Expression;
+        if (expr.type === "nonterminal") {
+            const target = expr.value as string;
+            if (nonterminals[target]) {
+                nonterminals[name] = nonterminals[target];
+            }
         }
     }
 
