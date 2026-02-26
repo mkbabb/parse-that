@@ -4,6 +4,7 @@ import fs from "fs";
 // parse-that parsers (value-building, same output as JSON.parse)
 import { JSONParser as BBNFParser } from "./bbnf";
 import { JSONParser as HandParser } from "./parse-that";
+import { jsonParseFast } from "../../src/parse/json-fast.js";
 
 // Competitor parsers (all value-building)
 import { json as ParsimmonJSONParser } from "./parsimmon";
@@ -48,6 +49,7 @@ interface ParserDef {
 
 const parserDefs: ParserDef[] = [
     { name: "JSON.parse (native)", fn: (s) => JSON.parse(s) },
+    { name: "parse-that (fast)", fn: (s) => jsonParseFast(s) },
     { name: "Chevrotain", fn: (s) => ChevrotainParse(s) },
     { name: "Peggy", fn: (s) => PeggyParse(s) },
     { name: "Nearley + moo", fn: (s) => NearleyParse(s) },

@@ -5,7 +5,9 @@ import {
     any,
     eof,
     regex,
+    regexSpan,
     string,
+    dispatch,
     mergeErrorState,
     createParserContext,
 } from "../parse/index.js";
@@ -167,10 +169,65 @@ export function ASTToParser(
         }
     }
 
-    function generateParser(name: string, expr: Expression): Parser<any> {
+    /**
+     * Phase 3.1: Detect `left >> middle << right` and compile to middle.wrap(left, right).
+     * wrap() already inlines 2 function frames (index.ts), so this saves overhead.
+     */
+    function tryWrapDetect(name: string, expr: Expression): Parser<any> | null {
+        // Shape: skip(next(L, M), R) → M.wrap(L, R)
+        if (expr.type === "skip") {
+            const [left, right] = expr.value as [Expression, Expression];
+            if (left.type === "next") {
+                const [l, m] = left.value as [Expression, Expression];
+                return generateParser(name, m).wrap(
+                    generateParser(name, l),
+                    generateParser(name, right),
+                );
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Phase 3.2: When all alternatives are string literals, compile to
+     * dispatch() with char-based routing for O(1) lookup.
+     */
+    function tryAllLiteralsAlternation(name: string, alts: Expression[]): Parser<any> | null {
+        if (alts.length < 2) return null;
+        if (!alts.every((a) => {
+            const resolved = resolveToTerminal(a);
+            return resolved?.type === "literal";
+        })) return null;
+
+        const table: Record<string, Parser<any>> = {};
+        const fallbackAlts: Parser<any>[] = [];
+
+        for (const alt of alts) {
+            const resolved = resolveToTerminal(alt)!;
+            const lit = resolved.value as string;
+            if (lit.length === 0) {
+                // Empty literal can't be dispatched
+                return null;
+            }
+            const firstChar = lit[0];
+            if (table[firstChar]) {
+                // Collision on first character — fall back to any()
+                // Could group them, but for now just bail
+                return null;
+            }
+            table[firstChar] = string(lit);
+        }
+
+        return dispatch(table);
+    }
+
+    function generateParser(name: string, expr: Expression, discarded: boolean = false): Parser<any> {
         // Try pattern recognition first
         const wrapResult = tryWrapRegexCoalesce(expr);
         if (wrapResult) return wrapResult;
+
+        const wrapDetectResult = tryWrapDetect(name, expr);
+        if (wrapDetectResult) return wrapDetectResult;
 
         const sepByResult = trySepByDetect(name, expr);
         if (sepByResult) return sepByResult;
@@ -191,13 +248,17 @@ export function ASTToParser(
                 return eof().opt();
 
             case "group":
-                return generateParser(name, expr.value as Expression);
+                return generateParser(name, expr.value as Expression, discarded);
 
             case "regex":
-                return regex(expr.value as RegExp);
+                // Phase 3.2: Use regexSpan when the result is discarded (right side
+                // of skip, left side of next) to avoid substring allocation.
+                return discarded
+                    ? regexSpan(expr.value as RegExp)
+                    : regex(expr.value as RegExp);
 
             case "optionalWhitespace":
-                return generateParser(name, expr.value as any).trim();
+                return generateParser(name, expr.value as any, discarded).trim();
 
             case "optional":
                 return generateParser(name, expr.value as Expression).opt();
@@ -213,12 +274,14 @@ export function ASTToParser(
                     generateParser(
                         name,
                         (expr.value as [Expression, Expression])[1],
+                        true, // right side of skip is discarded
                     ),
                 );
             case "next":
                 return generateParser(
                     name,
                     (expr.value as [Expression, Expression])[0],
+                    true, // left side of next is discarded
                 ).next(
                     generateParser(
                         name,
@@ -279,6 +342,11 @@ export function ASTToParser(
             }
             case "alternation": {
                 const alts = expr.value as Expression[];
+
+                // Phase 3.2: all-literals → dispatch table
+                const litDispatch = tryAllLiteralsAlternation(name, alts);
+                if (litDispatch) return litDispatch;
+
                 const parsers = alts.map((x) => generateParser(name, x));
 
                 // Try to build a dispatch table for O(1) alternation.

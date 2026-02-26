@@ -1,7 +1,27 @@
 import type { Parser } from "./index.js";
 import { statePrint } from "./debug.js";
 
+/**
+ * Zero-copy span: stores start/end offsets into the source string.
+ * Call toString(src) for lazy materialization of the substring.
+ */
+export interface Span {
+    start: number;
+    end: number;
+}
+
+export function spanToString(span: Span, src: string): string {
+    return src.substring(span.start, span.end);
+}
+
+export function mergeSpans(a: Span, b: Span): Span {
+    return { start: a.start, end: b.end };
+}
+
 export class ParserState<T = unknown> {
+    /** Parser names/descriptions that were expected at the failure point. */
+    expected?: string[];
+
     constructor(
         public src: string,
         public value: T = undefined as T,
@@ -101,6 +121,10 @@ export const parserNames = [
     "dispatch",
     "debug",
     "mapState",
+    "regexSpan",
+    "manySpan",
+    "sepBySpan",
+    "wrapSpan",
 ] as const;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

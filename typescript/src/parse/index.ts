@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createParserContext, ParserState } from "./state.js";
-import type { ParserContext } from "./state.js";
+import { createParserContext, ParserState, mergeSpans } from "./state.js";
+import type { ParserContext, Span } from "./state.js";
 import { parserDebug, parserPrint } from "./debug.js";
 
 type ExtractValue<T extends ReadonlyArray<Parser<unknown>>> = {
@@ -14,15 +14,36 @@ export type ParserFunction<T = string> = (
 let PARSER_ID = 0;
 
 const MEMO = new Map<number, ParserState<unknown>>();
-const LEFT_RECURSION_COUNTS = new Map<string, number>();
+const LEFT_RECURSION_COUNTS = new Map<number, number>();
+
+// Numeric memo key: eliminates string allocation per lookup.
+// Max offset 2^20 (~1M chars) allows parser IDs up to 2^11 = 2048.
+const MEMO_OFFSET_BITS = 20;
+const MEMO_MAX_OFFSET = (1 << MEMO_OFFSET_BITS) - 1;
 
 let lastFurthestOffset = -1;
 let lastState: ParserState<unknown> | undefined;
 
-export function mergeErrorState(state: ParserState<unknown>) {
+export function mergeErrorState(state: ParserState<unknown>, parserName?: string) {
     if (state.offset > lastFurthestOffset) {
         lastFurthestOffset = state.offset;
         lastState = state;
+        // Reset expected list when we advance to a new furthest position
+        if (parserName) {
+            state.expected = [parserName];
+        } else {
+            state.expected = undefined;
+        }
+    } else if (state.offset === lastFurthestOffset && parserName) {
+        // Same position — accumulate expected alternatives
+        const target = lastState ?? state;
+        if (target.expected) {
+            if (!target.expected.includes(parserName)) {
+                target.expected.push(parserName);
+            }
+        } else {
+            target.expected = [parserName];
+        }
     }
     return lastState;
 }
@@ -45,9 +66,14 @@ function createLazyCached<T>(fn: () => Parser<T>): (state: ParserState<T>) => Pa
     };
 }
 
+const FLAG_NONE = 0;
+const FLAG_TRIM_WS = 1;
+const FLAG_EOF = 2;
+
 export class Parser<T = string> {
     id: number = PARSER_ID++;
     state: ParserState<T> | undefined;
+    flags: number = FLAG_NONE;
 
     constructor(
         public parser: ParserFunction<T>,
@@ -86,8 +112,8 @@ export class Parser<T = string> {
         return this.parseState(val).value;
     }
 
-    getCijKey(state: ParserState<T>) {
-        return `${this.id}${state.offset}`;
+    getCijKey(state: ParserState<T>): number {
+        return (this.id << MEMO_OFFSET_BITS) | (state.offset & MEMO_MAX_OFFSET);
     }
 
     atLeftRecursionLimit(state: ParserState<T>) {
@@ -419,6 +445,49 @@ export class Parser<T = string> {
         );
     }
 
+    /**
+     * Call the parser with flag-based pre/post processing.
+     * Fast path: flags === 0 just calls parser directly.
+     */
+    call(state: ParserState<T>): ParserState<T> {
+        if (this.flags === 0) {
+            return this.parser(state) as ParserState<T>;
+        }
+        // Fast path: trim_ws only (most common flag combination)
+        if (this.flags === FLAG_TRIM_WS) {
+            trimStateWhitespace(state);
+            const savedOffset = state.offset;
+            this.parser(state);
+            if (state.isError) {
+                mergeErrorState(state as ParserState<unknown>);
+                state.offset = savedOffset;
+                state.isError = true;
+                return state as ParserState<T>;
+            }
+            trimStateWhitespace(state);
+            return state as ParserState<T>;
+        }
+        // General cold path for multiple flags
+        if (this.flags & FLAG_TRIM_WS) trimStateWhitespace(state);
+        const savedOffset = state.offset;
+        this.parser(state);
+        if (state.isError) {
+            mergeErrorState(state as ParserState<unknown>);
+            state.offset = savedOffset;
+            state.isError = true;
+            return state as ParserState<T>;
+        }
+        if (this.flags & FLAG_TRIM_WS) trimStateWhitespace(state);
+        if (this.flags & FLAG_EOF) {
+            if (state.offset < state.src.length) {
+                mergeErrorState(state as ParserState<unknown>);
+                state.offset = savedOffset;
+                state.isError = true;
+            }
+        }
+        return state as ParserState<T>;
+    }
+
     trim<S>(
         parser: Parser<S> = whitespace as unknown as Parser<S>,
         discard: boolean = true,
@@ -428,10 +497,19 @@ export class Parser<T = string> {
         }
 
         if (parser.context?.name === "whitespace") {
+            // Flag-based: clone the parser and set FLAG_TRIM_WS.
+            // The call() method handles the trim pre/post logic.
+            const inner = this;
+            const flaggedParser = new Parser(
+                ((state: ParserState<T>) => inner.call(state)) as ParserFunction<T>,
+                createParserContext("trimWhitespace", this as Parser<unknown>),
+            ) as Parser<T>;
+            flaggedParser.flags = this.flags | FLAG_TRIM_WS;
+            // Also provide the inline version for direct .parser() callers
             const whitespaceTrim = (state: ParserState<T>) => {
                 trimStateWhitespace(state);
                 const savedOffset = state.offset;
-                this.parser(state);
+                inner.parser(state);
 
                 if (state.isError) {
                     mergeErrorState(state as ParserState<unknown>);
@@ -455,7 +533,9 @@ export class Parser<T = string> {
 
     many(min: number = 0, max: number = Infinity) {
         const many = (state: ParserState<T>) => {
-            const matches: T[] = [];
+            const est = min > 0 ? min : 0;
+            const matches: T[] = est > 0 ? new Array<T>(est) : [];
+            let len = 0;
 
             for (let i = 0; i < max; i += 1) {
                 const savedOffset = state.offset;
@@ -467,10 +547,18 @@ export class Parser<T = string> {
                     break;
                 }
                 if (state.offset === savedOffset) break;
-                matches.push(state.value);
+                if (len < est) {
+                    matches[len] = state.value;
+                } else {
+                    matches.push(state.value);
+                }
+                len++;
             }
 
-            if (matches.length >= min) {
+            // Trim pre-allocated slots if we collected fewer than est
+            if (len < est) matches.length = len;
+
+            if (len >= min) {
                 return state.ok(matches) as ParserState<T[]>;
             }
             mergeErrorState(state as ParserState<unknown>);
@@ -487,7 +575,9 @@ export class Parser<T = string> {
 
     sepBy<S>(sep: Parser<S | T>, min: number = 0, max: number = Infinity) {
         const sepBy = (state: ParserState<T>) => {
-            const matches: T[] = [];
+            const est = min > 0 ? min : 0;
+            const matches: T[] = est > 0 ? new Array<T>(est) : [];
+            let len = 0;
 
             for (let i = 0; i < max; i += 1) {
                 const savedOffset = state.offset;
@@ -498,7 +588,12 @@ export class Parser<T = string> {
                     break;
                 }
                 if (state.offset === savedOffset) break;
-                matches.push(state.value);
+                if (len < est) {
+                    matches[len] = state.value;
+                } else {
+                    matches.push(state.value);
+                }
+                len++;
 
                 const sepOffset = state.offset;
                 sep.parser(state as ParserState<S | T>);
@@ -509,7 +604,10 @@ export class Parser<T = string> {
                 }
             }
 
-            if (matches.length >= min) {
+            // Trim pre-allocated slots if we collected fewer than est
+            if (len < est) matches.length = len;
+
+            if (len >= min) {
                 return state.ok(matches) as ParserState<T[]>;
             }
             mergeErrorState(state as ParserState<unknown>);
@@ -809,5 +907,183 @@ const trimStateWhitespace = <T>(state: ParserState<T>): ParserState<T> => {
 export const whitespace = regex(/\s*/);
 whitespace.context.name = "whitespace";
 
+// ─── Span-Returning Variants ───────────────────────────────────────────
+// These return {start, end} offsets instead of allocating substrings.
+// BBNF codegen can opt into span mode for zero-copy parsing.
+
+/**
+ * Like regex(), but returns a Span instead of a substring.
+ * Avoids substring allocation entirely — use spanToString(span, src) when needed.
+ */
+export function regexSpan(r: RegExp): Parser<Span> {
+    const flags = r.flags.replace(/y/g, "");
+    const sticky = new RegExp(r, flags + "y");
+
+    const regexSpanParser = (state: ParserState<Span>) => {
+        if (state.offset >= state.src.length) {
+            state.isError = true;
+            return state;
+        }
+
+        const savedOffset = state.offset;
+        sticky.lastIndex = savedOffset;
+
+        if (sticky.test(state.src)) {
+            const end = sticky.lastIndex;
+            if (end > savedOffset) {
+                state.offset = end;
+                (state as any).value = { start: savedOffset, end };
+                state.isError = false;
+                return state;
+            }
+            (state as any).value = { start: savedOffset, end: savedOffset };
+            state.isError = false;
+            return state;
+        }
+
+        mergeErrorState(state as ParserState<unknown>);
+        state.isError = true;
+        return state;
+    };
+
+    return new Parser(
+        regexSpanParser as ParserFunction<Span>,
+        createParserContext("regexSpan", undefined, r),
+    );
+}
+
+/**
+ * Like many(), but coalesces all matches into a single Span {start, end}
+ * instead of building a T[] array.
+ */
+export function manySpan(
+    inner: Parser<Span>,
+    min: number = 0,
+    max: number = Infinity,
+): Parser<Span> {
+    const manySpanParser = (state: ParserState<Span>) => {
+        const start = state.offset;
+        let count = 0;
+
+        for (let i = 0; i < max; i++) {
+            const savedOffset = state.offset;
+            inner.parser(state as any);
+            if (state.isError) {
+                state.offset = savedOffset;
+                state.isError = false;
+                break;
+            }
+            if (state.offset === savedOffset) break;
+            count++;
+        }
+
+        if (count >= min) {
+            (state as any).value = { start, end: state.offset };
+            state.isError = false;
+            return state;
+        }
+        mergeErrorState(state as ParserState<unknown>);
+        state.isError = true;
+        return state;
+    };
+
+    return new Parser(
+        manySpanParser as ParserFunction<Span>,
+        createParserContext("manySpan", inner as any, min, max),
+    );
+}
+
+/**
+ * Like sepBy(), but coalesces all matches into a single Span.
+ */
+export function sepBySpan<S>(
+    inner: Parser<Span>,
+    sep: Parser<S>,
+    min: number = 0,
+    max: number = Infinity,
+): Parser<Span> {
+    const sepBySpanParser = (state: ParserState<Span>) => {
+        const start = state.offset;
+        let count = 0;
+
+        for (let i = 0; i < max; i++) {
+            const savedOffset = state.offset;
+            inner.parser(state as any);
+            if (state.isError) {
+                state.offset = savedOffset;
+                state.isError = false;
+                break;
+            }
+            if (state.offset === savedOffset) break;
+            count++;
+
+            const sepOffset = state.offset;
+            sep.parser(state as any);
+            if (state.isError) {
+                state.offset = sepOffset;
+                state.isError = false;
+                break;
+            }
+        }
+
+        if (count >= min) {
+            (state as any).value = { start, end: state.offset };
+            state.isError = false;
+            return state;
+        }
+        mergeErrorState(state as ParserState<unknown>);
+        state.isError = true;
+        return state;
+    };
+
+    return new Parser(
+        sepBySpanParser as ParserFunction<Span>,
+        createParserContext("sepBySpan", inner as any, sep),
+    );
+}
+
+/**
+ * Like wrap(), but returns only the middle Span, merging adjacent spans.
+ */
+export function wrapSpan(
+    inner: Parser<Span>,
+    left: Parser<any>,
+    right: Parser<any>,
+): Parser<Span> {
+    const wrapSpanParser = (state: ParserState<Span>) => {
+        const savedOffset = state.offset;
+        left.parser(state as any);
+        if (state.isError) {
+            state.offset = savedOffset;
+            return state;
+        }
+        const innerStart = state.offset;
+        inner.parser(state as any);
+        if (state.isError) {
+            mergeErrorState(state as ParserState<unknown>);
+            state.offset = savedOffset;
+            state.isError = true;
+            return state;
+        }
+        const innerEnd = state.offset;
+        right.parser(state as any);
+        if (state.isError) {
+            mergeErrorState(state as ParserState<unknown>);
+            state.offset = savedOffset;
+            state.isError = true;
+            return state;
+        }
+        (state as any).value = { start: innerStart, end: innerEnd };
+        state.isError = false;
+        return state;
+    };
+
+    return new Parser(
+        wrapSpanParser as ParserFunction<Span>,
+        createParserContext("wrapSpan", inner as any, left, right),
+    );
+}
+
 export { createParserContext, ParserState } from "./state.js";
-export type { ParserContext } from "./state.js";
+export type { ParserContext, Span } from "./state.js";
+export { spanToString, mergeSpans } from "./state.js";
