@@ -1,5 +1,6 @@
 use crate::parse::*;
 use crate::span_parser::*;
+use crate::state::ParserState;
 
 use pprint::Pretty;
 
@@ -102,4 +103,139 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
 
 pub fn json_parser<'a>() -> Parser<'a, JsonValue<'a>> {
     json_value().trim_whitespace()
+}
+
+// ── Monolithic fast JSON parser ──────────────────────────────────
+//
+// Eliminates all vtable hops, redundant whitespace trimming, and Span
+// intermediaries. One recursive function handles the full JSON grammar
+// with inline first-byte dispatch.
+
+use crate::span_parser::{json_string_fast, number_fast, skip_ws};
+
+/// Monolithic recursive JSON value parser — zero vtable hops.
+/// Whitespace is skipped exactly once per value (before dispatch)
+/// and once after each comma/colon.
+#[inline(always)]
+fn json_value_fast<'a>(state: &mut ParserState<'a>) -> Option<JsonValue<'a>> {
+    skip_ws(state);
+
+    match state.src_bytes.get(state.offset)? {
+        b'"' => {
+            let span = json_string_fast(state)?;
+            Some(JsonValue::String(span.as_str()))
+        }
+
+        b'-' | b'0'..=b'9' => Some(JsonValue::Number(number_fast(state)?)),
+
+        b'{' => {
+            state.offset += 1; // consume '{'
+            skip_ws(state);
+            if state.src_bytes.get(state.offset) == Some(&b'}') {
+                state.offset += 1;
+                return Some(JsonValue::Object(HashMap::new()));
+            }
+
+            let mut pairs = Vec::with_capacity(8);
+            loop {
+                // Key: must be a JSON string
+                let key_span = json_string_fast(state)?;
+                skip_ws(state);
+                // Expect ':'
+                if state.src_bytes.get(state.offset)? != &b':' {
+                    return None;
+                }
+                state.offset += 1;
+                // Value (recursive — skip_ws is inside json_value_fast)
+                let val = json_value_fast(state)?;
+                pairs.push((key_span.as_str(), val));
+                skip_ws(state);
+                match state.src_bytes.get(state.offset)? {
+                    b',' => {
+                        state.offset += 1;
+                        skip_ws(state); // skip ws before next key's opening quote
+                    }
+                    b'}' => {
+                        state.offset += 1;
+                        break;
+                    }
+                    _ => return None,
+                }
+            }
+
+            let mut map = HashMap::with_capacity(pairs.len());
+            for (k, v) in pairs {
+                map.insert(k, v);
+            }
+            Some(JsonValue::Object(map))
+        }
+
+        b'[' => {
+            state.offset += 1; // consume '['
+            skip_ws(state);
+            if state.src_bytes.get(state.offset) == Some(&b']') {
+                state.offset += 1;
+                return Some(JsonValue::Array(vec![]));
+            }
+
+            let mut values = Vec::with_capacity(8);
+            loop {
+                // Value (recursive — skip_ws is inside json_value_fast)
+                values.push(json_value_fast(state)?);
+                skip_ws(state);
+                match state.src_bytes.get(state.offset)? {
+                    b',' => {
+                        state.offset += 1;
+                        // skip_ws not needed here — json_value_fast starts with skip_ws
+                    }
+                    b']' => {
+                        state.offset += 1;
+                        break;
+                    }
+                    _ => return None,
+                }
+            }
+
+            Some(JsonValue::Array(values))
+        }
+
+        b't' => {
+            if state.src_bytes.get(state.offset..state.offset + 4)? == b"true" {
+                state.offset += 4;
+                Some(JsonValue::Bool(true))
+            } else {
+                None
+            }
+        }
+
+        b'f' => {
+            if state.src_bytes.get(state.offset..state.offset + 5)? == b"false" {
+                state.offset += 5;
+                Some(JsonValue::Bool(false))
+            } else {
+                None
+            }
+        }
+
+        b'n' => {
+            if state.src_bytes.get(state.offset..state.offset + 4)? == b"null" {
+                state.offset += 4;
+                Some(JsonValue::Null)
+            } else {
+                None
+            }
+        }
+
+        _ => None,
+    }
+}
+
+/// Fast monolithic JSON parser entry point.
+/// Uses direct recursive dispatch — no vtable hops, no combinator overhead.
+pub fn json_parser_fast<'a>() -> Parser<'a, JsonValue<'a>> {
+    Parser::new(|state: &mut ParserState<'a>| {
+        let result = json_value_fast(state)?;
+        skip_ws(state); // consume trailing whitespace
+        Some(result)
+    })
 }

@@ -668,7 +668,7 @@ fn number_span_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
 /// Scans a JSON string `"..."` with `\`-escape handling using SIMD (memchr2).
 /// Returns the span of the *content* (between the quotes, exclusive of `"`).
 #[inline(always)]
-fn json_string_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+pub(crate) fn json_string_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     let bytes = state.src_bytes;
     let start = state.offset;
     if bytes.get(start) != Some(&b'"') {
@@ -713,4 +713,126 @@ fn json_string_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
 #[inline]
 pub fn number_span_fast_parser<'a>() -> Parser<'a, Span<'a>> {
     Parser::new(move |state: &mut ParserState<'a>| number_span_fast(state))
+}
+
+// ── Monolithic helpers for json_value_fast ─────────────────────
+
+/// Inline whitespace skip — modifies state.offset directly.
+/// Unlike `trim_leading_whitespace` (which returns a delta), this updates in place.
+#[inline(always)]
+pub(crate) fn skip_ws(state: &mut ParserState) {
+    let bytes = state.src_bytes;
+    let mut i = state.offset;
+    let end = bytes.len();
+    while i < end {
+        match unsafe { *bytes.get_unchecked(i) } {
+            b' ' | b'\t' | b'\n' | b'\r' => i += 1,
+            _ => break,
+        }
+    }
+    state.offset = i;
+}
+
+/// Fast number parser with dedicated integer fast path.
+/// Pure integers (no `.`/`e`/`E`) are converted directly from accumulated u64,
+/// bypassing `fast_float2` entirely. Floats fall through to Eisel-Lemire.
+#[inline(always)]
+pub(crate) fn number_fast(state: &mut ParserState) -> Option<f64> {
+    let bytes = state.src_bytes;
+    let start = state.offset;
+    let len = bytes.len();
+    let mut i = start;
+
+    if i >= len {
+        return None;
+    }
+
+    // Optional sign
+    let neg = if unsafe { *bytes.get_unchecked(i) } == b'-' {
+        i += 1;
+        if i >= len {
+            return None;
+        }
+        true
+    } else {
+        false
+    };
+
+    // Accumulate integer digits with wrapping arithmetic
+    let digit_start = i;
+    let mut int_val: u64 = 0;
+    while i < len {
+        let b = unsafe { *bytes.get_unchecked(i) };
+        if !b.is_ascii_digit() {
+            break;
+        }
+        int_val = int_val.wrapping_mul(10).wrapping_add((b & 0x0f) as u64);
+        i += 1;
+    }
+    if i == digit_start {
+        return None;
+    }
+
+    let digit_count = i - digit_start;
+
+    // Check for float indicator
+    let next = if i < len {
+        unsafe { *bytes.get_unchecked(i) }
+    } else {
+        0
+    };
+    if next == b'.' || next == b'e' || next == b'E' {
+        // Float path: continue scanning fraction/exponent, then fast_float2
+        if next == b'.' {
+            i += 1;
+            let frac_start = i;
+            while i < len && unsafe { *bytes.get_unchecked(i) }.is_ascii_digit() {
+                i += 1;
+            }
+            if i == frac_start {
+                // '.' with no digits after — backtrack the dot
+                i -= 1;
+            }
+        }
+        // Optional exponent
+        if i < len {
+            let b = unsafe { *bytes.get_unchecked(i) };
+            if b == b'e' || b == b'E' {
+                let exp_mark = i;
+                i += 1;
+                if i < len {
+                    let b = unsafe { *bytes.get_unchecked(i) };
+                    if b == b'+' || b == b'-' {
+                        i += 1;
+                    }
+                }
+                let exp_digit_start = i;
+                while i < len && unsafe { *bytes.get_unchecked(i) }.is_ascii_digit() {
+                    i += 1;
+                }
+                if i == exp_digit_start {
+                    i = exp_mark; // backtrack 'e' with no digits
+                }
+            }
+        }
+        state.offset = i;
+        let span = unsafe { state.src.get_unchecked(start..i) };
+        return Some(fast_float2::parse(span).unwrap_or(f64::NAN));
+    }
+
+    // Pure integer — no '.' or 'e'/'E' follows
+    state.offset = i;
+    if digit_count <= 15 {
+        // All 15-digit integers fit exactly in f64 (2^53 > 10^15)
+        let val = if neg {
+            -(int_val as i64) as f64
+        } else {
+            int_val as f64
+        };
+        Some(val)
+    } else {
+        // Large integers — use fast_float2 for exact conversion
+        let span = unsafe { state.src.get_unchecked(start..i) };
+        Some(fast_float2::parse(span).unwrap_or(f64::NAN))
+    }
 }
