@@ -17,29 +17,36 @@ const options = {
 // Use raw data.json (35KB) — no whitespace inflation to keep benchmarks tractable
 const jsonInput = fs.readFileSync("../data/json/data.json", "utf-8");
 
+// Suppress console.log from parse-that error reporting
+const origLog = console.log;
+
 describe("JSON Parser", () => {
     bench(
         "JSON.parse (native baseline)",
         () => {
             JSON.parse(jsonInput);
         },
-        options
+        options,
     );
 
     bench(
         "parse-that (hand-written)",
         () => {
-            StandardJsonParser.parse(jsonInput);
+            console.log = () => {};
+            try { StandardJsonParser.parse(jsonInput); }
+            finally { console.log = origLog; }
         },
-        options
+        options,
     );
 
     bench(
         "parse-that (BBNF-generated)",
         () => {
-            BBNFJsonParser.parse(jsonInput);
+            console.log = () => {};
+            try { BBNFJsonParser.parse(jsonInput); }
+            finally { console.log = origLog; }
         },
-        options
+        options,
     );
 
     bench(
@@ -47,15 +54,15 @@ describe("JSON Parser", () => {
         () => {
             ChevrotainJSONParser(jsonInput);
         },
-        options
+        options,
     );
 
     bench(
         "Parsimmon",
         () => {
-            ParsimmonJSONParser.parse(jsonInput);
+            ParsimmonJSONParser.tryParse(jsonInput);
         },
-        options
+        options,
     );
 });
 
@@ -101,7 +108,7 @@ describe("Math Expression Parser", () => {
                 expr.parse(e);
             }
         },
-        options
+        options,
     );
 
     bench(
@@ -111,7 +118,7 @@ describe("Math Expression Parser", () => {
                 bbnfMathParser.parse(e);
             }
         },
-        options
+        options,
     );
 
     bench(
@@ -121,6 +128,6 @@ describe("Math Expression Parser", () => {
                 eval(e);
             }
         },
-        options
+        options,
     );
 });

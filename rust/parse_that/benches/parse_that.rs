@@ -24,7 +24,15 @@ fn json_apache(b: &mut Bencher) {
 }
 
 fn json_data_xl(b: &mut Bencher) {
-    json_parse(b, "data-l.json")
+    json_parse(b, "data-xl.json")
+}
+
+fn json_twitter(b: &mut Bencher) {
+    json_parse(b, "twitter.json")
+}
+
+fn json_citm_catalog(b: &mut Bencher) {
+    json_parse(b, "citm_catalog.json")
 }
 
 fn json_parse(b: &mut Bencher, filepath: &str) {
@@ -70,7 +78,7 @@ fn csv_large(b: &mut Bencher) {
     })
 }
 
-benchmark_group!(json, json_data, json_canada, json_apache, json_data_xl);
+benchmark_group!(json, json_data, json_canada, json_apache, json_data_xl, json_twitter, json_citm_catalog);
 benchmark_group!(csv, csv_small, csv_large);
 
 benchmark_main!(json, csv);

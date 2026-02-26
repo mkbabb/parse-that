@@ -16,10 +16,12 @@ let PARSER_ID = 0;
 const MEMO = new Map<number, ParserState<unknown>>();
 const LEFT_RECURSION_COUNTS = new Map<string, number>();
 
+let lastFurthestOffset = -1;
 let lastState: ParserState<unknown> | undefined;
 
 export function mergeErrorState(state: ParserState<unknown>) {
-    if (!lastState || state.offset > lastState.offset) {
+    if (state.offset > lastFurthestOffset) {
+        lastFurthestOffset = state.offset;
         lastState = state;
     }
     return lastState;
@@ -34,6 +36,15 @@ export function getLazyParser<T>(
     return (fn.parser = fn());
 }
 
+// Closure-local lazy cache — avoids mutating function objects (megamorphic IC pollution)
+function createLazyCached<T>(fn: () => Parser<T>): (state: ParserState<T>) => ParserState<T> {
+    let cached: Parser<T> | undefined;
+    return (state: ParserState<T>) => {
+        if (!cached) cached = fn();
+        return cached.parser(state) as ParserState<T>;
+    };
+}
+
 export class Parser<T = string> {
     id: number = PARSER_ID++;
     state: ParserState<T> | undefined;
@@ -45,6 +56,7 @@ export class Parser<T = string> {
 
     reset() {
         lastState = undefined;
+        lastFurthestOffset = -1;
         MEMO.clear();
         LEFT_RECURSION_COUNTS.clear();
     }
@@ -52,16 +64,22 @@ export class Parser<T = string> {
     parseState(val: string) {
         this.reset();
 
-        const newState = this.parser(new ParserState(val) as ParserState<T>);
+        const state = new ParserState(val) as ParserState<T>;
+        this.parser(state);
 
-        this.state = mergeErrorState(newState as ParserState<unknown>) as ParserState<T>;
-        this.state.isError = newState.isError;
-
-        if (this.state.isError) {
+        if (state.isError && lastState) {
+            // Build error display from the furthest offset reached
+            const errorState = new ParserState(val, undefined, lastFurthestOffset, true);
+            this.state = errorState as ParserState<T>;
             console.log(this.state.toString());
+        } else {
+            this.state = state;
+            if (state.isError) {
+                console.log(state.toString());
+            }
         }
 
-        return newState;
+        return state;
     }
 
     parse(val: string) {
@@ -82,26 +100,32 @@ export class Parser<T = string> {
             const cijKey = this.getCijKey(state);
             const cij = LEFT_RECURSION_COUNTS.get(cijKey) ?? 0;
 
-            let cached = MEMO.get(this.id) as ParserState<T> | undefined;
+            const cached = MEMO.get(this.id) as ParserState<T> | undefined;
 
             if (cached && cached.offset >= state.offset) {
-                return cached;
+                // Restore from cache into mutable state
+                state.offset = cached.offset;
+                state.value = cached.value;
+                state.isError = cached.isError;
+                return state;
             } else if (this.atLeftRecursionLimit(state)) {
-                return state.err(undefined as unknown as T);
+                state.isError = true;
+                return state;
             }
 
             LEFT_RECURSION_COUNTS.set(cijKey, cij + 1);
-            const newState = this.parser(state);
+            this.parser(state);
 
-            cached = MEMO.get(this.id) as ParserState<T> | undefined;
+            const cachedAfter = MEMO.get(this.id) as ParserState<T> | undefined;
 
-            if (cached && cached.offset > newState.offset) {
-                newState.offset = cached.offset;
-            } else if (!cached) {
-                MEMO.set(this.id, newState as ParserState<unknown>);
+            if (cachedAfter && cachedAfter.offset > state.offset) {
+                state.offset = cachedAfter.offset;
+            } else if (!cachedAfter) {
+                // Clone before storing so the cache is immutable
+                MEMO.set(this.id, state.clone() as ParserState<unknown>);
             }
 
-            return newState;
+            return state;
         };
         return new Parser(
             memoize as ParserFunction<T>,
@@ -111,20 +135,24 @@ export class Parser<T = string> {
 
     mergeMemos() {
         const mergeMemo = (state: ParserState<T>) => {
-            let cached = MEMO.get(this.id) as ParserState<T> | undefined;
+            const cached = MEMO.get(this.id) as ParserState<T> | undefined;
             if (cached) {
-                return cached;
+                state.offset = cached.offset;
+                state.value = cached.value;
+                state.isError = cached.isError;
+                return state;
             } else if (this.atLeftRecursionLimit(state)) {
-                return state.err(undefined as unknown as T);
+                state.isError = true;
+                return state;
             }
 
-            const newState = this.parser(state);
+            this.parser(state);
 
-            cached = MEMO.get(this.id) as ParserState<T> | undefined;
-            if (!cached) {
-                MEMO.set(this.id, newState as ParserState<unknown>);
+            const cachedAfter = MEMO.get(this.id) as ParserState<T> | undefined;
+            if (!cachedAfter) {
+                MEMO.set(this.id, state.clone() as ParserState<unknown>);
             }
-            return newState;
+            return state;
         };
 
         return new Parser(
@@ -135,16 +163,20 @@ export class Parser<T = string> {
 
     then<S>(next: Parser<S | T>) {
         const then = (state: ParserState<T>) => {
-            const nextState1 = this.parser(state);
+            const savedOffset = state.offset;
+            this.parser(state);
 
-            if (!nextState1.isError) {
-                const nextState2 = next.parser(nextState1 as ParserState<S | T>);
-                if (!nextState2.isError) {
-                    return nextState2.ok([nextState1.value, nextState2.value]);
+            if (!state.isError) {
+                const value1 = state.value;
+                next.parser(state as ParserState<S | T>);
+                if (!state.isError) {
+                    return state.ok([value1, state.value]);
                 }
             }
             mergeErrorState(state as ParserState<unknown>);
-            return state.err(undefined);
+            state.offset = savedOffset;
+            state.isError = true;
+            return state;
         };
 
         return new Parser(
@@ -155,11 +187,14 @@ export class Parser<T = string> {
 
     or<S>(other: Parser<S | T>) {
         const or = (state: ParserState<T>) => {
-            const newState = this.parser(state);
+            const savedOffset = state.offset;
+            this.parser(state);
 
-            if (!newState.isError) {
-                return newState;
+            if (!state.isError) {
+                return state;
             }
+            state.offset = savedOffset;
+            state.isError = false;
             return other.parser(state as ParserState<S | T>);
         };
 
@@ -171,12 +206,12 @@ export class Parser<T = string> {
 
     chain<S>(fn: (value: T) => Parser<S | T>, chainError: boolean = false) {
         const chain = (state: ParserState<T>) => {
-            const newState = this.parser(state);
+            this.parser(state);
 
-            if (newState.isError) {
-                return newState;
-            } else if (newState.value || chainError) {
-                return fn(newState.value).parser(newState as ParserState<S | T>);
+            if (state.isError) {
+                return state;
+            } else if (state.value || chainError) {
+                return fn(state.value).parser(state as ParserState<S | T>);
             }
             return state;
         };
@@ -189,12 +224,12 @@ export class Parser<T = string> {
 
     map<S>(fn: (value: T) => S, mapError: boolean = false) {
         const map = (state: ParserState<T | S>) => {
-            const newState = this.parser(state as ParserState<T>);
+            this.parser(state as ParserState<T>);
 
-            if (!newState.isError || mapError) {
-                return newState.ok(fn(newState.value));
+            if (!state.isError || mapError) {
+                return state.ok(fn(state.value as T));
             }
-            return newState;
+            return state;
         };
 
         return new Parser(
@@ -210,8 +245,18 @@ export class Parser<T = string> {
         ) => ParserState<S>,
     ) {
         const mapState = (state: ParserState<T>) => {
-            const newState = this.parser(state);
-            return fn(newState, state);
+            // Snapshot old offset before parsing (avoids full clone on success)
+            const oldOffset = state.offset;
+            const oldValue = state.value;
+            this.parser(state);
+            if (state.isError) {
+                return state;
+            }
+            // Build a lightweight view for the old state
+            const oldView = Object.create(state);
+            oldView.offset = oldOffset;
+            oldView.value = oldValue;
+            return fn(state, oldView);
         };
 
         return new Parser(
@@ -222,16 +267,20 @@ export class Parser<T = string> {
 
     skip<S>(parser: Parser<T | S>) {
         const skip = (state: ParserState<T>) => {
-            const nextState1 = this.parser(state);
+            const savedOffset = state.offset;
+            this.parser(state);
 
-            if (!nextState1.isError) {
-                const nextState2 = parser.parser(nextState1 as ParserState<T | S>);
-                if (!nextState2.isError) {
-                    return nextState2.ok(nextState1.value);
+            if (!state.isError) {
+                const value1 = state.value;
+                parser.parser(state as ParserState<T | S>);
+                if (!state.isError) {
+                    return state.ok(value1);
                 }
             }
             mergeErrorState(state as ParserState<unknown>);
-            return state.err(undefined);
+            state.offset = savedOffset;
+            state.isError = true;
+            return state;
         };
         return new Parser(
             skip as ParserFunction<T>,
@@ -240,21 +289,37 @@ export class Parser<T = string> {
     }
 
     next<S>(parser: Parser<S>) {
-        const next = this.then(parser).map(([, b]) => {
-            return b;
-        }) as Parser<S>;
-        next.context = createParserContext("next", this as Parser<unknown>, parser);
-        return next;
+        const next = (state: ParserState<T>) => {
+            const savedOffset = state.offset;
+            this.parser(state);
+
+            if (!state.isError) {
+                parser.parser(state as ParserState<any>);
+                if (!state.isError) {
+                    return state;
+                }
+            }
+            mergeErrorState(state as ParserState<unknown>);
+            state.offset = savedOffset;
+            state.isError = true;
+            return state;
+        };
+        return new Parser(
+            next as ParserFunction<S>,
+            createParserContext("next", this as Parser<unknown>, parser),
+        );
     }
 
     opt() {
         const opt = (state: ParserState<T>) => {
-            const newState = this.parser(state);
-            if (newState.isError) {
+            const savedOffset = state.offset;
+            this.parser(state);
+            if (state.isError) {
                 mergeErrorState(state as ParserState<unknown>);
+                state.offset = savedOffset;
                 return state.ok(undefined);
             }
-            return newState;
+            return state;
         };
         return new Parser(
             opt as ParserFunction<T | undefined>,
@@ -264,29 +329,47 @@ export class Parser<T = string> {
 
     not<S extends T>(parser?: Parser<S | T>) {
         const negate = (state: ParserState<T>) => {
-            const newState = this.parser(state);
+            const savedOffset = state.offset;
+            const savedValue = state.value;
+            this.parser(state);
 
-            if (newState.isError) {
+            if (state.isError) {
                 mergeErrorState(state as ParserState<unknown>);
-                return state.ok(state.value);
+                state.offset = savedOffset;
+                return state.ok(savedValue);
             } else {
-                return state.err(undefined);
+                state.offset = savedOffset;
+                state.isError = true;
+                return state;
             }
         };
 
         const not = (state: ParserState<T>) => {
-            const newState = this.parser(state);
+            const savedOffset = state.offset;
+            this.parser(state);
 
-            if (newState.isError) {
+            if (state.isError) {
                 mergeErrorState(state as ParserState<unknown>);
-                return newState;
+                state.offset = savedOffset;
+                state.isError = true;
+                return state;
             } else {
-                const nextState = parser!.parser(state as ParserState<S | T>);
-                if (nextState.isError) {
-                    return newState;
+                const value1 = state.value;
+                const offset1 = state.offset;
+                state.offset = savedOffset;
+                state.isError = false;
+                parser!.parser(state as ParserState<S | T>);
+                if (state.isError) {
+                    // parser! failed — return the first parser's result
+                    state.offset = offset1;
+                    state.value = value1 as any;
+                    state.isError = false;
+                    return state;
                 } else {
                     mergeErrorState(state as ParserState<unknown>);
-                    return state.err(undefined);
+                    state.offset = savedOffset;
+                    state.isError = true;
+                    return state;
                 }
             }
         };
@@ -302,11 +385,38 @@ export class Parser<T = string> {
             return all(start as Parser<unknown>, this as Parser<unknown>, end as Parser<unknown>);
         }
 
-        const wrap = (start as Parser<unknown>)
-            .next(this as Parser<unknown>)
-            .skip(end as Parser<unknown>) as Parser<T>;
-        wrap.context = createParserContext("wrap", this as Parser<unknown>, start, end);
-        return wrap;
+        // Inline start.next(this).skip(end) into a single closure
+        // to eliminate 2 intermediate function frames per invocation.
+        const inner = this;
+        const wrapParser = (state: ParserState<T>) => {
+            const savedOffset = state.offset;
+            start.parser(state as any);
+            if (state.isError) {
+                state.offset = savedOffset;
+                return state;
+            }
+            inner.parser(state);
+            if (state.isError) {
+                mergeErrorState(state as ParserState<unknown>);
+                state.offset = savedOffset;
+                state.isError = true;
+                return state;
+            }
+            const value = state.value;
+            (end as Parser<unknown>).parser(state as any);
+            if (state.isError) {
+                mergeErrorState(state as ParserState<unknown>);
+                state.offset = savedOffset;
+                state.isError = true;
+                return state;
+            }
+            (state as any).value = value;
+            return state;
+        };
+        return new Parser(
+            wrapParser as ParserFunction<T>,
+            createParserContext("wrap", this as Parser<unknown>, start, end),
+        );
     }
 
     trim<S>(
@@ -319,14 +429,18 @@ export class Parser<T = string> {
 
         if (parser.context?.name === "whitespace") {
             const whitespaceTrim = (state: ParserState<T>) => {
-                const newState = trimStateWhitespace(state);
-                const tmpState = this.parser(newState);
+                trimStateWhitespace(state);
+                const savedOffset = state.offset;
+                this.parser(state);
 
-                if (tmpState.isError) {
+                if (state.isError) {
                     mergeErrorState(state as ParserState<unknown>);
-                    return state.err(undefined);
+                    state.offset = savedOffset;
+                    state.isError = true;
+                    return state;
                 } else {
-                    return trimStateWhitespace(tmpState);
+                    trimStateWhitespace(state);
+                    return state;
                 }
             };
 
@@ -342,23 +456,27 @@ export class Parser<T = string> {
     many(min: number = 0, max: number = Infinity) {
         const many = (state: ParserState<T>) => {
             const matches: T[] = [];
-            let newState: ParserState<T> = state;
 
             for (let i = 0; i < max; i += 1) {
-                const tmpState = this.parser(newState);
+                const savedOffset = state.offset;
+                this.parser(state);
 
-                if (tmpState.isError) {
+                if (state.isError) {
+                    state.offset = savedOffset;
+                    state.isError = false;
                     break;
                 }
-                matches.push(tmpState.value);
-                newState = tmpState;
+                if (state.offset === savedOffset) break;
+                matches.push(state.value);
             }
 
             if (matches.length >= min) {
-                return newState.ok(matches) as ParserState<T[]>;
+                return state.ok(matches) as ParserState<T[]>;
             }
             mergeErrorState(state as ParserState<unknown>);
-            return state.err([]) as unknown as ParserState<T[]>;
+            state.isError = true;
+            (state as any).value = [];
+            return state as unknown as ParserState<T[]>;
         };
 
         return new Parser(
@@ -371,28 +489,33 @@ export class Parser<T = string> {
         const sepBy = (state: ParserState<T>) => {
             const matches: T[] = [];
 
-            let newState: ParserState<T> = state;
-
             for (let i = 0; i < max; i += 1) {
-                const tmpState = this.parser(newState);
-                if (tmpState.isError) {
+                const savedOffset = state.offset;
+                this.parser(state);
+                if (state.isError) {
+                    state.offset = savedOffset;
+                    state.isError = false;
                     break;
                 }
-                newState = tmpState;
-                matches.push(newState.value);
+                if (state.offset === savedOffset) break;
+                matches.push(state.value);
 
-                const sepState = sep.parser(newState as ParserState<S | T>);
-                if (sepState.isError) {
+                const sepOffset = state.offset;
+                sep.parser(state as ParserState<S | T>);
+                if (state.isError) {
+                    state.offset = sepOffset;
+                    state.isError = false;
                     break;
                 }
-                newState = sepState as ParserState<T>;
             }
 
-            if (matches.length > min) {
-                return newState.ok(matches) as ParserState<T[]>;
+            if (matches.length >= min) {
+                return state.ok(matches) as ParserState<T[]>;
             }
             mergeErrorState(state as ParserState<unknown>);
-            return state.err([]) as unknown as ParserState<T[]>;
+            state.isError = true;
+            (state as any).value = [];
+            return state as unknown as ParserState<T[]>;
         };
 
         return new Parser(
@@ -420,11 +543,8 @@ export class Parser<T = string> {
     }
 
     static lazy<T>(fn: () => Parser<T>) {
-        const lazy = (state: ParserState<T>) => {
-            return getLazyParser(fn).parser(state) as ParserState<T>;
-        };
         return new Parser<T>(
-            lazy,
+            createLazyCached(fn),
             createParserContext("lazy", undefined, fn),
         );
     }
@@ -436,7 +556,8 @@ export function eof<T>() {
             return state.ok(undefined);
         } else {
             mergeErrorState(state as ParserState<unknown>);
-            return state.err();
+            state.isError = true;
+            return state;
         }
     };
     return new Parser(
@@ -457,11 +578,8 @@ export function lazy<T>(
     const method = descriptor.value!.bind(target)!;
 
     descriptor.value = function () {
-        const lazy = (state: ParserState<T>) => {
-            return getLazyParser(method).parser(state) as ParserState<T>;
-        };
         return new Parser<T>(
-            lazy,
+            createLazyCached(method),
             createParserContext("lazy", undefined, method),
         );
     };
@@ -471,14 +589,18 @@ export function lazy<T>(
 export function any<T extends Array<Parser<any>>>(...parsers: T) {
     type Result = T[number] extends Parser<infer V> ? V : never;
     const anyParser = (state: ParserState<Result>) => {
+        const savedOffset = state.offset;
         for (const parser of parsers) {
-            const newState = parser.parser(state);
-            if (!newState.isError) {
-                return newState;
+            parser.parser(state);
+            if (!state.isError) {
+                return state;
             }
+            state.offset = savedOffset;
+            state.isError = false;
         }
         mergeErrorState(state as ParserState<unknown>);
-        return state.err(undefined);
+        state.isError = true;
+        return state;
     };
 
     return new Parser(
@@ -487,28 +609,79 @@ export function any<T extends Array<Parser<any>>>(...parsers: T) {
     ) as Parser<Result>;
 }
 
+/**
+ * O(1) first-character dispatch for alternation.
+ * Maps ASCII characters to parsers for instant lookup instead of
+ * sequential trial-and-error like any().
+ *
+ * @param table - Maps characters (or char ranges) to parsers.
+ *   Keys can be single chars ("a"), ranges ("0-9"), or multi-char ("tf" = 't' or 'f').
+ * @param fallback - Optional parser to try when no table entry matches.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function dispatch<T>(table: Record<string, Parser<T>>, fallback?: Parser<T>) {
+    const tbl = new Int8Array(128).fill(-1);
+    const parsers: Parser<T>[] = [];
+
+    for (const [chars, parser] of Object.entries(table)) {
+        let idx = parsers.indexOf(parser);
+        if (idx === -1) {
+            idx = parsers.length;
+            parsers.push(parser);
+        }
+        // Support "0-9" range syntax
+        if (chars.length === 3 && chars[1] === '-') {
+            const lo = chars.charCodeAt(0);
+            const hi = chars.charCodeAt(2);
+            for (let c = lo; c <= hi; c++) tbl[c] = idx;
+        } else {
+            for (let i = 0; i < chars.length; i++) {
+                tbl[chars.charCodeAt(i)] = idx;
+            }
+        }
+    }
+
+    const dispatchParser = (state: ParserState<T>) => {
+        const ch = state.src.charCodeAt(state.offset);
+        const idx = ch < 128 ? tbl[ch] : -1;
+        if (idx >= 0) {
+            return parsers[idx].parser(state);
+        }
+        if (fallback) {
+            return fallback.parser(state);
+        }
+        mergeErrorState(state as ParserState<unknown>);
+        state.isError = true;
+        return state;
+    };
+
+    return new Parser(
+        dispatchParser as ParserFunction<T>,
+        createParserContext("dispatch", undefined, ...parsers),
+    );
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function all<T extends Array<Parser<any>>>(...parsers: T) {
     type Result = ExtractValue<T>;
     const allParser = (state: ParserState<Result>): ParserState<Result> => {
         const matches: unknown[] = [];
-
-        let currentState: ParserState<unknown> = state as ParserState<unknown>;
+        const savedOffset = state.offset;
 
         for (const parser of parsers) {
-            const newState = parser.parser(currentState);
+            parser.parser(state);
 
-            if (newState.isError) {
-                return newState as ParserState<Result>;
+            if (state.isError) {
+                state.offset = savedOffset;
+                state.isError = true;
+                return state as ParserState<Result>;
             }
 
-            if (newState.value !== undefined) {
-                matches.push(newState.value);
+            if (state.value !== undefined) {
+                matches.push(state.value);
             }
-            currentState = newState;
         }
-        mergeErrorState(currentState);
-        return currentState.ok(matches) as ParserState<Result>;
+        return state.ok(matches) as ParserState<Result>;
     };
 
     return new Parser(
@@ -517,48 +690,92 @@ export function all<T extends Array<Parser<any>>>(...parsers: T) {
     ) as Parser<Result>;
 }
 
+// Step 2: string() with startsWith + single-char charCodeAt fast path
 export function string(str: string) {
-    const stringParser = (state: ParserState<string>) => {
-        if (state.offset >= state.src.length) {
-            return state.err(undefined);
-        }
-        const s = state.src.slice(state.offset, state.offset + str.length);
-        if (s === str) {
-            return state.ok(s, s.length);
-        }
-        mergeErrorState(state as ParserState<unknown>);
-        return state.err(undefined);
-    };
+    const len = str.length;
+
+    let stringParser: ParserFunction<string>;
+
+    if (len === 1) {
+        const code = str.charCodeAt(0);
+        stringParser = ((state: ParserState<string>) => {
+            if (state.src.charCodeAt(state.offset) === code) {
+                state.offset += 1;
+                (state as any).value = str;
+                state.isError = false;
+                return state;
+            }
+            mergeErrorState(state as ParserState<unknown>);
+            state.isError = true;
+            return state;
+        }) as ParserFunction<string>;
+    } else {
+        stringParser = ((state: ParserState<string>) => {
+            if (state.src.startsWith(str, state.offset)) {
+                state.offset += len;
+                (state as any).value = str;
+                state.isError = false;
+                return state;
+            }
+            mergeErrorState(state as ParserState<unknown>);
+            state.isError = true;
+            return state;
+        }) as ParserFunction<string>;
+    }
 
     return new Parser(
-        stringParser as ParserFunction<string>,
+        stringParser,
         createParserContext("string", undefined, str),
     );
 }
 
+// regex() with test()+substring() for zero-alloc default path,
+// exec() only when matchFunction needs full RegExpMatchArray.
 export function regex(
     r: RegExp,
-    matchFunction: (match: RegExpMatchArray | null) => string | null = (m) =>
-        m?.[0] ?? null,
+    matchFunction?: (match: RegExpMatchArray | null) => string | null,
 ) {
     const flags = r.flags.replace(/y/g, "");
     const sticky = new RegExp(r, flags + "y");
+    const hasCustomMatch = matchFunction != null;
 
     const regexParser = (state: ParserState<string>) => {
         if (state.offset >= state.src.length) {
-            return state.err(undefined);
+            state.isError = true;
+            return state;
         }
 
-        sticky.lastIndex = state.offset;
-        const match = matchFunction(state.src.match(sticky));
+        const savedOffset = state.offset;
+        sticky.lastIndex = savedOffset;
 
-        if (match) {
-            return state.ok(match, sticky.lastIndex - state.offset);
-        } else if (match === "") {
-            return state.ok(undefined);
+        if (hasCustomMatch) {
+            // Custom match functions need the full RegExpMatchArray
+            const execResult = sticky.exec(state.src);
+            const match = matchFunction!(execResult);
+            if (match) {
+                return state.ok(match, sticky.lastIndex - savedOffset);
+            } else if (match === "") {
+                return state.ok(undefined);
+            }
+        } else if (sticky.test(state.src)) {
+            // test() advances lastIndex without allocating a RegExpMatchArray.
+            // Inline ok() to set offset directly (avoids += arithmetic).
+            const end = sticky.lastIndex;
+            if (end > savedOffset) {
+                state.offset = end;
+                (state as any).value = state.src.substring(savedOffset, end);
+                state.isError = false;
+                return state;
+            }
+            // Empty match
+            (state as any).value = undefined;
+            state.isError = false;
+            return state;
         }
+
         mergeErrorState(state as ParserState<unknown>);
-        return state.err(undefined);
+        state.isError = true;
+        return state;
     };
 
     return new Parser(
@@ -567,15 +784,26 @@ export function regex(
     );
 }
 
-const WHITESPACE = /\s*/y;
-const trimStateWhitespace = <T>(state: ParserState<T>) => {
-    if (state.offset >= state.src.length) {
-        return state;
-    }
+// Step 5: Inline whitespace trimming with charCode loop + fast-exit
+const trimStateWhitespace = <T>(state: ParserState<T>): ParserState<T> => {
+    const src = state.src;
+    const len = src.length;
+    let offset = state.offset;
 
-    WHITESPACE.lastIndex = state.offset;
-    const match = state.src.match(WHITESPACE)?.[0] ?? "";
-    return state.ok(state.value, match.length);
+    // Fast-exit: most calls hit non-whitespace immediately
+    if (offset >= len || src.charCodeAt(offset) > 32) return state;
+
+    while (offset < len) {
+        const c = src.charCodeAt(offset);
+        // space=32, tab=9, lf=10, vt=11, ff=12, cr=13
+        if (c === 32 || (c >= 9 && c <= 13)) {
+            offset++;
+        } else {
+            break;
+        }
+    }
+    state.offset = offset;
+    return state;
 };
 
 export const whitespace = regex(/\s*/);

@@ -1,20 +1,52 @@
+/**
+ * Inserts random whitespace between JSON tokens without corrupting string values.
+ * Walks the input character-by-character, skipping over string literals, and
+ * injects whitespace only at token boundaries (after : , [ ] { }).
+ */
 export const insertRandomWhitespace = (str: string, spaces: number = 12) => {
     const whitespaceChars = [" ", "\t", "\n"];
+    const tokenBoundary = new Set([",", ":", "[", "]", "{", "}"]);
+    const parts: string[] = [];
+    let i = 0;
 
-    return str
-        .split(" ")
-        .map((word) => {
-            if (Math.random() > 0.5) {
-                return word;
-            } else {
+    while (i < str.length) {
+        // Skip over string literals verbatim
+        if (str[i] === '"') {
+            const start = i;
+            i++; // opening quote
+            while (i < str.length) {
+                if (str[i] === "\\") {
+                    i += 2; // skip escape sequence
+                } else if (str[i] === '"') {
+                    i++; // closing quote
+                    break;
+                } else {
+                    i++;
+                }
+            }
+            parts.push(str.slice(start, i));
+            continue;
+        }
+
+        // At a token boundary, emit the char then inject random whitespace
+        if (tokenBoundary.has(str[i])) {
+            parts.push(str[i]);
+            i++;
+            if (Math.random() > 0.3) {
                 const ws = whitespaceChars[
                     Math.floor(Math.random() * whitespaceChars.length)
-                ].repeat(Math.floor(Math.random() * spaces));
-
-                return ws + word + ws;
+                ].repeat(1 + Math.floor(Math.random() * spaces));
+                parts.push(ws);
             }
-        })
-        .join("");
+            continue;
+        }
+
+        // Normal character (digits, letters, whitespace outside strings)
+        parts.push(str[i]);
+        i++;
+    }
+
+    return parts.join("");
 };
 
 export const evaluateMathOperator = (operator: string, a: number, b: number): number => {
