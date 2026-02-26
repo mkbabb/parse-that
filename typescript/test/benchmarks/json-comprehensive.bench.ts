@@ -11,7 +11,6 @@ import { json as ParsimmonJSONParser } from "./parsimmon";
 import { parse as PeggyParse } from "./peggy";
 import { parse as ChevrotainParse } from "./chevrotain";
 import { parse as NearleyParse } from "./nearley";
-import { parse as OhmParse } from "./ohm";
 
 // Suppress console.log during benchmarks (parse-that logs parse errors)
 const origLog = console.log;
@@ -37,7 +36,6 @@ const datasets = [
     { name: "twitter.json (617 KB)", file: "twitter.json", maxCombKB: Infinity },
     { name: "citm_catalog.json (1.7 MB)", file: "citm_catalog.json", maxCombKB: 500 },
     { name: "canada.json (2.1 MB)", file: "canada.json", maxCombKB: 500 },
-    { name: "data-xl.json (37 MB)", file: "data-xl.json", maxCombKB: 200 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -55,7 +53,6 @@ const parserDefs: ParserDef[] = [
     { name: "Chevrotain", fn: (s) => ChevrotainParse(s), buildsValues: true },
     { name: "Peggy", fn: (s) => PeggyParse(s), buildsValues: true },
     { name: "Nearley + moo", fn: (s) => NearleyParse(s), buildsValues: true },
-    { name: "Ohm", fn: (s) => OhmParse(s), buildsValues: true },
     { name: "parse-that (BBNF)", fn: (s) => BBNFRawParser.parse(s), buildsValues: false, isCombinator: true },
     { name: "parse-that (hand)", fn: (s) => HandRawParser.parse(s), buildsValues: false, isCombinator: true },
     { name: "Parsimmon", fn: (s) => ParsimmonJSONParser.tryParse(s), buildsValues: true, isCombinator: true },
