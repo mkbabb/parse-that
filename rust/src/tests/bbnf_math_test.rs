@@ -13,15 +13,13 @@ mod tests {
 
     #[test]
     fn parse_simple_number() {
+        // `factor` is a transparent alternation — returns Box<MathEnum> directly.
         let result = Math::factor().parse("42").expect("parse failed");
-        match &result {
-            MathEnum::factor(inner) => match inner.as_ref() {
-                MathEnum::number(span) => {
-                    assert_eq!(span.as_str(), "42");
-                }
-                other => panic!("expected number, got {other:?}"),
-            },
-            other => panic!("expected factor, got {other:?}"),
+        match result.as_ref() {
+            MathEnum::number(span) => {
+                assert_eq!(span.as_str(), "42");
+            }
+            other => panic!("expected number, got {other:?}"),
         }
     }
 

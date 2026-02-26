@@ -47,7 +47,6 @@ pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
                     .collect();
                 JsonValue::Object(map)
             }
-            JsonEnum::value(v) => recurse(v),
             _ => unimplemented!(),
         }
     }
@@ -74,7 +73,7 @@ pub fn main() {
     // BBNF-derived parser
     let now = SystemTime::now();
     let x = Json::value().parse(&json_string).unwrap();
-    let _tmp = consume_json(&x);
+    let _tmp = consume_json(&*x);
     let elapsed = now.elapsed().unwrap();
     println!("JSON (BBNF) Elapsed: {:?}", elapsed);
 
