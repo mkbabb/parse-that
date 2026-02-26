@@ -1,10 +1,9 @@
 import { describe, bench, BenchOptions } from "vitest";
 import fs from "fs";
-import { insertRandomWhitespace } from "../utils";
+import path from "path";
 
 import { JSONParser as BBNFJsonParser } from "./bbnf";
 import { JSONParser as StandardJsonParser } from "./parse-that";
-
 import { parse as ChevrotainJSONParser } from "./chevrotain";
 import { json as ParsimmonJSONParser } from "./parsimmon";
 
@@ -12,26 +11,30 @@ const options = {
     iterations: 10,
 } as BenchOptions;
 
-const whitespace = /\s+(?=(?:[^"]*"[^"]*")*[^"]*$)/g;
-let input = fs.readFileSync("../data/json/data.json", "utf-8");
-input = insertRandomWhitespace(input, 10);
-// input = input.replaceAll(whitespace, "");
+const input = fs.readFileSync(path.resolve(__dirname, "../../../data/json/data.json"), "utf-8");
+
+// Suppress console.log from parse-that error reporting
+const origLog = console.log;
 
 describe("JSON Parser", () => {
     bench(
         "Standard",
         () => {
-            StandardJsonParser.parse(input);
+            console.log = () => {};
+            try { StandardJsonParser.parse(input); }
+            finally { console.log = origLog; }
         },
-        options
+        options,
     );
 
     bench(
         "BBNF",
         () => {
-            BBNFJsonParser.parse(input);
+            console.log = () => {};
+            try { BBNFJsonParser.parse(input); }
+            finally { console.log = origLog; }
         },
-        options
+        options,
     );
 
     bench(
@@ -39,14 +42,14 @@ describe("JSON Parser", () => {
         () => {
             ChevrotainJSONParser(input);
         },
-        options
+        options,
     );
 
     bench(
         "Parsimmon",
         () => {
-            ParsimmonJSONParser.parse(input);
+            ParsimmonJSONParser.tryParse(input);
         },
-        options
+        options,
     );
 });

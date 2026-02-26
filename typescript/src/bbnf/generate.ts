@@ -249,7 +249,7 @@ export function ASTToParser(
                 // Try to build a dispatch table for O(1) alternation.
                 // Only use dispatch when all alternatives are non-nullable
                 // (epsilon/optional alternatives can't be dispatched on first char).
-                if (parsers.length > 2) {
+                if (parsers.length >= 2) {
                     const dispatch = buildDispatchTable(
                         alts,
                         fnData.firstSets,

@@ -8,7 +8,7 @@ const jsonBool = string("true").or(string("false"));
 
 // Using equivalent regex's as Chevrotain :D
 const jsonNumber = regex(/-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/);
-const jsonString = regex(/"((?:[^\\"]|\\(?:[bfnrtv"\\/]|u[0-9a-fA-F]{4})))+"/);
+const jsonString = regex(/"((?:[^\\"]|\\(?:[bfnrtv"\\/]|u[0-9a-fA-F]{4})))*"/);
 const jsonArray = Parser.lazy(() =>
     jsonValue.sepBy(comma).trim().wrap(string("["), string("]"))
 );
@@ -17,7 +17,6 @@ const jsonObject = Parser.lazy(() =>
         .skip(colon)
         .then(jsonValue.trim())
         .sepBy(comma)
-        .many()
         .trim()
         .wrap(string("{"), string("}"))
 );
