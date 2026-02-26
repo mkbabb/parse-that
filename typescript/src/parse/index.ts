@@ -729,7 +729,8 @@ export function string(str: string) {
     );
 }
 
-// Step 3: regex() with exec() + skip function call for default match
+// regex() with test()+substring() for zero-alloc default path,
+// exec() only when matchFunction needs full RegExpMatchArray.
 export function regex(
     r: RegExp,
     matchFunction?: (match: RegExpMatchArray | null) => string | null,
@@ -757,16 +758,19 @@ export function regex(
                 return state.ok(undefined);
             }
         } else if (sticky.test(state.src)) {
-            // test() advances lastIndex without allocating a RegExpMatchArray
+            // test() advances lastIndex without allocating a RegExpMatchArray.
+            // Inline ok() to set offset directly (avoids += arithmetic).
             const end = sticky.lastIndex;
             if (end > savedOffset) {
-                return state.ok(
-                    state.src.substring(savedOffset, end),
-                    end - savedOffset,
-                );
+                state.offset = end;
+                (state as any).value = state.src.substring(savedOffset, end);
+                state.isError = false;
+                return state;
             }
             // Empty match
-            return state.ok(undefined);
+            (state as any).value = undefined;
+            state.isError = false;
+            return state;
         }
 
         mergeErrorState(state as ParserState<unknown>);
