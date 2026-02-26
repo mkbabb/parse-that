@@ -5,6 +5,14 @@ mod tests {
     use parse_that::parsers::json::JsonValue;
     use std::fs;
 
+    /// Helper: lookup a key in a Vec-of-pairs object.
+    fn obj_get<'a, 'b>(
+        pairs: &'b [(&'a str, JsonValue<'a>)],
+        key: &str,
+    ) -> Option<&'b JsonValue<'a>> {
+        pairs.iter().find(|(k, _)| *k == key).map(|(_, v)| v)
+    }
+
     #[test]
     fn test_json() {
         let json = r#"
@@ -15,14 +23,14 @@ mod tests {
             }
         "#;
 
-        let map = json_parser().parse(json).unwrap();
+        let result = json_parser().parse(json).unwrap();
 
-        match map {
-            JsonValue::Object(map) => {
-                assert_eq!(map.len(), 3);
-                assert_eq!(map.get("a").unwrap(), &JsonValue::Number(1.0));
-                assert_eq!(map.get("b").unwrap(), &JsonValue::Number(2.0));
-                assert_eq!(map.get("c").unwrap(), &JsonValue::Number(3.0));
+        match result {
+            JsonValue::Object(pairs) => {
+                assert_eq!(pairs.len(), 3);
+                assert_eq!(obj_get(&pairs, "a").unwrap(), &JsonValue::Number(1.0));
+                assert_eq!(obj_get(&pairs, "b").unwrap(), &JsonValue::Number(2.0));
+                assert_eq!(obj_get(&pairs, "c").unwrap(), &JsonValue::Number(3.0));
             }
             _ => panic!("Expected JsonValue::Object"),
         }
@@ -39,7 +47,7 @@ mod tests {
             JsonValue::Array(arr) => {
                 assert_eq!(arr.len(), 4784);
             }
-            _ => panic!("Expected JsonValue::Object"),
+            _ => panic!("Expected JsonValue::Array"),
         }
     }
 
@@ -206,7 +214,7 @@ mod tests {
     fn test_empty_object() {
         let result = json_parser().parse("{}").unwrap();
         match result {
-            JsonValue::Object(map) => assert_eq!(map.len(), 0),
+            JsonValue::Object(pairs) => assert_eq!(pairs.len(), 0),
             other => panic!("Expected empty object, got {:?}", other),
         }
     }
@@ -256,7 +264,9 @@ mod tests {
         match v {
             JsonValue::Null | JsonValue::Bool(_) | JsonValue::Number(_) | JsonValue::String(_) => 1,
             JsonValue::Array(arr) => 1 + arr.iter().map(count_values).sum::<usize>(),
-            JsonValue::Object(map) => 1 + map.values().map(count_values).sum::<usize>(),
+            JsonValue::Object(pairs) => {
+                1 + pairs.iter().map(|(_, v)| count_values(v)).sum::<usize>()
+            }
         }
     }
 
@@ -292,25 +302,20 @@ mod tests {
                 // Just verify both are strings.
             }
             (JsonValue::Array(a), serde_json::Value::Array(b)) => {
-                assert_eq!(
-                    a.len(),
-                    b.len(),
-                    "Array length mismatch: {} vs {}",
-                    a.len(),
-                    b.len()
-                );
+                assert_eq!(a.len(), b.len(), "Array length mismatch");
                 for (ai, bi) in a.iter().zip(b.iter()) {
                     compare_structure(ai, bi);
                 }
             }
             (JsonValue::Object(a), serde_json::Value::Object(b)) => {
-                assert_eq!(
-                    a.len(),
-                    b.len(),
-                    "Object key count mismatch: {} vs {}",
-                    a.len(),
-                    b.len()
-                );
+                assert_eq!(a.len(), b.len(), "Object key count mismatch");
+                // Recurse into object values by matching keys
+                for (key, val) in a.iter() {
+                    let serde_val = b.get(*key).unwrap_or_else(|| {
+                        panic!("Key '{}' in parse_that but not in serde_json", key)
+                    });
+                    compare_structure(val, serde_val);
+                }
             }
             _ => panic!(
                 "Type mismatch: parse_that={:?}, serde={:?}",
@@ -384,14 +389,14 @@ mod tests {
             }
         "#;
 
-        let map = json_parser_fast().parse(json).unwrap();
+        let result = json_parser_fast().parse(json).unwrap();
 
-        match map {
-            JsonValue::Object(map) => {
-                assert_eq!(map.len(), 3);
-                assert_eq!(map.get("a").unwrap(), &JsonValue::Number(1.0));
-                assert_eq!(map.get("b").unwrap(), &JsonValue::Number(2.0));
-                assert_eq!(map.get("c").unwrap(), &JsonValue::Number(3.0));
+        match result {
+            JsonValue::Object(pairs) => {
+                assert_eq!(pairs.len(), 3);
+                assert_eq!(obj_get(&pairs, "a").unwrap(), &JsonValue::Number(1.0));
+                assert_eq!(obj_get(&pairs, "b").unwrap(), &JsonValue::Number(2.0));
+                assert_eq!(obj_get(&pairs, "c").unwrap(), &JsonValue::Number(3.0));
             }
             _ => panic!("Expected JsonValue::Object"),
         }
@@ -440,7 +445,7 @@ mod tests {
     #[test]
     fn test_fast_empty_object() {
         match json_parser_fast().parse("{}").unwrap() {
-            JsonValue::Object(map) => assert_eq!(map.len(), 0),
+            JsonValue::Object(pairs) => assert_eq!(pairs.len(), 0),
             other => panic!("Expected empty object, got {:?}", other),
         }
     }
@@ -497,19 +502,29 @@ mod tests {
             json_parser_fast().parse("9007199254740992").unwrap(),
             JsonValue::Number(9007199254740992.0)
         );
+        // 16-digit integer within 2^53 — uses fast path
+        assert_eq!(
+            json_parser_fast().parse("1000000000000000").unwrap(),
+            JsonValue::Number(1000000000000000.0)
+        );
     }
 
     #[test]
     fn test_fast_string_escapes() {
         let cases = vec![
-            (r#""\"""#, "\\\""),
-            (r#""\\""#, "\\\\"),
-            (r#""\n""#, "\\n"),
-            (r#""\u0041""#, "\\u0041"),
+            r#""\"""#,
+            r#""\\""#,
+            r#""\n""#,
+            r#""\t""#,
+            r#""\r""#,
+            r#""\b""#,
+            r#""\f""#,
+            r#""\/""#,
+            r#""\u0041""#,
         ];
 
         let parser = json_parser_fast();
-        for (input, _expected) in &cases {
+        for input in &cases {
             let result = parser.parse(input);
             assert!(result.is_some(), "Failed to parse string: {}", input);
             match result.unwrap() {
@@ -520,12 +535,82 @@ mod tests {
     }
 
     #[test]
+    fn test_fast_string_empty() {
+        match json_parser_fast().parse(r#""""#).unwrap() {
+            JsonValue::String(s) => assert_eq!(s, ""),
+            other => panic!("Expected String, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_fast_long_string() {
+        let long = "a".repeat(10_000);
+        let input = format!("\"{}\"", long);
+        match json_parser_fast().parse(&input).unwrap() {
+            JsonValue::String(s) => assert_eq!(s.len(), 10_000),
+            other => panic!("Expected String, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_fast_single_element_containers() {
+        // Single-element array
+        match json_parser_fast().parse("[42]").unwrap() {
+            JsonValue::Array(arr) => {
+                assert_eq!(arr.len(), 1);
+                assert_eq!(arr[0], JsonValue::Number(42.0));
+            }
+            other => panic!("Expected Array, got {:?}", other),
+        }
+        // Single-key object
+        match json_parser_fast().parse(r#"{"x": true}"#).unwrap() {
+            JsonValue::Object(pairs) => {
+                assert_eq!(pairs.len(), 1);
+                assert_eq!(pairs[0], ("x", JsonValue::Bool(true)));
+            }
+            other => panic!("Expected Object, got {:?}", other),
+        }
+    }
+
+    #[test]
     fn test_fast_malformed_inputs() {
         let parser = json_parser_fast();
         assert!(parser.parse("hello").is_none());
         assert!(parser.parse(r#""unterminated"#).is_none());
         assert!(parser.parse("").is_none());
         assert!(parser.parse("{\"a\":}").is_none());
+        // Truncated unicode
+        assert!(parser.parse(r#""\u00""#).is_none());
+        assert!(parser.parse(r#""\u""#).is_none());
+        // Backslash at EOF
+        assert!(parser.parse("\"\\").is_none());
+    }
+
+    #[test]
+    fn test_fast_whitespace_variants() {
+        // Tab-separated
+        assert!(json_parser_fast().parse("{\t\"a\"\t:\t1\t}").is_some());
+        // CRLF
+        assert!(json_parser_fast().parse("{\r\n\"a\"\r\n:\r\n1\r\n}").is_some());
+        // Mixed whitespace
+        assert!(json_parser_fast().parse(" \t\r\n null \t\r\n ").is_some());
+    }
+
+    #[test]
+    fn test_fast_number_edge_cases() {
+        let parser = json_parser_fast();
+        // Negative exponent
+        assert_eq!(
+            parser.parse("1.5e-10").unwrap(),
+            JsonValue::Number(1.5e-10)
+        );
+        // Explicit positive exponent
+        assert_eq!(
+            parser.parse("1.5e+10").unwrap(),
+            JsonValue::Number(1.5e10)
+        );
+        // Integer 1.0 (has decimal)
+        assert_eq!(parser.parse("1.0").unwrap(), JsonValue::Number(1.0));
     }
 
     // ── Fast parser equivalence with serde_json ─────────────────────
@@ -622,5 +707,15 @@ mod tests {
     #[test]
     fn test_fast_vs_combinator_citm_catalog() {
         test_fast_vs_combinator("citm_catalog.json");
+    }
+
+    #[test]
+    fn test_fast_vs_combinator_apache() {
+        test_fast_vs_combinator("apache-builds.json");
+    }
+
+    #[test]
+    fn test_fast_vs_combinator_data_xl() {
+        test_fast_vs_combinator("data-xl.json");
     }
 }

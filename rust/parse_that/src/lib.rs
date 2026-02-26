@@ -1,3 +1,4 @@
+#![feature(cold_path)]
 
 pub mod parse;
 pub use parse::*;

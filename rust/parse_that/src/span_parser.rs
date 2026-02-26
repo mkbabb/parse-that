@@ -822,8 +822,12 @@ pub(crate) fn number_fast(state: &mut ParserState) -> Option<f64> {
 
     // Pure integer — no '.' or 'e'/'E' follows
     state.offset = i;
-    if digit_count <= 15 {
-        // All 15-digit integers fit exactly in f64 (2^53 > 10^15)
+    if digit_count <= 15
+        || (digit_count == 16 && int_val <= 9_007_199_254_740_992)
+    {
+        // Integers up to 2^53 (9_007_199_254_740_992) fit exactly in f64.
+        // 15-digit integers are always < 10^15 < 2^50, safe unconditionally.
+        // 16-digit integers need an explicit range check against 2^53.
         let val = if neg {
             -(int_val as i64) as f64
         } else {

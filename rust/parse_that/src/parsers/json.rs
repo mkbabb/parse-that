@@ -4,8 +4,6 @@ use crate::state::ParserState;
 
 use pprint::Pretty;
 
-use std::collections::HashMap;
-
 #[derive(Pretty, Debug, Clone, PartialEq)]
 pub enum JsonValue<'a> {
     #[pprint(rename = "null")]
@@ -14,15 +12,7 @@ pub enum JsonValue<'a> {
     Number(f64),
     String(&'a str),
     Array(Vec<JsonValue<'a>>),
-    Object(HashMap<&'a str, JsonValue<'a>>),
-}
-
-fn pairs_to_object<'a>(pairs: Vec<(&'a str, JsonValue<'a>)>) -> JsonValue<'a> {
-    let mut map = HashMap::with_capacity(pairs.len());
-    for (k, v) in pairs {
-        map.insert(k, v);
-    }
-    JsonValue::Object(map)
+    Object(Vec<(&'a str, JsonValue<'a>)>),
 }
 
 pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
@@ -79,7 +69,7 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
             .or_else(std::vec::Vec::new)
             .trim_whitespace()
             .wrap(string_span("{"), string_span("}"))
-            .map(pairs_to_object)
+            .map(JsonValue::Object)
     });
 
     // ── First-byte dispatch ───────────────────────────────────
@@ -116,11 +106,16 @@ use crate::span_parser::{json_string_fast, number_fast, skip_ws};
 /// Monolithic recursive JSON value parser — zero vtable hops.
 /// Whitespace is skipped exactly once per value (before dispatch)
 /// and once after each comma/colon.
-#[inline(always)]
 fn json_value_fast<'a>(state: &mut ParserState<'a>) -> Option<JsonValue<'a>> {
     skip_ws(state);
 
-    match state.src_bytes.get(state.offset)? {
+    let bytes = state.src_bytes;
+    let offset = state.offset;
+    if offset >= bytes.len() {
+        return None;
+    }
+
+    match unsafe { *bytes.get_unchecked(offset) } {
         b'"' => {
             let span = json_string_fast(state)?;
             Some(JsonValue::String(span.as_str()))
@@ -129,20 +124,24 @@ fn json_value_fast<'a>(state: &mut ParserState<'a>) -> Option<JsonValue<'a>> {
         b'-' | b'0'..=b'9' => Some(JsonValue::Number(number_fast(state)?)),
 
         b'{' => {
-            state.offset += 1; // consume '{'
+            state.offset = offset + 1;
             skip_ws(state);
-            if state.src_bytes.get(state.offset) == Some(&b'}') {
+            if state.offset < bytes.len()
+                && unsafe { *bytes.get_unchecked(state.offset) } == b'}'
+            {
                 state.offset += 1;
-                return Some(JsonValue::Object(HashMap::new()));
+                return Some(JsonValue::Object(Vec::new()));
             }
 
-            let mut pairs = Vec::with_capacity(8);
+            let mut pairs = Vec::with_capacity(4);
             loop {
                 // Key: must be a JSON string
                 let key_span = json_string_fast(state)?;
                 skip_ws(state);
                 // Expect ':'
-                if state.src_bytes.get(state.offset)? != &b':' {
+                if state.offset >= state.src_bytes.len()
+                    || unsafe { *state.src_bytes.get_unchecked(state.offset) } != b':'
+                {
                     return None;
                 }
                 state.offset += 1;
@@ -150,49 +149,57 @@ fn json_value_fast<'a>(state: &mut ParserState<'a>) -> Option<JsonValue<'a>> {
                 let val = json_value_fast(state)?;
                 pairs.push((key_span.as_str(), val));
                 skip_ws(state);
-                match state.src_bytes.get(state.offset)? {
+                if state.offset >= state.src_bytes.len() {
+                    return None;
+                }
+                match unsafe { *state.src_bytes.get_unchecked(state.offset) } {
                     b',' => {
                         state.offset += 1;
-                        skip_ws(state); // skip ws before next key's opening quote
+                        skip_ws(state);
                     }
                     b'}' => {
                         state.offset += 1;
                         break;
                     }
-                    _ => return None,
+                    _ => {
+                        std::hint::cold_path();
+                        return None;
+                    }
                 }
             }
 
-            let mut map = HashMap::with_capacity(pairs.len());
-            for (k, v) in pairs {
-                map.insert(k, v);
-            }
-            Some(JsonValue::Object(map))
+            Some(JsonValue::Object(pairs))
         }
 
         b'[' => {
-            state.offset += 1; // consume '['
+            state.offset = offset + 1;
             skip_ws(state);
-            if state.src_bytes.get(state.offset) == Some(&b']') {
+            if state.offset < bytes.len()
+                && unsafe { *bytes.get_unchecked(state.offset) } == b']'
+            {
                 state.offset += 1;
-                return Some(JsonValue::Array(vec![]));
+                return Some(JsonValue::Array(Vec::new()));
             }
 
-            let mut values = Vec::with_capacity(8);
+            let mut values = Vec::with_capacity(4);
             loop {
-                // Value (recursive — skip_ws is inside json_value_fast)
                 values.push(json_value_fast(state)?);
                 skip_ws(state);
-                match state.src_bytes.get(state.offset)? {
+                if state.offset >= state.src_bytes.len() {
+                    return None;
+                }
+                match unsafe { *state.src_bytes.get_unchecked(state.offset) } {
                     b',' => {
                         state.offset += 1;
-                        // skip_ws not needed here — json_value_fast starts with skip_ws
                     }
                     b']' => {
                         state.offset += 1;
                         break;
                     }
-                    _ => return None,
+                    _ => {
+                        std::hint::cold_path();
+                        return None;
+                    }
                 }
             }
 
@@ -200,33 +207,49 @@ fn json_value_fast<'a>(state: &mut ParserState<'a>) -> Option<JsonValue<'a>> {
         }
 
         b't' => {
-            if state.src_bytes.get(state.offset..state.offset + 4)? == b"true" {
-                state.offset += 4;
-                Some(JsonValue::Bool(true))
-            } else {
-                None
+            if offset + 4 <= bytes.len() {
+                let word = unsafe {
+                    (bytes.as_ptr().add(offset) as *const u32).read_unaligned()
+                };
+                if word == u32::from_ne_bytes(*b"true") {
+                    state.offset = offset + 4;
+                    return Some(JsonValue::Bool(true));
+                }
             }
+            None
         }
 
         b'f' => {
-            if state.src_bytes.get(state.offset..state.offset + 5)? == b"false" {
-                state.offset += 5;
-                Some(JsonValue::Bool(false))
-            } else {
-                None
+            if offset + 5 <= bytes.len() {
+                let word = unsafe {
+                    (bytes.as_ptr().add(offset) as *const u32).read_unaligned()
+                };
+                let fifth = unsafe { *bytes.get_unchecked(offset + 4) };
+                if word == u32::from_ne_bytes(*b"fals") && fifth == b'e' {
+                    state.offset = offset + 5;
+                    return Some(JsonValue::Bool(false));
+                }
             }
+            None
         }
 
         b'n' => {
-            if state.src_bytes.get(state.offset..state.offset + 4)? == b"null" {
-                state.offset += 4;
-                Some(JsonValue::Null)
-            } else {
-                None
+            if offset + 4 <= bytes.len() {
+                let word = unsafe {
+                    (bytes.as_ptr().add(offset) as *const u32).read_unaligned()
+                };
+                if word == u32::from_ne_bytes(*b"null") {
+                    state.offset = offset + 4;
+                    return Some(JsonValue::Null);
+                }
             }
+            None
         }
 
-        _ => None,
+        _ => {
+            std::hint::cold_path();
+            None
+        }
     }
 }
 
