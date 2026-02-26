@@ -1,4 +1,4 @@
-import { Parser, regex, any, string, whitespace, all } from "../../src/parse";
+import { Parser, regex, string, dispatch } from "../../src/parse";
 
 const comma = string(",").trim();
 const colon = string(":").trim();
@@ -23,13 +23,16 @@ const jsonObject = Parser.lazy(() =>
         .map((pairs) => Object.fromEntries(pairs))
 );
 
-const jsonValue: Parser<any> = any(
-    jsonObject,
-    jsonArray,
-    jsonString,
-    jsonNumber,
-    jsonBool,
-    jsonNull
-);
+// O(1) first-character dispatch instead of sequential any()
+const jsonValue: Parser<any> = dispatch({
+    "{": jsonObject,
+    "[": jsonArray,
+    '"': jsonString,
+    "-": jsonNumber,
+    "0-9": jsonNumber,
+    "t": jsonBool,
+    "f": jsonBool,
+    "n": jsonNull,
+});
 
 export const JSONParser = jsonValue.trim();

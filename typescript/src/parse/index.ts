@@ -385,11 +385,38 @@ export class Parser<T = string> {
             return all(start as Parser<unknown>, this as Parser<unknown>, end as Parser<unknown>);
         }
 
-        const wrap = (start as Parser<unknown>)
-            .next(this as Parser<unknown>)
-            .skip(end as Parser<unknown>) as Parser<T>;
-        wrap.context = createParserContext("wrap", this as Parser<unknown>, start, end);
-        return wrap;
+        // Inline start.next(this).skip(end) into a single closure
+        // to eliminate 2 intermediate function frames per invocation.
+        const inner = this;
+        const wrapParser = (state: ParserState<T>) => {
+            const savedOffset = state.offset;
+            start.parser(state as any);
+            if (state.isError) {
+                state.offset = savedOffset;
+                return state;
+            }
+            inner.parser(state);
+            if (state.isError) {
+                mergeErrorState(state as ParserState<unknown>);
+                state.offset = savedOffset;
+                state.isError = true;
+                return state;
+            }
+            const value = state.value;
+            (end as Parser<unknown>).parser(state as any);
+            if (state.isError) {
+                mergeErrorState(state as ParserState<unknown>);
+                state.offset = savedOffset;
+                state.isError = true;
+                return state;
+            }
+            (state as any).value = value;
+            return state;
+        };
+        return new Parser(
+            wrapParser as ParserFunction<T>,
+            createParserContext("wrap", this as Parser<unknown>, start, end),
+        );
     }
 
     trim<S>(
@@ -580,6 +607,58 @@ export function any<T extends Array<Parser<any>>>(...parsers: T) {
         parsers.length === 1 ? parsers[0].parser : anyParser,
         createParserContext("any", undefined, ...parsers),
     ) as Parser<Result>;
+}
+
+/**
+ * O(1) first-character dispatch for alternation.
+ * Maps ASCII characters to parsers for instant lookup instead of
+ * sequential trial-and-error like any().
+ *
+ * @param table - Maps characters (or char ranges) to parsers.
+ *   Keys can be single chars ("a"), ranges ("0-9"), or multi-char ("tf" = 't' or 'f').
+ * @param fallback - Optional parser to try when no table entry matches.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function dispatch<T>(table: Record<string, Parser<T>>, fallback?: Parser<T>) {
+    const tbl = new Int8Array(128).fill(-1);
+    const parsers: Parser<T>[] = [];
+
+    for (const [chars, parser] of Object.entries(table)) {
+        let idx = parsers.indexOf(parser);
+        if (idx === -1) {
+            idx = parsers.length;
+            parsers.push(parser);
+        }
+        // Support "0-9" range syntax
+        if (chars.length === 3 && chars[1] === '-') {
+            const lo = chars.charCodeAt(0);
+            const hi = chars.charCodeAt(2);
+            for (let c = lo; c <= hi; c++) tbl[c] = idx;
+        } else {
+            for (let i = 0; i < chars.length; i++) {
+                tbl[chars.charCodeAt(i)] = idx;
+            }
+        }
+    }
+
+    const dispatchParser = (state: ParserState<T>) => {
+        const ch = state.src.charCodeAt(state.offset);
+        const idx = ch < 128 ? tbl[ch] : -1;
+        if (idx >= 0) {
+            return parsers[idx].parser(state);
+        }
+        if (fallback) {
+            return fallback.parser(state);
+        }
+        mergeErrorState(state as ParserState<unknown>);
+        state.isError = true;
+        return state;
+    };
+
+    return new Parser(
+        dispatchParser as ParserFunction<T>,
+        createParserContext("dispatch", undefined, ...parsers),
+    );
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
