@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use regex::Regex;
 
 use crate::parse::{trim_leading_whitespace, Parser, ParserFn};
@@ -702,6 +704,174 @@ pub(crate) fn json_string_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'
                     }
                     _ => i += 1, // \n, \t, \\, \", etc.
                 }
+            }
+        }
+    }
+}
+
+// ── JSON string with full escape decoding ─────────────────────
+
+/// Decode 4 hex digits at `bytes[i..i+4]` into a `u16`.
+#[inline]
+fn decode_hex4(bytes: &[u8], i: usize) -> Option<u16> {
+    if i + 4 > bytes.len() {
+        return None;
+    }
+    let mut val: u16 = 0;
+    // Unrolled — 4 iterations, branchless per digit
+    for j in 0..4 {
+        let b = unsafe { *bytes.get_unchecked(i + j) };
+        let digit = match b {
+            b'0'..=b'9' => b - b'0',
+            b'a'..=b'f' => b - b'a' + 10,
+            b'A'..=b'F' => b - b'A' + 10,
+            _ => return None,
+        };
+        val = (val << 4) | digit as u16;
+    }
+    Some(val)
+}
+
+/// Slow path: unescape a JSON string that contains at least one backslash.
+/// `content_start` is the index of the first byte after the opening `"`.
+/// `first_backslash` is the index of the first `\` found by the fast scan.
+#[cold]
+fn json_string_unescape<'a>(
+    state: &mut ParserState<'a>,
+    content_start: usize,
+    first_backslash: usize,
+) -> Option<Cow<'a, str>> {
+    let bytes = state.src_bytes;
+    // Pre-allocate: content before first escape + room for more
+    let mut out = String::with_capacity(first_backslash - content_start + 32);
+    // Copy everything before the first backslash
+    out.push_str(unsafe {
+        std::str::from_utf8_unchecked(&bytes[content_start..first_backslash])
+    });
+
+    let mut i = first_backslash;
+    loop {
+        // i points at a backslash
+        debug_assert_eq!(bytes[i], b'\\');
+        i += 1; // skip backslash
+        if i >= bytes.len() {
+            return None;
+        }
+        match unsafe { *bytes.get_unchecked(i) } {
+            b'"' => {
+                out.push('"');
+                i += 1;
+            }
+            b'\\' => {
+                out.push('\\');
+                i += 1;
+            }
+            b'/' => {
+                out.push('/');
+                i += 1;
+            }
+            b'b' => {
+                out.push('\u{0008}');
+                i += 1;
+            }
+            b'f' => {
+                out.push('\u{000C}');
+                i += 1;
+            }
+            b'n' => {
+                out.push('\n');
+                i += 1;
+            }
+            b'r' => {
+                out.push('\r');
+                i += 1;
+            }
+            b't' => {
+                out.push('\t');
+                i += 1;
+            }
+            b'u' => {
+                i += 1; // skip 'u'
+                let code = decode_hex4(bytes, i)?;
+                i += 4;
+                if (0xD800..=0xDBFF).contains(&code) {
+                    // High surrogate — expect \uDCxx low surrogate
+                    if i + 6 <= bytes.len()
+                        && unsafe { *bytes.get_unchecked(i) } == b'\\'
+                        && unsafe { *bytes.get_unchecked(i + 1) } == b'u'
+                    {
+                        let low = decode_hex4(bytes, i + 2)?;
+                        if (0xDC00..=0xDFFF).contains(&low) {
+                            let cp = 0x10000
+                                + ((code as u32 - 0xD800) << 10)
+                                + (low as u32 - 0xDC00);
+                            out.push(char::from_u32(cp)?);
+                            i += 6;
+                        } else {
+                            return None; // invalid low surrogate
+                        }
+                    } else {
+                        return None; // lone high surrogate
+                    }
+                } else if (0xDC00..=0xDFFF).contains(&code) {
+                    return None; // lone low surrogate
+                } else {
+                    out.push(char::from_u32(code as u32)?);
+                }
+            }
+            _ => return None, // invalid escape character
+        }
+
+        // Scan for next `"` or `\` — copies literal segments in bulk
+        match memchr::memchr2(b'"', b'\\', bytes.get(i..)?) {
+            None => return None,
+            Some(pos) => {
+                // Copy literal segment between escapes
+                out.push_str(unsafe {
+                    std::str::from_utf8_unchecked(&bytes[i..i + pos])
+                });
+                i += pos;
+                if unsafe { *bytes.get_unchecked(i) } == b'"' {
+                    state.offset = i + 1;
+                    return Some(Cow::Owned(out));
+                }
+                // Another backslash — continue loop
+            }
+        }
+    }
+}
+
+/// Scans and decodes a JSON string `"..."` with full escape processing.
+/// Returns `Cow::Borrowed` for strings without escapes (zero-copy fast path),
+/// `Cow::Owned` for strings that require unescaping (\\n, \\uXXXX, etc.).
+#[inline(always)]
+pub(crate) fn json_string_decoded_fast<'a>(
+    state: &mut ParserState<'a>,
+) -> Option<Cow<'a, str>> {
+    let bytes = state.src_bytes;
+    let start = state.offset;
+    if bytes.get(start) != Some(&b'"') {
+        return None;
+    }
+    let content_start = start + 1;
+    let mut i = content_start;
+
+    // Fast path: SIMD scan hoping for no escapes
+    loop {
+        match memchr::memchr2(b'"', b'\\', bytes.get(i..)?) {
+            None => return None, // unterminated
+            Some(pos) => {
+                i += pos;
+                if unsafe { *bytes.get_unchecked(i) } == b'"' {
+                    // No escapes — return borrowed slice (zero-copy)
+                    let s = unsafe {
+                        std::str::from_utf8_unchecked(&bytes[content_start..i])
+                    };
+                    state.offset = i + 1;
+                    return Some(Cow::Borrowed(s));
+                }
+                // Hit a backslash — delegate to cold unescape path
+                return json_string_unescape(state, content_start, i);
             }
         }
     }

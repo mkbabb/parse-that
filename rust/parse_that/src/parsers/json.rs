@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use crate::parse::*;
 use crate::span_parser::*;
 use crate::state::ParserState;
@@ -10,16 +12,18 @@ pub enum JsonValue<'a> {
     Null,
     Bool(bool),
     Number(f64),
-    String(&'a str),
+    String(Cow<'a, str>),
     Array(Vec<JsonValue<'a>>),
-    Object(Vec<(&'a str, JsonValue<'a>)>),
+    Object(Vec<(Cow<'a, str>, JsonValue<'a>)>),
 }
 
 pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
     // ── String parser using monolithic SIMD scanner ────────────
+    // NOTE: combinator path returns raw spans (no unescape).
+    // Use json_parser_fast() for full escape decoding.
 
-    let json_string_content = || -> Parser<'a, &'a str> {
-        sp_json_string().map(|s| s.as_str())
+    let json_string_content = || -> Parser<'a, Cow<'a, str>> {
+        sp_json_string().map(|s| Cow::Borrowed(s.as_str()))
     };
 
     // ── Leaf values ───────────────────────────────────────────
@@ -101,7 +105,7 @@ pub fn json_parser<'a>() -> Parser<'a, JsonValue<'a>> {
 // intermediaries. One recursive function handles the full JSON grammar
 // with inline first-byte dispatch.
 
-use crate::span_parser::{json_string_fast, number_fast, skip_ws};
+use crate::span_parser::{json_string_decoded_fast, number_fast, skip_ws};
 
 /// Monolithic recursive JSON value parser — zero vtable hops.
 /// Whitespace is skipped exactly once per value (before dispatch)
@@ -117,8 +121,8 @@ fn json_value_fast<'a>(state: &mut ParserState<'a>) -> Option<JsonValue<'a>> {
 
     match unsafe { *bytes.get_unchecked(offset) } {
         b'"' => {
-            let span = json_string_fast(state)?;
-            Some(JsonValue::String(span.as_str()))
+            let s = json_string_decoded_fast(state)?;
+            Some(JsonValue::String(s))
         }
 
         b'-' | b'0'..=b'9' => Some(JsonValue::Number(number_fast(state)?)),
@@ -135,8 +139,8 @@ fn json_value_fast<'a>(state: &mut ParserState<'a>) -> Option<JsonValue<'a>> {
 
             let mut pairs = Vec::with_capacity(4);
             loop {
-                // Key: must be a JSON string
-                let key_span = json_string_fast(state)?;
+                // Key: must be a JSON string (fully decoded)
+                let key = json_string_decoded_fast(state)?;
                 skip_ws(state);
                 // Expect ':'
                 if state.offset >= state.src_bytes.len()
@@ -147,7 +151,7 @@ fn json_value_fast<'a>(state: &mut ParserState<'a>) -> Option<JsonValue<'a>> {
                 state.offset += 1;
                 // Value (recursive — skip_ws is inside json_value_fast)
                 let val = json_value_fast(state)?;
-                pairs.push((key_span.as_str(), val));
+                pairs.push((key, val));
                 skip_ws(state);
                 if state.offset >= state.src_bytes.len() {
                     return None;

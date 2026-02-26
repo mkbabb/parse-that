@@ -3,15 +3,18 @@ mod tests {
     use parse_that::parsers::json::json_parser;
     use parse_that::parsers::json::json_parser_fast;
     use parse_that::parsers::json::JsonValue;
+    use std::borrow::Cow;
     use std::fs;
 
     /// Helper: lookup a key in a Vec-of-pairs object.
     fn obj_get<'a, 'b>(
-        pairs: &'b [(&'a str, JsonValue<'a>)],
+        pairs: &'b [(Cow<'a, str>, JsonValue<'a>)],
         key: &str,
     ) -> Option<&'b JsonValue<'a>> {
-        pairs.iter().find(|(k, _)| *k == key).map(|(_, v)| v)
+        pairs.iter().find(|(k, _)| k.as_ref() == key).map(|(_, v)| v)
     }
+
+    // ── Combinator path tests ───────────────────────────────────────
 
     #[test]
     fn test_json() {
@@ -65,22 +68,22 @@ mod tests {
         println!("{}", pretty);
     }
 
-    // ── B2: Comprehensive JSON string edge case tests ──────────────
+    // ── String edge case tests (combinator path — raw spans) ────────
 
     #[test]
     fn test_string_basic_escapes() {
         let cases = vec![
-            (r#""\"""#, "\""),
-            (r#""\\""#, "\\"),
-            (r#""\/""#, "/"),   // escaped forward slash — valid JSON
-            (r#""\b""#, "\x08"),  // we store raw span, so content is \b
-            (r#""\n""#, "\n"),
-            (r#""\r""#, "\r"),
-            (r#""\t""#, "\t"),
+            r#""\"""#,
+            r#""\\""#,
+            r#""\/""#,
+            r#""\b""#,
+            r#""\n""#,
+            r#""\r""#,
+            r#""\t""#,
         ];
 
         let parser = json_parser();
-        for (input, _expected_content) in &cases {
+        for input in &cases {
             let result = parser.parse(input);
             assert!(
                 result.is_some(),
@@ -89,9 +92,8 @@ mod tests {
             );
             match result.unwrap() {
                 JsonValue::String(s) => {
-                    // Our parser returns raw span content (between quotes),
-                    // so escapes are NOT decoded — just verify it parsed.
-                    assert!(!s.is_empty() || input == &r#""""#);
+                    // Combinator path returns raw span — just verify it parsed
+                    assert!(!s.is_empty());
                 }
                 other => panic!("Expected String, got {:?} for input {}", other, input),
             }
@@ -105,7 +107,8 @@ mod tests {
         assert!(result.is_some(), "Failed to parse unicode escape");
         match result.unwrap() {
             JsonValue::String(s) => {
-                assert_eq!(s, r"\u0041"); // raw span — not decoded
+                // Combinator path returns raw span
+                assert_eq!(s.as_ref(), r"\u0041");
             }
             other => panic!("Expected String, got {:?}", other),
         }
@@ -117,24 +120,16 @@ mod tests {
         let result = json_parser().parse(input);
         assert!(result.is_some(), "Failed to parse empty string");
         match result.unwrap() {
-            JsonValue::String(s) => assert_eq!(s, ""),
+            JsonValue::String(s) => assert_eq!(s.as_ref(), ""),
             other => panic!("Expected String, got {:?}", other),
         }
     }
 
     #[test]
     fn test_string_nested_escapes() {
-        // \\\" in JSON source = escaped backslash + escaped quote
-        // Raw content between quotes: \\\"
         let input = r#""\\\"""#;
         let result = json_parser().parse(input);
         assert!(result.is_some(), "Failed to parse nested escapes");
-        match result.unwrap() {
-            JsonValue::String(s) => {
-                assert_eq!(s, "\\\\\\\"");
-            }
-            other => panic!("Expected String, got {:?}", other),
-        }
     }
 
     #[test]
@@ -146,42 +141,35 @@ mod tests {
 
     #[test]
     fn test_string_with_forward_slash_escape() {
-        // apache-builds.json contains \/ escapes
         let input = r#""http:\/\/example.com""#;
         let result = json_parser().parse(input);
         assert!(result.is_some(), "Failed to parse string with \\/ escapes");
-        match result.unwrap() {
-            JsonValue::String(s) => {
-                assert_eq!(s, r"http:\/\/example.com");
-            }
-            other => panic!("Expected String, got {:?}", other),
-        }
     }
 
     #[test]
     fn test_malformed_unterminated_string() {
-        let input = r#""hello"#; // no closing quote
+        let input = r#""hello"#;
         let result = json_parser().parse(input);
         assert!(result.is_none(), "Should reject unterminated string");
     }
 
     #[test]
     fn test_malformed_truncated_unicode() {
-        let input = r#""\u00""#; // only 2 hex digits instead of 4
+        let input = r#""\u00""#;
         let result = json_parser().parse(input);
         assert!(result.is_none(), "Should reject truncated \\uXX");
     }
 
     #[test]
     fn test_malformed_unicode_at_end() {
-        let input = r#""\u""#; // \u with no hex digits at all
+        let input = r#""\u""#;
         let result = json_parser().parse(input);
         assert!(result.is_none(), "Should reject \\u with no hex digits");
     }
 
     #[test]
     fn test_malformed_backslash_at_end() {
-        let input = "\"\\"; // backslash then EOF
+        let input = "\"\\";
         let result = json_parser().parse(input);
         assert!(result.is_none(), "Should reject backslash at end of input");
     }
@@ -258,7 +246,7 @@ mod tests {
         }
     }
 
-    // ── B3: parse_that vs serde_json equivalence ───────────────────
+    // ── Structural comparison helpers ───────────────────────────────
 
     fn count_values(v: &JsonValue) -> usize {
         match v {
@@ -283,7 +271,10 @@ mod tests {
         }
     }
 
-    fn compare_structure(ours: &JsonValue, theirs: &serde_json::Value) {
+    /// Compare structure and content. `check_strings` controls whether
+    /// string content is compared (true for fast path which unescapes,
+    /// false for combinator path which returns raw spans).
+    fn compare_structure(ours: &JsonValue, theirs: &serde_json::Value, check_strings: bool) {
         match (ours, theirs) {
             (JsonValue::Null, serde_json::Value::Null) => {}
             (JsonValue::Bool(a), serde_json::Value::Bool(b)) => assert_eq!(a, b),
@@ -296,25 +287,30 @@ mod tests {
                     b_f64
                 );
             }
-            (JsonValue::String(_), serde_json::Value::String(_)) => {
-                // String content comparison is tricky because we store raw spans
-                // (with escape sequences unescaped by serde but not by us).
-                // Just verify both are strings.
+            (JsonValue::String(a), serde_json::Value::String(b)) => {
+                if check_strings {
+                    assert_eq!(
+                        a.as_ref(),
+                        b.as_str(),
+                        "String mismatch: {:?} vs {:?}",
+                        a,
+                        b
+                    );
+                }
             }
             (JsonValue::Array(a), serde_json::Value::Array(b)) => {
                 assert_eq!(a.len(), b.len(), "Array length mismatch");
                 for (ai, bi) in a.iter().zip(b.iter()) {
-                    compare_structure(ai, bi);
+                    compare_structure(ai, bi, check_strings);
                 }
             }
             (JsonValue::Object(a), serde_json::Value::Object(b)) => {
                 assert_eq!(a.len(), b.len(), "Object key count mismatch");
-                // Recurse into object values by matching keys
                 for (key, val) in a.iter() {
-                    let serde_val = b.get(*key).unwrap_or_else(|| {
+                    let serde_val = b.get(key.as_ref()).unwrap_or_else(|| {
                         panic!("Key '{}' in parse_that but not in serde_json", key)
                     });
-                    compare_structure(val, serde_val);
+                    compare_structure(val, serde_val, check_strings);
                 }
             }
             _ => panic!(
@@ -324,6 +320,8 @@ mod tests {
             ),
         }
     }
+
+    // ── Combinator equivalence tests (no string content check) ──────
 
     fn test_equivalence_for_file(filename: &str) {
         let path = format!("../../data/json/{}", filename);
@@ -344,7 +342,7 @@ mod tests {
             filename, our_count, their_count
         );
 
-        compare_structure(&ours, &theirs);
+        compare_structure(&ours, &theirs, false);
     }
 
     #[test]
@@ -377,7 +375,7 @@ mod tests {
         test_equivalence_for_file("citm_catalog.json");
     }
 
-    // ── json_parser_fast parallel tests ──────────────────────────────
+    // ── json_parser_fast tests ──────────────────────────────────────
 
     #[test]
     fn test_fast_json() {
@@ -484,7 +482,6 @@ mod tests {
 
     #[test]
     fn test_fast_integer_path() {
-        // Pure integers should use the fast path (no float parsing)
         assert_eq!(
             json_parser_fast().parse("42").unwrap(),
             JsonValue::Number(42.0)
@@ -497,47 +494,128 @@ mod tests {
             json_parser_fast().parse("0").unwrap(),
             JsonValue::Number(0.0)
         );
-        // Large integer (>15 digits) falls back to fast_float2
         assert_eq!(
             json_parser_fast().parse("9007199254740992").unwrap(),
             JsonValue::Number(9007199254740992.0)
         );
-        // 16-digit integer within 2^53 — uses fast path
         assert_eq!(
             json_parser_fast().parse("1000000000000000").unwrap(),
             JsonValue::Number(1000000000000000.0)
         );
     }
 
+    // ── Fast path: string escape decoding tests ─────────────────────
+
     #[test]
-    fn test_fast_string_escapes() {
-        let cases = vec![
-            r#""\"""#,
-            r#""\\""#,
-            r#""\n""#,
-            r#""\t""#,
-            r#""\r""#,
-            r#""\b""#,
-            r#""\f""#,
-            r#""\/""#,
-            r#""\u0041""#,
+    fn test_fast_string_escapes_decoded() {
+        let parser = json_parser_fast();
+
+        // Each escape should be fully decoded
+        let cases: Vec<(&str, &str)> = vec![
+            (r#""\"""#, "\""),
+            (r#""\\""#, "\\"),
+            (r#""\/""#, "/"),
+            (r#""\b""#, "\u{0008}"),
+            (r#""\f""#, "\u{000C}"),
+            (r#""\n""#, "\n"),
+            (r#""\r""#, "\r"),
+            (r#""\t""#, "\t"),
         ];
 
-        let parser = json_parser_fast();
-        for input in &cases {
-            let result = parser.parse(input);
-            assert!(result.is_some(), "Failed to parse string: {}", input);
-            match result.unwrap() {
-                JsonValue::String(_) => {}
+        for (input, expected) in &cases {
+            match parser.parse(input).unwrap() {
+                JsonValue::String(s) => {
+                    assert_eq!(
+                        s.as_ref(),
+                        *expected,
+                        "Escape mismatch for input {}: got {:?}, expected {:?}",
+                        input,
+                        s,
+                        expected
+                    );
+                }
                 other => panic!("Expected String, got {:?} for input {}", other, input),
             }
         }
     }
 
     #[test]
+    fn test_fast_string_unicode_decoded() {
+        let parser = json_parser_fast();
+
+        // Basic BMP codepoint
+        match parser.parse(r#""\u0041""#).unwrap() {
+            JsonValue::String(s) => assert_eq!(s.as_ref(), "A"),
+            other => panic!("Expected String, got {:?}", other),
+        }
+
+        // Non-ASCII BMP codepoint
+        match parser.parse(r#""\u00e9""#).unwrap() {
+            JsonValue::String(s) => assert_eq!(s.as_ref(), "\u{00e9}"), // é
+            other => panic!("Expected String, got {:?}", other),
+        }
+
+        // Surrogate pair: U+1F600 (😀) = \uD83D\uDE00
+        match parser.parse(r#""\uD83D\uDE00""#).unwrap() {
+            JsonValue::String(s) => assert_eq!(s.as_ref(), "\u{1F600}"),
+            other => panic!("Expected String, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_fast_string_mixed_escapes_and_literals() {
+        let parser = json_parser_fast();
+
+        match parser.parse(r#""hello\nworld""#).unwrap() {
+            JsonValue::String(s) => assert_eq!(s.as_ref(), "hello\nworld"),
+            other => panic!("Expected String, got {:?}", other),
+        }
+
+        // Forward slash escapes (common in URLs in JSON)
+        match parser.parse(r#""http:\/\/example.com\/path""#).unwrap() {
+            JsonValue::String(s) => assert_eq!(s.as_ref(), "http://example.com/path"),
+            other => panic!("Expected String, got {:?}", other),
+        }
+
+        // Multiple escapes in sequence
+        match parser.parse(r#""\t\n\r""#).unwrap() {
+            JsonValue::String(s) => assert_eq!(s.as_ref(), "\t\n\r"),
+            other => panic!("Expected String, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_fast_string_no_escapes_is_borrowed() {
+        let parser = json_parser_fast();
+
+        // Strings without escapes should be Cow::Borrowed (zero-copy)
+        match parser.parse(r#""hello""#).unwrap() {
+            JsonValue::String(Cow::Borrowed(s)) => assert_eq!(s, "hello"),
+            JsonValue::String(Cow::Owned(_)) => {
+                panic!("Expected Cow::Borrowed for escape-free string")
+            }
+            other => panic!("Expected String, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_fast_string_with_escapes_is_owned() {
+        let parser = json_parser_fast();
+
+        // Strings with escapes should be Cow::Owned
+        match parser.parse(r#""hello\nworld""#).unwrap() {
+            JsonValue::String(Cow::Owned(s)) => assert_eq!(s, "hello\nworld"),
+            JsonValue::String(Cow::Borrowed(_)) => {
+                panic!("Expected Cow::Owned for string with escapes")
+            }
+            other => panic!("Expected String, got {:?}", other),
+        }
+    }
+
+    #[test]
     fn test_fast_string_empty() {
         match json_parser_fast().parse(r#""""#).unwrap() {
-            JsonValue::String(s) => assert_eq!(s, ""),
+            JsonValue::String(s) => assert_eq!(s.as_ref(), ""),
             other => panic!("Expected String, got {:?}", other),
         }
     }
@@ -554,7 +632,6 @@ mod tests {
 
     #[test]
     fn test_fast_single_element_containers() {
-        // Single-element array
         match json_parser_fast().parse("[42]").unwrap() {
             JsonValue::Array(arr) => {
                 assert_eq!(arr.len(), 1);
@@ -562,11 +639,11 @@ mod tests {
             }
             other => panic!("Expected Array, got {:?}", other),
         }
-        // Single-key object
         match json_parser_fast().parse(r#"{"x": true}"#).unwrap() {
             JsonValue::Object(pairs) => {
                 assert_eq!(pairs.len(), 1);
-                assert_eq!(pairs[0], ("x", JsonValue::Bool(true)));
+                assert_eq!(pairs[0].0.as_ref(), "x");
+                assert_eq!(pairs[0].1, JsonValue::Bool(true));
             }
             other => panic!("Expected Object, got {:?}", other),
         }
@@ -584,36 +661,36 @@ mod tests {
         assert!(parser.parse(r#""\u""#).is_none());
         // Backslash at EOF
         assert!(parser.parse("\"\\").is_none());
+        // Invalid escape character
+        assert!(parser.parse(r#""\x""#).is_none());
+        // Lone high surrogate
+        assert!(parser.parse(r#""\uD800""#).is_none());
+        // Lone low surrogate
+        assert!(parser.parse(r#""\uDC00""#).is_none());
     }
 
     #[test]
     fn test_fast_whitespace_variants() {
-        // Tab-separated
         assert!(json_parser_fast().parse("{\t\"a\"\t:\t1\t}").is_some());
-        // CRLF
         assert!(json_parser_fast().parse("{\r\n\"a\"\r\n:\r\n1\r\n}").is_some());
-        // Mixed whitespace
         assert!(json_parser_fast().parse(" \t\r\n null \t\r\n ").is_some());
     }
 
     #[test]
     fn test_fast_number_edge_cases() {
         let parser = json_parser_fast();
-        // Negative exponent
         assert_eq!(
             parser.parse("1.5e-10").unwrap(),
             JsonValue::Number(1.5e-10)
         );
-        // Explicit positive exponent
         assert_eq!(
             parser.parse("1.5e+10").unwrap(),
             JsonValue::Number(1.5e10)
         );
-        // Integer 1.0 (has decimal)
         assert_eq!(parser.parse("1.0").unwrap(), JsonValue::Number(1.0));
     }
 
-    // ── Fast parser equivalence with serde_json ─────────────────────
+    // ── Fast parser equivalence with serde_json (FULL string check) ─
 
     fn test_fast_equivalence_for_file(filename: &str) {
         let path = format!("../../data/json/{}", filename);
@@ -634,7 +711,8 @@ mod tests {
             filename, our_count, their_count
         );
 
-        compare_structure(&ours, &theirs);
+        // Full structural + string content comparison
+        compare_structure(&ours, &theirs, true);
     }
 
     #[test]
