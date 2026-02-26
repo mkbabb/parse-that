@@ -41,7 +41,7 @@ throughput calculation).
 | serde_json | 607 | 569 | 546 | 582 | 864 | 624 |
 | winnow | 550 | 392 | 635 | 540 | 597 | 594 |
 | pest | 259 | 160 | 283 | 244 | 257 | 268 |
-| **parse_that (BBNF)** | 14 | — | — | — | — | — |
+| **parse_that (BBNF)** | **249** | **309** | **358** | **342** | **438** | **552** |
 
 ### Dataset Profiles
 
@@ -242,6 +242,89 @@ literal segments in bulk — amortizing the SIMD setup cost.
 **Impact**: twitter.json (escape-heavy) dropped ~14%. All other datasets <3%
 regression. The `#[cold]` annotation keeps the unescape function out of L1
 icache, preserving the fast path's instruction density.
+
+### Phase 7: Hybrid BBNF Codegen (~14 → ~249–552 MB/s)
+
+The BBNF-generated parser was previously a pure generic-combinator path with
+~115x overhead versus the fast path. Four codegen phases automatically detect
+when grammar patterns match optimized static parsers and emit them:
+
+**Phase A — Number regex substitution.** `is_json_number_regex()` detects the
+canonical JSON number regex (`/-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/`) and
+substitutes `sp_json_number()`, a monolithic byte scanner. On `canada.json`
+(99% numbers), this alone reduced the BBNF/combinator ratio from 4.5x to ~3x.
+
+**Phase B — Transparent alternation elimination.** Rules like
+`value = object | array | string | number | bool | null` are "pure alternation"
+— every branch is a nonterminal, and the rule adds no structural information.
+The `find_transparent_alternations()` analysis pass detects these, and the
+derive macro skips their enum variant. Previously each value parse produced:
+
+```
+Box::new(JsonEnum::value(Box::new(JsonEnum::string(span))))
+```
+
+Now it produces:
+
+```
+Box::new(JsonEnum::string(span))
+```
+
+One fewer Box allocation and one fewer enum tag per value. The `value()` method
+returns `Parser<'a, Box<JsonEnum<'a>>>` directly instead of
+`Parser<'a, JsonEnum<'a>>`.
+
+**Phase C — Inline match dispatch.** Alternations with disjoint FIRST sets
+(computed in `analysis.rs`) now emit a compile-time `match byte { ... }`
+statement instead of `dispatch_byte_multi(vec![...])`. This eliminates the
+`Vec` allocation, LUT construction, and per-branch vtable hop through
+`Box<dyn ParserFn>`. Branch parsers are hoisted into `let` bindings before
+the closure so they're constructed once at parser-build time.
+
+```rust
+// Before: runtime LUT → parsers[idx].call(state) (vtable hop)
+// After:
+let _branch_0 = /* parser for '{' */;
+let _branch_1 = /* parser for '[' */;
+Parser::new(move |state: &mut ParserState<'a>| {
+    let byte = *state.src_bytes.get(state.offset)?;
+    match byte {
+        b'{' => _branch_0.call(state),
+        b'[' => _branch_1.call(state),
+        b'"' => _branch_2.call(state),
+        // ...
+        _ => None,
+    }
+})
+```
+
+**Phase D — SpanParser dual methods.** `find_span_eligible_rules()` identifies
+rules whose body can be expressed entirely as a `SpanParser` (no recursion, no
+heterogeneous output). For these rules, the derive macro emits both:
+
+```rust
+fn string_sp<'a>() -> SpanParser<'a> { sp_json_string_quoted() }
+fn string<'a>() -> Parser<'a, JsonEnum<'a>> { ... }
+```
+
+In the Phase C inline match, span-eligible branches call `Self::rule_sp()`
+directly — `SpanParser::call()` is `#[inline(always)]` with enum dispatch,
+zero vtable hops.
+
+**Benchmark results (BBNF / combinator ratio):**
+
+| Benchmark | Before | After |
+|-----------|--------|-------|
+| canada | ~∞ | 1.45x |
+| twitter | ~∞ | 2.46x |
+| citm_catalog | ~∞ | 1.92x |
+| data_xl | ~∞ | 2.08x |
+| data | ~∞ | 3.97x |
+| apache | ~∞ | 2.78x |
+
+The BBNF parser is now within 1.5–4x of the hand-written combinator parser,
+and within the same order of magnitude as nom, winnow, and serde_json —
+all from a grammar file with zero hand-written Rust.
 
 ---
 
@@ -479,22 +562,37 @@ pass materializes DOM values. Every grammar rule creates a `Pair` allocation
 (boxed span + rule ID). The interpretive PEG engine adds overhead versus compiled
 recursive descent.
 
-### BBNF (~14 MB/s) — Generic Grammar Framework
+### BBNF (~249–552 MB/s) — Hybrid Codegen
 
-parse_that's BBNF-generated parser (via `#[derive(Parser)]`) runs the same
-combinator infrastructure as the combinator path, but with additional overhead:
+parse_that's BBNF-generated parser (via `#[derive(Parser)]`) was originally
+~14 MB/s — a ~115x gap versus the fast path. Four phases of automatic codegen
+optimizations ("Hybrid BBNF Codegen") closed that to 1.5–4x:
 
-- **`Box<JsonEnum>` allocations**: Every recursive value is heap-allocated
-  through the generic BBNF value type.
-- **`str::parse::<f64>()`**: stdlib float parsing (no fast-float).
-- **No JSON-specific optimizations**: The BBNF framework treats every grammar
-  rule uniformly — no first-byte dispatch, no SIMD string scanning, no integer
-  fast path.
-- **Redundant whitespace trimming**: BBNF rules inject whitespace handling at
-  every level — 3–4 layers of `trim_whitespace()` per value.
+| Phase | Technique | Impact |
+|-------|-----------|--------|
+| A | JSON number regex → `sp_json_number()` monolithic scanner | 5–15% (number-heavy) |
+| B | Transparent alternation elimination — skip wrapper enum variants for pure-alternation rules like `value`, saving 1 Box + 1 enum tag per parse | ~20% |
+| C | Inline match dispatch — compile-time `match byte {}` replaces runtime `dispatch_byte_multi` LUT, eliminates per-branch vtable hops | ~10% |
+| D | SpanParser `_sp()` dual methods for leaf rules — span-eligible branches call `Self::rule_sp()` directly (no vtable hop, `#[inline(always)]`) | ~5–10% |
 
-The ~115x slowdown versus the fast path quantifies the cost of generic grammar
-interpretation versus specialized hand-written parsing.
+**Remaining overhead vs. combinator path (1.5–4x):**
+
+- **`Box<JsonEnum>` allocations**: Every recursive value is still heap-allocated
+  through the generic BBNF value type. Phase B eliminates one layer of boxing
+  for transparent rules, but non-transparent rules still box.
+- **Enum tag overhead**: Each value carries an enum discriminant. The combinator
+  and fast paths use `JsonValue` (a smaller, purpose-built enum).
+- **Generic whitespace trimming**: BBNF rules inject whitespace handling at
+  every level — though dispatch_byte_multi elimination reduces the total vtable
+  hops, the trim overhead remains.
+
+**Remaining overhead vs. fast path (3–5x):**
+
+All of the above, plus: no SIMD string decoding (`memchr2`), no integer fast
+path (BBNF uses `sp_json_number()` which scans spans but still defers float
+parsing to stdlib), no `Cow<str>` escape elision, no `Vec<(K,V)>` object
+optimization. These are JSON-specific techniques that a generic grammar
+framework cannot automatically apply.
 
 ---
 
@@ -693,8 +791,14 @@ the `Parser::call` path, which is single-threaded by construction.
    intrinsics (like sonic-rs) is only justified when you've exhausted
    library-level SIMD.
 
-7. **Generic frameworks have a quantifiable cost.** The BBNF grammar framework's
-   ~115x overhead is the price of treating every rule uniformly. This isn't a
-   criticism — the framework's purpose is generality, not speed. But it
-   demonstrates why production parsers are hand-written: specialization enables
-   optimizations that generic frameworks structurally cannot.
+7. **Generic frameworks can close the gap with automatic specialization.** The
+   BBNF grammar framework started at ~115x overhead versus the fast path — the
+   cost of treating every rule uniformly. Hybrid codegen (automatic pattern
+   detection → specialized static parser substitution) closed this to 3–5x
+   versus the fast path and 1.5–4x versus the hand-written combinator parser.
+   The remaining gap is structural: `Box<Enum>` allocation per value, generic
+   whitespace handling, and the absence of domain-specific techniques (SIMD
+   strings, integer fast path, `Cow<str>` elision). These could be addressed
+   by further codegen phases that detect more patterns, but the diminishing
+   returns suggest the current balance of generality vs. performance is
+   practical for most grammar-driven use cases.

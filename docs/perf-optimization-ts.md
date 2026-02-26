@@ -341,9 +341,63 @@ The advantage grows with file size. On number-heavy data (canada.json), dispatch
 
 ---
 
-## 9. Commit Log
+## 9. Phase 4: Cross-Pollination from Rust
+
+Techniques proven in the Rust implementation were ported back to TypeScript:
+
+### `regexSpan()` — Zero-Alloc Discarded Matches
+
+When the BBNF compiler detects that a regex result is discarded (right side of
+`skip`, left side of `next`), it emits `regexSpan()` instead of `regex()`.
+`regexSpan()` uses `test()` + offset tracking without calling `substring()`,
+avoiding string allocation for tokens whose value is never consumed.
+
+### Flag-Based `trim()` with Inline `call()`
+
+The `trim()` combinator previously created a new closure wrapper. Now it sets a
+`FLAG_TRIM_WS` bit on the parser and uses a `call()` method with a fast-path
+check: `if (this.flags === 0)` falls through to `this.parser(state)` directly.
+The trim logic (whitespace skip before + after) is inlined in the flag branch.
+
+### Numeric Memo Keys
+
+The memoization key was `\`${this.id}${state.offset}\`` — string concatenation
+per lookup. Now it's `(this.id << 20) | (state.offset & 0xFFFFF)` — a single
+integer. Eliminates per-lookup string allocation for inputs up to ~1M chars
+with up to 2048 parser IDs.
+
+### Pre-Allocated Arrays in `many()` / `sepBy()`
+
+When `min > 0`, the result array is pre-allocated with `new Array(min)` and
+filled via index assignment instead of `push()`. For `sepBy(comma, 1)` on
+objects with 10+ keys, this avoids the `[] → push → push → ...` growth
+sequence.
+
+### `wrap()` Detection in BBNF Codegen
+
+The BBNF compiler detects `skip(next(L, M), R)` patterns and emits
+`M.wrap(L, R)` — which is already inlined to 3 direct calls instead of the
+4 indirect calls from chaining `skip` and `next` combinators.
+
+### All-Literals Dispatch
+
+When all alternatives in an alternation are string literals, the BBNF compiler
+emits `dispatch()` with character-keyed routing instead of `any()`. This gives
+O(1) keyword dispatch for patterns like `"true" | "false" | "null"`.
+
+### Monolithic JSON Fast Path (`json-fast.ts`)
+
+A hand-written recursive JSON parser using the same `ParserState` infrastructure
+but with zero combinator overhead — direct byte dispatch, inline string/number
+scanning, and `JSON.parse()` only for escaped strings. Equivalent to the Rust
+fast path in architecture.
+
+---
+
+## 10. Commit Log
 
 ```
+fe25063 perf(ts): dispatch tables, regexSpan, flag-based trim, json-fast parser
 f95f85c perf(ts): inline ok() in regex hot path
 fdf0adf perf(ts): inline wrap(), add dispatch() combinator
 ae94498 perf(ts): regex test()+substring(), remove identity pair.map()
