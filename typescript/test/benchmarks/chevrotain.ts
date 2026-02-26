@@ -78,10 +78,10 @@ class ChevrotainJsonParser extends EmbeddedActionsParser {
     });
 
     objectItem = this.RULE("objectItem", () => {
-        const key = this.CONSUME(StringLiteral).image.slice(1, -1);
+        const img = this.CONSUME(StringLiteral).image;
         this.CONSUME(Colon);
         const val = this.SUBRULE(this.value);
-        return [key, val] as [string, any];
+        return this.ACTION(() => [JSON.parse(img), val] as [string, any]);
     });
 
     array = this.RULE("array", () => {
@@ -103,8 +103,10 @@ class ChevrotainJsonParser extends EmbeddedActionsParser {
             this.c1 ||
                 (this.c1 = [
                     {
-                        ALT: () =>
-                            this.CONSUME(StringLiteral).image.slice(1, -1),
+                        ALT: () => {
+                            const img = this.CONSUME(StringLiteral).image;
+                            return this.ACTION(() => JSON.parse(img));
+                        },
                     },
                     {
                         ALT: () =>
