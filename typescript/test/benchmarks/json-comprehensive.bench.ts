@@ -2,11 +2,11 @@ import { describe, bench, BenchOptions } from "vitest";
 import fs from "fs";
 import path from "path";
 
-// parse-that parsers (raw AST — no value building)
-import { JSONParser as BBNFRawParser } from "./bbnf";
-import { JSONParser as HandRawParser } from "./parse-that";
+// parse-that parsers (value-building, same output as JSON.parse)
+import { JSONParser as BBNFParser } from "./bbnf";
+import { JSONParser as HandParser } from "./parse-that";
 
-// Value-building competitor parsers
+// Competitor parsers (all value-building)
 import { json as ParsimmonJSONParser } from "./parsimmon";
 import { parse as PeggyParse } from "./peggy";
 import { parse as ChevrotainParse } from "./chevrotain";
@@ -39,23 +39,22 @@ const datasets = [
 ];
 
 // ---------------------------------------------------------------------------
-// Parser definitions
+// Parser definitions — ALL build JS values (apples-to-apples)
 // ---------------------------------------------------------------------------
 interface ParserDef {
     name: string;
     fn: (input: string) => any;
-    buildsValues: boolean;
     isCombinator?: boolean;
 }
 
 const parserDefs: ParserDef[] = [
-    { name: "JSON.parse (native)", fn: (s) => JSON.parse(s), buildsValues: true },
-    { name: "Chevrotain", fn: (s) => ChevrotainParse(s), buildsValues: true },
-    { name: "Peggy", fn: (s) => PeggyParse(s), buildsValues: true },
-    { name: "Nearley + moo", fn: (s) => NearleyParse(s), buildsValues: true },
-    { name: "parse-that (BBNF)", fn: (s) => BBNFRawParser.parse(s), buildsValues: false, isCombinator: true },
-    { name: "parse-that (hand)", fn: (s) => HandRawParser.parse(s), buildsValues: false, isCombinator: true },
-    { name: "Parsimmon", fn: (s) => ParsimmonJSONParser.tryParse(s), buildsValues: true, isCombinator: true },
+    { name: "JSON.parse (native)", fn: (s) => JSON.parse(s) },
+    { name: "Chevrotain", fn: (s) => ChevrotainParse(s) },
+    { name: "Peggy", fn: (s) => PeggyParse(s) },
+    { name: "Nearley + moo", fn: (s) => NearleyParse(s) },
+    { name: "parse-that (BBNF)", fn: (s) => BBNFParser.parse(s), isCombinator: true },
+    { name: "parse-that (hand)", fn: (s) => HandParser.parse(s), isCombinator: true },
+    { name: "Parsimmon", fn: (s) => ParsimmonJSONParser.tryParse(s), isCombinator: true },
 ];
 
 // ---------------------------------------------------------------------------
@@ -74,9 +73,8 @@ for (const dataset of datasets) {
             if (parser.isCombinator && kbSize > dataset.maxCombKB) continue;
 
             const fn = parser.fn;
-            const suffix = parser.buildsValues ? "" : " (raw AST)";
             bench(
-                `${parser.name}${suffix}`,
+                parser.name,
                 () => {
                     suppressLogs();
                     try { fn(input); } finally { restoreLogs(); }

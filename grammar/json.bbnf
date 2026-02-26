@@ -6,15 +6,7 @@ number = /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ ;
 comma = "," ?w ;
 colon = ":" ?w ;
 
-chargerge = /[^"\\]/ ;
-charger = chargerge ;
-charge = charger ;
-char = charge    ;
-
-stringge = '"' >> char * << '"' ;
-// NOTE: Rust embedding experiment — disabled for TS compatibility
-// string = DOUBLE_QUOTED_STRING => |x| -> &'a str { x.as_str() } ;
-string = stringge ;
+string = /"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/ ;
 array = "[" >> (( value << comma ? ) *)?w << "]" ;
 
 pair = string, colon >> value ;
