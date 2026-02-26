@@ -439,6 +439,7 @@ name = "parse_that"
 version = "0.1.0"
 dependencies = [
  "aho-corasick",
+ "bbnf_derive",
  "bencher",
  "colored",
  "fast-float2",

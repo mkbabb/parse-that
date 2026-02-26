@@ -46,6 +46,14 @@ harness = false
 name = "serde_json_borrow"
 harness = false
 
+[[bench]]
+name = "parse_that_combinator"
+harness = false
+
+[[bench]]
+name = "parse_that_bbnf"
+harness = false
+
 [dependencies]
 pprint = { version = "0.3.0", path = "/Users/mkbabb/Programming/pprint" }
 regex = { version = "1.11", features = ["perf"] }
@@ -66,3 +74,4 @@ simd-json = "0.14"
 sonic-rs = "0.5"
 winnow = "0.7"
 serde_json_borrow = "0.9"
+bbnf_derive = { path = "../bbnf/derive" }
