@@ -1,14 +1,17 @@
 # BBNF Specification
 
-BBNF (Babb Backus-Naur Form) is a grammar notation for defining parsers. It extends
-classical EBNF with operators for whitespace handling, value projection (skip/next),
-set difference, and optional mapping functions. BBNF grammars are the shared contract
-between the TypeScript and Rust implementations of the `parse-that` parser combinator
-library.
+BBNF (Better Backus-Naur Form) is a grammar notation for defining parsers. It extends
+EBNF with operators for whitespace handling, value projection (skip/next), set
+difference, and mapping functions. BBNF grammars serve as the shared contract between
+the TypeScript and Rust implementations of `parse-that`.
 
 A BBNF file consists of one or more **production rules**, interleaved with comments.
 Each rule defines a named nonterminal in terms of an expression built from terminals,
 nonterminal references, and operators.
+
+> **Note**: The BBNF ecosystem also supports `@import` directives for composing grammars
+> across files. See the [bbnf-lang](https://github.com/mkbabb/bbnf-lang) repo for the
+> full specification including imports.
 
 ## Production Rules
 
