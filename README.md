@@ -2,11 +2,11 @@
 
 Parser combinators for TypeScript and Rust.
 
-Write your language in [`BBNF`](https://github.com/mkbabb/bbnf-language-support) (better
-backus-naur form) <img src="assets/bbnf-small.png" width=16>.
+Write your grammar in [`BBNF`](https://github.com/mkbabb/bbnf-lang) (Better
+Backus-Naur Form) <img src="assets/bbnf-small.png" width=16>.
 
-Handles left recursion and left factoring. Performance focused whilst maintaining
-readability and ease of use.
+Handles left recursion and left factoring. Performance-focused with an emphasis on
+readability.
 
 ## Usage
 
@@ -47,6 +47,7 @@ expr.parse("1 + 2 * 3"); // => [1, "+", [2, "*", 3]]
 
 ## Table of Contents
 
+- [Structure](#structure)
 - [Performance](#performance)
   - [Rust](#rust)
   - [TypeScript](#typescript)
@@ -55,6 +56,23 @@ expr.parse("1 + 2 * 3"); // => [1, "+", [2, "*", 3]]
 - [Left Recursion](#left-recursion--more)
 - [API & Examples](#api--examples)
 - [Sources](#sources-acknowledgements--c)
+
+## Structure
+
+```
+typescript/            TS library (@mkbabb/parse-that v0.7.0)
+  src/parse/           Core combinators, state, debug, json-fast
+  test/                Vitest tests + benchmark comparators
+rust/                  Rust workspace (nightly, edition 2024)
+  parse_that/          Core lib — Parser<'a,O> + SpanParser<'a>
+    src/parsers/       JSON, CSV, TOML domain parsers
+    tests/             Integration tests
+    benches/           10 benches × 6 datasets
+  src/                 CLI binary (parse_that_cli)
+grammar/               Shared BBNF grammar files (16 .bbnf)
+  tests/json/          Shared JSON test vectors
+docs/                  Perf chronicles, API reference
+```
 
 ## Performance
 
@@ -130,7 +148,7 @@ optimization chronicle.
 
 ## Debugging
 
-Debugging is made pretty by using the `debug` combinator.
+The `debug` combinator pretty-prints parser state during execution.
 
 ![image](./assets/debug.png)
 
@@ -143,10 +161,11 @@ The `blue` color indicates a BBNF nonterminal; `yellow` is the stringified parse
 
 ## BBNF and the Great Parser Generator
 
-Better Backus-Naur Form is a simple and readable way to describe a language. A
-[better](https://dwheeler.com/essays/dont-use-iso-14977-bbnf.html) EBNF.
+Better Backus-Naur Form: a readable, practical grammar notation. An extension of
+[EBNF](https://dwheeler.com/essays/dont-use-iso-14977-bbnf.html) with skip/next
+operators, regex terminals, mapping functions, and an `@import` system.
 
-See the BBNF for BBNF (meta right) at [bbnf.bbnf](./grammar/bbnf.bbnf).
+The BBNF grammar for BBNF itself lives at [bbnf.bbnf](./grammar/bbnf.bbnf).
 
 With your grammar in hand, call `generateParserFromBBNF` (TypeScript) or use
 `#[derive(Parser)]` (Rust):
@@ -163,8 +182,9 @@ pub struct Json;
 let result = Json::value().parse(input);
 ```
 
-Each nonterminal is a `Parser` object. Fully featured and self-parsing — the BBNF
-parser-generator is written in BBNF. See [bbnf.test.ts](./typescript/test/bbnf.test.ts).
+Each nonterminal is a `Parser` object. The BBNF parser-generator is itself written in
+BBNF—self-hosting. The BBNF ecosystem (compiler, LSP, VS Code extension) lives in the
+separate [`bbnf-lang`](https://github.com/mkbabb/bbnf-lang) repo.
 
 ### Operators
 
@@ -184,8 +204,8 @@ Emojis supported. Epsilon has a special value: `ε`.
 
 ## Left recursion & more
 
-This library fully supports left recursion (direct or indirect) and highly
-ambiguous grammars:
+Direct and indirect left recursion are fully supported, as are highly ambiguous
+grammars:
 
 ```bbnf
 expr = expr , "+" , expr
@@ -211,14 +231,13 @@ const expression = Parser.lazy(() =>
 ).memoize();
 ```
 
-See [left-recursion.md](./docs/left-recursion.md) and
-[memoize.test.ts](./typescript/test/memoize.test.ts) for details.
+See [memoize.test.ts](./typescript/test/memoize.test.ts) for details.
 
 ### Caveats
 
-Left recursion works but is not optimal. If it can be factored out via BBNF the
-performance will be fine; otherwise you may see slowdowns due to JavaScript's lack
-of tail call optimization.
+Left recursion works but isn't optimal. If it can be factored out via BBNF,
+performance will be fine; otherwise expect slowdowns, since JavaScript lacks proper
+tail call optimization.
 
 ## API & examples
 
@@ -227,20 +246,35 @@ See [api.md](./docs/api.md) for API information.
 See the [TypeScript tests](./typescript/test/) and [Rust tests](./rust/parse_that/tests/)
 for working examples.
 
-## Sources, acknowledgements, & c.
+## Sources, acknowledgements, &c.
 
-- [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form)
-- [Left recursion](https://en.wikipedia.org/wiki/Left_recursion)
-- [Notes on parsing EBNF](https://www.cs.umd.edu/class/spring2003/cmsc330/Notes/bbnf/bbnf.html)
-- [Formal theory of parsing](http://www.cs.may.ie/~jpower/Courses/parsing/parsing.pdf)
-- [Removing left recursion from CFGs](http://research.microsoft.com/pubs/68869/naacl2k-proc-rev.pdf)
-- [Top-down parsing for ambiguous left-recursive grammars](https://dl.acm.org/doi/10.1145/1149982.1149988)
-- [Modular top-down parsing for ambiguous left-recursive grammars](https://www.researchgate.net/profile/Richard-Frost-5/publication/30053225)
+### Theory
 
-Parser libraries:
+- Aho, A. V., Lam, M. S., Sethi, R., & Ullman, J. D. (2006). *Compilers: Principles, Techniques, and Tools* (2nd ed.). Addison-Wesley. — The Dragon Book. Left recursion elimination, left factoring, FIRST/FOLLOW sets.
+- Frost, R., Hafiz, R., & Callaghan, P. (2008). [Parser combinators for ambiguous left-recursive grammars](https://dl.acm.org/doi/10.1145/1328408.1328424). *PADL '08*. — Memoized top-down parsing with left recursion support.
+- Frost, R. & Hafiz, R. (2006). [A new top-down parsing algorithm to accommodate ambiguity and left recursion in polynomial time](https://dl.acm.org/doi/10.1145/1149982.1149988). *ACM SIGPLAN Notices*.
+- Moore, R. C. (2000). [Removing left recursion from context-free grammars](http://research.microsoft.com/pubs/68869/naacl2k-proc-rev.pdf). *NAACL '00*.
+- Tarjan, R. E. (1972). Depth-first search and linear graph algorithms. *SIAM Journal on Computing*. — SCC detection for grammar cycle analysis and FIRST-set computation.
+- Power, J. (n.d.). [Formal theory of parsing](http://www.cs.may.ie/~jpower/Courses/parsing/parsing.pdf). NUI Maynooth lecture notes.
 
-- [Parsimmon](https://github.com/jneen/parsimmon)
-- [Chevrotain](https://github.com/chevrotain/chevrotain)
-- [nom](https://github.com/rust-bakery/nom)
-- [pest](https://github.com/pest-parser/pest)
-- [winnow](https://github.com/winnow-rs/winnow)
+### Notation
+
+- [Extended Backus-Naur form](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form) — ISO 14977. BBNF's ancestor.
+- Wheeler, D. A. [Don't Use ISO 14977 EBNF](https://dwheeler.com/essays/dont-use-iso-14977-bbnf.html). — Motivation for BBNF's deviations from the standard.
+
+### Performance
+
+- Eisel, D. & Lemire, D. (2021). [Number parsing at a gigabyte per second](https://arxiv.org/abs/2101.11408). — `fast_float2` crate for Rust JSON float parsing.
+- [memchr](https://docs.rs/memchr/latest/memchr/) — SIMD-accelerated byte scanning. Used for `memchr2`-based JSON string scanning on AArch64 (NEON) and x86 (SSE2/AVX2).
+- `rustc_ast/format.rs` — [Rust compiler source](https://github.com/rust-lang/rust/blob/8bfcae730a5db2438bbda72796175bba21427be1/rust/compiler/rustc_ast/src/format.rs#L169). Reference for `u32` keyword matching pattern.
+
+### Parser libraries (competitors and influences)
+
+- [Parsimmon](https://github.com/jneen/parsimmon) — Monadic TS parser combinators. Benchmarked as baseline.
+- [Chevrotain](https://github.com/chevrotain/chevrotain) — TS parser toolkit with CST. Closest TS competitor.
+- [nom](https://github.com/rust-bakery/nom) — Rust parser combinators. The Rust ecosystem standard.
+- [winnow](https://github.com/winnow-rs/winnow) — nom's successor with improved dispatch.
+- [pest](https://github.com/pest-parser/pest) — PEG parser for Rust. Grammar-driven.
+- [sonic-rs](https://github.com/bytedance/sonic-rs) — ByteDance's SIMD JSON parser. The ceiling in our benchmarks.
+- [simd-json](https://github.com/simd-lite/simd-json) — Rust port of simdjson's 3-phase architecture.
+- [jiter](https://github.com/pydantic/jiter) — Pydantic's scalar JSON parser. Closest peer to our fast path.
