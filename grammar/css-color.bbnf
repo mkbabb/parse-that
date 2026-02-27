@@ -1,3 +1,11 @@
+@import { number, integer } from "css-value-unit.bbnf" ;
+
+// Primitives
+digit = /[0-9a-fA-F]/ ;
+comma = "," ;
+whitespace = /\s+/ ;
+div = "/" ;
+
 // Separators
 sep = comma | whitespace ;
 alphaSep = div | sep ;
