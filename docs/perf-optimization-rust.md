@@ -68,15 +68,15 @@ degrades with working-set size.
 Every parser in the matrix must do equivalent work. Specifically:
 
 1. **Full DOM materialization.** Every parser must build an in-memory tree of
-   values — not just tokenize or validate. Pest was initially only running its PEG
-   recognizer; we added a `consume()` pass that builds `JsonValue` variants from
-   the `Pairs` iterator.
+   values—tokenization or validation alone doesn't count. Pest was initially only
+   running its PEG recognizer; we added a `consume()` pass that builds `JsonValue`
+   variants from the `Pairs` iterator.
 
 2. **String escape decoding.** All production parsers (serde_json, jiter,
    simd-json, sonic-rs) fully decode JSON escape sequences (`\"`, `\\`, `\n`,
    `\uXXXX`, UTF-16 surrogate pairs). An early audit revealed parse_that was
    returning raw borrowed slices without unescaping — a significant unfair
-   advantage. We implemented full RFC 8259 escape decoding before accepting any
+   advantage. Full RFC 8259 escape decoding was implemented before accepting any
    numbers.
 
 3. **`black_box` on inputs.** Every benchmark wraps the input reference in
@@ -115,11 +115,11 @@ Starting from the combinator-based `json_parser()`:
 
 - **`SpanParser` enum dispatch.** Replaced `Box<dyn ParserFn>` with a
   `SpanParser` enum for span-level operations (string scanning, number scanning,
-  keyword matching). This eliminates vtable indirection for leaf parsers —
-  the compiler can inline the enum `match` directly.
+  keyword matching). This eliminates vtable indirection for leaf parsers—the
+  compiler can inline the enum `match` directly.
 
 - **`dispatch_byte_multi` LUT.** A 256-entry lookup table maps the first byte of
-  input to a parser index. This gives O(1) type discrimination — no sequential
+  input to a parser index. This gives O(1) type discrimination—no sequential
   `or()` chain. The LUT fits in 512 bytes (256 × `Option<u16>`), well within L1
   data cache.
 
@@ -222,13 +222,13 @@ Eisel-Lemire pipeline.
 
 ### Phase 6: Honest String Decoding
 
-An audit revealed that parse_that was not decoding JSON string escapes — returning
+An audit revealed that parse_that was not decoding JSON string escapes—returning
 raw `\n` as two bytes instead of a newline character. All competitors do full
 unescaping. We implemented a two-tier `Cow<'a, str>` approach:
 
 **Fast path** (`json_string_decoded_fast`): SIMD-scan with `memchr2('"', '\\')`
 hoping for no escapes. If the closing `"` is found before any `\`, return
-`Cow::Borrowed(&str)` — zero allocation, zero copy.
+`Cow::Borrowed(&str)`—zero allocation, zero copy.
 
 **Cold path** (`json_string_unescape`, marked `#[cold]`): On first `\`, copy the
 prefix into a `String`, then decode escapes one at a time:
@@ -237,7 +237,7 @@ prefix into a `String`, then decode escapes one at a time:
 - Surrogate pairs: `\uD83D\uDE00` → compute `0x10000 + (high - 0xD800) << 10 + (low - 0xDC00)` → `char`
 
 Between escape sequences, `memchr2` scans for the next `"` or `\`, copying
-literal segments in bulk — amortizing the SIMD setup cost.
+literal segments in bulk—amortizing the SIMD setup cost.
 
 **Impact**: twitter.json (escape-heavy) dropped ~14%. All other datasets <3%
 regression. The `#[cold]` annotation keeps the unescape function out of L1
@@ -338,8 +338,8 @@ compound to ~2.4x over the combinator path and ~1.2–1.7x over jiter/simd-json.
 
 #### 1. L1 Instruction Cache Fit
 
-The entire hot path — `json_value_fast` + `json_string_decoded_fast` +
-`number_fast` + `skip_ws` — compiles to ~2.9 KB of machine code. The Apple M-series
+The entire hot path—`json_value_fast` + `json_string_decoded_fast` +
+`number_fast` + `skip_ws`—compiles to ~2.9 KB of machine code. The Apple M-series
 L1 icache is 192 KB. The hot path fits in **1.5% of L1i**, meaning:
 
 - Zero icache misses during parsing (confirmed by the absence of throughput
@@ -354,7 +354,7 @@ address, thrashing the icache.
 #### 2. Zero-Copy Borrowed Strings (`Cow::Borrowed`)
 
 ~95% of JSON strings contain no escape sequences. For these, we return a
-`Cow::Borrowed(&'a str)` — a pointer + length into the original input buffer.
+`Cow::Borrowed(&'a str)`—a pointer + length into the original input buffer.
 No allocation, no copy, no `String` construction.
 
 Only strings with `\` trigger the cold unescape path, which allocates a `String`
@@ -472,7 +472,7 @@ sonic-rs is unreachable without a fundamentally different architecture:
   bytes/iteration for whitespace. `_mm256_cmpeq_epi8` + `_mm256_movemask_epi8`
   finds all `"` positions in 2 instructions.
 - **`PCLMULQDQ` in-string tracking**: Carryless multiplication to track whether
-  a `"` is inside or outside a string across 64-byte windows — 1 instruction
+  a `"` is inside or outside a string across 64-byte windows—1 instruction
   replaces a stateful DFA.
 - **`bumpalo` arena allocation**: All DOM nodes allocated from a bump arena.
   `alloc()` is a pointer bump (1 instruction). No `malloc`/`free` overhead, no
@@ -497,7 +497,7 @@ jiter is primarily scalar, like parse_that. The gap comes from:
 - **`JsonArray`/`JsonObject` newtype wrappers**: An extra layer of indirection
   that the compiler can sometimes but not always elide.
 - **`Peek(u8)` type discrimination**: jiter's `Peek` type wraps a `u8` and goes
-  through a `match` — functionally similar to our dispatch, but the extra newtype
+  through a `match`—functionally similar to our dispatch, but the extra newtype
   prevents the compiler from folding the match into a jump table as aggressively.
 
 jiter does use techniques we adopted: Eisel-Lemire floats, direct recursive
@@ -540,7 +540,7 @@ nom's JSON parser (from its examples) incurs:
   each wrapped in `map`. Every combinator is a function call with an `IResult`
   return.
 - **`char`-by-char string scanning**: `take_while1(is_string_character)` checks
-  one byte at a time — no SIMD.
+  one byte at a time—no SIMD.
 - **`HashMap` for objects**: `HashMap::default()` + `insert()` per key-value
   pair.
 - **`nom::number::complete::double`**: stdlib float parsing, not Eisel-Lemire.
@@ -551,7 +551,7 @@ winnow (nom's successor) improves dispatch with `dispatch!` macro (first-byte
 branching, similar to our LUT), but still:
 
 - **Char-level string scanning**: `take_while(0.., |c| c != '"' && c != '\\')`
-  — no SIMD batching.
+—no SIMD batching.
 - **`HashMap` for objects**.
 - **`winnow::ascii::float`**: Better than stdlib but not Eisel-Lemire.
 
@@ -565,7 +565,7 @@ recursive descent.
 ### BBNF (~249–552 MB/s) — Hybrid Codegen
 
 parse_that's BBNF-generated parser (via `#[derive(Parser)]`) was originally
-~14 MB/s — a ~115x gap versus the fast path. Four phases of automatic codegen
+~14 MB/s—a ~115x gap versus the fast path. Four phases of automatic codegen
 optimizations ("Hybrid BBNF Codegen") closed that to 1.5–4x:
 
 | Phase | Technique | Impact |
@@ -583,7 +583,7 @@ optimizations ("Hybrid BBNF Codegen") closed that to 1.5–4x:
 - **Enum tag overhead**: Each value carries an enum discriminant. The combinator
   and fast paths use `JsonValue` (a smaller, purpose-built enum).
 - **Generic whitespace trimming**: BBNF rules inject whitespace handling at
-  every level — though dispatch_byte_multi elimination reduces the total vtable
+  every level—though dispatch_byte_multi elimination reduces the total vtable
   hops, the trim overhead remains.
 
 **Remaining overhead vs. fast path (3–5x):**
@@ -598,7 +598,7 @@ framework cannot automatically apply.
 
 ## Compiler and Microarchitecture Theory
 
-### Why Vtable Elimination Matters More Than You Think
+### Vtable Elimination and the BTB
 
 A vtable call (`Box<dyn Fn>`) on AArch64 compiles to:
 
@@ -611,7 +611,7 @@ blr   x9                 ; indirect branch to function
 The `blr` (branch-link-register) is an indirect branch. The branch target
 buffer (BTB) must predict the target address. In a JSON parser, the same
 `Parser::call` vtable is used for different concrete types (string parser, number
-parser, array parser), so the BTB sees **polymorphic dispatch** — the same
+parser, array parser), so the BTB sees **polymorphic dispatch**—the same
 call site jumps to different addresses depending on which parser is active.
 
 Modern BTBs (Apple M-series: ~6K entries, 3-level) can track a few targets per
@@ -630,7 +630,7 @@ ldr   x9, [x8, w0, uxtw #3]   ; index into jump table
 br    x9                        ; direct branch
 ```
 
-The jump table target is fully determined by the input byte — no polymorphism.
+The jump table target is fully determined by the input byte—no polymorphism.
 The BTB sees consistent patterns and predicts nearly perfectly.
 
 ### Why `#[cold]` Matters for Icache
@@ -641,8 +641,8 @@ The `#[cold]` attribute on `json_string_unescape` tells LLVM to:
 2. Optimize for size (no loop unrolling, no function inlining)
 3. Treat branches that lead to this function as unlikely (profile-guided layout)
 
-This keeps the hot path — `json_value_fast`, `json_string_decoded_fast`,
-`number_fast`, `skip_ws` — contiguous in memory. Contiguous code means the
+This keeps the hot path—`json_value_fast`, `json_string_decoded_fast`,
+`number_fast`, `skip_ws`—contiguous in memory. Contiguous code means the
 instruction prefetcher (which streams ahead linearly) loads exactly the
 instructions that will execute next, with no wasted icache lines on error
 handling or rare escape-decoding code.
@@ -711,7 +711,7 @@ For a `HashMap` insertion:
 
 For a `Vec::push((key, value))`:
 
-1. Check capacity (usually passes — pre-allocated): 1 comparison
+1. Check capacity (usually passes—pre-allocated): 1 comparison
 2. Write key + value at `vec.len()`: 1 store
 3. Increment length: 1 add
 
@@ -736,7 +736,7 @@ Vec::with_capacity(cap)
 
 This was **catastrophic** on `canada.json` (50–86% regression). The file contains
 56K-element arrays of 2-element `[lat, lng]` pairs. The heuristic saw 2.1 MB
-remaining and allocated 1024-element `Vec`s for every `[lat, lng]` pair — each
+remaining and allocated 1024-element `Vec`s for every `[lat, lng]` pair—each
 needing only 2 slots. The wasted allocations and cache pollution from oversized
 buffers destroyed performance.
 
@@ -769,7 +769,7 @@ the `Parser::call` path, which is single-threaded by construction.
 
 2. **The multiplier effect is real.** No single optimization gave more than 30%.
    But 8 optimizations that each give 10–20% compound to 2.4x. The key is that
-   they're orthogonal — each addresses a different bottleneck (icache, allocation,
+   they're orthogonal—each addresses a different bottleneck (icache, allocation,
    branch prediction, instruction count, SIMD, data structure).
 
 3. **Audit for work equivalence before celebrating.** Our initial numbers showed
@@ -792,7 +792,7 @@ the `Parser::call` path, which is single-threaded by construction.
    library-level SIMD.
 
 7. **Generic frameworks can close the gap with automatic specialization.** The
-   BBNF grammar framework started at ~115x overhead versus the fast path — the
+   BBNF grammar framework started at ~115x overhead versus the fast path—the
    cost of treating every rule uniformly. Hybrid codegen (automatic pattern
    detection → specialized static parser substitution) closed this to 3–5x
    versus the fast path and 1.5–4x versus the hand-written combinator parser.
@@ -875,7 +875,7 @@ reverse-topological order (leaves first). For each SCC:
 - **Cyclic SCC:** Fixed-point iteration only within the SCC members.
 
 For chain grammars (all singletons, no cycles), this processes each rule exactly
-once — O(n+E) total. The 1000-rule chain went from ~918ms to <5ms for FIRST
+once—O(n+E) total. The 1000-rule chain went from ~918ms to <5ms for FIRST
 set computation alone.
 
 #### SCC-Based Cycle Detection (Step 1.3)
@@ -886,7 +886,7 @@ The LSP's `analyze()` function called `calculate_acyclic_deps_scc()`, which
 despite its name ran a full DFS per rule (O(n×(V+E))) and ignored the
 `scc_result` parameter. The LSP only needs cycle detection for diagnostics.
 
-Replaced with direct iteration over `scc_result.cyclic_rules` — the set is
+Replaced with direct iteration over `scc_result.cyclic_rules`—the set is
 already computed by Tarjan's algorithm. O(|cyclic_rules|) instead of
 O(n×(V+E)). The `calculate_acyclic_deps_scc()` function remains for the
 proc-macro codegen path, which genuinely needs the acyclic/non-acyclic
@@ -896,7 +896,7 @@ partition for inlining decisions.
 
 **File:** `lsp/src/analysis.rs`
 
-`offset_to_position()` scanned from byte 0 on every call — O(text_len) per
+`offset_to_position()` scanned from byte 0 on every call—O(text_len) per
 conversion, called multiple times per diagnostic/feature. Added a `LineIndex`
 struct built once per document:
 
@@ -906,7 +906,7 @@ pub struct LineIndex {
 }
 ```
 
-`offset_to_position()` is now a binary search on `line_starts` — O(log L)
+`offset_to_position()` is now a binary search on `line_starts`—O(log L)
 where L is line count. Stored in `DocumentState` alongside the text.
 
 #### Cached AST via `self_cell` (Step 1.5)
@@ -936,7 +936,7 @@ AST without re-parsing.
 
 Formatting and SelectionRange previously re-parsed the entire document on each
 request (`BBNFGrammar::grammar().parse(text)`). Now they call
-`state.ast()` — a zero-cost borrow from the cached `OwnedAst`.
+`state.ast()`—a zero-cost borrow from the cached `OwnedAst`.
 
 **Panic safety:** `parse_once()` wraps parsing in `catch_unwind` to handle
 panics from invalid regex patterns in the grammar, returning `None` for the
@@ -964,7 +964,7 @@ resolution. O(F×L + V + E) where F is file count and L is average file length.
 **LSP integration** (`lsp/src/server.rs`): Workspace-level import graph
 (`Uri → Vec<Uri>` forward deps, `Uri → HashSet<Uri>` reverse deps) and global
 rule index (`name → Vec<(Uri, rule_index)>`). On file change, reverse deps are
-re-analyzed — imported rules suppress "undefined rule" diagnostics, and
+re-analyzed—imported rules suppress "undefined rule" diagnostics, and
 cross-file goto-definition/references/completion work through the global index.
 
 **Proc-macro integration** (`bbnf-derive/src/lib.rs`): The `#[derive(Parser)]`

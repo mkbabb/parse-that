@@ -6,7 +6,7 @@ A scannerless parser combinator vs. the field (TypeScript / V8)
 
 ## 1. The Problem
 
-parse-that is a scannerless parser combinator library. Its BBNF (extended BNF) compiler takes a grammar string at runtime and produces a tree of Parser objects — closures composed via `.then()`, `.or()`, `.map()`, `.sepBy()`, etc. No lexer phase, no code generation, no build step. You write a grammar, you get a parser.
+parse-that is a scannerless parser combinator library. Its BBNF (Better Backus-Naur Form) compiler takes a grammar string at runtime and produces a tree of `Parser` objects—closures composed via `.then()`, `.or()`, `.map()`, `.sepBy()`, etc. No lexer phase, no code generation, no build step. You write a grammar, you get a parser.
 
 The cost of that flexibility: on a 35 KB JSON file, the BBNF-generated parser clocked 746 ops/s. `JSON.parse` does 25,000. Chevrotain (a lexer+parser toolkit) does 5,700. Even Parsimmon (another combinator lib) was competitive.
 
@@ -18,7 +18,7 @@ The question: how close can a zero-dependency, scannerless, runtime-compiled com
 
 ### The Cardinal Sin We Found
 
-Our initial Chevrotain benchmark ran with `outputCst: false` — recognizer-only mode. It validated syntax but built no JS objects. Meanwhile parse-that was constructing full `Object.fromEntries()` trees. Chevrotain looked 2x faster than it actually was.
+Our initial Chevrotain benchmark ran with `outputCst: false`—recognizer-only mode. It validated syntax but built no JS objects. Meanwhile parse-that was constructing full `Object.fromEntries()` trees. Chevrotain looked 2x faster than it actually was.
 
 We also discovered Chevrotain's string handling used `.slice(1, -1)` instead of `JSON.parse()`, silently producing wrong output on escaped strings (`"hello \"world\""` → broken). After fixing both issues, Chevrotain dropped from 5,749 to 4,029 ops/s.
 
@@ -63,7 +63,7 @@ ok(value, offset) {
 }
 ```
 
-For a 35 KB JSON file with ~4,700 combinator invocations per parse, that's 4,700 heap objects per parse — pure GC pressure.
+For a 35 KB JSON file with ~4,700 combinator invocations per parse, that's 4,700 heap objects per parse—pure GC pressure.
 
 The fix: a single mutable `ParserState` threaded through the entire parse. Combinators mutate `.offset`, `.value`, `.isError` in place:
 
@@ -77,11 +77,11 @@ ok(value, offset = 0) {
 }
 ```
 
-This is the single most impactful optimization. It eliminated virtually all per-parse allocation from the combinator infrastructure itself. The remaining allocations are result construction (arrays, objects) — work the user actually asked for.
+This is the single most impactful optimization. It eliminated virtually all per-parse allocation from the combinator infrastructure itself. The remaining allocations are result construction (arrays, objects)—work the user actually asked for.
 
 ### Zero-Alloc save/restore
 
-The old `save()` returned `{ offset, value }` — a heap object created ~6 times per JSON key-value pair. On the restore path (combinator failure), `value` is almost never needed. We replaced it with inline offset locals:
+The old `save()` returned `{ offset, value }`—a heap object created ~6 times per JSON key-value pair. On the restore path (combinator failure), `value` is almost never needed. We replaced it with inline offset locals:
 
 ```ts
 // Before (allocates):
@@ -101,7 +101,7 @@ Applied across `then`, `or`, `skip`, `next`, `opt`, `many`, `sepBy`, `not`, `tri
 
 ## 4. Phase 2: BBNF Graph Optimizations (~2,500 → ~4,800 ops/s)
 
-The BBNF compiler transforms a grammar string into a directed graph of Parser nodes. The naive approach — walk the AST, emit combinators — leaves massive optimization headroom on the table.
+The BBNF compiler transforms a grammar string into a directed graph of Parser nodes. The naive approach—walk the AST, emit combinators—leaves massive optimization headroom on the table.
 
 ### Tarjan's SCC for Build Order
 
@@ -109,7 +109,7 @@ The grammar `value = object | array | string | number | bool | null` with `objec
 
 We replaced it with Tarjan's algorithm for strongly connected components. This gives us:
 
-1. **Exact cycle detection:** only rules participating in actual recursion need `Parser.lazy()` wrappers. Non-cyclic rules (the majority) get direct references — eliminating one function-call indirection per invocation.
+1. **Exact cycle detection:** only rules participating in actual recursion need `Parser.lazy()` wrappers. Non-cyclic rules (the majority) get direct references—eliminating one function-call indirection per invocation.
 2. **Optimal build order:** leaves first, dependents after. Every non-cyclic rule references a fully-constructed parser, not a lazy thunk.
 3. **SCC grouping:** mutually recursive rules (e.g., `value ↔ object ↔ array`) are identified as a single component and resolved together.
 
@@ -125,7 +125,7 @@ any(object, array, string, number, bool, null)
 
 For a number token, it fails on `object` (not `{`), fails on `array` (not `[`), fails on `string` (not `"`), then finally matches `number`. Three wasted attempts per number. On canada.json (111,000 numbers), that's 333,000 failed parser invocations.
 
-The BBNF compiler computes FIRST sets for each alternative — the set of characters that can appear at the start of a match. For JSON:
+The BBNF compiler computes FIRST sets for each alternative—the set of characters that can appear at the start of a match. For JSON:
 
 ```
 object  → { '{' }
@@ -176,14 +176,14 @@ We deployed parallel research agents to profile allocation, V8 deopts, IC polymo
 
 ### RegExp.exec() Allocates on Every Match
 
-The `regex()` combinator is the workhorse — every token (strings, numbers, whitespace) goes through it. The original implementation:
+The `regex()` combinator is the workhorse—every token (strings, numbers, whitespace) goes through it. The original implementation:
 
 ```ts
 const match = sticky.exec(state.src);  // Allocates RegExpMatchArray
 if (match) state.ok(match[0], ...);
 ```
 
-`exec()` returns a `RegExpMatchArray` — a heap object with `.index`, `.input`, `.groups`, and the match string. For the JSON parser, that's 1,380 heap allocations per parse of data.json. ~30% of all allocation.
+`exec()` returns a `RegExpMatchArray`—a heap object with `.index`, `.input`, `.groups`, and the match string. For the JSON parser, that's 1,380 heap allocations per parse of data.json. ~30% of all allocation.
 
 `test()` returns a boolean and still advances `lastIndex`, but allocates nothing:
 
@@ -194,15 +194,15 @@ if (sticky.test(state.src)) {
 }
 ```
 
-`substring()` creates only the string we need. Net: 1,380 fewer objects per parse, ~108 KB less GC pressure. The wall-clock improvement is modest (~1-2%), but GC variance drops significantly — fewer nursery fills, fewer minor GC pauses during sustained parsing.
+`substring()` creates only the string we need. Net: 1,380 fewer objects per parse, ~108 KB less GC pressure. The wall-clock improvement is modest (~1-2%), but GC variance drops significantly—fewer nursery fills, fewer minor GC pauses during sustained parsing.
 
 Custom `matchFunction` users (who access capture groups) still get `exec()`.
 
 ### The Megamorphic IC Problem
 
-Every `Parser` object stores its parse function in `.parser`. Each combinator creates a unique closure shape — `string()` produces one, `regex()` another, `map()` another. When `any()` loops over alternatives calling `parser.parser(state)`, V8's inline cache at that call site sees 6+ different function targets (one per alternative). V8's megamorphic threshold is 4.
+Every `Parser` object stores its parse function in `.parser`. Each combinator creates a unique closure shape—`string()` produces one, `regex()` another, `map()` another. When `any()` loops over alternatives calling `parser.parser(state)`, V8's inline cache at that call site sees 6+ different function targets (one per alternative). V8's megamorphic threshold is 4.
 
-Beyond 4 targets, V8 falls back to generic dispatch — `Builtin: CallFunction_ReceiverIsNotNullOrUndefined` appeared at 5.9% of total CPU time in our profiles. No inlining, no speculative optimization, just a hashtable lookup on every call.
+Beyond 4 targets, V8 falls back to generic dispatch—`Builtin: CallFunction_ReceiverIsNotNullOrUndefined` appeared at 5.9% of total CPU time in our profiles. No inlining, no speculative optimization, just a hashtable lookup on every call.
 
 This is structural to the closure-based combinator pattern. The FIRST-set dispatch table mitigates it (fewer calls, not fewer targets), but doesn't solve it. A future architecture using tagged unions + switch dispatch could eliminate it entirely, but that's a fundamental API redesign.
 
@@ -223,11 +223,11 @@ const jsonValue = dispatch({
 });
 ```
 
-This gave the hand-written parser the same O(1) alternation as BBNF. The hand parser jumped from 4,267 to 5,480 ops/s — now the fastest non-native parser in the benchmark, faster than both BBNF and Chevrotain.
+This gave the hand-written parser the same O(1) alternation as BBNF. The hand parser jumped from 4,267 to 5,480 ops/s—the fastest non-native parser in the benchmark, faster than both BBNF and Chevrotain.
 
 ### Inlining wrap()
 
-`parser.wrap(start, end)` was implemented as `start.next(this).skip(end)` — a chain of two combinator nodes, each with its own closure, saved offset, error handling. That's 4 function calls per invocation (2 combinators x 2 inner calls each).
+`parser.wrap(start, end)` was implemented as `start.next(this).skip(end)`—a chain of two combinator nodes, each with its own closure, saved offset, error handling. That's 4 function calls per invocation (2 combinators x 2 inner calls each).
 
 Inlining into a single closure:
 
@@ -253,7 +253,7 @@ wrap(start, end) {
 
 ### String Unescape Fast Path
 
-98%+ of JSON strings contain no escape sequences. But both parsers were calling `JSON.parse(s)` on every string — a full C++ round-trip to validate and unescape. The fast path:
+98%+ of JSON strings contain no escape sequences. But both parsers were calling `JSON.parse(s)` on every string—a full C++ round-trip to validate and unescape. The fast path:
 
 ```ts
 s.indexOf("\\") === -1 ? s.slice(1, -1) : JSON.parse(s)
@@ -314,7 +314,7 @@ Per-parse allocation dropped from ~357 KB to ~180 KB. Minor GC frequency halved.
 All values ops/s. Higher is better.
 
 **BBNF improvement:** 746 → 4,779 (6.4x)
-**Hand-written with dispatch:** 5,480 — fastest non-native parser
+**Hand-written with dispatch:** 5,480—fastest non-native parser
 
 ### Ratios vs. Chevrotain (value-building mode)
 
@@ -335,7 +335,7 @@ The advantage grows with file size. On number-heavy data (canada.json), dispatch
 1. **Mutable state is the single biggest win.** Immutable-state combinators are elegant but allocate on every call. A single threaded `ParserState` with in-place mutation eliminated ~4,000 heap objects per parse. This is the difference between "academic exercise" and "production viable."
 2. **FIRST-set dispatch turns O(n) alternation into O(1).** Classical LL(1) lookahead tables work at runtime too. The BBNF compiler computes them automatically; the `dispatch()` combinator exposes them manually. Both beat sequential `any()` by 1.1-1.9x depending on the grammar.
 3. **Scannerless can beat lexer-based.** Chevrotain's 2-phase architecture (moo lexer → parser) creates `IToken` objects for every token. parse-that's scannerless approach avoids token object allocation entirely. The sticky-regex `test()` + `substring()` path is effectively a zero-alloc "inline lexer" that never materializes tokens.
-4. **V8's megamorphic IC ceiling is real but manageable.** The closure-per-combinator pattern causes megamorphic dispatch at alternation boundaries. FIRST-set dispatch reduces the number of calls (not the polymorphism), which is enough. A full fix would require a tagged-union architecture — a future project.
+4. **V8's megamorphic IC ceiling is real but manageable.** The closure-per-combinator pattern causes megamorphic dispatch at alternation boundaries. FIRST-set dispatch reduces the number of calls (not the polymorphism), which is enough. A full fix would require a tagged-union architecture—a future project.
 5. **Fair benchmarks require value construction.** A recognizer that doesn't build output is not comparable to a parser that does. Every benchmark must validate `deepEqual(result, JSON.parse(input))` or the numbers are meaningless.
 6. **Tarjan's SCC > naive topo sort for grammar compilation.** Exact cycle detection means minimal lazy wrappers. Non-cyclic rules get direct references. The compiler builds less, the parser calls less.
 
@@ -361,8 +361,8 @@ The trim logic (whitespace skip before + after) is inlined in the flag branch.
 
 ### Numeric Memo Keys
 
-The memoization key was `\`${this.id}${state.offset}\`` — string concatenation
-per lookup. Now it's `(this.id << 20) | (state.offset & 0xFFFFF)` — a single
+The memoization key was `\`${this.id}${state.offset}\``—string concatenation
+per lookup. Now it's `(this.id << 20) | (state.offset & 0xFFFFF)`—a single
 integer. Eliminates per-lookup string allocation for inputs up to ~1M chars
 with up to 2048 parser IDs.
 
@@ -376,7 +376,7 @@ sequence.
 ### `wrap()` Detection in BBNF Codegen
 
 The BBNF compiler detects `skip(next(L, M), R)` patterns and emits
-`M.wrap(L, R)` — which is already inlined to 3 direct calls instead of the
+`M.wrap(L, R)`—which is already inlined to 3 direct calls instead of the
 4 indirect calls from chaining `skip` and `next` combinators.
 
 ### All-Literals Dispatch
@@ -388,7 +388,7 @@ O(1) keyword dispatch for patterns like `"true" | "false" | "null"`.
 ### Monolithic JSON Fast Path (`json-fast.ts`)
 
 A hand-written recursive JSON parser using the same `ParserState` infrastructure
-but with zero combinator overhead — direct byte dispatch, inline string/number
+but with zero combinator overhead—direct byte dispatch, inline string/number
 scanning, and `JSON.parse()` only for escaped strings. Equivalent to the Rust
 fast path in architecture.
 
@@ -418,7 +418,7 @@ Added multi-file grammar support via `@import` directives:
   into a single `ParsedGrammar`, applying selective filtering
 
 The grammar-level FIRST-set dispatch and SCC optimizations (Phase 2) apply
-unchanged to imported rules — the merged AST is indistinguishable from a
+unchanged to imported rules—the merged AST is indistinguishable from a
 single-file grammar.
 
 ### Tarjan SCC + FIRST Sets from Rust
