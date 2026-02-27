@@ -802,3 +802,181 @@ the `Parser::call` path, which is single-threaded by construction.
    by further codegen phases that detect more patterns, but the diminishing
    returns suggest the current balance of generality vs. performance is
    practical for most grammar-driven use cases.
+
+---
+
+## BBNF Language Server Performance
+
+The BBNF LSP server (`bbnf-lang/rust/lsp/`) provides 17 editor features for
+`.bbnf` grammar files. Initial benchmarks on synthetic grammars (10–1000 rules)
+revealed O(n²) scaling in analysis and redundant re-parsing across features.
+
+### Benchmark Methodology
+
+Three grammar topologies stress different bottlenecks:
+
+| Topology | Shape | Bottleneck |
+|----------|-------|------------|
+| **chain** | `r0 = "a"; r1 = r0; r2 = r1; ...` | Dependency depth, FIRST set propagation |
+| **wide** | `r0 = "a"; r1 = "b"; ...` all independent | Rule count, flat iteration |
+| **nested** | `r0 = r1, r2; r1 = r3, r4; ...` binary tree | AST depth, recursive traversal |
+
+Each topology is generated at 10, 50, 100, 500, and 1000 rules. Benchmarks
+measure wall-clock time for LSP protocol round-trips: Open+Diagnostics, Hover,
+Goto Definition, References, Completion, Formatting, Inlay Hints, and Selection
+Range.
+
+### Results (1000 rules)
+
+| Metric | Before | After | Speedup | Key change |
+|--------|--------|-------|---------|------------|
+| Open+Diag (chain) | 1032ms | 31ms | **33x** | O(n+E) FIRST sets, SCC cycle detection |
+| Open+Diag (nested) | 1032ms | 64ms | **16x** | Same + LineIndex |
+| Inlay hints (chain) | 918ms | 272ms | **3.4x** | Topo-SCC FIRST set computation |
+| Format (chain) | 13.6ms | 2.1ms | **6.5x** | Cached AST (self_cell) |
+| SelRange (chain) | 13.0ms | 0.6ms | **21x** | Cached AST (self_cell) |
+| Hover | 0.6ms | 0.6ms | 1x | Already O(1) |
+| Goto Def | 0.9ms | 0.9ms | 1x | Already O(1) |
+
+### Optimization Details
+
+#### O(1) Nonterminal Lookup (Step 1.1)
+
+**File:** `bbnf/src/analysis.rs`
+
+`compute_first_sets` iterated the entire AST to find a nonterminal by name —
+O(n) per lookup, called O(n) times per fixed-point iteration. Built a
+`HashMap<&str, &Expression>` name index before the loop:
+
+```rust
+let name_to_expr: HashMap<&str, &'a Expression<'a>> = ast.iter()
+    .filter_map(|(lhs, _)| match lhs {
+        Expression::Nonterminal(tok) => Some((tok.value.as_ref(), lhs)),
+        _ => None,
+    })
+    .collect();
+```
+
+Every lookup is now O(1). Total FIRST set computation drops from O(n² × E) to
+O(n × E) in the worst case.
+
+#### Topological SCC Processing for FIRST Sets (Step 1.2)
+
+**File:** `bbnf/src/analysis.rs`
+
+The old algorithm ran a global fixed-point loop over all n rules until no FIRST
+set changed. For chain grammars (`r999 → r998 → ... → r0`), this requires
+~1000 passes because each pass propagates one step.
+
+Replaced with SCC-ordered processing. `tarjan_scc()` already computes SCCs in
+reverse-topological order (leaves first). For each SCC:
+
+- **Singleton, acyclic:** Compute FIRST in one pass (all deps already resolved).
+- **Cyclic SCC:** Fixed-point iteration only within the SCC members.
+
+For chain grammars (all singletons, no cycles), this processes each rule exactly
+once — O(n+E) total. The 1000-rule chain went from ~918ms to <5ms for FIRST
+set computation alone.
+
+#### SCC-Based Cycle Detection (Step 1.3)
+
+**File:** `lsp/src/state.rs`
+
+The LSP's `analyze()` function called `calculate_acyclic_deps_scc()`, which
+despite its name ran a full DFS per rule (O(n×(V+E))) and ignored the
+`scc_result` parameter. The LSP only needs cycle detection for diagnostics.
+
+Replaced with direct iteration over `scc_result.cyclic_rules` — the set is
+already computed by Tarjan's algorithm. O(|cyclic_rules|) instead of
+O(n×(V+E)). The `calculate_acyclic_deps_scc()` function remains for the
+proc-macro codegen path, which genuinely needs the acyclic/non-acyclic
+partition for inlining decisions.
+
+#### Line-Offset Table (Step 1.4)
+
+**File:** `lsp/src/analysis.rs`
+
+`offset_to_position()` scanned from byte 0 on every call — O(text_len) per
+conversion, called multiple times per diagnostic/feature. Added a `LineIndex`
+struct built once per document:
+
+```rust
+pub struct LineIndex {
+    line_starts: Vec<usize>,
+}
+```
+
+`offset_to_position()` is now a binary search on `line_starts` — O(log L)
+where L is line count. Stored in `DocumentState` alongside the text.
+
+#### Cached AST via `self_cell` (Step 1.5)
+
+**Files:** `lsp/src/state.rs`, `lsp/src/features/formatting.rs`,
+`lsp/src/features/selection_range.rs`
+
+The BBNF AST (`AST<'a>`) borrows from the source text via `Span<'a>`. Storing
+it alongside the owned `String` requires a self-referential struct. Used
+`self_cell` (zero-unsafe):
+
+```rust
+self_cell! {
+    struct OwnedAst {
+        owner: String,
+        #[covariant]
+        dependent: CachedAst,
+    }
+}
+type CachedAst<'a> = Option<CachedParseResult<'a>>;
+```
+
+The `parse_once()` function parses the grammar once in the `OwnedAst`
+constructor, extracting both the AST and diagnostic metadata (offsets for error
+reporting). The `analyze_from_cache()` function then operates on the borrowed
+AST without re-parsing.
+
+Formatting and SelectionRange previously re-parsed the entire document on each
+request (`BBNFGrammar::grammar().parse(text)`). Now they call
+`state.ast()` — a zero-cost borrow from the cached `OwnedAst`.
+
+**Panic safety:** `parse_once()` wraps parsing in `catch_unwind` to handle
+panics from invalid regex patterns in the grammar, returning `None` for the
+AST and a diagnostic message.
+
+**Avoiding double-parse:** An initial implementation parsed once in
+`OwnedAst::new()` and separately in `analyze()`, causing a 60% regression in
+Open+Diag. The fix uses `std::cell::Cell` to extract `ParseDiagnostics` from
+the `OwnedAst` closure, then passes the borrowed AST to `analyze_from_cache()`.
+
+### @import System
+
+The same optimization pass added an `@import` directive to the BBNF language,
+enabling cross-file grammar composition:
+
+```bbnf
+@import "path/to/base.bbnf" ;
+@import { number, integer } from "path/to/common.bbnf" ;
+```
+
+**Resolution algorithm** (`bbnf/src/imports.rs`): DFS file graph construction
+with cycle detection, canonical path deduplication, and selective import
+resolution. O(F×L + V + E) where F is file count and L is average file length.
+
+**LSP integration** (`lsp/src/server.rs`): Workspace-level import graph
+(`Uri → Vec<Uri>` forward deps, `Uri → HashSet<Uri>` reverse deps) and global
+rule index (`name → Vec<(Uri, rule_index)>`). On file change, reverse deps are
+re-analyzed — imported rules suppress "undefined rule" diagnostics, and
+cross-file goto-definition/references/completion work through the global index.
+
+**Proc-macro integration** (`bbnf-derive/src/lib.rs`): The `#[derive(Parser)]`
+macro detects `@import` directives and uses `load_module_graph()` for
+transitive dependency resolution, eliminating the need for users to manually
+list all grammar files in `#[parser(path = "...")]` attributes.
+
+### Commit Log (LSP Optimization)
+
+```
+c96dff0 perf: cache parsed AST with self_cell to eliminate re-parsing
+b1bdbfe feat: extend import support to TypeScript library and proc-macro
+8571239 feat: add @import system and O(n+E) performance optimizations
+4f75dad test: strengthen LSP integration tests, add dev workflow docs
+```

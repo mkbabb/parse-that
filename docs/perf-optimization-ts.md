@@ -394,9 +394,53 @@ fast path in architecture.
 
 ---
 
-## 10. Commit Log
+## 10. Phase 5: BBNF Language Extensions
+
+The TypeScript BBNF library (`@mkbabb/bbnf-lang`) was extended with grammar-level
+features that complement the parser performance work.
+
+### @import System
+
+Added multi-file grammar support via `@import` directives:
+
+```bbnf
+@import "path/to/base.bbnf" ;
+@import { number, integer } from "path/to/common.bbnf" ;
+```
+
+**Parser additions** (`grammar.ts`):
+- `importDirective()` parser handling both glob and selective import forms
+- `grammarWithImports()` returns `ParsedGrammar` (imports + rules)
+
+**Multi-file API** (`generate.ts`):
+- `BBNFToASTWithImports(input)` — parses a single file with import extraction
+- `BBNFToASTFromFiles(files: Map<string, string>)` — merges multiple files
+  into a single `ParsedGrammar`, applying selective filtering
+
+The grammar-level FIRST-set dispatch and SCC optimizations (Phase 2) apply
+unchanged to imported rules — the merged AST is indistinguishable from a
+single-file grammar.
+
+### Tarjan SCC + FIRST Sets from Rust
+
+The same algorithmic improvements applied to the Rust LSP were originally
+developed and proven in the TypeScript BBNF compiler:
+
+- **Tarjan's SCC** for minimal `Parser.lazy()` wrappers (Phase 2)
+- **FIRST-set dispatch tables** for O(1) alternation (Phase 2)
+- **Name index** for O(1) nonterminal lookup during compilation
+
+These remain the foundation of the TS BBNF compiler's performance. The Rust
+LSP analysis code (`bbnf/src/analysis.rs`) was subsequently optimized using the
+same techniques, with the added benefit of SCC-ordered FIRST set computation
+(processing SCCs in topological order instead of global fixed-point iteration).
+
+---
+
+## 11. Commit Log
 
 ```
+b1bdbfe feat: extend import support to TypeScript library and proc-macro
 fe25063 perf(ts): dispatch tables, regexSpan, flag-based trim, json-fast parser
 f95f85c perf(ts): inline ok() in regex hot path
 fdf0adf perf(ts): inline wrap(), add dispatch() combinator
