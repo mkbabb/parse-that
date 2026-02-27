@@ -24,22 +24,18 @@ pub fn consume_json<'a>(p: &'a JsonEnum) -> JsonValue<'a> {
             JsonEnum::array(values) => {
                 JsonValue::Array(values.iter().map(|v| recurse(v)).collect())
             }
-            JsonEnum::pair((key, value)) => {
-                let key_str = match key.as_ref() {
-                    JsonEnum::string(s) => Cow::Borrowed(s.as_str()),
-                    _ => panic!("Expected string key in pair"),
-                };
+            JsonEnum::pair((key_span, value)) => {
+                // Phase E: key is Span directly (string is span-eligible)
+                let key_str = Cow::Borrowed(key_span.as_str());
                 JsonValue::Object(vec![(key_str, recurse(value))])
             }
             JsonEnum::object(pairs) => {
                 let map: Vec<(Cow<'a, str>, JsonValue<'a>)> = pairs
                     .iter()
                     .map(|pair| match pair.as_ref() {
-                        JsonEnum::pair((key, value)) => {
-                            let key_str = match key.as_ref() {
-                                JsonEnum::string(s) => Cow::Borrowed(s.as_str()),
-                                _ => panic!("Expected string key"),
-                            };
+                        JsonEnum::pair((key_span, value)) => {
+                            // Phase E: key is Span directly
+                            let key_str = Cow::Borrowed(key_span.as_str());
                             (key_str, recurse(value))
                         }
                         _ => panic!("Expected pair in object"),

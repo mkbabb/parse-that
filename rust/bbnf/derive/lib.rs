@@ -1,5 +1,6 @@
 extern crate proc_macro;
 
+use std::collections::HashSet;
 use std::path::PathBuf;
 
 use bbnf::calculate_ast_deps;
@@ -315,6 +316,35 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     // Phase D: Span-eligible rule detection
     let span_eligible_rules = find_span_eligible_rules(&ast, &scc_result.cyclic_rules);
 
+    // Phase E: Compute which span-eligible rules actually get _sp() methods
+    // (only those whose RHS maps to a known SpanParser pattern).
+    let sp_method_rules: HashSet<String> = span_eligible_rules
+        .iter()
+        .filter(|name| {
+            // Temporarily build a minimal grammar_attrs just for the check.
+            // try_generate_span_parser only needs the AST.
+            let tmp_attrs = GeneratedGrammarAttributes {
+                ast: &ast,
+                deps: &deps,
+                acyclic_deps: &acyclic_deps,
+                non_acyclic_deps: &non_acyclic_deps,
+                first_sets: None,
+                ref_counts: None,
+                aliases: None,
+                transparent_rules: None,
+                span_eligible_rules: None,
+                sp_method_rules: None,
+                ident,
+                enum_ident: &enum_ident,
+                enum_type: &enum_type,
+                boxed_enum_type: &boxed_enum_type,
+                parser_container_attrs: &parser_container_attrs,
+            };
+            try_generate_span_parser(name, &tmp_attrs).is_some()
+        })
+        .cloned()
+        .collect();
+
     let grammar_attrs = GeneratedGrammarAttributes {
         ast: &ast,
         deps: &deps,
@@ -326,6 +356,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         aliases: Some(&aliases),
         transparent_rules: Some(&transparent_rules),
         span_eligible_rules: Some(&span_eligible_rules),
+        sp_method_rules: Some(&sp_method_rules),
 
         ident,
         enum_ident: &enum_ident,

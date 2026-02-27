@@ -55,6 +55,10 @@ pub struct GeneratedGrammarAttributes<'a> {
     /// `rule_sp() -> SpanParser` and `rule() -> Parser<Enum>`.
     pub span_eligible_rules: Option<&'a HashSet<String>>,
 
+    /// Subset of span-eligible rules that actually have `_sp()` methods generated.
+    /// Only these can be referenced as `Self::rule_sp().into_parser()` in codegen.
+    pub sp_method_rules: Option<&'a HashSet<String>>,
+
     pub ident: &'a syn::Ident,
     pub enum_ident: &'a syn::Ident,
 
@@ -282,9 +286,16 @@ pub fn calculate_expression_type<'a>(
         }
         Expression::Concatenation(inner_exprs) => {
             let inner_exprs = get_inner_expression(inner_exprs);
+            // Phase E: Override sp_method_rules nonterminals to Span in concatenation context.
             let tys = inner_exprs
                 .iter()
-                .map(|expr| calculate_expression_type(expr, grammar_attrs, cache_bundle))
+                .map(|expr| {
+                    if concat_element_sp_name(expr, grammar_attrs).is_some() {
+                        parse_quote!(::parse_that::Span<'a>)
+                    } else {
+                        calculate_expression_type(expr, grammar_attrs, cache_bundle)
+                    }
+                })
                 .collect::<Vec<_>>();
             let mut span_counter = 0;
             let mut non_span_counter = 0;
@@ -962,6 +973,20 @@ pub fn check_for_any_span(exprs: &[Expression]) -> Option<TokenStream> {
     }
 }
 
+/// Phase E: Check if a concatenation element is a nonterminal in sp_method_rules.
+/// Returns the nonterminal name if so.
+fn concat_element_sp_name<'a>(
+    expr: &'a Expression<'a>,
+    grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
+) -> Option<&'a str> {
+    if let Expression::Nonterminal(Token { value, .. }) = expr {
+        if grammar_attrs.sp_method_rules.map_or(false, |set| set.contains(value.as_ref())) {
+            return Some(value.as_ref());
+        }
+    }
+    None
+}
+
 pub fn calculate_concatenation_expression<'a>(
     inner_exprs: &'a [Expression<'a>],
     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
@@ -969,15 +994,29 @@ pub fn calculate_concatenation_expression<'a>(
     max_depth: usize,
     depth: usize,
 ) -> TokenStream {
-    let tys = inner_exprs
+    // Phase E: For sp_method_rules nonterminals in concatenation, override type to Span
+    // and parser to Self::rule_sp().into_parser(). This avoids Box allocation for
+    // nonterminals that are just Span wrappers (e.g. `string` in `pair = string, colon >> value`).
+    let tys: Vec<Type> = inner_exprs
         .iter()
-        .map(|expr| calculate_expression_type(expr, grammar_attrs, cache_bundle))
-        .collect::<Vec<_>>();
+        .map(|expr| {
+            if concat_element_sp_name(expr, grammar_attrs).is_some() {
+                parse_quote!(::parse_that::Span<'a>)
+            } else {
+                calculate_expression_type(expr, grammar_attrs, cache_bundle)
+            }
+        })
+        .collect();
     let mut chains: Vec<(bool, Vec<TokenStream>)> = Vec::new();
     for (parser, ty) in inner_exprs
         .iter()
         .map(|expr| {
-            calculate_parser_from_expression(expr, grammar_attrs, cache_bundle, max_depth, depth)
+            if let Some(name) = concat_element_sp_name(expr, grammar_attrs) {
+                let sp_ident = format_ident!("{}_sp", name);
+                quote! { Self::#sp_ident().into_parser() }
+            } else {
+                calculate_parser_from_expression(expr, grammar_attrs, cache_bundle, max_depth, depth)
+            }
         })
         .zip(tys.iter())
     {
@@ -1085,31 +1124,48 @@ pub fn calculate_alternation_expression<'a>(
             let mut used: Vec<bool> = vec![false; coerced_parsers.len()];
 
             // Detect which branches are span-eligible nonterminals with _sp methods.
-            let branch_sp_info: Vec<Option<(String, TokenStream)>> = inner_exprs
+            // Returns (name, sp_constructor, map_fn) so we can hoist the SpanParser
+            // construction into a let binding and only call it in the match arm.
+            let branch_sp_info: Vec<Option<(String, TokenStream, TokenStream)>> = inner_exprs
                 .iter()
                 .map(|expr| {
-                    // Resolve through inline cache to find the original nonterminal
+                    // First: check inline cache for MappedExpression (boxed2 path)
                     if let Some(cached) = cache_bundle.inline_cache.borrow().get(expr) {
-                        // Check if this is a MappedExpression wrapping a nonterminal
                         if let Expression::MappedExpression((inner_token, mapping_token)) = cached {
                             let inner = get_inner_expression(inner_token);
                             let mapping = get_inner_expression(mapping_token);
                             if let Expression::Nonterminal(Token { value: nt_name, .. }) = inner {
-                                if let Some(span_rules) = grammar_attrs.span_eligible_rules {
-                                    if span_rules.contains(nt_name.as_ref()) {
-                                        // Extract the mapping function for enum wrapping
+                                if let Some(sp_rules) = grammar_attrs.sp_method_rules {
+                                    if sp_rules.contains(nt_name.as_ref()) {
                                         if let Expression::MappingFn(Token { value: map_fn, .. }) = mapping {
                                             let sp_ident = format_ident!("{}_sp", nt_name.as_ref());
                                             let map_closure: syn::ExprClosure = syn::parse_str(map_fn).ok()?;
                                             return Some((
                                                 nt_name.as_ref().to_string(),
-                                                quote! {
-                                                    Self::#sp_ident().call(state).map(#map_closure)
-                                                },
+                                                quote! { Self::#sp_ident() },
+                                                quote! { #map_closure },
                                             ));
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+                    // Phase E: Direct nonterminal check — sp_method_rules nonterminals
+                    // skip the boxed2 inline cache, so detect them here directly.
+                    if let Expression::Nonterminal(Token { value: nt_name, .. }) = expr {
+                        if let Some(sp_rules) = grammar_attrs.sp_method_rules {
+                            if sp_rules.contains(nt_name.as_ref())
+                                && !is_transparent_rule(nt_name, grammar_attrs)
+                            {
+                                let sp_ident = format_ident!("{}_sp", nt_name.as_ref());
+                                let enum_ident = grammar_attrs.enum_ident;
+                                let variant_ident = format_ident!("{}", nt_name.as_ref());
+                                return Some((
+                                    nt_name.as_ref().to_string(),
+                                    quote! { Self::#sp_ident() },
+                                    quote! { |x| #enum_ident::#variant_ident(x) },
+                                ));
                             }
                         }
                     }
@@ -1133,19 +1189,23 @@ pub fn calculate_alternation_expression<'a>(
                     })
                     .collect();
 
-                // Phase D: Use SpanParser fast-path if available
-                if let Some(Some((_, sp_call))) = branch_sp_info.get(idx) {
-                    // Inline the SpanParser call — no vtable hop, no let binding needed.
-                    // If the overall type is Box<Enum>, wrap the result.
-                    let call = if overall_is_boxed_enum {
-                        quote! { (#sp_call).map(Box::new) }
-                    } else {
-                        sp_call.clone()
-                    };
-                    match_arms.push(quote! {
-                        #(#byte_patterns)|* => { #call },
-                    });
-                } else {
+                // Phase D: Use SpanParser fast-path if available.
+                // Only use branch_sp_info when overall type is Box<Enum> — the sp_call
+                // includes enum variant wrapping which is wrong for all-Span alternations.
+                // Hoist SpanParser construction into a let binding to avoid reconstructing
+                // on every match (critical for large-file performance).
+                if overall_is_boxed_enum {
+                    if let Some(Some((_, sp_constructor, map_fn))) = branch_sp_info.get(idx) {
+                        let sp_binding_ident = format_ident!("_sp_{}", idx);
+                        branch_bindings.push(quote! { let #sp_binding_ident = #sp_constructor; });
+                        let call = quote! { #sp_binding_ident.call(state).map(#map_fn).map(Box::new) };
+                        match_arms.push(quote! {
+                            #(#byte_patterns)|* => { #call },
+                        });
+                        continue;
+                    }
+                }
+                {
                     let branch_ident = format_ident!("_branch_{}", idx);
                     branch_bindings.push(quote! { let #branch_ident = #parser; });
                     match_arms.push(quote! {
@@ -1320,9 +1380,9 @@ pub fn calculate_parser_from_expression<'a>(
                 };
                 let ident = format_ident!("{}", resolved_name);
 
-                // Phase B: Transparent rules already return Box<Enum>,
-                // so skip the extra .map(|x| Box::new(x)) wrapping.
                 if is_transparent_rule(&resolved_name, grammar_attrs) {
+                    // Phase B: Transparent rules already return Box<Enum>,
+                    // so skip the extra .map(|x| Box::new(x)) wrapping.
                     quote! { Self::#ident() }
                 } else {
                     quote! { Self::#ident().map(|x| Box::new(x)) }

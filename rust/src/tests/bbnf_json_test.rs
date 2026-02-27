@@ -183,13 +183,9 @@ mod tests {
                 assert_eq!(pairs.len(), 2);
 
                 match pairs[0].as_ref() {
-                    JsonEnum::pair((key, val)) => {
-                        match key.as_ref() {
-                            JsonEnum::string(s) => {
-                                assert_eq!(s.as_str(), r#""a""#);
-                            }
-                            other => panic!("expected string key, got {other:?}"),
-                        }
+                    JsonEnum::pair((key_span, val)) => {
+                        // Phase E: key is Span directly (string is span-eligible)
+                        assert_eq!(key_span.as_str(), r#""a""#);
                         match val.as_ref() {
                             JsonEnum::number(n) => {
                                 assert_eq!(n.as_str(), "1");
@@ -212,19 +208,13 @@ mod tests {
             JsonEnum::object(pairs) => {
                 assert_eq!(pairs.len(), 1);
                 match pairs[0].as_ref() {
-                    JsonEnum::pair((_key, val)) => match val.as_ref() {
+                    // Phase E: key is Span directly (string is span-eligible)
+                    JsonEnum::pair((_key_span, val)) => match val.as_ref() {
                         JsonEnum::object(inner_pairs) => {
                             assert_eq!(inner_pairs.len(), 1);
                             match inner_pairs[0].as_ref() {
-                                JsonEnum::pair((inner_key, inner_val)) => {
-                                    match inner_key.as_ref() {
-                                        JsonEnum::string(s) => {
-                                            assert_eq!(s.as_str(), r#""inner""#);
-                                        }
-                                        other => {
-                                            panic!("expected string key, got {other:?}")
-                                        }
-                                    }
+                                JsonEnum::pair((inner_key_span, inner_val)) => {
+                                    assert_eq!(inner_key_span.as_str(), r#""inner""#);
                                     match inner_val.as_ref() {
                                         JsonEnum::bool(b) => {
                                             assert_eq!(b.as_str(), "true");
