@@ -10,7 +10,6 @@ export default defineConfig({
         lib: {
             entry: {
                 parse: "./src/parse/index.ts",
-                bbnf: "./src/bbnf/index.ts",
             },
             formats: ["es", "cjs"],
         },

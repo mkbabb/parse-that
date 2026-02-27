@@ -8,20 +8,12 @@
             "types": "./dist/src/parse/index.d.ts",
             "import": "./dist/parse.js",
             "require": "./dist/parse.cjs"
-        },
-        "./bbnf": {
-            "types": "./dist/src/bbnf/index.d.ts",
-            "import": "./dist/bbnf.js",
-            "require": "./dist/bbnf.cjs"
         }
     },
     "typesVersions": {
         "*": {
             "*": [
                 "dist/src/parse/index.d.ts"
-            ],
-            "bbnf": [
-                "dist/src/bbnf/index.d.ts"
             ]
         }
     },

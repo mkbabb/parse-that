@@ -1,5 +1,5 @@
 [workspace]
-members = ["src", "parse_that", "bbnf", "bbnf/derive"]
+members = ["src", "parse_that"]
 resolver = "2"
 
 

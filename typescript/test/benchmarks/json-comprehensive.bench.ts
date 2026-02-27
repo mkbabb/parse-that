@@ -2,7 +2,6 @@ import { describe, bench, BenchOptions } from "vitest";
 import fs from "fs";
 
 // parse-that parsers (value-building, same output as JSON.parse)
-import { JSONParser as BBNFParser } from "./bbnf";
 import { JSONParser as HandParser } from "./parse-that";
 import { jsonParseFast } from "../../src/parse/json-fast.js";
 
@@ -53,7 +52,6 @@ const parserDefs: ParserDef[] = [
     { name: "Chevrotain", fn: (s) => ChevrotainParse(s) },
     { name: "Peggy", fn: (s) => PeggyParse(s) },
     { name: "Nearley + moo", fn: (s) => NearleyParse(s) },
-    { name: "parse-that (BBNF)", fn: (s) => BBNFParser.parse(s), isCombinator: true },
     { name: "parse-that (hand)", fn: (s) => HandParser.parse(s), isCombinator: true },
     { name: "Parsimmon", fn: (s) => ParsimmonJSONParser.tryParse(s), isCombinator: true },
 ];

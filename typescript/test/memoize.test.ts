@@ -1,9 +1,7 @@
 import { regex, string, all, Parser, any } from "../src/parse";
 
 import { expect, describe, it } from "vitest";
-import fs from "fs";
 
-import { BBNFToParser } from "../src/bbnf/generate";
 import { generateMathExpression } from "./utils";
 
 const digits = regex(/[0-9]+/);
@@ -46,35 +44,6 @@ describe("Memoization & left recursion", () => {
         expect(sCount).toBe(input.length);
     });
 
-    it("should sS from BBNF", () => {
-        const grammar = fs.readFileSync("../grammar/sS.bbnf", "utf-8");
-        const [nonterminals, ast] = BBNFToParser(grammar);
-
-        nonterminals.sS = nonterminals.sS.mergeMemos().memoize();
-        const sentence = "s".repeat(100);
-
-        const result = nonterminals.sS.parse(sentence).flat(Infinity) ?? [];
-
-        const sCount = result.filter((x: any) => x === "s").length;
-        expect(sCount).toBe(sentence.length);
-    });
-
-    // Left-recursive ambiguous grammar produces incorrect parse trees (seed-growing limitation)
-    it.todo("should math from BBNF", () => {
-        const grammar = fs.readFileSync("../grammar/math-ambiguous.bbnf", "utf-8");
-        const [nonterminals, ast] = BBNFToParser(grammar);
-
-        nonterminals.expression = nonterminals.expression.trim().mergeMemos().memoize();
-
-        const parser = nonterminals.expression;
-
-        for (let i = 0; i < 100; i++) {
-            const expr = generateMathExpression(10);
-            const parsed = parser.parse(expr) ?? [];
-            const flat = parsed.flat(Infinity).join("");
-            expect(flat).toEqual(expr.replaceAll(" ", ""));
-        }
-    });
     it("should math again", () => {
         const operators = any(string("+"), string("-"), string("*"), string("/"));
         const number = regex(/-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/);

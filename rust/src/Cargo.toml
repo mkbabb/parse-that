@@ -11,5 +11,3 @@ path = "main.rs"
 pprint = { version = "0.3.0", path = "/Users/mkbabb/Programming/pprint" }
 regex = "1.11"
 parse_that = { version = "0.1.0", path = "../parse_that" }
-bbnf = { version = "0.1.0", path = "../bbnf" }
-bbnf_derive = { version = "0.1.0", path = "../bbnf/derive" }

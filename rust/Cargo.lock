@@ -37,32 +37,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
-name = "bbnf"
-version = "0.1.0"
-dependencies = [
- "indexmap",
- "parse_that",
- "pprint",
- "proc-macro2",
- "quote",
- "regex",
- "syn 2.0.117",
-]
-
-[[package]]
-name = "bbnf_derive"
-version = "0.1.0"
-dependencies = [
- "bbnf",
- "indexmap",
- "parse_that",
- "pprint",
- "proc-macro2",
- "quote",
- "syn 2.0.117",
-]
-
-[[package]]
 name = "bencher"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -439,7 +413,6 @@ name = "parse_that"
 version = "0.1.0"
 dependencies = [
  "aho-corasick",
- "bbnf_derive",
  "bencher",
  "colored",
  "fast-float2",
@@ -462,8 +435,6 @@ dependencies = [
 name = "parse_that_cli"
 version = "0.1.0"
 dependencies = [
- "bbnf",
- "bbnf_derive",
  "parse_that",
  "pprint",
  "regex",
