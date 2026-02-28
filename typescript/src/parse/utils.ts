@@ -111,3 +111,62 @@ export function getLastSuggestions(): readonly Suggestion[] {
 export function getLastSecondarySpans(): readonly SecondarySpan[] {
     return lastSecondarySpans;
 }
+
+// ── Collected Diagnostics (for error recovery) ──────────────
+
+export interface Diagnostic {
+    offset: number;
+    furthestOffset: number;
+    line: number;
+    column: number;
+    expected: string[];
+    suggestions: Suggestion[];
+    secondarySpans: SecondarySpan[];
+    found: string;
+}
+
+let collectedDiagnostics: Diagnostic[] = [];
+
+/**
+ * Snapshot the current global error state into a Diagnostic object,
+ * push it to the collection, then reset the error state so the next
+ * error starts fresh.
+ */
+export function collectDiagnostic(src: string, errorOffset: number): void {
+    const furthest = lastFurthestOffset >= 0 ? lastFurthestOffset : errorOffset;
+
+    // Compute line/column from the furthest offset
+    const before = src.slice(0, furthest);
+    const lastNl = before.lastIndexOf("\n");
+    const line = lastNl === -1 ? 1 : before.slice(0, lastNl + 1).split("\n").length;
+    const column = lastNl === -1 ? furthest : furthest - lastNl - 1;
+
+    // Extract a "found" snippet (up to 20 chars from the furthest offset)
+    const found = src.slice(furthest, furthest + 20).replace(/\n/g, "\\n");
+
+    collectedDiagnostics.push({
+        offset: errorOffset,
+        furthestOffset: furthest,
+        line,
+        column,
+        expected: [...lastExpected],
+        suggestions: [...lastSuggestions],
+        secondarySpans: [...lastSecondarySpans],
+        found,
+    });
+
+    // Reset so the next parse error starts fresh
+    resetErrorState();
+}
+
+export function getCollectedDiagnostics(): readonly Diagnostic[] {
+    return collectedDiagnostics;
+}
+
+export function clearCollectedDiagnostics(): void {
+    collectedDiagnostics = [];
+}
+
+export function popLastDiagnostic(): Diagnostic | undefined {
+    return collectedDiagnostics.pop();
+}

@@ -1,0 +1,46 @@
+/* Error 1: Missing semicolon between declarations */
+body {
+  margin: 0
+  padding: 0;
+}
+
+/* Error 2: Invalid property value (empty) */
+.hero {
+  color: white;
+  background-image: ;
+  font-size: 16px;
+}
+
+/* Error 3: Missing colon in declaration */
+.container {
+  width 100%;
+  max-width: 960px;
+}
+
+/* Error 4: Unclosed brace */
+.sidebar {
+  float: left;
+  width: 250px;
+
+/* Error 5: Invalid selector (starts with digit) */
+123invalid {
+  color: red;
+}
+
+/* Error 6: Unclosed paren in function call */
+.overlay {
+  background: rgba(0, 0, 0, 0.5;
+  position: absolute;
+}
+
+/* Error 7: Missing property value after colon */
+.footer {
+  color: ;
+  padding: 20px;
+}
+
+/* Valid rule at end — should still parse correctly after recovery */
+.success {
+  color: green;
+  font-weight: bold;
+}

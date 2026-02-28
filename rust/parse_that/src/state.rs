@@ -28,6 +28,20 @@ pub struct SecondarySpan {
     pub label: String,
 }
 
+/// Snapshot of diagnostic state collected during error recovery.
+#[cfg(feature = "diagnostics")]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Diagnostic {
+    pub offset: usize,
+    pub furthest_offset: usize,
+    pub line: usize,
+    pub column: usize,
+    pub expected: Vec<String>,
+    pub suggestions: Vec<Suggestion>,
+    pub secondary_spans: Vec<SecondarySpan>,
+    pub found: String,
+}
+
 #[derive(Pretty, Debug, Default, PartialEq, Clone, Copy, Hash, Eq)]
 pub struct Span<'a> {
     pub start: usize,
@@ -154,4 +168,64 @@ impl<'a> ParserState<'a> {
     #[cfg(not(feature = "diagnostics"))]
     #[inline(always)]
     pub fn add_secondary_span<S>(&mut self, _offset: usize, _label: S) {}
+
+    /// Snapshot the current diagnostic state into a `Diagnostic`, then clear
+    /// the expected/suggestions/secondary_spans so the next error starts fresh.
+    #[cfg(feature = "diagnostics")]
+    pub fn snapshot_diagnostic(&mut self, error_offset: usize) -> Diagnostic {
+        let furthest = self.furthest_offset.max(error_offset);
+        let src_before = &self.src[..furthest];
+        let last_nl = src_before.rfind('\n');
+        let line = match last_nl {
+            Some(pos) => src_before[..=pos].chars().filter(|&c| c == '\n').count() + 1,
+            None => 1,
+        };
+        let column = match last_nl {
+            Some(pos) => furthest - pos - 1,
+            None => furthest,
+        };
+        let found_end = (furthest + 20).min(self.src.len());
+        let found = self.src[furthest..found_end].replace('\n', "\\n");
+
+        let diag = Diagnostic {
+            offset: error_offset,
+            furthest_offset: furthest,
+            line,
+            column,
+            expected: self.expected.iter().map(|s| s.to_string()).collect(),
+            suggestions: std::mem::take(&mut self.suggestions),
+            secondary_spans: std::mem::take(&mut self.secondary_spans),
+            found,
+        };
+        self.expected.clear();
+        diag
+    }
+}
+
+// ── Collected Diagnostics (thread-local) ──────────────────────
+
+#[cfg(feature = "diagnostics")]
+std::thread_local! {
+    static COLLECTED_DIAGNOSTICS: std::cell::RefCell<Vec<Diagnostic>> =
+        const { std::cell::RefCell::new(Vec::new()) };
+}
+
+#[cfg(feature = "diagnostics")]
+pub fn push_diagnostic(d: Diagnostic) {
+    COLLECTED_DIAGNOSTICS.with(|diags| diags.borrow_mut().push(d));
+}
+
+#[cfg(feature = "diagnostics")]
+pub fn pop_last_diagnostic() -> Option<Diagnostic> {
+    COLLECTED_DIAGNOSTICS.with(|diags| diags.borrow_mut().pop())
+}
+
+#[cfg(feature = "diagnostics")]
+pub fn get_collected_diagnostics() -> Vec<Diagnostic> {
+    COLLECTED_DIAGNOSTICS.with(|diags| diags.borrow().clone())
+}
+
+#[cfg(feature = "diagnostics")]
+pub fn clear_collected_diagnostics() {
+    COLLECTED_DIAGNOSTICS.with(|diags| diags.borrow_mut().clear());
 }

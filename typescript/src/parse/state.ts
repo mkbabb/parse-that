@@ -135,6 +135,7 @@ export const parserNames = [
     "manySpan",
     "sepBySpan",
     "wrapSpan",
+    "recover",
 ] as const;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -10,12 +10,12 @@ parse_that/               Core library crate
   src/
     lib.rs                Barrel re-exports, #![feature(cold_path)]
     parse.rs              Parser<'a, O> struct, ParseError, ParserFn trait
-    combinators.rs        impl block combinators (then, or, map, many, sep_by, etc.)
+    combinators.rs        impl block combinators (then, or, map, many, sep_by, recover, etc.)
     leaf.rs               Leaf parsers (string, regex, take_while, dispatch_byte, etc.)
     lazy.rs               LazyParser, lazy() function
     span_parser.rs        SpanParser<'a> — enum-dispatched, vtable-free
-    state.rs              ParserState<'a>, Span<'a>, Suggestion, SecondarySpan (diagnostics feature)
-    debug.rs              Colored debug output, diagnostics rendering (feature-gated)
+    state.rs              ParserState<'a>, Span<'a>, Diagnostic, Suggestion, SecondarySpan (diagnostics feature)
+    debug.rs              Colored debug output, format_diagnostic(), format_all_diagnostics() (feature-gated)
     utils.rs              extract_bounds(), get_cargo_root_path() (20 lines)
     parsers/
       mod.rs              Module exports
@@ -25,6 +25,7 @@ parse_that/               Core library crate
       utils.rs            escaped_span(), quoted_span(), number_span() (38 lines)
   tests/
     combinator_test.rs    Core combinator coverage (698 lines)
+    css_recovery_test.rs  Multi-error recovery via recover() combinator (13 tests, diagnostics feature)
     debug_test.rs         Diagnostics system tests (103 tests — labels, suggestions, spans, CSS grammar)
     json_test.rs          JSON parsing + escape edge cases (799 lines)
     csv_test.rs           CSV parsing + large file test (49 lines)
@@ -68,6 +69,7 @@ SpanKind<'a>                 // StringLiteral | RegexMatch | JsonNumber | JsonSt
 // State (state.rs)
 ParserState<'a>              // src, src_bytes, offset, furthest_offset
 Span<'a>                     // start, end, src — zero-copy as_str()
+Diagnostic                   // (diagnostics feature) error snapshot — offset, expected, suggestions, spans
 Suggestion, SuggestionKind   // (diagnostics feature) unclosed-delimiter, trailing-content
 SecondarySpan                // (diagnostics feature) related source locations
 
@@ -78,7 +80,8 @@ JsonValue<'a>                // Null | Bool | Number | String(Cow) | Array | Obj
 ## Conventions
 
 - Edition 2024, nightly required for `#![feature(cold_path)]`
-- `diagnostics` Cargo feature — expected sets, suggestions, secondary spans (zero overhead when off)
+- `diagnostics` Cargo feature — expected sets, suggestions, secondary spans, error recovery (zero overhead when off)
+- `recover(sync, sentinel)` — parse past errors, collect Diagnostic snapshots into thread-local store
 - `pprint` path dep (`/Programming/pprint`) for Pretty derive
 - Two parser tiers: `Parser<'a, O>` (flexible, boxed) and `SpanParser<'a>` (fast, enum)
 - Zero-copy: `Span<'a>` borrows source, `Cow<'a, str>` for decoded strings

@@ -229,6 +229,73 @@ pub fn state_print(
     output
 }
 
+// ── Diagnostic formatting (for error recovery) ─────────────
+
+#[cfg(feature = "diagnostics")]
+pub fn format_diagnostic(d: &crate::state::Diagnostic, src: &str) -> String {
+    let badge = " Err x ".on_color(Color::Red).bold().to_string();
+    let loc = format!("{}:{}", d.line, d.column)
+        .color(Color::BrightBlack)
+        .to_string();
+    let offset_str = d.furthest_offset.to_string().color(Color::Green).to_string();
+    let header = format!("{}    {}    {}", badge, loc, offset_str);
+
+    // Build a temporary ParserState for add_cursor
+    let mut tmp_state = ParserState::new(src);
+    tmp_state.offset = d.furthest_offset;
+    let body = add_cursor(&tmp_state, "^^^", true);
+
+    let mut output = format!("{}\n{}", header, body);
+
+    if !d.expected.is_empty() {
+        let expected_strs: Vec<&str> = d.expected.iter().map(|s| s.as_str()).collect();
+        let expected_str = format_expected(&expected_strs);
+        let expected_display = expected_str.color(Color::Cyan).to_string();
+        output.push_str(&format!("\n   {}", expected_display));
+    }
+
+    if !d.secondary_spans.is_empty() {
+        // Build temporary state with secondary spans for rendering
+        let mut span_state = ParserState::new(src);
+        span_state.secondary_spans = d.secondary_spans.clone();
+        output.push_str(&format!("\n{}", format_secondary_spans(&span_state)));
+    }
+
+    if !d.suggestions.is_empty() {
+        let mut sugg_state = ParserState::new(src);
+        sugg_state.suggestions = d.suggestions.clone();
+        output.push_str(&format!("\n{}", format_suggestions(&sugg_state)));
+    }
+
+    if !d.found.is_empty() {
+        let found_display = format!("`{}`", d.found).color(Color::Red).to_string();
+        let found_label = "found".color(Color::BrightBlack).to_string();
+        output.push_str(&format!("\n   {} {}", found_label, found_display));
+    }
+
+    output
+}
+
+#[cfg(feature = "diagnostics")]
+pub fn format_all_diagnostics(diagnostics: &[crate::state::Diagnostic], src: &str) -> String {
+    if diagnostics.is_empty() {
+        return String::new();
+    }
+
+    let parts: Vec<String> = diagnostics.iter().map(|d| format_diagnostic(d, src)).collect();
+    let count = diagnostics.len();
+    let summary = format!(
+        "{} error{} found",
+        count,
+        if count == 1 { "" } else { "s" }
+    )
+    .color(Color::Red)
+    .bold()
+    .to_string();
+
+    format!("{}\n\n{}", parts.join("\n\n"), summary)
+}
+
 // ── Non-diagnostic fallback ──────────────────────────────────
 
 #[cfg(not(feature = "diagnostics"))]

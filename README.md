@@ -62,6 +62,8 @@ expr.parse("1 + 2 * 3"); // => [1, "+", [2, "*", 3]]
   - [Rust](#rust)
   - [TypeScript](#typescript)
 - [Debugging](#debugging)
+  - [Diagnostics](#diagnostics)
+  - [Error Recovery](#error-recovery)
 - [BBNF and the Great Parser Generator](#bbnf-and-the-great-parser-generator)
 - [Left Recursion](#left-recursion--more)
 - [API & Examples](#api--examples)
@@ -78,6 +80,7 @@ rust/                  Rust workspace (nightly, edition 2024)
   src/                 CLI binary (parse_that_cli)
 grammar/               Shared BBNF grammar files (16 .bbnf)
   tests/json/          Shared JSON test vectors
+  tests/css/           CSS recovery test vectors
   tests/debug/         Shared diagnostic output vectors
 docs/                  Perf chronicles, API reference
 ```
@@ -87,7 +90,7 @@ Both languages share a mirrored module structure:
 | Module | TypeScript (`src/parse/`) | Rust (`parse_that/src/`) |
 |---|---|---|
 | Core | `parser.ts` — Parser\<T\> class | `parse.rs` — Parser\<'a, O\> struct |
-| Combinators | methods on Parser class | `combinators.rs` — impl blocks |
+| Combinators | methods on Parser class (incl. recover) | `combinators.rs` — impl blocks (incl. recover) |
 | Leaf parsers | `leaf.ts` — string, regex, dispatch | `leaf.rs` — string, regex, dispatch_byte |
 | Lazy eval | `lazy.ts` — lazy(), getLazyParser | `lazy.rs` — LazyParser, lazy() |
 | Span / zero-copy | `span.ts` — regexSpan, manySpan | `span_parser.rs` — SpanParser enum |
@@ -200,6 +203,37 @@ Rich rendering: ANSI color output with TTY detection and `NO_COLOR` respect,
 center-truncation of long lines around the error column, ±4 lines of context
 with gutter line numbers. Shared test vectors in `grammar/tests/debug/` ensure
 isomorphic output between TypeScript and Rust.
+
+### Error Recovery
+
+The `recover(sync, sentinel)` combinator enables multi-error parsing — the
+standard technique used by production compilers (rustc, GCC, clang) to parse
+past failures and keep going.
+
+```ts
+const decl = declaration.trim().recover(declSync, "RECOVERED");
+const block = decl.many(0).wrap("{", "}");
+```
+
+On failure, `recover()` snapshots the current diagnostic state into a
+`Diagnostic` object (expected sets, suggestions, secondary spans, source
+location), pushes it to a collection, then invokes the sync parser to skip
+forward to a known recovery point (`;`, `}`, etc.) and returns the sentinel.
+`many()` loops keep going — each failed element produces a diagnostic but
+doesn't halt the overall parse.
+
+```ts
+clearCollectedDiagnostics();
+stylesheet.parse(cssWithErrors);
+const diagnostics = getCollectedDiagnostics();
+console.error(formatAllDiagnostics(diagnostics, css));
+```
+
+Both TypeScript and Rust expose the same API: `collectDiagnostic()` /
+`push_diagnostic()`, `getCollectedDiagnostics()` / `get_collected_diagnostics()`,
+`formatDiagnostic()` / `format_diagnostic()`. Rust uses thread-local storage;
+TypeScript uses module-level globals. See
+`grammar/tests/css/complex-errors.css` for a multi-error test vector.
 
 ## BBNF and the Great Parser Generator
 

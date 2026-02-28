@@ -28,6 +28,8 @@ tests/
   json/
     valid.jsonl            33 valid JSON test cases
     invalid.jsonl          7 invalid JSON test cases
+  css/
+    complex-errors.css     CSS stylesheet with 8 intentional errors (recovery test vector)
   debug/
     expected-output.txt    Shared diagnostic output vectors (8 scenarios, ANSI-stripped)
 ```

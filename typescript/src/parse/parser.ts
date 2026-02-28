@@ -2,7 +2,7 @@
 import { createParserContext, ParserState } from "./state.js";
 import type { ParserContext, Span } from "./state.js";
 import { parserDebug, parserPrint } from "./debug.js";
-import { mergeErrorState, resetErrorState, getLastState, getLastFurthestOffset, addSuggestion, addSecondarySpan, isDiagnosticsEnabled, getLastExpected, getLastSuggestions, getLastSecondarySpans } from "./utils.js";
+import { mergeErrorState, resetErrorState, getLastState, getLastFurthestOffset, addSuggestion, addSecondarySpan, isDiagnosticsEnabled, getLastExpected, getLastSuggestions, getLastSecondarySpans, collectDiagnostic, popLastDiagnostic } from "./utils.js";
 import { createLazyCached, _setParserClass } from "./lazy.js";
 import { trimStateWhitespace, eof, all, _setLeafParserClass, _initWhitespace, whitespace } from "./leaf.js";
 import { _setSpanParserClass } from "./span.js";
@@ -603,6 +603,52 @@ export class Parser<T = string> {
         const p = this.skip(eof()) as Parser<T>;
         p.context = createParserContext("eof", this as Parser<unknown>);
         return p;
+    }
+
+    /**
+     * Error recovery combinator. On success, returns the result normally.
+     * On failure, snapshots the current diagnostic into the collected
+     * diagnostics list, then runs `sync` to skip past the bad content
+     * and returns `sentinel`.
+     *
+     * This enables `many()` / `sepBy()` loops to keep going — each failed
+     * element produces a diagnostic but doesn't halt the overall parse.
+     */
+    recover(sync: Parser<unknown>, sentinel: T): Parser<T> {
+        const inner = this;
+        const recover = (state: ParserState<T>) => {
+            const checkpoint = state.offset;
+            inner.parser(state);
+
+            if (!state.isError) {
+                return state;
+            }
+
+            // Snapshot current error state into a diagnostic, then try
+            // to sync forward. If sync fails, pop the diagnostic back
+            // off — the error propagates normally (e.g. at EOF).
+            collectDiagnostic(state.src, checkpoint);
+
+            state.isError = false;
+            state.offset = checkpoint;
+            sync.parser(state as ParserState<unknown>);
+
+            if (state.isError) {
+                // Sync also failed — remove the collected diagnostic
+                popLastDiagnostic();
+                state.offset = checkpoint;
+                state.isError = true;
+                return state;
+            }
+
+            // Sync succeeded — return sentinel
+            return state.ok(sentinel);
+        };
+
+        return new Parser(
+            recover as ParserFunction<T>,
+            createParserContext("recover", this as Parser<unknown>, sync, sentinel),
+        );
     }
 
     debug(

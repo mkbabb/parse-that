@@ -7,14 +7,14 @@ TypeScript parser combinator library. Published as `@mkbabb/parse-that` v0.7.0.
 ```
 src/parse/
   index.ts          Barrel re-exports from all sub-modules
-  parser.ts         Parser<T> class, combinators, ParserFunction type, memoization, flags
+  parser.ts         Parser<T> class, combinators, recover(), ParserFunction type, memoization, flags
   leaf.ts           Leaf parsers: string, regex, eof, any, dispatch, all, whitespace
   lazy.ts           getLazyParser(), createLazyCached(), lazy decorator
   span.ts           regexSpan(), manySpan(), sepBySpan(), wrapSpan()
   state.ts          ParserState<T>, Span, ParserContext types (152 lines)
   ansi.ts           Zero-dep ANSI helpers (bold, red, green, etc.) — NO_COLOR + TTY aware
-  utils.ts          mergeErrorState(), diagnostics globals, Suggestion, SecondarySpan
-  debug.ts          parserDebug(), statePrint(), addCursor(), formatExpected(), formatSuggestions()
+  utils.ts          mergeErrorState(), Diagnostic, collectDiagnostic(), Suggestion, SecondarySpan
+  debug.ts          parserDebug(), statePrint(), formatDiagnostic(), formatAllDiagnostics()
   json-fast.ts      Monolithic JSON parser — charCode dispatch, no combinators (376 lines)
   parsers/
     index.ts        Barrel re-exports for domain parsers
@@ -24,8 +24,9 @@ src/parse/
     utils.ts        escapedString(), quotedString(), numberParser()
 test/
   csv.test.ts             CSV parsing with quoted fields
-  debug.test.ts           Diagnostics unit tests (summarizeLine, formatExpected, labels, suggestions)
   css-diagnostics.test.ts CSS-grammar integration tests for diagnostics system
+  css-recovery-demo.test.ts  Multi-error recovery via recover() combinator (13 tests)
+  debug.test.ts           Diagnostics unit tests (summarizeLine, formatExpected, labels, suggestions)
   json.test.ts            JSON combinator parser
   json-vectors.test.ts    Shared BBNF test vectors (grammar/tests/json/)
   math.test.ts            Math expressions with operator precedence
@@ -42,7 +43,7 @@ test/
 
 ```bash
 npm ci
-npm test          # vitest (pool: forks, 8GB heap)
+npm test          # vitest (pool: forks, 8GB heap) — 11 test files
 npm run build     # vite → dist/parse.js (ES) + parse.cjs (CJS) + .d.ts
 npx tsc --noEmit  # type check
 ```
@@ -69,7 +70,12 @@ escapedString(), quotedString(), numberParser()
 
 // Diagnostics (utils.ts + debug.ts)
 enableDiagnostics(), disableDiagnostics()
-Suggestion, SecondarySpan
+Diagnostic, Suggestion, SecondarySpan
+collectDiagnostic(), getCollectedDiagnostics(), clearCollectedDiagnostics()
+formatDiagnostic(), formatAllDiagnostics()
+
+// Error recovery (parser.ts)
+parser.recover(sync, sentinel)        // parse past errors, collect Diagnostic snapshots
 ```
 
 ## Conventions

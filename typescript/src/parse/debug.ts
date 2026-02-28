@@ -4,7 +4,7 @@ import { getLazyParser } from "./lazy.js";
 import { Parser } from "./parser.js";
 import { bold, dim, italic, red, green, yellow, cyan, gray, bgRed, bgGreen } from "./ansi.js";
 import { isDiagnosticsEnabled, getLastExpected, getLastSuggestions, getLastSecondarySpans } from "./utils.js";
-import type { Suggestion, SecondarySpan } from "./utils.js";
+import type { Suggestion, SecondarySpan, Diagnostic } from "./utils.js";
 
 const MAX_LINES = 4;
 const MAX_LINE_WIDTH = 74; // 80 - 6 for line number prefix
@@ -190,6 +190,55 @@ export function statePrint(
     }
 
     return output;
+}
+
+// ── Diagnostic formatting (for error recovery) ─────────────
+
+/**
+ * Format a single collected Diagnostic into compiler-style output,
+ * using the same visual style as statePrint but from a snapshot.
+ */
+export function formatDiagnostic(d: Diagnostic, src: string): string {
+    const badge = bgRed(bold(" Err x "));
+    const offsetStr = green(String(d.furthestOffset));
+    const locStr = dim(`${d.line}:${d.column}`);
+    const header = `${badge}    ${locStr}    ${offsetStr}`;
+
+    // Build a ParserState-like object for addCursor
+    const errorState = new ParserState(src, undefined, d.furthestOffset, true);
+    const body = addCursor(errorState, "^^^", true);
+
+    let output = `${header}\n${body}`;
+
+    if (d.expected.length > 0) {
+        output += `\n   ${cyan(formatExpected(d.expected))}`;
+    }
+
+    if (d.secondarySpans.length > 0) {
+        output += `\n${formatSecondarySpans(src, d.secondarySpans)}`;
+    }
+
+    if (d.suggestions.length > 0) {
+        output += `\n${formatSuggestions(d.suggestions)}`;
+    }
+
+    if (d.found) {
+        output += `\n   ${dim("found")} ${red(`\`${d.found}\``)}`;
+    }
+
+    return output;
+}
+
+/**
+ * Format all collected diagnostics with blank-line separators
+ * and a summary line.
+ */
+export function formatAllDiagnostics(diagnostics: readonly Diagnostic[], src: string): string {
+    if (diagnostics.length === 0) return "";
+
+    const parts = diagnostics.map((d) => formatDiagnostic(d, src));
+    const summary = bold(red(`${diagnostics.length} error${diagnostics.length === 1 ? "" : "s"} found`));
+    return parts.join("\n\n") + `\n\n${summary}`;
 }
 
 // ── Parser tree printing (unchanged from original) ──────────
