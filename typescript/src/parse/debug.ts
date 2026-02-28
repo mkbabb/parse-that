@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createParserContext, ParserState } from "./state.js";
-import { getLazyParser, Parser } from "./index.js";
+import { getLazyParser } from "./lazy.js";
+import { Parser } from "./parser.js";
 
 const MAX_LINES = 4;
 const MAX_LINE_LENGTH = 80;

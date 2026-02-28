@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use parse_that::parse::*;
-    use parse_that::span_parser::*;
+    use parse_that::*;
     use parse_that::state::{ParserState, Span};
 
     // ── string / string_span ──────────────────────────────────

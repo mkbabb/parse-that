@@ -8,15 +8,18 @@ Rust parser combinator workspace. Two crates: `parse_that` (library) and `parse_
 Cargo.toml                Workspace root (members: src, parse_that)
 parse_that/               Core library crate
   src/
-    lib.rs                Module exports, #![feature(cold_path)]
-    parse.rs              Parser<'a, O> — boxed dyn combinators (965 lines)
-    span_parser.rs        SpanParser<'a> — enum-dispatched, vtable-free (1044 lines)
+    lib.rs                Barrel re-exports, #![feature(cold_path)]
+    parse.rs              Parser<'a, O> struct, ParseError, ParserFn trait
+    combinators.rs        impl block combinators (then, or, map, many, sep_by, etc.)
+    leaf.rs               Leaf parsers (string, regex, take_while, dispatch_byte, etc.)
+    lazy.rs               LazyParser, lazy() function
+    span_parser.rs        SpanParser<'a> — enum-dispatched, vtable-free
     state.rs              ParserState<'a>, Span<'a> (66 lines)
     debug.rs              Colored debug output, cursor display (159 lines)
     utils.rs              extract_bounds(), get_cargo_root_path() (20 lines)
     parsers/
       mod.rs              Module exports
-      json.rs             JsonValue<'a> with Cow<str>, dispatch table (400+ lines)
+      json.rs             JsonValue<'a>, combinator + fast JSON + scanners
       csv.rs              RFC 4180 CSV parser (47 lines)
       toml.rs             TOML parser (incomplete)
       utils.rs            escaped_span(), quoted_span(), number_span() (38 lines)

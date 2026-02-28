@@ -1,3 +1,5 @@
+use crate::combinators::ParserSpan;
+use crate::leaf::*;
 use crate::parse::*;
 
 use super::utils::escaped_span;

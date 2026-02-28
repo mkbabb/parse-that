@@ -1,4 +1,4 @@
-import type { Parser } from "./index.js";
+import type { Parser } from "./parser.js";
 import { statePrint } from "./debug.js";
 
 /**

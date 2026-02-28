@@ -6,12 +6,25 @@ Parser combinator library — TypeScript + Rust monorepo with shared BBNF gramma
 
 ```
 typescript/                TS library (@mkbabb/parse-that v0.7.0)
-  src/parse/               Core parser combinators (4 files)
+  src/parse/               Core parser modules (isomorphic layout)
+    parser.ts              Parser<T> class, memoization, flags
+    leaf.ts                Leaf parsers (string, regex, eof, dispatch, etc.)
+    combinators.ts         (reserved — methods on Parser class)
+    lazy.ts                Lazy evaluation infrastructure
+    span.ts                Zero-copy span combinators
+    state.ts               ParserState, Span, ParserContext
+    parsers/               Domain parsers (JSON, CSV, TOML)
   test/                    Vitest tests (8 test files)
   test/benchmarks/         Competitor JSON parsers for benchmarking (9 files)
 rust/                      Rust workspace
   parse_that/              Core parser combinator lib (crate)
-    src/parsers/           Domain-specific parsers (JSON, CSV, TOML)
+    src/
+      parse.rs             Parser<'a, O> struct, ParseError, ParserFn trait
+      combinators.rs       impl block combinators (then, or, map, many, etc.)
+      leaf.rs              Leaf parsers (string, regex, dispatch_byte, etc.)
+      lazy.rs              LazyParser, lazy() function
+      span_parser.rs       SpanParser<'a> — enum-dispatched, vtable-free
+      parsers/             Domain parsers (JSON + scanners, CSV, TOML)
     tests/                 Integration tests (3 files)
     benches/               Benchmark suite (10 benches × 6 datasets)
   src/                     CLI binary (parse_that_cli)

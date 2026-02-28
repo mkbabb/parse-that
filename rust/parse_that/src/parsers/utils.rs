@@ -1,4 +1,7 @@
+use crate::combinators::ParserSpan;
+use crate::leaf::*;
 use crate::parse::*;
+use crate::parsers::json::number_span_fast_parser;
 use crate::span_parser::*;
 use crate::state::Span;
 

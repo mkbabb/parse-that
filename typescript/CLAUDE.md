@@ -6,10 +6,22 @@ TypeScript parser combinator library. Published as `@mkbabb/parse-that` v0.7.0.
 
 ```
 src/parse/
-  index.ts          Core Parser<T> class, combinators, dispatch, memoization (1090 lines)
+  index.ts          Barrel re-exports from all sub-modules
+  parser.ts         Parser<T> class, ParserFunction type, memoization, flags
+  combinators.ts    (reserved — combinator methods live on Parser class)
+  leaf.ts           Leaf parsers: string, regex, eof, any, dispatch, all, whitespace
+  lazy.ts           getLazyParser(), createLazyCached(), lazy decorator
+  span.ts           regexSpan(), manySpan(), sepBySpan(), wrapSpan()
   state.ts          ParserState<T>, Span, ParserContext types (152 lines)
+  utils.ts          mergeErrorState(), error tracking globals
   debug.ts          parserDebug(), parserPrint(), statePrint(), addCursor() (200 lines)
   json-fast.ts      Monolithic JSON parser — charCode dispatch, no combinators (376 lines)
+  parsers/
+    index.ts        Barrel re-exports for domain parsers
+    json.ts         JsonValue type, jsonParser() — combinator JSON
+    csv.ts          csvParser() — RFC 4180 CSV
+    toml.ts         TOML parser (placeholder)
+    utils.ts        escapedString(), quotedString(), numberParser()
 test/
   csv.test.ts             CSV parsing with quoted fields
   json.test.ts            JSON combinator parser
@@ -36,19 +48,22 @@ npx tsc --noEmit  # type check
 ## Key Exports
 
 ```ts
-// Core
+// Core (parser.ts)
 Parser<T>, ParserState<T>, ParserFunction<T>, Span
 
-// Leaf parsers
-string(s), regex(r), regexSpan(r), eof(), whitespace
+// Leaf parsers (leaf.ts)
+string(s), regex(r), eof(), any(...), all(...), dispatch(table, fallback?), whitespace
 
-// Combinators
-any(...), all(...), dispatch(table, fallback?)
-Parser.lazy(fn)
+// Lazy (lazy.ts)
+Parser.lazy(fn), getLazyParser(), createLazyCached()
 
-// Span variants (zero-copy)
+// Span variants (span.ts — zero-copy)
 regexSpan(), manySpan(), sepBySpan(), wrapSpan()
 mergeSpans(a, b), spanToString(span, src)
+
+// Domain parsers (parsers/)
+jsonParser(), JsonValue, csvParser(), jsonParseFast()
+escapedString(), quotedString(), numberParser()
 ```
 
 ## Conventions
