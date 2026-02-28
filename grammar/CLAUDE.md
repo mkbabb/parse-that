@@ -28,6 +28,8 @@ tests/
   json/
     valid.jsonl            33 valid JSON test cases
     invalid.jsonl          7 invalid JSON test cases
+  debug/
+    expected-output.txt    Shared diagnostic output vectors (8 scenarios, ANSI-stripped)
 ```
 
 ## BBNF Syntax (Quick Reference)

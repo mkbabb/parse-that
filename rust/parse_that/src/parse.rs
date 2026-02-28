@@ -124,6 +124,16 @@ where
 
         // Post: EOF check
         if self.flags & FLAG_EOF != 0 && result.is_some() && state.offset < state.end {
+            #[cfg(feature = "diagnostics")]
+            {
+                state.add_expected("<end of input>");
+                state.add_suggestion(|| crate::state::Suggestion {
+                    kind: crate::state::SuggestionKind::TrailingContent {
+                        context: "parsed value".to_string(),
+                    },
+                    message: "unexpected trailing content after parsed value".to_string(),
+                });
+            }
             return None;
         }
 
@@ -146,13 +156,20 @@ where
         let (result, state) = self.parse_return_state(src);
         match result {
             Some(value) => Ok(value),
-            None => Err(ParseError {
-                offset: state.offset,
-                furthest_offset: state.furthest_offset,
-                line: state.get_line_number(),
-                column: state.get_column_number(),
-                expected: Vec::new(),
-            }),
+            None => {
+                #[cfg(feature = "diagnostics")]
+                let expected = state.expected.iter().map(|s| s.to_string()).collect();
+                #[cfg(not(feature = "diagnostics"))]
+                let expected = Vec::new();
+
+                Err(ParseError {
+                    offset: state.offset,
+                    furthest_offset: state.furthest_offset,
+                    line: state.get_line_number(),
+                    column: state.get_column_number(),
+                    expected,
+                })
+            }
         }
     }
 

@@ -45,21 +45,42 @@ pub fn string_impl<'a>(s_bytes: &[u8], end: &usize, state: &mut ParserState<'a>)
 }
 
 #[inline(always)]
+#[allow(clippy::manual_map)]
 pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
     let s_bytes = s.as_bytes();
     let end = s_bytes.len();
+    #[cfg(feature = "diagnostics")]
+    let label: &'static str = Box::leak(format!("\"{}\"", s).into_boxed_str());
     let string = move |state: &mut ParserState<'a>| {
-        string_impl(s_bytes, &end, state).map(|span| span.as_str())
+        match string_impl(s_bytes, &end, state) {
+            Some(span) => Some(span.as_str()),
+            None => {
+                #[cfg(feature = "diagnostics")]
+                state.add_expected(label);
+                None
+            }
+        }
     };
     Parser::new(string)
 }
 
 #[inline(always)]
+#[allow(clippy::manual_map)]
 pub fn string_span<'a>(s: &'a str) -> Parser<'a, Span<'a>> {
     let s_bytes = s.as_bytes();
     let end = s_bytes.len();
-
-    let string = move |state: &mut ParserState<'a>| string_impl(s_bytes, &end, state);
+    #[cfg(feature = "diagnostics")]
+    let label: &'static str = Box::leak(format!("\"{}\"", s).into_boxed_str());
+    let string = move |state: &mut ParserState<'a>| {
+        match string_impl(s_bytes, &end, state) {
+            Some(span) => Some(span),
+            None => {
+                #[cfg(feature = "diagnostics")]
+                state.add_expected(label);
+                None
+            }
+        }
+    };
     Parser::new(string)
 }
 
@@ -83,16 +104,40 @@ fn regex_impl<'a>(re: &Regex, state: &mut ParserState<'a>) -> Option<Span<'a>> {
 }
 
 #[inline(always)]
+#[allow(clippy::manual_map)]
 pub fn regex<'a>(r: &'a str) -> Parser<'a, &'a str> {
     let re = Regex::new(r).unwrap_or_else(|_| panic!("Failed to compile regex: {}", r));
-    let regex = move |state: &mut ParserState<'a>| regex_impl(&re, state).map(|span| span.as_str());
+    #[cfg(feature = "diagnostics")]
+    let label: &'static str = Box::leak(format!("/{}/", r).into_boxed_str());
+    let regex = move |state: &mut ParserState<'a>| {
+        match regex_impl(&re, state) {
+            Some(span) => Some(span.as_str()),
+            None => {
+                #[cfg(feature = "diagnostics")]
+                state.add_expected(label);
+                None
+            }
+        }
+    };
     Parser::new(regex)
 }
 
 #[inline(always)]
+#[allow(clippy::manual_map)]
 pub fn regex_span<'a>(r: &'a str) -> Parser<'a, Span<'a>> {
     let re = Regex::new(r).unwrap_or_else(|_| panic!("Failed to compile regex: {}", r));
-    let regex = move |state: &mut ParserState<'a>| regex_impl(&re, state);
+    #[cfg(feature = "diagnostics")]
+    let label: &'static str = Box::leak(format!("/{}/", r).into_boxed_str());
+    let regex = move |state: &mut ParserState<'a>| {
+        match regex_impl(&re, state) {
+            Some(span) => Some(span),
+            None => {
+                #[cfg(feature = "diagnostics")]
+                state.add_expected(label);
+                None
+            }
+        }
+    };
     Parser::new(regex)
 }
 
@@ -107,16 +152,24 @@ where
             .char_indices()
             .take_while(|(_, c)| f(*c))
             .map(|(i, _)| i)
-            .last()?;
-        len += 1;
+            .last();
 
-        while len < slc.len() && !slc.is_char_boundary(len) {
-            len += 1;
+        match len {
+            Some(ref mut l) => {
+                *l += 1;
+                while *l < slc.len() && !slc.is_char_boundary(*l) {
+                    *l += 1;
+                }
+                let start = state.offset;
+                state.offset += *l;
+                Some(Span::new(start, state.offset, state.src))
+            }
+            None => {
+                #[cfg(feature = "diagnostics")]
+                state.add_expected("matching character");
+                None
+            }
         }
-
-        let start = state.offset;
-        state.offset += len;
-        Some(Span::new(start, state.offset, state.src))
     };
 
     Parser::new(take_while)
@@ -134,6 +187,8 @@ pub fn take_while_byte_span<'a>(f: fn(u8) -> bool) -> Parser<'a, Span<'a>> {
             i += 1;
         }
         if i == start {
+            #[cfg(feature = "diagnostics")]
+            state.add_expected("matching byte");
             return None;
         }
         state.offset = i;
@@ -161,15 +216,24 @@ pub fn any_span<'a>(patterns: &[&'a str]) -> Parser<'a, Span<'a>> {
         .start_kind(StartKind::Anchored)
         .build(patterns)
         .expect("failed to build aho-corasick automaton");
+    #[cfg(feature = "diagnostics")]
+    let label: &'static str = Box::leak(format!("one of {:?}", patterns).into_boxed_str());
 
     let any = move |state: &mut ParserState<'a>| {
         let slc = state.src.get(state.offset..)?;
         let input = Input::new(slc).anchored(Anchored::Yes);
-        let m = ac.find(input)?;
-
-        let start = state.offset;
-        state.offset += m.end();
-        Some(Span::new(start, state.offset, state.src))
+        match ac.find(input) {
+            Some(m) => {
+                let start = state.offset;
+                state.offset += m.end();
+                Some(Span::new(start, state.offset, state.src))
+            }
+            None => {
+                #[cfg(feature = "diagnostics")]
+                state.add_expected(label);
+                None
+            }
+        }
     };
 
     Parser::new(any)
@@ -204,6 +268,11 @@ pub fn dispatch_byte<'a, O: 'a>(
     for (i, (byte, _)) in table.iter().enumerate() {
         lut[*byte as usize] = Some(i as u16);
     }
+    #[cfg(feature = "diagnostics")]
+    let label: &'static str = {
+        let chars: Vec<char> = table.iter().map(|(b, _)| *b as char).collect();
+        Box::leak(format!("one of {:?}", chars).into_boxed_str())
+    };
     Parser::new(move |state: &mut ParserState<'a>| {
         let byte = *state.src_bytes.get(state.offset)?;
         if let Some(idx) = lut[byte as usize] {
@@ -211,6 +280,8 @@ pub fn dispatch_byte<'a, O: 'a>(
         } else if let Some(ref fb) = fallback {
             fb.call(state)
         } else {
+            #[cfg(feature = "diagnostics")]
+            state.add_expected(label);
             None
         }
     })
@@ -225,13 +296,22 @@ pub fn dispatch_byte_multi<'a, O: 'a>(
     // Build lookup table: byte → index into parsers vec
     let mut lut: [Option<u16>; 256] = [None; 256];
     let mut parsers: Vec<Parser<'a, O>> = Vec::with_capacity(table.len());
+    #[cfg(feature = "diagnostics")]
+    let mut all_bytes: Vec<u8> = Vec::new();
     for (bytes, parser) in table {
         let idx = parsers.len() as u16;
         parsers.push(parser);
         for &byte in bytes {
             lut[byte as usize] = Some(idx);
+            #[cfg(feature = "diagnostics")]
+            all_bytes.push(byte);
         }
     }
+    #[cfg(feature = "diagnostics")]
+    let label: &'static str = {
+        let chars: Vec<char> = all_bytes.iter().map(|b| *b as char).collect();
+        Box::leak(format!("one of {:?}", chars).into_boxed_str())
+    };
     Parser::new(move |state: &mut ParserState<'a>| {
         let byte = *state.src_bytes.get(state.offset)?;
         if let Some(idx) = lut[byte as usize] {
@@ -239,6 +319,8 @@ pub fn dispatch_byte_multi<'a, O: 'a>(
         } else if let Some(ref fb) = fallback {
             fb.call(state)
         } else {
+            #[cfg(feature = "diagnostics")]
+            state.add_expected(label);
             None
         }
     })

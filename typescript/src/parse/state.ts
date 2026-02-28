@@ -86,6 +86,16 @@ export class ParserState<T = unknown> {
             : 0;
     }
 
+    /** Returns 1-based line and 0-based column for any offset. */
+    getLineAndColumn(offset: number = this.offset): { line: number; column: number } {
+        const lastNewline = this.src.lastIndexOf("\n", offset - 1);
+        const line = lastNewline === -1
+            ? 1
+            : this.src.slice(0, lastNewline + 1).split("\n").length;
+        const column = lastNewline === -1 ? offset : offset - lastNewline - 1;
+        return { line, column };
+    }
+
     toString() {
         return statePrint(this as ParserState<unknown>);
     }

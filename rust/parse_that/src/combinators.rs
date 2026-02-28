@@ -176,10 +176,40 @@ where
         Output3: 'a,
     {
         let wrap = move |state: &mut ParserState<'a>| {
+            #[cfg(feature = "diagnostics")]
+            let open_offset = state.offset;
             left.call(state)?;
+            #[cfg(feature = "diagnostics")]
+            let open_end = state.offset;
             let value = self.call(state)?;
-            right.call(state)?;
-            Some(value)
+            if right.call(state).is_some() {
+                Some(value)
+            } else {
+                #[cfg(feature = "diagnostics")]
+                {
+                    let delimiter = state.src[open_offset..open_end].to_string();
+                    state.add_suggestion(|| crate::state::Suggestion {
+                        kind: crate::state::SuggestionKind::UnclosedDelimiter {
+                            delimiter: delimiter.clone(),
+                            open_offset,
+                        },
+                        message: format!(
+                            "close the delimiter with matching `{}`",
+                            match delimiter.as_str() {
+                                "{" => "}",
+                                "[" => "]",
+                                "(" => ")",
+                                d => d,
+                            }
+                        ),
+                    });
+                    state.add_secondary_span(
+                        open_offset,
+                        format!("unclosed `{}` opened here", delimiter),
+                    );
+                }
+                None
+            }
         };
         Parser::new(wrap)
     }

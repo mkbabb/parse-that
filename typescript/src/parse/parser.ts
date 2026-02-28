@@ -2,7 +2,7 @@
 import { createParserContext, ParserState } from "./state.js";
 import type { ParserContext, Span } from "./state.js";
 import { parserDebug, parserPrint } from "./debug.js";
-import { mergeErrorState, resetErrorState, getLastState, getLastFurthestOffset } from "./utils.js";
+import { mergeErrorState, resetErrorState, getLastState, getLastFurthestOffset, addSuggestion, addSecondarySpan, isDiagnosticsEnabled, getLastExpected, getLastSuggestions, getLastSecondarySpans } from "./utils.js";
 import { createLazyCached, _setParserClass } from "./lazy.js";
 import { trimStateWhitespace, eof, all, _setLeafParserClass, _initWhitespace, whitespace } from "./leaf.js";
 import { _setSpanParserClass } from "./span.js";
@@ -57,11 +57,11 @@ export class Parser<T = string> {
             const lastFurthestOffset = getLastFurthestOffset();
             const errorState = new ParserState(val, undefined, lastFurthestOffset, true);
             this.state = errorState as ParserState<T>;
-            console.log(this.state.toString());
+            console.error(this.state.toString());
         } else {
             this.state = state;
             if (state.isError) {
-                console.log(state.toString());
+                console.error(state.toString());
             }
         }
 
@@ -381,6 +381,7 @@ export class Parser<T = string> {
                 state.offset = savedOffset;
                 return state;
             }
+            const openEnd = state.offset;
             inner.parser(state);
             if (state.isError) {
                 mergeErrorState(state as ParserState<unknown>);
@@ -392,6 +393,16 @@ export class Parser<T = string> {
             (end as Parser<unknown>).parser(state as any);
             if (state.isError) {
                 mergeErrorState(state as ParserState<unknown>);
+                if (isDiagnosticsEnabled()) {
+                    const openText = state.src.slice(savedOffset, openEnd);
+                    const closeText = openText === "{" ? "}" : openText === "[" ? "]" : openText === "(" ? ")" : openText;
+                    addSuggestion({
+                        kind: "unclosed-delimiter",
+                        message: `close the delimiter with \`${closeText}\``,
+                        openOffset: savedOffset,
+                    });
+                    addSecondarySpan(savedOffset, `unclosed \`${openText}\` opened here`);
+                }
                 state.offset = savedOffset;
                 state.isError = true;
                 return state;
@@ -440,7 +451,13 @@ export class Parser<T = string> {
         if (this.flags & FLAG_TRIM_WS) trimStateWhitespace(state);
         if (this.flags & FLAG_EOF) {
             if (state.offset < state.src.length) {
-                mergeErrorState(state as ParserState<unknown>);
+                mergeErrorState(state as ParserState<unknown>, "<end of input>");
+                if (isDiagnosticsEnabled()) {
+                    addSuggestion({
+                        kind: "trailing-content",
+                        message: "unexpected trailing content after parsed value",
+                    });
+                }
                 state.offset = savedOffset;
                 state.isError = true;
             }

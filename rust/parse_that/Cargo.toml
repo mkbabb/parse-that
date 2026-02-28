@@ -10,6 +10,10 @@ repository = "https://github.com/mkbabb/parse-that"
 name = "parse_that"
 path = "src/lib.rs"
 
+[features]
+default = []
+diagnostics = []
+
 [[bench]]
 name = "parse_that"
 harness = false

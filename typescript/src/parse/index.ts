@@ -2,7 +2,8 @@
 export { Parser, type ParserFunction } from "./parser.js";
 export { ParserState, createParserContext, spanToString, mergeSpans } from "./state.js";
 export type { ParserContext, Span } from "./state.js";
-export { mergeErrorState } from "./utils.js";
+export { mergeErrorState, enableDiagnostics, disableDiagnostics } from "./utils.js";
+export type { Suggestion, SecondarySpan } from "./utils.js";
 export { getLazyParser, createLazyCached, lazy } from "./lazy.js";
 export { eof, any, dispatch, all, string, regex, trimStateWhitespace, whitespace } from "./leaf.js";
 export { regexSpan, manySpan, sepBySpan, wrapSpan } from "./span.js";

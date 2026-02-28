@@ -77,11 +77,14 @@ Applies the current parser, followed by the sep parser and the first parser repe
 from min to max times. Returns a new parser that will output an array of the results of
 all successful applications of the first and second parsers.
 
-### `debug(name: string = "", logger: (...s: any[]) => void = console.log): Parser<T>`
+### `debug(name: string = "", logger: (...s: any[]) => void = console.error): Parser<T>`
 
-Applies the current parser and logs a debug message with the name provided (default is
-"") and the logger function provided (default is console.log). Returns a new parser that
-will output the result of the first parser.
+Wraps the parser with debug tracing. Logs a rich status line to stderr on each
+invocation: badge (`Ok`/`Err`/`Done`), name, offset, and surrounding source lines
+with a cursor at the active column. Nested debug calls indent automatically.
+
+When diagnostics are enabled, the output includes expected sets, suggestions, and
+secondary spans.
 
 ### `toString(indent: number = 0): string`
 
@@ -203,3 +206,49 @@ Parses a quoted string with escape handling. Defaults to double quotes.
 ### `numberParser(): Parser<number>`
 
 Parses a JSON-style number (integer or decimal with optional exponent).
+
+## Diagnostics (`utils.ts` / `debug.ts`)
+
+Structured error diagnostics — opt-in, zero overhead when off.
+
+### `enableDiagnostics(): void`
+
+Activates diagnostic accumulation. Leaf parsers begin recording expected labels at the
+furthest offset; `wrap()` and EOF checks emit suggestions and secondary spans.
+
+### `disableDiagnostics(): void`
+
+Deactivates diagnostics and clears accumulated state.
+
+### `Suggestion`
+
+```ts
+interface Suggestion {
+    kind: "unclosed-delimiter" | "trailing-content";
+    message: string;
+    openOffset?: number;
+}
+```
+
+Structured hint emitted by `wrap()` (unclosed delimiters) and EOF checks (trailing
+content).
+
+### `SecondarySpan`
+
+```ts
+interface SecondarySpan {
+    offset: number;
+    label: string;
+}
+```
+
+Points to a related source location — e.g., where an unclosed delimiter was opened.
+
+### `formatExpected(expected: string[]): string`
+
+Formats an expected set with Oxford comma: `expected X, Y, or Z`.
+
+### `addCursor(state, cursor?, error?): string`
+
+Renders ±4 lines of source context around the current offset with gutter line numbers,
+a cursor at the active column, and ANSI coloring (red for errors, green for success).

@@ -12,8 +12,9 @@ src/parse/
   lazy.ts           getLazyParser(), createLazyCached(), lazy decorator
   span.ts           regexSpan(), manySpan(), sepBySpan(), wrapSpan()
   state.ts          ParserState<T>, Span, ParserContext types (152 lines)
-  utils.ts          mergeErrorState(), error tracking globals
-  debug.ts          parserDebug(), parserPrint(), statePrint(), addCursor() (200 lines)
+  ansi.ts           Zero-dep ANSI helpers (bold, red, green, etc.) — NO_COLOR + TTY aware
+  utils.ts          mergeErrorState(), diagnostics globals, Suggestion, SecondarySpan
+  debug.ts          parserDebug(), statePrint(), addCursor(), formatExpected(), formatSuggestions()
   json-fast.ts      Monolithic JSON parser — charCode dispatch, no combinators (376 lines)
   parsers/
     index.ts        Barrel re-exports for domain parsers
@@ -23,6 +24,8 @@ src/parse/
     utils.ts        escapedString(), quotedString(), numberParser()
 test/
   csv.test.ts             CSV parsing with quoted fields
+  debug.test.ts           Diagnostics unit tests (summarizeLine, formatExpected, labels, suggestions)
+  css-diagnostics.test.ts CSS-grammar integration tests for diagnostics system
   json.test.ts            JSON combinator parser
   json-vectors.test.ts    Shared BBNF test vectors (grammar/tests/json/)
   math.test.ts            Math expressions with operator precedence
@@ -63,6 +66,10 @@ mergeSpans(a, b), spanToString(span, src)
 // Domain parsers (parsers/)
 jsonParser(), JsonValue, csvParser(), jsonParseFast()
 escapedString(), quotedString(), numberParser()
+
+// Diagnostics (utils.ts + debug.ts)
+enableDiagnostics(), disableDiagnostics()
+Suggestion, SecondarySpan
 ```
 
 ## Conventions

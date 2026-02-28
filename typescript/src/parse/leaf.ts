@@ -24,7 +24,7 @@ export function eof<T>() {
         if (state.offset >= state.src.length) {
             return state.ok(undefined);
         } else {
-            mergeErrorState(state as ParserState<unknown>);
+            mergeErrorState(state as ParserState<unknown>, "<end of input>");
             state.isError = true;
             return state;
         }
@@ -91,6 +91,13 @@ export function dispatch<T>(table: Record<string, Parser<T>>, fallback?: Parser<
         }
     }
 
+    // Pre-compute label at construction time
+    const labelChars = Object.keys(table).map(k => {
+        if (k.length === 3 && k[1] === '-') return `'${k[0]}'-'${k[2]}'`;
+        return [...k].map(c => `'${c}'`).join(", ");
+    }).join(", ");
+    const label = `one of [${labelChars}]`;
+
     const dispatchParser = (state: ParserState<T>) => {
         const ch = state.src.charCodeAt(state.offset);
         const idx = ch < 128 ? tbl[ch] : -1;
@@ -100,7 +107,7 @@ export function dispatch<T>(table: Record<string, Parser<T>>, fallback?: Parser<
         if (fallback) {
             return fallback.parser(state);
         }
-        mergeErrorState(state as ParserState<unknown>);
+        mergeErrorState(state as ParserState<unknown>, label);
         state.isError = true;
         return state;
     };
@@ -146,6 +153,7 @@ export function all<T extends Array<Parser<any>>>(...parsers: T) {
 // Step 2: string() with startsWith + single-char charCodeAt fast path
 export function string(str: string) {
     const len = str.length;
+    const label = `"${str}"`;
 
     let stringParser: ParserFunction<string>;
 
@@ -158,7 +166,7 @@ export function string(str: string) {
                 state.isError = false;
                 return state;
             }
-            mergeErrorState(state as ParserState<unknown>);
+            mergeErrorState(state as ParserState<unknown>, label);
             state.isError = true;
             return state;
         }) as ParserFunction<string>;
@@ -170,7 +178,7 @@ export function string(str: string) {
                 state.isError = false;
                 return state;
             }
-            mergeErrorState(state as ParserState<unknown>);
+            mergeErrorState(state as ParserState<unknown>, label);
             state.isError = true;
             return state;
         }) as ParserFunction<string>;
@@ -191,6 +199,7 @@ export function regex(
     const flags = r.flags.replace(/y/g, "");
     const sticky = new RegExp(r, flags + "y");
     const hasCustomMatch = matchFunction != null;
+    const label = `/${r.source}/${r.flags}`;
 
     const regexParser = (state: ParserState<string>) => {
         if (state.offset >= state.src.length) {
@@ -226,7 +235,7 @@ export function regex(
             return state;
         }
 
-        mergeErrorState(state as ParserState<unknown>);
+        mergeErrorState(state as ParserState<unknown>, label);
         state.isError = true;
         return state;
     };

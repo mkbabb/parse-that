@@ -1,0 +1,85 @@
+# Shared diagnostic output test vectors
+# ANSI codes stripped — both TS and Rust must produce identical output.
+# Lines starting with # are comments and should be ignored.
+# Sections separated by "---" markers.
+# Format: SECTION_NAME followed by INPUT, then EXPECTED OUTPUT.
+
+--- simple-string-ok ---
+INPUT: hello world
+PARSER: string("hello")
+STATUS: ok
+EXPECTED:
+ Ok √     5
+ 1 | hello world
+     ^
+
+--- simple-string-err ---
+INPUT: goodbye world
+PARSER: string("hello")
+STATUS: err
+EXPECTED:
+ Err x     0
+ 1 | goodbye world
+     ^^^
+   expected "hello"
+
+--- or-expected-two ---
+INPUT: xyz
+PARSER: string("a") | string("b")
+STATUS: err
+EXPECTED:
+ Err x     0
+ 1 | xyz
+     ^^^
+   expected "a" or "b"
+
+--- or-expected-three ---
+INPUT: xyz
+PARSER: string("a") | string("b") | string("c")
+STATUS: err
+EXPECTED:
+ Err x     0
+ 1 | xyz
+     ^^^
+   expected "a", "b", or "c"
+
+--- json-unclosed-bracket ---
+INPUT: [1, 2, 3
+PARSER: json
+STATUS: err
+EXPECTED:
+ Err x     9
+ 1 | [1, 2, 3
+              ^^^
+   expected "]"
+   |
+ 1 | [1, 2, 3
+     - unclosed `[` opened here
+   |
+   = help: close the delimiter with `]`
+
+--- multiline-cursor ---
+INPUT:
+{
+  "name": "test",
+  "value": 42
+  "missing": "comma"
+}
+PARSER: json
+STATUS: err
+EXPECTED:
+ Err x     37
+   |
+ 2 |   "name": "test",
+ 3 |   "value": 42
+ 4 |   "missing": "comma"
+     ^^^
+   expected "}" or ","
+
+--- done-at-eof ---
+INPUT: hello
+PARSER: string("hello")
+STATUS: done
+EXPECTED:
+ Done √     5
+ 1 | hello

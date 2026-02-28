@@ -2,26 +2,53 @@
 import { createParserContext, ParserState } from "./state.js";
 import { getLazyParser } from "./lazy.js";
 import { Parser } from "./parser.js";
+import { bold, dim, italic, red, green, yellow, cyan, gray, bgRed, bgGreen } from "./ansi.js";
+import { isDiagnosticsEnabled, getLastExpected, getLastSuggestions, getLastSecondarySpans } from "./utils.js";
+import type { Suggestion, SecondarySpan } from "./utils.js";
 
 const MAX_LINES = 4;
-const MAX_LINE_LENGTH = 80;
+const MAX_LINE_WIDTH = 74; // 80 - 6 for line number prefix
 
-export const summarizeLine = (
-    line: string,
-    maxLength: number = MAX_LINE_LENGTH,
-) => {
-    const newLine = line.indexOf("\n");
-    const length = Math.min(
-        line.length,
-        newLine === -1 ? line.length : newLine,
-    );
+let debugDepth = 0;
 
-    if (length <= MAX_LINE_LENGTH) {
-        return line;
-    } else {
-        return line.slice(0, maxLength) + "...";
+export function summarizeLine(line: string, columnNum: number = 0): string {
+    const trimmed = line.trimEnd();
+    const len = trimmed.length;
+    const half = Math.floor(MAX_LINE_WIDTH / 2);
+
+    if (len <= MAX_LINE_WIDTH) return trimmed;
+
+    const mid = Math.min(columnNum, len);
+    let start = Math.min(Math.max(mid - half, 0), len);
+    let end = Math.min(mid + half, len);
+
+    if (start === 0) {
+        return trimmed.slice(0, end) + "...";
+    } else if (end >= len) {
+        return "..." + trimmed.slice(start);
     }
-};
+    return "..." + trimmed.slice(start, end) + "...";
+}
+
+export function formatExpected(expected: readonly string[]): string {
+    switch (expected.length) {
+        case 0:
+            return "";
+        case 1:
+            return `expected ${expected[0]}`;
+        case 2:
+            return `expected ${expected[0]} or ${expected[1]}`;
+        default: {
+            const last = expected[expected.length - 1];
+            const rest = expected.slice(0, -1).join(", ");
+            return `expected ${rest}, or ${last}`;
+        }
+    }
+}
+
+function lineNumberWidth(maxLine: number): number {
+    return String(maxLine).length;
+}
 
 export function addCursor(
     state: ParserState<unknown>,
@@ -29,25 +56,143 @@ export function addCursor(
     error: boolean = false,
 ): string {
     const lines = state.src.split("\n");
-    const lineIdx = Math.min(lines.length - 1, state.getLineNumber());
+    const { line: lineNum, column: columnNum } = state.getLineAndColumn
+        ? state.getLineAndColumn()
+        : { line: state.getLineNumber() + 1, column: state.getColumnNumber() };
+
+    const lineIdx = lineNum - 1; // 0-based index
     const startIdx = Math.max(lineIdx - MAX_LINES, 0);
     const endIdx = Math.min(lineIdx + MAX_LINES + 1, lines.length);
 
-    const lineSummaries = lines.slice(startIdx, endIdx);
+    const lnWidth = lineNumberWidth(endIdx);
 
-    if (cursor) {
-        const cursorLine = " ".repeat(state.getColumnNumber()) + cursor;
-        lineSummaries.splice(lineIdx - startIdx + 1, 0, cursorLine);
+    const result: string[] = [];
+
+    for (let i = startIdx; i < endIdx; i++) {
+        const ln = i + 1; // 1-based display
+        const isActive = i === lineIdx;
+        const lineContent = summarizeLine(lines[i], isActive ? columnNum : 0);
+        const pipe = gray("|");
+
+        if (isActive) {
+            const lnStr = bold(String(ln).padStart(lnWidth));
+            const lineDisplay = error
+                ? bold(red(lineContent))
+                : bold(green(lineContent));
+            result.push(` ${lnStr} ${pipe} ${lineDisplay}`);
+
+            if (cursor) {
+                const pad = " ".repeat(lnWidth + 4 + columnNum);
+                const cursorStr = error ? red(cursor) : green(cursor);
+                result.push(`${pad}${cursorStr}`);
+            }
+        } else {
+            const lnStr = gray(String(ln).padStart(lnWidth));
+            result.push(` ${lnStr} ${pipe} ${lineContent}`);
+        }
     }
 
-    const resultLines = lineSummaries.map((line, idx) => {
-        const lineNum = startIdx + idx + 1;
-        const paddedLine = `      ${lineNum}| ${line}`;
-        return paddedLine;
-    });
-
-    return resultLines.join("\n");
+    return result.join("\n");
 }
+
+function formatSecondarySpans(
+    src: string,
+    spans: readonly SecondarySpan[],
+): string {
+    const lines = src.split("\n");
+    const result: string[] = [];
+
+    for (const span of spans) {
+        // Find line containing this offset
+        let offsetAcc = 0;
+        for (let i = 0; i < lines.length; i++) {
+            const lineEnd = offsetAcc + lines[i].length + 1; // +1 for newline
+            if (span.offset < lineEnd) {
+                const col = span.offset - offsetAcc;
+                const lnWidth = Math.max(String(i + 1).length, 3);
+                const pipe = gray("|");
+                result.push(` ${" ".repeat(lnWidth)} ${pipe}`);
+                result.push(
+                    ` ${gray(String(i + 1).padStart(lnWidth))} ${pipe} ${lines[i]}`,
+                );
+                const markerPad = " ".repeat(lnWidth + 4 + col);
+                result.push(`${markerPad}${cyan("-")} ${cyan(span.label)}`);
+                break;
+            }
+            offsetAcc = lineEnd;
+        }
+    }
+
+    return result.join("\n");
+}
+
+function formatSuggestions(suggestions: readonly Suggestion[]): string {
+    const result: string[] = [];
+
+    for (const s of suggestions) {
+        const prefix =
+            s.kind === "unclosed-delimiter"
+                ? bold(yellow("help"))
+                : bold(cyan("note"));
+        result.push(`   = ${prefix}: ${s.message}`);
+    }
+
+    return result.join("\n");
+}
+
+export function statePrint(
+    state: ParserState<unknown>,
+    name: string = "",
+    parserString: string = "",
+): string {
+    const finished = state.offset >= state.src.length;
+    const isError = state.isError;
+
+    // Badge
+    let badge: string;
+    if (isError) {
+        badge = bgRed(bold(" Err x "));
+    } else if (finished) {
+        badge = bgGreen(bold(" Done \u221a "));
+    } else {
+        badge = bgGreen(bold(" Ok \u221a "));
+    }
+
+    // Header parts
+    const namePart = name ? `    ${yellow(italic(name))}` : "";
+    const offsetPart = `    ${green(String(state.offset))}`;
+    const parserPart = parserString ? `    ${green(parserString)}` : "";
+
+    const header = `${badge}${namePart}${offsetPart}${parserPart}`;
+
+    // Body — source context with cursor
+    const cursor = isError ? "^^^" : finished ? "" : "^";
+    const body = addCursor(state, cursor, isError);
+
+    let output = `${header}\n${body}`;
+
+    // Diagnostic extras (only when diagnostics enabled)
+    if (isError && isDiagnosticsEnabled()) {
+        const expected = getLastExpected();
+        if (expected.length > 0) {
+            output += `\n   ${cyan(formatExpected(expected))}`;
+        }
+
+        const secondarySpans = getLastSecondarySpans();
+        if (secondarySpans.length > 0) {
+            output += `\n${formatSecondarySpans(state.src, secondarySpans)}`;
+        }
+
+        const suggestions = getLastSuggestions();
+        if (suggestions.length > 0) {
+            output += `\n${formatSuggestions(suggestions)}`;
+        }
+    }
+
+    return output;
+}
+
+// ── Parser tree printing (unchanged from original) ──────────
 
 const PARSER_STRINGS = new Map<number, string>();
 
@@ -153,34 +298,16 @@ export function parserPrint(parser: Parser<unknown>): string {
     return s;
 }
 
-export function statePrint(
-    state: ParserState<unknown>,
-    name: string = "",
-    _parserString: string = "",
-): string {
-    const parserString = String(state.value);
-    const finished = state.offset >= state.src.length;
-
-    const stateSymbol = !state.isError ? (finished ? "done" : "ok") : "err";
-    const stateString = `[${stateSymbol}]`;
-
-    const header = `${stateString} ${name} offset=${state.offset} value=${parserString}`;
-
-    const body =
-        state.offset >= state.src.length
-            ? addCursor(state, "", state.isError)
-            : addCursor(state, "^", state.isError);
-
-    return `${header}\n${body}`;
-}
-
 export function parserDebug<T>(
     parser: Parser<T>,
     name: string = "",
     recursivePrint: boolean = false,
-    logger: (...s: unknown[]) => void = console.log,
+    logger: (...s: unknown[]) => void = console.error,
 ) {
     const debug = (state: ParserState<T>) => {
+        debugDepth++;
+        const indentStr = "  ".repeat(debugDepth - 1);
+
         const newState = parser.parser(state);
 
         const parserString = recursivePrint
@@ -192,8 +319,14 @@ export function parserDebug<T>(
             parserString,
         );
 
-        logger(s);
+        // Indent each line
+        const indented = s
+            .split("\n")
+            .map((line) => indentStr + line)
+            .join("\n");
+        logger(indented);
 
+        debugDepth--;
         return newState;
     };
     return new Parser(debug, createParserContext("debug", parser, logger));

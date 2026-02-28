@@ -15,9 +15,32 @@ const FLAG_SAVE_STATE: u8 = 0b0010;
 
 // ── SpanParser: enum-dispatched, zero-boxing for Span hot path ─
 
+/// Helper macro for constructing SpanParser with conditional label field.
+#[cfg(feature = "diagnostics")]
+macro_rules! sp_new {
+    ($kind:expr, $label:expr) => {
+        SpanParser { kind: $kind, flags: 0, label: Some($label) }
+    };
+    ($kind:expr) => {
+        SpanParser { kind: $kind, flags: 0, label: None }
+    };
+}
+
+#[cfg(not(feature = "diagnostics"))]
+macro_rules! sp_new {
+    ($kind:expr, $label:expr) => {
+        SpanParser { kind: $kind, flags: 0 }
+    };
+    ($kind:expr) => {
+        SpanParser { kind: $kind, flags: 0 }
+    };
+}
+
 pub struct SpanParser<'a> {
     kind: SpanKind<'a>,
     flags: u8,
+    #[cfg(feature = "diagnostics")]
+    label: Option<&'static str>,
 }
 
 enum SpanKind<'a> {
@@ -131,31 +154,56 @@ impl<'a> SpanParser<'a> {
                     state.offset += end;
                     Some(Span::new(start, state.offset, state.src))
                 } else {
+                    #[cfg(feature = "diagnostics")]
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
                     None
                 }
             }
 
             SpanKind::RegexMatch(re) => {
                 if state.is_at_end() {
+                    #[cfg(feature = "diagnostics")]
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
                     return None;
                 }
                 let slc = state.src.get(state.offset..)?;
-                let m = re.find_at(slc, 0)?;
-                if m.start() != 0 {
-                    return None;
+                match re.find_at(slc, 0) {
+                    Some(m) if m.start() == 0 => {
+                        let start = state.offset;
+                        state.offset += m.end();
+                        Some(Span::new(start, state.offset, state.src))
+                    }
+                    _ => {
+                        #[cfg(feature = "diagnostics")]
+                        if let Some(lbl) = self.label {
+                            state.add_expected(lbl);
+                        }
+                        None
+                    }
                 }
-                let start = state.offset;
-                state.offset += m.end();
-                Some(Span::new(start, state.offset, state.src))
             }
 
             SpanKind::AhoCorasickMatch(ac) => {
                 let slc = state.src.get(state.offset..)?;
                 let input = Input::new(slc).anchored(Anchored::Yes);
-                let m = ac.find(input)?;
-                let start = state.offset;
-                state.offset += m.end();
-                Some(Span::new(start, state.offset, state.src))
+                match ac.find(input) {
+                    Some(m) => {
+                        let start = state.offset;
+                        state.offset += m.end();
+                        Some(Span::new(start, state.offset, state.src))
+                    }
+                    None => {
+                        #[cfg(feature = "diagnostics")]
+                        if let Some(lbl) = self.label {
+                            state.add_expected(lbl);
+                        }
+                        None
+                    }
+                }
             }
 
             SpanKind::TakeWhileByte(f) => {
@@ -167,6 +215,10 @@ impl<'a> SpanParser<'a> {
                     i += 1;
                 }
                 if i == start {
+                    #[cfg(feature = "diagnostics")]
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
                     return None;
                 }
                 state.offset = i;
@@ -175,22 +227,37 @@ impl<'a> SpanParser<'a> {
 
             SpanKind::TakeWhileChar(f) => {
                 let slc = state.src.get(state.offset..)?;
-                let mut len = slc
+                match slc
                     .char_indices()
                     .take_while(|(_, c)| f(*c))
                     .map(|(i, _)| i)
-                    .last()?;
-                len += 1;
-                while len < slc.len() && !slc.is_char_boundary(len) {
-                    len += 1;
+                    .last()
+                {
+                    Some(mut len) => {
+                        len += 1;
+                        while len < slc.len() && !slc.is_char_boundary(len) {
+                            len += 1;
+                        }
+                        let start = state.offset;
+                        state.offset += len;
+                        Some(Span::new(start, state.offset, state.src))
+                    }
+                    None => {
+                        #[cfg(feature = "diagnostics")]
+                        if let Some(lbl) = self.label {
+                            state.add_expected(lbl);
+                        }
+                        None
+                    }
                 }
-                let start = state.offset;
-                state.offset += len;
-                Some(Span::new(start, state.offset, state.src))
             }
 
             SpanKind::NextN(amount) => {
                 if state.is_at_end() {
+                    #[cfg(feature = "diagnostics")]
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
                     return None;
                 }
                 let start = state.offset;
@@ -200,10 +267,37 @@ impl<'a> SpanParser<'a> {
 
             SpanKind::Epsilon => Some(Span::new(state.offset, state.offset, state.src)),
 
-            SpanKind::JsonNumber => crate::parsers::json::number_span_fast(state),
+            SpanKind::JsonNumber => {
+                let result = crate::parsers::json::number_span_fast(state);
+                #[cfg(feature = "diagnostics")]
+                if result.is_none() {
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
+                }
+                result
+            }
 
-            SpanKind::JsonString => crate::parsers::json::json_string_fast(state),
-            SpanKind::JsonStringQuoted => crate::parsers::json::json_string_fast_quoted(state),
+            SpanKind::JsonString => {
+                let result = crate::parsers::json::json_string_fast(state);
+                #[cfg(feature = "diagnostics")]
+                if result.is_none() {
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
+                }
+                result
+            }
+            SpanKind::JsonStringQuoted => {
+                let result = crate::parsers::json::json_string_fast_quoted(state);
+                #[cfg(feature = "diagnostics")]
+                if result.is_none() {
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
+                }
+                result
+            }
 
             SpanKind::Seq(parsers) => {
                 let start = state.offset;
@@ -283,10 +377,40 @@ impl<'a> SpanParser<'a> {
             }
 
             SpanKind::Wrap { left, inner, right } => {
+                #[cfg(feature = "diagnostics")]
+                let open_offset = state.offset;
                 left.call(state)?;
+                #[cfg(feature = "diagnostics")]
+                let open_end = state.offset;
                 let middle = inner.call(state)?;
-                right.call(state)?;
-                Some(Span::new(middle.start, middle.end, state.src))
+                if right.call(state).is_some() {
+                    Some(Span::new(middle.start, middle.end, state.src))
+                } else {
+                    #[cfg(feature = "diagnostics")]
+                    {
+                        let delimiter = state.src[open_offset..open_end].to_string();
+                        state.add_suggestion(|| crate::state::Suggestion {
+                            kind: crate::state::SuggestionKind::UnclosedDelimiter {
+                                delimiter: delimiter.clone(),
+                                open_offset,
+                            },
+                            message: format!(
+                                "close the delimiter with matching `{}`",
+                                match delimiter.as_str() {
+                                    "{" => "}",
+                                    "[" => "]",
+                                    "(" => ")",
+                                    d => d,
+                                }
+                            ),
+                        });
+                        state.add_secondary_span(
+                            open_offset,
+                            format!("unclosed `{}` opened here", delimiter),
+                        );
+                    }
+                    None
+                }
             }
 
             SpanKind::Skip(first, second) => {
@@ -334,10 +458,7 @@ impl<'a> SpanParser<'a> {
             SpanKind::Seq(v) if other.flags == 0 => parsers.extend(v),
             _ => parsers.push(other),
         };
-        SpanParser {
-            kind: SpanKind::Seq(parsers),
-            flags: 0,
-        }
+        sp_new!(SpanKind::Seq(parsers))
     }
 
     /// Alternation: flattens OneOf chains.
@@ -351,31 +472,22 @@ impl<'a> SpanParser<'a> {
             SpanKind::OneOf(v) if other.flags == 0 => parsers.extend(v),
             _ => parsers.push(other),
         };
-        SpanParser {
-            kind: SpanKind::OneOf(parsers),
-            flags: 0,
-        }
+        sp_new!(SpanKind::OneOf(parsers))
     }
 
     #[inline]
     pub fn opt_span(self) -> SpanParser<'a> {
-        SpanParser {
-            kind: SpanKind::Opt(Box::new(self)),
-            flags: 0,
-        }
+        sp_new!(SpanKind::Opt(Box::new(self)))
     }
 
     #[inline]
     pub fn many_span(self, bounds: impl RangeBounds<usize> + 'a) -> SpanParser<'a> {
         let (lo, hi) = extract_bounds(bounds);
-        SpanParser {
-            kind: SpanKind::Many {
-                inner: Box::new(self),
-                lo,
-                hi,
-            },
-            flags: 0,
-        }
+        sp_new!(SpanKind::Many {
+            inner: Box::new(self),
+            lo,
+            hi,
+        })
     }
 
     #[inline]
@@ -385,15 +497,12 @@ impl<'a> SpanParser<'a> {
         bounds: impl RangeBounds<usize> + 'a,
     ) -> SpanParser<'a> {
         let (lo, hi) = extract_bounds(bounds);
-        SpanParser {
-            kind: SpanKind::SepBy {
-                inner: Box::new(self),
-                sep: Box::new(sep),
-                lo,
-                hi,
-            },
-            flags: 0,
-        }
+        sp_new!(SpanKind::SepBy {
+            inner: Box::new(self),
+            sep: Box::new(sep),
+            lo,
+            hi,
+        })
     }
 
     #[inline]
@@ -402,46 +511,31 @@ impl<'a> SpanParser<'a> {
         left: SpanParser<'a>,
         right: SpanParser<'a>,
     ) -> SpanParser<'a> {
-        SpanParser {
-            kind: SpanKind::Wrap {
-                left: Box::new(left),
-                inner: Box::new(self),
-                right: Box::new(right),
-            },
-            flags: 0,
-        }
+        sp_new!(SpanKind::Wrap {
+            left: Box::new(left),
+            inner: Box::new(self),
+            right: Box::new(right),
+        })
     }
 
     #[inline]
     pub fn skip_span(self, next: SpanParser<'a>) -> SpanParser<'a> {
-        SpanParser {
-            kind: SpanKind::Skip(Box::new(self), Box::new(next)),
-            flags: 0,
-        }
+        sp_new!(SpanKind::Skip(Box::new(self), Box::new(next)))
     }
 
     #[inline]
     pub fn next_after(self, next: SpanParser<'a>) -> SpanParser<'a> {
-        SpanParser {
-            kind: SpanKind::Next(Box::new(self), Box::new(next)),
-            flags: 0,
-        }
+        sp_new!(SpanKind::Next(Box::new(self), Box::new(next)))
     }
 
     #[inline]
     pub fn not_span(self, negated: SpanParser<'a>) -> SpanParser<'a> {
-        SpanParser {
-            kind: SpanKind::Not(Box::new(self), Box::new(negated)),
-            flags: 0,
-        }
+        sp_new!(SpanKind::Not(Box::new(self), Box::new(negated)))
     }
 
     #[inline]
     pub fn look_ahead_span(self, lookahead: SpanParser<'a>) -> SpanParser<'a> {
-        SpanParser {
-            kind: SpanKind::LookAhead(Box::new(self), Box::new(lookahead)),
-            flags: 0,
-        }
+        sp_new!(SpanKind::LookAhead(Box::new(self), Box::new(lookahead)))
     }
 
     // ── Flag setters ──────────────────────────────────────────
@@ -502,18 +596,28 @@ impl<'a> From<SpanParser<'a>> for Parser<'a, Span<'a>> {
 /// The string must be `'static` (string literals, leaked strings).
 #[inline]
 pub fn sp_string<'a>(s: &'static str) -> SpanParser<'a> {
-    SpanParser {
-        kind: SpanKind::StringLiteral(s.as_bytes()),
-        flags: 0,
+    #[cfg(feature = "diagnostics")]
+    {
+        let label: &'static str = Box::leak(format!("\"{}\"", s).into_boxed_str());
+        sp_new!(SpanKind::StringLiteral(s.as_bytes()), label)
+    }
+    #[cfg(not(feature = "diagnostics"))]
+    {
+        sp_new!(SpanKind::StringLiteral(s.as_bytes()))
     }
 }
 
 /// Match regex pattern. The pattern string is compiled at construction time.
 pub fn sp_regex<'a>(r: &str) -> SpanParser<'a> {
     let re = Regex::new(r).unwrap_or_else(|_| panic!("Failed to compile regex: {}", r));
-    SpanParser {
-        kind: SpanKind::RegexMatch(re),
-        flags: 0,
+    #[cfg(feature = "diagnostics")]
+    {
+        let label: &'static str = Box::leak(format!("/{}/", r).into_boxed_str());
+        sp_new!(SpanKind::RegexMatch(re), label)
+    }
+    #[cfg(not(feature = "diagnostics"))]
+    {
+        sp_new!(SpanKind::RegexMatch(re))
     }
 }
 
@@ -524,81 +628,62 @@ pub fn sp_any<'a>(patterns: &[&str]) -> SpanParser<'a> {
         .start_kind(StartKind::Anchored)
         .build(patterns)
         .expect("failed to build aho-corasick automaton");
-    SpanParser {
-        kind: SpanKind::AhoCorasickMatch(ac),
-        flags: 0,
+    #[cfg(feature = "diagnostics")]
+    {
+        let label: &'static str = Box::leak(format!("one of {:?}", patterns).into_boxed_str());
+        sp_new!(SpanKind::AhoCorasickMatch(ac), label)
+    }
+    #[cfg(not(feature = "diagnostics"))]
+    {
+        sp_new!(SpanKind::AhoCorasickMatch(ac))
     }
 }
 
 /// Take bytes while predicate holds (byte-level, ASCII-safe).
 #[inline]
 pub fn sp_take_while_byte<'a>(f: fn(u8) -> bool) -> SpanParser<'a> {
-    SpanParser {
-        kind: SpanKind::TakeWhileByte(f),
-        flags: 0,
-    }
+    sp_new!(SpanKind::TakeWhileByte(f), "matching byte")
 }
 
 /// Take characters while predicate holds (char-level, Unicode-safe).
 #[inline]
 pub fn sp_take_while_char<'a>(f: impl Fn(char) -> bool + 'a) -> SpanParser<'a> {
-    SpanParser {
-        kind: SpanKind::TakeWhileChar(Box::new(f)),
-        flags: 0,
-    }
+    sp_new!(SpanKind::TakeWhileChar(Box::new(f)), "matching character")
 }
 
 /// Consume exactly N bytes.
 #[inline]
 pub fn sp_next<'a>(amount: usize) -> SpanParser<'a> {
-    SpanParser {
-        kind: SpanKind::NextN(amount),
-        flags: 0,
-    }
+    sp_new!(SpanKind::NextN(amount), "next character")
 }
 
 /// Always succeeds, consuming nothing (empty span).
 #[inline]
 pub fn sp_epsilon<'a>() -> SpanParser<'a> {
-    SpanParser {
-        kind: SpanKind::Epsilon,
-        flags: 0,
-    }
+    sp_new!(SpanKind::Epsilon)
 }
 
 /// Monolithic JSON number scanner.
 #[inline]
 pub fn sp_json_number<'a>() -> SpanParser<'a> {
-    SpanParser {
-        kind: SpanKind::JsonNumber,
-        flags: 0,
-    }
+    sp_new!(SpanKind::JsonNumber, "number")
 }
 
 /// Monolithic JSON string scanner — SIMD-accelerated via memchr2.
 /// Returns span of content between quotes (exclusive of delimiters).
 #[inline]
 pub fn sp_json_string<'a>() -> SpanParser<'a> {
-    SpanParser {
-        kind: SpanKind::JsonString,
-        flags: 0,
-    }
+    sp_new!(SpanKind::JsonString, "string")
 }
 
 /// Monolithic JSON string scanner — SIMD-accelerated via memchr2.
 /// Returns span including the quote delimiters (matches regex behavior).
 #[inline]
 pub fn sp_json_string_quoted<'a>() -> SpanParser<'a> {
-    SpanParser {
-        kind: SpanKind::JsonStringQuoted,
-        flags: 0,
-    }
+    sp_new!(SpanKind::JsonStringQuoted, "string")
 }
 
 /// Wrap a boxed `ParserFn` as a SpanParser escape hatch.
 pub fn sp_boxed<'a>(inner: impl ParserFn<'a, Span<'a>>) -> SpanParser<'a> {
-    SpanParser {
-        kind: SpanKind::Boxed(Box::new(inner)),
-        flags: 0,
-    }
+    sp_new!(SpanKind::Boxed(Box::new(inner)))
 }

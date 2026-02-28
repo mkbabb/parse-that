@@ -2,7 +2,7 @@
 import type { Parser as ParserType, ParserFunction } from "./parser.js";
 import type { ParserState, Span } from "./state.js";
 import { createParserContext } from "./state.js";
-import { mergeErrorState } from "./utils.js";
+import { mergeErrorState, addSuggestion, addSecondarySpan, isDiagnosticsEnabled } from "./utils.js";
 
 // Late-bound Parser constructor to break circular dependency with parser.ts.
 let _ParserCtor: any;
@@ -23,6 +23,7 @@ type Parser<T> = ParserType<T>;
 export function regexSpan(r: RegExp): Parser<Span> {
     const flags = r.flags.replace(/y/g, "");
     const sticky = new RegExp(r, flags + "y");
+    const label = `/${r.source}/${r.flags}`;
 
     const regexSpanParser = (state: ParserState<Span>) => {
         if (state.offset >= state.src.length) {
@@ -46,7 +47,7 @@ export function regexSpan(r: RegExp): Parser<Span> {
             return state;
         }
 
-        mergeErrorState(state as ParserState<unknown>);
+        mergeErrorState(state as ParserState<unknown>, label);
         state.isError = true;
         return state;
     };
@@ -162,6 +163,7 @@ export function wrapSpan(
             state.offset = savedOffset;
             return state;
         }
+        const openEnd = state.offset;
         const innerStart = state.offset;
         inner.parser(state as any);
         if (state.isError) {
@@ -174,6 +176,16 @@ export function wrapSpan(
         right.parser(state as any);
         if (state.isError) {
             mergeErrorState(state as ParserState<unknown>);
+            if (isDiagnosticsEnabled()) {
+                const openText = state.src.slice(savedOffset, openEnd);
+                const closeText = openText === "{" ? "}" : openText === "[" ? "]" : openText === "(" ? ")" : openText;
+                addSuggestion({
+                    kind: "unclosed-delimiter",
+                    message: `close the delimiter with \`${closeText}\``,
+                    openOffset: savedOffset,
+                });
+                addSecondarySpan(savedOffset, `unclosed \`${openText}\` opened here`);
+            }
             state.offset = savedOffset;
             state.isError = true;
             return state;

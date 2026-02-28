@@ -78,6 +78,7 @@ rust/                  Rust workspace (nightly, edition 2024)
   src/                 CLI binary (parse_that_cli)
 grammar/               Shared BBNF grammar files (16 .bbnf)
   tests/json/          Shared JSON test vectors
+  tests/debug/         Shared diagnostic output vectors
 docs/                  Perf chronicles, API reference
 ```
 
@@ -91,6 +92,7 @@ Both languages share a mirrored module structure:
 | Lazy eval | `lazy.ts` — lazy(), getLazyParser | `lazy.rs` — LazyParser, lazy() |
 | Span / zero-copy | `span.ts` — regexSpan, manySpan | `span_parser.rs` — SpanParser enum |
 | State | `state.ts` — ParserState, Span | `state.rs` — ParserState, Span |
+| Debug | `debug.ts` — diagnostics, ANSI output | `debug.rs` — diagnostics (feature-gated) |
 | Domain parsers | `parsers/` — JSON, CSV, TOML | `parsers/` — JSON + scanners, CSV, TOML |
 
 ## Performance
@@ -173,10 +175,31 @@ The `debug` combinator pretty-prints parser state during execution.
 
 As output, you'll see:
 
-- **Header**: parsing status (`Ok`/`Err`), current offset, node name, stringified parser
-- **Body**: up to 10 lines of input with the current offset denoted by `^`, with line numbers
+- **Header**: parsing status (`Ok`/`Err`/`Done`), current offset, node name, stringified parser
+- **Body**: surrounding lines of input with the cursor at the active column, line-numbered
 
-The `blue` color indicates a BBNF nonterminal; `yellow` is the stringified parser.
+Color-coded: BBNF nonterminals in blue, stringified parsers in yellow.
+
+### Diagnostics
+
+Both implementations ship a structured diagnostics system — Rust behind a
+`diagnostics` Cargo feature, TypeScript via `enableDiagnostics()` /
+`disableDiagnostics()`. Zero overhead when off.
+
+When enabled, parsers accumulate at the furthest offset:
+
+- **Expected sets** — leaf parsers pre-compute labels at construction time
+  (`"hello"`, `/[0-9]+/`, `one of ['a'-'z']`). Alternation chains merge them
+  into `expected X, Y, or Z` (Oxford comma).
+- **Suggestions** — `wrap()` detects unclosed delimiters and emits
+  `help: unclosed '(' — insert matching ')'`; EOF checks flag trailing content.
+- **Secondary spans** — point back to related source locations
+  (`unclosed '{' opened here`) for multi-site error context.
+
+Rich rendering: ANSI color output with TTY detection and `NO_COLOR` respect,
+center-truncation of long lines around the error column, ±4 lines of context
+with gutter line numbers. Shared test vectors in `grammar/tests/debug/` ensure
+isomorphic output between TypeScript and Rust.
 
 ## BBNF and the Great Parser Generator
 
