@@ -7,9 +7,8 @@ Parser combinator library — TypeScript + Rust monorepo with shared BBNF gramma
 ```
 typescript/                TS library (@mkbabb/parse-that v0.7.0)
   src/parse/               Core parser modules (isomorphic layout)
-    parser.ts              Parser<T> class, memoization, flags
+    parser.ts              Parser<T> class, combinators, memoization, flags
     leaf.ts                Leaf parsers (string, regex, eof, dispatch, etc.)
-    combinators.ts         (reserved — methods on Parser class)
     lazy.ts                Lazy evaluation infrastructure
     span.ts                Zero-copy span combinators
     state.ts               ParserState, Span, ParserContext

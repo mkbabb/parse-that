@@ -5,7 +5,7 @@ Project documentation. Performance chronicles, API reference.
 ## Structure
 
 ```
-api.md                         TypeScript API reference (Parser<T>, ParserState<T>, functions)
+api.md                         TypeScript API reference (Parser<T>, leaf, span, domain parsers)
 perf-optimization-rust.md      Rust optimization chronicle: ~400 → 1,730 MB/s (1000+ lines)
 perf-optimization-ts.md        TS optimization chronicle: 746 → 5,480 ops/s (600+ lines)
 left-recursion.md              Stub — see README.md and memoize.test.ts

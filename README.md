@@ -28,10 +28,20 @@ let heyy = string("heyyyyyyyyyt");
 heyy.parse("heyyyyyyyyyt"); // => "heyyyyyyyyyt"
 ```
 
-Or with a grammar:
+Domain parsers ship with the library:
 
 ```ts
-import { string, match, generateParserFromBBNF } from "@mkbabb/parse-that";
+import { jsonParser, csvParser, jsonParseFast } from "@mkbabb/parse-that";
+
+jsonParser().parse('{"key": [1, 2, 3]}');   // combinator-based
+jsonParseFast('{"key": [1, 2, 3]}');        // hand-rolled fast path
+csvParser().parse('a,b,c\n1,2,3');          // RFC 4180
+```
+
+Or with a grammar (via [`bbnf-lang`](https://github.com/mkbabb/bbnf-lang)):
+
+```ts
+import { generateParserFromBBNF } from "@mkbabb/bbnf-lang";
 
 const grammar = `
     expr = term, { ("+" | "-"), term };
@@ -61,18 +71,27 @@ expr.parse("1 + 2 * 3"); // => [1, "+", [2, "*", 3]]
 
 ```
 typescript/            TS library (@mkbabb/parse-that v0.7.0)
-  src/parse/           Core combinators, state, debug, json-fast
+  src/parse/           Isomorphic module layout (see below)
   test/                Vitest tests + benchmark comparators
 rust/                  Rust workspace (nightly, edition 2024)
-  parse_that/          Core lib — Parser<'a,O> + SpanParser<'a>
-    src/parsers/       JSON, CSV, TOML domain parsers
-    tests/             Integration tests
-    benches/           10 benches × 6 datasets
+  parse_that/          Core lib — isomorphic module layout (see below)
   src/                 CLI binary (parse_that_cli)
 grammar/               Shared BBNF grammar files (16 .bbnf)
   tests/json/          Shared JSON test vectors
 docs/                  Perf chronicles, API reference
 ```
+
+Both languages share a mirrored module structure:
+
+| Module | TypeScript (`src/parse/`) | Rust (`parse_that/src/`) |
+|---|---|---|
+| Core | `parser.ts` — Parser\<T\> class | `parse.rs` — Parser\<'a, O\> struct |
+| Combinators | methods on Parser class | `combinators.rs` — impl blocks |
+| Leaf parsers | `leaf.ts` — string, regex, dispatch | `leaf.rs` — string, regex, dispatch_byte |
+| Lazy eval | `lazy.ts` — lazy(), getLazyParser | `lazy.rs` — LazyParser, lazy() |
+| Span / zero-copy | `span.ts` — regexSpan, manySpan | `span_parser.rs` — SpanParser enum |
+| State | `state.ts` — ParserState, Span | `state.rs` — ParserState, Span |
+| Domain parsers | `parsers/` — JSON, CSV, TOML | `parsers/` — JSON + scanners, CSV, TOML |
 
 ## Performance
 

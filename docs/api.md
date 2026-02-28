@@ -1,5 +1,9 @@
 # API
 
+All exports are re-exported from the barrel `src/parse/index.ts`. Core types live in
+`parser.ts`, leaf parsers in `leaf.ts`, span variants in `span.ts`, and domain parsers
+under `parsers/`.
+
 ## `Parser<T>`
 
 The main class used for building parsers. It takes a ParserFunction<T> and an optional
@@ -105,26 +109,12 @@ Returns a new parser state with the value and isError set to true.
 Returns a new string with a cursor added at the current offset. Pretty prints the state
 of the currently parsed string.
 
-## Functions
+## Leaf Parsers (`leaf.ts`)
 
 ### `eof<T>(): Parser<T | undefined>`
 
 Returns a new parser that succeeds if the end of the input has been reached, otherwise
 fails.
-
-### `lazy<T>(target: any, propertyName: string, descriptor: TypedPropertyDescriptor<() => Parser<T>>)`
-
-void A decorator function that lazily initializes a parser.
-
-### `any<T extends any[]>(...parsers: T): Parser<ExtractValue<T>[number]>`
-
-Returns a new parser that applies all parsers in the input list until one succeeds, then
-returns its output.
-
-### `all<T extends any[]>(...parsers: T): Parser<ExtractValue<T>>`
-
-Returns a new parser that applies all parsers in the input list in order and returns an
-array of their outputs.
 
 ### `string(str: string): Parser<string>`
 
@@ -136,6 +126,80 @@ otherwise fails.
 Returns a new parser that succeeds if the input string matches the provided r regular
 expression, otherwise fails.
 
+### `any<T extends any[]>(...parsers: T): Parser<ExtractValue<T>[number]>`
+
+Returns a new parser that applies all parsers in the input list until one succeeds, then
+returns its output.
+
+### `all<T extends any[]>(...parsers: T): Parser<ExtractValue<T>>`
+
+Returns a new parser that applies all parsers in the input list in order and returns an
+array of their outputs.
+
+### `dispatch(table: Record<string, Parser>, fallback?: Parser): Parser`
+
+O(1) first-character dispatch. Branches on the first byte of input to select a parser
+from the lookup table. Falls back to the fallback parser if no match.
+
 ### `whitespace: Parser<string>`
 
 A pre-defined regular expression parser that matches any whitespace character.
+
+## Lazy Evaluation (`lazy.ts`)
+
+### `Parser.lazy<T>(fn: () => Parser<T>): Parser<T>`
+
+Static method. Wraps a parser factory in a lazy thunk — the inner parser is created on
+first use. Required for recursive grammars.
+
+### `lazy<T>(target: any, propertyName: string, descriptor: TypedPropertyDescriptor<() => Parser<T>>)`
+
+Decorator form. Lazily initializes a parser returned by a method.
+
+## Span Variants (`span.ts`)
+
+Zero-copy parsers that return `Span` (start/end offsets) instead of materialized strings.
+
+### `regexSpan(r: RegExp): Parser<Span>`
+
+Like `regex()`, but returns a Span instead of the matched string.
+
+### `manySpan(parser: Parser<Span>, min?, max?): Parser<Span>`
+
+Like `.many()`, but merges consecutive spans into one.
+
+### `sepBySpan(parser: Parser<Span>, sep: Parser, min?, max?): Parser<Span>`
+
+Like `.sepBy()`, but merges consecutive spans into one.
+
+### `wrapSpan(parser: Parser<Span>, start: Parser, end: Parser): Parser<Span>`
+
+Like `.wrap()`, but returns a merged span covering start through end.
+
+## Domain Parsers (`parsers/`)
+
+### `jsonParser(): Parser<JsonValue>`
+
+Combinator-based JSON parser. Returns a `JsonValue` discriminated union:
+`null | boolean | number | string | JsonValue[] | Record<string, JsonValue>`.
+
+### `jsonParseFast(input: string): JsonValue`
+
+Monolithic hand-rolled JSON parser. charCode dispatch, no combinator overhead.
+Fastest TypeScript path.
+
+### `csvParser(): Parser<string[][]>`
+
+RFC 4180 CSV parser. Handles quoted fields with escaped double-quotes.
+
+### `escapedString(): Parser<string>`
+
+Parses backslash-escaped characters (`\n`, `\t`, `\"`, `\uXXXX`, etc.).
+
+### `quotedString(quote?: string): Parser<string>`
+
+Parses a quoted string with escape handling. Defaults to double quotes.
+
+### `numberParser(): Parser<number>`
+
+Parses a JSON-style number (integer or decimal with optional exponent).

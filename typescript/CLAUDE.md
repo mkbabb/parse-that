@@ -7,8 +7,7 @@ TypeScript parser combinator library. Published as `@mkbabb/parse-that` v0.7.0.
 ```
 src/parse/
   index.ts          Barrel re-exports from all sub-modules
-  parser.ts         Parser<T> class, ParserFunction type, memoization, flags
-  combinators.ts    (reserved — combinator methods live on Parser class)
+  parser.ts         Parser<T> class, combinators, ParserFunction type, memoization, flags
   leaf.ts           Leaf parsers: string, regex, eof, any, dispatch, all, whitespace
   lazy.ts           getLazyParser(), createLazyCached(), lazy decorator
   span.ts           regexSpan(), manySpan(), sepBySpan(), wrapSpan()

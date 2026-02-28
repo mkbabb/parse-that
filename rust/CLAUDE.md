@@ -80,6 +80,6 @@ JsonValue<'a>                // Null | Bool | Number | String(Cow) | Array | Obj
 - Zero-copy: `Span<'a>` borrows source, `Cow<'a, str>` for decoded strings
 - SIMD acceleration: `memchr2` for JSON string scanning
 - Integer fast path: accumulate digits inline, `fast-float2` for decimals
-- Monolithic scanners: `json_string_fast`, `number_span_fast` bypass combinator overhead
+- Monolithic scanners in `parsers/json.rs`: `json_string_fast`, `number_span_fast` bypass combinator overhead
 - `dispatch_byte()` / `dispatch_byte_multi()` for O(1) first-byte branching
 - Benchmark profiles: `release-lto`, `bench` (fat LTO, codegen-units=1, opt-level=3)
