@@ -28,7 +28,7 @@ test/
   css-recovery-demo.test.ts  Multi-error recovery via recover() combinator (13 tests)
   debug.test.ts           Diagnostics unit tests (summarizeLine, formatExpected, labels, suggestions)
   json.test.ts            JSON combinator parser
-  json-vectors.test.ts    Shared BBNF test vectors (grammar/tests/json/)
+  json-vectors.test.ts    Shared JSON test vectors (grammar/tests/json/)
   math.test.ts            Math expressions with operator precedence
   memoize.test.ts         Left recursion via .memoize() / .mergeMemos()
   print.test.ts           parserPrint() output

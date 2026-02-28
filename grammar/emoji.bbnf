@@ -1,9 +1,0 @@
-program = {statement}, 🍕 ;
-statement = assignment | print ;
-assignment = identifier, 🍔, expression ;
-print = 📢, expression ;
-expression = term, {🍟 | 🥗, term} ;
-term = factor, {🍩 | 🍰, factor} ;
-factor = number | identifier | (👉, expression, 👈) ;
-identifier = 😎 | 😂 | 😍 | 😊 ;
-number = 🔢 | 🔢🔢 | 🔢🔢🔢 ;

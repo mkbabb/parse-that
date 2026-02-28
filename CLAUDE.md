@@ -1,6 +1,6 @@
 # parse-that
 
-Parser combinator library — TypeScript + Rust monorepo with shared BBNF grammars.
+Parser combinator library — TypeScript + Rust monorepo.
 
 ## Structure
 
@@ -31,10 +31,10 @@ rust/                      Rust workspace
     tests/                 Integration tests (5 files)
     benches/               Benchmark suite (10 benches × 6 datasets)
   src/                     CLI binary (parse_that_cli)
-grammar/                   Shared BBNF grammar files (16 .bbnf files)
-  tests/json/              Shared JSON test vectors (valid + invalid JSONL)
-  tests/css/               CSS test vectors (complex-errors.css for recovery)
-  tests/debug/             Shared diagnostic output vectors
+grammar/tests/             Shared test vectors
+  json/                    Valid + invalid JSONL test vectors
+  css/                     CSS test vectors (complex-errors.css for recovery)
+  debug/                   Shared diagnostic output vectors
 docs/                      Performance chronicles, API reference
 data/                      Benchmark datasets (JSON, CSV)
 assets/                    Images (logo, debug screenshot)
@@ -78,8 +78,7 @@ just rs-test      # cd rust && cargo test --workspace
 - Rust: `diagnostics` Cargo feature — expected sets, suggestions, secondary spans, error recovery
 - Both: `recover(sync, sentinel)` combinator — parse past errors, collect multi-error diagnostics
 - Rust: edition 2024
-- BBNF grammars are the shared contract between TS and Rust
-- BBNF ecosystem extracted to separate [`bbnf-lang`](https://github.com/mkbabb/bbnf-lang) repo
+- BBNF ecosystem lives in separate [`bbnf-lang`](https://github.com/mkbabb/bbnf-lang) repo — `grammar/tests/` are the only shared artifacts
 - Benchmark competitors are in devDependencies/dev-dependencies only
 
 ## CI
