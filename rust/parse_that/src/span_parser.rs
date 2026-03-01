@@ -1,6 +1,7 @@
 use regex::Regex;
+use std::sync::Arc;
 
-use crate::leaf::trim_leading_whitespace;
+use crate::leaf::{cached_regex, trim_leading_whitespace};
 use crate::parse::{Parser, ParserFn};
 use crate::state::{ParserState, Span};
 use crate::utils::extract_bounds;
@@ -46,7 +47,7 @@ pub struct SpanParser<'a> {
 enum SpanKind<'a> {
     // === Leaves (no inner parser, no vtable) ===
     StringLiteral(&'static [u8]),
-    RegexMatch(Regex),
+    RegexMatch(Arc<Regex>),
     AhoCorasickMatch(AhoCorasick),
     TakeWhileByte(fn(u8) -> bool),
     TakeWhileChar(Box<dyn Fn(char) -> bool + 'a>),
@@ -84,6 +85,9 @@ enum SpanKind<'a> {
     Skip(Box<SpanParser<'a>>, Box<SpanParser<'a>>),
     Next(Box<SpanParser<'a>>, Box<SpanParser<'a>>),
     Not(Box<SpanParser<'a>>, Box<SpanParser<'a>>),
+    /// Set difference: match main only if excluded would NOT match at the same
+    /// starting position. Used for EBNF/BNF exception (`-`) semantics.
+    Minus(Box<SpanParser<'a>>, Box<SpanParser<'a>>),
     LookAhead(Box<SpanParser<'a>>, Box<SpanParser<'a>>),
 
     // === Escape hatch ===
@@ -432,6 +436,16 @@ impl<'a> SpanParser<'a> {
                 None
             }
 
+            SpanKind::Minus(main, excluded) => {
+                let checkpoint = state.offset;
+                if excluded.call(state).is_some() {
+                    state.offset = checkpoint;
+                    return None;
+                }
+                state.offset = checkpoint;
+                main.call(state)
+            }
+
             SpanKind::LookAhead(main, lookahead) => {
                 let span = main.call(state)?;
                 let offset_after = state.offset;
@@ -533,6 +547,13 @@ impl<'a> SpanParser<'a> {
         sp_new!(SpanKind::Not(Box::new(self), Box::new(negated)))
     }
 
+    /// Set difference: match `self` only if `excluded` would NOT match at the
+    /// same starting position. Used for EBNF/BNF exception (`-`) semantics.
+    #[inline]
+    pub fn minus_span(self, excluded: SpanParser<'a>) -> SpanParser<'a> {
+        sp_new!(SpanKind::Minus(Box::new(self), Box::new(excluded)))
+    }
+
     #[inline]
     pub fn look_ahead_span(self, lookahead: SpanParser<'a>) -> SpanParser<'a> {
         sp_new!(SpanKind::LookAhead(Box::new(self), Box::new(lookahead)))
@@ -607,9 +628,9 @@ pub fn sp_string<'a>(s: &'static str) -> SpanParser<'a> {
     }
 }
 
-/// Match regex pattern. The pattern string is compiled at construction time.
+/// Match regex pattern. Uses global cache to avoid recompilation.
 pub fn sp_regex<'a>(r: &str) -> SpanParser<'a> {
-    let re = Regex::new(r).unwrap_or_else(|_| panic!("Failed to compile regex: {}", r));
+    let re = cached_regex(r);
     #[cfg(feature = "diagnostics")]
     {
         let label: &'static str = Box::leak(format!("/{}/", r).into_boxed_str());

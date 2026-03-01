@@ -79,6 +79,25 @@ where
         Parser::new(not)
     }
 
+    /// Set difference: match `self` only if `excluded` would NOT match at the
+    /// same starting position. Used for EBNF/BNF exception (`-`) semantics.
+    #[inline]
+    pub fn minus<Output2>(self, excluded: Parser<'a, Output2>) -> Parser<'a, Output>
+    where
+        Output2: 'a,
+    {
+        let minus = move |state: &mut ParserState<'a>| {
+            let checkpoint = state.offset;
+            if excluded.call(state).is_some() {
+                state.offset = checkpoint;
+                return None;
+            }
+            state.offset = checkpoint;
+            self.call(state)
+        };
+        Parser::new(minus)
+    }
+
     #[inline]
     pub fn negate(self) -> Parser<'a, ()> {
         let negate = move |state: &mut ParserState<'a>| {

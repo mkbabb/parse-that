@@ -1,9 +1,26 @@
 use regex::Regex;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex, OnceLock};
 
 use crate::parse::Parser;
 use crate::state::{ParserState, Span};
 
 use aho_corasick::{AhoCorasickBuilder, Anchored, Input, MatchKind, StartKind};
+
+/// Global regex cache — avoids recompiling the same pattern on repeated parser construction.
+pub fn cached_regex(pattern: &str) -> Arc<Regex> {
+    static CACHE: OnceLock<Mutex<HashMap<String, Arc<Regex>>>> = OnceLock::new();
+    let cache = CACHE.get_or_init(|| Mutex::new(HashMap::new()));
+    let mut map = cache.lock().unwrap();
+    if let Some(re) = map.get(pattern) {
+        return Arc::clone(re);
+    }
+    let re = Arc::new(
+        Regex::new(pattern).unwrap_or_else(|_| panic!("Failed to compile regex: {}", pattern)),
+    );
+    map.insert(pattern.to_owned(), Arc::clone(&re));
+    re
+}
 
 #[inline(always)]
 pub fn trim_leading_whitespace(state: &ParserState<'_>) -> usize {
@@ -106,7 +123,7 @@ fn regex_impl<'a>(re: &Regex, state: &mut ParserState<'a>) -> Option<Span<'a>> {
 #[inline(always)]
 #[allow(clippy::manual_map)]
 pub fn regex<'a>(r: &'a str) -> Parser<'a, &'a str> {
-    let re = Regex::new(r).unwrap_or_else(|_| panic!("Failed to compile regex: {}", r));
+    let re = cached_regex(r);
     #[cfg(feature = "diagnostics")]
     let label: &'static str = Box::leak(format!("/{}/", r).into_boxed_str());
     let regex = move |state: &mut ParserState<'a>| {
@@ -125,7 +142,7 @@ pub fn regex<'a>(r: &'a str) -> Parser<'a, &'a str> {
 #[inline(always)]
 #[allow(clippy::manual_map)]
 pub fn regex_span<'a>(r: &'a str) -> Parser<'a, Span<'a>> {
-    let re = Regex::new(r).unwrap_or_else(|_| panic!("Failed to compile regex: {}", r));
+    let re = cached_regex(r);
     #[cfg(feature = "diagnostics")]
     let label: &'static str = Box::leak(format!("/{}/", r).into_boxed_str());
     let regex = move |state: &mut ParserState<'a>| {
