@@ -79,7 +79,8 @@ just rs-test      # cd rust && cargo test --workspace
 - Both: `recover(sync, sentinel)` combinator — parse past errors, collect multi-error diagnostics
 - Both: `minus(excluded)` combinator — EBNF/BNF set-difference semantics (rejects if excluded matches at same position)
 - Rust: `cached_regex()` in `leaf.rs` — global `Arc<Regex>` cache avoids recompilation on repeated parser construction
-- Rust: `take_until_any_span(excluded)` — LUT-based byte scanner for negated character classes (`[^...]+`), 10-15x faster than regex NFA
+- Rust: `take_until_any_span(excluded)` / `sp_take_until_any(excluded)` — LUT-based byte scanner for negated character classes (`[^...]+`), 10-15x faster than regex NFA
+- Rust: `seq!` / `alt!` macros — flat N-ary combinators, single Box allocation. Used by BBNF codegen for inline alternation.
 - Rust: edition 2024
 - BBNF ecosystem lives in separate [`bbnf-lang`](https://github.com/mkbabb/bbnf-lang) repo — `grammar/tests/` are the only shared artifacts
 - Benchmark competitors are in devDependencies/dev-dependencies only

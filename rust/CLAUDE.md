@@ -64,7 +64,7 @@ ParserResult<'a, O> = Option<O>
 
 // Span-optimized (span_parser.rs)
 SpanParser<'a>               // Enum-dispatched, no vtable on hot path
-SpanKind<'a>                 // StringLiteral | RegexMatch | JsonNumber | JsonString | Seq | OneOf | Minus | ...
+SpanKind<'a>                 // StringLiteral | RegexMatch | JsonNumber | JsonString | TakeUntilAny | Seq | OneOf | Minus | ...
 
 // State (state.rs)
 ParserState<'a>              // src, src_bytes, offset, furthest_offset
@@ -92,4 +92,6 @@ JsonValue<'a>                // Null | Bool | Number | String(Cow) | Array | Obj
 - `dispatch_byte()` / `dispatch_byte_multi()` for O(1) first-byte branching
 - `cached_regex()` — global `Arc<Regex>` cache keyed by pattern string, avoids recompilation
 - `take_until_any_span(excluded)` — 256-byte LUT byte scanner for negated character classes (`[^...]+`); used by BBNF codegen for CSS patterns like `/[^;{}!,]+/`
+- `sp_take_until_any(excluded)` — SpanParser variant of LUT scanner (no boxing, enum-dispatched)
+- `seq!` / `alt!` macros — flat N-ary combinators (2-8 elements), single Box allocation instead of N-1 intermediate boxes
 - Benchmark profiles: `release-lto`, `bench` (fat LTO, codegen-units=1, opt-level=3)

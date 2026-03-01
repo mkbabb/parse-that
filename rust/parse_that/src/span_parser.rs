@@ -61,6 +61,9 @@ enum SpanKind<'a> {
     /// Like JsonString but returns span including the quote delimiters.
     /// Used by BBNF codegen where the regex captures the full quoted string.
     JsonStringQuoted,
+    /// LUT-based byte scanner for negated character classes (`[^...]+`).
+    /// Uses a 256-byte lookup table for branch-free scanning.
+    TakeUntilAny(Box<[bool; 256]>),
 
     // === Flat combinators (no nesting depth) ===
     Seq(Vec<SpanParser<'a>>),
@@ -301,6 +304,25 @@ impl<'a> SpanParser<'a> {
                     }
                 }
                 result
+            }
+
+            SpanKind::TakeUntilAny(lut) => {
+                let bytes = state.src_bytes;
+                let start = state.offset;
+                let end = bytes.len();
+                let mut i = start;
+                while i < end && !lut[unsafe { *bytes.get_unchecked(i) } as usize] {
+                    i += 1;
+                }
+                if i == start {
+                    #[cfg(feature = "diagnostics")]
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
+                    return None;
+                }
+                state.offset = i;
+                Some(Span::new(start, i, state.src))
             }
 
             SpanKind::Seq(parsers) => {
@@ -702,6 +724,26 @@ pub fn sp_json_string<'a>() -> SpanParser<'a> {
 #[inline]
 pub fn sp_json_string_quoted<'a>() -> SpanParser<'a> {
     sp_new!(SpanKind::JsonStringQuoted, "string")
+}
+
+/// Match one or more bytes until any byte in `excluded` is found.
+/// Enum-dispatched LUT scanner — no boxing, no vtable.
+#[inline]
+pub fn sp_take_until_any<'a>(excluded: &'static [u8]) -> SpanParser<'a> {
+    let mut lut = [false; 256];
+    for &b in excluded {
+        lut[b as usize] = true;
+    }
+    #[cfg(feature = "diagnostics")]
+    {
+        let chars: String = excluded.iter().map(|&b| b as char).collect();
+        let label: &'static str = Box::leak(format!("any byte not in [{}]", chars).into_boxed_str());
+        sp_new!(SpanKind::TakeUntilAny(Box::new(lut)), label)
+    }
+    #[cfg(not(feature = "diagnostics"))]
+    {
+        sp_new!(SpanKind::TakeUntilAny(Box::new(lut)))
+    }
 }
 
 /// Wrap a boxed `ParserFn` as a SpanParser escape hatch.
