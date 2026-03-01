@@ -90,4 +90,6 @@ JsonValue<'a>                // Null | Bool | Number | String(Cow) | Array | Obj
 - Integer fast path: accumulate digits inline, `fast-float2` for decimals
 - Monolithic scanners in `parsers/json.rs`: `json_string_fast`, `number_span_fast` bypass combinator overhead
 - `dispatch_byte()` / `dispatch_byte_multi()` for O(1) first-byte branching
+- `cached_regex()` — global `Arc<Regex>` cache keyed by pattern string, avoids recompilation
+- `take_until_any_span(excluded)` — 256-byte LUT byte scanner for negated character classes (`[^...]+`); used by BBNF codegen for CSS patterns like `/[^;{}!,]+/`
 - Benchmark profiles: `release-lto`, `bench` (fat LTO, codegen-units=1, opt-level=3)

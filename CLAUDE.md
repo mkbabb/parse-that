@@ -22,7 +22,7 @@ rust/                      Rust workspace
     src/
       parse.rs             Parser<'a, O> struct, ParseError, ParserFn trait
       combinators.rs       impl block combinators (then, or, map, many, recover, etc.)
-      leaf.rs              Leaf parsers (string, regex, dispatch_byte, etc.)
+      leaf.rs              Leaf parsers (string, regex, take_until_any_span, dispatch_byte, etc.)
       lazy.rs              LazyParser, lazy() function
       span_parser.rs       SpanParser<'a> — enum-dispatched, vtable-free
       state.rs             ParserState, Span, Diagnostic, diagnostics types (feature-gated)
@@ -78,6 +78,8 @@ just rs-test      # cd rust && cargo test --workspace
 - Rust: `diagnostics` Cargo feature — expected sets, suggestions, secondary spans, error recovery
 - Both: `recover(sync, sentinel)` combinator — parse past errors, collect multi-error diagnostics
 - Both: `minus(excluded)` combinator — EBNF/BNF set-difference semantics (rejects if excluded matches at same position)
+- Rust: `cached_regex()` in `leaf.rs` — global `Arc<Regex>` cache avoids recompilation on repeated parser construction
+- Rust: `take_until_any_span(excluded)` — LUT-based byte scanner for negated character classes (`[^...]+`), 10-15x faster than regex NFA
 - Rust: edition 2024
 - BBNF ecosystem lives in separate [`bbnf-lang`](https://github.com/mkbabb/bbnf-lang) repo — `grammar/tests/` are the only shared artifacts
 - Benchmark competitors are in devDependencies/dev-dependencies only

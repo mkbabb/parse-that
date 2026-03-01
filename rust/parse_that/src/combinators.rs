@@ -164,7 +164,7 @@ where
         let (lower_bound, upper_bound) = extract_bounds(bounds);
 
         let many = move |state: &mut ParserState<'a>| {
-            let est = if lower_bound > 0 { lower_bound } else { 8 };
+            let est = if lower_bound > 0 { lower_bound.max(16) } else { 32 };
             let mut values = Vec::with_capacity(est);
 
             while values.len() < upper_bound {
@@ -276,7 +276,7 @@ where
         let (lower_bound, upper_bound) = extract_bounds(bounds);
 
         let sep_by = move |state: &mut ParserState<'a>| {
-            let est = if lower_bound > 0 { lower_bound } else { 8 };
+            let est = if lower_bound > 0 { lower_bound.max(16) } else { 32 };
             let mut values = Vec::with_capacity(est);
 
             while values.len() < upper_bound {
