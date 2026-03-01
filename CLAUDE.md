@@ -77,6 +77,7 @@ just rs-test      # cd rust && cargo test --workspace
 - Rust: `Parser<'a, O>` (boxed dyn) + `SpanParser<'a>` (enum-dispatched, vtable-free)
 - Rust: `diagnostics` Cargo feature — expected sets, suggestions, secondary spans, error recovery
 - Both: `recover(sync, sentinel)` combinator — parse past errors, collect multi-error diagnostics
+- Both: `minus(excluded)` combinator — EBNF/BNF set-difference semantics (rejects if excluded matches at same position)
 - Rust: edition 2024
 - BBNF ecosystem lives in separate [`bbnf-lang`](https://github.com/mkbabb/bbnf-lang) repo — `grammar/tests/` are the only shared artifacts
 - Benchmark competitors are in devDependencies/dev-dependencies only

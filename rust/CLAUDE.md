@@ -64,7 +64,7 @@ ParserResult<'a, O> = Option<O>
 
 // Span-optimized (span_parser.rs)
 SpanParser<'a>               // Enum-dispatched, no vtable on hot path
-SpanKind<'a>                 // StringLiteral | RegexMatch | JsonNumber | JsonString | Seq | OneOf | ...
+SpanKind<'a>                 // StringLiteral | RegexMatch | JsonNumber | JsonString | Seq | OneOf | Minus | ...
 
 // State (state.rs)
 ParserState<'a>              // src, src_bytes, offset, furthest_offset
@@ -82,6 +82,7 @@ JsonValue<'a>                // Null | Bool | Number | String(Cow) | Array | Obj
 - Edition 2024, nightly required for `#![feature(cold_path)]`
 - `diagnostics` Cargo feature — expected sets, suggestions, secondary spans, error recovery (zero overhead when off)
 - `recover(sync, sentinel)` — parse past errors, collect Diagnostic snapshots into thread-local store
+- `minus(excluded)` — EBNF set-difference: match self only if excluded fails at same position. Distinct from `not` (which checks after consuming).
 - `pprint` path dep (`/Programming/pprint`) for Pretty derive
 - Two parser tiers: `Parser<'a, O>` (flexible, boxed) and `SpanParser<'a>` (fast, enum)
 - Zero-copy: `Span<'a>` borrows source, `Cow<'a, str>` for decoded strings
