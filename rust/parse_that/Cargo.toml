@@ -51,7 +51,7 @@ name = "parse_that_combinator"
 harness = false
 
 [dependencies]
-pprint = { version = "0.3.1", path = "/Users/mkbabb/Programming/pprint" }
+pprint = "0.3.1"
 regex = { version = "1.11", features = ["perf"] }
 colored = { version = "3", optional = true }
 memchr = "2.5.0"

@@ -8,6 +8,6 @@ name = "main"
 path = "main.rs"
 
 [dependencies]
-pprint = { version = "0.3.0", path = "/Users/mkbabb/Programming/pprint" }
+pprint = "0.3.1"
 regex = "1.11"
-parse_that = { version = "0.1.0", path = "../parse_that" }
+parse_that = { version = "0.1.1", path = "../parse_that" }
