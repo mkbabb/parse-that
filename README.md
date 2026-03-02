@@ -31,10 +31,9 @@ heyy.parse("heyyyyyyyyyt"); // => "heyyyyyyyyyt"
 Domain parsers ship with the library:
 
 ```ts
-import { jsonParser, csvParser, jsonParseFast } from "@mkbabb/parse-that";
+import { jsonParser, csvParser } from "@mkbabb/parse-that";
 
 jsonParser().parse('{"key": [1, 2, 3]}');   // combinator-based
-jsonParseFast('{"key": [1, 2, 3]}');        // hand-rolled fast path
 csvParser().parse('a,b,c\n1,2,3');          // RFC 4180
 ```
 
@@ -118,7 +117,7 @@ MB/s throughput. `bencher` crate with `black_box` on inputs and `b.bytes` set.
 | **citm_catalog** (1.7 MB) | **1,572** | 842 | 629 | 255 |
 | **data-xl** (39 MB) | **1,708** | 623 | 626 | 267 |
 
-#### All parsers (prior benchmark run, 11-parser matrix)
+#### All parsers (11-parser matrix)
 
 | Parser | data.json | canada | apache | twitter | citm_catalog | data-xl |
 |---|---:|---:|---:|---:|---:|---:|
@@ -132,11 +131,16 @@ MB/s throughput. `bencher` crate with `black_box` on inputs and `b.bytes` set.
 | serde_json | 607 | 569 | 546 | 582 | 864 | 624 |
 | winnow | 550 | 392 | 635 | 540 | 597 | 594 |
 | pest | 259 | 160 | 283 | 244 | 257 | 268 |
-| parse_that (BBNF) | 14 | -- | -- | -- | -- | -- |
+| parse_that (BBNF) | 249 | 309 | 358 | 342 | 438 | 552 |
 
 The fast path is a monolithic recursive parser with: SIMD string scanning
 (`memchr2`), integer fast path (`madd` + `ucvtf`), `Vec` objects (no HashMap),
 `u32` keyword loads, `Cow<str>` zero-copy strings, and `#[cold]` escape decoding.
+
+The BBNF-generated parser uses `#[derive(Parser)]` from a `.bbnf` grammar file—zero
+hand-written Rust. Hybrid codegen phases (number regex substitution, transparent
+alternation elimination, inline match dispatch, SpanParser dual methods, recursive
+SpanParser codegen) close the gap to 1.5–4x of the hand-written combinator parser.
 
 See [docs/perf-optimization-rust.md](docs/perf-optimization-rust.md) for the full
 optimization chronicle.

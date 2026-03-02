@@ -56,7 +56,7 @@ npx tsc --noEmit  # type check
 cd rust
 cargo test --workspace      # nightly required (cold_path)
 cargo check --workspace
-cargo bench --bench parse_that  # single bench
+cargo bench --bench parse_that_combinator  # single bench
 ```
 
 ### Just

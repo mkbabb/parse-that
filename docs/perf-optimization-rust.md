@@ -326,6 +326,46 @@ The BBNF parser is now within 1.5–4x of the hand-written combinator parser,
 and within the same order of magnitude as nom, winnow, and serde_json —
 all from a grammar file with zero hand-written Rust.
 
+### Phase E: Recursive SpanParser Codegen
+
+Phases A–D generated `_sp()` methods only for leaf rules whose body was a
+single regex or literal — `SpanParser` coverage was limited to ~2/21 rules
+in the CSS grammar. Phase E extends `try_generate_span_parser()` from
+leaf-only to all expression types: concatenation (`.then_span()`),
+alternation (`.or()`), many/optional, skip/next, minus, and nonterminal
+references via `Self::rule_sp()`.
+
+The set of span-eligible rules (`sp_method_rules`) is computed by an
+iterative fixed-point loop: start empty, attempt `SpanParser` codegen for
+all eligible rules, add successes, repeat until convergence (typically 2–3
+iterations). Concatenation span merging fuses consecutive Span-typed
+elements with `.then_span()`.
+
+A critical fix: BBNF literal escape sequences (`\\n`, `\\t`, etc.) must
+pass through `unescape_literal()` + `proc_macro2::Literal::string()` to
+emit correct Rust string literals in `sp_string()` / `sp_any()`.
+
+CSS coverage improved from 2/21 to ~14/21 rules with `_sp()` methods.
+
+### Phase F: Doc Allocation Optimization (prettify codegen)
+
+The prettify codegen emitted `Doc::Concat(vec![...])` at 4 sites — each
+allocating a `Vec` on the heap. Changed to `::pprint::concat(vec![...])`
+which dispatches to `DoubleDoc` / `TripleDoc` for 2–3 element tuples —
+stack-allocated, no `Vec` heap allocation. This reduced allocation pressure
+in the inner formatting loop.
+
+**Updated technique table:**
+
+| Phase | Technique | Impact |
+|-------|-----------|--------|
+| A | JSON number regex → `sp_json_number()` monolithic scanner | 5–15% (number-heavy) |
+| B | Transparent alternation elimination — skip wrapper enum variants | ~20% |
+| C | Inline match dispatch — compile-time `match byte {}` | ~10% |
+| D | SpanParser `_sp()` dual methods for leaf rules | ~5–10% |
+| E | Recursive SpanParser codegen — all expression types, fixed-point `sp_method_rules` | ~5–10% (CSS-heavy) |
+| F | Doc allocation optimization — `concat()` → DoubleDoc/TripleDoc | ~3–5% (prettify) |
+
 ---
 
 ## Architecture Deep Dive
@@ -565,7 +605,7 @@ recursive descent.
 ### BBNF (~249–552 MB/s) — Hybrid Codegen
 
 parse_that's BBNF-generated parser (via `#[derive(Parser)]`) was originally
-~14 MB/s—a ~115x gap versus the fast path. Four phases of automatic codegen
+~14 MB/s—a ~115x gap versus the fast path. Six phases of automatic codegen
 optimizations ("Hybrid BBNF Codegen") closed that to 1.5–4x:
 
 | Phase | Technique | Impact |
@@ -574,6 +614,8 @@ optimizations ("Hybrid BBNF Codegen") closed that to 1.5–4x:
 | B | Transparent alternation elimination — skip wrapper enum variants for pure-alternation rules like `value`, saving 1 Box + 1 enum tag per parse | ~20% |
 | C | Inline match dispatch — compile-time `match byte {}` replaces runtime `dispatch_byte_multi` LUT, eliminates per-branch vtable hops | ~10% |
 | D | SpanParser `_sp()` dual methods for leaf rules — span-eligible branches call `Self::rule_sp()` directly (no vtable hop, `#[inline(always)]`) | ~5–10% |
+| E | Recursive SpanParser codegen — all expression types, fixed-point `sp_method_rules` | ~5–10% (CSS-heavy) |
+| F | Doc allocation optimization — `concat()` → DoubleDoc/TripleDoc | ~3–5% (prettify) |
 
 **Remaining overhead vs. combinator path (1.5–4x):**
 

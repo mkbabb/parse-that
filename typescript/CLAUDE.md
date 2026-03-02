@@ -15,7 +15,6 @@ src/parse/
   ansi.ts           Zero-dep ANSI helpers (bold, red, green, etc.) — NO_COLOR + TTY aware
   utils.ts          mergeErrorState(), Diagnostic, collectDiagnostic(), Suggestion, SecondarySpan
   debug.ts          parserDebug(), statePrint(), formatDiagnostic(), formatAllDiagnostics()
-  json-fast.ts      Monolithic JSON parser — charCode dispatch, no combinators (376 lines)
   parsers/
     index.ts        Barrel re-exports for domain parsers
     json.ts         JsonValue type, jsonParser() — combinator JSON
@@ -65,7 +64,7 @@ regexSpan(), manySpan(), sepBySpan(), wrapSpan()
 mergeSpans(a, b), spanToString(span, src)
 
 // Domain parsers (parsers/)
-jsonParser(), JsonValue, csvParser(), jsonParseFast()
+jsonParser(), JsonValue, csvParser()
 escapedString(), quotedString(), numberParser()
 
 // Diagnostics (utils.ts + debug.ts)
