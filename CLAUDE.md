@@ -66,6 +66,26 @@ just ts-test      # cd typescript && npm test
 just rs-test      # cd rust && cargo test --workspace
 ```
 
+## Dependency Graph
+
+```
+Rust (crates.io):                     NPM:
+  pprint_derive                         @mkbabb/parse-that
+      ↓                                     ↓           ↓
+    pprint                              @mkbabb/value.js  @mkbabb/bbnf-lang
+      ↓                                     ↓
+  parse_that  ← pprint                 @mkbabb/keyframes.js
+      ↓
+    bbnf      ← parse_that, pprint
+      ↓
+  bbnf_derive ← bbnf, parse_that, pprint
+      ↓
+   gorgeous   ← all of the above
+```
+
+Local dev: `.cargo/config.toml` with `[patch.crates-io]` for sibling repo overrides.
+Cargo.toml uses crates.io version-only deps (no absolute paths).
+
 ## Key Conventions
 
 - TS: `strict:true`, `verbatimModuleSyntax:true`, ES2022+, zero runtime deps
