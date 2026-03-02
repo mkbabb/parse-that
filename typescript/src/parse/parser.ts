@@ -366,6 +366,34 @@ export class Parser<T = string> {
         );
     }
 
+    /**
+     * Set difference: match `this` only if `excluded` would NOT match at the
+     * same starting position. Used for EBNF/BNF exception (`-`) semantics.
+     */
+    minus<S>(excluded: Parser<S>) {
+        const inner = this;
+        const minus = (state: ParserState<T>) => {
+            const savedOffset = state.offset;
+            excluded.parser(state as ParserState<any>);
+            if (!state.isError) {
+                // excluded matched — fail
+                state.offset = savedOffset;
+                state.isError = true;
+                return state;
+            }
+            // excluded failed — try self
+            state.offset = savedOffset;
+            state.isError = false;
+            inner.parser(state);
+            return state;
+        };
+
+        return new Parser(
+            minus as ParserFunction<T>,
+            createParserContext("minus", this as Parser<unknown>, excluded),
+        );
+    }
+
     wrap<L, R>(start: Parser<L>, end: Parser<R>, discard: boolean = true) {
         if (!discard) {
             return all(start as Parser<unknown>, this as Parser<unknown>, end as Parser<unknown>);
