@@ -15,10 +15,6 @@ default = []
 diagnostics = []
 
 [[bench]]
-name = "parse_that"
-harness = false
-
-[[bench]]
 name = "nom"
 harness = false
 
