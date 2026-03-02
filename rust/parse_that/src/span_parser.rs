@@ -92,6 +92,10 @@ pub(super) enum SpanKind<'a> {
     /// starting position. Used for EBNF/BNF exception (`-`) semantics.
     Minus(Box<SpanParser<'a>>, Box<SpanParser<'a>>),
     LookAhead(Box<SpanParser<'a>>, Box<SpanParser<'a>>),
+    /// Zero-width negative assertion: succeeds (empty Span) when inner fails.
+    Negate(Box<SpanParser<'a>>),
+    /// End-of-input check: succeeds (empty Span) if at end of source.
+    Eof,
 
     // === Escape hatch ===
     Boxed(Box<dyn ParserFn<'a, Span<'a>> + 'a>),
@@ -260,16 +264,17 @@ impl<'a> SpanParser<'a> {
             }
 
             SpanKind::NextN(amount) => {
-                if state.is_at_end() {
+                let start = state.offset;
+                let new_offset = start + amount;
+                if new_offset > state.src.len() {
                     #[cfg(feature = "diagnostics")]
                     if let Some(lbl) = self.label {
                         state.add_expected(lbl);
                     }
                     return None;
                 }
-                let start = state.offset;
-                state.offset += amount;
-                Some(Span::new(start, state.offset, state.src))
+                state.offset = new_offset;
+                Some(Span::new(start, new_offset, state.src))
             }
 
             SpanKind::Epsilon => Some(Span::new(state.offset, state.offset, state.src)),
@@ -372,17 +377,30 @@ impl<'a> SpanParser<'a> {
                 hi,
             } => {
                 let start = state.offset;
-                let mut end = state.offset;
                 let mut count = 0;
+                // Parse first element
+                let Some(first_span) = inner.call(state) else {
+                    if *lo == 0 {
+                        return Some(Span::new(start, start, state.src));
+                    }
+                    return None;
+                };
+                let mut end = first_span.end;
+                count += 1;
+                // Parse (sep elem)* — checkpoint before separator to reject
+                // trailing separators.
                 while count < *hi {
+                    let cp = state.offset;
+                    if sep.call(state).is_none() {
+                        state.offset = cp;
+                        break;
+                    }
                     if let Some(span) = inner.call(state) {
                         end = span.end;
                         count += 1;
                     } else {
-                        break;
-                    }
-                    let cp = state.offset;
-                    if sep.call(state).is_none() {
+                        // Element after separator failed — backtrack past
+                        // the separator (reject trailing sep).
                         state.offset = cp;
                         break;
                     }
@@ -452,19 +470,28 @@ impl<'a> SpanParser<'a> {
 
             SpanKind::Not(main, negated) => {
                 let span = main.call(state)?;
+                let checkpoint = state.offset;
+                let saved_furthest = state.furthest_offset;
                 if negated.call(state).is_none() {
+                    state.offset = checkpoint;
+                    state.furthest_offset = saved_furthest;
                     return Some(span);
                 }
+                state.offset = checkpoint;
+                state.furthest_offset = saved_furthest;
                 None
             }
 
             SpanKind::Minus(main, excluded) => {
                 let checkpoint = state.offset;
+                let saved_furthest = state.furthest_offset;
                 if excluded.call(state).is_some() {
                     state.offset = checkpoint;
+                    state.furthest_offset = saved_furthest;
                     return None;
                 }
                 state.offset = checkpoint;
+                state.furthest_offset = saved_furthest;
                 main.call(state)
             }
 
@@ -475,6 +502,31 @@ impl<'a> SpanParser<'a> {
                 state.offset = offset_after;
                 result?;
                 Some(span)
+            }
+
+            SpanKind::Negate(inner) => {
+                let checkpoint = state.offset;
+                let saved_furthest = state.furthest_offset;
+                if inner.call(state).is_none() {
+                    state.offset = checkpoint;
+                    state.furthest_offset = saved_furthest;
+                    return Some(Span::new(checkpoint, checkpoint, state.src));
+                }
+                state.offset = checkpoint;
+                state.furthest_offset = saved_furthest;
+                None
+            }
+
+            SpanKind::Eof => {
+                if state.is_at_end() {
+                    Some(Span::new(state.offset, state.offset, state.src))
+                } else {
+                    #[cfg(feature = "diagnostics")]
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
+                    None
+                }
             }
 
             SpanKind::Boxed(inner) => inner.call(state),
@@ -579,6 +631,12 @@ impl<'a> SpanParser<'a> {
     #[inline]
     pub fn look_ahead_span(self, lookahead: SpanParser<'a>) -> SpanParser<'a> {
         sp_new!(SpanKind::LookAhead(Box::new(self), Box::new(lookahead)))
+    }
+
+    /// Zero-width negative assertion: succeeds (empty Span) when inner fails.
+    #[inline]
+    pub fn negate_span(self) -> SpanParser<'a> {
+        sp_new!(SpanKind::Negate(Box::new(self)))
     }
 
     // ── Flag setters ──────────────────────────────────────────

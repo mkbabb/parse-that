@@ -84,6 +84,21 @@ export function addSecondarySpan(offset: number, label: string) {
     }
 }
 
+/**
+ * Report an unclosed delimiter diagnostic. Shared by wrap() and wrapSpan().
+ */
+export function reportUnclosedDelimiter(openText: string, openOffset: number) {
+    if (!diagnosticsEnabled) return;
+    const closeText =
+        openText === "{" ? "}" : openText === "[" ? "]" : openText === "(" ? ")" : openText;
+    addSuggestion({
+        kind: "unclosed-delimiter",
+        message: `close the delimiter with \`${closeText}\``,
+        openOffset,
+    });
+    addSecondarySpan(openOffset, `unclosed \`${openText}\` opened here`);
+}
+
 export function resetErrorState() {
     lastState = undefined;
     lastFurthestOffset = -1;

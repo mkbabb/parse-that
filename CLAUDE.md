@@ -10,7 +10,7 @@ typescript/                TS library (@mkbabb/parse-that v0.7.0)
     parser.ts              Parser<T> class, combinators, recover(), memoization, flags
     leaf.ts                Leaf parsers (string, regex, eof, dispatch, etc.)
     lazy.ts                Lazy evaluation infrastructure
-    span.ts                Zero-copy span combinators
+    span.ts                Zero-copy span combinators (stringSpan, regexSpan, manySpan, sepBySpan, wrapSpan, optSpan, skipSpan, nextSpan)
     state.ts               ParserState, Span, ParserContext
     debug.ts               Diagnostics rendering, ANSI output, formatDiagnostic()
     ansi.ts                Zero-dep ANSI helpers (NO_COLOR + TTY aware)
@@ -27,7 +27,7 @@ rust/                      Rust workspace
       span_parser.rs       SpanParser<'a> — enum-dispatched, vtable-free
       state.rs             ParserState, Span, Diagnostic, diagnostics types (feature-gated)
       debug.rs             Diagnostics rendering, format_diagnostic() (feature-gated)
-      parsers/             Domain parsers (JSON + scanners, CSV, TOML)
+      parsers/             Domain parsers (JSON + scanners, CSV)
     tests/                 Integration tests (5 files)
     benches/               Benchmark suite (10 benches × 6 datasets)
   src/                     CLI binary (parse_that_cli)
@@ -71,13 +71,15 @@ just rs-test      # cd rust && cargo test --workspace
 - TS: `strict:true`, `verbatimModuleSyntax:true`, ES2022+, zero runtime deps
 - TS: `Parser.lazy(() => ...)` for recursive definitions (no decorators)
 - TS: Mutable `ParserState` with save/restore — zero-alloc hot path
-- TS: Span variants (`regexSpan`, `manySpan`, `sepBySpan`, `wrapSpan`) for zero-copy
+- TS: Span variants (`stringSpan`, `regexSpan`, `manySpan`, `sepBySpan`, `wrapSpan`, `optSpan`, `skipSpan`, `nextSpan`) for zero-copy
 - Rust: `pprint` (path dep to `/Programming/pprint`) for pretty-printing
 - Rust: nightly required — `#![feature(cold_path)]`
 - Rust: `Parser<'a, O>` (boxed dyn) + `SpanParser<'a>` (enum-dispatched, vtable-free)
 - Rust: `diagnostics` Cargo feature — expected sets, suggestions, secondary spans, error recovery
 - Both: `recover(sync, sentinel)` combinator — parse past errors, collect multi-error diagnostics
 - Both: `minus(excluded)` combinator — EBNF/BNF set-difference semantics (rejects if excluded matches at same position)
+- Both: `sep_by` strictly interleaving `elem (sep elem)*` — never accepts trailing separators
+- Rust: `negate()` — zero-width negative assertion; `not()` — consuming negative lookahead
 - Rust: `cached_regex()` in `leaf.rs` — global `Arc<Regex>` cache avoids recompilation on repeated parser construction
 - Rust: `take_until_any_span(excluded)` / `sp_take_until_any(excluded)` — LUT-based byte scanner for negated character classes (`[^...]+`), 10-15x faster than regex NFA
 - Rust: `seq!` / `alt!` macros — flat N-ary combinators, single Box allocation. Used by BBNF codegen for inline alternation.
@@ -89,4 +91,4 @@ just rs-test      # cd rust && cargo test --workspace
 
 GitHub Actions (`.github/workflows/ci.yml`):
 - **TypeScript**: Node 24 → tsc --noEmit → vitest → vite build
-- **Rust**: nightly → clippy -D warnings → cargo test --workspace
+- **Rust**: nightly → clippy -D warnings → cargo test --workspace → cargo test --workspace --features diagnostics

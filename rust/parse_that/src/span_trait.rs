@@ -109,24 +109,39 @@ impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
         ParserSpan::many(self, bounds)
     }
 
+    /// Strictly interleaving: `elem (sep elem)*`. Never accepts trailing separators.
     #[inline]
     fn sep_by(self, sep: Self::Output, bounds: impl RangeBounds<usize> + 'a) -> Self::Output {
         let (lower_bound, upper_bound) = extract_bounds(bounds);
 
         let sep_by = move |state: &mut ParserState<'a>| {
             let start = state.offset;
-            let mut end = state.offset;
             let mut count = 0;
 
+            // Parse first element
+            let Some(first_value) = self.call(state) else {
+                if lower_bound == 0 {
+                    return Some(Span::new(start, start, state.src));
+                }
+                return None;
+            };
+            let mut end = first_value.end;
+            count += 1;
+
+            // Parse (sep elem)* — checkpoint before separator to reject
+            // trailing separators.
             while count < upper_bound {
+                let cp = state.offset;
+                if sep.call(state).is_none() {
+                    state.offset = cp;
+                    break;
+                }
                 if let Some(value) = self.call(state) {
                     end = value.end;
                     count += 1;
                 } else {
-                    break;
-                }
-                let cp = state.offset;
-                if sep.call(state).is_none() {
+                    // Element after separator failed — backtrack past the
+                    // separator to reject trailing separator.
                     state.offset = cp;
                     break;
                 }

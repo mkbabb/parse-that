@@ -2,7 +2,7 @@
 import type { Parser as ParserType, ParserFunction } from "./parser.js";
 import type { ParserState, Span } from "./state.js";
 import { createParserContext } from "./state.js";
-import { mergeErrorState, addSuggestion, addSecondarySpan, isDiagnosticsEnabled } from "./utils.js";
+import { mergeErrorState, reportUnclosedDelimiter } from "./utils.js";
 
 // Late-bound Parser constructor to break circular dependency with parser.ts.
 let _ParserCtor: any;
@@ -15,6 +15,34 @@ function makeParser<T>(parser: ParserFunction<T>, context?: any): ParserType<T> 
 }
 
 type Parser<T> = ParserType<T>;
+
+// ── Leaf Span Combinators ────────────────────────────────────
+
+/**
+ * Match exact string literal, returning a Span.
+ */
+export function stringSpan(s: string): Parser<Span> {
+    const len = s.length;
+    const label = `"${s}"`;
+
+    const stringSpanParser = (state: ParserState<Span>) => {
+        if (state.src.startsWith(s, state.offset)) {
+            const start = state.offset;
+            state.offset += len;
+            (state as any).value = { start, end: state.offset };
+            state.isError = false;
+            return state;
+        }
+        mergeErrorState(state as ParserState<unknown>, label);
+        state.isError = true;
+        return state;
+    };
+
+    return makeParser(
+        stringSpanParser as ParserFunction<Span>,
+        createParserContext("string", undefined, s),
+    );
+}
 
 /**
  * Like regex(), but returns a Span instead of a substring.
@@ -73,7 +101,7 @@ export function manySpan(
 
         for (let i = 0; i < max; i++) {
             const savedOffset = state.offset;
-            inner.parser(state as any);
+            inner.call(state as any);
             if (state.isError) {
                 state.offset = savedOffset;
                 state.isError = false;
@@ -101,6 +129,7 @@ export function manySpan(
 
 /**
  * Like sepBy(), but coalesces all matches into a single Span.
+ * Strictly interleaving: `elem (sep elem)*`. Never accepts trailing separators.
  */
 export function sepBySpan<S>(
     inner: Parser<Span>,
@@ -111,29 +140,47 @@ export function sepBySpan<S>(
     const sepBySpanParser = (state: ParserState<Span>) => {
         const start = state.offset;
         let count = 0;
+        let end = state.offset;
 
-        for (let i = 0; i < max; i++) {
+        // Parse first element
+        {
             const savedOffset = state.offset;
-            inner.parser(state as any);
+            inner.call(state as any);
             if (state.isError) {
                 state.offset = savedOffset;
                 state.isError = false;
-                break;
-            }
-            if (state.offset === savedOffset) break;
-            count++;
-
-            const sepOffset = state.offset;
-            sep.parser(state as any);
-            if (state.isError) {
-                state.offset = sepOffset;
-                state.isError = false;
-                break;
+            } else if (state.offset !== savedOffset) {
+                end = state.offset;
+                count++;
             }
         }
 
+        // Parse (sep elem)* — checkpoint before separator to reject
+        // trailing separators.
+        while (count > 0 && count < max) {
+            const cpBeforeSep = state.offset;
+            sep.call(state as any);
+            if (state.isError) {
+                state.offset = cpBeforeSep;
+                state.isError = false;
+                break;
+            }
+
+            const savedOffset = state.offset;
+            inner.call(state as any);
+            if (state.isError || state.offset === savedOffset) {
+                // Element after separator failed — backtrack past the
+                // separator to reject trailing separator.
+                state.offset = cpBeforeSep;
+                state.isError = false;
+                break;
+            }
+            end = state.offset;
+            count++;
+        }
+
         if (count >= min) {
-            (state as any).value = { start, end: state.offset };
+            (state as any).value = { start, end };
             state.isError = false;
             return state;
         }
@@ -158,14 +205,14 @@ export function wrapSpan(
 ): Parser<Span> {
     const wrapSpanParser = (state: ParserState<Span>) => {
         const savedOffset = state.offset;
-        left.parser(state as any);
+        left.call(state as any);
         if (state.isError) {
             state.offset = savedOffset;
             return state;
         }
         const openEnd = state.offset;
         const innerStart = state.offset;
-        inner.parser(state as any);
+        inner.call(state as any);
         if (state.isError) {
             mergeErrorState(state as ParserState<unknown>);
             state.offset = savedOffset;
@@ -173,19 +220,10 @@ export function wrapSpan(
             return state;
         }
         const innerEnd = state.offset;
-        right.parser(state as any);
+        right.call(state as any);
         if (state.isError) {
             mergeErrorState(state as ParserState<unknown>);
-            if (isDiagnosticsEnabled()) {
-                const openText = state.src.slice(savedOffset, openEnd);
-                const closeText = openText === "{" ? "}" : openText === "[" ? "]" : openText === "(" ? ")" : openText;
-                addSuggestion({
-                    kind: "unclosed-delimiter",
-                    message: `close the delimiter with \`${closeText}\``,
-                    openOffset: savedOffset,
-                });
-                addSecondarySpan(savedOffset, `unclosed \`${openText}\` opened here`);
-            }
+            reportUnclosedDelimiter(state.src.slice(savedOffset, openEnd), savedOffset);
             state.offset = savedOffset;
             state.isError = true;
             return state;
@@ -198,5 +236,86 @@ export function wrapSpan(
     return makeParser(
         wrapSpanParser as ParserFunction<Span>,
         createParserContext("wrapSpan", inner as any, left, right),
+    );
+}
+
+// ── Additional Span Combinators ─────────────────────────────
+
+/**
+ * Optional span: returns the inner Span if matched, or an empty Span at
+ * the current position on failure.
+ */
+export function optSpan(inner: Parser<Span>): Parser<Span> {
+    const optSpanParser = (state: ParserState<Span>) => {
+        const start = state.offset;
+        inner.call(state as any);
+        if (state.isError) {
+            state.isError = false;
+            (state as any).value = { start, end: start };
+            return state;
+        }
+        return state;
+    };
+
+    return makeParser(
+        optSpanParser as ParserFunction<Span>,
+        createParserContext("opt", inner as any),
+    );
+}
+
+/**
+ * Parse `keep` then `skip` — return only the Span from `keep`.
+ */
+export function skipSpan(keep: Parser<Span>, skip: Parser<any>): Parser<Span> {
+    const skipSpanParser = (state: ParserState<Span>) => {
+        const savedOffset = state.offset;
+        keep.call(state as any);
+        if (state.isError) {
+            state.offset = savedOffset;
+            return state;
+        }
+        const span = (state as any).value;
+        skip.call(state as any);
+        if (state.isError) {
+            mergeErrorState(state as ParserState<unknown>);
+            state.offset = savedOffset;
+            state.isError = true;
+            return state;
+        }
+        (state as any).value = span;
+        state.isError = false;
+        return state;
+    };
+
+    return makeParser(
+        skipSpanParser as ParserFunction<Span>,
+        createParserContext("skip", keep as any, skip),
+    );
+}
+
+/**
+ * Parse `skip` then `keep` — return only the Span from `keep`.
+ */
+export function nextSpan(skip: Parser<any>, keep: Parser<Span>): Parser<Span> {
+    const nextSpanParser = (state: ParserState<Span>) => {
+        const savedOffset = state.offset;
+        skip.call(state as any);
+        if (state.isError) {
+            state.offset = savedOffset;
+            return state;
+        }
+        keep.call(state as any);
+        if (state.isError) {
+            mergeErrorState(state as ParserState<unknown>);
+            state.offset = savedOffset;
+            state.isError = true;
+            return state;
+        }
+        return state;
+    };
+
+    return makeParser(
+        nextSpanParser as ParserFunction<Span>,
+        createParserContext("next", skip as any, keep),
     );
 }

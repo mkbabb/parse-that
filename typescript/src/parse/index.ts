@@ -6,5 +6,5 @@ export { mergeErrorState, enableDiagnostics, disableDiagnostics, collectDiagnost
 export type { Suggestion, SecondarySpan, Diagnostic } from "./utils.js";
 export { getLazyParser, createLazyCached, lazy } from "./lazy.js";
 export { eof, any, dispatch, all, string, regex, trimStateWhitespace, whitespace } from "./leaf.js";
-export { regexSpan, manySpan, sepBySpan, wrapSpan } from "./span.js";
+export { stringSpan, regexSpan, manySpan, sepBySpan, wrapSpan, optSpan, skipSpan, nextSpan } from "./span.js";
 export * from "./parsers/index.js";

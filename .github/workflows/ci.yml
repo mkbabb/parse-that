@@ -39,3 +39,5 @@ jobs:
         working-directory: rust
       - run: cargo test --workspace
         working-directory: rust
+      - run: cargo test --workspace --features diagnostics
+        working-directory: rust

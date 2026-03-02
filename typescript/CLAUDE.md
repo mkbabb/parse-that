@@ -10,7 +10,7 @@ src/parse/
   parser.ts         Parser<T> class, combinators, recover(), ParserFunction type, memoization, flags
   leaf.ts           Leaf parsers: string, regex, eof, any, dispatch, all, whitespace
   lazy.ts           getLazyParser(), createLazyCached(), lazy decorator
-  span.ts           regexSpan(), manySpan(), sepBySpan(), wrapSpan()
+  span.ts           stringSpan(), regexSpan(), manySpan(), sepBySpan(), wrapSpan(), optSpan(), skipSpan(), nextSpan()
   state.ts          ParserState<T>, Span, ParserContext types (152 lines)
   ansi.ts           Zero-dep ANSI helpers (bold, red, green, etc.) — NO_COLOR + TTY aware
   utils.ts          mergeErrorState(), Diagnostic, collectDiagnostic(), Suggestion, SecondarySpan
@@ -60,7 +60,8 @@ string(s), regex(r), eof(), any(...), all(...), dispatch(table, fallback?), whit
 Parser.lazy(fn), getLazyParser(), createLazyCached()
 
 // Span variants (span.ts — zero-copy)
-regexSpan(), manySpan(), sepBySpan(), wrapSpan()
+stringSpan(), regexSpan(), manySpan(), sepBySpan(), wrapSpan()
+optSpan(), skipSpan(), nextSpan()
 mergeSpans(a, b), spanToString(span, src)
 
 // Domain parsers (parsers/)
@@ -87,3 +88,5 @@ parser.recover(sync, sentinel)        // parse past errors, collect Diagnostic s
 - Numeric memo keys: `(parserId << 20) | offset` — no string alloc
 - `dispatch(table)` for O(1) ASCII first-char branching
 - Flag-based trim/EOF inlined in `Parser.call()` hot path
+- `sep_by` strictly interleaving `elem (sep elem)*` — never accepts trailing separators
+- Span combinators use `.call()` (not `.parser()`) to respect flag system (whitespace trim, memoization)

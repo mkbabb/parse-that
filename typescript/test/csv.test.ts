@@ -1,5 +1,5 @@
-import { regex, all, Parser, any, lazy, string } from "../src/parse";
-import { test, expect, describe, it } from "vitest";
+import { regex, all, any, string } from "../src/parse";
+import { describe, it, expect } from "vitest";
 import fs from "fs";
 
 const delim = string(",").trim();
@@ -74,5 +74,6 @@ describe("CSV Parser", () => {
         const filepath = "../data/csv/data.csv";
         const input = fs.readFileSync(filepath, "utf-8");
         const result = csv.parse(input);
+        expect(result.length).toBeGreaterThan(0);
     });
 });

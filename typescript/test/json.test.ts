@@ -1,5 +1,5 @@
-import { Parser, regex, all, any, string, lazy } from "../src/parse";
-import { test, expect, describe, it, bench } from "vitest";
+import { Parser, regex, all, any, string } from "../src/parse";
+import { describe, it, expect } from "vitest";
 import fs from "fs";
 
 const comma = string(",").trim();

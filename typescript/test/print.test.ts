@@ -1,5 +1,5 @@
-import { Parser, regex, all, any, string, lazy } from "../src/parse";
-import { test, expect, describe, it, bench } from "vitest";
+import { Parser, regex, all, any, string } from "../src/parse";
+import { describe, it, expect } from "vitest";
 import { parserPrint } from "../src/parse/debug";
 
 const comma = string(",").trim();
@@ -23,11 +23,11 @@ const mijn: Parser<any> = Parser.lazy(() => any(inner, string("b"), mijn));
 describe("Printer", () => {
     it("should print vibes", () => {
         const s = parserPrint(wrapped);
-        console.log(s);
+        expect(s).toBeTruthy();
     });
 
     it("should print lazy", () => {
         const s = parserPrint(mijn);
-        console.log(s);
+        expect(s).toBeTruthy();
     });
 });

@@ -12,7 +12,7 @@ path = "src/lib.rs"
 
 [features]
 default = []
-diagnostics = []
+diagnostics = ["dep:colored"]
 
 [[bench]]
 name = "nom"
@@ -53,7 +53,7 @@ harness = false
 [dependencies]
 pprint = { version = "0.3.0", path = "/Users/mkbabb/Programming/pprint" }
 regex = { version = "1.11", features = ["perf"] }
-colored = "3"
+colored = { version = "3", optional = true }
 memchr = "2.5.0"
 aho-corasick = "1.1"
 fast-float2 = "0.2"

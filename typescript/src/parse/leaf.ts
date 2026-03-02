@@ -268,18 +268,6 @@ export const trimStateWhitespace = <T>(state: ParserState<T>): ParserState<T> =>
     return state;
 };
 
-let _whitespace: ReturnType<typeof regex> | undefined;
-export function getWhitespace() {
-    if (!_whitespace) {
-        _whitespace = regex(/\s*/);
-        _whitespace.context.name = "whitespace";
-    }
-    return _whitespace;
-}
-// Backward-compatible: exported as a getter on a module-level object
-// that lazily creates the parser on first access.
-export { getWhitespace as _getWhitespace };
-
 // For backward compatibility, we export `whitespace` as a const that
 // is initialized after Parser class registration. The `_initWhitespace`
 // function is called by parser.ts after it registers the Parser class.

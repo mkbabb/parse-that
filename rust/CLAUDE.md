@@ -10,10 +10,12 @@ parse_that/               Core library crate
   src/
     lib.rs                Barrel re-exports, #![feature(cold_path)]
     parse.rs              Parser<'a, O> struct, ParseError, ParserFn trait
-    combinators.rs        impl block combinators (then, or, map, many, sep_by, recover, etc.)
+    combinators.rs        impl block combinators (then, or, map, many, sep_by, recover, minus, negate, etc.)
     leaf.rs               Leaf parsers (string, regex, take_while, dispatch_byte, etc.)
     lazy.rs               LazyParser, lazy() function
     span_parser.rs        SpanParser<'a> — enum-dispatched, vtable-free
+    span_constructors.rs  SpanParser leaf constructors (sp_string, sp_regex, sp_json_*, etc.)
+    span_trait.rs         ParserSpan trait (Span combinator aliases), ParserFlat trait
     state.rs              ParserState<'a>, Span<'a>, Diagnostic, Suggestion, SecondarySpan (diagnostics feature)
     debug.rs              Colored debug output, format_diagnostic(), format_all_diagnostics() (feature-gated)
     utils.rs              extract_bounds(), get_cargo_root_path() (20 lines)
@@ -21,7 +23,6 @@ parse_that/               Core library crate
       mod.rs              Module exports
       json.rs             JsonValue<'a>, combinator + fast JSON + scanners
       csv.rs              RFC 4180 CSV parser (47 lines)
-      toml.rs             TOML parser (incomplete)
       utils.rs            escaped_span(), quoted_span(), number_span() (38 lines)
   tests/
     combinator_test.rs    Core combinator coverage (698 lines)
@@ -31,7 +32,6 @@ parse_that/               Core library crate
     csv_test.rs           CSV parsing + large file test (49 lines)
   benches/
     README.md             Benchmark methodology & work equivalence
-    parse_that.rs         SpanParser JSON bench
     parse_that_combinator.rs  Parser<Span> JSON bench
     nom.rs                nom 7.1.3
     winnow.rs             winnow 0.7
@@ -52,7 +52,7 @@ src/                      CLI binary
 cargo test --workspace      # nightly required
 cargo check --workspace
 cargo clippy --workspace -- -D warnings
-cargo bench --bench parse_that
+cargo bench --bench parse_that_combinator
 ```
 
 ## Key Types
@@ -64,7 +64,7 @@ ParserResult<'a, O> = Option<O>
 
 // Span-optimized (span_parser.rs)
 SpanParser<'a>               // Enum-dispatched, no vtable on hot path
-SpanKind<'a>                 // StringLiteral | RegexMatch | JsonNumber | JsonString | TakeUntilAny | Seq | OneOf | Minus | ...
+SpanKind<'a>                 // StringLiteral | RegexMatch | JsonNumber | JsonString | TakeUntilAny | Seq | OneOf | Minus | Negate | Eof | ...
 
 // State (state.rs)
 ParserState<'a>              // src, src_bytes, offset, furthest_offset
@@ -80,9 +80,12 @@ JsonValue<'a>                // Null | Bool | Number | String(Cow) | Array | Obj
 ## Conventions
 
 - Edition 2024, nightly required for `#![feature(cold_path)]`
-- `diagnostics` Cargo feature — expected sets, suggestions, secondary spans, error recovery (zero overhead when off)
+- `diagnostics` Cargo feature — expected sets, suggestions, secondary spans, error recovery (zero overhead when off). `colored` crate optional behind this feature.
 - `recover(sync, sentinel)` — parse past errors, collect Diagnostic snapshots into thread-local store
-- `minus(excluded)` — EBNF set-difference: match self only if excluded fails at same position. Distinct from `not` (which checks after consuming).
+- `minus(excluded)` — EBNF set-difference: match self only if excluded fails at same position. Saves/restores `furthest_offset`.
+- `negate()` — zero-width negative assertion: succeeds when inner parser fails, never consumes input. Saves/restores `furthest_offset`.
+- `not(next)` — consuming negative lookahead: parse self, then reject if `next` matches at resulting position. Saves/restores `furthest_offset`.
+- `sep_by` — strictly interleaving `elem (sep elem)*`, never accepts trailing separators
 - `pprint` path dep (`/Programming/pprint`) for Pretty derive
 - Two parser tiers: `Parser<'a, O>` (flexible, boxed) and `SpanParser<'a>` (fast, enum)
 - Zero-copy: `Span<'a>` borrows source, `Cow<'a, str>` for decoded strings

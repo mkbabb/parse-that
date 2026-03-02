@@ -116,12 +116,57 @@ fn json_string_fast_inner<'a>(state: &mut ParserState<'a>, include_quotes: bool)
                 }
                 match unsafe { *bytes.get_unchecked(i) } {
                     b'u' => {
+                        // Validate \uXXXX: require exactly 4 hex digits
                         if i + 4 >= bytes.len() {
                             return None;
                         }
-                        i += 5; // \uXXXX — skip u + 4 hex digits
+                        for k in 1..=4 {
+                            if !unsafe { *bytes.get_unchecked(i + k) }.is_ascii_hexdigit() {
+                                return None;
+                            }
+                        }
+                        // Check for surrogate pairs: \uD800-\uDBFF must be
+                        // followed by \uDC00-\uDFFF
+                        let hi = u16::from_str_radix(
+                            unsafe { std::str::from_utf8_unchecked(&bytes[i + 1..i + 5]) },
+                            16,
+                        )
+                        .unwrap_or(0);
+                        i += 5; // skip u + 4 hex digits
+                        if (0xD800..=0xDBFF).contains(&hi) {
+                            // High surrogate — must be followed by \uDC00-\uDFFF
+                            if i + 5 < bytes.len()
+                                && bytes[i] == b'\\'
+                                && bytes[i + 1] == b'u'
+                            {
+                                for k in 2..=5 {
+                                    if !unsafe { *bytes.get_unchecked(i + k) }.is_ascii_hexdigit()
+                                    {
+                                        return None;
+                                    }
+                                }
+                                let lo = u16::from_str_radix(
+                                    unsafe {
+                                        std::str::from_utf8_unchecked(&bytes[i + 2..i + 6])
+                                    },
+                                    16,
+                                )
+                                .unwrap_or(0);
+                                if !(0xDC00..=0xDFFF).contains(&lo) {
+                                    return None; // not a valid low surrogate
+                                }
+                                i += 6; // skip \uXXXX for the low surrogate
+                            } else {
+                                return None; // lone high surrogate
+                            }
+                        } else if (0xDC00..=0xDFFF).contains(&hi) {
+                            return None; // lone low surrogate
+                        }
                     }
-                    _ => i += 1, // \n, \t, \\, \", etc.
+                    b'"' | b'\\' | b'/' | b'b' | b'f' | b'n' | b'r' | b't' => {
+                        i += 1;
+                    }
+                    _ => return None, // invalid escape sequence
                 }
             }
         }

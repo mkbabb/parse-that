@@ -269,8 +269,6 @@ export function parserPrint(parser: Parser<unknown>): string {
                 case "string":
                     return `"${args![0]}"`;
                 case "regex":
-                case "regexConcat":
-                case "regexWrap":
                     return `${args![0]}`;
                 case "wrap":
                 case "trim": {

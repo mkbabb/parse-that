@@ -64,6 +64,10 @@ where
         Parser::new(opt)
     }
 
+    /// Consuming negative lookahead: parse `self`, then check that `next` does
+    /// NOT match at the resulting position. If `next` matches, the overall
+    /// parse fails. Unlike `negate()` (zero-width), `not()` consumes the input
+    /// matched by `self` on success.
     #[inline]
     pub fn not<Output2>(self, next: Parser<'a, Output2>) -> Parser<'a, Output>
     where
@@ -71,9 +75,15 @@ where
     {
         let not = move |state: &mut ParserState<'a>| {
             let value = self.call(state)?;
+            let checkpoint = state.offset;
+            let saved_furthest = state.furthest_offset;
             if next.call(state).is_none() {
+                state.offset = checkpoint;
+                state.furthest_offset = saved_furthest;
                 return Some(value);
             }
+            state.offset = checkpoint;
+            state.furthest_offset = saved_furthest;
             None
         };
         Parser::new(not)
@@ -88,22 +98,34 @@ where
     {
         let minus = move |state: &mut ParserState<'a>| {
             let checkpoint = state.offset;
+            let saved_furthest = state.furthest_offset;
             if excluded.call(state).is_some() {
                 state.offset = checkpoint;
+                state.furthest_offset = saved_furthest;
                 return None;
             }
             state.offset = checkpoint;
+            state.furthest_offset = saved_furthest;
             self.call(state)
         };
         Parser::new(minus)
     }
 
+    /// Zero-width negative assertion: succeeds (returning `()`) when the inner
+    /// parser *fails*, and fails when the inner parser *succeeds*. Does not
+    /// consume any input in either case.
     #[inline]
     pub fn negate(self) -> Parser<'a, ()> {
         let negate = move |state: &mut ParserState<'a>| {
+            let checkpoint = state.offset;
+            let saved_furthest = state.furthest_offset;
             if self.call(state).is_none() {
+                state.offset = checkpoint;
+                state.furthest_offset = saved_furthest;
                 return Some(());
             }
+            state.offset = checkpoint;
+            state.furthest_offset = saved_furthest;
             None
         };
         Parser::new(negate)
@@ -264,6 +286,8 @@ where
         Parser::new(trim)
     }
 
+    /// Strictly interleaving: `elem (sep elem)*`. Never accepts a trailing
+    /// separator — trailing sep acceptance is a grammar concern.
     #[inline]
     pub fn sep_by<Output2>(
         self,
@@ -279,15 +303,28 @@ where
             let est = if lower_bound > 0 { lower_bound.max(16) } else { 32 };
             let mut values = Vec::with_capacity(est);
 
+            // Parse first element
+            if let Some(value) = self.call(state) {
+                values.push(value);
+            } else if lower_bound == 0 {
+                return Some(values);
+            } else {
+                return None;
+            }
+
+            // Parse (sep elem)* — checkpoint before separator so trailing
+            // separators are rejected by restoring state.
             while values.len() < upper_bound {
+                let cp = state.offset;
+                if sep.call(state).is_none() {
+                    state.offset = cp;
+                    break;
+                }
                 if let Some(value) = self.call(state) {
                     values.push(value);
                 } else {
-                    break;
-                }
-                // Checkpoint-based: if sep fails, don't leave state dirty
-                let cp = state.offset;
-                if sep.call(state).is_none() {
+                    // Element after separator failed — backtrack past the
+                    // separator to reject the trailing separator.
                     state.offset = cp;
                     break;
                 }

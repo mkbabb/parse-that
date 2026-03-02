@@ -120,6 +120,12 @@ pub fn sp_take_until_any<'a>(excluded: &'static [u8]) -> SpanParser<'a> {
     }
 }
 
+/// End-of-input check for SpanParser. Succeeds with an empty Span at EOF.
+#[inline]
+pub fn sp_eof<'a>() -> SpanParser<'a> {
+    sp_new!(SpanKind::Eof, "<end of input>")
+}
+
 /// Wrap a boxed `ParserFn` as a SpanParser escape hatch.
 pub fn sp_boxed<'a>(inner: impl ParserFn<'a, Span<'a>>) -> SpanParser<'a> {
     sp_new!(SpanKind::Boxed(Box::new(inner)))

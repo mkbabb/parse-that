@@ -2,7 +2,7 @@
 import { createParserContext, ParserState } from "./state.js";
 import type { ParserContext, Span } from "./state.js";
 import { parserDebug, parserPrint } from "./debug.js";
-import { mergeErrorState, resetErrorState, getLastState, getLastFurthestOffset, addSuggestion, addSecondarySpan, isDiagnosticsEnabled, getLastExpected, getLastSuggestions, getLastSecondarySpans, collectDiagnostic, popLastDiagnostic } from "./utils.js";
+import { mergeErrorState, resetErrorState, getLastState, getLastFurthestOffset, addSuggestion, isDiagnosticsEnabled, getLastExpected, getLastSuggestions, getLastSecondarySpans, collectDiagnostic, popLastDiagnostic, reportUnclosedDelimiter } from "./utils.js";
 import { createLazyCached, _setParserClass } from "./lazy.js";
 import { trimStateWhitespace, eof, all, _setLeafParserClass, _initWhitespace, whitespace } from "./leaf.js";
 import { _setSpanParserClass } from "./span.js";
@@ -421,16 +421,7 @@ export class Parser<T = string> {
             (end as Parser<unknown>).parser(state as any);
             if (state.isError) {
                 mergeErrorState(state as ParserState<unknown>);
-                if (isDiagnosticsEnabled()) {
-                    const openText = state.src.slice(savedOffset, openEnd);
-                    const closeText = openText === "{" ? "}" : openText === "[" ? "]" : openText === "(" ? ")" : openText;
-                    addSuggestion({
-                        kind: "unclosed-delimiter",
-                        message: `close the delimiter with \`${closeText}\``,
-                        openOffset: savedOffset,
-                    });
-                    addSecondarySpan(savedOffset, `unclosed \`${openText}\` opened here`);
-                }
+                reportUnclosedDelimiter(state.src.slice(savedOffset, openEnd), savedOffset);
                 state.offset = savedOffset;
                 state.isError = true;
                 return state;
@@ -578,35 +569,59 @@ export class Parser<T = string> {
         );
     }
 
+    /**
+     * Strictly interleaving: `elem (sep elem)*`. Never accepts a trailing
+     * separator — trailing sep acceptance is a grammar concern.
+     */
     sepBy<S>(sep: Parser<S | T>, min: number = 0, max: number = Infinity) {
         const sepBy = (state: ParserState<T>) => {
             const est = min > 0 ? min : 0;
             const matches: T[] = est > 0 ? new Array<T>(est) : [];
             let len = 0;
 
-            for (let i = 0; i < max; i += 1) {
+            // Parse first element
+            {
                 const savedOffset = state.offset;
                 this.parser(state);
                 if (state.isError) {
                     state.offset = savedOffset;
                     state.isError = false;
+                } else if (state.offset !== savedOffset) {
+                    if (len < est) {
+                        matches[len] = state.value;
+                    } else {
+                        matches.push(state.value);
+                    }
+                    len++;
+                }
+            }
+
+            // Parse (sep elem)* — checkpoint before separator to reject
+            // trailing separators.
+            while (len > 0 && len < max) {
+                const cpBeforeSep = state.offset;
+                sep.parser(state as ParserState<S | T>);
+                if (state.isError) {
+                    state.offset = cpBeforeSep;
+                    state.isError = false;
                     break;
                 }
-                if (state.offset === savedOffset) break;
+
+                const savedOffset = state.offset;
+                this.parser(state);
+                if (state.isError || state.offset === savedOffset) {
+                    // Element after separator failed — backtrack past the
+                    // separator to reject trailing separator.
+                    state.offset = cpBeforeSep;
+                    state.isError = false;
+                    break;
+                }
                 if (len < est) {
                     matches[len] = state.value;
                 } else {
                     matches.push(state.value);
                 }
                 len++;
-
-                const sepOffset = state.offset;
-                sep.parser(state as ParserState<S | T>);
-                if (state.isError) {
-                    state.offset = sepOffset;
-                    state.isError = false;
-                    break;
-                }
             }
 
             // Trim pre-allocated slots if we collected fewer than est
