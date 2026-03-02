@@ -659,7 +659,7 @@ describe("CSS Diagnostics", () => {
             });
             wrappedParser.flags = 2; // FLAG_EOF
 
-            const state = new ParserState("red GARBAGE");
+            const state = new ParserState<string>("red GARBAGE");
             wrappedParser.call(state);
 
             expect(state.isError).toBe(true);

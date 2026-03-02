@@ -14,5 +14,5 @@
         "declarationMap": true
     },
     "include": ["src/", "test/"],
-    "exclude": ["test/benchmarks/", "test/tmp.bench.ts"]
+    "exclude": ["test/tmp.bench.ts"]
 }

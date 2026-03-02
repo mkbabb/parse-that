@@ -53,9 +53,9 @@ const jsonPair = sequenceOf([stringLiteral, colon, jsonValue]).map(
 );
 
 const jsonObject = between(lbrace)(rbrace)(sepBy(comma)(jsonPair)).map(
-    (pairs: any[]) => {
+    (pairs: unknown) => {
         const obj: Record<string, any> = {};
-        for (const [key, value] of pairs) {
+        for (const [key, value] of pairs as any[]) {
             obj[key] = value;
         }
         return obj;

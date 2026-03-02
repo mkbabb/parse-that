@@ -1,7 +1,9 @@
 // Nearley JSON parser benchmark using moo tokenizer
 // Compiled grammar format written inline (no nearleyc CLI)
 
+// @ts-expect-error no type declarations
 import nearley from "nearley";
+// @ts-expect-error no type declarations
 import moo from "moo";
 
 // ── Moo tokenizer ──────────────────────────────────────────────────────────────

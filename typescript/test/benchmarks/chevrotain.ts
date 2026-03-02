@@ -53,6 +53,7 @@ const ChevJsonLexer = new ChevrotainLexer(jsonTokens, {
 // Value-building parser using EmbeddedActionsParser
 class ChevrotainJsonParser extends EmbeddedActionsParser {
     constructor() {
+        // @ts-expect-error outputCst removed in newer chevrotain types
         super(jsonTokens, { outputCst: false });
         this.performSelfAnalysis();
     }

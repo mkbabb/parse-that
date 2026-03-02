@@ -130,7 +130,7 @@ describe("Diagnostics Infrastructure", () => {
             // state2 is at offset 5, there's still " world" remaining
             // We need the EOF flag path — use call() through the eof() method
             const pEof = string("hello").eof();
-            const state3 = new ParserState("hello world");
+            const state3 = new ParserState<string>("hello world");
             pEof.call(state3);
 
             const expected = getLastExpected();

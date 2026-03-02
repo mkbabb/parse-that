@@ -1,4 +1,4 @@
-import { describe, bench, BenchOptions } from "vitest";
+import { describe, bench, type BenchOptions } from "vitest";
 import fs from "fs";
 
 // parse-that parsers (value-building, same output as JSON.parse)

@@ -410,7 +410,7 @@ checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
 
 [[package]]
 name = "parse_that"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aho-corasick",
  "bencher",
@@ -502,7 +502,7 @@ checksum = "c33a9471896f1c69cecef8d20cbe2f7accd12527ce60845ff44c153bb2a21b49"
 
 [[package]]
 name = "pprint"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "dragonbox",
  "itoap",
@@ -512,7 +512,7 @@ dependencies = [
 
 [[package]]
 name = "pprint_derive"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "proc-macro2",
  "quote",
