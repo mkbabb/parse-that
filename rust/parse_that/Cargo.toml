@@ -50,6 +50,22 @@ harness = false
 name = "parse_that_combinator"
 harness = false
 
+[[bench]]
+name = "micro_parse_that"
+harness = false
+
+[[bench]]
+name = "parse_that_css"
+harness = false
+
+[[bench]]
+name = "lightningcss_bench"
+harness = false
+
+[[bench]]
+name = "cssparser_bench"
+harness = false
+
 [dependencies]
 pprint = "0.3.1"
 regex = { version = "1.11", features = ["perf"] }
@@ -70,3 +86,5 @@ simd-json = "0.14"
 sonic-rs = "0.5"
 winnow = "0.7"
 serde_json_borrow = "0.9"
+lightningcss = "1.0.0-alpha.70"
+cssparser = "0.34"

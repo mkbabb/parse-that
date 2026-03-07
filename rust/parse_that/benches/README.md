@@ -28,6 +28,41 @@ Not all parsers do the same work. This matters for interpreting results.
 | **simd-json** | `Cow<str>` (borrowed mode) | Decoded selectively | Buffer clone per iteration | `.to_vec()` is inherent (mutable input required) |
 | **sonic-rs** | Owned `Value` | Fully decoded | Arena allocation | Does MORE work, but extremely fast (SIMD) |
 
+---
+
+# CSS Benchmark Suite
+
+3 parsers × 3 datasets (+ TypeScript: 3 parsers × 2 datasets).
+
+## CSS Datasets
+
+| File | Size | Character |
+|---|---|---|
+| normalize.css | 6 KB | Simple selectors, few at-rules |
+| bootstrap.css | 281 KB | Media queries, selector lists, variables |
+| tailwind-output.css | 3.6 MB | Massive utility classes, stress test |
+
+## CSS Parser Work Equivalence
+
+CSS parsing exists on a spectrum. Comparing parsers across levels is misleading without documentation.
+
+| Parser | Selectors | Values | Allocation | Level |
+|---|---|---|---|---|
+| **parse_that** (hand-rolled) | Typed AST (L4) | Typed (dimension, color, fn) | Zero-copy spans + Vec | L1.5 |
+| **cssparser** (servo) | Callback tokens | Callback tokens | User-controlled | L0-L1 (LESS work) |
+| **lightningcss** | Typed (specificity) | Typed (units, colors) | Arena | L2 (MORE work) |
+| **postcss** (TS) | String array | String | GC-managed | L1 (LESS work) |
+| **css-tree** (TS) | Typed AST | Typed AST | GC-managed | L1-L2 |
+
+### Fairness Notes
+
+- **postcss** treats selectors and values as opaque strings. parse-that produces typed AST nodes for both (Dimension/Percentage/Color/Function for values, Type/Class/Id/Compound/Complex for selectors). parse-that does **more work** than postcss.
+- **cssparser** is a tokenizer with callback-based visitors. It doesn't build an AST. parse-that does **more work**.
+- **lightningcss** resolves cascade semantics, validates properties, and computes specificity. It does **more work** than parse-that.
+- Declaration counts match exactly across all parsers on normalize.css and bootstrap.css, validating that parse-that is doing real parsing, not skipping content.
+
+---
+
 ## Running
 
 ```bash
