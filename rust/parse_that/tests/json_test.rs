@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use parse_that::parsers::json::json_parser;
     use parse_that::parsers::json::JsonValue;
+    use parse_that::parsers::json::json_parser;
     use std::borrow::Cow;
     use std::fs;
 
@@ -10,7 +10,10 @@ mod tests {
         pairs: &'b [(Cow<'a, str>, JsonValue<'a>)],
         key: &str,
     ) -> Option<&'b JsonValue<'a>> {
-        pairs.iter().find(|(k, _)| k.as_ref() == key).map(|(_, v)| v)
+        pairs
+            .iter()
+            .find(|(k, _)| k.as_ref() == key)
+            .map(|(_, v)| v)
     }
 
     // ── Combinator path tests ───────────────────────────────────────
@@ -55,14 +58,14 @@ mod tests {
 
     #[test]
     fn test_json_file_print() {
-        use pprint::pprint;
+        use pprint::{Printer, pprint};
 
         let json_file_path = "../../data/json/data.json";
         let json_string = fs::read_to_string(json_file_path).unwrap();
 
         let arr = json_parser().parse(&json_string).unwrap();
 
-        let pretty = pprint(arr, None);
+        let pretty = pprint(arr, Printer::default());
 
         println!("{}", pretty);
     }
@@ -72,23 +75,13 @@ mod tests {
     #[test]
     fn test_string_basic_escapes() {
         let cases = vec![
-            r#""\"""#,
-            r#""\\""#,
-            r#""\/""#,
-            r#""\b""#,
-            r#""\n""#,
-            r#""\r""#,
-            r#""\t""#,
+            r#""\"""#, r#""\\""#, r#""\/""#, r#""\b""#, r#""\n""#, r#""\r""#, r#""\t""#,
         ];
 
         let parser = json_parser();
         for input in &cases {
             let result = parser.parse(input);
-            assert!(
-                result.is_some(),
-                "Failed to parse string: {}",
-                input
-            );
+            assert!(result.is_some(), "Failed to parse string: {}", input);
             match result.unwrap() {
                 JsonValue::String(s) => {
                     // Combinator path returns raw span — just verify it parsed
@@ -146,6 +139,27 @@ mod tests {
     }
 
     #[test]
+    fn test_string_surrogate_pair_edges() {
+        let valid = r#""\uD834\uDD1E""#;
+        assert!(
+            json_parser().parse(valid).is_some(),
+            "Valid surrogate pair should parse"
+        );
+
+        let lone_high = r#""\uD834x""#;
+        assert!(
+            json_parser().parse(lone_high).is_none(),
+            "Lone high surrogate should fail"
+        );
+
+        let lone_low = r#""\uDD1E""#;
+        assert!(
+            json_parser().parse(lone_low).is_none(),
+            "Lone low surrogate should fail"
+        );
+    }
+
+    #[test]
     fn test_malformed_unterminated_string() {
         let input = r#""hello"#;
         let result = json_parser().parse(input);
@@ -188,7 +202,10 @@ mod tests {
     #[test]
     fn test_boolean_values() {
         assert_eq!(json_parser().parse("true").unwrap(), JsonValue::Bool(true));
-        assert_eq!(json_parser().parse("false").unwrap(), JsonValue::Bool(false));
+        assert_eq!(
+            json_parser().parse("false").unwrap(),
+            JsonValue::Bool(false)
+        );
     }
 
     #[test]
@@ -274,14 +291,8 @@ mod tests {
     #[test]
     fn test_number_edge_cases() {
         let parser = json_parser();
-        assert_eq!(
-            parser.parse("1.5e-10").unwrap(),
-            JsonValue::Number(1.5e-10)
-        );
-        assert_eq!(
-            parser.parse("1.5e+10").unwrap(),
-            JsonValue::Number(1.5e10)
-        );
+        assert_eq!(parser.parse("1.5e-10").unwrap(), JsonValue::Number(1.5e-10));
+        assert_eq!(parser.parse("1.5e+10").unwrap(), JsonValue::Number(1.5e10));
         assert_eq!(parser.parse("1.0").unwrap(), JsonValue::Number(1.0));
     }
 
@@ -291,6 +302,28 @@ mod tests {
         assert_eq!(parser.parse("42").unwrap(), JsonValue::Number(42.0));
         assert_eq!(parser.parse("-100").unwrap(), JsonValue::Number(-100.0));
         assert_eq!(parser.parse("0").unwrap(), JsonValue::Number(0.0));
+    }
+
+    #[test]
+    fn test_large_numeric_literals_match_serde_f64() {
+        let parser = json_parser();
+        let cases = [
+            "9007199254740991",
+            "9007199254740992",
+            "12345678901234567890",
+            "-9223372036854775808",
+            "18446744073709551615",
+        ];
+
+        for input in cases {
+            let ours = parser.parse(input).unwrap();
+            let theirs: serde_json::Value = serde_json::from_str(input).unwrap();
+            let serde_num = theirs.as_f64().expect("number should convert to f64");
+            match ours {
+                JsonValue::Number(n) => assert_eq!(n, serde_num, "Mismatch for {input}"),
+                other => panic!("Expected number for {input}, got {:?}", other),
+            }
+        }
     }
 
     // ── Structural comparison helpers ───────────────────────────────
@@ -361,8 +394,8 @@ mod tests {
 
     fn test_equivalence_for_file(filename: &str) {
         let path = format!("../../data/json/{}", filename);
-        let data = fs::read_to_string(&path)
-            .unwrap_or_else(|e| panic!("Failed to read {}: {}", path, e));
+        let data =
+            fs::read_to_string(&path).unwrap_or_else(|e| panic!("Failed to read {}: {}", path, e));
 
         let ours = json_parser()
             .parse(&data)
@@ -409,5 +442,52 @@ mod tests {
     #[test]
     fn test_equivalence_citm_catalog() {
         test_equivalence_for_file("citm_catalog.json");
+    }
+
+    // ── RFC 8259 leading-zero rejection ──────────────────────────────
+
+    #[test]
+    fn test_leading_zero_rejected() {
+        // RFC 8259: "007" should parse as just "0", not "007"
+        let parser = json_parser();
+        let mut state = parse_that::state::ParserState::new("007");
+        let result = parser.call(&mut state);
+        assert!(result.is_some());
+        match result.unwrap() {
+            JsonValue::Number(n) => {
+                assert_eq!(n, 0.0);
+                assert_eq!(state.offset, 1); // consumed only "0"
+            }
+            other => panic!("expected Number, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_leading_zero_standalone() {
+        // "0" alone is valid
+        let parser = json_parser();
+        let mut state = parse_that::state::ParserState::new("0");
+        let result = parser.call(&mut state);
+        assert!(result.is_some());
+        match result.unwrap() {
+            JsonValue::Number(n) => assert_eq!(n, 0.0),
+            other => panic!("expected Number, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_leading_zero_decimal() {
+        // "0.5" is valid (leading zero followed by decimal)
+        let parser = json_parser();
+        let mut state = parse_that::state::ParserState::new("0.5");
+        let result = parser.call(&mut state);
+        assert!(result.is_some());
+        match result.unwrap() {
+            JsonValue::Number(n) => {
+                assert_eq!(n, 0.5);
+                assert_eq!(state.offset, 3); // consumed all "0.5"
+            }
+            other => panic!("expected Number, got {:?}", other),
+        }
     }
 }

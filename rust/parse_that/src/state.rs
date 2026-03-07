@@ -57,6 +57,16 @@ impl<'a> Span<'a> {
     }
 
     pub fn as_str(&self) -> &'a str {
+        debug_assert!(
+            self.start <= self.end
+                && self.end <= self.src.len()
+                && self.src.is_char_boundary(self.start)
+                && self.src.is_char_boundary(self.end),
+            "Span::as_str: invalid bounds {}..{} for src len {}",
+            self.start,
+            self.end,
+            self.src.len()
+        );
         unsafe { self.src.get_unchecked(self.start..self.end) }
     }
 }

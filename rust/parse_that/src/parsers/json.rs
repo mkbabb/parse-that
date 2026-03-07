@@ -8,13 +8,21 @@ use pprint::Pretty;
 
 // ── Monolithic number scanner ─────────────────────────────────
 
+/// Result of number scanning: span + whether it's a pure integer.
+pub(crate) struct NumberSpan<'a> {
+    pub span: Span<'a>,
+    pub is_integer: bool,
+}
+
 /// Scans `[-]digits[.digits][(e|E)[+-]digits]` in one byte loop.
+/// Returns the span and whether the number is a pure integer (no `.` or `e`/`E`).
 #[inline(always)]
-pub(crate) fn number_span_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+pub(crate) fn number_span_fast_ex<'a>(state: &mut ParserState<'a>) -> Option<NumberSpan<'a>> {
     let bytes = state.src_bytes;
     let start = state.offset;
     let len = bytes.len();
     let mut i = start;
+    let mut is_integer = true;
 
     if i >= len {
         return None;
@@ -37,6 +45,18 @@ pub(crate) fn number_span_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'
         return None; // no digits
     }
 
+    // Leading-zero rejection (RFC 8259): only `0` or `0.x` allowed
+    let digit_count = i - digit_start;
+    if digit_count > 1 && unsafe { *bytes.get_unchecked(digit_start) } == b'0' {
+        // `007` etc. — return span of just the sign + `0`
+        i = digit_start + 1;
+        state.offset = i;
+        return Some(NumberSpan {
+            span: Span::new(start, i, state.src),
+            is_integer: true,
+        });
+    }
+
     // Optional fraction
     if i < len && unsafe { *bytes.get_unchecked(i) } == b'.' {
         i += 1;
@@ -47,6 +67,8 @@ pub(crate) fn number_span_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'
         if i == frac_start {
             // '.' with no digits after — backtrack the dot
             i -= 1;
+        } else {
+            is_integer = false;
         }
     }
 
@@ -69,6 +91,8 @@ pub(crate) fn number_span_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'
             if i == exp_digit_start {
                 // 'e' with no digits — backtrack
                 i = exp_mark;
+            } else {
+                is_integer = false;
             }
         }
     }
@@ -78,7 +102,62 @@ pub(crate) fn number_span_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'
     }
 
     state.offset = i;
-    Some(Span::new(start, i, state.src))
+    Some(NumberSpan {
+        span: Span::new(start, i, state.src),
+        is_integer,
+    })
+}
+
+/// Convenience wrapper returning just the span (used by SpanParser).
+#[inline(always)]
+pub(crate) fn number_span_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+    number_span_fast_ex(state).map(|ns| ns.span)
+}
+
+#[inline(always)]
+fn parse_json_number_f64(span: Span<'_>, is_integer: bool) -> f64 {
+    let s = span.as_str();
+    let bytes = s.as_bytes();
+    if !is_integer {
+        return fast_float2::parse(s).expect("sp_json_number must only yield valid JSON numbers");
+    }
+
+    let (neg, digits) = if bytes.first() == Some(&b'-') {
+        (true, &bytes[1..])
+    } else {
+        (false, bytes)
+    };
+    if digits.is_empty() || digits.len() > 18 {
+        return fast_float2::parse(s).expect("sp_json_number must only yield valid JSON numbers");
+    }
+
+    let mut int = 0u64;
+    for &b in digits {
+        int = int * 10 + (b - b'0') as u64;
+    }
+    let num = int as f64;
+    if neg { -num } else { num }
+}
+
+
+#[inline(always)]
+fn decode_hex_nibble(b: u8) -> Option<u16> {
+    match b {
+        b'0'..=b'9' => Some((b - b'0') as u16),
+        b'a'..=b'f' => Some((b - b'a' + 10) as u16),
+        b'A'..=b'F' => Some((b - b'A' + 10) as u16),
+        _ => None,
+    }
+}
+
+#[inline(always)]
+fn decode_hex4(bytes: &[u8], start: usize) -> Option<u16> {
+    Some(
+        (decode_hex_nibble(*bytes.get(start)?)? << 12)
+            | (decode_hex_nibble(*bytes.get(start + 1)?)? << 8)
+            | (decode_hex_nibble(*bytes.get(start + 2)?)? << 4)
+            | decode_hex_nibble(*bytes.get(start + 3)?)?,
+    )
 }
 
 // ── Monolithic JSON string scanner ────────────────────────────
@@ -87,7 +166,10 @@ pub(crate) fn number_span_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'
 /// When `include_quotes` is false, returns content between quotes (exclusive).
 /// When `include_quotes` is true, returns full span including delimiters.
 #[inline(always)]
-fn json_string_fast_inner<'a>(state: &mut ParserState<'a>, include_quotes: bool) -> Option<Span<'a>> {
+fn json_string_fast_inner<'a>(
+    state: &mut ParserState<'a>,
+    include_quotes: bool,
+) -> Option<Span<'a>> {
     let bytes = state.src_bytes;
     let start = state.offset;
     if bytes.get(start) != Some(&b'"') {
@@ -116,42 +198,16 @@ fn json_string_fast_inner<'a>(state: &mut ParserState<'a>, include_quotes: bool)
                 }
                 match unsafe { *bytes.get_unchecked(i) } {
                     b'u' => {
-                        // Validate \uXXXX: require exactly 4 hex digits
                         if i + 4 >= bytes.len() {
                             return None;
                         }
-                        for k in 1..=4 {
-                            if !unsafe { *bytes.get_unchecked(i + k) }.is_ascii_hexdigit() {
-                                return None;
-                            }
-                        }
-                        // Check for surrogate pairs: \uD800-\uDBFF must be
-                        // followed by \uDC00-\uDFFF
-                        let hi = u16::from_str_radix(
-                            unsafe { std::str::from_utf8_unchecked(&bytes[i + 1..i + 5]) },
-                            16,
-                        )
-                        .unwrap_or(0);
+                        // Check for surrogate pairs: \uD800-\uDBFF must be followed by \uDC00-\uDFFF.
+                        let hi = decode_hex4(bytes, i + 1)?;
                         i += 5; // skip u + 4 hex digits
                         if (0xD800..=0xDBFF).contains(&hi) {
                             // High surrogate — must be followed by \uDC00-\uDFFF
-                            if i + 5 < bytes.len()
-                                && bytes[i] == b'\\'
-                                && bytes[i + 1] == b'u'
-                            {
-                                for k in 2..=5 {
-                                    if !unsafe { *bytes.get_unchecked(i + k) }.is_ascii_hexdigit()
-                                    {
-                                        return None;
-                                    }
-                                }
-                                let lo = u16::from_str_radix(
-                                    unsafe {
-                                        std::str::from_utf8_unchecked(&bytes[i + 2..i + 6])
-                                    },
-                                    16,
-                                )
-                                .unwrap_or(0);
+                            if i + 5 < bytes.len() && bytes[i] == b'\\' && bytes[i + 1] == b'u' {
+                                let lo = decode_hex4(bytes, i + 2)?;
                                 if !(0xDC00..=0xDFFF).contains(&lo) {
                                     return None; // not a valid low surrogate
                                 }
@@ -212,29 +268,24 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
     // ── String parser using monolithic SIMD scanner ────────────
     // Returns raw spans (no unescape) — zero-copy.
 
-    let json_string_content = || -> Parser<'a, Cow<'a, str>> {
-        sp_json_string().map(|s| Cow::Borrowed(s.as_str()))
-    };
+    let json_string_content =
+        || -> Parser<'a, Cow<'a, str>> { sp_json_string().map(|s| Cow::Borrowed(s.as_str())) };
 
     // ── Leaf values ───────────────────────────────────────────
 
-    let json_null: Parser<'a, JsonValue<'a>> =
-        sp_string("null").map(|_| JsonValue::Null);
-    let json_true: Parser<'a, JsonValue<'a>> =
-        sp_string("true").map(|_| JsonValue::Bool(true));
-    let json_false: Parser<'a, JsonValue<'a>> =
-        sp_string("false").map(|_| JsonValue::Bool(false));
+    let json_null: Parser<'a, JsonValue<'a>> = sp_string("null").map(|_| JsonValue::Null);
+    let json_true: Parser<'a, JsonValue<'a>> = sp_string("true").map(|_| JsonValue::Bool(true));
+    let json_false: Parser<'a, JsonValue<'a>> = sp_string("false").map(|_| JsonValue::Bool(false));
 
     let json_number = || -> Parser<'a, JsonValue<'a>> {
-        let num: SpanParser<'a> = sp_json_number();
-        num.map_closure(|s| {
-            JsonValue::Number(fast_float2::parse(s.as_str()).unwrap_or(f64::NAN))
+        Parser::new(move |state: &mut ParserState<'a>| {
+            let ns = number_span_fast_ex(state)?;
+            Some(JsonValue::Number(parse_json_number_f64(ns.span, ns.is_integer)))
         })
     };
 
-    let json_string = || -> Parser<'a, JsonValue<'a>> {
-        json_string_content().map(JsonValue::String)
-    };
+    let json_string =
+        || -> Parser<'a, JsonValue<'a>> { json_string_content().map(JsonValue::String) };
 
     // ── Recursive structures ──────────────────────────────────
 
@@ -244,7 +295,6 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
 
         json_value()
             .sep_by(comma, ..)
-            .or_else(std::vec::Vec::new)
             .trim_whitespace()
             .wrap(crate::leaf::string_span("["), crate::leaf::string_span("]"))
             .map(JsonValue::Array)
@@ -260,7 +310,6 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
 
         key_value
             .sep_by(comma, ..)
-            .or_else(std::vec::Vec::new)
             .trim_whitespace()
             .wrap(crate::leaf::string_span("{"), crate::leaf::string_span("}"))
             .map(JsonValue::Object)
@@ -268,21 +317,15 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
 
     // ── First-byte dispatch ───────────────────────────────────
 
-    crate::leaf::dispatch_byte_multi(
-        vec![
-            (b"{" as &[u8], json_object),
-            (b"[", json_array),
-            (b"\"", json_string()),
-            (b"t", json_true),
-            (b"f", json_false),
-            (b"n", json_null),
-            (
-                b"-0123456789",
-                json_number(),
-            ),
-        ],
-        None,
-    )
+    crate::leaf::dispatch_byte_multi(vec![
+        (b"{" as &[u8], json_object),
+        (b"[", json_array),
+        (b"\"", json_string()),
+        (b"t", json_true),
+        (b"f", json_false),
+        (b"n", json_null),
+        (b"-0123456789", json_number()),
+    ])
 }
 
 pub fn json_parser<'a>() -> Parser<'a, JsonValue<'a>> {
