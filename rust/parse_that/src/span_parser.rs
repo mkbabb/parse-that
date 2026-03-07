@@ -20,20 +20,34 @@ const FLAG_SAVE_STATE: u8 = 0b0010;
 #[cfg(feature = "diagnostics")]
 macro_rules! sp_new {
     ($kind:expr, $label:expr) => {
-        SpanParser { kind: $kind, flags: 0, label: Some($label) }
+        SpanParser {
+            kind: $kind,
+            flags: 0,
+            label: Some($label),
+        }
     };
     ($kind:expr) => {
-        SpanParser { kind: $kind, flags: 0, label: None }
+        SpanParser {
+            kind: $kind,
+            flags: 0,
+            label: None,
+        }
     };
 }
 
 #[cfg(not(feature = "diagnostics"))]
 macro_rules! sp_new {
     ($kind:expr, $label:expr) => {
-        SpanParser { kind: $kind, flags: 0 }
+        SpanParser {
+            kind: $kind,
+            flags: 0,
+        }
     };
     ($kind:expr) => {
-        SpanParser { kind: $kind, flags: 0 }
+        SpanParser {
+            kind: $kind,
+            flags: 0,
+        }
     };
 }
 
@@ -61,9 +75,15 @@ pub(super) enum SpanKind<'a> {
     /// Like JsonString but returns span including the quote delimiters.
     /// Used by BBNF codegen where the regex captures the full quoted string.
     JsonStringQuoted,
-    /// LUT-based byte scanner for negated character classes (`[^...]+`).
-    /// Uses a 256-byte lookup table for branch-free scanning.
-    TakeUntilAny(Box<[bool; 256]>),
+    /// Fast path for negated byte classes with one excluded byte.
+    TakeUntilAny1(u8),
+    /// Fast path for negated byte classes with two excluded bytes.
+    TakeUntilAny2(u8, u8),
+    /// Fast path for negated byte classes with three excluded bytes.
+    TakeUntilAny3(u8, u8, u8),
+    /// LUT-based byte scanner for negated character classes (`[^...]+`) when
+    /// the excluded set is larger than three bytes.
+    TakeUntilAnyLut(Box<[bool; 256]>),
 
     // === Flat combinators (no nesting depth) ===
     Seq(Vec<SpanParser<'a>>),
@@ -311,7 +331,75 @@ impl<'a> SpanParser<'a> {
                 result
             }
 
-            SpanKind::TakeUntilAny(lut) => {
+            SpanKind::TakeUntilAny1(b1) => {
+                let bytes = state.src_bytes;
+                let start = state.offset;
+                if start >= bytes.len() {
+                    #[cfg(feature = "diagnostics")]
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
+                    return None;
+                }
+                let scan_len = memchr::memchr(*b1, &bytes[start..]).unwrap_or(bytes.len() - start);
+                if scan_len == 0 {
+                    #[cfg(feature = "diagnostics")]
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
+                    return None;
+                }
+                let end = start + scan_len;
+                state.offset = end;
+                Some(Span::new(start, end, state.src))
+            }
+            SpanKind::TakeUntilAny2(b1, b2) => {
+                let bytes = state.src_bytes;
+                let start = state.offset;
+                if start >= bytes.len() {
+                    #[cfg(feature = "diagnostics")]
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
+                    return None;
+                }
+                let scan_len =
+                    memchr::memchr2(*b1, *b2, &bytes[start..]).unwrap_or(bytes.len() - start);
+                if scan_len == 0 {
+                    #[cfg(feature = "diagnostics")]
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
+                    return None;
+                }
+                let end = start + scan_len;
+                state.offset = end;
+                Some(Span::new(start, end, state.src))
+            }
+            SpanKind::TakeUntilAny3(b1, b2, b3) => {
+                let bytes = state.src_bytes;
+                let start = state.offset;
+                if start >= bytes.len() {
+                    #[cfg(feature = "diagnostics")]
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
+                    return None;
+                }
+                let scan_len =
+                    memchr::memchr3(*b1, *b2, *b3, &bytes[start..]).unwrap_or(bytes.len() - start);
+                if scan_len == 0 {
+                    #[cfg(feature = "diagnostics")]
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
+                    return None;
+                }
+                let end = start + scan_len;
+                state.offset = end;
+                Some(Span::new(start, end, state.src))
+            }
+            SpanKind::TakeUntilAnyLut(lut) => {
                 let bytes = state.src_bytes;
                 let start = state.offset;
                 let end = bytes.len();
@@ -370,12 +458,7 @@ impl<'a> SpanParser<'a> {
                 }
             }
 
-            SpanKind::SepBy {
-                inner,
-                sep,
-                lo,
-                hi,
-            } => {
+            SpanKind::SepBy { inner, sep, lo, hi } => {
                 let start = state.offset;
                 let mut count = 0;
                 // Parse first element
@@ -594,11 +677,7 @@ impl<'a> SpanParser<'a> {
     }
 
     #[inline]
-    pub fn wrap_span(
-        self,
-        left: SpanParser<'a>,
-        right: SpanParser<'a>,
-    ) -> SpanParser<'a> {
+    pub fn wrap_span(self, left: SpanParser<'a>, right: SpanParser<'a>) -> SpanParser<'a> {
         sp_new!(SpanKind::Wrap {
             left: Box::new(left),
             inner: Box::new(self),

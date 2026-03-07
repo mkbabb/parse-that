@@ -104,19 +104,42 @@ pub fn sp_json_string_quoted<'a>() -> SpanParser<'a> {
 #[inline]
 pub fn sp_take_until_any<'a>(excluded: &'static [u8]) -> SpanParser<'a> {
     let mut lut = [false; 256];
+    let mut unique = [0u8; 3];
+    let mut unique_count = 0usize;
+    let mut overflow = false;
     for &b in excluded {
-        lut[b as usize] = true;
+        let idx = b as usize;
+        if lut[idx] {
+            continue;
+        }
+        lut[idx] = true;
+        if unique_count < 3 {
+            unique[unique_count] = b;
+            unique_count += 1;
+        } else {
+            overflow = true;
+        }
     }
+    let kind = if overflow {
+        SpanKind::TakeUntilAnyLut(Box::new(lut))
+    } else {
+        match unique_count {
+            1 => SpanKind::TakeUntilAny1(unique[0]),
+            2 => SpanKind::TakeUntilAny2(unique[0], unique[1]),
+            3 => SpanKind::TakeUntilAny3(unique[0], unique[1], unique[2]),
+            _ => SpanKind::TakeUntilAnyLut(Box::new(lut)),
+        }
+    };
     #[cfg(feature = "diagnostics")]
     {
         let chars: String = excluded.iter().map(|&b| b as char).collect();
         let label: &'static str =
             Box::leak(format!("any byte not in [{}]", chars).into_boxed_str());
-        sp_new!(SpanKind::TakeUntilAny(Box::new(lut)), label)
+        sp_new!(kind, label)
     }
     #[cfg(not(feature = "diagnostics"))]
     {
-        sp_new!(SpanKind::TakeUntilAny(Box::new(lut)))
+        sp_new!(kind)
     }
 }
 

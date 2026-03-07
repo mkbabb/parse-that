@@ -15,5 +15,6 @@ pub fn extract_bounds<'a>(bounds: impl RangeBounds<usize> + 'a) -> (usize, usize
 }
 
 pub fn get_cargo_root_path() -> std::path::PathBuf {
-    std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".into()))
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR must be set");
+    std::path::PathBuf::from(manifest_dir)
 }

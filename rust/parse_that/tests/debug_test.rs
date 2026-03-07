@@ -74,10 +74,7 @@ mod tests {
 
     #[test]
     fn test_expected_set_dispatch_byte() {
-        let p = dispatch_byte(
-            vec![(b'a', string("abc")), (b'b', string("bcd"))],
-            None,
-        );
+        let p = dispatch_byte(vec![(b'a', string("abc")), (b'b', string("bcd"))]);
         let (result, state) = p.parse_return_state("xyz");
         assert!(result.is_none());
         assert!(
@@ -193,8 +190,16 @@ mod tests {
     fn test_state_print_ok() {
         let state = ParserState::new("hello world");
         let output = strip_ansi(&state_print(Ok(&state), "TEST", ""));
-        assert!(output.contains("Ok"), "output should contain Ok: {}", output);
-        assert!(output.contains("0"), "output should contain offset: {}", output);
+        assert!(
+            output.contains("Ok"),
+            "output should contain Ok: {}",
+            output
+        );
+        assert!(
+            output.contains("0"),
+            "output should contain offset: {}",
+            output
+        );
     }
 
     #[test]
@@ -328,9 +333,7 @@ mod tests {
 
     /// CSS hex color: `#` followed by 3, 4, 6, or 8 hex digits.
     fn css_hex_color<'a>() -> Parser<'a, ()> {
-        string("#")
-            .then(regex(r"[0-9a-fA-F]{3,8}"))
-            .map(|_| ())
+        string("#").then(regex(r"[0-9a-fA-F]{3,8}")).map(|_| ())
     }
 
     /// CSS rgb() functional notation: `rgb(` r `,` g `,` b `)`.
@@ -386,12 +389,16 @@ mod tests {
 
     /// CSS class selector: `.foo`
     fn css_class_selector<'a>() -> Parser<'a, ()> {
-        string(".").then(regex(r"[a-zA-Z_][a-zA-Z0-9_-]*")).map(|_| ())
+        string(".")
+            .then(regex(r"[a-zA-Z_][a-zA-Z0-9_-]*"))
+            .map(|_| ())
     }
 
     /// CSS ID selector: `#bar`
     fn css_id_selector<'a>() -> Parser<'a, ()> {
-        string("#").then(regex(r"[a-zA-Z_][a-zA-Z0-9_-]*")).map(|_| ())
+        string("#")
+            .then(regex(r"[a-zA-Z_][a-zA-Z0-9_-]*"))
+            .map(|_| ())
     }
 
     /// CSS attribute selector: `[attr=val]` or `[attr]`
@@ -402,7 +409,10 @@ mod tests {
             .map(|_| ())
             .opt()
             .map(|_| ());
-        attr_name.then(attr_value).wrap(string("["), string("]")).map(|_| ())
+        attr_name
+            .then(attr_value)
+            .wrap(string("["), string("]"))
+            .map(|_| ())
     }
 
     /// Any simple CSS selector.
@@ -573,7 +583,10 @@ mod tests {
         );
         // Secondary span should mention "opened here"
         assert!(
-            state.secondary_spans.iter().any(|s| s.label.contains("opened here")),
+            state
+                .secondary_spans
+                .iter()
+                .any(|s| s.label.contains("opened here")),
             "secondary span should mention opened here: {:?}",
             state.secondary_spans
         );
@@ -739,11 +752,7 @@ mod tests {
         // Verify we can get line/column info.
         let line = state.get_line_number();
         let col = state.get_column_number();
-        assert!(
-            line >= 1,
-            "line number should be at least 1, got {}",
-            line
-        );
+        assert!(line >= 1, "line number should be at least 1, got {}", line);
         assert!(
             col <= inner.len(),
             "column should be within the input, got {}",
@@ -800,7 +809,10 @@ mod tests {
     #[test]
     fn test_css_long_selector_line_truncated() {
         // A very long selector chain.
-        let selector = (0..50).map(|i| format!(".class{}", i)).collect::<Vec<_>>().join(" ");
+        let selector = (0..50)
+            .map(|i| format!(".class{}", i))
+            .collect::<Vec<_>>()
+            .join(" ");
         let line = format!("{} {{ }}", selector);
         let result = debug::summarize_line(&line, 50);
         assert!(
@@ -835,9 +847,10 @@ mod tests {
             "eof should add <end of input> label: {:?}",
             state.expected
         );
-        let has_trailing = state.suggestions.iter().any(|s| {
-            matches!(&s.kind, state::SuggestionKind::TrailingContent { .. })
-        });
+        let has_trailing = state
+            .suggestions
+            .iter()
+            .any(|s| matches!(&s.kind, state::SuggestionKind::TrailingContent { .. }));
         assert!(
             has_trailing,
             "eof should produce TrailingContent suggestion: {:?}",
@@ -928,14 +941,11 @@ mod tests {
     #[test]
     fn test_css_color_byte_dispatch_failure() {
         // Build a dispatch_byte for color start bytes: '#', 'r' (rgb/red), 'h' (hsl), etc.
-        let p = dispatch_byte(
-            vec![
-                (b'#', css_hex_color()),
-                (b'r', css_rgb().or(string("red").map(|_| ()))),
-                (b'h', css_hsl()),
-            ],
-            None,
-        );
+        let p = dispatch_byte(vec![
+            (b'#', css_hex_color()),
+            (b'r', css_rgb().or(string("red").map(|_| ()))),
+            (b'h', css_hsl()),
+        ]);
         let (result, state) = p.parse_return_state("???");
         assert!(result.is_none());
         assert!(

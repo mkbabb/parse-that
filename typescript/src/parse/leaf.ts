@@ -1,23 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Parser as ParserType, ParserFunction } from "./parser.js";
+import { Parser } from "./parser.js";
+import type { ParserFunction } from "./parser.js";
 import type { ParserState, Span } from "./state.js";
 import { createParserContext } from "./state.js";
 import { mergeErrorState } from "./utils.js";
 
-// Late-bound Parser constructor to break circular dependency with parser.ts.
-// parser.ts calls _setLeafParserClass() after defining Parser.
-let _ParserCtor: any;
-export function _setLeafParserClass(cls: any) {
-    _ParserCtor = cls;
+function makeParser<T>(parser: ParserFunction<T>, context?: any): Parser<T> {
+    return new Parser(parser, context);
 }
-
-// Type-safe wrapper that constructs a Parser using the late-bound constructor
-function makeParser<T>(parser: ParserFunction<T>, context?: any): ParserType<T> {
-    return new _ParserCtor(parser, context);
-}
-
-// Re-export type alias for use in return types
-type Parser<T> = ParserType<T>;
 
 export function eof<T>() {
     const eof = (state: ParserState<T>) => {
@@ -66,10 +56,9 @@ export function any<T extends Array<Parser<any>>>(...parsers: T) {
  *
  * @param table - Maps characters (or char ranges) to parsers.
  *   Keys can be single chars ("a"), ranges ("0-9"), or multi-char ("tf" = 't' or 'f').
- * @param fallback - Optional parser to try when no table entry matches.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function dispatch<T>(table: Record<string, Parser<T>>, fallback?: Parser<T>) {
+export function dispatch<T>(table: Record<string, Parser<T>>) {
     const tbl = new Int8Array(128).fill(-1);
     const parsers: Parser<T>[] = [];
 
@@ -103,9 +92,6 @@ export function dispatch<T>(table: Record<string, Parser<T>>, fallback?: Parser<
         const idx = ch < 128 ? tbl[ch] : -1;
         if (idx >= 0) {
             return parsers[idx].parser(state);
-        }
-        if (fallback) {
-            return fallback.parser(state);
         }
         mergeErrorState(state as ParserState<unknown>, label);
         state.isError = true;
@@ -268,9 +254,8 @@ export const trimStateWhitespace = <T>(state: ParserState<T>): ParserState<T> =>
     return state;
 };
 
-// For backward compatibility, we export `whitespace` as a const that
-// is initialized after Parser class registration. The `_initWhitespace`
-// function is called by parser.ts after it registers the Parser class.
+// `whitespace` is initialized from parser.ts after module evaluation to avoid
+// constructing Parser instances during circular module initialization.
 export let whitespace: ReturnType<typeof regex>;
 export function _initWhitespace() {
     whitespace = regex(/\s*/);

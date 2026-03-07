@@ -43,7 +43,11 @@ pub fn epsilon<'a>() -> Parser<'a, ()> {
 }
 
 #[inline(always)]
-pub fn string_impl<'a>(s_bytes: &[u8], end: &usize, state: &mut ParserState<'a>) -> Option<Span<'a>> {
+pub fn string_impl<'a>(
+    s_bytes: &[u8],
+    end: &usize,
+    state: &mut ParserState<'a>,
+) -> Option<Span<'a>> {
     if *end == 0 {
         return Some(Span::new(state.offset, state.offset, state.src));
     }
@@ -68,14 +72,12 @@ pub fn string<'a>(s: &'a str) -> Parser<'a, &'a str> {
     let end = s_bytes.len();
     #[cfg(feature = "diagnostics")]
     let label: &'static str = Box::leak(format!("\"{}\"", s).into_boxed_str());
-    let string = move |state: &mut ParserState<'a>| {
-        match string_impl(s_bytes, &end, state) {
-            Some(span) => Some(span.as_str()),
-            None => {
-                #[cfg(feature = "diagnostics")]
-                state.add_expected(label);
-                None
-            }
+    let string = move |state: &mut ParserState<'a>| match string_impl(s_bytes, &end, state) {
+        Some(span) => Some(span.as_str()),
+        None => {
+            #[cfg(feature = "diagnostics")]
+            state.add_expected(label);
+            None
         }
     };
     Parser::new(string)
@@ -88,14 +90,12 @@ pub fn string_span<'a>(s: &'a str) -> Parser<'a, Span<'a>> {
     let end = s_bytes.len();
     #[cfg(feature = "diagnostics")]
     let label: &'static str = Box::leak(format!("\"{}\"", s).into_boxed_str());
-    let string = move |state: &mut ParserState<'a>| {
-        match string_impl(s_bytes, &end, state) {
-            Some(span) => Some(span),
-            None => {
-                #[cfg(feature = "diagnostics")]
-                state.add_expected(label);
-                None
-            }
+    let string = move |state: &mut ParserState<'a>| match string_impl(s_bytes, &end, state) {
+        Some(span) => Some(span),
+        None => {
+            #[cfg(feature = "diagnostics")]
+            state.add_expected(label);
+            None
         }
     };
     Parser::new(string)
@@ -126,14 +126,12 @@ pub fn regex<'a>(r: &'a str) -> Parser<'a, &'a str> {
     let re = cached_regex(r);
     #[cfg(feature = "diagnostics")]
     let label: &'static str = Box::leak(format!("/{}/", r).into_boxed_str());
-    let regex = move |state: &mut ParserState<'a>| {
-        match regex_impl(&re, state) {
-            Some(span) => Some(span.as_str()),
-            None => {
-                #[cfg(feature = "diagnostics")]
-                state.add_expected(label);
-                None
-            }
+    let regex = move |state: &mut ParserState<'a>| match regex_impl(&re, state) {
+        Some(span) => Some(span.as_str()),
+        None => {
+            #[cfg(feature = "diagnostics")]
+            state.add_expected(label);
+            None
         }
     };
     Parser::new(regex)
@@ -145,14 +143,12 @@ pub fn regex_span<'a>(r: &'a str) -> Parser<'a, Span<'a>> {
     let re = cached_regex(r);
     #[cfg(feature = "diagnostics")]
     let label: &'static str = Box::leak(format!("/{}/", r).into_boxed_str());
-    let regex = move |state: &mut ParserState<'a>| {
-        match regex_impl(&re, state) {
-            Some(span) => Some(span),
-            None => {
-                #[cfg(feature = "diagnostics")]
-                state.add_expected(label);
-                None
-            }
+    let regex = move |state: &mut ParserState<'a>| match regex_impl(&re, state) {
+        Some(span) => Some(span),
+        None => {
+            #[cfg(feature = "diagnostics")]
+            state.add_expected(label);
+            None
         }
     };
     Parser::new(regex)
@@ -219,10 +215,40 @@ pub fn take_while_byte_span<'a>(f: fn(u8) -> bool) -> Parser<'a, Span<'a>> {
 /// negated character classes like `/[^;{}!,]+/`.
 #[inline]
 pub fn take_until_any_span<'a>(excluded: &'static [u8]) -> Parser<'a, Span<'a>> {
-    let mut lut = [false; 256];
-    for &b in excluded {
-        lut[b as usize] = true;
+    enum TakeUntilScan {
+        One(u8),
+        Two(u8, u8),
+        Three(u8, u8, u8),
+        Lut(Box<[bool; 256]>),
     }
+
+    let mut lut = [false; 256];
+    let mut unique = [0u8; 3];
+    let mut unique_count = 0usize;
+    let mut overflow = false;
+    for &b in excluded {
+        let idx = b as usize;
+        if lut[idx] {
+            continue;
+        }
+        lut[idx] = true;
+        if unique_count < 3 {
+            unique[unique_count] = b;
+            unique_count += 1;
+        } else {
+            overflow = true;
+        }
+    }
+    let scan = if overflow {
+        TakeUntilScan::Lut(Box::new(lut))
+    } else {
+        match unique_count {
+            1 => TakeUntilScan::One(unique[0]),
+            2 => TakeUntilScan::Two(unique[0], unique[1]),
+            3 => TakeUntilScan::Three(unique[0], unique[1], unique[2]),
+            _ => TakeUntilScan::Lut(Box::new(lut)),
+        }
+    };
     #[cfg(feature = "diagnostics")]
     let label: &'static str = {
         let chars: String = excluded.iter().map(|&b| b as char).collect();
@@ -231,18 +257,38 @@ pub fn take_until_any_span<'a>(excluded: &'static [u8]) -> Parser<'a, Span<'a>> 
     let take_until = move |state: &mut ParserState<'a>| {
         let bytes = state.src_bytes;
         let start = state.offset;
-        let end = bytes.len();
-        let mut i = start;
-        while i < end && !lut[unsafe { *bytes.get_unchecked(i) } as usize] {
-            i += 1;
-        }
-        if i == start {
+        if start >= bytes.len() {
             #[cfg(feature = "diagnostics")]
             state.add_expected(label);
             return None;
         }
-        state.offset = i;
-        Some(Span::new(start, i, state.src))
+        let scan_len = match &scan {
+            TakeUntilScan::One(b1) => {
+                memchr::memchr(*b1, &bytes[start..]).unwrap_or(bytes.len() - start)
+            }
+            TakeUntilScan::Two(b1, b2) => {
+                memchr::memchr2(*b1, *b2, &bytes[start..]).unwrap_or(bytes.len() - start)
+            }
+            TakeUntilScan::Three(b1, b2, b3) => {
+                memchr::memchr3(*b1, *b2, *b3, &bytes[start..]).unwrap_or(bytes.len() - start)
+            }
+            TakeUntilScan::Lut(lut) => {
+                let mut i = start;
+                let end = bytes.len();
+                while i < end && !lut[unsafe { *bytes.get_unchecked(i) } as usize] {
+                    i += 1;
+                }
+                i - start
+            }
+        };
+        if scan_len == 0 {
+            #[cfg(feature = "diagnostics")]
+            state.add_expected(label);
+            return None;
+        }
+        let end = start + scan_len;
+        state.offset = end;
+        Some(Span::new(start, end, state.src))
     };
     Parser::new(take_until)
 }
@@ -250,12 +296,13 @@ pub fn take_until_any_span<'a>(excluded: &'static [u8]) -> Parser<'a, Span<'a>> 
 #[inline]
 pub fn next_span<'a>(amount: usize) -> Parser<'a, Span<'a>> {
     let next = move |state: &mut ParserState<'a>| {
-        if state.is_at_end() {
+        let start = state.offset;
+        let new_offset = start + amount;
+        if new_offset > state.src.len() {
             return None;
         }
-        let start = state.offset;
-        state.offset += amount;
-        Some(Span::new(start, state.offset, state.src))
+        state.offset = new_offset;
+        Some(Span::new(start, new_offset, state.src))
     };
     Parser::new(next)
 }
@@ -309,10 +356,7 @@ pub fn one_of<'a, O: 'a>(parsers: Vec<Parser<'a, O>>) -> Parser<'a, O> {
 // ── dispatch_byte: first-byte lookup table ────────────────────
 
 /// First-byte dispatch — O(1) branch selection by peeking the next byte.
-pub fn dispatch_byte<'a, O: 'a>(
-    table: Vec<(u8, Parser<'a, O>)>,
-    fallback: Option<Parser<'a, O>>,
-) -> Parser<'a, O> {
+pub fn dispatch_byte<'a, O: 'a>(table: Vec<(u8, Parser<'a, O>)>) -> Parser<'a, O> {
     // Build lookup table: byte → index into table
     let mut lut: [Option<u16>; 256] = [None; 256];
     for (i, (byte, _)) in table.iter().enumerate() {
@@ -327,8 +371,6 @@ pub fn dispatch_byte<'a, O: 'a>(
         let byte = *state.src_bytes.get(state.offset)?;
         if let Some(idx) = lut[byte as usize] {
             table[idx as usize].1.call(state)
-        } else if let Some(ref fb) = fallback {
-            fb.call(state)
         } else {
             #[cfg(feature = "diagnostics")]
             state.add_expected(label);
@@ -339,10 +381,7 @@ pub fn dispatch_byte<'a, O: 'a>(
 
 /// First-byte dispatch with multiple bytes mapping to the same parser.
 /// Avoids duplicating parsers for bytes that share the same handler (e.g., digits 0-9).
-pub fn dispatch_byte_multi<'a, O: 'a>(
-    table: Vec<(&[u8], Parser<'a, O>)>,
-    fallback: Option<Parser<'a, O>>,
-) -> Parser<'a, O> {
+pub fn dispatch_byte_multi<'a, O: 'a>(table: Vec<(&[u8], Parser<'a, O>)>) -> Parser<'a, O> {
     // Build lookup table: byte → index into parsers vec
     let mut lut: [Option<u16>; 256] = [None; 256];
     let mut parsers: Vec<Parser<'a, O>> = Vec::with_capacity(table.len());
@@ -366,8 +405,6 @@ pub fn dispatch_byte_multi<'a, O: 'a>(
         let byte = *state.src_bytes.get(state.offset)?;
         if let Some(idx) = lut[byte as usize] {
             parsers[idx as usize].call(state)
-        } else if let Some(ref fb) = fallback {
-            fb.call(state)
         } else {
             #[cfg(feature = "diagnostics")]
             state.add_expected(label);

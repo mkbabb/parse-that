@@ -3,9 +3,8 @@ import { createParserContext, ParserState } from "./state.js";
 import type { ParserContext, Span } from "./state.js";
 import { parserDebug, parserPrint } from "./debug.js";
 import { mergeErrorState, resetErrorState, getLastState, getLastFurthestOffset, addSuggestion, isDiagnosticsEnabled, getLastExpected, getLastSuggestions, getLastSecondarySpans, collectDiagnostic, popLastDiagnostic, reportUnclosedDelimiter } from "./utils.js";
-import { createLazyCached, _setParserClass } from "./lazy.js";
-import { trimStateWhitespace, eof, all, _setLeafParserClass, _initWhitespace, whitespace } from "./leaf.js";
-import { _setSpanParserClass } from "./span.js";
+import { createLazyCached } from "./lazy.js";
+import { trimStateWhitespace, eof, all, _initWhitespace, whitespace } from "./leaf.js";
 
 type ExtractValue<T extends ReadonlyArray<Parser<unknown>>> = {
     [K in keyof T]: T[K] extends Parser<infer V> ? V : never;
@@ -714,9 +713,5 @@ export class Parser<T = string> {
     }
 }
 
-// Register Parser class with modules that need it to break circular dependencies
-_setParserClass(Parser);
-_setLeafParserClass(Parser);
-_setSpanParserClass(Parser);
 // Initialize module-level singletons that depend on Parser
 _initWhitespace();

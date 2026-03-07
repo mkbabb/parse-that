@@ -59,7 +59,10 @@ export function mergeErrorState(state: ParserState<unknown>, label?: string) {
             }
         }
         if (label) {
-            const target = lastState ?? state;
+            const target = lastState;
+            if (!target) {
+                throw new Error("mergeErrorState invariant violated: lastState missing");
+            }
             if (target.expected) {
                 if (!target.expected.includes(label)) {
                     target.expected.push(label);

@@ -315,10 +315,10 @@ export function parserPrint(parser: Parser<unknown>): string {
                     return `${parserString} sepBy ${print(args![0], id)}`;
                 case "lazy": {
                     const [lazy] = args!;
-                    const p = getLazyParser(lazy);
+                    const p = getLazyParser(lazy) as Parser<unknown>;
 
                     if (!id) {
-                        const s = print(p as Parser<unknown>, p.id);
+                        const s = print(p, p.id);
                         PARSER_STRINGS.set(p.id, s);
                         return s;
                     } else {
@@ -332,7 +332,10 @@ export function parserPrint(parser: Parser<unknown>): string {
             }
         })();
 
-        const result = s ?? name ?? "unknown";
+        const result = s ?? name;
+        if (!result) {
+            throw new Error("parserPrint: missing parser context name");
+        }
         if (id) {
             PARSER_STRINGS.set(innerParser.id, result);
         }

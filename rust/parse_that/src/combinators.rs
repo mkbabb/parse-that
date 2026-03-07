@@ -45,15 +45,6 @@ where
     }
 
     #[inline]
-    pub fn or_else(self, f: fn() -> Output) -> Parser<'a, Output> {
-        let or_else = move |state: &mut ParserState<'a>| match self.call(state) {
-            Some(value) => Some(value),
-            None => Some(f()),
-        };
-        Parser::new(or_else)
-    }
-
-    #[inline]
     pub fn opt(self) -> Parser<'a, Option<Output>> {
         let opt = move |state: &mut ParserState<'a>| {
             if let Some(value) = self.call(state) {
@@ -186,7 +177,11 @@ where
         let (lower_bound, upper_bound) = extract_bounds(bounds);
 
         let many = move |state: &mut ParserState<'a>| {
-            let est = if lower_bound > 0 { lower_bound.max(16) } else { 32 };
+            let est = if lower_bound > 0 {
+                lower_bound.max(16)
+            } else {
+                32
+            };
             let mut values = Vec::with_capacity(est);
 
             while values.len() < upper_bound {
@@ -300,7 +295,11 @@ where
         let (lower_bound, upper_bound) = extract_bounds(bounds);
 
         let sep_by = move |state: &mut ParserState<'a>| {
-            let est = if lower_bound > 0 { lower_bound.max(16) } else { 32 };
+            let est = if lower_bound > 0 {
+                lower_bound.max(16)
+            } else {
+                32
+            };
             let mut values = Vec::with_capacity(est);
 
             // Parse first element
@@ -352,7 +351,7 @@ where
     where
         Output: Clone,
     {
-        use crate::state::{push_diagnostic, pop_last_diagnostic};
+        use crate::state::{pop_last_diagnostic, push_diagnostic};
 
         let recover = move |state: &mut ParserState<'a>| {
             let checkpoint = state.offset;
@@ -384,7 +383,7 @@ where
     where
         Output: Clone,
     {
-        self
+        panic!("recover() requires the `diagnostics` feature")
     }
 
     #[inline]
@@ -520,10 +519,14 @@ macro_rules! alt {
     ($p1:expr, $p2:expr) => {
         $crate::Parser::new(move |state| {
             let cp = state.offset;
-            if let Some(v) = $p1.call(state) { return Some(v); }
+            if let Some(v) = $p1.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p2.call(state) { return Some(v); }
+            if let Some(v) = $p2.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
             None
@@ -532,13 +535,19 @@ macro_rules! alt {
     ($p1:expr, $p2:expr, $p3:expr) => {
         $crate::Parser::new(move |state| {
             let cp = state.offset;
-            if let Some(v) = $p1.call(state) { return Some(v); }
+            if let Some(v) = $p1.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p2.call(state) { return Some(v); }
+            if let Some(v) = $p2.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p3.call(state) { return Some(v); }
+            if let Some(v) = $p3.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
             None
@@ -547,16 +556,24 @@ macro_rules! alt {
     ($p1:expr, $p2:expr, $p3:expr, $p4:expr) => {
         $crate::Parser::new(move |state| {
             let cp = state.offset;
-            if let Some(v) = $p1.call(state) { return Some(v); }
+            if let Some(v) = $p1.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p2.call(state) { return Some(v); }
+            if let Some(v) = $p2.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p3.call(state) { return Some(v); }
+            if let Some(v) = $p3.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p4.call(state) { return Some(v); }
+            if let Some(v) = $p4.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
             None
@@ -565,19 +582,29 @@ macro_rules! alt {
     ($p1:expr, $p2:expr, $p3:expr, $p4:expr, $p5:expr) => {
         $crate::Parser::new(move |state| {
             let cp = state.offset;
-            if let Some(v) = $p1.call(state) { return Some(v); }
+            if let Some(v) = $p1.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p2.call(state) { return Some(v); }
+            if let Some(v) = $p2.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p3.call(state) { return Some(v); }
+            if let Some(v) = $p3.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p4.call(state) { return Some(v); }
+            if let Some(v) = $p4.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p5.call(state) { return Some(v); }
+            if let Some(v) = $p5.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
             None
@@ -586,22 +613,34 @@ macro_rules! alt {
     ($p1:expr, $p2:expr, $p3:expr, $p4:expr, $p5:expr, $p6:expr) => {
         $crate::Parser::new(move |state| {
             let cp = state.offset;
-            if let Some(v) = $p1.call(state) { return Some(v); }
+            if let Some(v) = $p1.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p2.call(state) { return Some(v); }
+            if let Some(v) = $p2.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p3.call(state) { return Some(v); }
+            if let Some(v) = $p3.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p4.call(state) { return Some(v); }
+            if let Some(v) = $p4.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p5.call(state) { return Some(v); }
+            if let Some(v) = $p5.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p6.call(state) { return Some(v); }
+            if let Some(v) = $p6.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
             None
@@ -610,25 +649,39 @@ macro_rules! alt {
     ($p1:expr, $p2:expr, $p3:expr, $p4:expr, $p5:expr, $p6:expr, $p7:expr) => {
         $crate::Parser::new(move |state| {
             let cp = state.offset;
-            if let Some(v) = $p1.call(state) { return Some(v); }
+            if let Some(v) = $p1.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p2.call(state) { return Some(v); }
+            if let Some(v) = $p2.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p3.call(state) { return Some(v); }
+            if let Some(v) = $p3.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p4.call(state) { return Some(v); }
+            if let Some(v) = $p4.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p5.call(state) { return Some(v); }
+            if let Some(v) = $p5.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p6.call(state) { return Some(v); }
+            if let Some(v) = $p6.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p7.call(state) { return Some(v); }
+            if let Some(v) = $p7.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
             None
@@ -637,28 +690,44 @@ macro_rules! alt {
     ($p1:expr, $p2:expr, $p3:expr, $p4:expr, $p5:expr, $p6:expr, $p7:expr, $p8:expr) => {
         $crate::Parser::new(move |state| {
             let cp = state.offset;
-            if let Some(v) = $p1.call(state) { return Some(v); }
+            if let Some(v) = $p1.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p2.call(state) { return Some(v); }
+            if let Some(v) = $p2.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p3.call(state) { return Some(v); }
+            if let Some(v) = $p3.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p4.call(state) { return Some(v); }
+            if let Some(v) = $p4.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p5.call(state) { return Some(v); }
+            if let Some(v) = $p5.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p6.call(state) { return Some(v); }
+            if let Some(v) = $p6.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p7.call(state) { return Some(v); }
+            if let Some(v) = $p7.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
-            if let Some(v) = $p8.call(state) { return Some(v); }
+            if let Some(v) = $p8.call(state) {
+                return Some(v);
+            }
             state.furthest_offset = state.furthest_offset.max(state.offset);
             state.offset = cp;
             None

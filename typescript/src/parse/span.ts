@@ -1,20 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Parser as ParserType, ParserFunction } from "./parser.js";
+import { Parser } from "./parser.js";
+import type { ParserFunction } from "./parser.js";
 import type { ParserState, Span } from "./state.js";
 import { createParserContext } from "./state.js";
 import { mergeErrorState, reportUnclosedDelimiter } from "./utils.js";
 
-// Late-bound Parser constructor to break circular dependency with parser.ts.
-let _ParserCtor: any;
-export function _setSpanParserClass(cls: any) {
-    _ParserCtor = cls;
+function makeParser<T>(parser: ParserFunction<T>, context?: any): Parser<T> {
+    return new Parser(parser, context);
 }
-
-function makeParser<T>(parser: ParserFunction<T>, context?: any): ParserType<T> {
-    return new _ParserCtor(parser, context);
-}
-
-type Parser<T> = ParserType<T>;
 
 // ── Leaf Span Combinators ────────────────────────────────────
 

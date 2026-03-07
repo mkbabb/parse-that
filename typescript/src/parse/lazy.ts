@@ -1,20 +1,17 @@
-import type { ParserFunction } from "./parser.js";
+import { Parser } from "./parser.js";
 import type { ParserState } from "./state.js";
 import { createParserContext } from "./state.js";
 
-// Forward reference — set by parser.ts to avoid circular import at module init
-let _Parser: any;
-export function _setParserClass(cls: any) {
-    _Parser = cls;
-}
+const LAZY_PARSER_CACHE = new WeakMap<Function, unknown>();
 
-export function getLazyParser<T>(
-    fn: (() => any) & { parser?: any },
-): any {
-    if (fn.parser) {
-        return fn.parser;
+export function getLazyParser<T>(fn: () => T): T {
+    const cached = LAZY_PARSER_CACHE.get(fn);
+    if (cached !== undefined) {
+        return cached as T;
     }
-    return (fn.parser = fn());
+    const parser = fn();
+    LAZY_PARSER_CACHE.set(fn, parser);
+    return parser;
 }
 
 // Closure-local lazy cache — avoids mutating function objects (megamorphic IC pollution)
@@ -38,7 +35,7 @@ export function lazy<T>(
     const method = descriptor.value!.bind(target)!;
 
     descriptor.value = function () {
-        return new _Parser(
+        return new Parser(
             createLazyCached(method),
             createParserContext("lazy", undefined, method),
         );

@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use parse_that::*;
     use parse_that::state::{ParserState, Span};
+    use parse_that::*;
 
     // ── string / string_span ──────────────────────────────────
 
@@ -73,9 +73,11 @@ mod tests {
 
     #[test]
     fn test_take_while_span_no_match() {
-        assert!(take_while_span(|c| c.is_ascii_digit())
-            .parse("abc")
-            .is_none());
+        assert!(
+            take_while_span(|c| c.is_ascii_digit())
+                .parse("abc")
+                .is_none()
+        );
     }
 
     #[test]
@@ -103,9 +105,7 @@ mod tests {
 
     #[test]
     fn test_any_span_keywords() {
-        let span = any_span(&["true", "false", "null"])
-            .parse("true!")
-            .unwrap();
+        let span = any_span(&["true", "false", "null"]).parse("true!").unwrap();
         assert_eq!(span.as_str(), "true");
     }
 
@@ -137,18 +137,12 @@ mod tests {
 
     #[test]
     fn test_or_first_matches() {
-        assert_eq!(
-            (string("a") | string("b")).parse("abc"),
-            Some("a")
-        );
+        assert_eq!((string("a") | string("b")).parse("abc"), Some("a"));
     }
 
     #[test]
     fn test_or_second_matches() {
-        assert_eq!(
-            (string("a") | string("b")).parse("bcd"),
-            Some("b")
-        );
+        assert_eq!((string("a") | string("b")).parse("bcd"), Some("b"));
     }
 
     #[test]
@@ -159,27 +153,10 @@ mod tests {
     #[test]
     fn test_or_backtracking() {
         // First branch partially matches prefix but fails — must backtrack
-        let p = string("ab").then(string("c"))
-            .map(|(a, b)| a);
-        let q = string("ab").then(string("d"))
-            .map(|(a, b)| a);
+        let p = string("ab").then(string("c")).map(|(a, _b)| a);
+        let q = string("ab").then(string("d")).map(|(a, _b)| a);
         let parser = p.save_state() | q.save_state();
         assert_eq!(parser.parse("abd"), Some("ab"));
-    }
-
-    // ── or_else ───────────────────────────────────────────────
-
-    #[test]
-    fn test_or_else_match() {
-        assert_eq!(string("a").or_else(|| "default").parse("abc"), Some("a"));
-    }
-
-    #[test]
-    fn test_or_else_fallback() {
-        assert_eq!(
-            string("x").or_else(|| "default").parse("abc"),
-            Some("default")
-        );
     }
 
     // ── map ───────────────────────────────────────────────────
@@ -430,8 +407,7 @@ mod tests {
 
     #[test]
     fn test_flat_then() {
-        let p: Parser<(_, _, _)> =
-            ParserFlat::then(string("a").then(string("b")), string("c"));
+        let p: Parser<(_, _, _)> = ParserFlat::then(string("a").then(string("b")), string("c"));
         let (a, b, c) = p.parse("abcd").unwrap();
         assert_eq!((a, b, c), ("a", "b", "c"));
     }
@@ -530,8 +506,7 @@ mod tests {
 
     #[test]
     fn test_sp_sep_by() {
-        let p = sp_take_while_byte(|b| b.is_ascii_digit())
-            .sep_by_span(sp_string(","), 1..);
+        let p = sp_take_while_byte(|b| b.is_ascii_digit()).sep_by_span(sp_string(","), 1..);
         let mut state = ParserState::new("1,2,3end");
         let span = p.call(&mut state).unwrap();
         assert_eq!(span.as_str(), "1,2,3");
@@ -539,8 +514,8 @@ mod tests {
 
     #[test]
     fn test_sp_wrap() {
-        let p = sp_take_while_byte(|b| b.is_ascii_digit())
-            .wrap_span(sp_string("("), sp_string(")"));
+        let p =
+            sp_take_while_byte(|b| b.is_ascii_digit()).wrap_span(sp_string("("), sp_string(")"));
         let mut state = ParserState::new("(42)rest");
         let span = p.call(&mut state).unwrap();
         assert_eq!(span.as_str(), "42");
@@ -565,8 +540,8 @@ mod tests {
 
     #[test]
     fn test_sp_bridge_map() {
-        let p: Parser<i32> = sp_take_while_byte(|b| b.is_ascii_digit())
-            .map(|s| s.as_str().parse().unwrap());
+        let p: Parser<i32> =
+            sp_take_while_byte(|b| b.is_ascii_digit()).map(|s| s.as_str().parse().unwrap());
         assert_eq!(p.parse("42abc"), Some(42));
     }
 
@@ -657,25 +632,16 @@ mod tests {
 
     #[test]
     fn test_dispatch_byte() {
-        let p = dispatch_byte(
-            vec![
-                (b'a', string("alpha")),
-                (b'b', string("beta")),
-            ],
-            Some(string("other")),
-        );
+        let p = dispatch_byte(vec![(b'a', string("alpha")), (b'b', string("beta"))]);
         assert_eq!(p.parse("alpha"), Some("alpha"));
         assert_eq!(p.parse("beta"), Some("beta"));
-        assert_eq!(p.parse("other"), Some("other"));
+        assert!(p.parse("other").is_none());
         assert!(p.parse("xyz").is_none());
     }
 
     #[test]
     fn test_dispatch_byte_no_fallback() {
-        let p: Parser<&str> = dispatch_byte(
-            vec![(b'x', string("x"))],
-            None,
-        );
+        let p: Parser<&str> = dispatch_byte(vec![(b'x', string("x"))]);
         assert_eq!(p.parse("x"), Some("x"));
         assert!(p.parse("y").is_none());
     }
@@ -693,5 +659,135 @@ mod tests {
     fn test_take_while_byte_span_no_match() {
         let p = take_while_byte_span(|b| b.is_ascii_digit());
         assert!(p.parse("abc").is_none());
+    }
+
+    // ── take_until_any_span tests ──────────────────────────────
+
+    fn naive_take_until_any<'a>(input: &'a str, excluded: &[u8]) -> Option<&'a str> {
+        let bytes = input.as_bytes();
+        let mut i = 0usize;
+        while i < bytes.len() && !excluded.contains(&bytes[i]) {
+            i += 1;
+        }
+        if i == 0 { None } else { Some(&input[..i]) }
+    }
+
+    #[test]
+    fn test_take_until_any_equivalence_specialization_sizes() {
+        let cases: [(&'static [u8], &str); 4] = [
+            (b",", "alpha,beta"),
+            (b",;", "alpha;beta"),
+            (b",;!", "alpha!beta"),
+            (b",;!?", "alpha?beta"),
+        ];
+
+        for (excluded, input) in cases {
+            let expected = naive_take_until_any(input, excluded).unwrap();
+
+            let got_leaf = take_until_any_span(excluded).parse(input).unwrap();
+            assert_eq!(got_leaf.as_str(), expected);
+
+            let mut state = ParserState::new(input);
+            let got_span = sp_take_until_any(excluded).call(&mut state).unwrap();
+            assert_eq!(got_span.as_str(), expected);
+        }
+    }
+
+    fn next_rand(seed: &mut u64) -> u64 {
+        *seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
+        *seed
+    }
+
+    #[test]
+    fn test_take_until_any_randomized_equivalence() {
+        let mut seed = 0xD1CE_BAAD_1234_5678u64;
+
+        for _ in 0..500 {
+            let len = (next_rand(&mut seed) % 64 + 1) as usize;
+            let mut input_bytes = Vec::with_capacity(len);
+            for _ in 0..len {
+                let b = 32u8 + (next_rand(&mut seed) % 95) as u8;
+                input_bytes.push(b);
+            }
+            let input = String::from_utf8(input_bytes).unwrap();
+
+            let excluded_count = (next_rand(&mut seed) % 6) as usize;
+            let mut excluded = Vec::with_capacity(excluded_count);
+            while excluded.len() < excluded_count {
+                let b = 32u8 + (next_rand(&mut seed) % 95) as u8;
+                if !excluded.contains(&b) {
+                    excluded.push(b);
+                }
+            }
+
+            let expected = naive_take_until_any(&input, &excluded).map(str::to_string);
+            let excluded_static: &'static [u8] = Box::leak(excluded.into_boxed_slice());
+
+            let got_leaf = take_until_any_span(excluded_static)
+                .parse(&input)
+                .map(|s| s.as_str().to_string());
+            assert_eq!(got_leaf, expected);
+
+            let mut state = ParserState::new(&input);
+            let got_span = sp_take_until_any(excluded_static)
+                .call(&mut state)
+                .map(|s| s.as_str().to_string());
+            assert_eq!(got_span, expected);
+        }
+    }
+
+    fn gen_json_number(seed: &mut u64) -> String {
+        let mut out = String::new();
+        if next_rand(seed) % 2 == 0 {
+            out.push('-');
+        }
+
+        if next_rand(seed) % 10 == 0 {
+            out.push('0');
+        } else {
+            out.push((b'1' + (next_rand(seed) % 9) as u8) as char);
+            let extra_int = (next_rand(seed) % 12) as usize;
+            for _ in 0..extra_int {
+                out.push((b'0' + (next_rand(seed) % 10) as u8) as char);
+            }
+        }
+
+        if next_rand(seed) % 3 == 0 {
+            out.push('.');
+            let frac_len = (next_rand(seed) % 6 + 1) as usize;
+            for _ in 0..frac_len {
+                out.push((b'0' + (next_rand(seed) % 10) as u8) as char);
+            }
+        }
+
+        if next_rand(seed) % 3 == 0 {
+            out.push(if next_rand(seed) % 2 == 0 { 'e' } else { 'E' });
+            match next_rand(seed) % 3 {
+                0 => out.push('+'),
+                1 => out.push('-'),
+                _ => {}
+            }
+            let exp_len = (next_rand(seed) % 3 + 1) as usize;
+            for _ in 0..exp_len {
+                out.push((b'0' + (next_rand(seed) % 10) as u8) as char);
+            }
+        }
+
+        out
+    }
+
+    #[test]
+    fn test_number_span_fast_randomized_boundaries() {
+        let mut seed = 0xA11C_E5E5_7788_99AAu64;
+        let suffixes = [",", "]", "}", " ", "\n", "x", "abc"];
+
+        for _ in 0..1000 {
+            let number = gen_json_number(&mut seed);
+            let suffix = suffixes[(next_rand(&mut seed) as usize) % suffixes.len()];
+            let input = format!("{number}{suffix}");
+            let parser = number_span_fast_parser();
+            let span = parser.parse(&input).unwrap();
+            assert_eq!(span.as_str(), number);
+        }
     }
 }
