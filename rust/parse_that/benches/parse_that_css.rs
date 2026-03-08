@@ -39,7 +39,6 @@ fn parse(b: &mut Bencher, filepath: &str) {
     })
 }
 
-// tailwind excluded — too slow without SpanParser optimization
-benchmark_group!(css, normalize, bootstrap);
+benchmark_group!(css, normalize, bootstrap, tailwind);
 
 benchmark_main!(css);
