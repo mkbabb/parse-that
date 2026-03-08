@@ -3,6 +3,8 @@ use crate::state::ParserState;
 
 #[cfg(feature = "diagnostics")]
 use colored::{Color, Colorize};
+#[cfg(feature = "diagnostics")]
+use smallvec::SmallVec;
 
 #[cfg(feature = "diagnostics")]
 const MAX_LINES: usize = 4;
@@ -257,13 +259,13 @@ pub fn format_diagnostic(d: &crate::state::Diagnostic, src: &str) -> String {
     if !d.secondary_spans.is_empty() {
         // Build temporary state with secondary spans for rendering
         let mut span_state = ParserState::new(src);
-        span_state.secondary_spans = d.secondary_spans.clone();
+        span_state.secondary_spans = SmallVec::from_vec(d.secondary_spans.clone());
         output.push_str(&format!("\n{}", format_secondary_spans(&span_state)));
     }
 
     if !d.suggestions.is_empty() {
         let mut sugg_state = ParserState::new(src);
-        sugg_state.suggestions = d.suggestions.clone();
+        sugg_state.suggestions = SmallVec::from_vec(d.suggestions.clone());
         output.push_str(&format!("\n{}", format_suggestions(&sugg_state)));
     }
 

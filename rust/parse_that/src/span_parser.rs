@@ -2,10 +2,8 @@ use regex::Regex;
 use std::sync::Arc;
 
 use crate::leaf::trim_leading_whitespace;
-use crate::parse::{Parser, ParserFn};
+use crate::parse::ParserFn;
 use crate::state::{ParserState, Span};
-use crate::utils::extract_bounds;
-use std::ops::RangeBounds;
 
 use aho_corasick::{AhoCorasick, Anchored, Input};
 
@@ -67,14 +65,6 @@ pub(super) enum SpanKind<'a> {
     TakeWhileChar(Box<dyn Fn(char) -> bool + 'a>),
     NextN(usize),
     Epsilon,
-    /// Monolithic JSON number scanner: [-]digits[.digits][(e|E)[+-]digits]
-    JsonNumber,
-    /// Monolithic JSON string scanner: `"` ... `"` with `\`-escapes, using memchr2.
-    /// Returns the span of the *content* (between the quotes, exclusive).
-    JsonString,
-    /// Like JsonString but returns span including the quote delimiters.
-    /// Used by BBNF codegen where the regex captures the full quoted string.
-    JsonStringQuoted,
     /// Fast path for negated byte classes with one excluded byte.
     TakeUntilAny1(u8),
     /// Fast path for negated byte classes with two excluded bytes.
@@ -84,13 +74,9 @@ pub(super) enum SpanKind<'a> {
     /// LUT-based byte scanner for negated character classes (`[^...]+`) when
     /// the excluded set is larger than three bytes.
     TakeUntilAnyLut(Box<[bool; 256]>),
-    /// Monolithic CSS identifier scanner: -?[a-zA-Z_][\w-]* | --[\w-]+
-    CssIdent,
-    /// Monolithic CSS whitespace + comment scanner: (\s | /\*...\*/)*
-    /// Always succeeds (zero-width on no whitespace).
-    CssWsComment,
-    /// Monolithic CSS quoted string scanner: "..." or '...' with \-escapes.
-    CssString,
+
+    // === Domain-specific monolithic scanners (JSON, CSS, etc.) ===
+    Scanner(SpanScanner),
 
     // === Flat combinators (no nesting depth) ===
     Seq(Vec<SpanParser<'a>>),
@@ -306,53 +292,9 @@ impl<'a> SpanParser<'a> {
 
             SpanKind::Epsilon => Some(Span::new(state.offset, state.offset, state.src)),
 
-            SpanKind::JsonNumber => {
-                let result = crate::parsers::json::number_span_fast(state);
-                #[cfg(feature = "diagnostics")]
-                if result.is_none() {
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                }
-                result
-            }
-
-            SpanKind::JsonString => {
-                let result = crate::parsers::json::json_string_fast(state);
-                #[cfg(feature = "diagnostics")]
-                if result.is_none() {
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                }
-                result
-            }
-            SpanKind::JsonStringQuoted => {
-                let result = crate::parsers::json::json_string_fast_quoted(state);
-                #[cfg(feature = "diagnostics")]
-                if result.is_none() {
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                }
-                result
-            }
-
-            SpanKind::CssIdent => {
-                let result = crate::parsers::css::css_ident_fast(state);
-                #[cfg(feature = "diagnostics")]
-                if result.is_none() {
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                }
-                result
-            }
-
-            SpanKind::CssWsComment => crate::parsers::css::css_ws_comment_fast(state),
-
-            SpanKind::CssString => {
-                let result = crate::parsers::css::css_string_fast(state);
+            // Domain-specific scanners delegate to SpanScanner dispatch
+            SpanKind::Scanner(scanner) => {
+                let result = scanner.call(state);
                 #[cfg(feature = "diagnostics")]
                 if result.is_none() {
                     if let Some(lbl) = self.label {
@@ -647,158 +589,14 @@ impl<'a> SpanParser<'a> {
         }
     }
 
-    // ── Combinators with automatic flattening ─────────────────
-
-    /// Sequential composition: flattens Seq chains.
-    #[inline]
-    pub fn then_span(self, other: SpanParser<'a>) -> SpanParser<'a> {
-        let mut parsers = match self.kind {
-            SpanKind::Seq(v) if self.flags == 0 => v,
-            _ => vec![self],
-        };
-        match other.kind {
-            SpanKind::Seq(v) if other.flags == 0 => parsers.extend(v),
-            _ => parsers.push(other),
-        };
-        sp_new!(SpanKind::Seq(parsers))
-    }
-
-    /// Alternation: flattens OneOf chains.
-    #[inline]
-    pub fn or(self, other: SpanParser<'a>) -> SpanParser<'a> {
-        let mut parsers = match self.kind {
-            SpanKind::OneOf(v) if self.flags == 0 => v,
-            _ => vec![self],
-        };
-        match other.kind {
-            SpanKind::OneOf(v) if other.flags == 0 => parsers.extend(v),
-            _ => parsers.push(other),
-        };
-        sp_new!(SpanKind::OneOf(parsers))
-    }
-
-    #[inline]
-    pub fn opt_span(self) -> SpanParser<'a> {
-        sp_new!(SpanKind::Opt(Box::new(self)))
-    }
-
-    #[inline]
-    pub fn many_span(self, bounds: impl RangeBounds<usize> + 'a) -> SpanParser<'a> {
-        let (lo, hi) = extract_bounds(bounds);
-        sp_new!(SpanKind::Many {
-            inner: Box::new(self),
-            lo,
-            hi,
-        })
-    }
-
-    #[inline]
-    pub fn sep_by_span(
-        self,
-        sep: SpanParser<'a>,
-        bounds: impl RangeBounds<usize> + 'a,
-    ) -> SpanParser<'a> {
-        let (lo, hi) = extract_bounds(bounds);
-        sp_new!(SpanKind::SepBy {
-            inner: Box::new(self),
-            sep: Box::new(sep),
-            lo,
-            hi,
-        })
-    }
-
-    #[inline]
-    pub fn wrap_span(self, left: SpanParser<'a>, right: SpanParser<'a>) -> SpanParser<'a> {
-        sp_new!(SpanKind::Wrap {
-            left: Box::new(left),
-            inner: Box::new(self),
-            right: Box::new(right),
-        })
-    }
-
-    #[inline]
-    pub fn skip_span(self, next: SpanParser<'a>) -> SpanParser<'a> {
-        sp_new!(SpanKind::Skip(Box::new(self), Box::new(next)))
-    }
-
-    #[inline]
-    pub fn next_after(self, next: SpanParser<'a>) -> SpanParser<'a> {
-        sp_new!(SpanKind::Next(Box::new(self), Box::new(next)))
-    }
-
-    #[inline]
-    pub fn not_span(self, negated: SpanParser<'a>) -> SpanParser<'a> {
-        sp_new!(SpanKind::Not(Box::new(self), Box::new(negated)))
-    }
-
-    /// Set difference: match `self` only if `excluded` would NOT match at the
-    /// same starting position. Used for EBNF/BNF exception (`-`) semantics.
-    #[inline]
-    pub fn minus_span(self, excluded: SpanParser<'a>) -> SpanParser<'a> {
-        sp_new!(SpanKind::Minus(Box::new(self), Box::new(excluded)))
-    }
-
-    #[inline]
-    pub fn look_ahead_span(self, lookahead: SpanParser<'a>) -> SpanParser<'a> {
-        sp_new!(SpanKind::LookAhead(Box::new(self), Box::new(lookahead)))
-    }
-
-    /// Zero-width negative assertion: succeeds (empty Span) when inner fails.
-    #[inline]
-    pub fn negate_span(self) -> SpanParser<'a> {
-        sp_new!(SpanKind::Negate(Box::new(self)))
-    }
-
-    // ── Flag setters ──────────────────────────────────────────
-
-    #[inline]
-    pub fn trim_whitespace(mut self) -> SpanParser<'a> {
-        self.flags |= FLAG_TRIM_WS;
-        self
-    }
-
-    #[inline]
-    pub fn save_state(mut self) -> SpanParser<'a> {
-        self.flags |= FLAG_SAVE_STATE;
-        self
-    }
-
-    // ── Bridge to Parser<'a, O> ───────────────────────────────
-
-    /// Convert to a generic `Parser<'a, Span<'a>>`.
-    #[inline]
-    pub fn into_parser(self) -> Parser<'a, Span<'a>> {
-        Parser::new(move |state: &mut ParserState<'a>| self.call(state))
-    }
-
-    /// Map Span output to any type, producing a generic Parser.
-    #[inline]
-    pub fn map<O: 'a>(self, f: fn(Span<'a>) -> O) -> Parser<'a, O> {
-        Parser::new(move |state: &mut ParserState<'a>| self.call(state).map(f))
-    }
-
-    /// Map with a closure (not just fn pointer).
-    #[inline]
-    pub fn map_closure<O: 'a>(self, f: impl Fn(Span<'a>) -> O + 'a) -> Parser<'a, O> {
-        Parser::new(move |state: &mut ParserState<'a>| self.call(state).map(&f))
-    }
 }
 
-impl<'a> std::ops::BitOr for SpanParser<'a> {
-    type Output = SpanParser<'a>;
+#[path = "span_scanner.rs"]
+mod span_scanner;
+pub(super) use span_scanner::SpanScanner;
 
-    #[inline]
-    fn bitor(self, other: SpanParser<'a>) -> Self::Output {
-        self.or(other)
-    }
-}
-
-impl<'a> From<SpanParser<'a>> for Parser<'a, Span<'a>> {
-    #[inline]
-    fn from(sp: SpanParser<'a>) -> Self {
-        sp.into_parser()
-    }
-}
+#[path = "span_methods.rs"]
+mod span_methods;
 
 #[path = "span_constructors.rs"]
 mod span_constructors;

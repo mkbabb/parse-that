@@ -59,9 +59,11 @@ dependencies = [
 [[package]]
 name = "bbnf"
 version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b00ae003feb4fe283e5b639e2c1678ea8881275478319efb0632fee96dc42c84"
 dependencies = [
  "indexmap",
- "parse_that 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parse_that 0.1.1",
  "pprint",
  "proc-macro2",
  "quote",
@@ -72,10 +74,12 @@ dependencies = [
 [[package]]
 name = "bbnf_derive"
 version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02f70b3b5c9ef4c424ec3a9ae94bba2d0980497897a71ac3f4490580b7f4cd27"
 dependencies = [
  "bbnf",
  "indexmap",
- "parse_that 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parse_that 0.1.1",
  "pprint",
  "proc-macro2",
  "quote",
@@ -769,6 +773,19 @@ dependencies = [
 [[package]]
 name = "parse_that"
 version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1abe912b36a0715d9170d57ebd44895ea9ebfb14141620a3d19a1cb63a91857e"
+dependencies = [
+ "aho-corasick",
+ "fast-float2",
+ "memchr",
+ "pprint",
+ "regex",
+]
+
+[[package]]
+name = "parse_that"
+version = "0.2.0"
 dependencies = [
  "aho-corasick",
  "bbnf",
@@ -789,28 +806,16 @@ dependencies = [
  "serde_json",
  "serde_json_borrow",
  "simd-json",
+ "smallvec",
  "sonic-rs",
  "winnow",
-]
-
-[[package]]
-name = "parse_that"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1abe912b36a0715d9170d57ebd44895ea9ebfb14141620a3d19a1cb63a91857e"
-dependencies = [
- "aho-corasick",
- "fast-float2",
- "memchr",
- "pprint",
- "regex",
 ]
 
 [[package]]
 name = "parse_that_cli"
 version = "0.1.0"
 dependencies = [
- "parse_that 0.1.1",
+ "parse_that 0.2.0",
  "pprint",
  "regex",
 ]
@@ -1739,3 +1744,11 @@ name = "zmij"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
+
+[[patch.unused]]
+name = "bbnf"
+version = "0.2.2"
+
+[[patch.unused]]
+name = "bbnf_derive"
+version = "0.2.1"

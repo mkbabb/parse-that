@@ -4,7 +4,7 @@ use crate::leaf::cached_regex;
 use crate::parse::ParserFn;
 use crate::state::Span;
 
-use super::{SpanKind, SpanParser};
+use super::{SpanKind, SpanParser, SpanScanner};
 
 // ── Leaf constructors ─────────────────────────────────────────
 
@@ -79,43 +79,48 @@ pub fn sp_epsilon<'a>() -> SpanParser<'a> {
     sp_new!(SpanKind::Epsilon)
 }
 
+// ── Domain-specific scanner constructors ─────────────────────
+
 /// Monolithic JSON number scanner.
 #[inline]
 pub fn sp_json_number<'a>() -> SpanParser<'a> {
-    sp_new!(SpanKind::JsonNumber, "number")
+    sp_new!(SpanKind::Scanner(SpanScanner::JsonNumber), "number")
 }
 
-/// Monolithic JSON string scanner — SIMD-accelerated via memchr2.
-/// Returns span of content between quotes (exclusive of delimiters).
+/// Monolithic JSON string scanner (memchr2). Content span, exclusive of quotes.
 #[inline]
 pub fn sp_json_string<'a>() -> SpanParser<'a> {
-    sp_new!(SpanKind::JsonString, "string")
+    sp_new!(SpanKind::Scanner(SpanScanner::JsonString), "string")
 }
 
-/// Monolithic JSON string scanner — SIMD-accelerated via memchr2.
-/// Returns span including the quote delimiters (matches regex behavior).
+/// Monolithic JSON string scanner (memchr2). Span includes quote delimiters.
 #[inline]
 pub fn sp_json_string_quoted<'a>() -> SpanParser<'a> {
-    sp_new!(SpanKind::JsonStringQuoted, "string")
+    sp_new!(SpanKind::Scanner(SpanScanner::JsonStringQuoted), "string")
 }
 
-/// Monolithic CSS identifier scanner — no regex, direct byte scanning.
+/// Monolithic CSS identifier scanner — direct byte scanning.
 #[inline]
 pub fn sp_css_ident<'a>() -> SpanParser<'a> {
-    sp_new!(SpanKind::CssIdent, "CSS identifier")
+    sp_new!(SpanKind::Scanner(SpanScanner::CssIdent), "CSS identifier")
 }
 
-/// Monolithic CSS whitespace + comment scanner.
-/// Always succeeds (zero-width on no whitespace/comments).
+/// Monolithic CSS whitespace + comment scanner. Always succeeds.
 #[inline]
 pub fn sp_css_ws_comment<'a>() -> SpanParser<'a> {
-    sp_new!(SpanKind::CssWsComment)
+    sp_new!(SpanKind::Scanner(SpanScanner::CssWsComment))
 }
 
-/// Monolithic CSS quoted string scanner — SIMD-accelerated via memchr2.
+/// Monolithic CSS quoted string scanner (memchr2).
 #[inline]
 pub fn sp_css_string<'a>() -> SpanParser<'a> {
-    sp_new!(SpanKind::CssString, "CSS string")
+    sp_new!(SpanKind::Scanner(SpanScanner::CssString), "CSS string")
+}
+
+/// Monolithic CSS block comment scanner: /\*...\*/
+#[inline]
+pub fn sp_css_block_comment<'a>() -> SpanParser<'a> {
+    sp_new!(SpanKind::Scanner(SpanScanner::CssBlockComment), "CSS comment")
 }
 
 /// Match one or more bytes until any byte in `excluded` is found.

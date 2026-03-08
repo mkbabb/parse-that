@@ -1,4 +1,6 @@
 use pprint::Pretty;
+#[cfg(feature = "diagnostics")]
+use smallvec::SmallVec;
 
 // ── Diagnostic types (feature-gated) ──────────────────────────
 
@@ -87,13 +89,13 @@ pub struct ParserState<'a> {
 
     #[cfg(feature = "diagnostics")]
     #[pprint(skip)]
-    pub expected: Vec<&'static str>,
+    pub expected: SmallVec<[&'static str; 8]>,
     #[cfg(feature = "diagnostics")]
     #[pprint(skip)]
-    pub suggestions: Vec<Suggestion>,
+    pub suggestions: SmallVec<[Suggestion; 4]>,
     #[cfg(feature = "diagnostics")]
     #[pprint(skip)]
-    pub secondary_spans: Vec<SecondarySpan>,
+    pub secondary_spans: SmallVec<[SecondarySpan; 4]>,
 }
 
 impl<'a> ParserState<'a> {
@@ -203,8 +205,8 @@ impl<'a> ParserState<'a> {
             line,
             column,
             expected: self.expected.iter().map(|s| s.to_string()).collect(),
-            suggestions: std::mem::take(&mut self.suggestions),
-            secondary_spans: std::mem::take(&mut self.secondary_spans),
+            suggestions: std::mem::take(&mut self.suggestions).into_vec(),
+            secondary_spans: std::mem::take(&mut self.secondary_spans).into_vec(),
             found,
         };
         self.expected.clear();

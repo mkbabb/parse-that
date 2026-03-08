@@ -1,6 +1,7 @@
 #[cfg(feature = "diagnostics")]
 mod tests {
     use parse_that::*;
+    use smallvec::{SmallVec, smallvec};
 
     /// Strip ANSI escape codes for comparison.
     fn strip_ansi(s: &str) -> String {
@@ -228,7 +229,7 @@ mod tests {
     #[test]
     fn test_state_print_err_with_expected() {
         let mut state = ParserState::new("xyz");
-        state.expected = vec!["\"a\"", "\"b\""];
+        state.expected = smallvec!["\"a\"", "\"b\""];
         let output = strip_ansi(&state_print(Err(&state), "TEST", ""));
         assert!(
             output.contains("expected"),
@@ -1035,7 +1036,7 @@ mod tests {
     #[test]
     fn test_css_state_print_shows_expected_colors() {
         let mut state = ParserState::new("???");
-        state.expected = vec!["\"#\"", "\"rgb(\"", "\"hsl(\"", "\"red\""];
+        state.expected = smallvec!["\"#\"", "\"rgb(\"", "\"hsl(\"", "\"red\""];
         let output = strip_ansi(&state_print(Err(&state), "CSS_COLOR", ""));
         assert!(
             output.contains("expected"),
@@ -1053,14 +1054,14 @@ mod tests {
     fn test_css_state_print_shows_suggestions() {
         let mut state = ParserState::new("rgb(255, 0, 128");
         state.offset = 15;
-        state.suggestions = vec![state::Suggestion {
+        state.suggestions = smallvec![state::Suggestion {
             kind: state::SuggestionKind::UnclosedDelimiter {
                 delimiter: "rgb(".to_string(),
                 open_offset: 0,
             },
             message: "close the delimiter with matching `)`".to_string(),
         }];
-        state.secondary_spans = vec![state::SecondarySpan {
+        state.secondary_spans = smallvec![state::SecondarySpan {
             offset: 0,
             label: "unclosed `rgb(` opened here".to_string(),
         }];

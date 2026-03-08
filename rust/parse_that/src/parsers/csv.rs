@@ -5,10 +5,11 @@ use crate::parse::*;
 use super::utils::escaped_span;
 
 use pprint::{Doc, Join};
+use smallvec::SmallVec;
 
 #[derive(Debug, PartialEq)]
 pub enum CSV<'a> {
-    Lines(Vec<Vec<&'a str>>),
+    Lines(Vec<SmallVec<[&'a str; 16]>>),
 }
 
 impl<'a> From<CSV<'a>> for Doc<'a> {
@@ -20,10 +21,10 @@ impl<'a> From<CSV<'a>> for Doc<'a> {
             .map(|line| {
                 line.into_iter()
                     .map(Doc::from)
-                    .collect::<Vec<_>>()
+                    .collect::<Vec<Doc<'_>>>()
                     .join(",")
             })
-            .collect::<Vec<_>>()
+            .collect::<Vec<Doc<'_>>>()
             .join(Doc::Hardline)
     }
 }
@@ -41,7 +42,7 @@ pub fn csv_parser<'a>() -> Parser<'a, CSV<'a>> {
 
     let token = (double_quotes | no_quotes | empty).map(|span| span.as_str());
 
-    let line = token.sep_by(delim(), 1..);
+    let line = token.sep_by_small::<_, [&str; 16]>(delim(), 1..);
 
     let csv = line.sep_by(regex_span(r"[ \t]*(\r?\n)+[ \t]*"), ..);
 
