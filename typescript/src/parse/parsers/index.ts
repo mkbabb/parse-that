@@ -1,6 +1,6 @@
 export { jsonParser } from "./json.js";
 export type { JsonValue } from "./json.js";
-export { cssParser } from "./css.js";
+export { cssParser, specificity } from "./css/index.js";
 export type {
     CssNode,
     CssValue,
@@ -9,6 +9,12 @@ export type {
     CssDeclaration,
     KeyframeBlock,
     KeyframeStop,
-} from "./css.js";
+    MediaQuery,
+    MediaCondition,
+    MediaFeature,
+    RangeOp,
+    SupportsCondition,
+    Specificity,
+} from "./css/index.js";
 export { csvParser } from "./csv.js";
 export { escapedString, quotedString, numberParser } from "./utils.js";

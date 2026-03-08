@@ -1,12 +1,20 @@
 import { describe, it, expect } from "vitest";
-import { cssParser } from "../src/parse/parsers/css.js";
+import { cssParser } from "../src/parse/parsers/css/index.js";
 import type {
     CssNode,
     CssSelector,
     CssValue,
     CssDeclaration,
     CssColor,
-} from "../src/parse/parsers/css.js";
+    CssAtMedia,
+    CssAtSupports,
+    MediaQuery,
+    MediaCondition,
+    MediaFeature,
+    SupportsCondition,
+    Specificity,
+} from "../src/parse/parsers/css/index.js";
+import { specificity } from "../src/parse/parsers/css/index.js";
 import { ParserState } from "../src/parse/state.js";
 import * as fs from "fs";
 import * as path from "path";
@@ -185,8 +193,13 @@ describe("CSS Parser", () => {
             const nodes = parse("@media (max-width: 768px) { .foo { display: none; } }");
             expect(nodes).toHaveLength(1);
             expect(nodes[0].type).toBe("atMedia");
-            const rule = nodes[0] as any;
-            expect(rule.prelude).toContain("max-width");
+            const rule = nodes[0] as CssAtMedia;
+            expect(rule.queries).toHaveLength(1);
+            expect(rule.queries[0].conditions).toHaveLength(1);
+            const cond = rule.queries[0].conditions[0] as MediaCondition & { type: "feature" };
+            expect(cond.type).toBe("feature");
+            expect(cond.feature.type).toBe("plain");
+            expect((cond.feature as any).name).toBe("max-width");
             expect(rule.body).toHaveLength(1);
         });
 
@@ -250,6 +263,177 @@ describe("CSS Parser", () => {
             const nodes = parse(":root { --main-color: #ff0000; }");
             const decl = (nodes[0] as any).declarations[0];
             expect(decl.property).toBe("--main-color");
+        });
+    });
+
+    describe("media queries (L1.75)", () => {
+        it("parses media type only", () => {
+            const nodes = parse("@media screen { .foo { color: red; } }");
+            const rule = nodes[0] as CssAtMedia;
+            expect(rule.queries).toHaveLength(1);
+            expect(rule.queries[0].mediaType).toBe("screen");
+            expect(rule.queries[0].modifier).toBeNull();
+        });
+
+        it("parses not modifier", () => {
+            const nodes = parse("@media not print { .foo { color: red; } }");
+            const rule = nodes[0] as CssAtMedia;
+            expect(rule.queries[0].modifier).toBe("not");
+            expect(rule.queries[0].mediaType).toBe("print");
+        });
+
+        it("parses media type with condition", () => {
+            const nodes = parse("@media screen and (min-width: 768px) { .foo { display: block; } }");
+            const rule = nodes[0] as CssAtMedia;
+            expect(rule.queries[0].mediaType).toBe("screen");
+            expect(rule.queries[0].conditions).toHaveLength(1);
+            const cond = rule.queries[0].conditions[0];
+            expect(cond.type).toBe("feature");
+        });
+
+        it("parses condition-only media query", () => {
+            const nodes = parse("@media (max-width: 768px) { .foo { display: none; } }");
+            const rule = nodes[0] as CssAtMedia;
+            expect(rule.queries[0].mediaType).toBeNull();
+            expect(rule.queries[0].conditions).toHaveLength(1);
+        });
+
+        it("parses multiple media queries", () => {
+            const nodes = parse("@media screen, print { .foo { color: red; } }");
+            const rule = nodes[0] as CssAtMedia;
+            expect(rule.queries).toHaveLength(2);
+            expect(rule.queries[0].mediaType).toBe("screen");
+            expect(rule.queries[1].mediaType).toBe("print");
+        });
+
+        it("parses and-chained conditions", () => {
+            const nodes = parse("@media (min-width: 768px) and (max-width: 1024px) { .foo { color: red; } }");
+            const rule = nodes[0] as CssAtMedia;
+            const cond = rule.queries[0].conditions[0];
+            expect(cond.type).toBe("and");
+            if (cond.type === "and") {
+                expect(cond.conditions).toHaveLength(2);
+            }
+        });
+
+        it("parses bare feature name", () => {
+            const nodes = parse("@media (color) { .foo { color: red; } }");
+            const rule = nodes[0] as CssAtMedia;
+            const cond = rule.queries[0].conditions[0];
+            expect(cond.type).toBe("feature");
+            if (cond.type === "feature") {
+                expect(cond.feature.type).toBe("plain");
+                expect(cond.feature.name).toBe("color");
+                if (cond.feature.type === "plain") {
+                    expect(cond.feature.value).toBeNull();
+                }
+            }
+        });
+
+        it("parses range syntax", () => {
+            const nodes = parse("@media (width >= 768px) { .foo { color: red; } }");
+            const rule = nodes[0] as CssAtMedia;
+            const cond = rule.queries[0].conditions[0];
+            expect(cond.type).toBe("feature");
+            if (cond.type === "feature") {
+                expect(cond.feature.type).toBe("range");
+                if (cond.feature.type === "range") {
+                    expect(cond.feature.name).toBe("width");
+                    expect(cond.feature.op).toBe(">=");
+                }
+            }
+        });
+    });
+
+    describe("supports conditions (L1.75)", () => {
+        it("parses declaration test", () => {
+            const nodes = parse("@supports (display: grid) { .foo { display: grid; } }");
+            const rule = nodes[0] as CssAtSupports;
+            expect(rule.condition.type).toBe("declaration");
+            if (rule.condition.type === "declaration") {
+                expect(rule.condition.property).toBe("display");
+            }
+        });
+
+        it("parses not condition", () => {
+            const nodes = parse("@supports not (display: grid) { .foo { display: flex; } }");
+            const rule = nodes[0] as CssAtSupports;
+            expect(rule.condition.type).toBe("not");
+        });
+
+        it("parses and chain", () => {
+            const nodes = parse("@supports (display: grid) and (gap: 1em) { .foo { color: red; } }");
+            const rule = nodes[0] as CssAtSupports;
+            expect(rule.condition.type).toBe("and");
+            if (rule.condition.type === "and") {
+                expect(rule.condition.conditions).toHaveLength(2);
+            }
+        });
+
+        it("parses or chain", () => {
+            const nodes = parse("@supports (display: grid) or (display: flex) { .foo { color: red; } }");
+            const rule = nodes[0] as CssAtSupports;
+            expect(rule.condition.type).toBe("or");
+            if (rule.condition.type === "or") {
+                expect(rule.condition.conditions).toHaveLength(2);
+            }
+        });
+    });
+
+    describe("specificity (L1.75)", () => {
+        it("id selector", () => {
+            expect(specificity({ type: "id", value: "#foo" })).toEqual([1, 0, 0]);
+        });
+
+        it("class selector", () => {
+            expect(specificity({ type: "class", value: ".foo" })).toEqual([0, 1, 0]);
+        });
+
+        it("type selector", () => {
+            expect(specificity({ type: "type", value: "div" })).toEqual([0, 0, 1]);
+        });
+
+        it("universal selector", () => {
+            expect(specificity({ type: "universal" })).toEqual([0, 0, 0]);
+        });
+
+        it("compound selector", () => {
+            expect(specificity({
+                type: "compound",
+                parts: [
+                    { type: "type", value: "div" },
+                    { type: "class", value: ".foo" },
+                    { type: "id", value: "#bar" },
+                ],
+            })).toEqual([1, 1, 1]);
+        });
+
+        it("complex selector", () => {
+            expect(specificity({
+                type: "complex",
+                left: { type: "type", value: "div" },
+                combinator: " ",
+                right: { type: "class", value: ".foo" },
+            })).toEqual([0, 1, 1]);
+        });
+
+        it(":where() has zero specificity", () => {
+            expect(specificity({
+                type: "pseudoFunction",
+                name: "where",
+                args: [{ type: "id", value: "#foo" }],
+            })).toEqual([0, 0, 0]);
+        });
+
+        it(":is() uses most specific argument", () => {
+            expect(specificity({
+                type: "pseudoFunction",
+                name: "is",
+                args: [
+                    { type: "class", value: ".foo" },
+                    { type: "id", value: "#bar" },
+                ],
+            })).toEqual([1, 0, 0]);
         });
     });
 

@@ -2,7 +2,6 @@ import { Parser, regex, ParserFunction, string, any } from "../src/parse";
 import { test, expect, describe, it, bench } from "vitest";
 import { parserPrint } from "../src/parse/debug";
 import { ParserState } from "../src/parse/state";
-import fs from "fs";
 
 interface BaseInst<T extends string> {
     id: number;
@@ -318,7 +317,9 @@ const csvCombinator = () => {
 
 // `;
 
-const src = fs.readFileSync("data/active_charter_schools_report.csv", "utf8");
+const src = Array.from({ length: 5000 }, (_, i) =>
+    `"${i}","School ${i}","NY","${100 + (i % 900)}"`,
+).join("\n");
 
 describe("FSM", () => {
     // it("should print vibes", () => {

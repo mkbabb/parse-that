@@ -1,7 +1,7 @@
 import { bench, describe } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
-import { cssParser } from "../../src/parse/parsers/css.js";
+import { cssParser } from "../../src/parse/parsers/css/index.js";
 import { ParserState } from "../../src/parse/state.js";
 import postcss from "postcss";
 import * as csstree from "css-tree";

@@ -4,8 +4,8 @@
  * output, the benchmark comparison is misleading.
  */
 import { describe, it, expect } from "vitest";
-import { cssParser } from "../src/parse/parsers/css.js";
-import type { CssNode, CssDeclaration, CssValue } from "../src/parse/parsers/css.js";
+import { cssParser } from "../src/parse/parsers/css/index.js";
+import type { CssNode, CssDeclaration, CssValue } from "../src/parse/parsers/css/index.js";
 import { ParserState } from "../src/parse/state.js";
 import postcss from "postcss";
 import * as csstree from "css-tree";
