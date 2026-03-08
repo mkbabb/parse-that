@@ -174,6 +174,29 @@ lazy wrappers, FIRST-set dispatch tables (O(1) alternation), regex
 See [docs/perf-optimization-ts.md](docs/perf-optimization-ts.md) for the full
 optimization chronicle.
 
+### CSS
+
+Rust MB/s on normalize.css (6KB), bootstrap.css (281KB), tailwind-output.css (3.6MB):
+
+| Parser | normalize | bootstrap | tailwind | Level |
+|---|---:|---:|---:|---|
+| **parse_that** (hand-rolled) | **283** | **237** | **267** | L1.5 — typed AST |
+| BBNF-generated | 241 | 67 | — | L1 — opaque spans |
+| lightningcss | 227 | 104 | FAIL | L2 — semantic |
+| cssparser | 686 | 434 | 272 | L0 — tokenizer only |
+
+parse_that builds a fully typed AST (selectors, values with dimensions/colors/functions,
+specialized at-rules) using monolithic byte-level scanners with memchr SIMD. Faster than
+lightningcss (which does L2 semantic validation), within 1.6-2.4x of cssparser (tokenizer-only).
+
+TypeScript (ops/s):
+
+| Parser | normalize | bootstrap | vs. postcss |
+|---|---:|---:|---|
+| **parse-that** | **70,789** | **565** | — |
+| postcss (L1) | 18,321 | 206 | 2.7-3.9x slower |
+| css-tree (L1-L2) | 12,421 | 129 | 4.4-5.7x slower |
+
 ## Debugging
 
 The `debug` combinator pretty-prints parser state during execution.

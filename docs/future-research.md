@@ -5,22 +5,21 @@ approach, expected impact.
 
 ---
 
-## 1. CSS Parse Throughput
+## 1. CSS Parse Throughput — RESOLVED
 
-**Current**: ~31 MB/s (prettify pipeline).
+**Previous**: 6-38 MB/s (hand-rolled), ~31 MB/s (prettify pipeline).
 
-**Bottleneck**: Deep alternation chains in the CSS grammar produce `Box<Enum>` per
-recursive value. Each rule invocation allocates a heap-boxed enum variant, and the
-CSS grammar has 21 rules with significant nesting depth (selectors, declarations,
-media queries).
+**Current**: **237-287 MB/s** (hand-rolled), 67-241 MB/s (BBNF-generated).
 
-**Approach**: Extend the BBNF codegen to detect linear-chain rules (rules whose body
-is a single nonterminal reference) and eliminate the intermediate `Box<Enum>`
-allocation via direct inlining. For alternation-heavy rules, investigate arena
-allocation (`bumpalo`) scoped to a single parse call.
+**What was done** (2026-03-08):
+- Added 3 monolithic SpanParser scanners: `CssIdent` (byte loop), `CssWsComment` (memchr for `*/`), `CssString` (memchr2 for quote/backslash)
+- Hoisted all parser construction out of hot loops (eliminated thousands of `Box<dyn ParserFn>` allocations per parse)
+- Inlined value parsing (replaced `dispatch_byte_multi` + `.or()` vtable chains with direct byte-match dispatch)
+- Inlined selector suffix parsing (replaced 5-branch `.or()` chain with first-byte match)
+- Inlined `css_rule()` dispatch (first-byte match instead of `.or()` chain)
+- Removed 6 unnecessary `lazy()` wrappers from non-recursive rules
 
-**Expected impact**: 2–3x improvement to ~60–90 MB/s, closing the gap with JSON
-parse throughput.
+**Result**: 34x improvement on bootstrap.css. Now faster than lightningcss (L2 semantic parser) while building a full typed AST.
 
 ---
 
@@ -76,15 +75,13 @@ SipHash computation and reduces to a single array index per lookup.
 
 ---
 
-## 5. Re-run 11-parser Benchmark Matrix
+## 5. Re-run 11-parser Benchmark Matrix — RESOLVED
 
-**Current**: BBNF row shows 249–552 MB/s from Phase D results. Phase E (recursive
-SpanParser codegen) was added after the last full benchmark run.
+**Done**: Full matrix re-run completed 2026-03-08. BBNF JSON improved to 323-735 MB/s
+(from 249-552). All docs updated with current numbers.
 
-**Approach**: Run the full 11-parser × 6-dataset matrix with current code. Update
-`README.md` and `docs/perf-optimization-rust.md` tables.
-
-**Expected impact**: BBNF numbers should improve 5–15% from Phase E.
+BBNF CSS benchmarks added: 67-241 MB/s on css-fast.bbnf grammar (opaque spans).
+Hand-rolled CSS benchmarks added: 237-287 MB/s on bootstrap/normalize/tailwind.
 
 ---
 
@@ -113,3 +110,78 @@ eliminating closure allocation and virtual dispatch overhead.
 
 **Expected impact**: ~10–20% improvement for BBNF-generated TS parsers on
 span-eligible rules. Requires changes to the TS BBNF codegen path.
+
+---
+
+## 8. SmallVec for CSS AST Allocations
+
+**Current**: CSS parser allocates `Vec` for selectors, declarations, values, and
+function args. Most of these are small (1-5 elements). Each Vec starts at capacity 0
+and grows, causing multiple reallocs.
+
+**Approach**: Replace with `SmallVec<[T; N]>` (or `tinyvec::ArrayVec`) where N covers
+the common case: `SmallVec<[CssSelector; 4]>` for selector lists,
+`SmallVec<[CssValue; 6]>` for declaration values, `SmallVec<[CssDeclaration; 8]>` for
+declaration blocks. Eliminates heap allocation for the common case.
+
+**Expected impact**: 10-20% throughput improvement on bootstrap.css (allocation-heavy).
+
+---
+
+## 9. SIMD Whitespace Scanning
+
+**Current**: Whitespace scanning uses a scalar byte-by-byte loop (5 predicate checks
+per byte). The micro-benchmark "chunked" variant (8-byte u64 loads) shows modest gains.
+
+**Approach**: Use 128-bit NEON/SSE to compare 16 bytes against `{0x20, 0x09, 0x0A, 0x0D}`
+simultaneously. Find first non-whitespace via movemask + trailing zeros. Would give
+~16x throughput on whitespace-heavy regions (pretty-printed JSON, CSS indentation).
+
+**Expected impact**: 5-10% on whitespace-heavy files (citm_catalog, pretty-printed CSS).
+Limited impact on minified inputs.
+
+---
+
+## 10. Eliminate Remaining Regex on CSS Hot Paths
+
+**Current**: Four regex patterns remain in CSS parser hot/warm paths:
+- `sp_regex(r"(?s)/\*.*?\*/")` for standalone comment nodes
+- `sp_regex(r"[~|^$*]?=")` for attribute selector matchers
+- `sp_regex(r"#[0-9a-fA-F]{3,8}")` for hex colors
+- `sp_regex(r"...")` for `:nth-child()` An+B syntax
+
+**Approach**: Replace each with trivial hand-written byte checks. Hex color: consume
+`#`, scan 3-8 hex digits. Attribute matcher: peek 1-2 bytes. Comment: consume `/*`,
+memchr for `*`, check `/`.
+
+**Expected impact**: 5-10% on selector-heavy and color-heavy CSS.
+
+---
+
+## 11. Close BBNF-to-Hand-Rolled JSON Gap
+
+**Current**: BBNF JSON at 573 MB/s vs hand-rolled at 940 MB/s (0.61x).
+
+**Bottleneck**: `lazy()` indirection for recursive rules (UnsafeCell + branch + vtable
+per call), `trim_whitespace()` double-dispatch (redundant whitespace scanning at
+boundaries), and `sep_by` + comma parsing overhead.
+
+**Approach**: (a) Replace `dispatch_byte_multi` with inline `match` in BBNF codegen,
+(b) fuse whitespace skipping into array/object loops rather than wrapping comma parser,
+(c) explore function-pointer recursion instead of `lazy()` for known recursive rules.
+
+**Expected impact**: Close gap to 0.75-0.85x of hand-rolled.
+
+---
+
+## 12. CSS L1.75 — Typed Media/Supports Preludes
+
+**Current**: `@media` and `@supports` preludes are captured as raw `Span`. Specificity
+is not computed.
+
+**Approach**: Parse `@media` preludes into typed conditions (`MediaFeature`,
+`MediaCondition` with boolean combinators). Parse `@supports` conditions into boolean
+expression trees. Add specificity computation as a post-parse utility.
+
+**Expected impact**: Bounded, well-specified additions that bring parse_that closer to
+lightningcss's feature set without the full L2 property registry.

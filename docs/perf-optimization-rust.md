@@ -366,6 +366,44 @@ in the inner formatting loop.
 | E | Recursive SpanParser codegen — all expression types, fixed-point `sp_method_rules` | ~5–10% (CSS-heavy) |
 | F | Doc allocation optimization — `concat()` → DoubleDoc/TripleDoc | ~3–5% (prettify) |
 
+### Phase 8: CSS Monolithic Scanners + Inline Dispatch (6 MB/s → 237 MB/s)
+
+The CSS parser was 10-50x slower than JSON due to pure combinator composition: every
+leaf token (ident, whitespace, string, number) went through `Box<dyn ParserFn>` vtable
+dispatch, and every value/selector was parsed through `.or()` chains reconstructing
+parser trees per loop iteration.
+
+**Monolithic scanners** — 3 new `SpanKind` variants with hand-written byte loops:
+- `CssIdent`: `-?[a-zA-Z_][\w-]* | --[\w-]+` inline byte loop (no regex NFA)
+- `CssWsComment`: whitespace byte loop + `memchr` for `*/` in comments (always succeeds)
+- `CssString`: `memchr2(quote, b'\\')` SIMD loop (same pattern as `JsonString`)
+
+**Parser hoisting** — All parser construction moved out of hot loops. Before: each loop
+iteration called `css_single_value()` which reconstructed `dispatch_byte_multi` (256-byte
+LUT + 8 `Box<dyn>` allocations). After: constructed once, reused via captured reference.
+This alone was worth **34x on bootstrap.css**.
+
+**Inline byte dispatch** — Replaced combinator chains with direct `match` on first byte:
+- Value parsing: `match byte { b'#' => hex_color, b'"' => string, b',' => comma, ... }`
+  instead of `dispatch_byte_multi(..).or(function).or(operator).or(ident)`
+- Selector suffix: `match byte { b'.' => class, b'#' => id, b'[' => attr, b':' => pseudo, ... }`
+  instead of 5-branch `.or()` chain
+- Rule dispatch: `match byte { b'/' => comment, b'@' => at_rule, _ => qualified_rule }`
+  instead of 3-branch `.or()` chain
+
+**BBNF codegen integration** — Added CSS pattern detection in `bbnf-derive`:
+- `is_css_ws_comment_regex()` → `sp_css_ws_comment()`
+- `is_css_ident_regex()` → `sp_css_ident()`
+- `is_css_string_regex()` → `sp_css_string()`
+
+| Metric | Before | After | Speedup |
+|--------|--------|-------|---------|
+| normalize.css | 60 MB/s | 283 MB/s | 4.7x |
+| bootstrap.css | 7 MB/s | 237 MB/s | **34x** |
+| tailwind (3.6MB) | N/A | 267 MB/s | — |
+| vs lightningcss (L2) | 0.25x | **1.25-2.3x faster** | — |
+| vs cssparser (L0) | 0.01x | 0.55-0.98x | — |
+
 ---
 
 ## Architecture Deep Dive

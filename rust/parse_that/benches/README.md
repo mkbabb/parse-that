@@ -1,6 +1,6 @@
 # JSON Benchmark Suite
 
-8 parsers × 6 datasets. All benchmarks report MB/s throughput via `bencher`.
+10 parsers × 6 datasets. All benchmarks report MB/s throughput via `bencher`.
 
 ## Datasets
 
@@ -20,6 +20,7 @@ Not all parsers do the same work. This matters for interpreting results.
 | Parser | String handling | Escapes | Allocation | Notes |
 |---|---|---|---|---|
 | **parse_that** | Borrowed `&str` | Raw (not decoded) | Zero-copy | Our library |
+| **parse_that (BBNF)** | Borrowed `&str` | Raw (not decoded) | Zero-copy | `#[derive(Parser)]` from `.bbnf` grammar |
 | **nom** | Borrowed `&str` | Raw (not decoded) | Zero-copy | Most equivalent to parse_that |
 | **winnow** | Borrowed `&str` | Raw (not decoded) | Zero-copy | nom's successor, uses `dispatch!` for O(1) branching |
 | **pest** | Borrowed `Span` | Raw | Zero-copy | PEG parser generator |
@@ -32,7 +33,7 @@ Not all parsers do the same work. This matters for interpreting results.
 
 # CSS Benchmark Suite
 
-3 parsers × 3 datasets (+ TypeScript: 3 parsers × 2 datasets).
+4 parsers × 3 datasets (+ TypeScript: 3 parsers × 2 datasets).
 
 ## CSS Datasets
 
@@ -49,6 +50,7 @@ CSS parsing exists on a spectrum. Comparing parsers across levels is misleading 
 | Parser | Selectors | Values | Allocation | Level |
 |---|---|---|---|---|
 | **parse_that** (hand-rolled) | Typed AST (L4) | Typed (dimension, color, fn) | Zero-copy spans + Vec | L1.5 |
+| **parse_that (BBNF)** | Opaque span | Opaque span | Zero-copy spans | L1 (LESS work) |
 | **cssparser** (servo) | Callback tokens | Callback tokens | User-controlled | L0-L1 (LESS work) |
 | **lightningcss** | Typed (specificity) | Typed (units, colors) | Arena | L2 (MORE work) |
 | **postcss** (TS) | String array | String | GC-managed | L1 (LESS work) |
