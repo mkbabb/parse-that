@@ -49,7 +49,7 @@ CSS parsing exists on a spectrum. Comparing parsers across levels is misleading 
 
 | Parser | Selectors | Values | Allocation | Level |
 |---|---|---|---|---|
-| **parse_that** (hand-rolled) | Typed AST (L4) | Typed (dimension, color, fn) | Zero-copy spans + Vec | L1.5 |
+| **parse_that** (hand-rolled) | Typed AST (compound/complex) | Typed (dimension, color, fn) + media/supports/specificity | Zero-copy spans + SmallVec | L1.75 |
 | **parse_that (BBNF)** | Opaque span | Opaque span | Zero-copy spans | L1 (LESS work) |
 | **cssparser** (servo) | Callback tokens | Callback tokens | User-controlled | L0-L1 (LESS work) |
 | **lightningcss** | Typed (specificity) | Typed (units, colors) | Arena | L2 (MORE work) |

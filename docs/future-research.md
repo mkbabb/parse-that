@@ -9,17 +9,19 @@ approach, expected impact.
 
 **Previous**: 6-38 MB/s (hand-rolled), ~31 MB/s (prettify pipeline).
 
-**Current**: **237-287 MB/s** (hand-rolled), 67-241 MB/s (BBNF-generated).
+**Current**: **229-457 MB/s** (hand-rolled L1.75), 61-159 MB/s (BBNF-generated).
 
 **What was done** (2026-03-08):
-- Added 3 monolithic SpanParser scanners: `CssIdent` (byte loop), `CssWsComment` (memchr for `*/`), `CssString` (memchr2 for quote/backslash)
+- Added 4 monolithic SpanParser scanners: `CssIdent` (byte loop), `CssWsComment` (memchr for `*/`), `CssString` (memchr2 for quote/backslash), `CssBlockComment` (memchr for `*/`)
 - Hoisted all parser construction out of hot loops (eliminated thousands of `Box<dyn ParserFn>` allocations per parse)
 - Inlined value parsing (replaced `dispatch_byte_multi` + `.or()` vtable chains with direct byte-match dispatch)
 - Inlined selector suffix parsing (replaced 5-branch `.or()` chain with first-byte match)
 - Inlined `css_rule()` dispatch (first-byte match instead of `.or()` chain)
 - Removed 6 unnecessary `lazy()` wrappers from non-recursive rules
+- Added typed MediaQuery, SupportsCondition, Specificity (L1.75) — both Rust + TS
+- SmallVec for selectors (N=2) and values (N=2) — kept declarations as Vec to avoid stack bloat from nested SmallVec
 
-**Result**: 34x improvement on bootstrap.css. Now faster than lightningcss (L2 semantic parser) while building a full typed AST.
+**Result**: 38x improvement on bootstrap. 2.2x faster than lightningcss (L2 semantic parser) on bootstrap, within 0.93x of cssparser (tokenizer-only) on tailwind — while building a fully typed L1.75 AST.
 
 ---
 
@@ -77,11 +79,11 @@ SipHash computation and reduces to a single array index per lookup.
 
 ## 5. Re-run 11-parser Benchmark Matrix — RESOLVED
 
-**Done**: Full matrix re-run completed 2026-03-08. BBNF JSON improved to 323-735 MB/s
-(from 249-552). All docs updated with current numbers.
+**Done**: Full matrix re-run completed 2026-03-08. All docs updated.
 
-BBNF CSS benchmarks added: 67-241 MB/s on css-fast.bbnf grammar (opaque spans).
-Hand-rolled CSS benchmarks added: 237-287 MB/s on bootstrap/normalize/tailwind.
+parse_that JSON: 358–1,006 MB/s. BBNF JSON: 312–703 MB/s.
+CSS L1.75: 229–457 MB/s. BBNF CSS: 61–159 MB/s.
+10 Rust JSON competitors, 3 CSS competitors benchmarked.
 
 ---
 
@@ -113,18 +115,17 @@ span-eligible rules. Requires changes to the TS BBNF codegen path.
 
 ---
 
-## 8. SmallVec for CSS AST Allocations
+## 8. SmallVec for CSS AST Allocations — RESOLVED
 
-**Current**: CSS parser allocates `Vec` for selectors, declarations, values, and
-function args. Most of these are small (1-5 elements). Each Vec starts at capacity 0
-and grows, causing multiple reallocs.
+**Previous**: CSS parser allocated `Vec` for all selectors, declarations, values.
 
-**Approach**: Replace with `SmallVec<[T; N]>` (or `tinyvec::ArrayVec`) where N covers
-the common case: `SmallVec<[CssSelector; 4]>` for selector lists,
-`SmallVec<[CssValue; 6]>` for declaration values, `SmallVec<[CssDeclaration; 8]>` for
-declaration blocks. Eliminates heap allocation for the common case.
+**Current**: SmallVec applied to SelectorVec (N=2) and ValueVec (N=2). DeclVec
+remains `Vec<CssDeclaration>` — nested SmallVec for declarations caused a 5x
+regression due to ~4.4KB `CssNode` stack size (DeclVec<[CssDeclaration; 8]> where
+each declaration contains ValueVec<[CssValue; 6]>). Smaller N values avoid this.
 
-**Expected impact**: 10-20% throughput improvement on bootstrap.css (allocation-heavy).
+**Lesson**: SmallVec is counterproductive when the element type itself contains
+SmallVec. Nested inline storage cascades to kilobyte-scale stack objects.
 
 ---
 
@@ -142,25 +143,20 @@ Limited impact on minified inputs.
 
 ---
 
-## 10. Eliminate Remaining Regex on CSS Hot Paths
+## 10. Eliminate Remaining Regex on CSS Hot Paths — RESOLVED
 
-**Current**: Four regex patterns remain in CSS parser hot/warm paths:
-- `sp_regex(r"(?s)/\*.*?\*/")` for standalone comment nodes
-- `sp_regex(r"[~|^$*]?=")` for attribute selector matchers
-- `sp_regex(r"#[0-9a-fA-F]{3,8}")` for hex colors
-- `sp_regex(r"...")` for `:nth-child()` An+B syntax
+**Previous**: Four regex patterns in CSS parser hot/warm paths.
 
-**Approach**: Replace each with trivial hand-written byte checks. Hex color: consume
-`#`, scan 3-8 hex digits. Attribute matcher: peek 1-2 bytes. Comment: consume `/*`,
-memchr for `*`, check `/`.
-
-**Expected impact**: 5-10% on selector-heavy and color-heavy CSS.
+**Current**: Zero `sp_regex()` calls remain in css.rs. All replaced with hand-written
+byte scanners: hex color (inline scan in `parse_value_inline`), attribute matcher
+(inline peek in `css_attribute_selector`), An+B syntax (hand-written), block comment
+(new `SpanScanner::CssBlockComment` variant).
 
 ---
 
 ## 11. Close BBNF-to-Hand-Rolled JSON Gap
 
-**Current**: BBNF JSON at 573 MB/s vs hand-rolled at 940 MB/s (0.61x).
+**Current**: BBNF JSON at 540 MB/s vs hand-rolled at 926 MB/s (0.58x).
 
 **Bottleneck**: `lazy()` indirection for recursive rules (UnsafeCell + branch + vtable
 per call), `trim_whitespace()` double-dispatch (redundant whitespace scanning at
@@ -174,14 +170,66 @@ boundaries), and `sep_by` + comma parsing overhead.
 
 ---
 
-## 12. CSS L1.75 — Typed Media/Supports Preludes
+## 12. CSS L1.75 — Typed Media/Supports Preludes — RESOLVED
 
-**Current**: `@media` and `@supports` preludes are captured as raw `Span`. Specificity
-is not computed.
+**Previous**: `@media` and `@supports` preludes captured as raw `Span`.
 
-**Approach**: Parse `@media` preludes into typed conditions (`MediaFeature`,
-`MediaCondition` with boolean combinators). Parse `@supports` conditions into boolean
-expression trees. Add specificity computation as a post-parse utility.
+**Current**: Fully typed ASTs for both Rust and TypeScript:
+- `MediaQuery` with modifier, media_type, `Vec<MediaCondition>` (Feature/And/Or/Not)
+- `MediaFeature` with Plain, Range (Level 4 range syntax), and RangeInterval variants
+- `SupportsCondition` with Declaration, Not, And, Or variants
+- `Specificity(u16, u16, u16)` with `:where()` → zero, `:is()`/`:not()`/`:has()` → max arg
+- Module split: Rust CSS 7 files (max 520 lines), TS CSS 8 files (max 322 lines)
 
-**Expected impact**: Bounded, well-specified additions that bring parse_that closer to
-lightningcss's feature set without the full L2 property registry.
+---
+
+## 13. CSS Byte-Table Dispatch for Property Values
+
+**Current**: `parse_value_inline()` uses sequential byte matching for value types.
+
+**Approach**: Build a 256-entry function pointer table indexed by first byte. Map
+`#` → hex color, `0-9`/`.`/`-` → number, `"` → string, `a-z` → ident/keyword/function.
+Eliminates branch misprediction on heterogeneous value sequences.
+
+**Expected impact**: 10-20% CSS throughput improvement on declaration-heavy files.
+
+---
+
+## 14. Arena Allocator (bumpalo) for JSON/CSS
+
+**Current**: Per-node `Vec` allocation hits the global allocator. SmallVec mitigates
+for small containers, but spills still go to jemalloc/system.
+
+**Approach**: Wrap parse in a `bumpalo::Bump` arena. All transient allocations
+(Vec backing stores, Box<CssSelector>, Cow::Owned strings) allocate from the arena
+and free in bulk on parse completion. Eliminates per-allocation bookkeeping.
+
+**Expected impact**: 15-25% throughput improvement on allocation-heavy files
+(bootstrap.css, citm_catalog.json). Near-zero benefit on number-heavy files (canada).
+
+---
+
+## 15. SIMD String Scanning
+
+**Current**: JSON string scanning uses `memchr2` for `"`/`\\`. Fast on AArch64
+(NEON-accelerated), but processes one match at a time.
+
+**Approach**: Use `std::simd` (nightly) for 32-byte-wide ASCII validation + escape
+detection. Scan entire cache lines of string content in one operation. sonic-rs and
+simd-json use this for their string hot paths.
+
+**Expected impact**: 2-4x faster string scanning on long strings. 20-40% overall
+JSON throughput improvement on string-heavy files (twitter, apache).
+
+---
+
+## 16. Tape/Event Output Mode for JSON
+
+**Current**: JSON parser always builds a `JsonValue` tree. Each node allocates.
+
+**Approach**: Add a `json_parser_tape()` that returns `Vec<JsonEvent>` (flat tape of
+Open/Close/String/Number tokens). Eliminates AST allocation entirely. Offer both
+modes — `JsonValue` for convenience, tape for throughput-critical paths.
+
+**Expected impact**: 40-60% throughput improvement, approaching jiter/simd-json
+territory.

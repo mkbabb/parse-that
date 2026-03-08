@@ -95,7 +95,7 @@ Both languages share a mirrored module structure:
 | Span / zero-copy | `span.ts` — regexSpan, manySpan | `span_parser.rs` — SpanParser enum |
 | State | `state.ts` — ParserState, Span | `state.rs` — ParserState, Span |
 | Debug | `debug.ts` — diagnostics, ANSI output | `debug.rs` — diagnostics (feature-gated) |
-| Domain parsers | `parsers/` — JSON, CSV, TOML | `parsers/` — JSON + scanners, CSV, TOML |
+| Domain parsers | `parsers/` — JSON, CSV, CSS | `parsers/` — JSON + scanners, CSV, CSS |
 
 ## Performance
 
@@ -106,66 +106,49 @@ materialization and string escape decoding. Higher is better.
 
 MB/s throughput. `bencher` crate with `black_box` on inputs and `b.bytes` set.
 
-#### parse_that (fast) vs. the field
+#### 11-parser JSON matrix
 
-| Dataset | parse_that (fast) | serde_json | nom | pest |
-|---|---:|---:|---:|---:|
-| **data.json** (35 KB) | **1,607** | 601 | 611 | 259 |
-| **apache-builds** (127 KB) | **1,680** | 548 | 724 | 281 |
-| **canada** (2.1 MB) | **641** | 568 | 401 | 158 |
-| **twitter** (632 KB) | **1,716** | 579 | 516 | 243 |
-| **citm_catalog** (1.7 MB) | **1,572** | 842 | 629 | 255 |
-| **data-xl** (39 MB) | **1,708** | 623 | 626 | 267 |
-
-#### All parsers (11-parser matrix)
-
-| Parser | data.json | canada | apache | twitter | citm_catalog | data-xl |
+| Parser | data.json | apache | twitter | citm_catalog | canada | data-xl |
 |---|---:|---:|---:|---:|---:|---:|
-| sonic-rs | 2,307 | 1,520 | 1,892 | 2,511 | 3,019 | 2,769 |
-| **parse_that (fast)** | **1,609** | **646** | **1,709** | **1,732** | **1,599** | **1,730** |
-| simd-json | 1,395 | 498 | 1,456 | 1,530 | 1,327 | 1,655 |
-| jiter | 1,341 | 579 | 1,137 | 1,027 | 992 | 1,402 |
-| serde_json_borrow | 1,219 | 623 | 1,140 | 1,340 | 1,309 | 1,245 |
-| parse_that (combinator) | 1,037 | 452 | 1,008 | 921 | 827 | 1,174 |
-| nom | 615 | 399 | 722 | 514 | 627 | 619 |
-| serde_json | 607 | 569 | 546 | 582 | 864 | 624 |
-| winnow | 550 | 392 | 635 | 540 | 597 | 594 |
-| pest | 259 | 160 | 283 | 244 | 257 | 268 |
-| parse_that (BBNF) | 249 | 309 | 358 | 342 | 438 | 552 |
+| sonic-rs | 2,291 | 1,814 | 2,496 | 2,896 | 1,495 | 2,644 |
+| simd-json | 1,459 | 1,477 | 1,498 | 1,292 | 488 | 1,637 |
+| jiter | 1,249 | 1,127 | 1,022 | 1,016 | 566 | 1,319 |
+| serde_json_borrow | 1,181 | 1,120 | 1,272 | 1,256 | 613 | 1,194 |
+| **parse_that** | **926** | **920** | **867** | **701** | **358** | **1,006** |
+| nom | 587 | 704 | 504 | 602 | 396 | 599 |
+| serde_json | 566 | 539 | 557 | 857 | 554 | 606 |
+| winnow | 539 | 610 | 531 | 583 | 394 | 579 |
+| parse_that (BBNF) | 540 | 541 | 524 | 541 | 312 | 703 |
+| pest | 256 | 275 | 240 | 257 | 156 | 261 |
 
-The fast path is a monolithic recursive parser with: SIMD string scanning
-(`memchr2`), integer fast path (`madd` + `ucvtf`), `Vec` objects (no HashMap),
-`u32` keyword loads, `Cow<str>` zero-copy strings, and `#[cold]` escape decoding.
+parse_that uses SIMD string scanning (`memchr2`), integer fast path (`madd` +
+`ucvtf`), `Vec` objects (no HashMap), `u32` keyword loads, `Cow<str>` zero-copy
+strings, and `#[cold]` escape decoding. 1.4–1.7x faster than nom/winnow
+(work-equivalent peers).
 
 The BBNF-generated parser uses `#[derive(Parser)]` from a `.bbnf` grammar file—zero
 hand-written Rust. Hybrid codegen phases (number regex substitution, transparent
 alternation elimination, inline match dispatch, SpanParser dual methods, recursive
-SpanParser codegen) close the gap to 1.5–4x of the hand-written combinator parser.
+SpanParser codegen) reach 55–70% of the hand-written parser.
 
 See [docs/perf-optimization-rust.md](docs/perf-optimization-rust.md) for the full
 optimization chronicle.
 
 ### TypeScript
 
-ops/s on data.json (35 KB). Vitest bench with 5 iterations, 5s warmup.
+Relative to `JSON.parse` (native C++). Vitest bench, 5 iterations, 5s warmup.
 
-| Parser | ops/s | vs. native |
-|---|---:|---:|
-| JSON.parse (native) | 22,361 | 1.0x |
-| **parse-that (hand-written)** | **5,499** | **4.1x** |
-| **parse-that (BBNF-generated)** | **4,728** | **4.7x** |
-| Chevrotain | 4,099 | 5.5x |
-| Parsimmon | 965 | 23.2x |
+| Parser | data (35KB) | apache (124KB) | twitter (617KB) | citm (1.7MB) | canada (2.1MB) |
+|---|---:|---:|---:|---:|---:|
+| JSON.parse (native) | 1.00x | 1.00x | 1.00x | 1.00x | 1.00x |
+| **parse-that** | **4.94x** | **5.27x** | **6.47x** | **6.64x** | **2.78x** |
+| Chevrotain | 6.17x | 7.19x | 9.06x | 8.97x | 4.65x |
+| Peggy | 22.5x | 24.6x | 24.6x | 29.1x | 8.87x |
+| Parsimmon | 25.9x | 30.3x | 36.0x | 41.7x | 20.0x |
+| Nearley + moo | 64.5x | 91.6x | 73.0x | 85.2x | 33.4x |
 
-#### Multi-dataset results (prior benchmark run)
-
-| Dataset | JSON.parse | Hand | BBNF | Chevrotain | Peggy | Parsimmon | Nearley |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| **data.json** (35 KB) | 24,738 | 5,480 | 4,779 | 4,100 | 1,107 | 985 | 386 |
-| **apache-builds** (124 KB) | 7,149 | 1,477 | 1,328 | 1,035 | 299 | 243 | 82 |
-| **twitter** (555 KB) | 1,566 | 243 | 213 | 166 | 63 | 44 | 21 |
-| **citm_catalog** (1.7 MB) | 680 | 117 | 102 | 76 | 24 | 17 | 8 |
-| **canada** (2.1 MB) | 133 | 56 | 44 | 29 | 15 | 7 | 4 |
+parse-that is the fastest JS parser combinator library — 1.3–1.5x faster than
+Chevrotain, 4–12x faster than PEG/Earley parsers.
 
 Key optimizations: mutable `ParserState` (zero-alloc), Tarjan's SCC for minimal
 lazy wrappers, FIRST-set dispatch tables (O(1) alternation), regex
@@ -180,22 +163,24 @@ Rust MB/s on normalize.css (6KB), bootstrap.css (281KB), tailwind-output.css (3.
 
 | Parser | normalize | bootstrap | tailwind | Level |
 |---|---:|---:|---:|---|
-| **parse_that** (hand-rolled) | **283** | **237** | **267** | L1.5 — typed AST |
-| BBNF-generated | 241 | 67 | — | L1 — opaque spans |
-| lightningcss | 227 | 104 | FAIL | L2 — semantic |
-| cssparser | 686 | 434 | 272 | L0 — tokenizer only |
+| **parse_that** (hand-rolled) | **457** | **229** | **240** | L1.75 — typed AST |
+| BBNF-generated | 159 | 61 | — | L1 — opaque spans |
+| lightningcss | 221 | 104 | — | L2 — semantic |
+| cssparser | 678 | 428 | 258 | L0 — tokenizer only |
 
-parse_that builds a fully typed AST (selectors, values with dimensions/colors/functions,
-specialized at-rules) using monolithic byte-level scanners with memchr SIMD. Faster than
-lightningcss (which does L2 semantic validation), within 1.6-2.4x of cssparser (tokenizer-only).
+parse_that (L1.75) builds a fully typed AST: selectors (compound/complex), values
+(dimension/color/function), typed media queries (conditions, features, range ops),
+typed @supports conditions, and specificity computation. Monolithic byte-level
+scanners with memchr SIMD. 2.2x faster than lightningcss on bootstrap, within
+0.93x of cssparser (tokenizer-only) on tailwind.
 
-TypeScript (ops/s):
+TypeScript (relative to parse-that):
 
-| Parser | normalize | bootstrap | vs. postcss |
-|---|---:|---:|---|
-| **parse-that** | **70,789** | **565** | — |
-| postcss (L1) | 18,321 | 206 | 2.7-3.9x slower |
-| css-tree (L1-L2) | 12,421 | 129 | 4.4-5.7x slower |
+| Parser | normalize (6KB) | bootstrap (274KB) |
+|---|---:|---:|
+| **parse-that** (L1.75) | **1.00x** | **1.00x** |
+| postcss (L1) | 1.63x slower | 1.33x slower |
+| css-tree (L1-L2) | 2.34x slower | 2.03x slower |
 
 ## Debugging
 

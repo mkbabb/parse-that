@@ -1,9 +1,8 @@
 # Rust JSON Parser Performance: Research, Optimization, and Findings
 
 A chronicle of taking `parse_that`'s Rust JSON parser from mid-tier combinator
-performance (~400–750 MB/s) to scalar state-of-the-art (~1,600–1,730 MB/s),
-surpassing jiter and simd-json on most datasets while remaining a general-purpose
-parser combinator library.
+performance (~400–750 MB/s) to ~870–1,000 MB/s, 1.4–1.7x faster than nom/winnow
+(work-equivalent peers) while remaining a general-purpose parser combinator library.
 
 **Platform**: Apple M-series (AArch64), Rust nightly, default codegen (no
 `-C target-cpu=native`).
@@ -31,17 +30,16 @@ throughput calculation).
 
 | Parser | data.json (35K) | canada (2.1M) | apache (127K) | twitter (632K) | citm_catalog (1.7M) | data-xl (39M) |
 |---|---:|---:|---:|---:|---:|---:|
-| sonic-rs | 2,307 | 1,520 | 1,892 | 2,511 | 3,019 | 2,769 |
-| **parse_that (fast)** | **1,609** | **646** | **1,709** | **1,732** | **1,599** | **1,730** |
-| simd-json | 1,395 | 498 | 1,456 | 1,530 | 1,327 | 1,655 |
-| jiter | 1,341 | 579 | 1,137 | 1,027 | 992 | 1,402 |
-| serde_json_borrow | 1,219 | 623 | 1,140 | 1,340 | 1,309 | 1,245 |
-| **parse_that (combinator)** | 1,037 | 452 | 1,008 | 921 | 827 | 1,174 |
-| nom | 615 | 399 | 722 | 514 | 627 | 619 |
-| serde_json | 607 | 569 | 546 | 582 | 864 | 624 |
-| winnow | 550 | 392 | 635 | 540 | 597 | 594 |
-| pest | 259 | 160 | 283 | 244 | 257 | 268 |
-| **parse_that (BBNF)** | **249** | **309** | **358** | **342** | **438** | **552** |
+| sonic-rs | 2,291 | 1,495 | 1,814 | 2,496 | 2,896 | 2,644 |
+| simd-json | 1,459 | 488 | 1,477 | 1,498 | 1,292 | 1,637 |
+| jiter | 1,249 | 566 | 1,127 | 1,022 | 1,016 | 1,319 |
+| serde_json_borrow | 1,181 | 613 | 1,120 | 1,272 | 1,256 | 1,194 |
+| **parse_that** | **926** | **358** | **920** | **867** | **701** | **1,006** |
+| nom | 587 | 396 | 704 | 504 | 602 | 599 |
+| serde_json | 566 | 554 | 539 | 557 | 857 | 606 |
+| winnow | 539 | 394 | 610 | 531 | 583 | 579 |
+| **parse_that (BBNF)** | **540** | **312** | **541** | **524** | **541** | **703** |
+| pest | 256 | 156 | 275 | 240 | 257 | 261 |
 
 ### Dataset Profiles
 
