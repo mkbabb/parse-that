@@ -1,6 +1,6 @@
 [package]
 name = "parse_that"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2024"
 license = "MIT"
 description = "Zero-copy parser combinator library for Rust"
@@ -66,6 +66,14 @@ harness = false
 name = "cssparser_bench"
 harness = false
 
+[[bench]]
+name = "bbnf_json"
+harness = false
+
+[[bench]]
+name = "bbnf_css"
+harness = false
+
 [dependencies]
 pprint = "0.3.1"
 regex = { version = "1.11", features = ["perf"] }
@@ -88,3 +96,5 @@ winnow = "0.7"
 serde_json_borrow = "0.9"
 lightningcss = "1.0.0-alpha.70"
 cssparser = "0.34"
+bbnf = "0.2.1"
+bbnf_derive = "0.2.0"

@@ -1,0 +1,48 @@
+// CSS Stylesheet Grammar
+// Composes existing CSS grammar fragments with @recover annotations
+// for multi-error parsing of malformed stylesheets.
+
+@import "css-selectors.bbnf" ;
+@import "css-values.bbnf" ;
+@import { KEYFRAMES_RULE } from "css-keyframes.bbnf" ;
+
+// Comments + whitespace
+cssComment = /\/\*[^*]*\*+([^\/*][^*]*\*+)*\// ;
+ws         = (/\s+/ | cssComment) * ;
+
+// Shared tokens (locally defined to shadow imports from sub-grammars)
+ident  = /[a-zA-Z_][\w-]*/ ;
+string = /"(?:[^"\\]|\\[\s\S])*"/ | /'(?:[^'\\]|\\[\s\S])*'/ ;
+IDENT  = ident ;
+STRING = string ;
+
+// Declarations
+propertyName    = IDENT | /--[\w-]+/ ;
+declaration     = propertyName ?w << ":" ?w , value , ("," >> value) * ,
+                  ("!" ?w , "important") ? << ";" ?w ;
+declarationList = (declaration ?w) * ;
+
+@recover declaration /[^;{}]*;/ ;
+
+// Qualified rules
+qualifiedRule = selectorList ?w , "{" ?w >> declarationList ?w << "}" ;
+
+@recover qualifiedRule /[^}]*}/ ;
+
+// At-rules (minimal viable set)
+mediaRule     = "@media" >> /[^{]+/ , "{" ?w >> ruleList ?w << "}" ;
+supportsRule  = "@supports" >> /[^{]+/ , "{" ?w >> ruleList ?w << "}" ;
+fontFaceRule  = "@font-face" ?w , "{" ?w >> declarationList ?w << "}" ;
+importRule    = "@import" >> (value , ("," >> value) *) << ";" ;
+genericAtRule = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , ("{" ?w >> ruleList ?w << "}" | ";") ;
+
+atRule = mediaRule | supportsRule | fontFaceRule | importRule
+       | KEYFRAMES_RULE | genericAtRule ;
+
+@recover atRule /[^;{}]*[;]|[^}]*}/ ;
+
+// Rule list (recursive for nesting)
+ruleList   = (ws >> (atRule | qualifiedRule) ?w) * ;
+
+// Entry point
+stylesheet = ws >> ruleList ?w ;

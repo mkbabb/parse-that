@@ -1,0 +1,37 @@
+// CSS Fast Grammar — streamlined for throughput.
+// Opaque spans (no typed values/selectors).
+// Handles comments, empty values, real-world CSS.
+
+ws = /(?s)(?:\s|\/\*.*?\*\/)*/ ;
+
+selectorSpan = /[^{};]+/ ;
+valueSpan    = /[^;{}!]*/ ;
+
+propertyName = /[a-zA-Z_][\w-]*/ | /--[\w-]+/ | /-[a-zA-Z][\w-]*/ ;
+important    = "!" ?w , "important" ;
+optSemicolon = ";" ? ;
+declProperty = propertyName ?w , ":" ;
+declValue    = valueSpan , important ? , optSemicolon ;
+declaration  = declProperty ?w , declValue ?w ;
+
+blockContent = (ws , (declaration | ruleItem) ?w) * ;
+ruleBlock    = "{" ?w , blockContent ?w , "}" ;
+
+qualifiedRule = selectorSpan ?w , ruleBlock ;
+
+atRuleBody     = ruleBlock | ";" ;
+genericAtRule  = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , atRuleBody ;
+
+atRule = genericAtRule ;
+
+ruleItem = qualifiedRule | atRule ;
+ruleList = (ws , ruleItem ?w) * ;
+stylesheet = ws , ruleList ?w ;
+
+@pretty stylesheet block ;
+@pretty ruleList blankline ;
+@pretty blockContent block indent ;
+@pretty ruleBlock off ;
+@pretty qualifiedRule group nobreak ;
+@pretty declaration group ;
+@pretty atRule group nobreak ;

@@ -1,0 +1,94 @@
+// CSS Selectors Level 4 grammar.
+// Spec: https://drafts.csswg.org/selectors-4/
+// Covers type, class, id, attribute, pseudo-class, pseudo-element selectors,
+// combinators, :is(), :where(), :not(), :has(), and :nth-*() functional forms.
+//
+// Recursive structure: :is()/:where()/:not() take a selectorList argument,
+// and :has() takes a relativeSelectorList — both reference back to the
+// compoundSelector/complexSelector hierarchy. Parser.lazy() handles this.
+
+@import "css-tokens.bbnf" ;
+
+// --- Tokens ---
+
+hash   = /#[\w-]+/ ;
+
+// --- Namespace (CSS Namespaces) ---
+
+nsPrefix   = (ident | "*") , "|" ;
+wqName     = nsPrefix ? , ident ;
+
+// --- Simple selectors ---
+
+typeSelector  = wqName | (nsPrefix ? , "*") ;
+classSelector = "." , ident ;
+idSelector    = hash ;
+
+// --- Attribute selectors (Selectors §6) ---
+
+attrMatcher  = "~=" | "|=" | "^=" | "$=" | "*=" | "=" ;
+attrModifier = /[iIsS]/ ;
+attrSelector = "[" ?w , wqName ?w , (attrMatcher ?w , (string | ident) ?w , attrModifier ?) ? , "]" ?w ;
+
+// --- An+B microsyntax (§14.3) ---
+// Matches patterns like "2n+1", "odd", "even", "3n", "-n+6", "5"
+
+anPlusB = "odd" | "even" | /[-+]?\d*n\s*[+-]\s*\d+/ | /[-+]?\d*n/ | /[-+]?\d+/ ;
+
+// --- Pseudo-classes ---
+
+// Functional pseudo-classes with selector-list arguments (forgiving)
+isPseudo    = ":is(" >> selectorList << ")" ;
+wherePseudo = ":where(" >> selectorList << ")" ;
+notPseudo   = ":not(" >> selectorList << ")" ;
+hasPseudo   = ":has(" >> relativeSelectorList << ")" ;
+
+// :nth-*() functional pseudo-classes
+nthPseudo = (":" , ("nth-child" | "nth-last-child" | "nth-of-type" | "nth-last-of-type"))
+            << "(" , anPlusB , ("of" >> selectorList) ? << ")" ;
+
+// :lang(), :dir()
+langPseudo = ":lang(" >> (ident , ("," >> ident) *) << ")" ;
+dirPseudo  = ":dir(" >> ("ltr" | "rtl") << ")" ;
+
+// Simple (non-functional) pseudo-classes: :hover, :focus, :checked, etc.
+simplePseudoClass = ":" , ident ;
+
+pseudoClass = isPseudo | wherePseudo | notPseudo | hasPseudo
+            | nthPseudo | langPseudo | dirPseudo
+            | simplePseudoClass ;
+
+// --- Pseudo-elements (::before, ::after, ::first-line, etc.) ---
+
+// Functional pseudo-elements: ::part(), ::slotted(), ::highlight()
+partPseudo      = "::part(" >> (ident , (" " >> ident) *) << ")" ;
+slottedPseudo   = "::slotted(" >> compoundSelector << ")" ;
+highlightPseudo = "::highlight(" >> ident << ")" ;
+
+simplePseudoElement = "::" , ident ;
+
+pseudoElement = partPseudo | slottedPseudo | highlightPseudo | simplePseudoElement ;
+
+// --- Compound selector (one or more simple selectors, no whitespace) ---
+
+simpleSelector = typeSelector | classSelector | idSelector
+               | attrSelector | pseudoElement | pseudoClass ;
+
+compoundSelector = simpleSelector + ;
+
+// --- Combinators ---
+
+combinator = /\s*>\s*/ | /\s*\+\s*/ | /\s*~\s*/ | /\s+/ ;
+
+// --- Complex selector: compounds joined by combinators ---
+
+complexSelector = compoundSelector , (combinator , compoundSelector) * ;
+
+// --- Relative selector (for :has()) ---
+
+relativeSelector = combinator ? , complexSelector ;
+relativeSelectorList = relativeSelector , (/\s*,\s*/ >> relativeSelector) * ;
+
+// --- Selector list: comma-separated complex selectors ---
+
+selectorList = complexSelector , (/\s*,\s*/ >> complexSelector) * ;

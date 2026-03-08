@@ -1,0 +1,74 @@
+@import "css-tokens.bbnf" ;
+@import "css-value-unit.bbnf" ;
+@import "css-color.bbnf" ;
+
+// CSS Values and Units Level 4 — composite value grammar.
+// Spec: https://drafts.csswg.org/css-values-4/
+// Imports numeric primitives and color values from their canonical grammars.
+//
+// This grammar covers the recursive calc()/min()/max()/clamp() math functions
+// (§10), CSS custom properties via var() (CSS Custom Properties Level 1),
+// environment variables via env() (CSS Environment Variables Level 1),
+// and url() resource references.
+//
+// The `value` rule ordering is designed for dispatch-table efficiency:
+// function names start with distinct characters, allowing O(1) routing.
+
+// --- Identifiers ---
+
+dashed   = /--[\w-]+/ ;
+
+// --- Dimension (any dimensioned value) ---
+
+dimension = length | angle | time | frequency | resolution | flex | percentage ;
+
+// --- calc() and math functions (§10) ---
+// Recursive: calc() can contain nested calc(), min(), max(), clamp().
+// mathExpr uses left-recursive-like structure for correct precedence:
+// mathProduct handles * and /, mathExpr handles + and -.
+
+mathOperator = "+" | "-" | "*" | "/" ;
+
+mathValue = calcFunction
+          | minFunction
+          | maxFunction
+          | clampFunction
+          | dimension
+          | number
+          | "(" >> mathExpr << ")" ;
+
+mathProduct = mathValue , ( ("*" | "/") >> mathValue ) * ;
+mathExpr    = mathProduct , ( ("+" | "-") >> mathProduct ) * ;
+
+calcFunction  = "calc(" >> mathExpr << ")" ;
+minFunction   = "min(" >> (mathExpr , ("," >> mathExpr) +) << ")" ;
+maxFunction   = "max(" >> (mathExpr , ("," >> mathExpr) +) << ")" ;
+clampFunction = "clamp(" >> mathExpr , "," >> mathExpr , "," >> mathExpr << ")" ;
+
+// --- var() and env() functions ---
+// CSS Custom Properties Level 1 — var() with optional fallback
+// CSS Environment Variables Level 1 — env() for safe-area-inset-* etc.
+
+varFallback = value , ("," >> value) * ;
+varFunction = "var(" >> dashed , ("," >> varFallback) ? << ")" ;
+envFunction = "env(" >> ident , ("," >> varFallback) ? << ")" ;
+
+// --- url() function ---
+
+urlFunction = "url(" >> (string | /[^)"'\s]+/) << ")" ;
+
+// --- Generic value ---
+// Ordered for dispatch: longest-prefix / most-specific first.
+
+value = calcFunction
+      | minFunction
+      | maxFunction
+      | clampFunction
+      | varFunction
+      | envFunction
+      | urlFunction
+      | color
+      | dimension
+      | number
+      | string
+      | ident ;

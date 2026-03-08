@@ -1,0 +1,49 @@
+@import "css-value-unit.bbnf" ;
+
+// CSS @keyframes grammar (CSS Animations Level 1).
+// Spec: https://drafts.csswg.org/css-animations-1/#keyframes
+// Imports numeric primitives from the canonical base grammar.
+//
+// Structure: @keyframes name { selector { prop: value; }* }
+// Keyframe selectors can be percentages, "from"/"to", or comma-separated lists.
+// Declaration model reuses standard CSS property:value pairs.
+// Vendor-prefixed keyframe blocks (-webkit-, -moz-) are supported.
+
+// --- Tokens ---
+
+IDENT         = /[a-zA-Z_][\w-]*/ ;
+VENDOR_PREFIX = /-\w+-/ ;
+STRING        = /"(?:[^"\\]|\\[\s\S])*?"/ ;
+HASH          = /#[\w-]+/ ;
+
+// --- Values ---
+
+DIMENSION      = number , IDENT ;
+IMPORTANT_SYM  = "!important" ;
+UNICODE_RANGE  = /u\+[0-9a-fA-F?]{1,6}(-[0-9a-fA-F]{1,6})?/ ;
+
+// Functions: ident(...args...)
+FUNCTION = IDENT , "(" >> (PROPERTY_VALUE ?w , ("," ?w >> PROPERTY_VALUE ?w) *) ?w << ")" ;
+
+// --- Property values ---
+
+PROPERTY_VALUE = FUNCTION | STRING | percentage | DIMENSION | HASH
+               | UNICODE_RANGE | IMPORTANT_SYM | number | IDENT ;
+
+// --- Declarations ---
+
+PROPERTY_NAME     = IDENT ;
+DECLARATION       = (PROPERTY_NAME << ":" ?w) , PROPERTY_VALUE ;
+DECLARATIONS_LIST = (DECLARATION ?w << ";" ?) + << ";" ? ;
+
+// --- Keyframe blocks ---
+
+FROM_TO_KEYWORD    = "from" | "to" ;
+KEYFRAME_SELECTOR  = percentage | FROM_TO_KEYWORD | (percentage , ("," ?w >> percentage) +) ;
+KEYFRAME_BLOCK     = KEYFRAME_SELECTOR ?w , "{" ?w >> DECLARATIONS_LIST ?w << "}" ;
+KEYFRAME_BLOCKS    = (VENDOR_PREFIX ? , KEYFRAME_BLOCK ?w) + ;
+
+// --- @keyframes rule ---
+
+KEYFRAMES_NAME = IDENT | STRING ;
+KEYFRAMES_RULE = ("@keyframes" ?w >> KEYFRAMES_NAME ?w , "{" ?w >> KEYFRAME_BLOCKS ?w << "}") ?w ;

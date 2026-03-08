@@ -1,0 +1,63 @@
+// CSS Values and Units Level 4 — numeric primitives and dimension types.
+// Spec: https://drafts.csswg.org/css-values-4/
+// This is the canonical base grammar; other CSS grammars import from here.
+//
+// Usage: @import "css-value-unit.bbnf" ;
+// All dimension types (length, angle, time, etc.) produce [number, unit] tuples.
+// Override `number` and `integer` at runtime for proper numeric parsing.
+
+// --- Numeric primitives (§3.1) ---
+
+number = /[-+]?(\d+)?(\.\d+)?([eE][-+]?\d+)?/ ;
+integer = /[-+]?\d+/ ;
+
+// --- Length units (§6) ---
+
+// §6.2 — Absolute lengths
+absoluteLengthUnit = "cm" | "mm" | "Q" | "in" | "pc" | "pt" | "px" ;
+
+// §6.3 — Viewport-percentage lengths (added in L4: vi/vb, s/l/d prefixed)
+viewportLengthUnit = "vw" | "vh" | "vmin" | "vmax" | "vb" | "vi"
+                   | "svw" | "svh" | "svmin" | "svmax" | "svb" | "svi"
+                   | "lvw" | "lvh" | "lvmin" | "lvmax" | "lvb" | "lvi"
+                   | "dvw" | "dvh" | "dvmin" | "dvmax" | "dvb" | "dvi" ;
+
+// Container query units (CSS Containment Level 3)
+containerLengthUnit = "cqw" | "cqh" | "cqi" | "cqb" | "cqmin" | "cqmax" ;
+
+// §6.1 — Font-relative lengths
+fontLengthUnit = "em" | "ex" | "ch" | "rem" | "lh" | "rlh" | "cap" | "ic" | "rcap" | "rex" | "rch" | "ric" | "rlh" ;
+
+relativeLengthUnit = fontLengthUnit | viewportLengthUnit | containerLengthUnit ;
+lengthUnit = absoluteLengthUnit | relativeLengthUnit ;
+
+// --- Other dimension units ---
+
+// §6.4 — Angle units
+angleUnit = "deg" | "rad" | "grad" | "turn" ;
+// §6.5 — Duration units
+timeUnit  = "ms" | "s" ;
+// §6.6 — Frequency units
+frequencyUnit = "Hz" | "kHz" ;
+// §6.7 — Resolution units
+resolutionUnit = "dpi" | "dpcm" | "dppx" | "x" ;
+// CSS Grid Layout Level 1 — Flexible lengths
+flexUnit = "fr" ;
+
+// §5.1.1 — Percentage
+percentageUnit = "%" ;
+
+// --- Dimension types ---
+// Each produces a [number, unit] tuple for runtime mapping.
+
+length     = number , lengthUnit ;
+angle      = number , angleUnit ;
+time       = number , timeUnit ;
+frequency  = number , frequencyUnit ;
+resolution = number , resolutionUnit ;
+flex       = number , flexUnit ;
+percentage = number , percentageUnit ;
+
+unitless = number ;
+
+valueUnit = length | angle | time | frequency | resolution | flex | percentage | unitless ;

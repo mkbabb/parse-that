@@ -1,0 +1,58 @@
+// CSS Stylesheet Grammar — Prettifier edition
+// Models CSS nesting (CSS Nesting Module Level 1) to create structural AST.
+// Treats selectors and values as opaque spans for formatting.
+
+// Comments + whitespace
+cssComment = /\/\*[^*]*\*+([^\/*][^*]*\*+)*\// ;
+ws         = (/\s+/ | cssComment) * ;
+
+// Opaque tokens
+selectorSpan = /[^{};]+/ ;
+valueSpan    = /[^;{}!,]+/ ;
+
+// Declarations
+propertyName = /[a-zA-Z_][\w-]*/ | /--[\w-]+/ | /-[a-zA-Z][\w-]*/ ;
+important    = "!" ?w , "important" ;
+optSemicolon = ";" ? ;
+declaration  = propertyName ?w , ":" ?w , valueSpan , ("," ?w , valueSpan) * ,
+               important ? , optSemicolon ?w ;
+
+@recover declaration /[^;{}]*;/ ;
+
+// Block contents: declarations and nested rules (CSS Nesting Level 1)
+// This creates the structural cycle: blockContent → ruleItem → ... → ruleBlock → blockContent
+blockContent = (ws , (declaration | ruleItem) ?w) * ;
+ruleBlock    = "{" ?w , blockContent ?w , "}" ;
+
+// Qualified rules
+qualifiedRule = selectorSpan ?w , ruleBlock ;
+
+@recover qualifiedRule /[^}]*}/ ;
+
+// At-rules
+mediaRule      = "@media" , /[^{]+/ , ruleBlock ;
+supportsRule   = "@supports" , /[^{]+/ , ruleBlock ;
+fontFaceRule   = "@font-face" ?w , ruleBlock ;
+importRule     = "@import" , valueSpan , ("," ?w , valueSpan) * , ";" ;
+atRuleBody     = ruleBlock | ";" ;
+genericAtRule  = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , atRuleBody ;
+
+atRule = mediaRule | supportsRule | fontFaceRule | importRule | genericAtRule ;
+
+@recover atRule /[^;{}]*[;]|[^}]*}/ ;
+
+// Rule item
+ruleItem = qualifiedRule | atRule ;
+
+// Rule list (top-level)
+ruleList   = (ws , ruleItem ?w) * ;
+
+// Entry point
+stylesheet = ws , ruleList ?w ;
+
+@pretty stylesheet block ;
+@pretty ruleList block ;
+@pretty blockContent block indent ;
+@pretty qualifiedRule group indent ;
+@pretty declaration group ;
+@pretty atRule group indent ;
