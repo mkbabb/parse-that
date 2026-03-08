@@ -99,6 +99,25 @@ pub fn sp_json_string_quoted<'a>() -> SpanParser<'a> {
     sp_new!(SpanKind::JsonStringQuoted, "string")
 }
 
+/// Monolithic CSS identifier scanner — no regex, direct byte scanning.
+#[inline]
+pub fn sp_css_ident<'a>() -> SpanParser<'a> {
+    sp_new!(SpanKind::CssIdent, "CSS identifier")
+}
+
+/// Monolithic CSS whitespace + comment scanner.
+/// Always succeeds (zero-width on no whitespace/comments).
+#[inline]
+pub fn sp_css_ws_comment<'a>() -> SpanParser<'a> {
+    sp_new!(SpanKind::CssWsComment)
+}
+
+/// Monolithic CSS quoted string scanner — SIMD-accelerated via memchr2.
+#[inline]
+pub fn sp_css_string<'a>() -> SpanParser<'a> {
+    sp_new!(SpanKind::CssString, "CSS string")
+}
+
 /// Match one or more bytes until any byte in `excluded` is found.
 /// Enum-dispatched LUT scanner — no boxing, no vtable.
 #[inline]

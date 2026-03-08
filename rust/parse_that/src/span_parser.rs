@@ -84,6 +84,13 @@ pub(super) enum SpanKind<'a> {
     /// LUT-based byte scanner for negated character classes (`[^...]+`) when
     /// the excluded set is larger than three bytes.
     TakeUntilAnyLut(Box<[bool; 256]>),
+    /// Monolithic CSS identifier scanner: -?[a-zA-Z_][\w-]* | --[\w-]+
+    CssIdent,
+    /// Monolithic CSS whitespace + comment scanner: (\s | /\*...\*/)*
+    /// Always succeeds (zero-width on no whitespace).
+    CssWsComment,
+    /// Monolithic CSS quoted string scanner: "..." or '...' with \-escapes.
+    CssString,
 
     // === Flat combinators (no nesting depth) ===
     Seq(Vec<SpanParser<'a>>),
@@ -322,6 +329,30 @@ impl<'a> SpanParser<'a> {
             }
             SpanKind::JsonStringQuoted => {
                 let result = crate::parsers::json::json_string_fast_quoted(state);
+                #[cfg(feature = "diagnostics")]
+                if result.is_none() {
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
+                }
+                result
+            }
+
+            SpanKind::CssIdent => {
+                let result = crate::parsers::css::css_ident_fast(state);
+                #[cfg(feature = "diagnostics")]
+                if result.is_none() {
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
+                }
+                result
+            }
+
+            SpanKind::CssWsComment => crate::parsers::css::css_ws_comment_fast(state),
+
+            SpanKind::CssString => {
+                let result = crate::parsers::css::css_string_fast(state);
                 #[cfg(feature = "diagnostics")]
                 if result.is_none() {
                     if let Some(lbl) = self.label {
