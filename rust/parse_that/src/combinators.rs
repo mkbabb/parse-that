@@ -179,9 +179,9 @@ where
 
         let many = move |state: &mut ParserState<'a>| {
             let est = if lower_bound > 0 {
-                lower_bound.max(16)
+                lower_bound.max(4)
             } else {
-                32
+                4
             };
             let mut values = Vec::with_capacity(est);
 
@@ -379,9 +379,9 @@ where
 
         let sep_by = move |state: &mut ParserState<'a>| {
             let est = if lower_bound > 0 {
-                lower_bound.max(16)
+                lower_bound.max(4)
             } else {
-                32
+                4
             };
             let mut values = Vec::with_capacity(est);
 

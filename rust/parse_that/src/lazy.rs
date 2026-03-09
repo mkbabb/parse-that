@@ -55,7 +55,10 @@ where
 
     let lazy = move |state: &mut ParserState<'a>| {
         let parser = unsafe { &mut *cell.get() }.get();
-        parser.call(state)
+        // Bypass flag dispatch — the cached inner parser never has flags set
+        // (flags live on the outer wrapper). This avoids a branch on every
+        // recursive call through lazy().
+        parser.parser_fn.call(state)
     };
 
     Parser::new(lazy)
