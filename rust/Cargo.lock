@@ -61,7 +61,7 @@ name = "bbnf"
 version = "0.2.3"
 dependencies = [
  "indexmap",
- "parse_that 0.2.1",
+ "parse_that 0.3.0",
  "pprint",
  "proc-macro2",
  "quote",

@@ -25,6 +25,7 @@ rust/                      Rust workspace
       leaf.rs              Leaf parsers (string, regex, take_until_any_span, dispatch_byte, etc.)
       lazy.rs              LazyParser, lazy() function
       span_parser.rs       SpanParser<'a> — enum-dispatched, vtable-free
+      split.rs             split_balanced(), contains_delimiter() — format-time balanced splitting
       state.rs             ParserState, Span, Diagnostic, diagnostics types (feature-gated)
       debug.rs             Diagnostics rendering, format_diagnostic() (feature-gated)
       parsers/             Domain parsers (JSON + scanners, CSV)
@@ -103,6 +104,7 @@ Cargo.toml uses crates.io version-only deps (no absolute paths).
 - Rust: `cached_regex()` in `leaf.rs` — global `Arc<Regex>` cache avoids recompilation on repeated parser construction
 - Rust: `take_until_any_span(excluded)` / `sp_take_until_any(excluded)` — LUT-based byte scanner for negated character classes (`[^...]+`), 10-15x faster than regex NFA
 - Rust: `seq!` / `alt!` macros — flat N-ary combinators, single Box allocation. Used by BBNF codegen for inline alternation.
+- Rust: `split_balanced(text, delim)` + `contains_delimiter(text, delim)` — format-time balanced splitting for BBNF `@pretty split("...")` directive. Respects `()[]` nesting + `""''` quoting, memchr fast-path.
 - Rust: edition 2024
 - BBNF ecosystem lives in separate [`bbnf-lang`](https://github.com/mkbabb/bbnf-lang) repo — `grammar/tests/` are the only shared artifacts
 - Benchmark competitors are in devDependencies/dev-dependencies only
