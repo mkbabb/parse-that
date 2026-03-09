@@ -1,4 +1,5 @@
 #![feature(cold_path)]
+#![feature(portable_simd)]
 
 pub mod parse;
 pub use parse::*;

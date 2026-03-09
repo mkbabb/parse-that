@@ -27,6 +27,33 @@ pub fn trim_leading_whitespace(state: &ParserState<'_>) -> usize {
     let bytes = state.src_bytes;
     let mut i = state.offset;
     let end = bytes.len();
+
+    // Fast path: first byte is not whitespace (most common case)
+    if i >= end || !matches!(unsafe { *bytes.get_unchecked(i) }, b' ' | b'\t' | b'\n' | b'\r') {
+        return 0;
+    }
+
+    i += 1; // we know the first byte is whitespace
+
+    // SIMD: process 16 bytes at a time for longer spans
+    {
+        use std::simd::prelude::*;
+        while i + 16 <= end {
+            let chunk = u8x16::from_slice(&bytes[i..i + 16]);
+            let mask = chunk.simd_eq(u8x16::splat(b' '))
+                | chunk.simd_eq(u8x16::splat(b'\t'))
+                | chunk.simd_eq(u8x16::splat(b'\n'))
+                | chunk.simd_eq(u8x16::splat(b'\r'));
+            if mask.all() {
+                i += 16;
+                continue;
+            }
+            let first_non_ws = (!mask).to_bitmask().trailing_zeros() as usize;
+            return i + first_non_ws - state.offset;
+        }
+    }
+
+    // Scalar tail
     while i < end {
         match unsafe { *bytes.get_unchecked(i) } {
             b' ' | b'\t' | b'\n' | b'\r' => i += 1,
@@ -34,6 +61,13 @@ pub fn trim_leading_whitespace(state: &ParserState<'_>) -> usize {
         }
     }
     i - state.offset
+}
+
+/// Convenience: skip leading whitespace, advancing the state offset.
+#[inline(always)]
+pub fn trim_leading_whitespace_mut(state: &mut ParserState<'_>) {
+    let n = trim_leading_whitespace(state);
+    state.offset += n;
 }
 
 #[inline]
