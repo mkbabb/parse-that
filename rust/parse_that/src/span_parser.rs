@@ -115,6 +115,9 @@ pub(super) enum SpanKind<'a> {
     LookAhead(Box<SpanParser<'a>>, Box<SpanParser<'a>>),
     /// Zero-width negative assertion: succeeds (empty Span) when inner fails.
     Negate(Box<SpanParser<'a>>),
+    /// Zero-width positive assertion: succeeds with inner's Span but does NOT
+    /// consume input. The dual of `Negate`.
+    Peek(Box<SpanParser<'a>>),
     /// End-of-input check: succeeds (empty Span) if at end of source.
     Eof,
 
@@ -618,6 +621,15 @@ impl<'a> SpanParser<'a> {
                 state.offset = checkpoint;
                 state.furthest_offset = saved_furthest;
                 None
+            }
+
+            SpanKind::Peek(inner) => {
+                let checkpoint = state.offset;
+                let saved_furthest = state.furthest_offset;
+                let span = inner.call(state)?;
+                state.offset = checkpoint;
+                state.furthest_offset = saved_furthest;
+                Some(span)
             }
 
             SpanKind::Eof => {

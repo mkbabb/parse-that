@@ -125,6 +125,13 @@ impl<'a> SpanParser<'a> {
         sp_new!(SpanKind::Negate(Box::new(self)))
     }
 
+    /// Zero-width positive assertion: succeeds with inner's Span but does NOT
+    /// consume input. The dual of `negate_span()`.
+    #[inline]
+    pub fn peek_span(self) -> SpanParser<'a> {
+        sp_new!(SpanKind::Peek(Box::new(self)))
+    }
+
     // ── Flag setters ──────────────────────────────────────────
 
     #[inline]

@@ -124,6 +124,23 @@ where
         Parser::new(negate)
     }
 
+    /// Zero-width positive assertion: succeeds with the inner parser's value
+    /// when it matches, but does NOT consume any input. The dual of `negate()`:
+    /// where `negate()` succeeds when the inner parser fails, `peek()` succeeds
+    /// when the inner parser succeeds — both without advancing the offset.
+    #[inline]
+    pub fn peek(self) -> Parser<'a, Output> {
+        let peek = move |state: &mut ParserState<'a>| {
+            let checkpoint = state.offset;
+            let saved_furthest = state.furthest_offset;
+            let value = self.call(state)?;
+            state.offset = checkpoint;
+            state.furthest_offset = saved_furthest;
+            Some(value)
+        };
+        Parser::new(peek)
+    }
+
     #[inline]
     pub fn map<Output2>(self, f: fn(Output) -> Output2) -> Parser<'a, Output2>
     where

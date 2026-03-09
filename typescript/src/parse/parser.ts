@@ -339,18 +339,19 @@ export class Parser<T = string> {
                 state.isError = true;
                 return state;
             } else {
+                // self succeeded — check that excluded does NOT match
+                // at the post-self position (consuming negative lookahead).
                 const value1 = state.value;
                 const offset1 = state.offset;
-                state.offset = savedOffset;
-                state.isError = false;
                 parser!.parser(state as ParserState<S | T>);
                 if (state.isError) {
-                    // parser! failed — return the first parser's result
+                    // excluded failed at post-self position — success
                     state.offset = offset1;
                     state.value = value1 as any;
                     state.isError = false;
                     return state;
                 } else {
+                    // excluded matched — overall parse fails
                     mergeErrorState(state as ParserState<unknown>);
                     state.offset = savedOffset;
                     state.isError = true;
@@ -390,6 +391,65 @@ export class Parser<T = string> {
         return new Parser(
             minus as ParserFunction<T>,
             createParserContext("minus", this as Parser<unknown>, excluded),
+        );
+    }
+
+    /**
+     * Zero-width positive assertion: succeeds with `this`'s value when
+     * `this` matches, but does NOT consume any input. The dual of
+     * `not()` (no argument): where `not()` is zero-width negative
+     * assertion, `peek()` is zero-width positive assertion.
+     */
+    peek() {
+        const inner = this;
+        const peek = (state: ParserState<T>) => {
+            const savedOffset = state.offset;
+            inner.parser(state);
+            if (state.isError) {
+                state.offset = savedOffset;
+                return state;
+            }
+            const value = state.value;
+            state.offset = savedOffset;
+            state.value = value;
+            return state;
+        };
+        return new Parser(
+            peek as ParserFunction<T>,
+            createParserContext("peek", this as Parser<unknown>),
+        );
+    }
+
+    /**
+     * Consuming positive lookahead: parse `this`, then check that
+     * `lookahead` matches at the resulting position without consuming it.
+     * Returns `this`'s value; the lookahead is zero-width.
+     * Mirrors Rust's `look_ahead()`.
+     */
+    lookAhead<S>(lookahead: Parser<S>) {
+        const inner = this;
+        const la = (state: ParserState<T>) => {
+            const savedOffset = state.offset;
+            inner.parser(state);
+            if (state.isError) {
+                state.offset = savedOffset;
+                return state;
+            }
+            const value = state.value;
+            const offsetAfterSelf = state.offset;
+            lookahead.parser(state as ParserState<any>);
+            if (state.isError) {
+                state.offset = savedOffset;
+                state.isError = true;
+                return state;
+            }
+            state.offset = offsetAfterSelf;
+            (state as any).value = value;
+            return state;
+        };
+        return new Parser(
+            la as ParserFunction<T>,
+            createParserContext("lookAhead", this as Parser<unknown>, lookahead),
         );
     }
 
