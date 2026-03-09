@@ -1,6 +1,6 @@
 [package]
 name = "parse_that"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 license = "MIT"
 description = "Zero-copy parser combinator library for Rust"
@@ -75,7 +75,7 @@ name = "bbnf_css"
 harness = false
 
 [dependencies]
-pprint = "0.3.1"
+pprint = "0.3"
 regex = { version = "1.11", features = ["perf"] }
 colored = { version = "3", optional = true }
 memchr = "2.5.0"
