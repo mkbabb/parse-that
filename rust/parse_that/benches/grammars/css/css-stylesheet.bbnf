@@ -22,12 +22,12 @@ declaration     = propertyName ?w << ":" ?w , value , ("," >> value) * ,
                   ("!" ?w , "important") ? << ";" ?w ;
 declarationList = (declaration ?w) * ;
 
-@recover declaration /[^;{}]*;/ ;
+@recover declaration /[^;{}]+;/ ;
 
 // Qualified rules
 qualifiedRule = selectorList ?w , "{" ?w >> declarationList ?w << "}" ;
 
-@recover qualifiedRule /[^}]*}/ ;
+@recover qualifiedRule /[^}]+}/ ;
 
 // At-rules (minimal viable set)
 mediaRule     = "@media" >> /[^{]+/ , "{" ?w >> ruleList ?w << "}" ;
@@ -39,7 +39,7 @@ genericAtRule = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , ("{" ?w >> ruleList ?w << "}" | 
 atRule = mediaRule | supportsRule | fontFaceRule | importRule
        | KEYFRAMES_RULE | genericAtRule ;
 
-@recover atRule /[^;{}]*[;]|[^}]*}/ ;
+@recover atRule /[^;{}]+[;]|[^}]+}/ ;
 
 // Rule list (recursive for nesting)
 ruleList   = (ws >> (atRule | qualifiedRule) ?w) * ;

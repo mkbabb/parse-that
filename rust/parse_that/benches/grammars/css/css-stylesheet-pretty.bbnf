@@ -7,7 +7,7 @@ cssComment = /\/\*[^*]*\*+([^\/*][^*]*\*+)*\// ;
 ws         = (/\s+/ | cssComment) * ;
 
 // Opaque tokens
-selectorSpan = /[^{};]+/ ;
+selectorSpan = /[^{};]+[^\s{};]/ | /[^{};]/ ;
 valueSpan    = /[^;{}!,]+/ ;
 
 // Declarations
@@ -17,7 +17,7 @@ optSemicolon = ";" ? ;
 declaration  = propertyName ?w , ":" ?w , valueSpan , ("," ?w , valueSpan) * ,
                important ? , optSemicolon ?w ;
 
-@recover declaration /[^;{}]*;/ ;
+@recover declaration /[^;{}]+;/ ;
 
 // Block contents: declarations and nested rules (CSS Nesting Level 1)
 // This creates the structural cycle: blockContent → ruleItem → ... → ruleBlock → blockContent
@@ -27,7 +27,7 @@ ruleBlock    = "{" ?w , blockContent ?w , "}" ;
 // Qualified rules
 qualifiedRule = selectorSpan ?w , ruleBlock ;
 
-@recover qualifiedRule /[^}]*}/ ;
+@recover qualifiedRule /[^}]+}/ ;
 
 // At-rules
 mediaRule      = "@media" , /[^{]+/ , ruleBlock ;
@@ -39,7 +39,7 @@ genericAtRule  = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , atRuleBody ;
 
 atRule = mediaRule | supportsRule | fontFaceRule | importRule | genericAtRule ;
 
-@recover atRule /[^;{}]*[;]|[^}]*}/ ;
+@recover atRule /[^;{}]+[;]|[^}]+}/ ;
 
 // Rule item
 ruleItem = qualifiedRule | atRule ;
