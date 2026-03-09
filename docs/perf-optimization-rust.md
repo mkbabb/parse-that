@@ -34,11 +34,11 @@ throughput calculation).
 | simd-json | 1,459 | 488 | 1,477 | 1,498 | 1,292 | 1,637 |
 | jiter | 1,249 | 566 | 1,127 | 1,022 | 1,016 | 1,319 |
 | serde_json_borrow | 1,181 | 613 | 1,120 | 1,272 | 1,256 | 1,194 |
-| **parse_that** | **926** | **358** | **920** | **867** | **701** | **1,006** |
+| **parse_that** | **821** | **409** | **745** | **842** | **949** | **1,051** |
 | nom | 587 | 396 | 704 | 504 | 602 | 599 |
 | serde_json | 566 | 554 | 539 | 557 | 857 | 606 |
 | winnow | 539 | 394 | 610 | 531 | 583 | 579 |
-| **parse_that (BBNF)** | **540** | **312** | **541** | **524** | **541** | **703** |
+| **parse_that (BBNF)** | **519** | **325** | **520** | **526** | **624** | **681** |
 | pest | 256 | 156 | 275 | 240 | 257 | 261 |
 
 ### Dataset Profiles
@@ -401,6 +401,51 @@ This alone was worth **34x on bootstrap.css**.
 | tailwind (3.6MB) | N/A | 267 MB/s | — |
 | vs lightningcss (L2) | 0.25x | **1.25-2.3x faster** | — |
 | vs cssparser (L0) | 0.01x | 0.55-0.98x | — |
+
+### Phase 9: BBNF Codegen Optimizations + Hand-rolled Loop Fusion
+
+Three independent optimizations targeting both the combinator library and the
+BBNF codegen pipeline:
+
+**A — Vec capacity reduction.** `many()` and `sep_by()` defaulted to
+`Vec::with_capacity(32)` when lower_bound == 0. Most JSON arrays/objects have
+0–10 elements — capacity 32 wastes 256+ bytes per allocation and touches
+cold cache lines. Reduced to `with_capacity(4)`.
+
+**B — Fused `sep_by_ws` combinator.** BBNF wraps `sep_by` patterns in
+`.trim_whitespace()`, which does pre-trim + parse + post-trim. Between elements,
+whitespace gets trimmed 3–4× (post-trim of prev, pre-trim of sep, post-trim of
+sep, pre-trim of next). `sep_by_ws()` fuses trimming into the loop: a single
+`trim_ws` between each step. BBNF codegen detects `OptionalWhitespace(Many(sep_by))`
+and emits `sep_by_ws` automatically. The separator's flag dispatch is bypassed
+since the combinator handles whitespace directly.
+
+**C — `lazy()` flag bypass.** `lazy()` caches a `Parser` and calls it on every
+recursive invocation. The call goes through `Parser::call()` which checks
+`self.flags` — but the cached inner parser never has flags (flags live on the
+outer wrapper). Calling `parser.parser_fn.call(state)` directly skips this branch.
+
+**D — Hand-rolled JSON array/object loops.** Replaced `sep_by(comma, ..).trim_whitespace().wrap()`
+combinator chains with hand-rolled loops that pre-allocate `Vec::with_capacity(4)`,
+handle the empty case without allocation, and fuse whitespace trimming inline.
+`JsonValue::Array` and `Object` fields are now `Box<Vec<...>>` to shrink the
+enum variant (reduces stack pressure in deeply nested structures).
+
+**E — SIMD whitespace trimming.** `trim_leading_whitespace` now uses
+`portable_simd` to process 16 bytes at a time for longer whitespace spans.
+Short spans (≤16 bytes) use the existing scalar path; the SIMD path kicks in
+for the longer inter-element whitespace common in pretty-printed JSON.
+
+| Dataset | Before | After | Change |
+|---------|--------|-------|--------|
+| apache (BBNF) | 541 | 520 | −3.9% |
+| canada (BBNF) | 312 | 325 | +4.2% |
+| citm (BBNF) | 541 | 624 | +15.3% |
+| data (BBNF) | 540 | 519 | −3.9% |
+| data-xl (BBNF) | 703 | 681 | −3.1% |
+| twitter (BBNF) | 524 | 526 | +0.4% |
+| data-xl (hand-rolled) | 1,006 | 1,051 | +4.5% |
+| bootstrap CSS | 229 | 278 | +21.4% |
 
 ---
 
