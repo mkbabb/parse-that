@@ -67,6 +67,22 @@ impl<'a> SpanParser<'a> {
         })
     }
 
+    /// Fused sep_by + whitespace trimming: single trim between each step.
+    #[inline]
+    pub fn sep_by_ws_span(
+        self,
+        sep: SpanParser<'a>,
+        bounds: impl RangeBounds<usize> + 'a,
+    ) -> SpanParser<'a> {
+        let (lo, hi) = extract_bounds(bounds);
+        sp_new!(SpanKind::SepByWs {
+            inner: Box::new(self),
+            sep: Box::new(sep),
+            lo,
+            hi,
+        })
+    }
+
     #[inline]
     pub fn wrap_span(self, left: SpanParser<'a>, right: SpanParser<'a>) -> SpanParser<'a> {
         sp_new!(SpanKind::Wrap {

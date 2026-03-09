@@ -1,5 +1,6 @@
 use std::ops::RangeBounds;
 
+use crate::leaf::trim_leading_whitespace_mut;
 use crate::parse::Parser;
 use crate::state::ParserState;
 use crate::utils::extract_bounds;
@@ -420,6 +421,67 @@ where
         };
 
         Parser::new(sep_by)
+    }
+
+    /// Fused sep_by + whitespace trimming. Instead of wrapping element and
+    /// separator in trim_whitespace (which double-trims between elements),
+    /// this does a single trim between each step:
+    ///   trim_ws → parse_element → (trim_ws → parse_sep → trim_ws → parse_element)*
+    #[inline]
+    pub fn sep_by_ws<Output2>(
+        self,
+        sep: Parser<'a, Output2>,
+        bounds: impl RangeBounds<usize> + 'a,
+    ) -> Parser<'a, Vec<Output>>
+    where
+        Output2: 'a,
+    {
+        let (lower_bound, upper_bound) = extract_bounds(bounds);
+
+        let sep_by_ws = move |state: &mut ParserState<'a>| {
+            let mut values = Vec::with_capacity(4);
+
+            // Pre-trim before first element
+            trim_leading_whitespace_mut(state);
+
+            // Parse first element
+            if let Some(value) = self.call(state) {
+                values.push(value);
+            } else if lower_bound == 0 {
+                return Some(values);
+            } else {
+                return None;
+            }
+
+            while values.len() < upper_bound {
+                let cp = state.offset;
+                // Trim before separator — bypass sep's own flag dispatch
+                // since we're handling whitespace
+                trim_leading_whitespace_mut(state);
+                if sep.parser_fn.call(state).is_none() {
+                    state.offset = cp;
+                    break;
+                }
+                // Trim before next element
+                trim_leading_whitespace_mut(state);
+                if let Some(value) = self.call(state) {
+                    values.push(value);
+                } else {
+                    state.offset = cp;
+                    break;
+                }
+            }
+
+            if values.len() >= lower_bound {
+                // Post-trim after the last element
+                trim_leading_whitespace_mut(state);
+                Some(values)
+            } else {
+                None
+            }
+        };
+
+        Parser::new(sep_by_ws)
     }
 
     /// Error recovery combinator. On success, returns the result normally.

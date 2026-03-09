@@ -1,7 +1,7 @@
 use regex::Regex;
 use std::sync::Arc;
 
-use crate::leaf::trim_leading_whitespace;
+use crate::leaf::{trim_leading_whitespace, trim_leading_whitespace_mut};
 use crate::parse::ParserFn;
 use crate::state::{ParserState, Span};
 
@@ -87,6 +87,14 @@ pub(super) enum SpanKind<'a> {
         hi: usize,
     },
     SepBy {
+        inner: Box<SpanParser<'a>>,
+        sep: Box<SpanParser<'a>>,
+        lo: usize,
+        hi: usize,
+    },
+    /// Fused sep_by + whitespace trimming: single trim between each step,
+    /// no redundant double-trims from nested trim_whitespace wrappers.
+    SepByWs {
         inner: Box<SpanParser<'a>>,
         sep: Box<SpanParser<'a>>,
         lo: usize,
@@ -463,6 +471,45 @@ impl<'a> SpanParser<'a> {
                 }
                 if count >= *lo {
                     Some(Span::new(start, end, state.src))
+                } else {
+                    None
+                }
+            }
+
+            SpanKind::SepByWs { inner, sep, lo, hi } => {
+                let start = state.offset;
+                let mut count = 0;
+                // Pre-trim before first element
+                trim_leading_whitespace_mut(state);
+                // Parse first element
+                if inner.call(state).is_none() {
+                    if *lo == 0 {
+                        return Some(Span::new(start, state.offset, state.src));
+                    }
+                    return None;
+                }
+                count += 1;
+                while count < *hi {
+                    let cp = state.offset;
+                    // Trim before separator
+                    trim_leading_whitespace_mut(state);
+                    if sep.call(state).is_none() {
+                        state.offset = cp;
+                        break;
+                    }
+                    // Trim before next element
+                    trim_leading_whitespace_mut(state);
+                    if inner.call(state).is_some() {
+                        count += 1;
+                    } else {
+                        state.offset = cp;
+                        break;
+                    }
+                }
+                if count >= *lo {
+                    // Post-trim after the last element
+                    trim_leading_whitespace_mut(state);
+                    Some(Span::new(start, state.offset, state.src))
                 } else {
                     None
                 }
