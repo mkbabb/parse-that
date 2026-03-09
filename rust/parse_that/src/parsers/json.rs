@@ -260,8 +260,8 @@ pub enum JsonValue<'a> {
     Bool(bool),
     Number(f64),
     String(Cow<'a, str>),
-    Array(Vec<JsonValue<'a>>),
-    Object(Vec<(Cow<'a, str>, JsonValue<'a>)>),
+    Array(Box<Vec<JsonValue<'a>>>),
+    Object(Box<Vec<(Cow<'a, str>, JsonValue<'a>)>>),
 }
 
 pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
@@ -287,32 +287,71 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
     let json_string =
         || -> Parser<'a, JsonValue<'a>> { json_string_content().map(JsonValue::String) };
 
-    // ── Recursive structures ──────────────────────────────────
+    // ── Array: hand-rolled loop inside a Parser for pre-allocated capacity ──
 
     let json_array = crate::lazy::lazy(|| {
-        let comma_sp: SpanParser<'_> = sp_string(",").trim_whitespace();
-        let comma = comma_sp.into_parser();
+        let value = json_value();
+        let open = sp_string("[");
+        let close = sp_string("]");
+        let comma = sp_string(",").trim_whitespace();
 
-        json_value()
-            .sep_by(comma, ..)
-            .trim_whitespace()
-            .wrap(crate::leaf::string_span("["), crate::leaf::string_span("]"))
-            .map(JsonValue::Array)
+        Parser::new(move |state: &mut ParserState<'a>| {
+            open.call(state)?;
+            crate::leaf::trim_leading_whitespace_mut(state);
+
+            if close.call(state).is_some() {
+                return Some(JsonValue::Array(Box::new(Vec::new())));
+            }
+
+            let mut items = Vec::with_capacity(4);
+            loop {
+                crate::leaf::trim_leading_whitespace_mut(state);
+                items.push(value.call(state)?);
+                crate::leaf::trim_leading_whitespace_mut(state);
+                if comma.call(state).is_none() {
+                    break;
+                }
+            }
+
+            close.call(state)?;
+            Some(JsonValue::Array(Box::new(items)))
+        })
     });
 
+    // ── Object: hand-rolled loop inside a Parser for pre-allocated capacity ──
+
     let json_object = crate::lazy::lazy(move || {
-        let colon_sp: SpanParser<'_> = sp_string(":").trim_whitespace();
-        let colon = colon_sp.into_parser();
-        let comma_sp: SpanParser<'_> = sp_string(",").trim_whitespace();
-        let comma = comma_sp.into_parser();
+        let value = json_value();
+        let key = json_string_content();
+        let open = sp_string("{");
+        let close = sp_string("}");
+        let colon = sp_string(":").trim_whitespace();
+        let comma = sp_string(",").trim_whitespace();
 
-        let key_value = json_string_content().skip(colon).then(json_value());
+        Parser::new(move |state: &mut ParserState<'a>| {
+            open.call(state)?;
+            crate::leaf::trim_leading_whitespace_mut(state);
 
-        key_value
-            .sep_by(comma, ..)
-            .trim_whitespace()
-            .wrap(crate::leaf::string_span("{"), crate::leaf::string_span("}"))
-            .map(JsonValue::Object)
+            if close.call(state).is_some() {
+                return Some(JsonValue::Object(Box::new(Vec::new())));
+            }
+
+            let mut entries = Vec::with_capacity(4);
+            loop {
+                crate::leaf::trim_leading_whitespace_mut(state);
+                let k = key.call(state)?;
+                colon.call(state)?;
+                let v = value.call(state)?;
+                entries.push((k, v));
+                crate::leaf::trim_leading_whitespace_mut(state);
+                if comma.call(state).is_none() {
+                    break;
+                }
+            }
+
+            close.call(state)?;
+            Some(JsonValue::Object(Box::new(entries)))
+        })
     });
 
     // ── First-byte dispatch ───────────────────────────────────

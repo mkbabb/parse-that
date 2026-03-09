@@ -211,7 +211,7 @@ mod tests {
     #[test]
     fn test_empty_array() {
         let result = json_parser().parse("[]").unwrap();
-        assert_eq!(result, JsonValue::Array(vec![]));
+        assert_eq!(result, JsonValue::Array(Box::new(vec![])));
     }
 
     #[test]
