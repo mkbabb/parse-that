@@ -18,6 +18,7 @@ parse_that/               Core library crate
     span_trait.rs         ParserSpan trait (Span combinator aliases), ParserFlat trait
     state.rs              ParserState<'a>, Span<'a>, Diagnostic, Suggestion, SecondarySpan (diagnostics feature)
     debug.rs              Colored debug output, format_diagnostic(), format_all_diagnostics() (feature-gated)
+    split.rs              split_balanced(), contains_delimiter() — format-time balanced splitting
     utils.rs              extract_bounds(), get_cargo_root_path() (20 lines)
     parsers/
       mod.rs              Module exports
@@ -97,4 +98,6 @@ JsonValue<'a>                // Null | Bool | Number | String(Cow) | Array | Obj
 - `take_until_any_span(excluded)` — 256-byte LUT byte scanner for negated character classes (`[^...]+`); used by BBNF codegen for CSS patterns like `/[^;{}!,]+/`
 - `sp_take_until_any(excluded)` — SpanParser variant of LUT scanner (no boxing, enum-dispatched)
 - `seq!` / `alt!` macros — flat N-ary combinators (2-8 elements), single Box allocation instead of N-1 intermediate boxes
+- `split_balanced(text, delim)` — format-time balanced splitting on delimiter at nesting depth 0, respects `()[]` nesting + `""''` quoting. Used by BBNF `@pretty split("...")` codegen.
+- `contains_delimiter(text, delim)` — memchr fast-path guard to skip `split_balanced()` when delimiter absent
 - Benchmark profiles: `release-lto`, `bench` (fat LTO, codegen-units=1, opt-level=3)
