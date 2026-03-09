@@ -48,13 +48,15 @@ fn css_at_rule<'a>() -> Parser<'a, CssNode<'a>> {
             let name = ident.call(state)?;
             ws.call(state);
 
-            match name.as_str() {
-                "media" => {
+            // First-byte dispatch on at-rule name for O(1) branching
+            let name_first_byte = state.src_bytes.get(name.start).copied().unwrap_or(0);
+            match name_first_byte {
+                b'm' if name.as_str() == "media" => {
                     let queries = parse_media_query_list(state);
                     ws.call(state);
                     open_brace.call(state)?;
 
-                    let mut body = Vec::new();
+                    let mut body = Vec::with_capacity(4);
                     loop {
                         ws.call(state);
                         if close_brace.call(state).is_some() {
@@ -76,12 +78,12 @@ fn css_at_rule<'a>() -> Parser<'a, CssNode<'a>> {
                         body,
                     })
                 }
-                "supports" => {
+                b's' if name.as_str() == "supports" => {
                     let condition = parse_supports_condition(state);
                     ws.call(state);
                     open_brace.call(state)?;
 
-                    let mut body = Vec::new();
+                    let mut body = Vec::with_capacity(4);
                     loop {
                         ws.call(state);
                         if close_brace.call(state).is_some() {
@@ -108,12 +110,12 @@ fn css_at_rule<'a>() -> Parser<'a, CssNode<'a>> {
                         body,
                     })
                 }
-                "font-face" => {
+                b'f' if name.as_str() == "font-face" => {
                     ws.call(state);
                     let declarations = decl_block.call(state)?;
                     Some(CssNode::AtFontFace { declarations })
                 }
-                "import" => {
+                b'i' if name.as_str() == "import" => {
                     ws.call(state);
                     let mut values: SmallVec<[CssValue<'a>; 4]> = SmallVec::new();
                     loop {
@@ -129,7 +131,7 @@ fn css_at_rule<'a>() -> Parser<'a, CssNode<'a>> {
                     }
                     Some(CssNode::AtImport { values })
                 }
-                "keyframes" | "-webkit-keyframes" | "-moz-keyframes" => {
+                b'k' | b'-' if matches!(name.as_str(), "keyframes" | "-webkit-keyframes" | "-moz-keyframes") => {
                     ws.call(state);
                     let kf_name = kf_name_parser.call(state)?;
                     ws.call(state);
@@ -172,7 +174,7 @@ fn css_at_rule<'a>() -> Parser<'a, CssNode<'a>> {
                     };
 
                     let body = if has_block {
-                        let mut rules = Vec::new();
+                        let mut rules = Vec::with_capacity(4);
                         loop {
                             ws.call(state);
                             if close_brace.call(state).is_some() {
@@ -269,7 +271,7 @@ pub fn css_stylesheet<'a>() -> Parser<'a, NodeVec<'a>> {
     let close_brace = sp_string("}");
 
     Parser::new(move |state: &mut ParserState<'a>| {
-        let mut nodes = Vec::new();
+        let mut nodes = Vec::with_capacity(32);
 
         loop {
             ws_only.call(state);

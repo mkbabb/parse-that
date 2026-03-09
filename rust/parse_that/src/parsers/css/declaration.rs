@@ -68,7 +68,7 @@ pub(super) fn css_declaration_block<'a>() -> Parser<'a, DeclVec<'a>> {
     Parser::new(move |state: &mut ParserState<'a>| {
         open_brace.call(state)?;
 
-        let mut declarations: DeclVec<'_> = Vec::new();
+        let mut declarations: DeclVec<'_> = Vec::with_capacity(8);
         loop {
             ws.call(state);
             if close_brace.call(state).is_some() {

@@ -7,6 +7,8 @@ use smallvec::SmallVec;
 
 pub type SelectorVec<'a> = SmallVec<[CssSelector<'a>; 2]>;
 pub type ValueVec<'a> = SmallVec<[CssValue<'a>; 2]>;
+pub type FuncArgVec<'a> = Vec<CssValue<'a>>;
+pub type CompoundVec<'a> = Vec<CssSelector<'a>>;
 pub type DeclVec<'a> = Vec<CssDeclaration<'a>>;
 pub type NodeVec<'a> = Vec<CssNode<'a>>;
 
@@ -58,7 +60,7 @@ pub enum CssValue<'a> {
     Color(CssColor<'a>),
     Function {
         name: Span<'a>,
-        args: Vec<CssValue<'a>>,
+        args: FuncArgVec<'a>,
     },
     String(Span<'a>),
     Ident(Span<'a>),
@@ -73,7 +75,7 @@ pub enum CssColor<'a> {
     Named(Span<'a>),
     Function {
         name: Span<'a>,
-        args: Vec<CssValue<'a>>,
+        args: FuncArgVec<'a>,
     },
 }
 
@@ -94,7 +96,7 @@ pub enum CssSelector<'a> {
         name: Span<'a>,
         args: Vec<CssSelector<'a>>,
     },
-    Compound(Vec<CssSelector<'a>>),
+    Compound(CompoundVec<'a>),
     Complex {
         left: Box<CssSelector<'a>>,
         combinator: Span<'a>,

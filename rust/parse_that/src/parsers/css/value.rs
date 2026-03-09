@@ -122,7 +122,7 @@ pub(super) fn parse_ident_or_function_inline<'a>(state: &mut ParserState<'a>) ->
         state.offset += 1;
         css_ws_comment_fast(state);
 
-        let mut args = Vec::new();
+        let mut args: FuncArgVec<'_> = Vec::with_capacity(4);
         loop {
             css_ws_comment_fast(state);
             if state.src_bytes.get(state.offset) == Some(&b')') {

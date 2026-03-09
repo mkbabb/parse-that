@@ -83,7 +83,7 @@ pub(super) fn css_compound_selector<'a>() -> Parser<'a, CssSelector<'a>> {
     let pseudo_sel = css_pseudo_selector();
 
     Parser::new(move |state: &mut ParserState<'a>| {
-        let mut parts = Vec::new();
+        let mut parts: CompoundVec<'_> = Vec::with_capacity(3);
 
         // First: optional type selector or *
         if let Some(&b'*') = state.src_bytes.get(state.offset) {
