@@ -7,3 +7,9 @@ dist/
 .claude/
 
 .cargo/
+
+# Playwright MCP
+.playwright-mcp/
+
+# Screenshot artifacts (root only, not assets/)
+/*.png
