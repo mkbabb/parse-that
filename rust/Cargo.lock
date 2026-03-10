@@ -58,10 +58,10 @@ dependencies = [
 
 [[package]]
 name = "bbnf"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "indexmap",
- "parse_that 0.3.0",
+ "parse_that",
  "pprint",
  "proc-macro2",
  "quote",
@@ -71,11 +71,11 @@ dependencies = [
 
 [[package]]
 name = "bbnf_derive"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "bbnf",
  "indexmap",
- "parse_that 0.2.1",
+ "parse_that",
  "pprint",
  "proc-macro2",
  "quote",
@@ -768,20 +768,6 @@ dependencies = [
 
 [[package]]
 name = "parse_that"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d79dd6c72d2301fb9cd28f2a9400f275656c49c8eb84053c4f6fc0d76c6761d1"
-dependencies = [
- "aho-corasick",
- "fast-float2",
- "memchr",
- "pprint",
- "regex",
- "smallvec",
-]
-
-[[package]]
-name = "parse_that"
 version = "0.3.0"
 dependencies = [
  "aho-corasick",
@@ -812,7 +798,7 @@ dependencies = [
 name = "parse_that_cli"
 version = "0.1.0"
 dependencies = [
- "parse_that 0.3.0",
+ "parse_that",
  "pprint",
  "regex",
 ]

@@ -6,6 +6,7 @@ Project documentation. Performance chronicles, API reference.
 
 ```
 api.md                         TypeScript API reference (Parser<T>, leaf, span, diagnostics, domain parsers)
+publishing.md                  Dependency graph, publish order, local dev workflow
 perf-optimization-rust.md      Rust optimization chronicle: ~400 → 1,030 MB/s (1000+ lines)
 perf-optimization-ts.md        TS optimization chronicle: 746 → 5,480 ops/s (600+ lines)
 future-research.md             Research roadmap: 16 items (8 resolved, 8 open)
