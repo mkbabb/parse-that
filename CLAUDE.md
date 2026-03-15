@@ -5,32 +5,37 @@ Parser combinator library — TypeScript + Rust monorepo.
 ## Structure
 
 ```
-typescript/                TS library (@mkbabb/parse-that v0.7.0)
+typescript/                TS library (@mkbabb/parse-that v0.8.1)
   src/parse/               Core parser modules (isomorphic layout)
     parser.ts              Parser<T> class, combinators, recover(), memoization, flags
     leaf.ts                Leaf parsers (string, regex, eof, dispatch, etc.)
     lazy.ts                Lazy evaluation infrastructure
-    span.ts                Zero-copy span combinators (stringSpan, regexSpan, manySpan, sepBySpan, wrapSpan, optSpan, skipSpan, nextSpan)
+    span.ts                Zero-copy span combinators (stringSpan, regexSpan, manySpan, sepBySpan, wrapSpan, optSpan, skipSpan, nextSpan, altSpan, takeUntilAnySpan)
+    split.ts               splitBalanced(), containsDelimiter() — format-time balanced splitting
     state.ts               ParserState, Span, ParserContext
     debug.ts               Diagnostics rendering, ANSI output, formatDiagnostic()
     ansi.ts                Zero-dep ANSI helpers (NO_COLOR + TTY aware)
-    parsers/               Domain parsers (JSON, CSV, TOML)
-  test/                    Vitest tests (11 test files)
-  test/benchmarks/         Competitor JSON parsers for benchmarking (9 files)
+    parsers/               Domain parsers (JSON, CSV, CSS)
+  test/                    Vitest tests (14 test files)
+  test/benchmarks/         Competitor JSON parsers for benchmarking
 rust/                      Rust workspace
   parse_that/              Core parser combinator lib (crate)
     src/
       parse.rs             Parser<'a, O> struct, ParseError, ParserFn trait
-      combinators.rs       impl block combinators (then, or, map, many, recover, etc.)
+      combinators.rs       impl block combinators (then, or, map, many, recover, chain, memoize, etc.)
       leaf.rs              Leaf parsers (string, regex, take_until_any_span, dispatch_byte, etc.)
       lazy.rs              LazyParser, lazy() function
       span_parser.rs       SpanParser<'a> — enum-dispatched, vtable-free
+      span_constructors.rs SpanParser leaf constructors (sp_string, sp_regex, sp_json_*, etc.)
+      span_methods.rs      SpanParser combinator methods and bridge helpers
+      span_scanner.rs      SpanScanner variants (CssIdent, CssWsComment, CssString, CssBlockComment)
+      span_trait.rs        ParserSpan trait (Span combinator aliases), ParserFlat trait
       split.rs             split_balanced(), contains_delimiter() — format-time balanced splitting
       state.rs             ParserState, Span, Diagnostic, diagnostics types (feature-gated)
       debug.rs             Diagnostics rendering, format_diagnostic() (feature-gated)
-      parsers/             Domain parsers (JSON + scanners, CSV)
-    tests/                 Integration tests (5 files)
-    benches/               Benchmark suite (10 benches × 6 datasets)
+      parsers/             Domain parsers (JSON + scanners, CSV, CSS)
+    tests/                 Integration tests (6 files)
+    benches/               Benchmark suite (16 benches)
   src/                     CLI binary (parse_that_cli)
 grammar/tests/             Shared test vectors
   json/                    Valid + invalid JSONL test vectors
@@ -47,7 +52,7 @@ assets/                    Images (logo, debug screenshot)
 ```bash
 cd typescript
 npm ci
-npm test          # vitest — 11 test files
+npm test          # vitest — 14 test files
 npm run build     # vite → dist/parse.js (ES) + parse.cjs (CJS)
 npx tsc --noEmit  # type check
 ```
@@ -77,7 +82,9 @@ Rust (crates.io):                     NPM:
       ↓                                     ↓
   parse_that  ← pprint                 @mkbabb/keyframes.js
       ↓
-    bbnf      ← parse_that, pprint
+   bbnf_ir    ← parse_that
+      ↓
+    bbnf      ← parse_that, pprint, bbnf_ir
       ↓
   bbnf_derive ← bbnf, parse_that, pprint
       ↓
@@ -92,7 +99,7 @@ Cargo.toml uses crates.io version-only deps (no absolute paths).
 - TS: `strict:true`, `verbatimModuleSyntax:true`, ES2022+, zero runtime deps
 - TS: `Parser.lazy(() => ...)` for recursive definitions (no decorators)
 - TS: Mutable `ParserState` with save/restore — zero-alloc hot path
-- TS: Span variants (`stringSpan`, `regexSpan`, `manySpan`, `sepBySpan`, `wrapSpan`, `optSpan`, `skipSpan`, `nextSpan`) for zero-copy
+- TS: Span variants (`stringSpan`, `regexSpan`, `manySpan`, `sepBySpan`, `wrapSpan`, `optSpan`, `skipSpan`, `nextSpan`, `altSpan`, `takeUntilAnySpan`) for zero-copy
 - Rust: `pprint` (path dep to `/Programming/pprint`) for pretty-printing
 - Rust: nightly required — `#![feature(cold_path)]`
 - Rust: `Parser<'a, O>` (boxed dyn) + `SpanParser<'a>` (enum-dispatched, vtable-free)
@@ -101,6 +108,8 @@ Cargo.toml uses crates.io version-only deps (no absolute paths).
 - Both: `minus(excluded)` combinator — EBNF/BNF set-difference semantics (rejects if excluded matches at same position)
 - Both: `sep_by` strictly interleaving `elem (sep elem)*` — never accepts trailing separators
 - Rust: `negate()` — zero-width negative assertion; `not()` — consuming negative lookahead
+- Rust: `chain(f)` — monadic bind (flatMap), context-sensitive continuation based on parsed value
+- Rust: `memoize()` — packrat memoization, caches parse results by input offset
 - Rust: `cached_regex()` in `leaf.rs` — global `Arc<Regex>` cache avoids recompilation on repeated parser construction
 - Rust: `take_until_any_span(excluded)` / `sp_take_until_any(excluded)` — LUT-based byte scanner for negated character classes (`[^...]+`), 10-15x faster than regex NFA
 - Rust: `seq!` / `alt!` macros — flat N-ary combinators, single Box allocation. Used by BBNF codegen for inline alternation.

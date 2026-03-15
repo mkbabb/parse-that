@@ -71,13 +71,13 @@ expr.parse("1 + 2 * 3"); // => [1, "+", [2, "*", 3]]
 ## Structure
 
 ```
-typescript/            TS library (@mkbabb/parse-that v0.7.0)
+typescript/            TS library (@mkbabb/parse-that v0.8.1)
   src/parse/           Isomorphic module layout (see below)
   test/                Vitest tests + benchmark comparators
 rust/                  Rust workspace (nightly, edition 2024)
   parse_that/          Core lib — isomorphic module layout (see below)
   src/                 CLI binary (parse_that_cli)
-grammar/               Shared BBNF grammar files (16 .bbnf)
+grammar/               Shared test vectors (BBNF grammars in bbnf-lang repo)
   tests/json/          Shared JSON test vectors
   tests/css/           CSS recovery test vectors
   tests/debug/         Shared diagnostic output vectors
@@ -92,7 +92,8 @@ Both languages share a mirrored module structure:
 | Combinators | methods on Parser class (incl. recover) | `combinators.rs` — impl blocks (incl. recover) |
 | Leaf parsers | `leaf.ts` — string, regex, dispatch | `leaf.rs` — string, regex, dispatch_byte |
 | Lazy eval | `lazy.ts` — lazy(), getLazyParser | `lazy.rs` — LazyParser, lazy() |
-| Span / zero-copy | `span.ts` — regexSpan, manySpan | `span_parser.rs` — SpanParser enum |
+| Span / zero-copy | `span.ts` — regexSpan, manySpan, altSpan, takeUntilAnySpan | `span_parser.rs` — SpanParser enum |
+| Balanced splitting | `split.ts` — splitBalanced | `split.rs` — split_balanced |
 | State | `state.ts` — ParserState, Span | `state.rs` — ParserState, Span |
 | Debug | `debug.ts` — diagnostics, ANSI output | `debug.rs` — diagnostics (feature-gated) |
 | Domain parsers | `parsers/` — JSON, CSV, CSS | `parsers/` — JSON + scanners, CSV, CSS |
@@ -106,7 +107,7 @@ materialization and string escape decoding. Higher is better.
 
 MB/s throughput. `bencher` crate with `black_box` on inputs and `b.bytes` set.
 
-#### 11-parser JSON matrix
+#### 10-parser JSON matrix
 
 | Parser | data.json | apache | twitter | citm_catalog | canada | data-xl |
 |---|---:|---:|---:|---:|---:|---:|
@@ -147,7 +148,7 @@ Relative to `JSON.parse` (native C++). Vitest bench, 5 iterations, 5s warmup.
 | Parsimmon | 25.9x | 30.3x | 36.0x | 41.7x | 20.0x |
 | Nearley + moo | 64.5x | 91.6x | 73.0x | 85.2x | 33.4x |
 
-parse-that is the fastest JS parser combinator library — 1.3–1.5x faster than
+parse-that is the fastest among benchmarked JS parser combinator libraries—1.3–1.5x faster than
 Chevrotain, 4–12x faster than PEG/Earley parsers.
 
 Key optimizations: mutable `ParserState` (zero-alloc), Tarjan's SCC for minimal
@@ -253,7 +254,7 @@ Better Backus-Naur Form: a readable, practical grammar notation. An extension of
 [EBNF](https://dwheeler.com/essays/dont-use-iso-14977-bbnf.html) with skip/next
 operators, regex terminals, mapping functions, and an `@import` system.
 
-The BBNF grammar for BBNF itself lives at [bbnf.bbnf](./grammar/bbnf.bbnf).
+The BBNF grammar for BBNF itself lives in the [`bbnf-lang`](https://github.com/mkbabb/bbnf-lang) repo.
 
 With your grammar in hand, call `generateParserFromBBNF` (TypeScript) or use
 `#[derive(Parser)]` (Rust):
@@ -334,7 +335,7 @@ See [api.md](./docs/api.md) for API information.
 See the [TypeScript tests](./typescript/test/) and [Rust tests](./rust/parse_that/tests/)
 for working examples.
 
-## Sources, acknowledgements, &c.
+## Sources, acknowledgements, & c.
 
 ### Theory
 

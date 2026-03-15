@@ -71,11 +71,12 @@ Returns a new parser that will output the result of the first parser.
 Applies the current parser repeatedly, from min to max times. Returns a new parser that
 will output an array of the results of all successful applications of the first parser.
 
-### `sepBy<S>(sep: Parser<S>, min: number = 0, max: number = Infinity): Parser<(T | S)[]>`
+### `sepBy<S>(sep: Parser<S>, min: number = 0, max: number = Infinity): Parser<T[]>`
 
 Applies the current parser, followed by the sep parser and the first parser repeatedly,
-from min to max times. Returns a new parser that will output an array of the results of
-all successful applications of the first and second parsers.
+from min to max times. Separator values are discarded. Returns an array of the element
+parser results only. Strictly interleaving: `elem (sep elem)*`—never accepts trailing
+separators.
 
 ### `debug(name: string = "", logger: (...s: any[]) => void = console.error): Parser<T>`
 
@@ -85,6 +86,27 @@ with a cursor at the active column. Nested debug calls indent automatically.
 
 When diagnostics are enabled, the output includes expected sets, suggestions, and
 secondary spans.
+
+### `minus<S>(excluded: Parser<S>): Parser<T>`
+
+EBNF set-difference: match self only if `excluded` fails at the same position.
+Saves and restores `furthestOffset` so excluded's attempt doesn't pollute diagnostics.
+
+### `recover<S>(sync: Parser<S>, sentinel: T): Parser<T>`
+
+Error recovery: on failure, snapshots the current diagnostic state, invokes `sync`
+to skip forward to a known recovery point, and returns `sentinel`. Enables multi-error
+parsing when used inside `many()` loops.
+
+### `memoize(): Parser<T>`
+
+Caches parse results by `(parserId, offset)` key. On cache hit, restores offset and
+returns the cached value. Required for left-recursive grammars.
+
+### `chain<S>(fn: (value: T) => Parser<S>): Parser<S>`
+
+Monadic bind: parse with self, then use the result to choose the next parser via `fn`.
+Enables context-sensitive parsing.
 
 ### `toString(indent: number = 0): string`
 
@@ -97,15 +119,15 @@ A class representing the state of a parser after it has been applied to a string
 
 ### `next(len: number): ParserState<T>`
 
-Returns a new parser state with the offset incremented by len.
+Advances the offset by len in place and returns the same state.
 
 ### `ok(value: T): ParserState<T>`
 
-Returns a new parser state with the value and isError set to false.
+Sets value and isError to false in place, returns the same state.
 
 ### `err(value?: T): ParserState<T>`
 
-Returns a new parser state with the value and isError set to true.
+Sets value and isError to true in place, returns the same state.
 
 ### `addCursor(cursor: string): string`
 
@@ -179,17 +201,36 @@ Like `.sepBy()`, but merges consecutive spans into one.
 
 Like `.wrap()`, but returns a merged span covering start through end.
 
+### `optSpan(parser: Parser<Span>): Parser<Span>`
+
+Like `.opt()`, but returns a zero-length span on miss instead of `undefined`.
+
+### `skipSpan(skip: Parser, keep: Parser<Span>): Parser<Span>`
+
+Parses `skip` then `keep`, returns only the keep span.
+
+### `nextSpan(skip: Parser, keep: Parser<Span>): Parser<Span>`
+
+Alias for `skipSpan`—parses skip then keep, returns keep's span.
+
+### `altSpan(...parsers: Parser<Span>[]): Parser<Span>`
+
+Alternation of span-producing parsers. Tries each in order, first success wins.
+More efficient than `any(...).map(span => span)` since it avoids boxing through
+the generic alternation path.
+
+### `takeUntilAnySpan(excluded: string): Parser<Span>`
+
+Byte-class scanner: match one or more characters NOT in `excluded`. Uses a 128-entry
+ASCII lookup table for O(1) per-character checks instead of regex NFA overhead.
+TS equivalent of Rust's `take_until_any_span`.
+
 ## Domain Parsers (`parsers/`)
 
 ### `jsonParser(): Parser<JsonValue>`
 
 Combinator-based JSON parser. Returns a `JsonValue` discriminated union:
 `null | boolean | number | string | JsonValue[] | Record<string, JsonValue>`.
-
-### `jsonParseFast(input: string): JsonValue`
-
-Monolithic hand-rolled JSON parser. charCode dispatch, no combinator overhead.
-Fastest TypeScript path.
 
 ### `csvParser(): Parser<string[][]>`
 

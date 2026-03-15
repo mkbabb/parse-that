@@ -1,6 +1,6 @@
 # typescript/
 
-TypeScript parser combinator library. Published as `@mkbabb/parse-that` v0.7.0.
+TypeScript parser combinator library. Published as `@mkbabb/parse-that` v0.8.1.
 
 ## Structure
 
@@ -10,8 +10,9 @@ src/parse/
   parser.ts         Parser<T> class, combinators, recover(), ParserFunction type, memoization, flags
   leaf.ts           Leaf parsers: string, regex, eof, any, dispatch, all, whitespace
   lazy.ts           getLazyParser(), createLazyCached(), lazy decorator
-  span.ts           stringSpan(), regexSpan(), manySpan(), sepBySpan(), wrapSpan(), optSpan(), skipSpan(), nextSpan()
-  state.ts          ParserState<T>, Span, ParserContext types (152 lines)
+  span.ts           stringSpan(), regexSpan(), manySpan(), sepBySpan(), wrapSpan(), optSpan(), skipSpan(), nextSpan(), altSpan(), takeUntilAnySpan()
+  split.ts          splitBalanced(), containsDelimiter() — format-time balanced splitting
+  state.ts          ParserState<T>, Span, ParserContext types
   ansi.ts           Zero-dep ANSI helpers (bold, red, green, etc.) — NO_COLOR + TTY aware
   utils.ts          mergeErrorState(), Diagnostic, collectDiagnostic(), Suggestion, SecondarySpan
   debug.ts          parserDebug(), statePrint(), formatDiagnostic(), formatAllDiagnostics()
@@ -19,30 +20,33 @@ src/parse/
     index.ts        Barrel re-exports for domain parsers
     json.ts         JsonValue type, jsonParser() — combinator JSON
     csv.ts          csvParser() — RFC 4180 CSV
-    toml.ts         TOML parser (placeholder)
+    css/            CSS L1.75 parser (types, scan, value, selector, rule, media, specificity)
     utils.ts        escapedString(), quotedString(), numberParser()
 test/
-  csv.test.ts             CSV parsing with quoted fields
-  css-diagnostics.test.ts CSS-grammar integration tests for diagnostics system
-  css-recovery-demo.test.ts  Multi-error recovery via recover() combinator (13 tests)
-  debug.test.ts           Diagnostics unit tests (summarizeLine, formatExpected, labels, suggestions)
-  json.test.ts            JSON combinator parser
-  json-vectors.test.ts    Shared JSON test vectors (grammar/tests/json/)
-  math.test.ts            Math expressions with operator precedence
-  memoize.test.ts         Left recursion via .memoize() / .mergeMemos()
-  print.test.ts           parserPrint() output
+  csv.test.ts               CSV parsing with quoted fields
+  css-diagnostics.test.ts   CSS-grammar integration tests for diagnostics system
+  css-fairness-validation.test.ts  Cross-parser CSS fairness checks
+  css-parse.test.ts         CSS parser integration tests
+  css-recovery-demo.test.ts Multi-error recovery via recover() combinator (13 tests)
+  debug.test.ts             Diagnostics unit tests (summarizeLine, formatExpected, labels, suggestions)
+  json.test.ts              JSON combinator parser
+  json-vectors.test.ts      Shared JSON test vectors (grammar/tests/json/)
+  math.test.ts              Math expressions with operator precedence
+  memoize.test.ts           Left recursion via .memoize() / .mergeMemos()
+  print.test.ts             parserPrint() output
+  split.test.ts             splitBalanced() format-time splitting
   validate-parsers.test.ts  Competitor parsers vs JSON.parse()
   verify-parse-output.test.ts  Hand-written JSON correctness
-  setup.ts                CWD setup
-  utils.ts                Test helpers
-  benchmarks/             9 competitor implementations + comprehensive bench suite
+  setup.ts                  CWD setup
+  utils.ts                  Test helpers
+  benchmarks/               Competitor implementations + comprehensive bench suite
 ```
 
 ## Build
 
 ```bash
 npm ci
-npm test          # vitest (pool: forks, 8GB heap) — 11 test files
+npm test          # vitest (pool: forks, 8GB heap) — 14 test files
 npm run build     # vite → dist/parse.js (ES) + parse.cjs (CJS) + .d.ts
 npx tsc --noEmit  # type check
 ```
@@ -61,8 +65,11 @@ Parser.lazy(fn), getLazyParser(), createLazyCached()
 
 // Span variants (span.ts — zero-copy)
 stringSpan(), regexSpan(), manySpan(), sepBySpan(), wrapSpan()
-optSpan(), skipSpan(), nextSpan()
+optSpan(), skipSpan(), nextSpan(), altSpan(), takeUntilAnySpan()
 mergeSpans(a, b), spanToString(span, src)
+
+// Balanced splitting (split.ts)
+splitBalanced(), containsDelimiter()
 
 // Domain parsers (parsers/)
 jsonParser(), JsonValue, csvParser()
