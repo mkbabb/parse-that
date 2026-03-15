@@ -2,7 +2,6 @@
 ///
 /// Used by BBNF-generated `to_doc()` code to split opaque Span text on a
 /// delimiter at nesting depth 0, respecting `()[]` nesting and `""''` quoting.
-
 /// Quick check: does `text` contain `delim` at all?
 ///
 /// Use before [`split_balanced`] to avoid a Vec allocation when the delimiter
