@@ -198,13 +198,6 @@ impl<'a> SpanParser<'a> {
             }
 
             SpanKind::RegexMatch(re) => {
-                if state.is_at_end() {
-                    #[cfg(feature = "diagnostics")]
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                    return None;
-                }
                 let slc = state.src.get(state.offset..)?;
                 match re.find_at(slc, 0) {
                     Some(m) if m.start() == 0 => {

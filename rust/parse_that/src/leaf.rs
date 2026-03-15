@@ -137,9 +137,6 @@ pub fn string_span<'a>(s: &'a str) -> Parser<'a, Span<'a>> {
 
 #[inline(always)]
 fn regex_impl<'a>(re: &Regex, state: &mut ParserState<'a>) -> Option<Span<'a>> {
-    if state.is_at_end() {
-        return None;
-    }
     let slc = state.src.get(state.offset..)?;
     match re.find_at(slc, 0) {
         Some(m) => {
