@@ -132,6 +132,8 @@ export const parserNames = [
     "manySpan",
     "sepBySpan",
     "wrapSpan",
+    "altSpan",
+    "takeUntilAnySpan",
     "recover",
 ] as const;
 

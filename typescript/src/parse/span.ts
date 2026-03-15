@@ -312,3 +312,87 @@ export function nextSpan(skip: Parser<any>, keep: Parser<Span>): Parser<Span> {
         createParserContext("next", skip as any, keep),
     );
 }
+
+// ── Alternation Span Combinator ──────────────────────────────
+
+/**
+ * Alternation of span-producing parsers, returning a single Span.
+ * Tries each parser in order — first success wins.
+ * More efficient than `any(...).map(span => span)` since it avoids
+ * boxing/unboxing through the generic alternation path.
+ */
+export function altSpan(...parsers: Parser<Span>[]): Parser<Span> {
+    if (parsers.length === 0) {
+        return makeParser(
+            ((state: ParserState<Span>) => {
+                state.isError = true;
+                return state;
+            }) as ParserFunction<Span>,
+        );
+    }
+
+    if (parsers.length === 1) return parsers[0];
+
+    const altSpanParser = (state: ParserState<Span>) => {
+        const savedOffset = state.offset;
+
+        for (const parser of parsers) {
+            parser.call(state as any);
+            if (!state.isError) return state;
+            state.offset = savedOffset;
+            state.isError = false;
+        }
+
+        mergeErrorState(state as ParserState<unknown>);
+        state.isError = true;
+        return state;
+    };
+
+    return makeParser(
+        altSpanParser as ParserFunction<Span>,
+        createParserContext("altSpan", undefined, ...parsers),
+    );
+}
+
+/**
+ * Byte-class scanner: match one or more characters NOT in `excluded`.
+ * TS equivalent of Rust's `take_until_any_span` — uses a LUT for O(1)
+ * per-character lookup instead of regex NFA overhead.
+ */
+export function takeUntilAnySpan(excluded: string): Parser<Span> {
+    // Build 128-entry ASCII lookup table.
+    const lut = new Uint8Array(128);
+    for (let i = 0; i < excluded.length; i++) {
+        const code = excluded.charCodeAt(i);
+        if (code < 128) lut[code] = 1;
+    }
+
+    const label = `[^${excluded.replace(/[\\\]]/g, "\\$&")}]+`;
+
+    const scanner = (state: ParserState<Span>) => {
+        const { src, offset } = state;
+        let pos = offset;
+        const len = src.length;
+
+        while (pos < len) {
+            const ch = src.charCodeAt(pos);
+            if (ch < 128 && lut[ch]) break;
+            pos++;
+        }
+
+        if (pos > offset) {
+            (state as any).value = { start: offset, end: pos };
+            state.offset = pos;
+            state.isError = false;
+        } else {
+            mergeErrorState(state as ParserState<unknown>, label);
+            state.isError = true;
+        }
+        return state;
+    };
+
+    return makeParser(
+        scanner as ParserFunction<Span>,
+        createParserContext("takeUntilAnySpan", undefined, excluded),
+    );
+}
