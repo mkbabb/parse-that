@@ -24,6 +24,10 @@ fn bootstrap(b: &mut Bencher) {
     parse(b, "bootstrap.css")
 }
 
+fn tailwind(b: &mut Bencher) {
+    parse(b, "tailwind-output.css")
+}
+
 fn parse(b: &mut Bencher, filepath: &str) {
     let filepath = data_dir().join(filepath);
     let data = std::fs::read_to_string(&filepath)
@@ -50,5 +54,5 @@ fn parse(b: &mut Bencher, filepath: &str) {
     })
 }
 
-benchmark_group!(bbnf_css, normalize, bootstrap);
+benchmark_group!(bbnf_css, normalize, bootstrap, tailwind);
 benchmark_main!(bbnf_css);
