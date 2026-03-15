@@ -99,7 +99,7 @@ Limited impact on minified inputs.
 
 ## 11. Close BBNF-to-Hand-Rolled JSON Gap
 
-**Current**: BBNF JSON at 540 MB/s vs hand-rolled at 926 MB/s (0.58x, measured 2026-03-08).
+**Current**: BBNF JSON at 540 MB/s vs hand-rolled at 926 MB/s (0.58x).
 
 **Bottleneck**: `lazy()` indirection for recursive rules (UnsafeCell + branch + vtable
 per call), `trim_whitespace()` double-dispatch (redundant whitespace scanning at
@@ -184,7 +184,7 @@ territory.
 - Added typed MediaQuery, SupportsCondition, Specificity (L1.75) — both Rust + TS
 - SmallVec for selectors (N=2) and values (N=2) — kept declarations as Vec to avoid stack bloat from nested SmallVec
 
-**Result**: 38x improvement on bootstrap. 2.2x faster than lightningcss (L2 semantic parser) on bootstrap, within 0.93x of cssparser (tokenizer-only) on tailwind — while building a fully typed L1.75 AST.
+**Result**: 38x improvement on bootstrap, building a fully typed L1.75 AST.
 
 ---
 

@@ -223,7 +223,7 @@ const jsonValue = dispatch({
 });
 ```
 
-This gave the hand-written parser the same O(1) alternation as BBNF. The hand parser jumped from 4,267 to 5,480 ops/s—the fastest non-native parser in the benchmark, faster than both BBNF and Chevrotain.
+This gave the hand-written parser the same O(1) alternation as BBNF. The hand parser jumped from 4,267 to 5,480 ops/s.
 
 ### Inlining wrap()
 

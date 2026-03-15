@@ -1,8 +1,8 @@
 # Rust JSON Parser Performance: Research, Optimization, and Findings
 
 A chronicle of taking `parse_that`'s Rust JSON parser from mid-tier combinator
-performance (~400--750 MB/s) to 400--1,030 MB/s, 1.0--1.7x faster than nom/winnow
-(work-equivalent peers) while remaining a general-purpose parser combinator library.
+performance (~400–750 MB/s) to 397–900 MB/s while remaining a general-purpose
+parser combinator library.
 
 **Platform**: Apple M-series (AArch64), Rust nightly, default codegen (no
 `-C target-cpu=native`).
@@ -24,22 +24,22 @@ performance (~400--750 MB/s) to 400--1,030 MB/s, 1.0--1.7x faster than nom/winno
 
 ## Benchmark Matrix
 
-11 parsers × 6 datasets. All numbers are MB/s throughput, measured with the
+10 parsers × 6 datasets. All numbers are MB/s throughput, measured with the
 `bencher` crate (statistical sampling, `black_box` on inputs, `b.bytes` set for
 throughput calculation).
 
 | Parser | data.json (35K) | canada (2.1M) | apache (127K) | twitter (632K) | citm_catalog (1.7M) | data-xl (39M) |
 |---|---:|---:|---:|---:|---:|---:|
-| sonic-rs | 2,356 | 1,530 | 1,887 | 2,482 | 3,002 | 2,715 |
-| simd-json | 1,459 | 488 | 1,477 | 1,498 | 1,292 | 1,637 |
-| jiter | 1,249 | 566 | 1,127 | 1,022 | 1,016 | 1,319 |
-| serde_json_borrow | 1,181 | 613 | 1,120 | 1,272 | 1,256 | 1,194 |
-| **parse_that** | **804** | **400** | **732** | **833** | **938** | **1,030** |
-| nom | 600 | 404 | 728 | 496 | 626 | 622 |
-| serde_json | 592 | 581 | 542 | 563 | 882 | 622 |
-| winnow | 546 | 398 | 627 | 532 | 601 | 592 |
-| **parse_that (BBNF)** | **521** | **316** | **505** | **493** | **610** | **674** |
-| pest | 256 | 156 | 275 | 240 | 257 | 261 |
+| sonic-rs | 2,295 | 1,505 | 1,869 | 2,372 | 2,843 | 2,704 |
+| simd-json | 1,462 | 479 | 1,507 | 1,486 | 1,260 | 1,557 |
+| jiter | 1,219 | 546 | 1,096 | 985 | 974 | 1,309 |
+| serde_json_borrow | 1,161 | 606 | 1,106 | 1,239 | 1,198 | 1,136 |
+| **parse_that** | **736** | **397** | **733** | **477** | **900** | **660** |
+| nom | 399 | 364 | 698 | 357 | 446 | 357 |
+| serde_json | 362 | 414 | 496 | 436 | 530 | 386 |
+| winnow | 347 | 289 | 603 | 396 | 391 | 363 |
+| **parse_that (BBNF)** | **757** | **307** | **902** | **640** | **734** | **429** |
+| pest | 156 | 94 | 172 | 233 | 151 | 222 |
 
 ### Dataset Profiles
 
