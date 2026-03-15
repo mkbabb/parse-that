@@ -558,6 +558,25 @@ where
         panic!("recover() requires the `diagnostics` feature")
     }
 
+    /// Monadic bind (flatMap): parse with `self`, then use the result to choose
+    /// the next parser via `f`. The second parser runs from where `self` left off.
+    ///
+    /// This enables context-sensitive parsing where the choice of continuation
+    /// depends on the value parsed so far.
+    #[inline]
+    pub fn chain<Output2, F>(self, f: F) -> Parser<'a, Output2>
+    where
+        Output2: 'a,
+        F: Fn(Output) -> Parser<'a, Output2> + 'a,
+    {
+        let chain = move |state: &mut ParserState<'a>| {
+            let value = self.call(state)?;
+            let next = f(value);
+            next.call(state)
+        };
+        Parser::new(chain)
+    }
+
     #[inline]
     pub fn look_ahead<Output2>(self, parser: Parser<'a, Output2>) -> Parser<'a, Output>
     where

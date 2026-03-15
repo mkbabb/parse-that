@@ -790,4 +790,49 @@ mod tests {
             assert_eq!(span.as_str(), number);
         }
     }
+
+    // ── chain ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn chain_basic() {
+        // Parse a keyword, then choose a continuation parser based on the value.
+        let parser = (string("int") | string("str")).chain(|tag: &str| match tag {
+            "int" => regex(r"\d+"),
+            "str" => regex(r"[a-z]+"),
+            _ => unreachable!(),
+        });
+
+        assert_eq!(parser.parse("int42"), Some("42"));
+        assert_eq!(parser.parse("strhello"), Some("hello"));
+        // Wrong continuation content fails:
+        assert_eq!(parser.parse("inthello"), None);
+    }
+
+    #[test]
+    fn chain_state_advances() {
+        // Verify the chained parser runs from where the first left off.
+        let parser = string("ab").chain(|_: &str| string("cd"));
+
+        let mut state = ParserState::new("abcd");
+        let result = parser.call(&mut state);
+        assert_eq!(result, Some("cd"));
+        assert_eq!(state.offset, 4);
+    }
+
+    #[test]
+    fn chain_failure_propagates() {
+        // First parser fails → entire chain fails.
+        let parser = string("MISSING").chain(|_: &str| string("anything"));
+
+        assert_eq!(parser.parse("hello"), None);
+    }
+
+    #[test]
+    fn chain_second_failure() {
+        // First parser succeeds, chained parser fails.
+        let parser = string("ok").chain(|_: &str| string("NOPE"));
+
+        assert_eq!(parser.parse("okwrong"), None);
+    }
+
 }
