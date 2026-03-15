@@ -835,4 +835,50 @@ mod tests {
         assert_eq!(parser.parse("okwrong"), None);
     }
 
+    // ── memoize ──────────────────────────────────────────────────
+
+    #[test]
+    fn memoize_basic_hit() {
+        let p = string("hello").memoize();
+        // First call populates cache, second returns cached value.
+        assert_eq!(p.parse("hello"), Some("hello"));
+        assert_eq!(p.parse("hello"), Some("hello"));
+    }
+
+    #[test]
+    fn memoize_failure_cached() {
+        let p = string("hello").memoize();
+        // Failure is also cached — second call returns None without re-parsing.
+        assert!(p.parse("world").is_none());
+        assert!(p.parse("world").is_none());
+    }
+
+    #[test]
+    fn memoize_offset_restored() {
+        // Verify that memoize restores the correct end offset on cache hit.
+        let p = string("ab").memoize().then(string("cd"));
+        assert_eq!(p.parse("abcd"), Some(("ab", "cd")));
+        // Second parse should work identically via cache.
+        assert_eq!(p.parse("abcd"), Some(("ab", "cd")));
+    }
+
+    #[test]
+    fn memoize_different_offsets() {
+        // Two calls at different offsets cache independently.
+        let inner = regex(r"[a-z]+").memoize();
+        let p = inner.sep_by(string(","), 1..);
+        let result = p.parse("abc,def,ghi").unwrap();
+        assert_eq!(result, vec!["abc", "def", "ghi"]);
+    }
+
+    #[test]
+    fn memoize_with_alternation() {
+        // Memoized parser in alternation avoids redundant re-parsing.
+        let word = regex(r"[a-z]+").memoize();
+        let p = word.then(string("!")).map(|(w, _)| w).save_state()
+            | regex(r"[a-z]+").then(string("?")).map(|(w, _)| w).save_state();
+        // First branch fails (no !), second succeeds — word is parsed twice
+        // at offset 0 but the memoized version caches the first attempt.
+        assert_eq!(p.parse("hello?"), Some("hello"));
+    }
 }

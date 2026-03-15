@@ -592,6 +592,44 @@ where
         };
         Parser::new(look_ahead)
     }
+
+    /// Packrat memoization: cache parse results by input offset.
+    /// On cache hit, restores offset and returns cloned value in O(1).
+    /// Eliminates exponential re-parsing in ambiguous/cyclic grammars.
+    pub fn memoize(self) -> Parser<'a, Output>
+    where
+        Output: Clone,
+    {
+        use std::cell::RefCell;
+        use std::collections::HashMap;
+
+        // Cache: offset → None (failed) | Some((end_offset, value))
+        let cache: RefCell<HashMap<usize, Option<(usize, Output)>>> =
+            RefCell::new(HashMap::new());
+
+        let memo = move |state: &mut ParserState<'a>| {
+            let key = state.offset;
+
+            // Fast path: check cache without mutation
+            if let Some(entry) = cache.borrow().get(&key) {
+                return match entry {
+                    Some((end_offset, value)) => {
+                        state.offset = *end_offset;
+                        Some(value.clone())
+                    }
+                    None => None,
+                };
+            }
+
+            // Cache miss: parse and store result
+            let result = self.call(state);
+            let entry = result.as_ref().map(|v| (state.offset, v.clone()));
+            cache.borrow_mut().insert(key, entry);
+            result
+        };
+
+        Parser::new(memo)
+    }
 }
 
 impl<'a, Output2> std::ops::BitOr<Parser<'a, Output2>> for Parser<'a, Output2>
