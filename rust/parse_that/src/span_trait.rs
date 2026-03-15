@@ -86,10 +86,14 @@ impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
             let mut count = 0;
 
             while count < upper_bound {
+                let prev_offset = state.offset;
                 match self.call(state) {
                     Some(span) => {
                         end = span.end;
                         count += 1;
+                        if state.offset == prev_offset {
+                            break;
+                        }
                     }
                     None => break,
                 }

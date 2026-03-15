@@ -427,10 +427,15 @@ impl<'a> SpanParser<'a> {
                 let mut end = state.offset;
                 let mut count = 0;
                 while count < *hi {
+                    let prev_offset = state.offset;
                     match inner.call(state) {
                         Some(span) => {
                             end = span.end;
                             count += 1;
+                            // Guard: break on zero-length match to prevent infinite loops.
+                            if state.offset == prev_offset {
+                                break;
+                            }
                         }
                         None => break,
                     }

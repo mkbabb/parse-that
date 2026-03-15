@@ -204,8 +204,14 @@ where
             let mut values = Vec::with_capacity(est);
 
             while values.len() < upper_bound {
+                let prev_offset = state.offset;
                 if let Some(value) = self.call(state) {
                     values.push(value);
+                    // Guard: break on zero-length match to prevent infinite loops.
+                    // Mirrors the VM interpreter's iter_start_offset check.
+                    if state.offset == prev_offset {
+                        break;
+                    }
                 } else {
                     break;
                 }
@@ -236,8 +242,12 @@ where
             let mut values = SmallVec::new();
 
             while values.len() < upper_bound {
+                let prev_offset = state.offset;
                 if let Some(value) = self.call(state) {
                     values.push(value);
+                    if state.offset == prev_offset {
+                        break;
+                    }
                 } else {
                     break;
                 }
