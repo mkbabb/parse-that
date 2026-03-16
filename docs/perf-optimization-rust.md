@@ -1,7 +1,7 @@
 # Rust JSON Parser Performance: Research, Optimization, and Findings
 
 A chronicle of taking `parse_that`'s Rust JSON parser from mid-tier combinator
-performance (~400–750 MB/s) to 397–900 MB/s while remaining a general-purpose
+performance (~400–750 MB/s) to 389–999 MB/s while remaining a general-purpose
 parser combinator library.
 
 **Platform**: Apple M-series (AArch64), Rust nightly, default codegen (no
@@ -30,16 +30,16 @@ throughput calculation).
 
 | Parser | data.json (35K) | canada (2.1M) | apache (127K) | twitter (632K) | citm_catalog (1.7M) | data-xl (39M) |
 |---|---:|---:|---:|---:|---:|---:|
-| sonic-rs | 2,295 | 1,505 | 1,869 | 2,372 | 2,843 | 2,704 |
-| simd-json | 1,462 | 479 | 1,507 | 1,486 | 1,260 | 1,557 |
-| jiter | 1,219 | 546 | 1,096 | 985 | 974 | 1,309 |
-| serde_json_borrow | 1,161 | 606 | 1,106 | 1,239 | 1,198 | 1,136 |
-| **parse_that** | **736** | **397** | **733** | **477** | **900** | **660** |
-| nom | 399 | 364 | 698 | 357 | 446 | 357 |
-| serde_json | 362 | 414 | 496 | 436 | 530 | 386 |
-| winnow | 347 | 289 | 603 | 396 | 391 | 363 |
-| **parse_that (BBNF)** | **757** | **307** | **902** | **640** | **734** | **429** |
-| pest | 156 | 94 | 172 | 233 | 151 | 222 |
+| sonic-rs | 2,222 | 1,456 | 1,888 | 2,299 | 2,920 | 2,646 |
+| simd-json | 1,460 | 487 | 1,392 | 1,538 | 1,267 | 1,584 |
+| jiter | 1,257 | 556 | 1,113 | 1,004 | 986 | 1,308 |
+| serde_json_borrow | 1,165 | 617 | 1,122 | 1,292 | 1,268 | 1,196 |
+| **parse_that** | **779** | **389** | **727** | **788** | **922** | **999** |
+| nom | 576 | 391 | 690 | 496 | 607 | 601 |
+| serde_json | 576 | 559 | 533 | 549 | 851 | 602 |
+| winnow | 524 | 390 | 645 | 525 | 581 | 582 |
+| **parse_that (BBNF)** | **852** | **305** | **875** | **866** | **736** | **663** |
+| pest | 255 | 154 | 272 | 222 | 250 | 249 |
 
 ### Dataset Profiles
 

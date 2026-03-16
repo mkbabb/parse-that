@@ -111,16 +111,16 @@ MB/s throughput. `bencher` crate with `black_box` on inputs and `b.bytes` set.
 
 | Parser | data.json | apache | twitter | citm_catalog | canada | data-xl |
 |---|---:|---:|---:|---:|---:|---:|
-| sonic-rs | 2,295 | 1,869 | 2,372 | 2,843 | 1,505 | 2,704 |
-| simd-json | 1,462 | 1,507 | 1,486 | 1,260 | 479 | 1,557 |
-| jiter | 1,219 | 1,096 | 985 | 974 | 546 | 1,309 |
-| serde_json_borrow | 1,161 | 1,106 | 1,239 | 1,198 | 606 | 1,136 |
-| **parse_that** | **736** | **733** | **477** | **900** | **397** | **660** |
-| nom | 399 | 698 | 357 | 446 | 364 | 357 |
-| serde_json | 362 | 496 | 436 | 530 | 414 | 386 |
-| winnow | 347 | 603 | 396 | 391 | 289 | 363 |
-| parse_that (BBNF) | 757 | 902 | 640 | 734 | 307 | 429 |
-| pest | 156 | 172 | 233 | 151 | 94 | 222 |
+| sonic-rs | 2,222 | 1,888 | 2,299 | 2,920 | 1,456 | 2,646 |
+| simd-json | 1,460 | 1,392 | 1,538 | 1,267 | 487 | 1,584 |
+| jiter | 1,257 | 1,113 | 1,004 | 986 | 556 | 1,308 |
+| serde_json_borrow | 1,165 | 1,122 | 1,292 | 1,268 | 617 | 1,196 |
+| **parse_that** | **779** | **727** | **788** | **922** | **389** | **999** |
+| nom | 576 | 690 | 496 | 607 | 391 | 601 |
+| serde_json | 576 | 533 | 549 | 851 | 559 | 602 |
+| winnow | 524 | 645 | 525 | 581 | 390 | 582 |
+| parse_that (BBNF) | 852 | 875 | 866 | 736 | 305 | 663 |
+| pest | 255 | 272 | 222 | 250 | 154 | 249 |
 
 parse_that uses SIMD string scanning (`memchr2`), integer fast path (`madd` +
 `ucvtf`), `Vec` objects (no HashMap), `u32` keyword loads, `Cow<str>` zero-copy
@@ -129,7 +129,7 @@ strings, and `#[cold]` escape decoding.
 The BBNF-generated parser uses `#[derive(Parser)]` from a `.bbnf` grammar file—zero
 hand-written Rust. Hybrid codegen phases (number regex substitution, transparent
 alternation elimination, inline match dispatch, SpanParser dual methods, recursive
-SpanParser codegen) reach 65–120% of the hand-written parser depending on dataset.
+SpanParser codegen) reach 66–120% of the hand-written parser depending on dataset.
 
 See [docs/perf-optimization-rust.md](docs/perf-optimization-rust.md) for the full
 optimization chronicle.
@@ -160,10 +160,10 @@ Rust MB/s on normalize.css (6KB), bootstrap.css (281KB), tailwind-output.css (3.
 
 | Parser | normalize | bootstrap | tailwind | Level |
 |---|---:|---:|---:|---|
-| **parse_that** (hand-rolled) | **498** | **253** | **237** | L1.75 — typed AST |
-| BBNF-generated | 611 | 341 | 214 | L1 — opaque spans |
-| lightningcss | 224 | 102 | — | L2 — semantic |
-| cssparser | 669 | 421 | 262 | L0 — tokenizer only |
+| **parse_that** (hand-rolled) | **494** | **244** | **229** | L1.75 — typed AST |
+| BBNF-generated | 614 | 341 | 215 | L1 — opaque spans |
+| lightningcss | 229 | 104 | — | L2 — semantic |
+| cssparser | 660 | 421 | 254 | L0 — tokenizer only |
 
 parse_that (L1.75) builds a fully typed AST: selectors (compound/complex), values
 (dimension/color/function), typed media queries (conditions, features, range ops),

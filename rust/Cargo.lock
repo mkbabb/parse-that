@@ -58,7 +58,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "bbnf-ir",
  "indexmap",
@@ -72,7 +72,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf-ir"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "regex",
  "rmp-serde",
@@ -82,7 +82,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf_derive"
-version = "0.2.3"
+version = "0.2.5"
 dependencies = [
  "bbnf",
  "bbnf-ir",
