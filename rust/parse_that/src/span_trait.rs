@@ -95,7 +95,10 @@ impl<'a> ParserSpan<'a> for Parser<'a, Span<'a>> {
                             break;
                         }
                     }
-                    None => break,
+                    None => {
+                        state.offset = prev_offset;
+                        break;
+                    }
                 }
             }
 

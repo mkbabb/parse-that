@@ -213,6 +213,11 @@ where
                         break;
                     }
                 } else {
+                    // Restore offset — the inner parser may have advanced past a
+                    // partial match before failing (e.g., `binding.skip(comma)` where
+                    // binding matched but comma didn't). Without this, subsequent
+                    // parsers (like `.then(expression)`) see a wrong offset.
+                    state.offset = prev_offset;
                     break;
                 }
             }
@@ -249,6 +254,7 @@ where
                         break;
                     }
                 } else {
+                    state.offset = prev_offset;
                     break;
                 }
             }

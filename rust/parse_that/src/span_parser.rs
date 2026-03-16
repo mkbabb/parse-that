@@ -430,7 +430,10 @@ impl<'a> SpanParser<'a> {
                                 break;
                             }
                         }
-                        None => break,
+                        None => {
+                            state.offset = prev_offset;
+                            break;
+                        }
                     }
                 }
                 if count >= *lo {
