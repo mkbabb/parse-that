@@ -58,7 +58,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "bbnf-ir",
  "indexmap",
@@ -72,7 +72,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf-ir"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "regex",
  "rmp-serde",
@@ -82,7 +82,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf_derive"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "bbnf",
  "bbnf-ir",
@@ -941,7 +941,7 @@ checksum = "c33a9471896f1c69cecef8d20cbe2f7accd12527ce60845ff44c153bb2a21b49"
 
 [[package]]
 name = "pprint"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "dragonbox",
  "itoap",
