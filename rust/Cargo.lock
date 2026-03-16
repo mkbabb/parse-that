@@ -58,7 +58,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
  "bbnf-ir",
  "indexmap",
@@ -72,7 +72,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf-ir"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "regex",
  "rmp-serde",
@@ -82,7 +82,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf_derive"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
  "bbnf",
  "bbnf-ir",
@@ -780,7 +780,7 @@ dependencies = [
 
 [[package]]
 name = "parse_that"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "aho-corasick",
  "bbnf",
@@ -941,7 +941,7 @@ checksum = "c33a9471896f1c69cecef8d20cbe2f7accd12527ce60845ff44c153bb2a21b49"
 
 [[package]]
 name = "pprint"
-version = "0.3.4"
+version = "0.3.5"
 dependencies = [
  "dragonbox",
  "itoap",
