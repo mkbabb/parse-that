@@ -71,7 +71,7 @@ expr.parse("1 + 2 * 3"); // => [1, "+", [2, "*", 3]]
 ## Structure
 
 ```
-typescript/            TS library (@mkbabb/parse-that v0.8.1)
+typescript/            TS library (@mkbabb/parse-that v0.8.2)
   src/parse/           Isomorphic module layout (see below)
   test/                Vitest tests + benchmark comparators
 rust/                  Rust workspace (nightly, edition 2024)
@@ -119,17 +119,17 @@ MB/s throughput. `bencher` crate with `black_box` on inputs and `b.bytes` set.
 | nom | 576 | 690 | 496 | 607 | 391 | 601 |
 | serde_json | 576 | 533 | 549 | 851 | 559 | 602 |
 | winnow | 524 | 645 | 525 | 581 | 390 | 582 |
-| parse_that (BBNF) | 852 | 875 | 866 | 736 | 305 | 663 |
+| **BBNF AOT** | **1,543** | **1,638** | **1,599** | **1,520** | **1,260** | **1,052** |
 | pest | 255 | 272 | 222 | 250 | 154 | 249 |
 
 parse_that uses SIMD string scanning (`memchr2`), integer fast path (`madd` +
 `ucvtf`), `Vec` objects (no HashMap), `u32` keyword loads, `Cow<str>` zero-copy
 strings, and `#[cold]` escape decoding.
 
-The BBNF-generated parser uses `#[derive(Parser)]` from a `.bbnf` grammar file—zero
-hand-written Rust. Hybrid codegen phases (number regex substitution, transparent
-alternation elimination, inline match dispatch, SpanParser dual methods, recursive
-SpanParser codegen) reach 66–120% of the hand-written parser depending on dataset.
+The BBNF AOT parser uses `#[derive(Parser)]` from a `.bbnf` grammar file—zero
+hand-written Rust. Codegen phases (number regex substitution, transparent alternation
+elimination, inline match dispatch, SpanParser dual methods, recursive SpanParser
+codegen, Vec unboxing) reach 105–324% of the hand-written parser depending on dataset.
 
 See [docs/perf-optimization-rust.md](docs/perf-optimization-rust.md) for the full
 optimization chronicle.
@@ -161,16 +161,15 @@ Rust MB/s on normalize.css (6KB), bootstrap.css (281KB), tailwind-output.css (3.
 | Parser | normalize | bootstrap | tailwind | Level |
 |---|---:|---:|---:|---|
 | **parse_that** (hand-rolled) | **494** | **244** | **229** | L1.75 — typed AST |
-| BBNF-generated | 614 | 341 | 215 | L1 — opaque spans |
+| BBNF AOT | 488 | 661 | 382 | L1 — opaque spans |
 | lightningcss | 229 | 104 | — | L2 — semantic |
 | cssparser | 660 | 421 | 254 | L0 — tokenizer only |
 
 parse_that (L1.75) builds a fully typed AST: selectors (compound/complex), values
 (dimension/color/function), typed media queries (conditions, features, range ops),
 typed @supports conditions, and specificity computation. Monolithic byte-level
-scanners with memchr SIMD. The BBNF-generated parser is faster on
-normalize/bootstrap because it produces L1 opaque spans (no typed AST
-construction overhead).
+scanners with memchr SIMD. The BBNF AOT parser surpasses hand-rolled on
+bootstrap/tailwind due to Vec unboxing and inline dispatch codegen.
 
 TypeScript (relative to parse-that):
 

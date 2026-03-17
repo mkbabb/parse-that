@@ -1,6 +1,6 @@
 # typescript/
 
-TypeScript parser combinator library. Published as `@mkbabb/parse-that` v0.8.1.
+TypeScript parser combinator library. Published as `@mkbabb/parse-that` v0.8.2.
 
 ## Structure
 

@@ -1,8 +1,8 @@
 # Rust JSON Parser Performance: Research, Optimization, and Findings
 
 A chronicle of taking `parse_that`'s Rust JSON parser from mid-tier combinator
-performance (~400–750 MB/s) to 389–999 MB/s while remaining a general-purpose
-parser combinator library.
+performance (~400–750 MB/s) to 389–999 MB/s (hand-rolled) and 1,052–1,638 MB/s
+(BBNF AOT) while remaining a general-purpose parser combinator library.
 
 **Platform**: Apple M-series (AArch64), Rust nightly, default codegen (no
 `-C target-cpu=native`).
@@ -38,7 +38,7 @@ throughput calculation).
 | nom | 576 | 391 | 690 | 496 | 607 | 601 |
 | serde_json | 576 | 559 | 533 | 549 | 851 | 602 |
 | winnow | 524 | 390 | 645 | 525 | 581 | 582 |
-| **parse_that (BBNF)** | **852** | **305** | **875** | **866** | **736** | **663** |
+| **BBNF AOT** | **1,543** | **1,260** | **1,638** | **1,599** | **1,520** | **1,052** |
 | pest | 255 | 154 | 272 | 222 | 250 | 249 |
 
 ### Dataset Profiles
@@ -683,11 +683,11 @@ pass materializes DOM values. Every grammar rule creates a `Pair` allocation
 (boxed span + rule ID). The interpretive PEG engine adds overhead versus compiled
 recursive descent.
 
-### BBNF (~249–552 MB/s) — Hybrid Codegen
+### BBNF AOT (1,052–1,638 MB/s) — Hybrid Codegen + Vec Unboxing
 
-parse_that's BBNF-generated parser (via `#[derive(Parser)]`) was originally
-~14 MB/s—a ~115x gap versus the fast path. Six phases of automatic codegen
-optimizations ("Hybrid BBNF Codegen") closed that to 1.5–4x:
+parse_that's BBNF AOT parser (via `#[derive(Parser)]`) was originally
+~14 MB/s. Ten phases of automatic codegen optimizations brought it to
+1,052--1,638 MB/s, surpassing serde_json_borrow on 5/6 datasets:
 
 | Phase | Technique | Impact |
 |-------|-----------|--------|
@@ -698,24 +698,17 @@ optimizations ("Hybrid BBNF Codegen") closed that to 1.5–4x:
 | E | Recursive SpanParser codegen — all expression types, fixed-point `sp_method_rules` | ~5–10% (CSS-heavy) |
 | F | Doc allocation optimization — `concat()` → DoubleDoc/TripleDoc | ~3–5% (prettify) |
 
-**Remaining overhead vs. combinator path (1.5–4x):**
+**Remaining gap vs. fast path (1.3–2x on most datasets):**
 
-- **`Box<JsonEnum>` allocations**: Every recursive value is still heap-allocated
-  through the generic BBNF value type. Phase B eliminates one layer of boxing
-  for transparent rules, but non-transparent rules still box.
-- **Enum tag overhead**: Each value carries an enum discriminant. The combinator
-  and fast paths use `JsonValue` (a smaller, purpose-built enum).
-- **Generic whitespace trimming**: BBNF rules inject whitespace handling at
-  every level—though dispatch_byte_multi elimination reduces the total vtable
-  hops, the trim overhead remains.
+- **No SIMD string decoding** (`memchr2`): BBNF uses regex-based string scanning
+- **No integer fast path**: `sp_json_number()` scans spans but defers float
+  parsing to stdlib
+- **No `Cow<str>` escape elision**: All strings go through the generic path
+- **No `Vec<(K,V)>` object optimization**: Objects use the generic enum container
 
-**Remaining overhead vs. fast path (3–5x):**
-
-All of the above, plus: no SIMD string decoding (`memchr2`), no integer fast
-path (BBNF uses `sp_json_number()` which scans spans but still defers float
-parsing to stdlib), no `Cow<str>` escape elision, no `Vec<(K,V)>` object
-optimization. These are JSON-specific techniques that a generic grammar
-framework cannot automatically apply.
+Phase 2a's Vec unboxing eliminated the largest source of overhead (`Box<Enum>`
+per array element). The remaining gap is in JSON-specific techniques that a
+generic grammar framework cannot automatically apply.
 
 ---
 
@@ -1103,3 +1096,56 @@ b1bdbfe feat: extend import support to TypeScript library and proc-macro
 8571239 feat: add @import system and O(n+E) performance optimizations
 4f75dad test: strengthen LSP integration tests, add dev workflow docs
 ```
+
+---
+
+## Phase 10: Inline Direct-Dispatch + Vec Unboxing (663–875 → 1,052–1,638 MB/s BBNF AOT)
+
+Two codegen phases targeting the BBNF AOT pipeline, plus a transparent-rule unboxing pass.
+
+### Phase 1: Inline Direct-Dispatch Codegen
+
+**File:** `bbnf/src/generate/ir_codegen/inline.rs`
+
+Generates flat match-arm dispatch instead of combinator chains. For alternations
+where each branch has a disjoint leading byte, the codegen emits a single `match`
+on the input byte that directly invokes each branch's parser inline, eliminating
+closure allocation and vtable indirection.
+
+Measured 0% gain on JSON. The JSON grammar is too flat (most alternations already
+had disjoint FIRST sets handled by Phase C's match dispatch). The architectural
+value is in deeper grammars where multi-level alternation nesting would otherwise
+produce nested combinator chains.
+
+### Phase 2a: Vec Unboxing via `in_vec` Context Threading
+
+**File:** `bbnf/src/generate/ir_codegen/infer.rs`
+
+The BBNF derive macro previously emitted `Vec<Box<Enum>>` for repetition rules.
+Every array element required a heap allocation for the `Box`. Phase 2a threads
+an `in_vec` context flag through the type inference pass (`infer_node_in_vec`
+sub-pass), detecting when a value is collected into a `Vec` and emitting
+`Vec<Enum>` directly, eliminating one heap allocation per element.
+
+Impact on JSON benchmarks: 40--107% throughput gain across datasets.
+
+### Transparent Rule `_unboxed()` Generation
+
+For datasets dominated by deeply nested arrays (e.g., `canada.json` with 56K
+coordinate pairs), the remaining bottleneck was `Box<Enum>` on recursive value
+references. Transparent rules now generate `_unboxed()` variants that return
+the inner type directly without boxing. This produced a 3.2x improvement on
+`canada.json` specifically.
+
+### Results
+
+BBNF AOT now beats `serde_json_borrow` on 5 of 6 JSON datasets.
+
+| Dataset | Before (MB/s) | After (MB/s) | Change |
+|---------|---:|---:|---|
+| data | 852 | 1,543 | +81% |
+| apache | 875 | 1,638 | +87% |
+| citm_catalog | 736 | 1,520 | +107% |
+| canada | 305 | 1,260 | +313% |
+| twitter | 866 | 1,599 | +85% |
+| data-xl | 663 | 1,052 | +59% |

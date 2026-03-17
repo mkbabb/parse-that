@@ -5,7 +5,7 @@ Parser combinator library — TypeScript + Rust monorepo.
 ## Structure
 
 ```
-typescript/                TS library (@mkbabb/parse-that v0.8.1)
+typescript/                TS library (@mkbabb/parse-that v0.8.2)
   src/parse/               Core parser modules (isomorphic layout)
     parser.ts              Parser<T> class, combinators, recover(), memoization, flags
     leaf.ts                Leaf parsers (string, regex, eof, dispatch, etc.)
