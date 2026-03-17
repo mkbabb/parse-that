@@ -717,13 +717,10 @@ impl<'a> SpanParser<'a> {
 
 }
 
-#[path = "span_scanner.rs"]
 mod span_scanner;
 pub(super) use span_scanner::SpanScanner;
 
-#[path = "span_methods.rs"]
-mod span_methods;
+mod methods;
 
-#[path = "span_constructors.rs"]
-mod span_constructors;
-pub use span_constructors::*;
+mod constructors;
+pub use constructors::*;
