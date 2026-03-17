@@ -58,7 +58,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf"
-version = "0.2.8"
+version = "0.2.9"
 dependencies = [
  "bbnf-ir",
  "indexmap",
@@ -72,7 +72,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf-ir"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "rayon",
  "regex",
@@ -83,7 +83,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf_derive"
-version = "0.2.8"
+version = "0.2.9"
 dependencies = [
  "bbnf",
  "bbnf-ir",
@@ -781,7 +781,7 @@ dependencies = [
 
 [[package]]
 name = "parse_that"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "aho-corasick",
  "bbnf",
