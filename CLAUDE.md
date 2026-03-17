@@ -22,13 +22,17 @@ rust/                      Rust workspace
   parse_that/              Core parser combinator lib (crate)
     src/
       parse.rs             Parser<'a, O> struct, ParseError, ParserFn trait
-      combinators.rs       impl block combinators (then, or, map, many, recover, chain, memoize, etc.)
+      combinators/         Parser combinator methods and macros
+        mod.rs             Re-exports
+        methods.rs         impl block combinators (then, or, map, many, recover, chain, memoize, etc.)
+        macros.rs          seq! and alt! N-ary combinator macros
       leaf.rs              Leaf parsers (string, regex, take_until_any_span, dispatch_byte, etc.)
       lazy.rs              LazyParser, lazy() function
-      span_parser.rs       SpanParser<'a> — enum-dispatched, vtable-free
-      span_constructors.rs SpanParser leaf constructors (sp_string, sp_regex, sp_json_*, etc.)
-      span_methods.rs      SpanParser combinator methods and bridge helpers
-      span_scanner.rs      SpanScanner variants (CssIdent, CssWsComment, CssString, CssBlockComment)
+      span_parser/         SpanParser<'a> — enum-dispatched, vtable-free
+        mod.rs             SpanParser struct, SpanKind enum, core dispatch
+        methods.rs         SpanParser combinator methods and bridge helpers
+        constructors.rs    SpanParser leaf constructors (sp_string, sp_regex, sp_json_*, etc.)
+        span_scanner.rs    SpanScanner variants (CssIdent, CssWsComment, CssString, CssBlockComment)
       span_trait.rs        ParserSpan trait (Span combinator aliases), ParserFlat trait
       split.rs             split_balanced(), contains_delimiter() — format-time balanced splitting
       state.rs             ParserState, Span, Diagnostic, diagnostics types (feature-gated)

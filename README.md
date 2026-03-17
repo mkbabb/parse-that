@@ -89,10 +89,10 @@ Both languages share a mirrored module structure:
 | Module | TypeScript (`src/parse/`) | Rust (`parse_that/src/`) |
 |---|---|---|
 | Core | `parser.ts` — Parser\<T\> class | `parse.rs` — Parser\<'a, O\> struct |
-| Combinators | methods on Parser class (incl. recover) | `combinators.rs` — impl blocks (incl. recover) |
+| Combinators | methods on Parser class (incl. recover) | `combinators/` — methods + seq!/alt! macros |
 | Leaf parsers | `leaf.ts` — string, regex, dispatch | `leaf.rs` — string, regex, dispatch_byte |
 | Lazy eval | `lazy.ts` — lazy(), getLazyParser | `lazy.rs` — LazyParser, lazy() |
-| Span / zero-copy | `span.ts` — regexSpan, manySpan, altSpan, takeUntilAnySpan | `span_parser.rs` — SpanParser enum |
+| Span / zero-copy | `span.ts` — regexSpan, manySpan, altSpan, takeUntilAnySpan | `span_parser/` — SpanParser enum + methods |
 | Balanced splitting | `split.ts` — splitBalanced | `split.rs` — split_balanced |
 | State | `state.ts` — ParserState, Span | `state.rs` — ParserState, Span |
 | Debug | `debug.ts` — diagnostics, ANSI output | `debug.rs` — diagnostics (feature-gated) |
