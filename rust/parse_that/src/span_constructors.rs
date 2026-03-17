@@ -128,31 +128,36 @@ pub fn sp_css_block_comment<'a>() -> SpanParser<'a> {
 #[inline]
 pub fn sp_take_until_any<'a>(excluded: &'static [u8]) -> SpanParser<'a> {
     let mut lut = [false; 256];
-    let mut unique = [0u8; 3];
+    let mut unique = [0u8; 8];
     let mut unique_count = 0usize;
-    let mut overflow = false;
     for &b in excluded {
         let idx = b as usize;
         if lut[idx] {
             continue;
         }
         lut[idx] = true;
-        if unique_count < 3 {
+        if unique_count < 8 {
             unique[unique_count] = b;
             unique_count += 1;
-        } else {
-            overflow = true;
         }
     }
-    let kind = if overflow {
-        SpanKind::TakeUntilAnyLut(Box::new(lut))
-    } else {
-        match unique_count {
-            1 => SpanKind::TakeUntilAny1(unique[0]),
-            2 => SpanKind::TakeUntilAny2(unique[0], unique[1]),
-            3 => SpanKind::TakeUntilAny3(unique[0], unique[1], unique[2]),
-            _ => SpanKind::TakeUntilAnyLut(Box::new(lut)),
+    let kind = match unique_count {
+        0 => SpanKind::TakeUntilAnyLut(Box::new(lut)),
+        1 => SpanKind::TakeUntilAny1(unique[0]),
+        2 => SpanKind::TakeUntilAny2(unique[0], unique[1]),
+        3 => SpanKind::TakeUntilAny3(unique[0], unique[1], unique[2]),
+        4..=8 => {
+            // Build SIMD nibble LUTs — exact classification, no false positives
+            let mut lo_lut = [0u8; 16];
+            let mut hi_lut = [0u8; 16];
+            for i in 0..unique_count {
+                let bit = 1u8 << i;
+                lo_lut[(unique[i] & 0x0F) as usize] |= bit;
+                hi_lut[(unique[i] >> 4) as usize] |= bit;
+            }
+            SpanKind::TakeUntilAnySIMD { lo_lut, hi_lut }
         }
+        _ => SpanKind::TakeUntilAnyLut(Box::new(lut)),
     };
     #[cfg(feature = "diagnostics")]
     {

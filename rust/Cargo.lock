@@ -74,6 +74,7 @@ dependencies = [
 name = "bbnf-ir"
 version = "0.1.3"
 dependencies = [
+ "rayon",
  "regex",
  "rmp-serde",
  "serde",
@@ -801,6 +802,7 @@ dependencies = [
  "serde_json",
  "serde_json_borrow",
  "simd-json",
+ "smallbox",
  "smallvec",
  "sonic-rs",
  "winnow",
@@ -1429,6 +1431,12 @@ name = "siphasher"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b2aa850e253778c88a04c3d7323b043aeda9d3e30d5971937c1855769763678e"
+
+[[package]]
+name = "smallbox"
+version = "0.8.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aca054fd9f8c2ebe8557a2433f307e038c0716124efd045daa0388afa5172189"
 
 [[package]]
 name = "smallvec"

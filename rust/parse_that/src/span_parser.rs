@@ -74,6 +74,13 @@ pub(super) enum SpanKind<'a> {
     /// LUT-based byte scanner for negated character classes (`[^...]+`) when
     /// the excluded set is larger than three bytes.
     TakeUntilAnyLut(Box<[bool; 256]>),
+    /// SIMD nibble-LUT byte scanner for negated character classes when the
+    /// excluded set has 4–8 unique bytes. Two 16-byte LUTs classify 16 bytes/cycle
+    /// via `swizzle_dyn` (vpshufb / tbl).
+    TakeUntilAnySIMD {
+        lo_lut: [u8; 16],
+        hi_lut: [u8; 16],
+    },
 
     // === Domain-specific monolithic scanners (JSON, CSS, etc.) ===
     Scanner(SpanScanner),
@@ -384,6 +391,65 @@ impl<'a> SpanParser<'a> {
                 while i < end && !lut[unsafe { *bytes.get_unchecked(i) } as usize] {
                     i += 1;
                 }
+                if i == start {
+                    #[cfg(feature = "diagnostics")]
+                    if let Some(lbl) = self.label {
+                        state.add_expected(lbl);
+                    }
+                    return None;
+                }
+                state.offset = i;
+                Some(Span::new(start, i, state.src))
+            }
+            SpanKind::TakeUntilAnySIMD { lo_lut, hi_lut } => {
+                use std::simd::prelude::*;
+
+                let lo = u8x16::from_array(*lo_lut);
+                let hi = u8x16::from_array(*hi_lut);
+                let lo_mask_const = u8x16::splat(0x0F);
+
+                let bytes = state.src_bytes;
+                let start = state.offset;
+                let end = bytes.len();
+                let mut i = start;
+
+                // SIMD: classify 16 bytes at a time
+                while i + 16 <= end {
+                    let chunk = u8x16::from_slice(&bytes[i..i + 16]);
+                    let lo_nibbles = chunk & lo_mask_const;
+                    let hi_nibbles = chunk >> 4;
+
+                    let lo_result = lo.swizzle_dyn(lo_nibbles);
+                    let hi_result = hi.swizzle_dyn(hi_nibbles);
+                    let matched = lo_result & hi_result;
+
+                    let is_excluded = matched.simd_ne(u8x16::splat(0));
+                    if !is_excluded.any() {
+                        i += 16;
+                        continue;
+                    }
+                    i += is_excluded.to_bitmask().trailing_zeros() as usize;
+                    // Found an excluded byte — break to return result
+                    if i == start {
+                        #[cfg(feature = "diagnostics")]
+                        if let Some(lbl) = self.label {
+                            state.add_expected(lbl);
+                        }
+                        return None;
+                    }
+                    state.offset = i;
+                    return Some(Span::new(start, i, state.src));
+                }
+
+                // Scalar tail: use nibble LUTs for remaining bytes
+                while i < end {
+                    let b = unsafe { *bytes.get_unchecked(i) };
+                    if lo_lut[(b & 0x0F) as usize] & hi_lut[(b >> 4) as usize] != 0 {
+                        break;
+                    }
+                    i += 1;
+                }
+
                 if i == start {
                     #[cfg(feature = "diagnostics")]
                     if let Some(lbl) = self.label {

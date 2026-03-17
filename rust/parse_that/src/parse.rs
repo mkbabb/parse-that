@@ -1,3 +1,5 @@
+use smallbox::{SmallBox, space::S32};
+
 use crate::leaf::trim_leading_whitespace;
 use crate::state::ParserState;
 
@@ -57,7 +59,7 @@ const FLAG_SAVE_STATE: u8 = 0b0010;
 const FLAG_EOF: u8 = 0b0100;
 
 pub struct Parser<'a, Output> {
-    pub parser_fn: Box<dyn ParserFn<'a, Output> + 'a>,
+    pub parser_fn: SmallBox<dyn ParserFn<'a, Output> + 'a, S32>,
     flags: u8,
 }
 
@@ -69,7 +71,7 @@ where
     #[inline]
     pub fn new(parser_fn: impl ParserFn<'a, Output>) -> Parser<'a, Output> {
         Parser {
-            parser_fn: Box::new(parser_fn),
+            parser_fn: SmallBox::new(parser_fn),
             flags: 0,
         }
     }
