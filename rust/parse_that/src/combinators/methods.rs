@@ -517,6 +517,67 @@ where
         Parser::new(sep_by_ws)
     }
 
+    /// Fused sep_by + whitespace trimming + speculative termination.
+    /// Before attempting the separator, peeks at the next non-whitespace byte.
+    /// If it matches `terminator`, breaks immediately without checkpoint/restore.
+    #[inline]
+    pub fn sep_by_ws_until<Output2>(
+        self,
+        sep: Parser<'a, Output2>,
+        bounds: impl RangeBounds<usize> + 'a,
+        terminator: &'static [u8],
+    ) -> Parser<'a, Vec<Output>>
+    where
+        Output2: 'a,
+    {
+        let (lower_bound, upper_bound) = extract_bounds(bounds);
+
+        let sep_by_ws = move |state: &mut ParserState<'a>| {
+            let mut values = Vec::with_capacity(4);
+
+            trim_leading_whitespace_mut(state);
+
+            if let Some(value) = self.call(state) {
+                values.push(value);
+            } else if lower_bound == 0 {
+                return Some(values);
+            } else {
+                return None;
+            }
+
+            while values.len() < upper_bound {
+                let cp = state.offset;
+                trim_leading_whitespace_mut(state);
+                // Peek terminator — skip separator attempt entirely
+                if let Some(&b) = state.src_bytes.get(state.offset) {
+                    if terminator.contains(&b) {
+                        break;
+                    }
+                }
+                if sep.parser_fn.call(state).is_none() {
+                    state.offset = cp;
+                    break;
+                }
+                trim_leading_whitespace_mut(state);
+                if let Some(value) = self.call(state) {
+                    values.push(value);
+                } else {
+                    state.offset = cp;
+                    break;
+                }
+            }
+
+            if values.len() >= lower_bound {
+                trim_leading_whitespace_mut(state);
+                Some(values)
+            } else {
+                None
+            }
+        };
+
+        Parser::new(sep_by_ws)
+    }
+
     /// Error recovery combinator. On success, returns the result normally.
     /// On failure, snapshots the current diagnostic into the collected
     /// diagnostics list, then runs `sync` to skip past the bad content
