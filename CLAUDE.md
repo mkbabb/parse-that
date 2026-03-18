@@ -107,6 +107,7 @@ Cargo.toml uses crates.io version-only deps (no absolute paths).
 - Rust: `pprint` (path dep to `/Programming/pprint`) for pretty-printing
 - Rust: nightly required — `#![feature(cold_path)]`
 - Rust: `Parser<'a, O>` (boxed dyn) + `SpanParser<'a>` (enum-dispatched, vtable-free)
+- Rust: `SmallBox<S32>` — 32-byte inline closure storage for parser functions, avoids heap allocation for typical parsers
 - Rust: `diagnostics` Cargo feature — expected sets, suggestions, secondary spans, error recovery
 - Both: `recover(sync, sentinel)` combinator — parse past errors, collect multi-error diagnostics
 - Both: `minus(excluded)` combinator — EBNF/BNF set-difference semantics (rejects if excluded matches at same position)

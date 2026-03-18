@@ -111,7 +111,7 @@ MB/s throughput. `bencher` crate with `black_box` on inputs and `b.bytes` set.
 
 | Parser | data.json | apache | twitter | citm_catalog | canada | data-xl |
 |---|---:|---:|---:|---:|---:|---:|
-| sonic-rs | 2,222 | 1,888 | 2,299 | 2,920 | 1,456 | 2,646 |
+| sonic-rs | 2,323 | 1,949 | 2,515 | 3,037 | 1,521 | 2,646 |
 | simd-json | 1,460 | 1,392 | 1,538 | 1,267 | 487 | 1,584 |
 | jiter | 1,257 | 1,113 | 1,004 | 986 | 556 | 1,308 |
 | serde_json_borrow | 1,165 | 1,122 | 1,292 | 1,268 | 617 | 1,196 |
@@ -119,7 +119,7 @@ MB/s throughput. `bencher` crate with `black_box` on inputs and `b.bytes` set.
 | nom | 576 | 690 | 496 | 607 | 391 | 601 |
 | serde_json | 576 | 533 | 549 | 851 | 559 | 602 |
 | winnow | 524 | 645 | 525 | 581 | 390 | 582 |
-| **BBNF AOT** | **1,543** | **1,638** | **1,599** | **1,520** | **1,260** | **1,052** |
+| **BBNF AOT (borrow)** | **2,077** | **2,524** | **2,325** | **2,129** | **776** | **1,052** |
 | pest | 255 | 272 | 222 | 250 | 154 | 249 |
 
 parse_that uses SIMD string scanning (`memchr2`), integer fast path (`madd` +
@@ -127,9 +127,11 @@ parse_that uses SIMD string scanning (`memchr2`), integer fast path (`madd` +
 strings, and `#[cold]` escape decoding.
 
 The BBNF AOT parser uses `#[derive(Parser)]` from a `.bbnf` grammar file—zero
-hand-written Rust. Codegen phases (number regex substitution, transparent alternation
-elimination, inline match dispatch, SpanParser dual methods, recursive SpanParser
-codegen, Vec unboxing) reach 105–324% of the hand-written parser depending on dataset.
+hand-written Rust. All benchmarks use mimalloc. Codegen phases (number regex
+substitution, transparent alternation elimination, inline match dispatch, SpanParser
+dual methods, recursive SpanParser codegen, Vec unboxing) reach 200–347% of the
+hand-written parser depending on dataset. The borrow tier is shown above; the span
+tier (zero-copy, no DOM) reaches 3,402 MB/s on data.json.
 
 See [docs/perf-optimization-rust.md](docs/perf-optimization-rust.md) for the full
 optimization chronicle.
