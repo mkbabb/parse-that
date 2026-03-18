@@ -16,7 +16,7 @@ The question: how close can a zero-dependency, scannerless, runtime-compiled com
 
 ## 2. Methodology: Fair Benchmarking
 
-### The Cardinal Sin We Found
+### Correcting Benchmark Configuration
 
 Our initial Chevrotain benchmark ran with `outputCst: false`—recognizer-only mode. It validated syntax but built no JS objects. Meanwhile parse-that was constructing full `Object.fromEntries()` trees. Chevrotain looked 2x faster than it actually was.
 
@@ -314,7 +314,7 @@ Per-parse allocation dropped from ~357 KB to ~180 KB. Minor GC frequency halved.
 All values ops/s. Higher is better.
 
 **BBNF improvement:** 746 → 4,779 (6.4x)
-**Hand-written with dispatch:** 5,480—fastest non-native parser
+**Hand-written with dispatch:** 5,480—fastest among benchmarked parsers
 
 ### Ratios vs. Chevrotain (value-building mode)
 
@@ -332,7 +332,7 @@ The advantage grows with file size. On number-heavy data (canada.json), dispatch
 
 ## 8. What We Learned
 
-1. **Mutable state is the single biggest win.** Immutable-state combinators are elegant but allocate on every call. A single threaded `ParserState` with in-place mutation eliminated ~4,000 heap objects per parse. This is the difference between "academic exercise" and "production viable."
+1. **Mutable state is the single biggest win.** Immutable-state combinators are elegant but allocate on every call. A single threaded `ParserState` with in-place mutation eliminated ~4,000 heap objects per parse. The numbers above show the impact.
 2. **FIRST-set dispatch turns O(n) alternation into O(1).** Classical LL(1) lookahead tables work at runtime too. The BBNF compiler computes them automatically; the `dispatch()` combinator exposes them manually. Both beat sequential `any()` by 1.1-1.9x depending on the grammar.
 3. **Scannerless can beat lexer-based.** Chevrotain's 2-phase architecture (moo lexer → parser) creates `IToken` objects for every token. parse-that's scannerless approach avoids token object allocation entirely. The sticky-regex `test()` + `substring()` path is effectively a zero-alloc "inline lexer" that never materializes tokens.
 4. **V8's megamorphic IC ceiling is real but manageable.** The closure-per-combinator pattern causes megamorphic dispatch at alternation boundaries. FIRST-set dispatch reduces the number of calls (not the polymorphism), which is enough. A full fix would require a tagged-union architecture—a future project.
