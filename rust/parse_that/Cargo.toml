@@ -74,6 +74,14 @@ harness = false
 name = "bbnf_css"
 harness = false
 
+[[bench]]
+name = "bbnf_json_owned"
+harness = false
+
+[[bench]]
+name = "bbnf_json_borrow"
+harness = false
+
 [dependencies]
 pprint = "0.3"
 regex = { version = "1.11", features = ["perf"] }
@@ -100,3 +108,5 @@ lightningcss = "1.0.0-alpha.70"
 cssparser = "0.34"
 bbnf = "0.2"
 bbnf_derive = "0.2"
+mimalloc = "0.1"
+fast-float2 = "0.2"

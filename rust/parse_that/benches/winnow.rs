@@ -1,3 +1,5 @@
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -54,7 +56,7 @@ fn string<'i>(input: &mut &'i str) -> ModalResult<&'i str> {
 fn string_content<'i>(input: &mut &'i str) -> ModalResult<&'i str> {
     let start = *input;
     loop {
-        let _: &str = take_while(0.., |c: char| c != '"' && c != '\\')
+        let _: &str = take_while(0.., |c: char| c != '"' && c != '\')
             .parse_next(input)?;
 
         if input.is_empty() || input.starts_with('"') {
@@ -66,7 +68,7 @@ fn string_content<'i>(input: &mut &'i str) -> ModalResult<&'i str> {
         let _: char = any.parse_next(input)?;
         let esc: char = any.parse_next(input)?;
         match esc {
-            '"' | '\\' | '/' | 'b' | 'f' | 'n' | 'r' | 't' => {}
+            '"' | '\' | '/' | 'b' | 'f' | 'n' | 'r' | 't' => {}
             'u' => {
                 let _: &str = take(4usize).parse_next(input)?;
             }
@@ -98,7 +100,8 @@ fn key_value<'i>(input: &mut &'i str) -> ModalResult<(&'i str, JsonValue<'i>)> {
 }
 
 fn ws<'i>(input: &mut &'i str) -> ModalResult<&'i str> {
-    take_while(0.., |c: char| " \t\r\n".contains(c)).parse_next(input)
+    take_while(0.., |c: char| " 	
+".contains(c)).parse_next(input)
 }
 
 // ── Benchmarks ───────────────────────────────────────────────────────────

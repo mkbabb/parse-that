@@ -1,3 +1,5 @@
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -19,11 +21,12 @@ use nom::{
 use std::str;
 
 pub fn is_string_character(c: char) -> bool {
-    c != '"' && c != '\\'
+    c != '"' && c != '\'
 }
 
 pub fn is_space(c: char) -> bool {
-    c == ' ' || c == '\t' || c == '\r' || c == '\n'
+    c == ' ' || c == '	' || c == '' || c == '
+'
 }
 
 fn sp(i: &str) -> IResult<&str, &str> {
@@ -47,8 +50,8 @@ fn string(i: &str) -> IResult<&str, &str> {
             alt((
                 escaped(
                     take_while1(is_string_character),
-                    '\\',
-                    one_of("\"bfnrt\\/u"),
+                    '\',
+                    one_of("\"bfnrt\/u"),
                 ),
                 // Handle empty strings
                 tag(""),

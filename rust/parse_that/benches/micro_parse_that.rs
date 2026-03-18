@@ -1,3 +1,5 @@
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 #[macro_use]
 extern crate bencher;
 use bencher::{Bencher, black_box};
@@ -48,7 +50,8 @@ fn json_string_unescaped(b: &mut Bencher) {
 }
 
 fn json_string_escaped(b: &mut Bencher) {
-    let unit = r#"alpha\nbeta\tgamma\"delta\\omega\u0041"#;
+    let unit = r#"alpha
+beta	gamma\"delta\omegaA"#;
     let content = unit.repeat(128);
     let input = format!("\"{content}\"");
     b.bytes = input.len() as u64;
@@ -86,7 +89,8 @@ fn trim_ws_scalar(bytes: &[u8], mut i: usize) -> usize {
     let end = bytes.len();
     while i < end {
         match bytes[i] {
-            b' ' | b'\t' | b'\n' | b'\r' => i += 1,
+            b' ' | b'	' | b'
+' | b'' => i += 1,
             _ => break,
         }
     }
@@ -100,7 +104,8 @@ fn trim_ws_chunked(bytes: &[u8], mut i: usize) -> usize {
         let chunk = &bytes[i..i + 8];
         if chunk
             .iter()
-            .all(|b| matches!(*b, b' ' | b'\t' | b'\n' | b'\r'))
+            .all(|b| matches!(*b, b' ' | b'	' | b'
+' | b''))
         {
             i += 8;
         } else {
@@ -111,14 +116,16 @@ fn trim_ws_chunked(bytes: &[u8], mut i: usize) -> usize {
 }
 
 fn ws_trim_scalar(b: &mut Bencher) {
-    let input = format!("{}x", " \t\n\r".repeat(2048));
+    let input = format!("{}x", " 	
+".repeat(2048));
     let bytes = input.as_bytes();
     b.bytes = bytes.len() as u64;
     b.iter(|| black_box(trim_ws_scalar(black_box(bytes), 0)));
 }
 
 fn ws_trim_chunked(b: &mut Bencher) {
-    let input = format!("{}x", " \t\n\r".repeat(2048));
+    let input = format!("{}x", " 	
+".repeat(2048));
     let bytes = input.as_bytes();
     b.bytes = bytes.len() as u64;
     b.iter(|| black_box(trim_ws_chunked(black_box(bytes), 0)));
