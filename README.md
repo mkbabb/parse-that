@@ -117,9 +117,9 @@ All BBNF numbers use `BumpArena` with monolithic codegen (fresh arena + parser p
 | simd-json | 1,460 | 1,538 | 1,267 | 487 | 1,584 |
 | jiter | 1,257 | 1,004 | 986 | 556 | 1,308 |
 | serde_json_borrow | 1,165 | 1,292 | 1,268 | 617 | 1,196 |
-| **BBNF arena (span)** | **1,250** | **1,372** | **1,627** | **1,112** | **850** |
-| **BBNF arena (borrow)** | **1,019** | **1,156** | **1,257** | **598** | **632** |
-| **BBNF arena (owned)** | **887** | **900** | **1,173** | **595** | **567** |
+| **BBNF span** | **1,250** | **1,372** | **1,627** | **1,112** | **850** |
+| **BBNF borrow** | **1,019** | **1,156** | **1,257** | **598** | **632** |
+| **BBNF copy** | **887** | **900** | **1,173** | **595** | **567** |
 | nom | 576 | 496 | 607 | 391 | 601 |
 | serde_json | 576 | 549 | 851 | 559 | 602 |
 | winnow | 524 | 525 | 581 | 390 | 582 |
@@ -158,7 +158,7 @@ Rust MB/s on normalize.css (6KB), bootstrap.css (281KB), tailwind-output.css (3.
 
 | Parser | normalize | bootstrap | tailwind | Level |
 |---|---:|---:|---:|---|
-| **BBNF arena (fast)** | **760** | **331** | **28** | L0 — opaque spans, `@ws` SIMD |
+| **BBNF span** | **760** | **331** | **28** | L0 — opaque spans, `@ws` SIMD |
 | cssparser | 655 | 424 | 402 | L0 — tokenizer only |
 | lightningcss | 257 | 117 | 94 | L2 — semantic |
 
