@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::ops::RangeBounds;
 
 use crate::leaf::trim_leading_whitespace_mut;
@@ -151,6 +153,19 @@ where
     }
 
     #[inline]
+    pub fn map_with_ctx<Output2, F>(self, f: F) -> Parser<'a, Output2>
+    where
+        Output2: 'a,
+        F: Fn(Output, &mut ParserState<'a>) -> Output2 + 'a,
+    {
+        let map = move |state: &mut ParserState<'a>| {
+            let result = self.call(state)?;
+            Some(f(result, state))
+        };
+        Parser::new(map)
+    }
+
+    #[inline]
     pub fn map_with_state<Output2>(
         self,
         f: fn(Output, usize, &mut ParserState<'a>) -> Output2,
@@ -197,9 +212,9 @@ where
 
         let many = move |state: &mut ParserState<'a>| {
             let est = if lower_bound > 0 {
-                lower_bound.max(4)
+                lower_bound.max(16)
             } else {
-                4
+                16
             };
             let mut values = Vec::with_capacity(est);
 
@@ -234,10 +249,7 @@ where
     /// Like `many()` but returns `SmallVec<A>` — inline storage avoids heap
     /// allocation for small collections.
     #[inline]
-    pub fn many_small<A>(
-        self,
-        bounds: impl RangeBounds<usize> + 'a,
-    ) -> Parser<'a, SmallVec<A>>
+    pub fn many_small<A>(self, bounds: impl RangeBounds<usize> + 'a) -> Parser<'a, SmallVec<A>>
     where
         A: smallvec::Array<Item = Output> + 'a,
     {
@@ -413,9 +425,9 @@ where
 
         let sep_by = move |state: &mut ParserState<'a>| {
             let est = if lower_bound > 0 {
-                lower_bound.max(4)
+                lower_bound.max(16)
             } else {
-                4
+                16
             };
             let mut values = Vec::with_capacity(est);
 
@@ -472,7 +484,13 @@ where
         let (lower_bound, upper_bound) = extract_bounds(bounds);
 
         let sep_by_ws = move |state: &mut ParserState<'a>| {
-            let mut values = Vec::with_capacity(4);
+            let remaining = state.end - state.offset;
+            let est = if remaining > 4096 {
+                (remaining / 64).clamp(64, 16384)
+            } else {
+                8
+            };
+            let mut values = Vec::with_capacity(est);
 
             // Pre-trim before first element
             trim_leading_whitespace_mut(state);
@@ -533,7 +551,13 @@ where
         let (lower_bound, upper_bound) = extract_bounds(bounds);
 
         let sep_by_ws = move |state: &mut ParserState<'a>| {
-            let mut values = Vec::with_capacity(4);
+            let remaining = state.end - state.offset;
+            let est = if remaining > 4096 {
+                (remaining / 64).clamp(64, 16384)
+            } else {
+                8
+            };
+            let mut values = Vec::with_capacity(est);
 
             trim_leading_whitespace_mut(state);
 
@@ -660,38 +684,85 @@ where
         Parser::new(look_ahead)
     }
 
+    /// State-based memoization for monolithic arena functions.
+    ///
+    /// Cache lives in `ParserState.memo` (dropped with each parse), not in the
+    /// parser closure. No `Output` values stored in the closure — the parser
+    /// only captures `(self, memo_id)`.
+    ///
+    /// The existing `memoize()` is unchanged — box parsers continue using it
+    /// for warm cross-iteration caching.
+    pub fn memoize_state(self, memo_id: usize) -> Parser<'a, Output>
+    where
+        Output: Clone,
+    {
+        let memo = move |state: &mut ParserState<'a>| {
+            let key = state.offset;
+
+            // Check cache.
+            {
+                let cache = state.memo.table_mut::<Output>(memo_id);
+                if let Some(entry) = cache.get(&key).cloned() {
+                    return match entry {
+                        Some((end, val)) => {
+                            state.offset = end;
+                            Some(val)
+                        }
+                        None => None,
+                    };
+                }
+            }
+
+            // Cache miss: parse and store.
+            let result = self.call(state);
+            let entry = result.as_ref().map(|v| (state.offset, v.clone()));
+            state.memo.table_mut::<Output>(memo_id).insert(key, entry);
+            result
+        };
+        Parser::new(memo)
+    }
+
     /// Packrat memoization: cache parse results by input offset.
     /// On cache hit, restores offset and returns cloned value in O(1).
     /// Eliminates exponential re-parsing in ambiguous/cyclic grammars.
+    ///
+    /// Context-aware: when `context_ptr` changes (e.g. fresh arena between
+    /// parses), the cache is cleared to avoid returning stale references.
+    /// For the box path (`context_ptr` is always null), this is a no-op
+    /// comparison and the cache stays warm across iterations.
     pub fn memoize(self) -> Parser<'a, Output>
     where
         Output: Clone,
     {
-        use std::cell::RefCell;
-        use std::collections::HashMap;
-
-        // Cache: offset → None (failed) | Some((end_offset, value))
-        let cache: RefCell<HashMap<usize, Option<(usize, Output)>>> =
-            RefCell::new(HashMap::new());
+        let cache: RefCell<(*const (), HashMap<usize, Option<(usize, Output)>>)> =
+            RefCell::new((std::ptr::null(), HashMap::new()));
 
         let memo = move |state: &mut ParserState<'a>| {
             let key = state.offset;
 
-            // Fast path: check cache without mutation
-            if let Some(entry) = cache.borrow().get(&key) {
-                return match entry {
-                    Some((end_offset, value)) => {
-                        state.offset = *end_offset;
-                        Some(value.clone())
-                    }
-                    None => None,
-                };
+            // Check if context changed (arena swapped) — if so, invalidate
+            {
+                let mut guard = cache.borrow_mut();
+                if guard.0 != state.context_ptr {
+                    guard.1.clear();
+                    guard.0 = state.context_ptr;
+                }
+                // Fast path: cache hit
+                if let Some(entry) = guard.1.get(&key).cloned() {
+                    return match entry {
+                        Some((end_offset, value)) => {
+                            state.offset = end_offset;
+                            Some(value)
+                        }
+                        None => None,
+                    };
+                }
             }
 
             // Cache miss: parse and store result
             let result = self.call(state);
             let entry = result.as_ref().map(|v| (state.offset, v.clone()));
-            cache.borrow_mut().insert(key, entry);
+            cache.borrow_mut().1.insert(key, entry);
             result
         };
 

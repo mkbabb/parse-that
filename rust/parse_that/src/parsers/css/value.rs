@@ -24,14 +24,14 @@ pub(super) fn parse_value_inline<'a>(state: &mut ParserState<'a>) -> Option<CssV
             let hex_len = i - start - 1;
             if matches!(hex_len, 3 | 4 | 6 | 8) {
                 state.offset = i;
-                Some(CssValue::Color(CssColor::Hex(Span::new(start, i, state.src))))
+                Some(CssValue::Color(CssColor::Hex(Span::new(
+                    start, i, state.src,
+                ))))
             } else {
                 None
             }
         }
-        b'"' | b'\'' => {
-            css_string_fast(state).map(CssValue::String)
-        }
+        b'"' | b'\'' => css_string_fast(state).map(CssValue::String),
         b',' => {
             state.offset += 1;
             Some(CssValue::Comma)
@@ -40,9 +40,7 @@ pub(super) fn parse_value_inline<'a>(state: &mut ParserState<'a>) -> Option<CssV
             state.offset += 1;
             Some(CssValue::Slash)
         }
-        b'0'..=b'9' | b'.' => {
-            parse_number_value_inline(state)
-        }
+        b'0'..=b'9' | b'.' => parse_number_value_inline(state),
         b'-' => {
             // Could be: negative number (-5, -.5, -1px), CSS ident (-webkit-xxx, --custom),
             // or standalone operator (in calc)
@@ -89,9 +87,7 @@ pub(super) fn parse_value_inline<'a>(state: &mut ParserState<'a>) -> Option<CssV
             state.offset = cp;
             None
         }
-        b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
-            parse_ident_or_function_inline(state)
-        }
+        b'a'..=b'z' | b'A'..=b'Z' | b'_' => parse_ident_or_function_inline(state),
         _ => None,
     }
 }
@@ -114,7 +110,9 @@ pub(super) fn parse_number_value_inline<'a>(state: &mut ParserState<'a>) -> Opti
 }
 
 #[inline]
-pub(super) fn parse_ident_or_function_inline<'a>(state: &mut ParserState<'a>) -> Option<CssValue<'a>> {
+pub(super) fn parse_ident_or_function_inline<'a>(
+    state: &mut ParserState<'a>,
+) -> Option<CssValue<'a>> {
     let name = css_ident_fast(state)?;
 
     // Check for function call
@@ -145,8 +143,17 @@ pub(super) fn parse_ident_or_function_inline<'a>(state: &mut ParserState<'a>) ->
         let name_str = name.as_str();
         if matches!(
             name_str,
-            "rgb" | "rgba" | "hsl" | "hsla" | "hwb" | "lab" | "lch"
-                | "oklab" | "oklch" | "color" | "color-mix"
+            "rgb"
+                | "rgba"
+                | "hsl"
+                | "hsla"
+                | "hwb"
+                | "lab"
+                | "lch"
+                | "oklab"
+                | "oklch"
+                | "color"
+                | "color-mix"
         ) {
             return Some(CssValue::Color(CssColor::Function { name, args }));
         }

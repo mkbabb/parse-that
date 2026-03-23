@@ -51,7 +51,13 @@ pub(super) fn css_complex_selector<'a>() -> Parser<'a, CssSelector<'a>> {
                 combinator
             } else if state.offset > cp && !state.is_at_end() {
                 let next = state.src_bytes.get(state.offset).copied();
-                if matches!(next, Some(b'.' | b'#' | b'[' | b':' | b'*') | Some(b'a'..=b'z') | Some(b'A'..=b'Z') | Some(b'_')) {
+                if matches!(
+                    next,
+                    Some(b'.' | b'#' | b'[' | b':' | b'*')
+                        | Some(b'a'..=b'z')
+                        | Some(b'A'..=b'Z')
+                        | Some(b'_')
+                ) {
                     Some(Span::new(cp, cp + 1, state.src))
                 } else {
                     state.offset = cp;
@@ -106,7 +112,11 @@ pub(super) fn css_compound_selector<'a>() -> Parser<'a, CssSelector<'a>> {
                 Some(&b'.') => {
                     state.offset += 1;
                     if let Some(name) = css_ident_fast(state) {
-                        parts.push(CssSelector::Class(Span::new(name.start - 1, name.end, state.src)));
+                        parts.push(CssSelector::Class(Span::new(
+                            name.start - 1,
+                            name.end,
+                            state.src,
+                        )));
                     } else {
                         state.offset -= 1;
                         break;
@@ -115,7 +125,11 @@ pub(super) fn css_compound_selector<'a>() -> Parser<'a, CssSelector<'a>> {
                 Some(&b'#') => {
                     state.offset += 1;
                     if let Some(name) = css_ident_fast(state) {
-                        parts.push(CssSelector::Id(Span::new(name.start - 1, name.end, state.src)));
+                        parts.push(CssSelector::Id(Span::new(
+                            name.start - 1,
+                            name.end,
+                            state.src,
+                        )));
                     } else {
                         state.offset -= 1;
                         break;
@@ -247,7 +261,7 @@ pub(super) fn css_pseudo_selector<'a>() -> Parser<'a, CssSelector<'a>> {
             if i < len && bytes[i] == b'n' {
                 // An+B form: [+-]?\d*n\s*([+-]\s*\d+)?
                 i += 1; // skip 'n'
-                // Skip whitespace
+                        // Skip whitespace
                 while i < len && matches!(bytes[i], b' ' | b'\t') {
                     i += 1;
                 }
@@ -297,7 +311,10 @@ pub(super) fn css_pseudo_selector<'a>() -> Parser<'a, CssSelector<'a>> {
                     return Some(CssSelector::PseudoFunction { name, args: arg });
                 }
 
-                let args: Vec<CssSelector<'_>> = sel_list.call(state).map(|v| v.into_vec()).unwrap_or_default();
+                let args: Vec<CssSelector<'_>> = sel_list
+                    .call(state)
+                    .map(|v| v.into_vec())
+                    .unwrap_or_default();
                 ws.call(state);
                 close_paren.call(state)?;
                 return Some(CssSelector::PseudoFunction { name, args });

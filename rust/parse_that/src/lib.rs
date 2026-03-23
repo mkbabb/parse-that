@@ -1,6 +1,11 @@
 #![feature(cold_path)]
 #![feature(portable_simd)]
 
+pub use typed_arena::Arena;
+
+pub mod bump_arena;
+pub use bump_arena::BumpArena;
+
 pub mod parse;
 pub use parse::*;
 

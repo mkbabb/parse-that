@@ -11,8 +11,10 @@ mod value;
 pub use media::specificity;
 pub use types::*;
 
-// Re-export scanner functions for span_parser.rs
-pub(crate) use scan::{css_block_comment_fast, css_ident_fast, css_string_fast, css_ws_comment_fast};
+// Re-export scanner functions for span_parser.rs and external codegen.
+pub use scan::{
+    css_block_comment_fast, css_ident_fast, css_string_fast, css_ws_comment_fast,
+};
 
 use declaration::*;
 use media::*;
@@ -73,10 +75,7 @@ fn css_at_rule<'a>() -> Parser<'a, CssNode<'a>> {
                         }
                     }
 
-                    Some(CssNode::AtMedia {
-                        queries,
-                        body,
-                    })
+                    Some(CssNode::AtMedia { queries, body })
                 }
                 b's' if name.as_str() == "supports" => {
                     let condition = parse_supports_condition(state);
@@ -105,10 +104,7 @@ fn css_at_rule<'a>() -> Parser<'a, CssNode<'a>> {
                         value: Vec::new(),
                     });
 
-                    Some(CssNode::AtSupports {
-                        condition,
-                        body,
-                    })
+                    Some(CssNode::AtSupports { condition, body })
                 }
                 b'f' if name.as_str() == "font-face" => {
                     ws.call(state);
@@ -131,7 +127,12 @@ fn css_at_rule<'a>() -> Parser<'a, CssNode<'a>> {
                     }
                     Some(CssNode::AtImport { values })
                 }
-                b'k' | b'-' if matches!(name.as_str(), "keyframes" | "-webkit-keyframes" | "-moz-keyframes") => {
+                b'k' | b'-'
+                    if matches!(
+                        name.as_str(),
+                        "keyframes" | "-webkit-keyframes" | "-moz-keyframes"
+                    ) =>
+                {
                     ws.call(state);
                     let kf_name = kf_name_parser.call(state)?;
                     ws.call(state);
@@ -264,8 +265,9 @@ fn css_rule<'a>() -> Parser<'a, CssNode<'a>> {
 
 pub fn css_stylesheet<'a>() -> Parser<'a, NodeVec<'a>> {
     let rule = css_rule();
-    let ws_only = sp_take_while_byte(|b| b == b' ' || b == b'\t' || b == b'\n' || b == b'\r' || b == 0x0C)
-        .opt_span();
+    let ws_only =
+        sp_take_while_byte(|b| b == b' ' || b == b'\t' || b == b'\n' || b == b'\r' || b == 0x0C)
+            .opt_span();
     let skip = sp_take_until_any(b";}");
     let semi = sp_string(";");
     let close_brace = sp_string("}");

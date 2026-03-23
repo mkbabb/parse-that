@@ -153,9 +153,7 @@ pub fn format_suggestions(state: &ParserState) -> String {
             SuggestionKind::UnclosedDelimiter { .. } => {
                 "help".color(Color::Yellow).bold().to_string()
             }
-            SuggestionKind::TrailingContent { .. } => {
-                "note".color(Color::Cyan).bold().to_string()
-            }
+            SuggestionKind::TrailingContent { .. } => "note".color(Color::Cyan).bold().to_string(),
         };
         result.push(format!("   = {}: {}", prefix, suggestion.message));
     }
@@ -239,7 +237,11 @@ pub fn format_diagnostic(d: &crate::state::Diagnostic, src: &str) -> String {
     let loc = format!("{}:{}", d.line, d.column)
         .color(Color::BrightBlack)
         .to_string();
-    let offset_str = d.furthest_offset.to_string().color(Color::Green).to_string();
+    let offset_str = d
+        .furthest_offset
+        .to_string()
+        .color(Color::Green)
+        .to_string();
     let header = format!("{}    {}    {}", badge, loc, offset_str);
 
     // Build a temporary ParserState for add_cursor
@@ -284,16 +286,15 @@ pub fn format_all_diagnostics(diagnostics: &[crate::state::Diagnostic], src: &st
         return String::new();
     }
 
-    let parts: Vec<String> = diagnostics.iter().map(|d| format_diagnostic(d, src)).collect();
+    let parts: Vec<String> = diagnostics
+        .iter()
+        .map(|d| format_diagnostic(d, src))
+        .collect();
     let count = diagnostics.len();
-    let summary = format!(
-        "{} error{} found",
-        count,
-        if count == 1 { "" } else { "s" }
-    )
-    .color(Color::Red)
-    .bold()
-    .to_string();
+    let summary = format!("{} error{} found", count, if count == 1 { "" } else { "s" })
+        .color(Color::Red)
+        .bold()
+        .to_string();
 
     format!("{}\n\n{}", parts.join("\n\n"), summary)
 }

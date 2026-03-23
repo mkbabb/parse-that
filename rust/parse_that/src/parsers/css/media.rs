@@ -93,10 +93,7 @@ fn parse_media_feature<'a>(state: &mut ParserState<'a>) -> Option<MediaFeature<'
         css_ws_comment_fast(state);
         if state.src_bytes.get(state.offset) == Some(&b')') {
             state.offset += 1;
-            return Some(MediaFeature::Plain {
-                name,
-                value,
-            });
+            return Some(MediaFeature::Plain { name, value });
         }
         state.offset = cp;
         return None;
@@ -105,10 +102,7 @@ fn parse_media_feature<'a>(state: &mut ParserState<'a>) -> Option<MediaFeature<'
     // Bare feature name (e.g., (color))
     if state.src_bytes.get(state.offset) == Some(&b')') {
         state.offset += 1;
-        return Some(MediaFeature::Plain {
-            name,
-            value: None,
-        });
+        return Some(MediaFeature::Plain { name, value: None });
     }
 
     state.offset = cp;
@@ -271,7 +265,9 @@ pub(super) fn parse_media_query_list<'a>(state: &mut ParserState<'a>) -> Vec<Med
 
 // ── Supports Condition parser (L1.75) ───────────────────────
 
-pub(super) fn parse_supports_condition<'a>(state: &mut ParserState<'a>) -> Option<SupportsCondition<'a>> {
+pub(super) fn parse_supports_condition<'a>(
+    state: &mut ParserState<'a>,
+) -> Option<SupportsCondition<'a>> {
     css_ws_comment_fast(state);
 
     // Check for "not" prefix
@@ -411,7 +407,10 @@ pub(super) fn parse_supports_condition<'a>(state: &mut ParserState<'a>) -> Optio
                 if state.src_bytes.get(state.offset) == Some(&b')') {
                     state.offset += 1;
 
-                    let mut result = SupportsCondition::Declaration { property, value: values };
+                    let mut result = SupportsCondition::Declaration {
+                        property,
+                        value: values,
+                    };
 
                     // Check for and/or chains
                     loop {
@@ -494,21 +493,20 @@ pub fn specificity(selector: &CssSelector<'_>) -> Specificity {
         }
         CssSelector::Type(_) | CssSelector::PseudoElement(_) => Specificity(0, 0, 1),
         CssSelector::Universal => Specificity(0, 0, 0),
-        CssSelector::Compound(parts) => {
-            parts.iter().fold(Specificity::zero(), |acc, s| acc + specificity(s))
-        }
-        CssSelector::Complex {
-            left,
-            right,
-            ..
-        } => specificity(left) + specificity(right),
+        CssSelector::Compound(parts) => parts
+            .iter()
+            .fold(Specificity::zero(), |acc, s| acc + specificity(s)),
+        CssSelector::Complex { left, right, .. } => specificity(left) + specificity(right),
         CssSelector::PseudoFunction { name, args } => {
             let name_str = name.as_str();
             match name_str {
                 "where" => Specificity(0, 0, 0),
                 "is" | "not" | "has" => {
                     // Most specific argument
-                    args.iter().map(specificity).max().unwrap_or(Specificity::zero())
+                    args.iter()
+                        .map(specificity)
+                        .max()
+                        .unwrap_or(Specificity::zero())
                 }
                 "nth-child" | "nth-last-child" | "nth-of-type" | "nth-last-of-type" => {
                     Specificity(0, 1, 0)

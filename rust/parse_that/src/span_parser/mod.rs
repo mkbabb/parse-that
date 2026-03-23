@@ -60,7 +60,7 @@ pub(super) enum SpanKind<'a> {
     // === Leaves (no inner parser, no vtable) ===
     StringLiteral(&'static [u8]),
     RegexMatch(Arc<Regex>),
-    AhoCorasickMatch(AhoCorasick),
+    AhoCorasickMatch(Arc<AhoCorasick>),
     TakeWhileByte(fn(u8) -> bool),
     TakeWhileChar(Box<dyn Fn(char) -> bool + 'a>),
     NextN(usize),
@@ -714,7 +714,6 @@ impl<'a> SpanParser<'a> {
             SpanKind::Boxed(inner) => inner.call(state),
         }
     }
-
 }
 
 mod span_scanner;

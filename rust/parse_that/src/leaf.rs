@@ -5,7 +5,28 @@ use std::sync::{Arc, Mutex, OnceLock};
 use crate::parse::Parser;
 use crate::state::{ParserState, Span};
 
-use aho_corasick::{AhoCorasickBuilder, Anchored, Input, MatchKind, StartKind};
+use aho_corasick::{AhoCorasick, AhoCorasickBuilder, Anchored, Input, MatchKind, StartKind};
+
+/// Global Aho-Corasick cache — avoids rebuilding automata on repeated parser construction.
+/// Key is the sorted, joined pattern list.
+pub fn cached_aho_corasick(patterns: &[&str]) -> Arc<AhoCorasick> {
+    static CACHE: OnceLock<Mutex<HashMap<String, Arc<AhoCorasick>>>> = OnceLock::new();
+    let cache = CACHE.get_or_init(|| Mutex::new(HashMap::new()));
+    let key = patterns.join("\x00");
+    let mut map = cache.lock().unwrap();
+    if let Some(ac) = map.get(&key) {
+        return Arc::clone(ac);
+    }
+    let ac = Arc::new(
+        AhoCorasickBuilder::new()
+            .match_kind(MatchKind::LeftmostFirst)
+            .start_kind(StartKind::Anchored)
+            .build(patterns)
+            .expect("failed to build aho-corasick automaton"),
+    );
+    map.insert(key, Arc::clone(&ac));
+    ac
+}
 
 /// Global regex cache — avoids recompiling the same pattern on repeated parser construction.
 pub fn cached_regex(pattern: &str) -> Arc<Regex> {
@@ -29,7 +50,12 @@ pub fn trim_leading_whitespace(state: &ParserState<'_>) -> usize {
     let end = bytes.len();
 
     // Fast path: first byte is not whitespace (most common case)
-    if i >= end || !matches!(unsafe { *bytes.get_unchecked(i) }, b' ' | b'\t' | b'\n' | b'\r') {
+    if i >= end
+        || !matches!(
+            unsafe { *bytes.get_unchecked(i) },
+            b' ' | b'\t' | b'\n' | b'\r'
+        )
+    {
         return 0;
     }
 
@@ -339,11 +365,7 @@ pub fn next_span<'a>(amount: usize) -> Parser<'a, Span<'a>> {
 }
 
 pub fn any_span<'a>(patterns: &[&'a str]) -> Parser<'a, Span<'a>> {
-    let ac = AhoCorasickBuilder::new()
-        .match_kind(MatchKind::LeftmostFirst)
-        .start_kind(StartKind::Anchored)
-        .build(patterns)
-        .expect("failed to build aho-corasick automaton");
+    let ac = cached_aho_corasick(patterns);
     #[cfg(feature = "diagnostics")]
     let label: &'static str = Box::leak(format!("one of {:?}", patterns).into_boxed_str());
 

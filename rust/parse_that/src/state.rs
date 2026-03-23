@@ -1,6 +1,94 @@
+use std::collections::HashMap;
+
 use pprint::Pretty;
 #[cfg(feature = "diagnostics")]
 use smallvec::SmallVec;
+
+// ── State-based memoization ───────────────────────────────────
+
+/// Type-erased memoization store for state-based caching.
+///
+/// Used by generated monolithic arena parsers where the memo cache lives in
+/// `ParserState` (dropped with each parse) rather than in the parser closure.
+/// This avoids storing `Output` values in the closure — no `Output: 'a`
+/// requirement, no `RefCell<HashMap>` per parser object.
+pub struct MemoStore {
+    slots: Vec<MemoSlotInner>,
+}
+
+struct MemoSlotInner {
+    ptr: *mut (),
+    drop_fn: unsafe fn(*mut ()),
+}
+
+unsafe fn drop_memo_table<T>(ptr: *mut ()) {
+    unsafe {
+        let _ = Box::from_raw(ptr as *mut HashMap<usize, Option<(usize, T)>>);
+    }
+}
+
+unsafe fn noop_drop(_ptr: *mut ()) {}
+
+impl MemoStore {
+    #[inline]
+    pub fn new() -> Self {
+        Self {
+            slots: Vec::new(),
+        }
+    }
+
+    /// Get or create a memo table for the given slot ID.
+    ///
+    /// Each ID corresponds to one memoized rule. Tables are created lazily
+    /// on first access and destroyed when the `MemoStore` is dropped
+    /// (end of each parse).
+    #[inline]
+    pub fn table_mut<T: Clone>(
+        &mut self,
+        id: usize,
+    ) -> &mut HashMap<usize, Option<(usize, T)>> {
+        // Grow slots vec if needed.
+        while self.slots.len() <= id {
+            self.slots.push(MemoSlotInner {
+                ptr: std::ptr::null_mut(),
+                drop_fn: noop_drop,
+            });
+        }
+        if self.slots[id].ptr.is_null() {
+            let table = Box::new(HashMap::<usize, Option<(usize, T)>>::new());
+            let ptr = Box::into_raw(table) as *mut ();
+            self.slots[id] = MemoSlotInner {
+                ptr,
+                drop_fn: drop_memo_table::<T>,
+            };
+        }
+        unsafe { &mut *(self.slots[id].ptr as *mut HashMap<usize, Option<(usize, T)>>) }
+    }
+}
+
+impl Drop for MemoStore {
+    fn drop(&mut self) {
+        for slot in &self.slots {
+            if !slot.ptr.is_null() {
+                unsafe {
+                    (slot.drop_fn)(slot.ptr);
+                }
+            }
+        }
+    }
+}
+
+impl std::fmt::Debug for MemoStore {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "MemoStore({})", self.slots.len())
+    }
+}
+
+impl Default for MemoStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 // ── Diagnostic types (feature-gated) ──────────────────────────
 
@@ -73,9 +161,7 @@ impl<'a> Span<'a> {
     }
 }
 
-
-
-#[derive(Pretty, Debug, Default, PartialEq, Clone, Hash, Eq)]
+#[derive(Pretty, Debug)]
 pub struct ParserState<'a> {
     #[pprint(skip)]
     pub src: &'a str,
@@ -86,6 +172,13 @@ pub struct ParserState<'a> {
 
     pub offset: usize,
     pub furthest_offset: usize,
+    #[pprint(skip)]
+    pub context_ptr: *const (),
+
+    /// State-based memoization for monolithic arena parsers.
+    /// Dropped with each parse — no cross-iteration cache retention.
+    #[pprint(skip)]
+    pub memo: MemoStore,
 
     #[cfg(feature = "diagnostics")]
     #[pprint(skip)]
@@ -98,14 +191,49 @@ pub struct ParserState<'a> {
     pub secondary_spans: SmallVec<[SecondarySpan; 4]>,
 }
 
+impl Default for ParserState<'_> {
+    fn default() -> Self {
+        Self {
+            src: "",
+            src_bytes: &[],
+            end: 0,
+            offset: 0,
+            furthest_offset: 0,
+            context_ptr: std::ptr::null(),
+            memo: MemoStore::new(),
+            #[cfg(feature = "diagnostics")]
+            expected: SmallVec::new(),
+            #[cfg(feature = "diagnostics")]
+            suggestions: SmallVec::new(),
+            #[cfg(feature = "diagnostics")]
+            secondary_spans: SmallVec::new(),
+        }
+    }
+}
+
 impl<'a> ParserState<'a> {
     pub fn new(src: &'a str) -> ParserState<'a> {
         ParserState {
             src,
             src_bytes: src.as_bytes(),
             end: src.len(),
-            ..Default::default()
+            offset: 0,
+            furthest_offset: 0,
+            context_ptr: std::ptr::null(),
+            memo: MemoStore::new(),
+            #[cfg(feature = "diagnostics")]
+            expected: SmallVec::new(),
+            #[cfg(feature = "diagnostics")]
+            suggestions: SmallVec::new(),
+            #[cfg(feature = "diagnostics")]
+            secondary_spans: SmallVec::new(),
         }
+    }
+
+    pub fn with_context<C>(src: &'a str, context: &'a C) -> ParserState<'a> {
+        let mut state = Self::new(src);
+        state.context_ptr = context as *const C as *const ();
+        state
     }
 
     pub fn is_at_end(&self) -> bool {

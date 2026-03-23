@@ -37,13 +37,9 @@ pub fn sp_regex<'a>(r: &str) -> SpanParser<'a> {
     }
 }
 
-/// Match any of the given string patterns (Aho-Corasick). Compiled at construction time.
+/// Match any of the given string patterns (Aho-Corasick). Uses global cache.
 pub fn sp_any<'a>(patterns: &[&str]) -> SpanParser<'a> {
-    let ac = AhoCorasickBuilder::new()
-        .match_kind(MatchKind::LeftmostFirst)
-        .start_kind(StartKind::Anchored)
-        .build(patterns)
-        .expect("failed to build aho-corasick automaton");
+    let ac = crate::cached_aho_corasick(patterns);
     #[cfg(feature = "diagnostics")]
     {
         let label: &'static str = Box::leak(format!("one of {:?}", patterns).into_boxed_str());
@@ -120,7 +116,10 @@ pub fn sp_css_string<'a>() -> SpanParser<'a> {
 /// Monolithic CSS block comment scanner: /\*...\*/
 #[inline]
 pub fn sp_css_block_comment<'a>() -> SpanParser<'a> {
-    sp_new!(SpanKind::Scanner(SpanScanner::CssBlockComment), "CSS comment")
+    sp_new!(
+        SpanKind::Scanner(SpanScanner::CssBlockComment),
+        "CSS comment"
+    )
 }
 
 /// Match one or more bytes until any byte in `excluded` is found.

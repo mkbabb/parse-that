@@ -7,7 +7,7 @@ use crate::state::{ParserState, Span};
 
 /// Scan a CSS identifier: -?[a-zA-Z_][\w-]* | --[\w-]+
 /// Returns None if no ident at current offset.
-pub(crate) fn css_ident_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+pub fn css_ident_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     let bytes = state.src_bytes;
     let start = state.offset;
     let len = bytes.len();
@@ -71,7 +71,7 @@ pub(crate) fn css_ident_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>
 
 /// Scan CSS whitespace and comments: (\s | /\*...\*/)*
 /// Always succeeds (returns empty span if no ws/comments).
-pub(crate) fn css_ws_comment_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+pub fn css_ws_comment_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     let bytes = state.src_bytes;
     let start = state.offset;
     let len = bytes.len();
@@ -123,7 +123,7 @@ pub(crate) fn css_ws_comment_fast<'a>(state: &mut ParserState<'a>) -> Option<Spa
 
 /// Scan a CSS quoted string: "..." or '...' with \-escapes.
 /// Returns span including quote delimiters.
-pub(crate) fn css_string_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+pub fn css_string_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     let bytes = state.src_bytes;
     let start = state.offset;
     if start >= bytes.len() {
@@ -160,7 +160,7 @@ pub(crate) fn css_string_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a
 
 /// Scan a CSS block comment: /\*...\*/
 /// Returns span including the delimiters.
-pub(crate) fn css_block_comment_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+pub fn css_block_comment_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     let bytes = state.src_bytes;
     let start = state.offset;
     let len = bytes.len();

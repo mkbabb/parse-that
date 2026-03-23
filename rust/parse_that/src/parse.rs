@@ -1,4 +1,4 @@
-use smallbox::{SmallBox, space::S32};
+use smallbox::{space::S32, SmallBox};
 
 use crate::leaf::trim_leading_whitespace;
 use crate::state::ParserState;
@@ -150,8 +150,24 @@ where
     }
 
     #[inline]
+    pub fn parse_return_state_with_context<C>(
+        &self,
+        src: &'a str,
+        context: &'a C,
+    ) -> (ParserResult<'a, Output>, ParserState<'a>) {
+        let mut state = ParserState::with_context(src, context);
+        let result = self.call(&mut state);
+        (result, state)
+    }
+
+    #[inline]
     pub fn parse(&self, src: &'a str) -> Option<Output> {
         self.parse_return_state(src).0
+    }
+
+    #[inline]
+    pub fn parse_with_context<C>(&self, src: &'a str, context: &'a C) -> Option<Output> {
+        self.parse_return_state_with_context(src, context).0
     }
 
     pub fn parse_or_error(&self, src: &'a str) -> Result<Output, ParseError> {

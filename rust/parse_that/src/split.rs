@@ -74,7 +74,10 @@ mod tests {
 
     #[test]
     fn no_delimiter() {
-        assert_eq!(split_balanced("no commas here", b','), vec!["no commas here"]);
+        assert_eq!(
+            split_balanced("no commas here", b','),
+            vec!["no commas here"]
+        );
     }
 
     #[test]
@@ -100,18 +103,12 @@ mod tests {
 
     #[test]
     fn quoted_strings() {
-        assert_eq!(
-            split_balanced(r#""a,b", c"#, b','),
-            vec![r#""a,b""#, " c"],
-        );
+        assert_eq!(split_balanced(r#""a,b", c"#, b','), vec![r#""a,b""#, " c"],);
     }
 
     #[test]
     fn single_quoted_strings() {
-        assert_eq!(
-            split_balanced("'a,b', c", b','),
-            vec!["'a,b'", " c"],
-        );
+        assert_eq!(split_balanced("'a,b', c", b','), vec!["'a,b'", " c"],);
     }
 
     #[test]

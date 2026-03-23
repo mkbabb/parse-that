@@ -9,7 +9,7 @@ use pprint::Pretty;
 // ── Monolithic number scanner ─────────────────────────────────
 
 /// Result of number scanning: span + whether it's a pure integer.
-pub(crate) struct NumberSpan<'a> {
+pub struct NumberSpan<'a> {
     pub span: Span<'a>,
     pub is_integer: bool,
 }
@@ -17,7 +17,7 @@ pub(crate) struct NumberSpan<'a> {
 /// Scans `[-]digits[.digits][(e|E)[+-]digits]` in one byte loop.
 /// Returns the span and whether the number is a pure integer (no `.` or `e`/`E`).
 #[inline(always)]
-pub(crate) fn number_span_fast_ex<'a>(state: &mut ParserState<'a>) -> Option<NumberSpan<'a>> {
+pub fn number_span_fast_ex<'a>(state: &mut ParserState<'a>) -> Option<NumberSpan<'a>> {
     let bytes = state.src_bytes;
     let start = state.offset;
     let len = bytes.len();
@@ -110,7 +110,7 @@ pub(crate) fn number_span_fast_ex<'a>(state: &mut ParserState<'a>) -> Option<Num
 
 /// Convenience wrapper returning just the span (used by SpanParser).
 #[inline(always)]
-pub(crate) fn number_span_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+pub fn number_span_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     number_span_fast_ex(state).map(|ns| ns.span)
 }
 
@@ -136,9 +136,12 @@ fn parse_json_number_f64(span: Span<'_>, is_integer: bool) -> f64 {
         int = int * 10 + (b - b'0') as u64;
     }
     let num = int as f64;
-    if neg { -num } else { num }
+    if neg {
+        -num
+    } else {
+        num
+    }
 }
-
 
 #[inline(always)]
 fn decode_hex_nibble(b: u8) -> Option<u16> {
@@ -239,7 +242,7 @@ pub(crate) fn json_string_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'
 /// Scans a JSON string `"..."` with `\`-escape handling using SIMD (memchr2).
 /// Returns the span including the quote delimiters (matches regex behavior).
 #[inline(always)]
-pub(crate) fn json_string_fast_quoted<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+pub fn json_string_fast_quoted<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     json_string_fast_inner(state, true)
 }
 
@@ -280,7 +283,10 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
     let json_number = || -> Parser<'a, JsonValue<'a>> {
         Parser::new(move |state: &mut ParserState<'a>| {
             let ns = number_span_fast_ex(state)?;
-            Some(JsonValue::Number(parse_json_number_f64(ns.span, ns.is_integer)))
+            Some(JsonValue::Number(parse_json_number_f64(
+                ns.span,
+                ns.is_integer,
+            )))
         })
     };
 
