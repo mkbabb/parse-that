@@ -107,31 +107,27 @@ materialization and string escape decoding. Higher is better.
 
 MB/s throughput. `bencher` crate with `black_box` on inputs and `b.bytes` set.
 
-#### 10-parser JSON matrix
+#### JSON matrix (cold per-parse, MB/s)
 
-| Parser | data.json | apache | twitter | citm_catalog | canada | data-xl |
-|---|---:|---:|---:|---:|---:|---:|
-| sonic-rs | 2,323 | 1,949 | 2,515 | 3,037 | 1,521 | 2,646 |
-| simd-json | 1,460 | 1,392 | 1,538 | 1,267 | 487 | 1,584 |
-| jiter | 1,257 | 1,113 | 1,004 | 986 | 556 | 1,308 |
-| serde_json_borrow | 1,165 | 1,122 | 1,292 | 1,268 | 617 | 1,196 |
-| **parse_that** | **779** | **727** | **788** | **922** | **389** | **999** |
-| nom | 576 | 690 | 496 | 607 | 391 | 601 |
-| serde_json | 576 | 533 | 549 | 851 | 559 | 602 |
-| winnow | 524 | 645 | 525 | 581 | 390 | 582 |
-| **BBNF AOT (borrow)** | **2,077** | **2,524** | **2,325** | **2,129** | **776** | **1,052** |
-| pest | 255 | 272 | 222 | 250 | 154 | 249 |
+All BBNF numbers use `BumpArena` with monolithic codegen (fresh arena + parser per iteration). Competitors construct per-iteration.
 
-parse_that uses SIMD string scanning (`memchr2`), integer fast path (`madd` +
-`ucvtf`), `Vec` objects (no HashMap), `u32` keyword loads, `Cow<str>` zero-copy
-strings, and `#[cold]` escape decoding.
+| Parser | data.json | twitter | citm_catalog | canada | data_xl |
+|---|---:|---:|---:|---:|---:|
+| sonic-rs | 2,323 | 2,515 | 3,037 | 1,521 | 2,646 |
+| simd-json | 1,460 | 1,538 | 1,267 | 487 | 1,584 |
+| jiter | 1,257 | 1,004 | 986 | 556 | 1,308 |
+| serde_json_borrow | 1,165 | 1,292 | 1,268 | 617 | 1,196 |
+| **BBNF arena (span)** | **1,250** | **1,372** | **1,627** | **1,112** | **850** |
+| **BBNF arena (borrow)** | **1,019** | **1,156** | **1,257** | **598** | **632** |
+| **BBNF arena (owned)** | **887** | **900** | **1,173** | **595** | **567** |
+| nom | 576 | 496 | 607 | 391 | 601 |
+| serde_json | 576 | 549 | 851 | 559 | 602 |
+| winnow | 524 | 525 | 581 | 390 | 582 |
+| pest | 255 | 222 | 250 | 154 | 249 |
 
-The BBNF AOT parser uses `#[derive(Parser)]` from a `.bbnf` grammar file—zero
-hand-written Rust. All benchmarks use mimalloc. Codegen phases (number regex
-substitution, transparent alternation elimination, inline match dispatch, SpanParser
-dual methods, recursive SpanParser codegen, Vec unboxing) reach 200–347% of the
-hand-written parser depending on dataset. The borrow tier is shown above; the span
-tier (zero-copy, no DOM) reaches 3,402 MB/s on data.json.
+parse_that uses SIMD string scanning (`memchr2`), integer fast path, `Vec` objects (no HashMap), `Cow<str>` zero-copy strings, and `#[cold]` escape decoding.
+
+The BBNF AOT parser uses `#[derive(Parser)]` from a `.bbnf` grammar file—zero hand-written Rust. All benchmarks use mimalloc. The monolithic arena codegen emits direct recursive functions with `BumpArena` allocation, dispatch-byte elimination, IIFE elision, and B.1 Span collapse.
 
 See [docs/perf-optimization-rust.md](docs/perf-optimization-rust.md) for the full
 optimization chronicle.
@@ -158,20 +154,15 @@ optimization chronicle.
 
 ### CSS
 
-Rust MB/s on normalize.css (6KB), bootstrap.css (281KB), tailwind-output.css (3.6MB):
+Rust MB/s on normalize.css (6KB), bootstrap.css (281KB), tailwind-output.css (3.6MB). BBNF uses cold `BumpArena` per-parse.
 
 | Parser | normalize | bootstrap | tailwind | Level |
 |---|---:|---:|---:|---|
-| **parse_that** (hand-rolled) | **494** | **244** | **229** | L1.75 — typed AST |
-| BBNF AOT | 488 | 661 | 382 | L1 — opaque spans |
-| lightningcss | 229 | 104 | — | L2 — semantic |
-| cssparser | 660 | 421 | 254 | L0 — tokenizer only |
+| **BBNF arena (fast)** | **760** | **331** | **28** | L0 — opaque spans, `@ws` SIMD |
+| cssparser | 655 | 424 | 402 | L0 — tokenizer only |
+| lightningcss | 257 | 117 | 94 | L2 — semantic |
 
-parse_that (L1.75) builds a fully typed AST: selectors (compound/complex), values
-(dimension/color/function), typed media queries (conditions, features, range ops),
-typed @supports conditions, and specificity computation. Monolithic byte-level
-scanners with memchr SIMD. The BBNF AOT parser surpasses hand-rolled on
-bootstrap/tailwind due to Vec unboxing and inline dispatch codegen.
+BBNF fast uses `@ws` for SIMD comment-aware whitespace and `@inline` for trivial helper rules. Tailwind's 28 MB/s reflects per-rule overhead on ~65K tiny utility classes (~40 bytes each)—fixed costs that don't amortize on small rules.
 
 TypeScript (relative to parse-that):
 
