@@ -35,3 +35,6 @@ pub use split::*;
 
 pub mod state;
 pub use state::*;
+
+// Re-export memchr so generated monolithic code can reference it.
+pub use memchr;
