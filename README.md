@@ -158,11 +158,12 @@ Rust MB/s on normalize.css (6KB), bootstrap.css (281KB), tailwind-output.css (3.
 
 | Parser | normalize | bootstrap | tailwind | Level |
 |---|---:|---:|---:|---|
-| **BBNF span** | **760** | **331** | **28** | L0 — opaque spans, `@ws` SIMD |
-| cssparser | 655 | 424 | 402 | L0 — tokenizer only |
-| lightningcss | 257 | 117 | 94 | L2 — semantic |
+| **BBNF pretty arena** | **659** | **276** | **284** | L1.75 — typed AST for formatting |
+| **BBNF parse-only** | **639** | **939** | **469** | L0 — parse phase isolated |
+| cssparser | 323 | 437 | 360 | L0 — tokenizer, callbacks only |
+| lightningcss | 254 | 117 | 90 | L2 — semantic |
 
-BBNF fast uses `@ws` for SIMD comment-aware whitespace and `@inline` for trivial helper rules. Tailwind's 28 MB/s reflects per-rule overhead on ~65K tiny utility classes (~40 bytes each)—fixed costs that don't amortize on small rules.
+The pretty arena tier produces the full typed AST that gorgeous uses for CSS formatting. A delimiter-driven flat scanner in the monolithic codegen handles `Wrap(Repeat(Alt))` patterns with overlapping FIRST sets—uses forward `memchr` to select the branch, then calls the existing recursive descent for typed output. Grammar-agnostic; all delimiter bytes extracted from the grammar's Literal nodes.
 
 TypeScript (relative to parse-that):
 
