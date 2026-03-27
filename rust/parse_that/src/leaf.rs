@@ -30,9 +30,21 @@ pub fn cached_aho_corasick(patterns: &[&str]) -> Arc<AhoCorasick> {
 
 /// Global regex cache — avoids recompiling the same pattern on repeated parser construction.
 pub fn cached_regex(pattern: &str) -> Arc<Regex> {
-    static CACHE: OnceLock<Mutex<HashMap<String, Arc<Regex>>>> = OnceLock::new();
-    let cache = CACHE.get_or_init(|| Mutex::new(HashMap::new()));
-    let mut map = cache.lock().unwrap();
+    use std::sync::RwLock;
+    static CACHE: OnceLock<RwLock<HashMap<String, Arc<Regex>>>> = OnceLock::new();
+    let cache = CACHE.get_or_init(|| RwLock::new(HashMap::new()));
+
+    // Fast path: read-only lock for cache hit (no contention).
+    {
+        let map = cache.read().unwrap();
+        if let Some(re) = map.get(pattern) {
+            return Arc::clone(re);
+        }
+    }
+
+    // Slow path: write lock for cache miss (rare after warmup).
+    let mut map = cache.write().unwrap();
+    // Double-check after acquiring write lock.
     if let Some(re) = map.get(pattern) {
         return Arc::clone(re);
     }
@@ -94,6 +106,86 @@ pub fn trim_leading_whitespace(state: &ParserState<'_>) -> usize {
 pub fn trim_leading_whitespace_mut(state: &mut ParserState<'_>) {
     let n = trim_leading_whitespace(state);
     state.offset += n;
+}
+
+/// Find the first occurrence of any of 4 target bytes in `haystack`.
+/// Returns `(position, byte_found)`. Uses SIMD to scan 16 bytes per iteration.
+///
+/// Used by delimiter-scan codegen to replace 2 sequential `memchr` calls
+/// (find delimiter, then find pivot within range) with a single pass that
+/// classifies all structural bytes simultaneously.
+#[inline(always)]
+pub fn find_first_of_4(haystack: &[u8], b0: u8, b1: u8, b2: u8, b3: u8) -> Option<(usize, u8)> {
+    use std::simd::prelude::*;
+
+    let v0 = u8x16::splat(b0);
+    let v1 = u8x16::splat(b1);
+    let v2 = u8x16::splat(b2);
+    let v3 = u8x16::splat(b3);
+
+    let len = haystack.len();
+    let mut i = 0;
+
+    // SIMD: 16 bytes at a time.
+    while i + 16 <= len {
+        let chunk = u8x16::from_slice(&haystack[i..]);
+        let mask = chunk.simd_eq(v0)
+            | chunk.simd_eq(v1)
+            | chunk.simd_eq(v2)
+            | chunk.simd_eq(v3);
+        if mask.any() {
+            let pos = mask.to_bitmask().trailing_zeros() as usize;
+            let idx = i + pos;
+            return Some((idx, unsafe { *haystack.get_unchecked(idx) }));
+        }
+        i += 16;
+    }
+
+    // Scalar tail.
+    while i < len {
+        let b = unsafe { *haystack.get_unchecked(i) };
+        if b == b0 || b == b1 || b == b2 || b == b3 {
+            return Some((i, b));
+        }
+        i += 1;
+    }
+
+    None
+}
+
+/// Find the first occurrence of any of 3 target bytes in `haystack`.
+/// Returns `(position, byte_found)`. Uses SIMD to scan 16 bytes per iteration.
+#[inline(always)]
+pub fn find_first_of_3(haystack: &[u8], b0: u8, b1: u8, b2: u8) -> Option<(usize, u8)> {
+    use std::simd::prelude::*;
+
+    let v0 = u8x16::splat(b0);
+    let v1 = u8x16::splat(b1);
+    let v2 = u8x16::splat(b2);
+
+    let len = haystack.len();
+    let mut i = 0;
+
+    while i + 16 <= len {
+        let chunk = u8x16::from_slice(&haystack[i..]);
+        let mask = chunk.simd_eq(v0) | chunk.simd_eq(v1) | chunk.simd_eq(v2);
+        if mask.any() {
+            let pos = mask.to_bitmask().trailing_zeros() as usize;
+            let idx = i + pos;
+            return Some((idx, unsafe { *haystack.get_unchecked(idx) }));
+        }
+        i += 16;
+    }
+
+    while i < len {
+        let b = unsafe { *haystack.get_unchecked(i) };
+        if b == b0 || b == b1 || b == b2 {
+            return Some((i, b));
+        }
+        i += 1;
+    }
+
+    None
 }
 
 #[inline]

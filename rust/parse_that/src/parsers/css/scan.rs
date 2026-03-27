@@ -190,6 +190,73 @@ pub fn css_block_comment_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a
     }
 }
 
+/// Scan from the current offset to find the end of a CSS declaration value.
+/// Returns the number of bytes scanned (relative offset to the terminator).
+/// Terminates at depth-0 `;`, `{`, or `}` — NOT inside `()`, `""`, or `''`.
+///
+/// This is a drop-in replacement for `memchr3(b';', b'{', b'}')` that handles:
+/// - Nested parentheses: `calc(var(--x) * 2)` — `)` doesn't terminate
+/// - Quoted strings: `url("data:image/svg;xml")` — `;` inside quotes doesn't terminate
+/// - Balanced brackets: `[attr]` (less common in values but correct)
+pub fn css_scan_value_end(bytes: &[u8]) -> usize {
+    let len = bytes.len();
+    let mut i = 0;
+    let mut paren_depth: u32 = 0;
+
+    while i < len {
+        let b = unsafe { *bytes.get_unchecked(i) };
+        match b {
+            b'(' => {
+                paren_depth += 1;
+                i += 1;
+            }
+            b')' => {
+                if paren_depth > 0 {
+                    paren_depth -= 1;
+                }
+                i += 1;
+            }
+            b'"' => {
+                // Skip double-quoted string
+                i += 1;
+                while i < len {
+                    let c = unsafe { *bytes.get_unchecked(i) };
+                    if c == b'"' {
+                        i += 1;
+                        break;
+                    }
+                    if c == b'\\' {
+                        i += 1; // skip escaped char
+                    }
+                    i += 1;
+                }
+            }
+            b'\'' => {
+                // Skip single-quoted string
+                i += 1;
+                while i < len {
+                    let c = unsafe { *bytes.get_unchecked(i) };
+                    if c == b'\'' {
+                        i += 1;
+                        break;
+                    }
+                    if c == b'\\' {
+                        i += 1;
+                    }
+                    i += 1;
+                }
+            }
+            b';' | b'{' | b'}' if paren_depth == 0 => {
+                return i;
+            }
+            _ => {
+                i += 1;
+            }
+        }
+    }
+    len // No terminator found — return full length
+}
+
 // ── Leaf token parsers (SpanParser wrappers) ────────────────
 
 pub(super) fn css_ident<'a>() -> SpanParser<'a> {

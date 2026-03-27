@@ -13,7 +13,8 @@ pub use types::*;
 
 // Re-export scanner functions for span_parser.rs and external codegen.
 pub use scan::{
-    css_block_comment_fast, css_ident_fast, css_string_fast, css_ws_comment_fast,
+    css_block_comment_fast, css_ident_fast, css_scan_value_end, css_string_fast,
+    css_ws_comment_fast,
 };
 
 use declaration::*;
