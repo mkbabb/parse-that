@@ -1,6 +1,7 @@
+use std::sync::Arc;
+
 use aho_corasick::{AhoCorasickBuilder, MatchKind, StartKind};
 
-use crate::leaf::cached_regex;
 use crate::parse::ParserFn;
 use crate::state::Span;
 
@@ -23,18 +24,24 @@ pub fn sp_string<'a>(s: &'static str) -> SpanParser<'a> {
     }
 }
 
-/// Match regex pattern. Uses global cache to avoid recompilation.
-pub fn sp_regex<'a>(r: &str) -> SpanParser<'a> {
-    let re = cached_regex(r);
+/// Compile a regex pattern to a bespoke DFA `SpanParser`.
+/// Returns `None` if the pattern is unsupported or exceeds the state limit.
+pub fn sp_compiled_dfa<'a>(pattern: &str) -> Option<SpanParser<'a>> {
+    let dfa = crate::regex::dfa::Dfa::compile(pattern)?;
     #[cfg(feature = "diagnostics")]
     {
-        let label: &'static str = Box::leak(format!("/{}/", r).into_boxed_str());
-        sp_new!(SpanKind::RegexMatch(re), label)
+        let label: &'static str = Box::leak(format!("/{}/", pattern).into_boxed_str());
+        Some(sp_new!(SpanKind::CompiledDfa(Arc::new(dfa)), label))
     }
     #[cfg(not(feature = "diagnostics"))]
     {
-        sp_new!(SpanKind::RegexMatch(re))
+        Some(sp_new!(SpanKind::CompiledDfa(Arc::new(dfa))))
     }
+}
+
+/// Match regex pattern via bespoke DFA engine.
+pub fn sp_regex<'a>(r: &str) -> SpanParser<'a> {
+    sp_compiled_dfa(r).unwrap_or_else(|| panic!("Failed to compile regex to DFA: {}", r))
 }
 
 /// Match any of the given string patterns (Aho-Corasick). Uses global cache.

@@ -1,4 +1,3 @@
-use regex::Regex;
 use std::sync::Arc;
 
 use crate::leaf::{trim_leading_whitespace, trim_leading_whitespace_mut};
@@ -59,7 +58,7 @@ pub struct SpanParser<'a> {
 pub(super) enum SpanKind<'a> {
     // === Leaves (no inner parser, no vtable) ===
     StringLiteral(&'static [u8]),
-    RegexMatch(Arc<Regex>),
+    CompiledDfa(Arc<crate::regex::dfa::Dfa>),
     AhoCorasickMatch(Arc<AhoCorasick>),
     TakeWhileByte(fn(u8) -> bool),
     TakeWhileChar(Box<dyn Fn(char) -> bool + 'a>),
@@ -204,15 +203,16 @@ impl<'a> SpanParser<'a> {
                 }
             }
 
-            SpanKind::RegexMatch(re) => {
-                let slc = state.src.get(state.offset..)?;
-                match re.find_at(slc, 0) {
-                    Some(m) if m.start() == 0 => {
+
+            SpanKind::CompiledDfa(dfa) => {
+                let bytes = &state.src_bytes[state.offset..];
+                match dfa.find_at(bytes, 0) {
+                    Some(end) => {
                         let start = state.offset;
-                        state.offset += m.end();
+                        state.offset += end;
                         Some(Span::new(start, state.offset, state.src))
                     }
-                    _ => {
+                    None => {
                         #[cfg(feature = "diagnostics")]
                         if let Some(lbl) = self.label {
                             state.add_expected(lbl);
