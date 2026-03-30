@@ -58,7 +58,7 @@ pub struct SpanParser<'a> {
 pub(super) enum SpanKind<'a> {
     // === Leaves (no inner parser, no vtable) ===
     StringLiteral(&'static [u8]),
-    CompiledDfa(Arc<crate::regex::dfa::Dfa>),
+    CompiledDfa(Arc<crate::regex_engine::dfa::Dfa>),
     AhoCorasickMatch(Arc<AhoCorasick>),
     TakeWhileByte(fn(u8) -> bool),
     TakeWhileChar(Box<dyn Fn(char) -> bool + 'a>),

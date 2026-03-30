@@ -153,7 +153,7 @@ mod tests {
         // [^\n]+ — self-loops on everything except \n.
         // With Unicode mode, the DFA may have extra states for UTF-8 handling,
         // but the main looping state should have memchr-level acceleration.
-        use crate::regex::dfa::DfaOptions;
+        use crate::regex_engine::dfa::DfaOptions;
         let opts = DfaOptions {
             unicode: false, // ASCII mode for simpler DFA.
             ..DfaOptions::default()
@@ -175,7 +175,7 @@ mod tests {
     #[test]
     fn memchr2_for_json_string() {
         // [^"\\]+ — loops on everything except " and \.
-        use crate::regex::dfa::DfaOptions;
+        use crate::regex_engine::dfa::DfaOptions;
         let opts = DfaOptions {
             unicode: false,
             ..DfaOptions::default()
@@ -197,7 +197,7 @@ mod tests {
     #[test]
     fn accel_for_wider_negated_class() {
         // [^abcde]+ — 5 exit bytes.
-        use crate::regex::dfa::DfaOptions;
+        use crate::regex_engine::dfa::DfaOptions;
         let opts = DfaOptions {
             unicode: false,
             ..DfaOptions::default()

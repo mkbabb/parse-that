@@ -28,9 +28,9 @@ pub fn cached_aho_corasick(patterns: &[&str]) -> Arc<AhoCorasick> {
 }
 
 /// Global DFA cache — avoids recompiling the same pattern on repeated parser construction.
-pub fn cached_dfa(pattern: &str) -> Arc<crate::regex::dfa::Dfa> {
+pub fn cached_dfa(pattern: &str) -> Arc<crate::regex_engine::dfa::Dfa> {
     use std::sync::RwLock;
-    static CACHE: OnceLock<RwLock<HashMap<String, Arc<crate::regex::dfa::Dfa>>>> = OnceLock::new();
+    static CACHE: OnceLock<RwLock<HashMap<String, Arc<crate::regex_engine::dfa::Dfa>>>> = OnceLock::new();
     let cache = CACHE.get_or_init(|| RwLock::new(HashMap::new()));
 
     // Fast path: read-only lock for cache hit (no contention).
@@ -48,7 +48,7 @@ pub fn cached_dfa(pattern: &str) -> Arc<crate::regex::dfa::Dfa> {
         return Arc::clone(dfa);
     }
     let dfa = Arc::new(
-        crate::regex::dfa::Dfa::compile(pattern)
+        crate::regex_engine::dfa::Dfa::compile(pattern)
             .unwrap_or_else(|| panic!("Failed to compile regex to DFA: {}", pattern)),
     );
     map.insert(pattern.to_owned(), Arc::clone(&dfa));
@@ -390,7 +390,7 @@ pub fn string_span<'a>(s: &'a str) -> Parser<'a, Span<'a>> {
 }
 
 #[inline(always)]
-fn dfa_impl<'a>(dfa: &crate::regex::dfa::Dfa, state: &mut ParserState<'a>) -> Option<Span<'a>> {
+fn dfa_impl<'a>(dfa: &crate::regex_engine::dfa::Dfa, state: &mut ParserState<'a>) -> Option<Span<'a>> {
     let bytes = &state.src_bytes[state.offset..];
     let end = dfa.find_at(bytes, 0)?;
     if end == 0 {

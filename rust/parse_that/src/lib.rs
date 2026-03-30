@@ -36,7 +36,7 @@ pub use split::*;
 pub mod state;
 pub use state::*;
 
-pub mod regex;
+pub mod regex_engine;
 
 // Re-export memchr so generated monolithic code can reference it.
 pub use memchr;

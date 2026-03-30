@@ -27,7 +27,7 @@ pub fn sp_string<'a>(s: &'static str) -> SpanParser<'a> {
 /// Compile a regex pattern to a bespoke DFA `SpanParser`.
 /// Returns `None` if the pattern is unsupported or exceeds the state limit.
 pub fn sp_compiled_dfa<'a>(pattern: &str) -> Option<SpanParser<'a>> {
-    let dfa = crate::regex::dfa::Dfa::compile(pattern)?;
+    let dfa = crate::regex_engine::dfa::Dfa::compile(pattern)?;
     #[cfg(feature = "diagnostics")]
     {
         let label: &'static str = Box::leak(format!("/{}/", pattern).into_boxed_str());
