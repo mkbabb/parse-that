@@ -6,18 +6,22 @@ use crate::state::{ParserState, Span};
 
 // ── Re-exports from parsers::scan ──────────────────────────────
 
+#[inline(always)]
 pub fn css_ident_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     super::super::scan::scan_ident(state)
 }
 
+#[inline(always)]
 pub fn css_ws_comment_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     super::super::scan::scan_ws_block_comments(state)
 }
 
+#[inline(always)]
 pub fn css_string_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     super::super::scan::scan_string_quoted(state)
 }
 
+#[inline(always)]
 pub fn css_block_comment_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     super::super::scan::scan_block_comment(state)
 }

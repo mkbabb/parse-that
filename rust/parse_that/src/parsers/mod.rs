@@ -14,7 +14,7 @@ pub mod utils;
 // Behavior-named, language-agnostic. Codegen emits these names.
 // Old CSS/JSON-prefixed names above remain for backward compat.
 
-pub use scan::{scan_ident, scan_string_quoted, scan_ws_block_comments, scan_block_comment, scan_balanced_end};
+pub use scan::{scan_ident, scan_string_quoted, scan_ws_block_comments, scan_block_comment, scan_balanced_end, scan_balanced, BalancedScanConfig};
 pub use json::css_number_span_fast as scan_number_span;
 pub use json::css_number_scan_f64 as scan_number_f64;
 pub use json::json_string_fast_quoted as scan_json_string;
