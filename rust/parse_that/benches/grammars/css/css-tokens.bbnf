@@ -1,5 +1,0 @@
-// CSS shared tokens — imported by all CSS sub-grammars.
-// Avoids name conflicts when multiple CSS grammars are composed.
-
-ident  = /[a-zA-Z_][\w-]*/ ;
-string = /"(?:[^"\\]|\\[\s\S])*"/ | /'(?:[^'\\]|\\[\s\S])*'/ ;

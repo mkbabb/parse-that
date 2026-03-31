@@ -14,73 +14,76 @@ path = "src/lib.rs"
 default = []
 diagnostics = ["dep:colored"]
 
-[[bench]]
-name = "nom"
-harness = false
-
-[[bench]]
-name = "serde"
-harness = false
-
-[[bench]]
-name = "pest"
-harness = false
-
-[[bench]]
-name = "jiter"
-harness = false
-
-[[bench]]
-name = "simd_json"
-harness = false
-
-[[bench]]
-name = "sonic_rs"
-harness = false
-
-[[bench]]
-name = "winnow"
-harness = false
-
-[[bench]]
-name = "serde_json_borrow"
-harness = false
+# ── parse_that benches ──────────────────────────────────────
 
 [[bench]]
 name = "parse_that_combinator"
+path = "benches/parse_that/combinator.rs"
 harness = false
 
 [[bench]]
 name = "micro_parse_that"
+path = "benches/parse_that/micro.rs"
 harness = false
 
 [[bench]]
 name = "parse_that_css"
+path = "benches/parse_that/css.rs"
+harness = false
+
+# ── competitor benches ──────────────────────────────────────
+
+[[bench]]
+name = "nom"
+path = "benches/competitors/nom.rs"
 harness = false
 
 [[bench]]
-name = "lightningcss_bench"
+name = "serde"
+path = "benches/competitors/serde.rs"
 harness = false
 
 [[bench]]
-name = "cssparser_bench"
+name = "pest"
+path = "benches/competitors/pest.rs"
 harness = false
 
 [[bench]]
-name = "bbnf_json"
+name = "jiter"
+path = "benches/competitors/jiter.rs"
 harness = false
 
 [[bench]]
-name = "bbnf_css"
+name = "simd_json"
+path = "benches/competitors/simd_json.rs"
 harness = false
 
 [[bench]]
-name = "bbnf_json_owned"
+name = "sonic_rs"
+path = "benches/competitors/sonic_rs.rs"
 harness = false
 
 [[bench]]
-name = "bbnf_json_borrow"
+name = "winnow"
+path = "benches/competitors/winnow.rs"
 harness = false
+
+[[bench]]
+name = "serde_json_borrow"
+path = "benches/competitors/serde_json_borrow.rs"
+harness = false
+
+[[bench]]
+name = "lightningcss"
+path = "benches/competitors/lightningcss.rs"
+harness = false
+
+[[bench]]
+name = "cssparser"
+path = "benches/competitors/cssparser.rs"
+harness = false
+
+# ── dependencies ────────────────────────────────────────────
 
 [dependencies]
 pprint = "0.3"
@@ -94,7 +97,6 @@ smallbox = { version = "0.8", features = ["nightly"] }
 typed-arena = "2"
 
 [dev-dependencies]
-regex = "1.11"
 serde_json = "1.0.94"
 serde = "1.0.156"
 bencher = "0.1.5"
@@ -108,7 +110,5 @@ winnow = "0.7"
 serde_json_borrow = "0.9"
 lightningcss = "1.0.0-alpha.70"
 cssparser = "0.34"
-bbnf = "0.2"
-bbnf_derive = "0.2"
 mimalloc = "0.1"
 fast-float2 = "0.2"
