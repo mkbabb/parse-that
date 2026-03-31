@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Parser } from "./parser.js";
 import type { ParserFunction } from "./parser.js";
-import type { ParserState, Span } from "./state.js";
+import type { ParserState, ParserContext, Span } from "./state.js";
 import { createParserContext } from "./state.js";
 import { mergeErrorState } from "./utils.js";
 
-function makeParser<T>(parser: ParserFunction<T>, context?: any): Parser<T> {
+function makeParser<T>(parser: ParserFunction<T>, context?: ParserContext): Parser<T> {
     return new Parser(parser, context);
 }
 
@@ -148,7 +147,7 @@ export function string(str: string) {
         stringParser = ((state: ParserState<string>) => {
             if (state.src.charCodeAt(state.offset) === code) {
                 state.offset += 1;
-                (state as any).value = str;
+                state.unsafeSetValue(str);
                 state.isError = false;
                 return state;
             }
@@ -160,7 +159,7 @@ export function string(str: string) {
         stringParser = ((state: ParserState<string>) => {
             if (state.src.startsWith(str, state.offset)) {
                 state.offset += len;
-                (state as any).value = str;
+                state.unsafeSetValue(str);
                 state.isError = false;
                 return state;
             }
@@ -211,12 +210,12 @@ export function regex(
             const end = sticky.lastIndex;
             if (end > savedOffset) {
                 state.offset = end;
-                (state as any).value = state.src.substring(savedOffset, end);
+                state.unsafeSetValue(state.src.substring(savedOffset, end));
                 state.isError = false;
                 return state;
             }
             // Empty match
-            (state as any).value = undefined;
+            state.unsafeSetValue(undefined);
             state.isError = false;
             return state;
         }

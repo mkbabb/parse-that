@@ -15,8 +15,8 @@ export function getLazyParser<T>(fn: () => T): T {
 }
 
 // Closure-local lazy cache — avoids mutating function objects (megamorphic IC pollution)
-export function createLazyCached<T>(fn: () => any): (state: ParserState<T>) => ParserState<T> {
-    let cached: any | undefined;
+export function createLazyCached<T>(fn: () => Parser<T>): (state: ParserState<T>) => ParserState<T> {
+    let cached: Parser<T> | undefined;
     return (state: ParserState<T>) => {
         if (!cached) cached = fn();
         return cached.parser(state) as ParserState<T>;
@@ -32,7 +32,7 @@ export function lazy<T>(
     _propertyName: string,
     descriptor: TypedPropertyDescriptor<() => any>,
 ) {
-    const method = descriptor.value!.bind(target)!;
+    const method = descriptor.value!.bind(target);
 
     descriptor.value = function () {
         return new Parser(

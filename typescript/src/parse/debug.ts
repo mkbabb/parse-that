@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createParserContext, ParserState } from "./state.js";
 import { getLazyParser } from "./lazy.js";
 import { Parser } from "./parser.js";
+import type { ParserFunction } from "./parser.js";
 import { bold, dim, italic, red, green, yellow, cyan, gray, bgRed, bgGreen } from "./ansi.js";
 import { isDiagnosticsEnabled, getLastExpected, getLastSuggestions, getLastSecondarySpans } from "./utils.js";
 import type { Suggestion, SecondarySpan, Diagnostic } from "./utils.js";
@@ -56,9 +56,7 @@ export function addCursor(
     error: boolean = false,
 ): string {
     const lines = state.src.split("\n");
-    const { line: lineNum, column: columnNum } = state.getLineAndColumn
-        ? state.getLineAndColumn()
-        : { line: state.getLineNumber() + 1, column: state.getColumnNumber() };
+    const { line: lineNum, column: columnNum } = state.getLineAndColumn();
 
     const lineIdx = lineNum - 1; // 0-based index
     const startIdx = Math.max(lineIdx - MAX_LINES, 0);
@@ -251,6 +249,7 @@ export function parserPrint(parser: Parser<unknown>): string {
     }
 
     const print = (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         innerParser: Parser<any>,
         id?: number,
     ): string => {
@@ -272,7 +271,7 @@ export function parserPrint(parser: Parser<unknown>): string {
                     return `${args![0]}`;
                 case "wrap":
                 case "trim": {
-                    const [left, right] = args!;
+                    const [left, right] = args! as [Parser<unknown>, Parser<unknown>];
                     return `${print(left, id)} ${parserString} ${print(right, id)}`;
                 }
                 case "trimWhitespace":
@@ -282,25 +281,25 @@ export function parserPrint(parser: Parser<unknown>): string {
                 case "opt":
                     return `${parserString}?`;
                 case "next": {
-                    const [next] = args!;
+                    const [next] = args! as [Parser<unknown>];
                     return `${parserString} >> ${print(next, id)}`;
                 }
                 case "skip": {
-                    const [skip] = args!;
+                    const [skip] = args! as [Parser<unknown>];
                     return `${parserString} << ${print(skip, id)}`;
                 }
                 case "map":
                     return parserString;
                 case "all":
                 case "then": {
-                    const items = args!.map((x: Parser<unknown>) =>
+                    const items = (args! as Parser<unknown>[]).map((x) =>
                         print(x, id),
                     );
                     return `[${items.join(", ")}]`;
                 }
                 case "any":
                 case "or": {
-                    const items = args!.map((x: Parser<unknown>) =>
+                    const items = (args! as Parser<unknown>[]).map((x) =>
                         print(x, id),
                     );
                     return items.join(" | ");
@@ -312,10 +311,10 @@ export function parserPrint(parser: Parser<unknown>): string {
                     return `${parserString} {${bounds}}`;
                 }
                 case "sepBy":
-                    return `${parserString} sepBy ${print(args![0], id)}`;
+                    return `${parserString} sepBy ${print(args![0] as Parser<unknown>, id)}`;
                 case "lazy": {
-                    const [lazy] = args!;
-                    const p = getLazyParser(lazy) as Parser<unknown>;
+                    const [lazy] = args! as [() => Parser<unknown>];
+                    const p = getLazyParser(lazy);
 
                     if (!id) {
                         const s = print(p, p.id);
@@ -379,5 +378,5 @@ export function parserDebug<T>(
         debugDepth--;
         return newState;
     };
-    return new Parser(debug, createParserContext("debug", parser, logger));
+    return new Parser(debug as ParserFunction<T>, createParserContext("debug", parser as Parser<unknown>, logger));
 }

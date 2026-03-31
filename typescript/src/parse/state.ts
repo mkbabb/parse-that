@@ -32,21 +32,21 @@ export class ParserState<T = unknown> {
 
     ok<S>(value: S, offset: number = 0): ParserState<S> {
         this.offset += offset;
-        (this as any).value = value;
+        this.unsafeSetValue(value);
         this.isError = false;
         return this as unknown as ParserState<S>;
     }
 
     err<S>(value?: S, offset: number = 0): ParserState<S> {
         this.offset += offset;
-        (this as any).value = value;
+        this.unsafeSetValue(value);
         this.isError = true;
         return this as unknown as ParserState<S>;
     }
 
     from<S>(value: S, offset: number = 0): ParserState<S> {
         this.offset += offset;
-        (this as any).value = value;
+        this.unsafeSetValue(value);
         return this as unknown as ParserState<S>;
     }
 
@@ -59,6 +59,21 @@ export class ParserState<T = unknown> {
         this.value = saved.value;
         this.isError = false;
         return this;
+    }
+
+    /** Type-erased value setter — single choke point for the mutable-state cast pattern. */
+    unsafeSetValue(value: unknown): void {
+        (this as ParserState<unknown>).value = value as T;
+    }
+
+    /** Type-erased parser invocation via .call() — single choke point for combinator type casts. */
+    unsafeCall(parser: Parser<unknown>): void {
+        parser.call(this as ParserState<unknown>);
+    }
+
+    /** Type-erased raw parser invocation via .parser() — for internal combinator plumbing. */
+    unsafeCallRaw(parser: Parser<unknown>): void {
+        parser.parser(this as ParserState<unknown>);
     }
 
     clone(): ParserState<T> {
@@ -135,23 +150,25 @@ export const parserNames = [
     "altSpan",
     "takeUntilAnySpan",
     "recover",
+    "peek",
+    "lookAhead",
+    "negateSpan",
+    "peekSpan",
+    "notSpan",
+    "minusSpan",
+    "lookAheadSpan",
 ] as const;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ParserContext = {
     name?: (typeof parserNames)[number];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    parser?: Parser<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    args?: any[];
+    parser?: Parser<unknown>;
+    args?: unknown[];
 };
 
 export function createParserContext(
     name: (typeof parserNames)[number],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    parser: Parser<any> | undefined,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...args: any[]
+    parser: Parser<unknown> | undefined,
+    ...args: unknown[]
 ) {
     return {
         name,

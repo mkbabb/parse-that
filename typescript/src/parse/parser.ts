@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createParserContext, ParserState } from "./state.js";
 import type { ParserContext, Span } from "./state.js";
 import { parserDebug, parserPrint } from "./debug.js";
@@ -10,6 +9,7 @@ type ExtractValue<T extends ReadonlyArray<Parser<unknown>>> = {
     [K in keyof T]: T[K] extends Parser<infer V> ? V : never;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- type-erased function pointer; `any` required for variance
 export type ParserFunction<T = string> = (
     val: ParserState<any>,
 ) => ParserState<any>;
@@ -114,7 +114,7 @@ export class Parser<T = string> {
         };
         return new Parser(
             memoize as ParserFunction<T>,
-            createParserContext("memoize", this),
+            createParserContext("memoize", this as Parser<unknown>),
         );
     }
 
@@ -142,7 +142,7 @@ export class Parser<T = string> {
 
         return new Parser(
             mergeMemo as ParserFunction<T>,
-            createParserContext("mergeMemo", this),
+            createParserContext("mergeMemo", this as Parser<unknown>),
         );
     }
 
@@ -279,7 +279,7 @@ export class Parser<T = string> {
             this.parser(state);
 
             if (!state.isError) {
-                parser.parser(state as ParserState<any>);
+                state.unsafeCallRaw(parser as Parser<unknown>);
                 if (!state.isError) {
                     return state;
                 }
@@ -347,7 +347,7 @@ export class Parser<T = string> {
                 if (state.isError) {
                     // excluded failed at post-self position — success
                     state.offset = offset1;
-                    state.value = value1 as any;
+                    state.unsafeSetValue(value1);
                     state.isError = false;
                     return state;
                 } else {
@@ -374,7 +374,7 @@ export class Parser<T = string> {
         const inner = this;
         const minus = (state: ParserState<T>) => {
             const savedOffset = state.offset;
-            excluded.parser(state as ParserState<any>);
+            state.unsafeCallRaw(excluded as Parser<unknown>);
             if (!state.isError) {
                 // excluded matched — fail
                 state.offset = savedOffset;
@@ -437,14 +437,14 @@ export class Parser<T = string> {
             }
             const value = state.value;
             const offsetAfterSelf = state.offset;
-            lookahead.parser(state as ParserState<any>);
+            state.unsafeCallRaw(lookahead as Parser<unknown>);
             if (state.isError) {
                 state.offset = savedOffset;
                 state.isError = true;
                 return state;
             }
             state.offset = offsetAfterSelf;
-            (state as any).value = value;
+            state.unsafeSetValue(value);
             return state;
         };
         return new Parser(
@@ -463,7 +463,7 @@ export class Parser<T = string> {
         const inner = this;
         const wrapParser = (state: ParserState<T>) => {
             const savedOffset = state.offset;
-            start.parser(state as any);
+            state.unsafeCallRaw(start as Parser<unknown>);
             if (state.isError) {
                 state.offset = savedOffset;
                 return state;
@@ -477,7 +477,7 @@ export class Parser<T = string> {
                 return state;
             }
             const value = state.value;
-            (end as Parser<unknown>).parser(state as any);
+            state.unsafeCallRaw(end as Parser<unknown>);
             if (state.isError) {
                 mergeErrorState(state as ParserState<unknown>);
                 reportUnclosedDelimiter(state.src.slice(savedOffset, openEnd), savedOffset);
@@ -485,7 +485,7 @@ export class Parser<T = string> {
                 state.isError = true;
                 return state;
             }
-            (state as any).value = value;
+            state.unsafeSetValue(value);
             return state;
         };
         return new Parser(
@@ -618,7 +618,7 @@ export class Parser<T = string> {
             }
             mergeErrorState(state as ParserState<unknown>);
             state.isError = true;
-            (state as any).value = [];
+            state.unsafeSetValue([]);
             return state as unknown as ParserState<T[]>;
         };
 
@@ -691,7 +691,7 @@ export class Parser<T = string> {
             }
             mergeErrorState(state as ParserState<unknown>);
             state.isError = true;
-            (state as any).value = [];
+            state.unsafeSetValue([]);
             return state as unknown as ParserState<T[]>;
         };
 
