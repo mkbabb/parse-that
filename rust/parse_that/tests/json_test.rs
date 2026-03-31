@@ -65,7 +65,7 @@ mod tests {
 
         let arr = json_parser().parse(&json_string).unwrap();
 
-        let pretty = pprint(arr, Printer::default());
+        let pretty = pprint(&arr, Printer::default());
 
         println!("{}", pretty);
     }
