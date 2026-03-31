@@ -3,7 +3,7 @@
 
 import { Parser } from "../../index.js";
 import type { CssNode } from "./types.js";
-import { isAtEnd, matchStr, skipWs } from "./scan.js";
+import { isAtEnd, skipWs } from "./scan.js";
 import { parseRule } from "./rule.js";
 
 // Re-export all public types
@@ -47,18 +47,11 @@ export const cssParser = new Parser<CssNode[]>((state) => {
             nodes.push(node);
         } else {
             if (isAtEnd(state)) break;
-            const rest = state.src.slice(state.offset);
-            const skip = rest.search(/[;}]/);
-            if (skip >= 0) {
-                state.offset += skip;
-                if (!matchStr(state, ";") && !matchStr(state, "}")) {
-                    if (!isAtEnd(state)) state.offset++;
-                    else break;
-                }
-            } else {
-                if (!isAtEnd(state)) state.offset++;
-                else break;
-            }
+            const semi = state.src.indexOf(";", state.offset);
+            const brace = state.src.indexOf("}", state.offset);
+            const next = semi === -1 ? brace : brace === -1 ? semi : Math.min(semi, brace);
+            if (next === -1) break;
+            state.offset = next + 1;
         }
     }
 
