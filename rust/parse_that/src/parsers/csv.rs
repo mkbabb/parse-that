@@ -4,29 +4,11 @@ use crate::parse::*;
 
 use super::utils::escaped_span;
 
-use pprint::{Doc, Join};
 use smallvec::SmallVec;
 
 #[derive(Debug, PartialEq)]
 pub enum CSV<'a> {
     Lines(Vec<SmallVec<[&'a str; 16]>>),
-}
-
-impl<'a> From<CSV<'a>> for Doc<'a> {
-    fn from(val: CSV<'a>) -> Self {
-        let CSV::Lines(lines) = val;
-
-        lines
-            .into_iter()
-            .map(|line| {
-                line.into_iter()
-                    .map(Doc::from)
-                    .collect::<Vec<Doc<'_>>>()
-                    .join(",")
-            })
-            .collect::<Vec<Doc<'_>>>()
-            .join(Doc::Hardline)
-    }
 }
 
 pub fn csv_parser<'a>() -> Parser<'a, CSV<'a>> {
