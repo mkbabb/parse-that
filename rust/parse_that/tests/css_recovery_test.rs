@@ -4,8 +4,24 @@ mod tests {
 
     /// Strip ANSI escape codes for comparison.
     fn strip_ansi(s: &str) -> String {
-        let re = regex::Regex::new(r"\x1b\[[0-9;]*m").unwrap();
-        re.replace_all(s, "").to_string()
+        let bytes = s.as_bytes();
+        let mut out = Vec::with_capacity(bytes.len());
+        let mut i = 0;
+        while i < bytes.len() {
+            if bytes[i] == 0x1b && bytes.get(i + 1) == Some(&b'[') {
+                i += 2;
+                while i < bytes.len() && (bytes[i].is_ascii_digit() || bytes[i] == b';') {
+                    i += 1;
+                }
+                if i < bytes.len() && bytes[i] == b'm' {
+                    i += 1;
+                }
+            } else {
+                out.push(bytes[i]);
+                i += 1;
+            }
+        }
+        String::from_utf8(out).unwrap()
     }
 
     // ── CSS parser helpers ─────────────────────────────────────────
