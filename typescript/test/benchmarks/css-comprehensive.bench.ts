@@ -2,6 +2,7 @@ import { bench, describe } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
 import { cssParser } from "../../src/parse/parsers/css/index.js";
+import type { CssNode } from "../../src/parse/parsers/css/index.js";
 import { ParserState } from "../../src/parse/state.js";
 import postcss from "postcss";
 import * as csstree from "css-tree";
@@ -19,7 +20,7 @@ for (const file of ["normalize.css", "bootstrap.css"]) {
 for (const [name, data] of Object.entries(datasets)) {
     describe(`CSS: ${name} (${(data.length / 1024).toFixed(0)} KB)`, () => {
         bench("parse-that", () => {
-            const state = new ParserState(data);
+            const state = new ParserState<CssNode[]>(data);
             cssParser.call(state);
         });
 

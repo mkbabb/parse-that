@@ -20,9 +20,9 @@ import * as fs from "fs";
 import * as path from "path";
 
 function parse(input: string): CssNode[] {
-    const state = new ParserState(input);
+    const state = new ParserState<CssNode[]>(input);
     cssParser.call(state);
-    return state.value as CssNode[];
+    return state.value;
 }
 
 describe("CSS Parser", () => {
