@@ -4,11 +4,12 @@ mod declaration;
 mod media;
 mod scan;
 mod selector;
+mod specificity;
 mod types;
 mod value;
 
 // Re-export all public AST types
-pub use media::specificity;
+pub use specificity::specificity;
 pub use types::*;
 
 // Re-export scanner functions for span_parser.rs and external codegen.
