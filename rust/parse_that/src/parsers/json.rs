@@ -594,7 +594,7 @@ pub fn parse_number_f64(s: &str) -> f64 {
     // Float or too many digits → fast_float2 (already near-optimal).
     let is_pure_int = i >= bytes.len() || (bytes[i] != b'.' && bytes[i] != b'e' && bytes[i] != b'E');
     if !is_pure_int || digit_count == 0 || digit_count > 18 {
-        return fast_float2::parse(s).unwrap_or(0.0);
+        return fast_float2::parse(s).expect("number scanner produced unparseable span");
     }
 
     // Integer fast path: 8-digit chunk accumulation.
@@ -614,35 +614,6 @@ pub fn parse_number_f64(s: &str) -> f64 {
 
     let f = mantissa as f64;
     if neg { -f } else { f }
-}
-
-#[inline(always)]
-fn parse_json_number_f64(span: Span<'_>, is_integer: bool) -> f64 {
-    let s = span.as_str();
-    let bytes = s.as_bytes();
-    if !is_integer {
-        return fast_float2::parse(s).expect("sp_json_number must only yield valid JSON numbers");
-    }
-
-    let (neg, digits) = if bytes.first() == Some(&b'-') {
-        (true, &bytes[1..])
-    } else {
-        (false, bytes)
-    };
-    if digits.is_empty() || digits.len() > 18 {
-        return fast_float2::parse(s).expect("sp_json_number must only yield valid JSON numbers");
-    }
-
-    let mut int = 0u64;
-    for &b in digits {
-        int = int * 10 + (b - b'0') as u64;
-    }
-    let num = int as f64;
-    if neg {
-        -num
-    } else {
-        num
-    }
 }
 
 #[inline(always)]

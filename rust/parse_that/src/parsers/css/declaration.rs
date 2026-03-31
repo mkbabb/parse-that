@@ -98,7 +98,7 @@ pub(super) fn css_keyframe_stop<'a>() -> Parser<'a, KeyframeStop> {
     let pct = Parser::new(move |state: &mut ParserState<'a>| {
         let span = css_number_span().call(state)?;
         sp_string("%").call(state)?;
-        let num: f64 = fast_float2::parse(span.as_str()).unwrap_or(0.0);
+        let num: f64 = fast_float2::parse(span.as_str()).expect("number scanner produced unparseable span");
         Some(KeyframeStop::Percentage(num))
     });
     from.or(to).or(pct)
