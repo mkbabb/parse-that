@@ -437,6 +437,213 @@ describe("CSS Parser", () => {
         });
     });
 
+    // ── Selector coverage expansion ───────────────────────────
+
+    describe("sibling combinators", () => {
+        it("parses adjacent sibling combinator", () => {
+            const nodes = parse("h1 + p { color: red; }");
+            expect(nodes).toHaveLength(1);
+            const rule = nodes[0] as { type: "qualifiedRule"; selectorList: CssSelector[] };
+            const sel = rule.selectorList[0] as { type: "complex"; combinator: string };
+            expect(sel.combinator).toBe("+");
+        });
+
+        it("parses general sibling combinator", () => {
+            const nodes = parse("h1 ~ p { color: blue; }");
+            expect(nodes).toHaveLength(1);
+            const rule = nodes[0] as { type: "qualifiedRule"; selectorList: CssSelector[] };
+            const sel = rule.selectorList[0] as { type: "complex"; combinator: string };
+            expect(sel.combinator).toBe("~");
+        });
+    });
+
+    describe("pseudo-function selectors", () => {
+        it("parses :is() with selector list", () => {
+            const nodes = parse(":is(.a, .b) { color: red; }");
+            expect(nodes).toHaveLength(1);
+            const rule = nodes[0] as { type: "qualifiedRule"; selectorList: CssSelector[] };
+            const sel = rule.selectorList[0] as { type: "pseudoFunction"; name: string; args: CssSelector[] };
+            expect(sel.type).toBe("pseudoFunction");
+            expect(sel.name).toBe("is");
+            expect(sel.args).toHaveLength(2);
+        });
+
+        it("parses :where() with selector", () => {
+            const nodes = parse(":where(.a) { color: red; }");
+            const rule = nodes[0] as { type: "qualifiedRule"; selectorList: CssSelector[] };
+            const sel = rule.selectorList[0] as { type: "pseudoFunction"; name: string };
+            expect(sel.name).toBe("where");
+        });
+
+        it("parses :not() with selector", () => {
+            const nodes = parse(":not(.disabled) { opacity: 1; }");
+            const rule = nodes[0] as { type: "qualifiedRule"; selectorList: CssSelector[] };
+            const sel = rule.selectorList[0] as { type: "pseudoFunction"; name: string };
+            expect(sel.name).toBe("not");
+        });
+
+        it("parses :has() with selector", () => {
+            const nodes = parse(":has(img) { border: 1px; }");
+            const rule = nodes[0] as { type: "qualifiedRule"; selectorList: CssSelector[] };
+            const sel = rule.selectorList[0] as { type: "pseudoFunction"; name: string };
+            expect(sel.name).toBe("has");
+        });
+
+        it("parses :nth-child(2n+1)", () => {
+            const nodes = parse(":nth-child(2n+1) { color: red; }");
+            const rule = nodes[0] as { type: "qualifiedRule"; selectorList: CssSelector[] };
+            const sel = rule.selectorList[0] as { type: "pseudoFunction"; name: string };
+            expect(sel.name).toBe("nth-child");
+        });
+
+        it("parses :nth-child(odd)", () => {
+            const nodes = parse(":nth-child(odd) { color: blue; }");
+            const rule = nodes[0] as { type: "qualifiedRule"; selectorList: CssSelector[] };
+            const sel = rule.selectorList[0] as { type: "pseudoFunction"; name: string; args: CssSelector[] };
+            expect(sel.name).toBe("nth-child");
+            expect(sel.args[0]).toEqual({ type: "type", value: "odd" });
+        });
+    });
+
+    describe("attribute selector matchers", () => {
+        it("parses presence-only attribute [data-active]", () => {
+            const nodes = parse("[data-active] { display: block; }");
+            const rule = nodes[0] as { type: "qualifiedRule"; selectorList: CssSelector[] };
+            const sel = rule.selectorList[0] as { type: "attribute"; name: string; matcher: null };
+            expect(sel.type).toBe("attribute");
+            expect(sel.name).toBe("data-active");
+            expect(sel.matcher).toBeNull();
+        });
+
+        it("parses ~= includes matcher", () => {
+            const nodes = parse('[class~="btn"] { color: red; }');
+            const sel = (nodes[0] as any).selectorList[0];
+            expect(sel.matcher).toBe("~=");
+        });
+
+        it("parses ^= prefix matcher", () => {
+            const nodes = parse('[href^="https"] { color: green; }');
+            const sel = (nodes[0] as any).selectorList[0];
+            expect(sel.matcher).toBe("^=");
+        });
+
+        it("parses $= suffix matcher", () => {
+            const nodes = parse('[src$=".png"] { border: 0; }');
+            const sel = (nodes[0] as any).selectorList[0];
+            expect(sel.matcher).toBe("$=");
+        });
+
+        it("parses *= contains matcher", () => {
+            const nodes = parse('[data*="value"] { display: none; }');
+            const sel = (nodes[0] as any).selectorList[0];
+            expect(sel.matcher).toBe("*=");
+        });
+
+        it("parses |= dash matcher", () => {
+            const nodes = parse('[lang|="en"] { quotes: auto; }');
+            const sel = (nodes[0] as any).selectorList[0];
+            expect(sel.matcher).toBe("|=");
+        });
+    });
+
+    // ── !important ─────────────────────────────────────────────
+
+    describe("!important", () => {
+        it("parses !important flag", () => {
+            const nodes = parse(".box { color: red !important; }");
+            const rule = nodes[0] as { type: "qualifiedRule"; declarations: CssDeclaration[] };
+            expect(rule.declarations[0].important).toBe(true);
+            expect(rule.declarations[0].values).toHaveLength(1);
+            expect((rule.declarations[0].values[0] as any).value).toBe("red");
+        });
+
+        it("parses ! important with space", () => {
+            const nodes = parse(".box { margin: 0 ! important; }");
+            const rule = nodes[0] as { type: "qualifiedRule"; declarations: CssDeclaration[] };
+            expect(rule.declarations[0].important).toBe(true);
+        });
+
+        it("non-important declaration has important=false", () => {
+            const nodes = parse(".box { color: red; }");
+            const rule = nodes[0] as { type: "qualifiedRule"; declarations: CssDeclaration[] };
+            expect(rule.declarations[0].important).toBe(false);
+        });
+    });
+
+    // ── At-rule coverage ───────────────────────────────────────
+
+    describe("generic at-rules", () => {
+        it("parses @charset as generic", () => {
+            const nodes = parse('@charset "UTF-8";');
+            expect(nodes).toHaveLength(1);
+            expect(nodes[0].type).toBe("genericAtRule");
+            expect((nodes[0] as any).name).toBe("charset");
+        });
+
+        it("parses @namespace as generic", () => {
+            const nodes = parse("@namespace svg url(http://www.w3.org/2000/svg);");
+            expect(nodes).toHaveLength(1);
+            expect(nodes[0].type).toBe("genericAtRule");
+            expect((nodes[0] as any).name).toBe("namespace");
+        });
+
+        it("parses @layer with block", () => {
+            const nodes = parse("@layer base { .btn { color: red; } }");
+            expect(nodes).toHaveLength(1);
+            expect(nodes[0].type).toBe("genericAtRule");
+            expect((nodes[0] as any).name).toBe("layer");
+            expect((nodes[0] as any).body).toHaveLength(1);
+        });
+
+        it("parses @container with block", () => {
+            const nodes = parse("@container (width > 400px) { .card { display: grid; } }");
+            expect(nodes).toHaveLength(1);
+            expect(nodes[0].type).toBe("genericAtRule");
+            expect((nodes[0] as any).name).toBe("container");
+        });
+
+        it("parses @page with declarations", () => {
+            const nodes = parse("@page { margin: 1cm; }");
+            expect(nodes).toHaveLength(1);
+            expect(nodes[0].type).toBe("genericAtRule");
+            expect((nodes[0] as any).name).toBe("page");
+        });
+    });
+
+    // ── Edge cases ─────────────────────────────────────────────
+
+    describe("edge cases", () => {
+        it("parses empty rule body", () => {
+            const nodes = parse(".empty {}");
+            expect(nodes).toHaveLength(1);
+            const rule = nodes[0] as { type: "qualifiedRule"; declarations: CssDeclaration[] };
+            expect(rule.declarations).toHaveLength(0);
+        });
+
+        it("handles multiple semicolons", () => {
+            const nodes = parse(".box { color: red;; margin: 0; }");
+            const rule = nodes[0] as { type: "qualifiedRule"; declarations: CssDeclaration[] };
+            expect(rule.declarations.length).toBeGreaterThanOrEqual(2);
+        });
+
+        it("parses var() with fallback value", () => {
+            const nodes = parse(".box { color: var(--main, red); }");
+            const rule = nodes[0] as { type: "qualifiedRule"; declarations: CssDeclaration[] };
+            const val = rule.declarations[0].values[0] as { type: "function"; name: string; args: CssValue[] };
+            expect(val.type).toBe("function");
+            expect(val.name).toBe("var");
+            expect(val.args.length).toBeGreaterThanOrEqual(2);
+        });
+
+        it("parses comments between declarations", () => {
+            const nodes = parse(".box { color: red; /* override */ margin: 0; }");
+            const rule = nodes[0] as { type: "qualifiedRule"; declarations: CssDeclaration[] };
+            expect(rule.declarations.length).toBeGreaterThanOrEqual(2);
+        });
+    });
+
+    // ── Benchmark files ────────────────────────────────────────
+
     describe("benchmark files", () => {
         const dataDir = path.resolve(__dirname, "../../data/css");
 
