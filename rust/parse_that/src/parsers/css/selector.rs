@@ -314,7 +314,7 @@ pub(super) fn css_pseudo_selector<'a>() -> Parser<'a, CssSelector<'a>> {
                 let args: Vec<CssSelector<'_>> = sel_list
                     .call(state)
                     .map(|v| v.into_vec())
-                    .unwrap_or_default();
+                    .unwrap_or_else(Vec::new);
                 ws.call(state);
                 close_paren.call(state)?;
                 return Some(CssSelector::PseudoFunction { name, args });

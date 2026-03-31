@@ -52,7 +52,7 @@ fn css_at_rule<'a>() -> Parser<'a, CssNode<'a>> {
             ws.call(state);
 
             // First-byte dispatch on at-rule name for O(1) branching
-            let name_first_byte = state.src_bytes.get(name.start).copied().unwrap_or(0);
+            let name_first_byte = state.src_bytes[name.start];
             match name_first_byte {
                 b'm' if name.as_str() == "media" => {
                     let queries = parse_media_query_list(state);
@@ -100,7 +100,7 @@ fn css_at_rule<'a>() -> Parser<'a, CssNode<'a>> {
                         }
                     }
 
-                    let condition = condition.unwrap_or(SupportsCondition::Declaration {
+                    let condition = condition.unwrap_or_else(|| SupportsCondition::Declaration {
                         property: Span::new(state.offset, state.offset, state.src),
                         value: Vec::new(),
                     });
@@ -162,11 +162,8 @@ fn css_at_rule<'a>() -> Parser<'a, CssNode<'a>> {
                 }
                 _ => {
                     let skip = sp_take_until_any(b"{;");
-                    let prelude_span = skip.call(state).unwrap_or(Span::new(
-                        state.offset,
-                        state.offset,
-                        state.src,
-                    ));
+                    let prelude_span = skip.call(state)
+                        .unwrap_or_else(|| Span::new(state.offset, state.offset, state.src));
 
                     let has_block = if open_brace.call(state).is_some() {
                         true
