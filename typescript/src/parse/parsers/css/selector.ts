@@ -11,8 +11,7 @@ export function parseSelectorList(state: ParserState<unknown>): CssSelector[] | 
     const first = parseComplexSelector(state);
     if (first === undefined) return undefined;
     const list = [first];
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
+    for (;;) {
         skipWsAndComments(state);
         if (!matchStr(state, ",")) break;
         skipWsAndComments(state);
@@ -79,8 +78,7 @@ function parseCompoundSelector(state: ParserState<unknown>): CssSelector | undef
         }
     }
 
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
+    for (;;) {
         const s = parseSimpleSelectorSuffix(state);
         if (s === undefined) break;
         parts.push(s);

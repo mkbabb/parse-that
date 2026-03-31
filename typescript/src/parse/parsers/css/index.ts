@@ -38,8 +38,7 @@ export { specificity } from "./specificity.js";
 export const cssParser = new Parser<CssNode[]>((state) => {
     const nodes: CssNode[] = [];
 
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
+    for (;;) {
         skipWs(state);
         if (isAtEnd(state)) break;
         const node = parseRule(state);
