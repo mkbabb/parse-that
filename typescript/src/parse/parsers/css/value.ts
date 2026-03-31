@@ -56,6 +56,18 @@ export function parseSingleValue(state: ParserState<unknown>): CssValue | undefi
         }
     }
 
+    // ! → check for !important
+    if (ch === 33) {
+        const saved = state.offset;
+        state.offset++;
+        skipWsAndComments(state);
+        const id = parseIdent(state);
+        if (id === "important") {
+            return { type: "ident", value: "!important" };
+        }
+        state.offset = saved;
+    }
+
     // Function call: ident(
     const saved = state.offset;
     const name = parseIdent(state);
@@ -76,8 +88,7 @@ export function parseSingleValue(state: ParserState<unknown>): CssValue | undefi
 
 export function parseFunctionArgs(state: ParserState<unknown>): CssValue[] | undefined {
     const args: CssValue[] = [];
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
+    for (;;) {
         skipWsAndComments(state);
         if (isAtEnd(state)) return undefined;
         if (matchStr(state, ")")) return args;

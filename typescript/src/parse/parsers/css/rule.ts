@@ -23,8 +23,7 @@ function parseDeclaration(state: ParserState<unknown>): CssDeclaration | undefin
     skipWsAndComments(state);
 
     const values: CssValue[] = [];
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
+    for (;;) {
         skipWsAndComments(state);
         if (isAtEnd(state)) break;
         const ch = charAt(state);
@@ -34,15 +33,24 @@ function parseDeclaration(state: ParserState<unknown>): CssDeclaration | undefin
         values.push(v);
     }
 
+    // Detect !important — mirrors Rust declaration.rs:40-47
+    let important = false;
+    if (values.length > 0) {
+        const last = values[values.length - 1];
+        if (last.type === "ident" && last.value === "!important") {
+            important = true;
+            values.pop();
+        }
+    }
+
     matchStr(state, ";");
-    return { property, values, important: false };
+    return { property, values, important };
 }
 
 function parseDeclarationBlock(state: ParserState<unknown>): CssDeclaration[] | undefined {
     if (!matchStr(state, "{")) return undefined;
     const declarations: CssDeclaration[] = [];
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
+    for (;;) {
         skipWsAndComments(state);
         if (isAtEnd(state)) return undefined;
         if (matchStr(state, "}")) break;
@@ -52,10 +60,11 @@ function parseDeclarationBlock(state: ParserState<unknown>): CssDeclaration[] | 
             declarations.push(d);
         } else {
             // Skip to ; or } to recover from malformed declaration
-            const rest = state.src.slice(state.offset);
-            const idx = rest.search(/[;}]/);
-            if (idx >= 0) {
-                state.offset += idx;
+            const semi = state.src.indexOf(";", state.offset);
+            const brace = state.src.indexOf("}", state.offset);
+            const next = semi === -1 ? brace : brace === -1 ? semi : Math.min(semi, brace);
+            if (next >= 0) {
+                state.offset = next;
                 matchStr(state, ";");
             } else {
                 break;
@@ -83,8 +92,7 @@ function parseKeyframeBlock(state: ParserState<unknown>): KeyframeBlock | undefi
     const first = parseKeyframeStop(state);
     if (first === undefined) return undefined;
     stops.push(first);
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
+    for (;;) {
         skipWsAndComments(state);
         if (!matchStr(state, ",")) break;
         skipWsAndComments(state);
@@ -103,8 +111,7 @@ function parseKeyframeBlock(state: ParserState<unknown>): KeyframeBlock | undefi
 /** Parse body rules inside braces (shared by @media, @supports, generic at-rules). */
 function parseRuleBody(state: ParserState<unknown>): CssNode[] | undefined {
     const body: CssNode[] = [];
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
+    for (;;) {
         skipWsAndComments(state);
         if (isAtEnd(state)) return undefined;
         if (matchStr(state, "}")) break;
@@ -112,8 +119,10 @@ function parseRuleBody(state: ParserState<unknown>): CssNode[] | undefined {
         if (node !== undefined) {
             body.push(node);
         } else {
-            const skip = state.src.slice(state.offset).search(/[;}]/);
-            if (skip >= 0) { state.offset += skip; matchStr(state, ";"); }
+            const semi = state.src.indexOf(";", state.offset);
+            const brace = state.src.indexOf("}", state.offset);
+            const next = semi === -1 ? brace : brace === -1 ? semi : Math.min(semi, brace);
+            if (next >= 0) { state.offset = next; matchStr(state, ";"); }
             else break;
         }
     }
@@ -183,21 +192,22 @@ function parseAtRule(state: ParserState<unknown>): CssNode | undefined {
                 if (block !== undefined) {
                     blocks.push(block);
                 } else {
-                    const skip = state.src.slice(state.offset).search(/}/);
-                    if (skip >= 0) state.offset += skip;
+                    const closeBrace = state.src.indexOf("}", state.offset);
+                    if (closeBrace >= 0) state.offset = closeBrace;
                     else break;
                 }
             }
             return { type: "atKeyframes", name: kfName, blocks };
         }
         default: {
-            const rest = state.src.slice(state.offset);
-            const idx = rest.search(/[{;]/);
+            const openB = state.src.indexOf("{", state.offset);
+            const semiIdx = state.src.indexOf(";", state.offset);
+            const idx = openB === -1 ? semiIdx : semiIdx === -1 ? openB : Math.min(openB, semiIdx);
             let prelude = "";
             let hasBlock = false;
             if (idx >= 0) {
-                prelude = rest.slice(0, idx).trim();
-                state.offset += idx;
+                prelude = state.src.slice(state.offset, idx).trim();
+                state.offset = idx;
                 if (matchStr(state, "{")) hasBlock = true;
                 else matchStr(state, ";");
             }
