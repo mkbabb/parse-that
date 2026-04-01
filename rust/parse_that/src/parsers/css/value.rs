@@ -94,8 +94,7 @@ pub(super) fn parse_value_inline<'a>(state: &mut ParserState<'a>) -> Option<CssV
 
 #[inline]
 pub(super) fn parse_number_value_inline<'a>(state: &mut ParserState<'a>) -> Option<CssValue<'a>> {
-    let span = sp_json_number().call(state)?;
-    let num: f64 = fast_float2::parse(span.as_str()).expect("number scanner produced unparseable span");
+    let num = super::super::scan::scan_number_f64(state)?;
 
     // Try %
     if state.src_bytes.get(state.offset) == Some(&b'%') {

@@ -305,12 +305,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dragonbox"
-version = "0.1.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "248d9043590d93ae0dd689fc184893cf1f99501a15765f153e3eb88d88336e98"
-
-[[package]]
 name = "dtoa"
 version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -939,9 +933,9 @@ checksum = "c33a9471896f1c69cecef8d20cbe2f7accd12527ce60845ff44c153bb2a21b49"
 name = "pprint"
 version = "0.3.6"
 dependencies = [
- "dragonbox",
  "itoap",
  "pprint_derive",
+ "ryu",
 ]
 
 [[package]]
