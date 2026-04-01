@@ -43,8 +43,11 @@ impl Default for DfaOptions {
 /// A compiled DFA. Transitions are indexed by byte equivalence classes.
 #[derive(Clone, Debug)]
 pub struct Dfa {
-    /// DFA states. State 0 is always the start state.
+    /// DFA states (kept for minimization, accept checks, etc.).
     pub states: Vec<DfaState>,
+    /// Flat transition table: `flat_transitions[state * num_classes + class]` = target StateId.
+    /// Single contiguous allocation, cache-friendly access — one indirection instead of two.
+    pub flat_transitions: Vec<StateId>,
     /// Byte → equivalence class mapping (256 entries).
     pub byte_classes: [u8; 256],
     /// Number of equivalence classes.
@@ -91,14 +94,18 @@ impl Dfa {
             dfa = hopcroft_minimize(&dfa);
         }
 
-        // Step 5: Compute accept mask.
+        // Step 5: Compute accept mask + flatten transition table.
         let mut accept_mask: u64 = 0;
+        let num_cls = dfa.num_classes as usize;
+        let mut flat = Vec::with_capacity(dfa.states.len() * num_cls);
         for (i, state) in dfa.states.iter().enumerate() {
             if state.is_accept && i < 64 {
                 accept_mask |= 1u64 << i;
             }
+            flat.extend_from_slice(&state.transitions);
         }
         dfa.accept_mask = accept_mask;
+        dfa.flat_transitions = flat;
 
         Some(dfa)
     }
@@ -116,9 +123,11 @@ impl Dfa {
     /// Anchored match at the given byte offset.
     /// Returns the end position of the longest match, or `None`.
     pub fn find_at(&self, bytes: &[u8], offset: usize) -> Option<usize> {
+        let num_cls = self.num_classes as usize;
+        let flat = &self.flat_transitions;
         let mut state: u32 = 0; // start state
         let mut pos = offset;
-        let mut last_accept = if self.states[0].is_accept {
+        let mut last_accept = if self.accept_mask & 1 != 0 {
             Some(pos)
         } else {
             None
@@ -126,14 +135,15 @@ impl Dfa {
 
         while pos < bytes.len() {
             let b = bytes[pos];
-            let class = self.byte_classes[b as usize];
-            let next = self.states[state as usize].transitions[class as usize];
+            let class = self.byte_classes[b as usize] as usize;
+            let next = flat[state as usize * num_cls + class];
             if next == DEAD {
                 break;
             }
             state = next;
             pos += 1;
-            if self.states[state as usize].is_accept {
+            // Use accept_mask for inline check (avoids states[] indirection).
+            if (state as usize) < 64 && self.accept_mask & (1u64 << state) != 0 {
                 last_accept = Some(pos);
             }
         }
@@ -251,6 +261,7 @@ fn subset_construction(
 
     Some(Dfa {
         states: dfa_states,
+        flat_transitions: vec![], // built in from_nfa after minimization
         byte_classes: *byte_classes,
         num_classes,
         accept_mask: 0, // filled in by caller
@@ -409,6 +420,7 @@ fn hopcroft_minimize(dfa: &Dfa) -> Dfa {
 
     Dfa {
         states: new_states,
+        flat_transitions: vec![], // rebuilt in from_nfa
         byte_classes: dfa.byte_classes,
         num_classes: dfa.num_classes,
         accept_mask,
