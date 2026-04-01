@@ -64,6 +64,51 @@ impl<T> BumpArena<T> {
         }
     }
 
+    /// Allocate a cloned slice in the arena and return a borrowed view of it.
+    #[inline(always)]
+    pub fn alloc_slice_clone(&self, values: &[T]) -> &[T]
+    where
+        T: Clone,
+    {
+        if values.is_empty() {
+            return &[];
+        }
+
+        self.ensure_capacity(values.len());
+        let current = unsafe { &mut *self.current.get() };
+        let start = current.len();
+        current.extend(values.iter().cloned());
+        &current[start..]
+    }
+
+    /// Allocate a copied slice in the arena and return a borrowed view of it.
+    #[inline(always)]
+    pub fn alloc_slice_copy(&self, values: &[T]) -> &[T]
+    where
+        T: Copy,
+    {
+        if values.is_empty() {
+            return &[];
+        }
+
+        self.ensure_capacity(values.len());
+        let current = unsafe { &mut *self.current.get() };
+        let start = current.len();
+        current.extend_from_slice(values);
+        &current[start..]
+    }
+
+    #[inline(always)]
+    fn ensure_capacity(&self, additional: usize) {
+        let available = {
+            let current = unsafe { &mut *self.current.get() };
+            current.capacity() - current.len()
+        };
+        if available < additional {
+            self.grow_to_fit(additional);
+        }
+    }
+
     /// Grow the arena by moving the current chunk to `rest` and allocating a new,
     /// larger chunk.
     #[cold]
@@ -72,6 +117,21 @@ impl<T> BumpArena<T> {
         let current = unsafe { &mut *self.current.get() };
         let rest = unsafe { &mut *self.rest.get() };
         let new_cap = current.capacity() * 2;
+        let old = std::mem::replace(current, Vec::with_capacity(new_cap));
+        rest.push(old);
+    }
+
+    /// Grow the arena until the current chunk can fit `additional` more items.
+    #[cold]
+    #[inline(never)]
+    fn grow_to_fit(&self, additional: usize) {
+        let current = unsafe { &mut *self.current.get() };
+        let rest = unsafe { &mut *self.rest.get() };
+        let required = current.len() + additional;
+        let mut new_cap = current.capacity().max(64);
+        while new_cap < required {
+            new_cap *= 2;
+        }
         let old = std::mem::replace(current, Vec::with_capacity(new_cap));
         rest.push(old);
     }

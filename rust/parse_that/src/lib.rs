@@ -40,3 +40,4 @@ pub mod regex_engine;
 
 // Re-export memchr so generated monolithic code can reference it.
 pub use memchr;
+pub use smallvec;
