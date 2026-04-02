@@ -33,7 +33,7 @@ pub struct DfaOptions {
 impl Default for DfaOptions {
     fn default() -> Self {
         Self {
-            state_limit: 512,
+            state_limit: 4096,
             minimize: true,
             unicode: true,
         }
@@ -52,8 +52,6 @@ pub struct Dfa {
     pub byte_classes: [u8; 256],
     /// Number of equivalence classes.
     pub num_classes: u16,
-    /// Bitmask of accepting states (supports up to 64 states inline).
-    pub accept_mask: u64,
 }
 
 impl Dfa {
@@ -94,17 +92,12 @@ impl Dfa {
             dfa = hopcroft_minimize(&dfa);
         }
 
-        // Step 5: Compute accept mask + flatten transition table.
-        let mut accept_mask: u64 = 0;
+        // Step 5: Flatten transition table for cache-friendly access.
         let num_cls = dfa.num_classes as usize;
         let mut flat = Vec::with_capacity(dfa.states.len() * num_cls);
-        for (i, state) in dfa.states.iter().enumerate() {
-            if state.is_accept && i < 64 {
-                accept_mask |= 1u64 << i;
-            }
+        for state in dfa.states.iter() {
             flat.extend_from_slice(&state.transitions);
         }
-        dfa.accept_mask = accept_mask;
         dfa.flat_transitions = flat;
 
         Some(dfa)
@@ -125,13 +118,10 @@ impl Dfa {
     pub fn find_at(&self, bytes: &[u8], offset: usize) -> Option<usize> {
         let num_cls = self.num_classes as usize;
         let flat = &self.flat_transitions;
+        let states = &self.states;
         let mut state: u32 = 0; // start state
         let mut pos = offset;
-        let mut last_accept = if self.accept_mask & 1 != 0 {
-            Some(pos)
-        } else {
-            None
-        };
+        let mut last_accept = if states[0].is_accept { Some(pos) } else { None };
 
         while pos < bytes.len() {
             let b = bytes[pos];
@@ -142,8 +132,7 @@ impl Dfa {
             }
             state = next;
             pos += 1;
-            // Use accept_mask for inline check (avoids states[] indirection).
-            if (state as usize) < 64 && self.accept_mask & (1u64 << state) != 0 {
+            if states[state as usize].is_accept {
                 last_accept = Some(pos);
             }
         }
@@ -264,7 +253,6 @@ fn subset_construction(
         flat_transitions: vec![], // built in from_nfa after minimization
         byte_classes: *byte_classes,
         num_classes,
-        accept_mask: 0, // filled in by caller
     })
 }
 
@@ -410,20 +398,11 @@ fn hopcroft_minimize(dfa: &Dfa) -> Dfa {
         }
     }
 
-    // Compute new accept mask.
-    let mut accept_mask: u64 = 0;
-    for (i, state) in new_states.iter().enumerate() {
-        if state.is_accept && i < 64 {
-            accept_mask |= 1u64 << i;
-        }
-    }
-
     Dfa {
         states: new_states,
-        flat_transitions: vec![], // rebuilt in from_nfa
+        flat_transitions: vec![], // rebuilt by caller
         byte_classes: dfa.byte_classes,
         num_classes: dfa.num_classes,
-        accept_mask,
     }
 }
 
