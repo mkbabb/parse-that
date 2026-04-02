@@ -8,7 +8,7 @@ use smallvec::SmallVec;
 
 /// Type-erased memoization store for state-based caching.
 ///
-/// Used by generated monolithic arena parsers where the memo cache lives in
+/// Used by generated monolithic slab parsers where the memo cache lives in
 /// `ParserState` (dropped with each parse) rather than in the parser closure.
 /// This avoids storing `Output` values in the closure — no `Output: 'a`
 /// requirement, no `RefCell<HashMap>` per parser object.
@@ -175,7 +175,7 @@ pub struct ParserState<'a> {
     #[pprint(skip)]
     pub context_ptr: *const (),
 
-    /// State-based memoization for monolithic arena parsers.
+    /// State-based memoization for monolithic slab parsers.
     /// Dropped with each parse — no cross-iteration cache retention.
     #[pprint(skip)]
     pub memo: MemoStore,

@@ -1,8 +1,6 @@
 #![feature(cold_path)]
 #![feature(portable_simd)]
 
-pub use typed_arena::Arena;
-
 pub mod bump_slab;
 pub use bump_slab::BumpSlab;
 

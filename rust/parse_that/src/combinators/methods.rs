@@ -684,7 +684,7 @@ where
         Parser::new(look_ahead)
     }
 
-    /// State-based memoization for monolithic arena functions.
+    /// State-based memoization for monolithic slab functions.
     ///
     /// Cache lives in `ParserState.memo` (dropped with each parse), not in the
     /// parser closure. No `Output` values stored in the closure — the parser
@@ -726,7 +726,7 @@ where
     /// On cache hit, restores offset and returns cloned value in O(1).
     /// Eliminates exponential re-parsing in ambiguous/cyclic grammars.
     ///
-    /// Context-aware: when `context_ptr` changes (e.g. fresh arena between
+    /// Context-aware: when `context_ptr` changes (e.g. fresh slab between
     /// parses), the cache is cleared to avoid returning stale references.
     /// For the box path (`context_ptr` is always null), this is a no-op
     /// comparison and the cache stays warm across iterations.
@@ -740,7 +740,7 @@ where
         let memo = move |state: &mut ParserState<'a>| {
             let key = state.offset;
 
-            // Check if context changed (arena swapped) — if so, invalidate
+            // Check if context changed (slab swapped) — if so, invalidate
             {
                 let mut guard = cache.borrow_mut();
                 if guard.0 != state.context_ptr {

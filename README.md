@@ -109,7 +109,7 @@ MB/s throughput. `bencher` crate with `black_box` on inputs and `b.bytes` set.
 
 #### JSON matrix (cold per-parse, MB/s)
 
-All BBNF numbers use `BumpArena` with monolithic codegen (fresh arena + parser per iteration). Competitors construct per-iteration.
+All BBNF numbers use `BumpSlab` with monolithic codegen (fresh slab + parser per iteration). Competitors construct per-iteration.
 
 | Parser | data.json | twitter | citm_catalog | canada | data_xl |
 |---|---:|---:|---:|---:|---:|
@@ -127,7 +127,7 @@ All BBNF numbers use `BumpArena` with monolithic codegen (fresh arena + parser p
 
 parse_that uses SIMD string scanning (`memchr2`), integer fast path, `Vec` objects (no HashMap), `Cow<str>` zero-copy strings, and `#[cold]` escape decoding.
 
-The BBNF AOT parser uses `#[derive(Parser)]` from a `.bbnf` grammar file—zero hand-written Rust. All benchmarks use mimalloc. The monolithic arena codegen emits direct recursive functions with `BumpArena` allocation, dispatch-byte elimination, IIFE elision, and B.1 Span collapse.
+The BBNF AOT parser uses `#[derive(Parser)]` from a `.bbnf` grammar file—zero hand-written Rust. All benchmarks use mimalloc. The monolithic slab codegen emits direct recursive functions with `BumpSlab` allocation, dispatch-byte elimination, IIFE elision, and B.1 Span collapse.
 
 See [docs/perf-optimization-rust.md](docs/perf-optimization-rust.md) for the full
 optimization chronicle.
@@ -154,16 +154,16 @@ optimization chronicle.
 
 ### CSS
 
-Rust MB/s on normalize.css (6KB), bootstrap.css (281KB), tailwind-output.css (3.6MB). BBNF uses cold `BumpArena` per-parse.
+Rust MB/s on normalize.css (6KB), bootstrap.css (281KB), tailwind-output.css (3.6MB). BBNF uses cold `BumpSlab` per-parse.
 
 | Parser | normalize | bootstrap | tailwind | Level |
 |---|---:|---:|---:|---|
-| **BBNF pretty arena** | **659** | **276** | **284** | L1.75 — typed AST for formatting |
+| **BBNF pretty slab** | **659** | **276** | **284** | L1.75 — typed AST for formatting |
 | **BBNF parse-only** | **639** | **939** | **469** | L0 — parse phase isolated |
 | cssparser | 323 | 437 | 360 | L0 — tokenizer, callbacks only |
 | lightningcss | 254 | 117 | 90 | L2 — semantic |
 
-The pretty arena tier produces the full typed AST that gorgeous uses for CSS formatting. A delimiter-driven flat scanner in the monolithic codegen handles `Wrap(Repeat(Alt))` patterns with overlapping FIRST sets—uses forward `memchr` to select the branch, then calls the existing recursive descent for typed output. Grammar-agnostic; all delimiter bytes extracted from the grammar's Literal nodes.
+The pretty slab tier produces the full typed AST that gorgeous uses for CSS formatting. A delimiter-driven flat scanner in the monolithic codegen handles `Wrap(Repeat(Alt))` patterns with overlapping FIRST sets—uses forward `memchr` to select the branch, then calls the existing recursive descent for typed output. Grammar-agnostic; all delimiter bytes extracted from the grammar's Literal nodes.
 
 TypeScript (relative to parse-that):
 

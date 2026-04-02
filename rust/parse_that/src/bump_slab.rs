@@ -1,7 +1,7 @@
 //! Byte-based bump allocator — polymorphic, zero-overhead allocation for
 //! single-threaded parsing.
 //!
-//! Unlike a typed `Arena<T>`, `BumpSlab` allocates raw bytes with alignment,
+//! Unlike a typed `Slab<T>`, `BumpSlab` allocates raw bytes with alignment,
 //! so a single slab serves all types: enums, tuples, slices, references.
 //!
 //! # Safety
