@@ -3,8 +3,8 @@
 
 pub use typed_arena::Arena;
 
-pub mod bump_arena;
-pub use bump_arena::BumpArena;
+pub mod bump_slab;
+pub use bump_slab::BumpSlab;
 
 pub mod parse;
 pub use parse::*;
