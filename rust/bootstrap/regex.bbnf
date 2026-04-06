@@ -1,0 +1,72 @@
+// Regex grammar — full L4 spec for self-hosting parse-that's regex parser.
+//
+// Natural recursion: alternation → concat → quantified → atom → group → alternation.
+// Rules in the cycle survive the IR optimizer; leaf rules are correctly inlined.
+//
+// Regenerate: scripts/bootstrap-regex.sh
+
+// ── Leaf rules (defined first — inlined by optimizer) ─────────────────
+
+literal = /[^\\()\[\]{}|*+?.^$]/ ;
+
+class_escape
+    = "\\" >> /[dDwWsS]/
+    | "\\" >> "u" >> "{" >> /[0-9a-fA-F]+/ << "}"
+    | "\\" >> "u" >> /[0-9a-fA-F]{4}/
+    | "\\" >> "x" >> /[0-9a-fA-F]{2}/
+    | "\\" >> /[^\n]/
+    ;
+
+class_atom = class_escape | /[^\]\\]/ ;
+
+class_item
+    = class_atom , "-" >> class_atom
+    | class_escape
+    | /[^\]\\]/
+    ;
+
+char_class = "[" >> "^" ? , class_item + << "]" ;
+
+escape
+    = "\\" >> /[dDwWsS]/
+    | "\\" >> /[pP]/ >> "{" >> /[A-Za-z_]+/ << "}"
+    | "\\" >> "u" >> "{" >> /[0-9a-fA-F]+/ << "}"
+    | "\\" >> "u" >> /[0-9a-fA-F]{4}/
+    | "\\" >> "x" >> /[0-9a-fA-F]{2}/
+    | "\\" >> /[^\n]/
+    ;
+
+quantifier
+    = "*" , "?" ?
+    | "+" , "?" ?
+    | "?" , "?" ?
+    | "{" >> /\d+/ , ( "," >> /\d*/ ) ? << "}" , "?" ?
+    ;
+
+// ── Recursive spine (last rule = entry point) ─────────────────────────
+
+group
+    = "(?:" >> alternation << ")"
+    | "(?" >> /[simux]+/ , ":" >> alternation << ")"
+    | "(?" >> /[simux]+/ << ")"
+    | "(" >> alternation << ")"
+    ;
+
+atom
+    = group
+    | char_class
+    | "."
+    | "^"
+    | "$"
+    | escape
+    | literal
+    ;
+
+quantified = atom , quantifier ? ;
+
+concat = quantified + ;
+
+alternation = concat , ( "|" >> concat ) * ;
+
+// Entry point — last rule in source order.
+regex = alternation ;

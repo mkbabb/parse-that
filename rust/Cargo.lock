@@ -57,6 +57,45 @@ dependencies = [
 ]
 
 [[package]]
+name = "bbnf"
+version = "0.2.11"
+dependencies = [
+ "bbnf-ir",
+ "indexmap",
+ "parse_that",
+ "pprint",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "bbnf-ir"
+version = "0.1.6"
+dependencies = [
+ "parse_that",
+ "rayon",
+ "rmp-serde",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "bbnf_derive"
+version = "0.2.11"
+dependencies = [
+ "bbnf",
+ "bbnf-ir",
+ "indexmap",
+ "parse_that",
+ "pprint",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
 name = "bencher"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1182,6 +1221,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "regex-bootstrap"
+version = "0.1.0"
+dependencies = [
+ "bbnf_derive",
+ "parse_that",
+]
+
+[[package]]
 name = "regex-syntax"
 version = "0.8.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1258,6 +1305,25 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.117",
+]
+
+[[package]]
+name = "rmp"
+version = "0.8.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4ba8be72d372b2c9b35542551678538b562e7cf86c3315773cae48dfbfe7790c"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
+name = "rmp-serde"
+version = "1.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72f81bee8c8ef9b577d1681a70ebbc962c232461e397b22c208c43c04b67a155"
+dependencies = [
+ "rmp",
+ "serde",
 ]
 
 [[package]]
