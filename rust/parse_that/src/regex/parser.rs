@@ -662,10 +662,11 @@ impl<'a> Parser<'a> {
 // ── Helper functions ────────────────────────────────────────────────────
 
 /// Characters that don't need escaping outside character classes.
+/// Note: `}` is allowed as a literal — it's only special after `{`.
 fn is_literal_char(b: u8) -> bool {
     !matches!(
         b,
-        b'(' | b')' | b'[' | b']' | b'{' | b'}' | b'|' | b'*' | b'+' | b'?' | b'.' | b'^'
+        b'(' | b')' | b'[' | b']' | b'{' | b'|' | b'*' | b'+' | b'?' | b'.' | b'^'
             | b'$' | b'\\'
     )
 }
