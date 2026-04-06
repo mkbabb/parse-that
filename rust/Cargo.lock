@@ -1225,6 +1225,8 @@ name = "regex-bootstrap"
 version = "0.1.0"
 dependencies = [
  "bbnf_derive",
+ "bencher",
+ "mimalloc",
  "parse_that",
 ]
 

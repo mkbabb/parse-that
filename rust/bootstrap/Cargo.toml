@@ -4,6 +4,14 @@ version = "0.1.0"
 edition = "2024"
 publish = false
 
+[[bench]]
+name = "regex_parse"
+harness = false
+
 [dependencies]
 parse_that = { path = "../parse_that" }
 bbnf_derive = "0.2"
+
+[dev-dependencies]
+bencher = "0.1"
+mimalloc = "0.1"
