@@ -137,6 +137,37 @@ impl Dfa {
 
         last_accept
     }
+
+    /// Anchored shortest (non-greedy) match at the given byte offset.
+    /// Returns the end position of the first (shortest) match, or `None`.
+    pub fn find_at_shortest(&self, bytes: &[u8], offset: usize) -> Option<usize> {
+        let num_cls = self.num_classes as usize;
+        let flat = &self.flat_transitions;
+        let states = &self.states;
+        let mut state: u32 = 0;
+        let mut pos = offset;
+
+        // If the start state is accepting, that's the shortest match (empty).
+        if states[0].is_accept {
+            return Some(pos);
+        }
+
+        while pos < bytes.len() {
+            let b = bytes[pos];
+            let class = self.byte_classes[b as usize] as usize;
+            let next = flat[state as usize * num_cls + class];
+            if next == DEAD {
+                break;
+            }
+            state = next;
+            pos += 1;
+            if states[state as usize].is_accept {
+                return Some(pos); // first accept = shortest match
+            }
+        }
+
+        None
+    }
 }
 
 /// Compute one representative byte for each equivalence class.
