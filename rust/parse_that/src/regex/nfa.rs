@@ -1,15 +1,15 @@
-//! Thompson NFA construction from regex-syntax HIR.
+//! Thompson NFA construction from bespoke HIR.
 //!
-//! Converts a `regex_syntax::hir::Hir` tree into a byte-level NFA with
-//! ε-transitions. Unicode codepoint ranges are expanded into UTF-8 byte
-//! sequences using `regex_syntax::utf8::Utf8Sequences`, so the NFA operates
-//! entirely on individual bytes — never on codepoints.
+//! Converts a `Hir` tree into a byte-level NFA with ε-transitions.
+//! Unicode codepoint ranges are expanded into UTF-8 byte sequences
+//! via `super::utf8::Utf8Sequences`, so the NFA operates entirely
+//! on individual bytes — never on codepoints.
 
-use regex_syntax::hir::{Class, Hir, HirKind, Look, Repetition};
-use regex_syntax::utf8::Utf8Sequences;
 use smallvec::SmallVec;
 
 use super::byteset::ByteSet;
+use super::hir::{CharClass, Hir, Look, Repetition};
+use super::utf8::Utf8Sequences;
 
 /// NFA state identifier. `DEAD` is a sentinel for "no transition".
 pub type StateId = u32;
@@ -59,21 +59,15 @@ struct Fragment {
 impl Nfa {
     /// Build an NFA from a regex pattern string.
     ///
-    /// Returns `None` if the pattern is invalid, uses unsupported features
-    /// (backreferences), or if regex-syntax cannot parse it.
+    /// Returns `None` if the pattern is invalid or uses unsupported features.
     pub fn from_pattern(pattern: &str) -> Option<Self> {
-        let hir = regex_syntax::ParserBuilder::new()
-            .utf8(true)
-            .unicode(true)
-            .build()
-            .parse(pattern)
-            .ok()?;
+        let hir = super::parse(pattern).ok()?;
         Self::from_hir(&hir)
     }
 
     /// Build an NFA from an already-parsed HIR.
     ///
-    /// Returns `None` for unsupported HIR features (backreferences).
+    /// Returns `None` for unsupported HIR features.
     pub fn from_hir(hir: &Hir) -> Option<Self> {
         let mut builder = NfaBuilder {
             states: Vec::with_capacity(64),
@@ -129,8 +123,8 @@ impl NfaBuilder {
     }
 
     fn build_hir(&mut self, hir: &Hir) -> Option<Fragment> {
-        match hir.kind() {
-            HirKind::Empty => {
+        match hir {
+            Hir::Empty => {
                 let s = self.new_state();
                 Some(Fragment {
                     start: s,
@@ -138,22 +132,22 @@ impl NfaBuilder {
                 })
             }
 
-            HirKind::Literal(lit) => self.build_literal(&lit.0),
+            Hir::Literal(bytes) => self.build_literal(bytes),
 
-            HirKind::Class(class) => self.build_class(class),
+            Hir::Class(class) => self.build_class(class),
 
-            HirKind::Look(look) => self.build_look(*look),
+            Hir::Look(look) => self.build_look(*look),
 
-            HirKind::Repetition(rep) => self.build_repetition(rep),
+            Hir::Repetition(rep) => self.build_repetition(rep),
 
-            HirKind::Capture(cap) => {
-                // Ignore capture group boundaries — we only need Span (start, end).
-                self.build_hir(&cap.sub)
+            Hir::Group(sub) => {
+                // Capture/non-capturing groups are transparent.
+                self.build_hir(sub)
             }
 
-            HirKind::Concat(subs) => self.build_concat(subs),
+            Hir::Concat(subs) => self.build_concat(subs),
 
-            HirKind::Alternation(alts) => self.build_alternation(alts),
+            Hir::Alternation(alts) => self.build_alternation(alts),
         }
     }
 
@@ -182,12 +176,17 @@ impl NfaBuilder {
 
     // ── Character class ──────────────────────────────────────────────
 
-    fn build_class(&mut self, class: &Class) -> Option<Fragment> {
+    fn build_class(&mut self, class: &CharClass) -> Option<Fragment> {
         match class {
-            Class::Bytes(cb) => {
+            CharClass::Bytes { ranges, negated } => {
+                let positive = if *negated {
+                    super::hir::negate_byte_ranges(ranges)
+                } else {
+                    ranges.clone()
+                };
                 let mut bs = ByteSet::empty();
-                for range in cb.ranges() {
-                    for b in range.start()..=range.end() {
+                for range in &positive {
+                    for b in range.start..=range.end {
                         bs.insert(b);
                     }
                 }
@@ -196,25 +195,32 @@ impl NfaBuilder {
                 self.add_transition(start, bs, accept);
                 Some(Fragment { start, accept })
             }
-            Class::Unicode(cu) => self.build_unicode_class(cu),
+            CharClass::Unicode { ranges, negated } => {
+                let positive = if *negated {
+                    super::hir::negate_codepoint_ranges(ranges)
+                } else {
+                    ranges.clone()
+                };
+                self.build_unicode_class(&positive)
+            }
         }
     }
 
-    /// Build NFA fragment for a Unicode character class.
+    /// Build NFA fragment for Unicode codepoint ranges.
     ///
-    /// Uses `regex_syntax::utf8::Utf8Sequences` to convert codepoint ranges
-    /// into byte-level NFA transitions. Each codepoint range may expand into
-    /// multiple UTF-8 byte sequence paths through the NFA.
+    /// Uses `Utf8Sequences` to convert codepoint ranges into byte-level NFA
+    /// transitions. Each range may expand into multiple UTF-8 byte sequence
+    /// paths through the NFA.
     fn build_unicode_class(
         &mut self,
-        cu: &regex_syntax::hir::ClassUnicode,
+        ranges: &[super::hir::CodepointRange],
     ) -> Option<Fragment> {
         let start = self.new_state();
         let accept = self.new_state();
 
-        for range in cu.ranges() {
-            let lo = range.start();
-            let hi = range.end();
+        for range in ranges {
+            let lo = range.start;
+            let hi = range.end;
 
             // Fast path: if entirely ASCII, emit a single byte-set transition.
             if hi <= '\x7F' {
@@ -228,10 +234,10 @@ impl NfaBuilder {
 
             // General path: convert codepoint range to UTF-8 byte sequences.
             for seq in Utf8Sequences::new(lo, hi) {
-                let ranges = seq.as_slice();
+                let byte_ranges = seq.as_slice();
                 let mut current = start;
-                for (i, byte_range) in ranges.iter().enumerate() {
-                    let target = if i == ranges.len() - 1 {
+                for (i, byte_range) in byte_ranges.iter().enumerate() {
+                    let target = if i == byte_ranges.len() - 1 {
                         accept
                     } else {
                         self.new_state()
@@ -250,35 +256,15 @@ impl NfaBuilder {
 
     fn build_look(&mut self, look: Look) -> Option<Fragment> {
         // Look assertions are zero-width: start == accept.
-        // We encode them as special marker states.
-        // For now, we support start/end anchors. Word boundaries are
-        // handled by flagging the state for the DFA driver.
         match look {
-            Look::Start | Look::StartLF | Look::StartCRLF => {
+            Look::Start | Look::StartLF | Look::StartCRLF
+            | Look::End | Look::EndLF | Look::EndCRLF => {
                 let s = self.new_state();
                 Some(Fragment {
                     start: s,
                     accept: s,
                 })
             }
-            Look::End | Look::EndLF | Look::EndCRLF => {
-                let s = self.new_state();
-                Some(Fragment {
-                    start: s,
-                    accept: s,
-                })
-            }
-            // Word boundaries and other complex assertions:
-            // We can still build the NFA, but the DFA driver needs
-            // special handling. For now, return None to fall back.
-            Look::WordUnicode
-            | Look::WordUnicodeNegate
-            | Look::WordAscii
-            | Look::WordAsciiNegate => {
-                // TODO: word boundary support via DFA state flags.
-                None
-            }
-            _ => None,
         }
     }
 
@@ -310,10 +296,8 @@ impl NfaBuilder {
 
     fn build_alternation(&mut self, alts: &[Hir]) -> Option<Fragment> {
         if alts.is_empty() {
-            // Empty alternation = always fails. Create a dead fragment.
             let start = self.new_state();
             let accept = self.new_state();
-            // No transitions → never reaches accept.
             return Some(Fragment { start, accept });
         }
         if alts.len() == 1 {
@@ -337,42 +321,28 @@ impl NfaBuilder {
 
     fn build_repetition(&mut self, rep: &Repetition) -> Option<Fragment> {
         let min = rep.min;
-        let max = rep.max; // None = unbounded
+        let max = rep.max;
         let greedy = rep.greedy;
 
         match (min, max) {
-            // `?` — optional
             (0, Some(1)) => self.build_optional(&rep.sub, greedy),
-
-            // `*` — zero or more
             (0, None) => self.build_star(&rep.sub, greedy),
-
-            // `+` — one or more
             (1, None) => self.build_plus(&rep.sub, greedy),
-
-            // `{n}` — exactly n
             (n, Some(m)) if n == m => self.build_exact(&rep.sub, n),
-
-            // `{n,}` — n or more
             (n, None) => self.build_at_least(&rep.sub, n, greedy),
-
-            // `{n,m}` — between n and m
             (n, Some(m)) => self.build_bounded(&rep.sub, n, m, greedy),
         }
     }
 
-    /// `sub?` — optional.
     fn build_optional(&mut self, sub: &Hir, greedy: bool) -> Option<Fragment> {
         let frag = self.build_hir(sub)?;
         let start = self.new_state();
         let accept = self.new_state();
 
         if greedy {
-            // Greedy: prefer matching (priority 0), skip is fallback (priority 1).
             self.add_epsilon(start, frag.start, 0);
             self.add_epsilon(start, accept, 1);
         } else {
-            // Lazy: prefer skipping (priority 0), match is fallback (priority 1).
             self.add_epsilon(start, accept, 0);
             self.add_epsilon(start, frag.start, 1);
         }
@@ -381,46 +351,39 @@ impl NfaBuilder {
         Some(Fragment { start, accept })
     }
 
-    /// `sub*` — zero or more.
     fn build_star(&mut self, sub: &Hir, greedy: bool) -> Option<Fragment> {
         let frag = self.build_hir(sub)?;
         let start = self.new_state();
         let accept = self.new_state();
 
         if greedy {
-            // Greedy: prefer looping, fallback to exit.
             self.add_epsilon(start, frag.start, 0);
             self.add_epsilon(start, accept, 1);
         } else {
-            // Lazy: prefer exiting, fallback to looping.
             self.add_epsilon(start, accept, 0);
             self.add_epsilon(start, frag.start, 1);
         }
-        self.add_epsilon(frag.accept, start, 0); // loop back
+        self.add_epsilon(frag.accept, start, 0);
 
         Some(Fragment { start, accept })
     }
 
-    /// `sub+` — one or more.
     fn build_plus(&mut self, sub: &Hir, greedy: bool) -> Option<Fragment> {
         let frag = self.build_hir(sub)?;
         let start = frag.start;
         let accept = self.new_state();
 
         if greedy {
-            // After first match: prefer looping (priority 0), exit (priority 1).
-            self.add_epsilon(frag.accept, frag.start, 0); // loop
-            self.add_epsilon(frag.accept, accept, 1); // exit
+            self.add_epsilon(frag.accept, frag.start, 0);
+            self.add_epsilon(frag.accept, accept, 1);
         } else {
-            // Lazy: prefer exiting (priority 0), looping (priority 1).
-            self.add_epsilon(frag.accept, accept, 0); // exit
-            self.add_epsilon(frag.accept, frag.start, 1); // loop
+            self.add_epsilon(frag.accept, accept, 0);
+            self.add_epsilon(frag.accept, frag.start, 1);
         }
 
         Some(Fragment { start, accept })
     }
 
-    /// `sub{n}` — exactly n repetitions.
     fn build_exact(&mut self, sub: &Hir, n: u32) -> Option<Fragment> {
         if n == 0 {
             let s = self.new_state();
@@ -441,9 +404,7 @@ impl NfaBuilder {
         Some(result)
     }
 
-    /// `sub{n,}` — at least n repetitions.
     fn build_at_least(&mut self, sub: &Hir, n: u32, greedy: bool) -> Option<Fragment> {
-        // Build n required copies, then a star.
         let required = self.build_exact(sub, n)?;
         let star = self.build_star(sub, greedy)?;
         self.add_epsilon(required.accept, star.start, 0);
@@ -453,19 +414,16 @@ impl NfaBuilder {
         })
     }
 
-    /// `sub{n,m}` — between n and m repetitions.
     fn build_bounded(&mut self, sub: &Hir, n: u32, m: u32, greedy: bool) -> Option<Fragment> {
         if m < n {
             return None;
         }
-        // Build n required copies.
         let required = self.build_exact(sub, n)?;
 
         if n == m {
             return Some(required);
         }
 
-        // Build (m - n) optional copies.
         let mut current_accept = required.accept;
         let final_accept = self.new_state();
 
@@ -496,16 +454,13 @@ mod tests {
     #[test]
     fn literal_pattern() {
         let nfa = Nfa::from_pattern("abc").unwrap();
-        // 4 states: start + one per byte + implicit accept at end.
         assert!(nfa.state_count() >= 4);
     }
 
     #[test]
     fn char_class_ascii() {
         let nfa = Nfa::from_pattern("[a-z]").unwrap();
-        // 2 states: start → [a-z] → accept.
         assert!(nfa.state_count() >= 2);
-        // Check that the transition from start has a ByteSet covering a-z.
         let start_trans = &nfa.states[nfa.start as usize].transitions;
         assert_eq!(start_trans.len(), 1);
         let (bs, _) = &start_trans[0];
@@ -516,18 +471,14 @@ mod tests {
 
     #[test]
     fn char_class_unicode() {
-        // Latin Extended-A: U+0100–U+017F (2-byte UTF-8 sequences).
         let nfa = Nfa::from_pattern(r"[\u{0100}-\u{017F}]").unwrap();
-        // Should have intermediate states for UTF-8 byte sequences.
         assert!(nfa.state_count() >= 3);
     }
 
     #[test]
     fn alternation() {
-        // regex-syntax may optimize `a|b|c` into `[abc]`, so use longer branches.
         let nfa = Nfa::from_pattern("cat|dog|fox").unwrap();
-        // Should have enough states for 3 branches.
-        assert!(nfa.state_count() >= 7); // at least 3×2 + shared states
+        assert!(nfa.state_count() >= 7);
     }
 
     #[test]
@@ -545,7 +496,7 @@ mod tests {
     #[test]
     fn bounded_repetition() {
         let nfa = Nfa::from_pattern("[0-9]{3,5}").unwrap();
-        assert!(nfa.state_count() >= 4); // At least 3 required + optional states.
+        assert!(nfa.state_count() >= 4);
     }
 
     #[test]
@@ -562,22 +513,15 @@ mod tests {
 
     #[test]
     fn dot_all() {
-        // With dotall + unicode, `.` matches all codepoints.
-        // The NFA expands this into UTF-8 byte sequences.
-        // Verify via DFA matching instead of inspecting NFA structure.
         let nfa = Nfa::from_pattern("(?s).").unwrap();
-        // Should have states for UTF-8 multi-byte paths.
         assert!(nfa.state_count() >= 2);
     }
 
     #[test]
     fn unicode_property() {
-        // \p{L} — Unicode letter.
         let nfa = Nfa::from_pattern(r"\p{L}");
-        // Should succeed (builds UTF-8 automata for all Unicode letters).
         assert!(nfa.is_some());
         let nfa = nfa.unwrap();
-        // Should have many states due to UTF-8 expansion.
         assert!(nfa.state_count() > 10);
     }
 
@@ -586,15 +530,12 @@ mod tests {
         let nfa = Nfa::from_pattern("[a-z]+").unwrap();
         let sets = nfa.transition_byte_sets();
         assert!(!sets.is_empty());
-        // At least one set covering a-z.
         assert!(sets.iter().any(|bs| bs.contains(b'a') && bs.contains(b'z')));
     }
 
     #[test]
     fn backreference_unsupported() {
-        // Backreferences are not regular — should return None.
-        // regex-syntax doesn't parse backreferences in default mode,
-        // so this would be a parse error (returning None).
+        // Our parser doesn't support backreferences — parse error → None.
         let result = Nfa::from_pattern(r"(a)\1");
         assert!(result.is_none());
     }

@@ -25,6 +25,8 @@ struct Parser<'a> {
     dotall: bool,
     /// Unicode mode — shorthand classes are Unicode-aware.
     unicode: bool,
+    /// Case-insensitive mode — literals match both cases.
+    case_insensitive: bool,
 }
 
 impl<'a> Parser<'a> {
@@ -34,6 +36,7 @@ impl<'a> Parser<'a> {
             pos: 0,
             dotall: false,
             unicode: opts.unicode,
+            case_insensitive: false,
         }
     }
 
@@ -205,7 +208,7 @@ impl<'a> Parser<'a> {
             Some(b'\\') => self.parse_escape(),
             Some(b) if is_literal_char(b) => {
                 self.advance();
-                Ok(Hir::Literal(vec![b]))
+                Ok(self.maybe_case_fold_byte(b))
             }
             Some(b) => Err(self.err(format!("unexpected character '{}'", b as char))),
             None => Err(self.err("unexpected end of pattern".into())),
@@ -230,6 +233,7 @@ impl<'a> Parser<'a> {
             // Inline flags: (?s), (?i), (?si), (?flags:...)
             let saved_dotall = self.dotall;
             let saved_unicode = self.unicode;
+            let saved_ci = self.case_insensitive;
             self.parse_flags()?;
 
             if self.peek() == Some(b':') {
@@ -240,6 +244,7 @@ impl<'a> Parser<'a> {
                 // Restore flags after scoped group.
                 self.dotall = saved_dotall;
                 self.unicode = saved_unicode;
+                self.case_insensitive = saved_ci;
                 return Ok(Hir::Group(Box::new(inner)));
             }
 
@@ -268,8 +273,7 @@ impl<'a> Parser<'a> {
                 }
                 b'i' => {
                     self.advance();
-                    // Case-insensitive — noted but not changing HIR structure.
-                    // The downstream consumer handles case folding if needed.
+                    self.case_insensitive = true;
                 }
                 b'u' => {
                     self.advance();
@@ -308,6 +312,9 @@ impl<'a> Parser<'a> {
     // ── Character classes ───────────────────────────────────────────
 
     /// Parse `[...]` or `[^...]`.
+    ///
+    /// If any Unicode escapes (`\u{...}`) are present, produces a
+    /// `CharClass::Unicode`. Otherwise produces `CharClass::Bytes`.
     fn parse_char_class(&mut self) -> Result<Hir, ParseError> {
         self.expect(b'[')?;
 
@@ -318,79 +325,113 @@ impl<'a> Parser<'a> {
             false
         };
 
-        let mut ranges = Vec::new();
+        let mut byte_ranges = Vec::new();
+        let mut cp_ranges: Vec<CodepointRange> = Vec::new();
+
         // Special case: ] as first char in class is literal.
         if self.peek() == Some(b']') {
             self.advance();
-            ranges.push(ByteRange::new(b']', b']'));
+            byte_ranges.push(ByteRange::new(b']', b']'));
         }
 
         while self.peek() != Some(b']') && !self.at_end() {
-            self.parse_class_item(&mut ranges)?;
+            self.parse_class_item(&mut byte_ranges, &mut cp_ranges)?;
         }
 
         self.expect(b']')?;
-        ranges.sort();
-        ranges = merge_byte_ranges(ranges);
 
-        Ok(Hir::Class(CharClass::Bytes { ranges, negated }))
+        if cp_ranges.is_empty() {
+            byte_ranges.sort();
+            byte_ranges = merge_byte_ranges(byte_ranges);
+            Ok(Hir::Class(CharClass::Bytes { ranges: byte_ranges, negated }))
+        } else {
+            // Promote byte ranges to codepoint ranges and merge.
+            for br in &byte_ranges {
+                cp_ranges.push(CodepointRange::new(br.start as char, br.end as char));
+            }
+            cp_ranges.sort();
+            cp_ranges.dedup();
+            Ok(Hir::Class(CharClass::Unicode { ranges: cp_ranges, negated }))
+        }
     }
 
     /// Parse a single item inside a character class.
-    /// Returns `None` for shorthand classes that expand to multiple ranges
-    /// (handled by pushing directly into `ranges` in `parse_char_class`).
-    fn parse_class_item(&mut self, ranges: &mut Vec<ByteRange>) -> Result<(), ParseError> {
+    fn parse_class_item(
+        &mut self,
+        byte_ranges: &mut Vec<ByteRange>,
+        cp_ranges: &mut Vec<CodepointRange>,
+    ) -> Result<(), ParseError> {
         if self.peek() == Some(b'\\') {
             self.advance();
             match self.peek() {
-                // Shorthand classes inside character classes — expand directly.
-                Some(b'd') => { self.advance(); ranges.push(ByteRange::new(b'0', b'9')); return Ok(()); }
+                // Shorthand classes — expand directly into byte ranges.
+                Some(b'd') => { self.advance(); byte_ranges.push(ByteRange::new(b'0', b'9')); return Ok(()); }
                 Some(b'D') => {
                     self.advance();
-                    ranges.push(ByteRange::new(0, b'0' - 1));
-                    ranges.push(ByteRange::new(b'9' + 1, 255));
+                    byte_ranges.push(ByteRange::new(0, b'0' - 1));
+                    byte_ranges.push(ByteRange::new(b'9' + 1, 255));
                     return Ok(());
                 }
                 Some(b'w') => {
                     self.advance();
-                    ranges.push(ByteRange::new(b'0', b'9'));
-                    ranges.push(ByteRange::new(b'A', b'Z'));
-                    ranges.push(ByteRange::new(b'_', b'_'));
-                    ranges.push(ByteRange::new(b'a', b'z'));
+                    byte_ranges.push(ByteRange::new(b'0', b'9'));
+                    byte_ranges.push(ByteRange::new(b'A', b'Z'));
+                    byte_ranges.push(ByteRange::new(b'_', b'_'));
+                    byte_ranges.push(ByteRange::new(b'a', b'z'));
                     return Ok(());
                 }
                 Some(b'W') => {
                     self.advance();
-                    ranges.push(ByteRange::new(0, b'0' - 1));
-                    ranges.push(ByteRange::new(b'9' + 1, b'A' - 1));
-                    ranges.push(ByteRange::new(b'Z' + 1, b'_' - 1));
-                    ranges.push(ByteRange::new(b'_' + 1, b'a' - 1));
-                    ranges.push(ByteRange::new(b'z' + 1, 255));
+                    byte_ranges.push(ByteRange::new(0, b'0' - 1));
+                    byte_ranges.push(ByteRange::new(b'9' + 1, b'A' - 1));
+                    byte_ranges.push(ByteRange::new(b'Z' + 1, b'_' - 1));
+                    byte_ranges.push(ByteRange::new(b'_' + 1, b'a' - 1));
+                    byte_ranges.push(ByteRange::new(b'z' + 1, 255));
                     return Ok(());
                 }
                 Some(b's') => {
                     self.advance();
-                    ranges.push(ByteRange::new(0x09, 0x0D));
-                    ranges.push(ByteRange::new(0x20, 0x20));
+                    byte_ranges.push(ByteRange::new(0x09, 0x0D));
+                    byte_ranges.push(ByteRange::new(0x20, 0x20));
                     return Ok(());
                 }
                 Some(b'S') => {
                     self.advance();
-                    ranges.push(ByteRange::new(0, 0x08));
-                    ranges.push(ByteRange::new(0x0E, 0x1F));
-                    ranges.push(ByteRange::new(0x21, 255));
+                    byte_ranges.push(ByteRange::new(0, 0x08));
+                    byte_ranges.push(ByteRange::new(0x0E, 0x1F));
+                    byte_ranges.push(ByteRange::new(0x21, 255));
+                    return Ok(());
+                }
+                // Unicode escape inside class: \u{XXXX}
+                Some(b'u') => {
+                    self.advance();
+                    let cp = self.parse_class_unicode_codepoint()?;
+                    let ch = char::from_u32(cp)
+                        .ok_or_else(|| self.err(format!("invalid codepoint U+{:04X}", cp)))?;
+                    if self.peek() == Some(b'-') && self.src.get(self.pos + 1) != Some(&b']') {
+                        self.advance(); // consume '-'
+                        // Expect another \u{...} for the range end.
+                        self.expect(b'\\')?;
+                        self.expect(b'u')?;
+                        let cp_hi = self.parse_class_unicode_codepoint()?;
+                        let ch_hi = char::from_u32(cp_hi)
+                            .ok_or_else(|| self.err(format!("invalid codepoint U+{:04X}", cp_hi)))?;
+                        cp_ranges.push(CodepointRange::new(ch, ch_hi));
+                    } else {
+                        cp_ranges.push(CodepointRange::new(ch, ch));
+                    }
                     return Ok(());
                 }
                 _ => {
-                    // Fall through to single-byte escape.
+                    // Single-byte escape.
                     let b = self.parse_class_escape_single()?;
                     let lo = b;
                     if self.peek() == Some(b'-') && self.src.get(self.pos + 1) != Some(&b']') {
-                        self.advance(); // consume '-'
+                        self.advance();
                         let hi = self.parse_class_atom_single()?;
-                        ranges.push(ByteRange::new(lo, hi));
+                        byte_ranges.push(ByteRange::new(lo, hi));
                     } else {
-                        ranges.push(ByteRange::new(lo, lo));
+                        byte_ranges.push(ByteRange::new(lo, lo));
                     }
                     return Ok(());
                 }
@@ -400,13 +441,31 @@ impl<'a> Parser<'a> {
         // Non-escape atom.
         let lo = self.parse_class_atom_single()?;
         if self.peek() == Some(b'-') && self.src.get(self.pos + 1) != Some(&b']') {
-            self.advance(); // consume '-'
+            self.advance();
             let hi = self.parse_class_atom_single()?;
-            ranges.push(ByteRange::new(lo, hi));
+            byte_ranges.push(ByteRange::new(lo, hi));
         } else {
-            ranges.push(ByteRange::new(lo, lo));
+            byte_ranges.push(ByteRange::new(lo, lo));
         }
         Ok(())
+    }
+
+    /// Parse `{XXXX}` after `\u` inside a character class.
+    fn parse_class_unicode_codepoint(&mut self) -> Result<u32, ParseError> {
+        if self.peek() == Some(b'{') {
+            self.advance();
+            let cp = self.parse_hex_codepoint()?;
+            self.expect(b'}')?;
+            Ok(cp)
+        } else {
+            // \uHHHH — exactly 4 hex digits.
+            let mut cp = 0u32;
+            for _ in 0..4 {
+                let d = self.parse_hex_digit()? as u32;
+                cp = (cp << 4) | d;
+            }
+            Ok(cp)
+        }
     }
 
     /// Parse a single byte atom inside a character class (non-shorthand).
@@ -469,7 +528,7 @@ impl<'a> Parser<'a> {
             Some(b'b') => Ok(Hir::Literal(vec![0x08])), // \b inside regex = backspace
 
             // Literal escapes.
-            Some(b) if is_escapable(b) => Ok(Hir::Literal(vec![b])),
+            Some(b) if is_escapable(b) => Ok(self.maybe_case_fold_byte(b)),
 
             Some(b) => Err(self.err(format!("invalid escape: \\{}", b as char))),
             None => Err(self.err("unexpected end after backslash".into())),
@@ -573,6 +632,20 @@ impl<'a> Parser<'a> {
             ],
             negated,
         })
+    }
+
+    /// Produce a literal or a case-insensitive class for a single byte.
+    fn maybe_case_fold_byte(&self, b: u8) -> Hir {
+        if self.case_insensitive && b.is_ascii_alphabetic() {
+            let lo = b.to_ascii_lowercase();
+            let hi = b.to_ascii_uppercase();
+            Hir::Class(CharClass::Bytes {
+                ranges: vec![ByteRange::new(hi, hi), ByteRange::new(lo, lo)],
+                negated: false,
+            })
+        } else {
+            Hir::Literal(vec![b])
+        }
     }
 
     fn shorthand_space(&self, negated: bool) -> Hir {

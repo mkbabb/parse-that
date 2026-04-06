@@ -26,7 +26,7 @@ pub struct DfaOptions {
     pub state_limit: usize,
     /// Whether to minimize the DFA via Hopcroft's algorithm.
     pub minimize: bool,
-    /// Whether to enable Unicode mode in regex-syntax parsing.
+    /// Whether to enable Unicode mode in regex parsing.
     pub unicode: bool,
 }
 
@@ -65,12 +65,10 @@ impl Dfa {
 
     /// Compile with explicit options.
     pub fn compile_with(pattern: &str, opts: &DfaOptions) -> Option<Self> {
-        let hir = regex_syntax::ParserBuilder::new()
-            .utf8(opts.unicode) // byte-mode when unicode is off
-            .unicode(opts.unicode)
-            .build()
-            .parse(pattern)
-            .ok()?;
+        let parse_opts = super::hir::ParseOptions {
+            unicode: opts.unicode,
+        };
+        let hir = super::parse_with(pattern, &parse_opts).ok()?;
         let nfa = Nfa::from_hir(&hir)?;
         Self::from_nfa(&nfa, opts)
     }

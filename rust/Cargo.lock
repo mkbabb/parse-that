@@ -787,7 +787,6 @@ dependencies = [
  "pest_grammars",
  "pprint",
  "regex",
- "regex-syntax",
  "serde",
  "serde_json",
  "serde_json_borrow",

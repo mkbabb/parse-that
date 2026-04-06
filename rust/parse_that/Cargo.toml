@@ -87,7 +87,6 @@ harness = false
 
 [dependencies]
 pprint = "0.3"
-regex-syntax = "0.8"
 colored = { version = "3", optional = true }
 memchr = "2.5.0"
 aho-corasick = "1.1"

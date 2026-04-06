@@ -100,7 +100,7 @@ impl CharClass {
 }
 
 /// Negate sorted, non-overlapping byte ranges over `[0, 255]`.
-fn negate_byte_ranges(ranges: &[ByteRange]) -> Vec<ByteRange> {
+pub fn negate_byte_ranges(ranges: &[ByteRange]) -> Vec<ByteRange> {
     let mut result = Vec::new();
     let mut cursor: u16 = 0; // u16 to handle 255+1
     for r in ranges {
@@ -118,7 +118,7 @@ fn negate_byte_ranges(ranges: &[ByteRange]) -> Vec<ByteRange> {
 
 /// Negate sorted, non-overlapping codepoint ranges over `['\0', '\u{10FFFF}']`,
 /// skipping the surrogate range `[U+D800, U+DFFF]`.
-fn negate_codepoint_ranges(ranges: &[CodepointRange]) -> Vec<CodepointRange> {
+pub fn negate_codepoint_ranges(ranges: &[CodepointRange]) -> Vec<CodepointRange> {
     let mut result = Vec::new();
     let mut cursor: u32 = 0;
 
