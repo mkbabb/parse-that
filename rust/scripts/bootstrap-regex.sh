@@ -27,10 +27,27 @@ body = "".join(lines[start:])
 body = body.replace("::parse_that::", "crate::")
 
 # Replace unstable core::panicking::panic_fmt with stable panic!
+# Match the full block: { ::core::panicking::panic_fmt(format_args!(...)); }
+body = re.sub(
+    r'\{\s*\n\s*::core::panicking::panic_fmt\(\s*\n\s*format_args!\(([^)]+)\),?\s*\n\s*\);\s*\n\s*\}',
+    r'panic!(\1);',
+    body,
+)
+# Simpler single-line variant
 body = re.sub(
     r'\{\s*::core::panicking::panic_fmt\(\s*format_args!\(([^)]+)\),?\s*\);\s*\}',
     r'panic!(\1);',
     body,
+)
+
+# Make context struct and its with_capacity pub(crate)
+body = body.replace(
+    "struct __RegexParserEnumCtx",
+    "pub(crate) struct __RegexParserEnumCtx",
+)
+body = body.replace(
+    "    fn with_capacity(n: usize)",
+    "    pub(crate) fn with_capacity(n: usize)",
 )
 
 header = '''#![allow(unused, non_snake_case, non_camel_case_types, clippy::all)]
@@ -49,5 +66,5 @@ body = body.replace("use crate::*;\n", "", 1)
 sys.stdout.write(header + body)
 PYEOF
 
-LINES=$(wc -l < parse_that/src/regex/generated.rs)
-echo "Generated parse_that/src/regex/generated.rs ($LINES lines)"
+LINES=\$(wc -l < parse_that/src/regex/generated.rs)
+echo "Generated parse_that/src/regex/generated.rs (\$LINES lines)"

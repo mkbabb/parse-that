@@ -8,12 +8,12 @@ pub struct RegexParser;
 
 #[allow(non_upper_case_globals)]
 pub const GRAMMAR_RegexParser: [&'static str; 1usize] = [
-    "// Regex grammar \u{2014} full L4 spec for self-hosting parse-that\'s regex parser.\n//\n// Natural recursion: alternation \u{2192} concat \u{2192} quantified \u{2192} atom \u{2192} group \u{2192} alternation.\n// Rules in the cycle survive the IR optimizer; leaf rules are correctly inlined.\n//\n// Regenerate: scripts/bootstrap-regex.sh\n\n// \u{2500}\u{2500} Leaf rules (defined first \u{2014} inlined by optimizer) \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\nliteral = /[^\\\\()\\[\\]{}|*+?.^$]/ ;\n\nclass_escape\n    = \"\\\\\" >> /[dDwWsS]/\n    | \"\\\\\" >> \"u\" >> \"{\" >> /[0-9a-fA-F]+/ << \"}\"\n    | \"\\\\\" >> \"u\" >> /[0-9a-fA-F]{4}/\n    | \"\\\\\" >> \"x\" >> /[0-9a-fA-F]{2}/\n    | \"\\\\\" >> /[^\\n]/\n    ;\n\nclass_atom = class_escape | /[^\\]\\\\]/ ;\n\nclass_item\n    = class_atom , \"-\" >> class_atom\n    | class_escape\n    | /[^\\]\\\\]/\n    ;\n\nchar_class = \"[\" >> \"^\" ? , class_item + << \"]\" ;\n\nescape\n    = \"\\\\\" >> /[dDwWsS]/\n    | \"\\\\\" >> /[pP]/ >> \"{\" >> /[A-Za-z_]+/ << \"}\"\n    | \"\\\\\" >> \"u\" >> \"{\" >> /[0-9a-fA-F]+/ << \"}\"\n    | \"\\\\\" >> \"u\" >> /[0-9a-fA-F]{4}/\n    | \"\\\\\" >> \"x\" >> /[0-9a-fA-F]{2}/\n    | \"\\\\\" >> /[^\\n]/\n    ;\n\nquantifier\n    = \"*\" , \"?\" ?\n    | \"+\" , \"?\" ?\n    | \"?\" , \"?\" ?\n    | \"{\" >> /\\d+/ , ( \",\" >> /\\d*/ ) ? << \"}\" , \"?\" ?\n    ;\n\n// \u{2500}\u{2500} Recursive spine (last rule = entry point) \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\ngroup\n    = \"(?:\" >> alternation << \")\"\n    | \"(?\" >> /[simux]+/ , \":\" >> alternation << \")\"\n    | \"(?\" >> /[simux]+/ << \")\"\n    | \"(\" >> alternation << \")\"\n    ;\n\natom\n    = group\n    | char_class\n    | \".\"\n    | \"^\"\n    | \"$\"\n    | escape\n    | literal\n    ;\n\nquantified = atom , quantifier ? ;\n\nconcat = quantified + ;\n\nalternation = concat , ( \"|\" >> concat ) * ;\n\n// Entry point \u{2014} last rule in source order.\nregex = alternation ;\n",
+    "// Regex grammar \u{2014} full L4 spec for self-hosting parse-that\'s regex parser.\n//\n// Natural recursion: alternation \u{2192} concat \u{2192} quantified \u{2192} atom \u{2192} group \u{2192} alternation.\n// Rules in the cycle survive the IR optimizer; leaf rules are correctly inlined.\n//\n// Regenerate: scripts/bootstrap-regex.sh\n\n// \u{2500}\u{2500} Leaf rules (defined first \u{2014} inlined by optimizer) \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\nliteral = /[^\\\\()\\[\\]{}|*+?.^$]/ ;\n\nclass_escape\n    = \"\\\\\" >> /[dDwWsS]/\n    | \"\\\\\" >> \"u\" >> \"{\" >> /[0-9a-fA-F]+/ << \"}\"\n    | \"\\\\\" >> \"u\" >> /[0-9a-fA-F]{4}/\n    | \"\\\\\" >> \"x\" >> /[0-9a-fA-F]{2}/\n    | \"\\\\\" >> /[^\\n]/\n    ;\n\nclass_atom = class_escape | /[^\\]\\\\]/ ;\n\nclass_item\n    = class_atom , \"-\" >> class_atom\n    | class_escape\n    | /[^\\]\\\\]/\n    ;\n\nchar_class = \"[\" >> \"^\" ? , class_item + << \"]\" ;\n\nescape\n    = \"\\\\\" >> /[dDwWsS]/\n    | \"\\\\\" >> /[pP]/ >> \"{\" >> /[A-Za-z_]+/ << \"}\"\n    | \"\\\\\" >> \"u\" >> \"{\" >> /[0-9a-fA-F]+/ << \"}\"\n    | \"\\\\\" >> \"u\" >> /[0-9a-fA-F]{4}/\n    | \"\\\\\" >> \"x\" >> /[0-9a-fA-F]{2}/\n    | \"\\\\\" >> /[^\\n]/\n    ;\n\nquantifier\n    = \"*\" , \"?\" ?\n    | \"+\" , \"?\" ?\n    | \"?\" , \"?\" ?\n    | \"{\" >> /\\d+/ , ( \",\" , /\\d+/ ? ) ? << \"}\" , \"?\" ?\n    ;\n\n// \u{2500}\u{2500} Recursive spine (last rule = entry point) \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\ngroup\n    = \"(?:\" >> alternation << \")\"\n    | \"(?\" >> /[simux]+/ , \":\" >> alternation << \")\"\n    | \"(?\" >> /[simux]+/ << \")\"\n    | \"(\" >> alternation << \")\"\n    ;\n\natom\n    = group\n    | char_class\n    | \".\"\n    | \"^\"\n    | \"$\"\n    | escape\n    | literal\n    ;\n\nquantified = atom , quantifier ? ;\n\nconcat = quantified * ;\n\nalternation = concat , ( \"|\" >> concat ) * ;\n\n// Entry point \u{2014} last rule in source order.\nregex = alternation ;\n",
 ];
 pub enum RegexParserEnum<'a> {
-    class_escape(crate::Span<'a>),
     escape(crate::Span<'a>),
     quantifier(crate::Span<'a>),
+    class_escape(crate::Span<'a>),
     literal(crate::Span<'a>),
     class_atom(&'a RegexParserEnum<'a>),
     class_item(&'a RegexParserEnum<'a>),
@@ -38,13 +38,6 @@ impl<'a> ::core::fmt::Debug for RegexParserEnum<'a> {
     #[inline]
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         match self {
-            RegexParserEnum::class_escape(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(
-                    f,
-                    "class_escape",
-                    &__self_0,
-                )
-            }
             RegexParserEnum::escape(__self_0) => {
                 ::core::fmt::Formatter::debug_tuple_field1_finish(f, "escape", &__self_0)
             }
@@ -52,6 +45,13 @@ impl<'a> ::core::fmt::Debug for RegexParserEnum<'a> {
                 ::core::fmt::Formatter::debug_tuple_field1_finish(
                     f,
                     "quantifier",
+                    &__self_0,
+                )
+            }
+            RegexParserEnum::class_escape(__self_0) => {
+                ::core::fmt::Formatter::debug_tuple_field1_finish(
+                    f,
+                    "class_escape",
                     &__self_0,
                 )
             }
@@ -162,14 +162,14 @@ impl<'a> ::core::clone::Clone for RegexParserEnum<'a> {
     #[inline]
     fn clone(&self) -> RegexParserEnum<'a> {
         match self {
-            RegexParserEnum::class_escape(__self_0) => {
-                RegexParserEnum::class_escape(::core::clone::Clone::clone(__self_0))
-            }
             RegexParserEnum::escape(__self_0) => {
                 RegexParserEnum::escape(::core::clone::Clone::clone(__self_0))
             }
             RegexParserEnum::quantifier(__self_0) => {
                 RegexParserEnum::quantifier(::core::clone::Clone::clone(__self_0))
+            }
+            RegexParserEnum::class_escape(__self_0) => {
+                RegexParserEnum::class_escape(::core::clone::Clone::clone(__self_0))
             }
             RegexParserEnum::literal(__self_0) => {
                 RegexParserEnum::literal(::core::clone::Clone::clone(__self_0))
@@ -226,13 +226,13 @@ impl<'a> ::core::clone::Clone for RegexParserEnum<'a> {
     }
 }
 #[allow(non_camel_case_types)]
-struct __RegexParserEnumCtx<'a> {
+pub(crate) struct __RegexParserEnumCtx<'a> {
     __slab: crate::BumpSlab,
     __s0: ::std::cell::UnsafeCell<Vec<RegexParserEnum<'a>>>,
 }
 #[allow(non_snake_case)]
 impl<'a> __RegexParserEnumCtx<'a> {
-    fn with_capacity(n: usize) -> Self {
+    pub(crate) fn with_capacity(n: usize) -> Self {
         Self {
             __slab: crate::BumpSlab::with_capacity(n * 32),
             __s0: ::std::cell::UnsafeCell::new(Vec::with_capacity(64)),
@@ -401,6 +401,7 @@ impl RegexParser {
                                 let __kept = {
                                     let __cp = state.offset;
                                     if (|| (|| {
+                                        let __sp_start = state.offset;
                                         if state.offset < state.src.len()
                                             && state.src.as_bytes()[state.offset] == 44u8
                                         {
@@ -412,7 +413,18 @@ impl RegexParser {
                                         } else {
                                             None
                                         }?;
-                                        crate::scan_number_span_json(state)
+                                        {
+                                            let __cp = state.offset;
+                                            if (|| crate::scan_number_span_json(state))()
+                                                .is_none()
+                                            {
+                                                state.offset = __cp;
+                                            }
+                                            Some(crate::Span::new(__cp, state.offset, state.src))
+                                        }?;
+                                        Some(
+                                            crate::Span::new(__sp_start, state.offset, state.src),
+                                        )
                                     })())()
                                         .is_none()
                                     {
@@ -2359,12 +2371,7 @@ impl RegexParser {
                         }
                     }
                 }
-                if (__RegexParserEnum_alloc(state).__s0().len() - __depth14) >= 1usize {
-                    Some(__RegexParserEnum_alloc(state).__c0(__depth14))
-                } else {
-                    __RegexParserEnum_alloc(state).__s0().truncate(__depth14);
-                    None
-                }
+                Some(__RegexParserEnum_alloc(state).__c0(__depth14))
             }
         })()
             .map(|__x| RegexParserEnum::concat(__x))

@@ -40,7 +40,7 @@ quantifier
     = "*" , "?" ?
     | "+" , "?" ?
     | "?" , "?" ?
-    | "{" >> /\d+/ , ( "," >> /\d*/ ) ? << "}" , "?" ?
+    | "{" >> /\d+/ , ( "," , /\d+/ ? ) ? << "}" , "?" ?
     ;
 
 // ── Recursive spine (last rule = entry point) ─────────────────────────
@@ -64,7 +64,7 @@ atom
 
 quantified = atom , quantifier ? ;
 
-concat = quantified + ;
+concat = quantified * ;
 
 alternation = concat , ( "|" >> concat ) * ;
 
