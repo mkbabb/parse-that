@@ -13,6 +13,7 @@ pub mod accel;
 pub mod byteset;
 pub mod dfa;
 pub mod equiv;
+pub mod generated;
 pub mod hir;
 pub mod nfa;
 pub mod parser;
