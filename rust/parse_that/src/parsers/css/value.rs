@@ -2,7 +2,6 @@
 
 use super::scan::*;
 use super::types::*;
-use crate::span_parser::*;
 use crate::state::{ParserState, Span};
 
 /// Inline value parsing — no vtable dispatch, pure byte-level scanning.

@@ -48,8 +48,5 @@ pub(super) fn css_ws<'a>() -> SpanParser<'a> {
     sp_css_ws_comment()
 }
 
-// Number + dimension parsing
-
-pub(super) fn css_number_span<'a>() -> SpanParser<'a> {
-    sp_json_number()
-}
+// Number + dimension parsing — css_number_span removed (unused; callers use
+// css_number_scan_f64 or scan_number_span directly).
