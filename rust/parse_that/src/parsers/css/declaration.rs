@@ -12,20 +12,20 @@ pub(super) fn css_declaration<'a>() -> Parser<'a, CssDeclaration<'a>> {
     let semi = sp_string(";");
 
     Parser::new(move |state: &mut ParserState<'a>| {
-        css_ws_comment_fast(state);
-        let property = css_ident_fast(state)?;
-        css_ws_comment_fast(state);
+        ws_block_comment_scan(state);
+        let property = ident_scan_fast(state)?;
+        ws_block_comment_scan(state);
         if state.src_bytes.get(state.offset) != Some(&b':') {
             return None;
         }
         state.offset += 1;
-        css_ws_comment_fast(state);
+        ws_block_comment_scan(state);
 
         // Parse values until ; or }
         let mut values: ValueVec<'_> = SmallVec::new();
         let mut important = false;
         loop {
-            css_ws_comment_fast(state);
+            ws_block_comment_scan(state);
             let next = state.src_bytes.get(state.offset).copied();
             if matches!(next, Some(b';') | Some(b'}') | None) {
                 break;

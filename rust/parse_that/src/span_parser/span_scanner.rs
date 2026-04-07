@@ -27,13 +27,13 @@ impl SpanScanner {
     #[inline(always)]
     pub fn call<'a>(&self, state: &mut ParserState<'a>) -> Option<Span<'a>> {
         match self {
-            Self::JsonNumber => crate::parsers::json::number_span_fast(state),
-            Self::JsonString => crate::parsers::json::json_string_fast(state),
-            Self::JsonStringQuoted => crate::parsers::json::json_string_fast_quoted(state),
-            Self::CssIdent => crate::parsers::css::css_ident_fast(state),
-            Self::CssWsComment => crate::parsers::css::css_ws_comment_fast(state),
-            Self::CssString => crate::parsers::css::css_string_fast(state),
-            Self::CssBlockComment => crate::parsers::css::css_block_comment_fast(state),
+            Self::JsonNumber => crate::parsers::json::number_span_scan_strict(state),
+            Self::JsonString => crate::parsers::json::quoted_string_scan_content(state),
+            Self::JsonStringQuoted => crate::parsers::json::quoted_string_scan_full(state),
+            Self::CssIdent => crate::parsers::css::ident_scan_fast(state),
+            Self::CssWsComment => crate::parsers::css::ws_block_comment_scan(state),
+            Self::CssString => crate::parsers::css::quoted_string_scan_fast(state),
+            Self::CssBlockComment => crate::parsers::css::block_comment_scan(state),
         }
     }
 }

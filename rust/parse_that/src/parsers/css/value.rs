@@ -30,7 +30,7 @@ pub(super) fn parse_value_inline<'a>(state: &mut ParserState<'a>) -> Option<CssV
                 None
             }
         }
-        b'"' | b'\'' => css_string_fast(state).map(CssValue::String),
+        b'"' | b'\'' => quoted_string_scan_fast(state).map(CssValue::String),
         b',' => {
             state.offset += 1;
             Some(CssValue::Comma)
@@ -76,8 +76,8 @@ pub(super) fn parse_value_inline<'a>(state: &mut ParserState<'a>) -> Option<CssV
             // !important — the '!' is consumed, 'important' is next ident
             let cp = state.offset;
             state.offset += 1;
-            css_ws_comment_fast(state);
-            if let Some(s) = css_ident_fast(state) {
+            ws_block_comment_scan(state);
+            if let Some(s) = ident_scan_fast(state) {
                 if s.as_str() == "important" {
                     // We'll mark important in the declaration, skip this value
                     return Some(CssValue::Ident(s)); // Let caller detect
@@ -101,7 +101,7 @@ pub(super) fn parse_number_value_inline<'a>(state: &mut ParserState<'a>) -> Opti
         return Some(CssValue::Percentage(num));
     }
     // Try unit
-    if let Some(u) = css_ident_fast(state) {
+    if let Some(u) = ident_scan_fast(state) {
         return Some(CssValue::Dimension(num, u));
     }
     Some(CssValue::Number(num))
@@ -111,16 +111,16 @@ pub(super) fn parse_number_value_inline<'a>(state: &mut ParserState<'a>) -> Opti
 pub(super) fn parse_ident_or_function_inline<'a>(
     state: &mut ParserState<'a>,
 ) -> Option<CssValue<'a>> {
-    let name = css_ident_fast(state)?;
+    let name = ident_scan_fast(state)?;
 
     // Check for function call
     if state.src_bytes.get(state.offset) == Some(&b'(') {
         state.offset += 1;
-        css_ws_comment_fast(state);
+        ws_block_comment_scan(state);
 
         let mut args: FuncArgVec<'_> = Vec::with_capacity(4);
         loop {
-            css_ws_comment_fast(state);
+            ws_block_comment_scan(state);
             if state.src_bytes.get(state.offset) == Some(&b')') {
                 state.offset += 1;
                 break;

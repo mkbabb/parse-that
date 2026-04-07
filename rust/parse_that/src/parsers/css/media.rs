@@ -43,27 +43,27 @@ fn parse_media_feature<'a>(state: &mut ParserState<'a>) -> Option<MediaFeature<'
         return None;
     }
     state.offset += 1;
-    css_ws_comment_fast(state);
+    ws_block_comment_scan(state);
 
     // Try value < name < value (range interval, value-first)
     let cp = state.offset;
 
     // First try: name [: value] or name op value
-    let name = css_ident_fast(state)?;
-    css_ws_comment_fast(state);
+    let name = ident_scan_fast(state)?;
+    ws_block_comment_scan(state);
 
     // Check for range op after name
     let range_cp = state.offset;
     if let Some(op) = parse_range_op(state) {
-        css_ws_comment_fast(state);
+        ws_block_comment_scan(state);
         if let Some(value) = parse_value_inline(state) {
-            css_ws_comment_fast(state);
+            ws_block_comment_scan(state);
             // Check for second range op (interval: name op value op value)
             let range_cp2 = state.offset;
             if let Some(op2) = parse_range_op(state) {
-                css_ws_comment_fast(state);
+                ws_block_comment_scan(state);
                 if let Some(value2) = parse_value_inline(state) {
-                    css_ws_comment_fast(state);
+                    ws_block_comment_scan(state);
                     if state.src_bytes.get(state.offset) == Some(&b')') {
                         state.offset += 1;
                         return Some(MediaFeature::RangeInterval {
@@ -88,9 +88,9 @@ fn parse_media_feature<'a>(state: &mut ParserState<'a>) -> Option<MediaFeature<'
     // Check for colon (plain feature)
     if state.src_bytes.get(state.offset) == Some(&b':') {
         state.offset += 1;
-        css_ws_comment_fast(state);
+        ws_block_comment_scan(state);
         let value = parse_value_inline(state);
-        css_ws_comment_fast(state);
+        ws_block_comment_scan(state);
         if state.src_bytes.get(state.offset) == Some(&b')') {
             state.offset += 1;
             return Some(MediaFeature::Plain { name, value });
@@ -110,13 +110,13 @@ fn parse_media_feature<'a>(state: &mut ParserState<'a>) -> Option<MediaFeature<'
 }
 
 fn parse_media_condition<'a>(state: &mut ParserState<'a>) -> Option<MediaCondition<'a>> {
-    css_ws_comment_fast(state);
+    ws_block_comment_scan(state);
 
     // Check for "not" prefix
     let cp = state.offset;
-    if let Some(ident) = css_ident_fast(state) {
+    if let Some(ident) = ident_scan_fast(state) {
         if ident.as_str() == "not" {
-            css_ws_comment_fast(state);
+            ws_block_comment_scan(state);
             if let Some(inner) = parse_media_condition(state) {
                 return Some(MediaCondition::Not(Box::new(inner)));
             }
@@ -132,12 +132,12 @@ fn parse_media_condition<'a>(state: &mut ParserState<'a>) -> Option<MediaConditi
 
     // Check for "and" / "or" chains
     loop {
-        css_ws_comment_fast(state);
+        ws_block_comment_scan(state);
         let kw_cp = state.offset;
-        if let Some(kw) = css_ident_fast(state) {
+        if let Some(kw) = ident_scan_fast(state) {
             match kw.as_str() {
                 "and" => {
-                    css_ws_comment_fast(state);
+                    ws_block_comment_scan(state);
                     if let Some(next) = parse_media_condition(state) {
                         let mut conditions = match result {
                             MediaCondition::And(v) => v,
@@ -151,7 +151,7 @@ fn parse_media_condition<'a>(state: &mut ParserState<'a>) -> Option<MediaConditi
                     break;
                 }
                 "or" => {
-                    css_ws_comment_fast(state);
+                    ws_block_comment_scan(state);
                     if let Some(next) = parse_media_condition(state) {
                         let mut conditions = match result {
                             MediaCondition::Or(v) => v,
@@ -178,7 +178,7 @@ fn parse_media_condition<'a>(state: &mut ParserState<'a>) -> Option<MediaConditi
 }
 
 fn parse_media_query<'a>(state: &mut ParserState<'a>) -> Option<MediaQuery<'a>> {
-    css_ws_comment_fast(state);
+    ws_block_comment_scan(state);
 
     let mut modifier = None;
     let mut media_type = None;
@@ -187,12 +187,12 @@ fn parse_media_query<'a>(state: &mut ParserState<'a>) -> Option<MediaQuery<'a>> 
     let cp = state.offset;
 
     // Try modifier + media type: [not|only] <media-type>
-    if let Some(ident) = css_ident_fast(state) {
+    if let Some(ident) = ident_scan_fast(state) {
         let s = ident.as_str();
         if s == "not" || s == "only" {
             modifier = Some(ident);
-            css_ws_comment_fast(state);
-            if let Some(mt) = css_ident_fast(state) {
+            ws_block_comment_scan(state);
+            if let Some(mt) = ident_scan_fast(state) {
                 media_type = Some(mt);
             } else {
                 // "not" might be a condition prefix, backtrack
@@ -207,11 +207,11 @@ fn parse_media_query<'a>(state: &mut ParserState<'a>) -> Option<MediaQuery<'a>> 
 
     if media_type.is_some() {
         // Check for "and" <condition>
-        css_ws_comment_fast(state);
+        ws_block_comment_scan(state);
         let kw_cp = state.offset;
-        if let Some(kw) = css_ident_fast(state) {
+        if let Some(kw) = ident_scan_fast(state) {
             if kw.as_str() == "and" {
-                css_ws_comment_fast(state);
+                ws_block_comment_scan(state);
                 if let Some(cond) = parse_media_condition(state) {
                     conditions.push(cond);
                 }
@@ -247,12 +247,12 @@ pub(super) fn parse_media_query_list<'a>(state: &mut ParserState<'a>) -> Vec<Med
     }
 
     loop {
-        css_ws_comment_fast(state);
+        ws_block_comment_scan(state);
         if state.src_bytes.get(state.offset) != Some(&b',') {
             break;
         }
         state.offset += 1;
-        css_ws_comment_fast(state);
+        ws_block_comment_scan(state);
         if let Some(q) = parse_media_query(state) {
             queries.push(q);
         } else {
@@ -268,24 +268,24 @@ pub(super) fn parse_media_query_list<'a>(state: &mut ParserState<'a>) -> Vec<Med
 pub(super) fn parse_supports_condition<'a>(
     state: &mut ParserState<'a>,
 ) -> Option<SupportsCondition<'a>> {
-    css_ws_comment_fast(state);
+    ws_block_comment_scan(state);
 
     // Check for "not" prefix
     let cp = state.offset;
-    if let Some(ident) = css_ident_fast(state) {
+    if let Some(ident) = ident_scan_fast(state) {
         if ident.as_str() == "not" {
-            css_ws_comment_fast(state);
+            ws_block_comment_scan(state);
             if let Some(inner) = parse_supports_condition(state) {
                 let mut result = SupportsCondition::Not(Box::new(inner));
 
                 // Check for and/or chains after not
                 loop {
-                    css_ws_comment_fast(state);
+                    ws_block_comment_scan(state);
                     let kw_cp = state.offset;
-                    if let Some(kw) = css_ident_fast(state) {
+                    if let Some(kw) = ident_scan_fast(state) {
                         match kw.as_str() {
                             "and" => {
-                                css_ws_comment_fast(state);
+                                ws_block_comment_scan(state);
                                 if let Some(next) = parse_supports_condition(state) {
                                     let mut conds = match result {
                                         SupportsCondition::And(v) => v,
@@ -298,7 +298,7 @@ pub(super) fn parse_supports_condition<'a>(
                                 state.offset = kw_cp;
                             }
                             "or" => {
-                                css_ws_comment_fast(state);
+                                ws_block_comment_scan(state);
                                 if let Some(next) = parse_supports_condition(state) {
                                     let mut conds = match result {
                                         SupportsCondition::Or(v) => v,
@@ -329,24 +329,24 @@ pub(super) fn parse_supports_condition<'a>(
     // Try (property: value) declaration test
     if state.src_bytes.get(state.offset) == Some(&b'(') {
         state.offset += 1;
-        css_ws_comment_fast(state);
+        ws_block_comment_scan(state);
 
         // Try nested condition first
         let inner_cp = state.offset;
         if let Some(inner) = parse_supports_condition(state) {
-            css_ws_comment_fast(state);
+            ws_block_comment_scan(state);
             if state.src_bytes.get(state.offset) == Some(&b')') {
                 state.offset += 1;
                 let mut result = inner;
 
                 // Check for and/or chains
                 loop {
-                    css_ws_comment_fast(state);
+                    ws_block_comment_scan(state);
                     let kw_cp = state.offset;
-                    if let Some(kw) = css_ident_fast(state) {
+                    if let Some(kw) = ident_scan_fast(state) {
                         match kw.as_str() {
                             "and" => {
-                                css_ws_comment_fast(state);
+                                ws_block_comment_scan(state);
                                 if let Some(next) = parse_supports_condition(state) {
                                     let mut conds = match result {
                                         SupportsCondition::And(v) => v,
@@ -359,7 +359,7 @@ pub(super) fn parse_supports_condition<'a>(
                                 state.offset = kw_cp;
                             }
                             "or" => {
-                                css_ws_comment_fast(state);
+                                ws_block_comment_scan(state);
                                 if let Some(next) = parse_supports_condition(state) {
                                     let mut conds = match result {
                                         SupportsCondition::Or(v) => v,
@@ -385,15 +385,15 @@ pub(super) fn parse_supports_condition<'a>(
         }
 
         // Try declaration: property: value
-        if let Some(property) = css_ident_fast(state) {
-            css_ws_comment_fast(state);
+        if let Some(property) = ident_scan_fast(state) {
+            ws_block_comment_scan(state);
             if state.src_bytes.get(state.offset) == Some(&b':') {
                 state.offset += 1;
-                css_ws_comment_fast(state);
+                ws_block_comment_scan(state);
 
                 let mut values = Vec::new();
                 loop {
-                    css_ws_comment_fast(state);
+                    ws_block_comment_scan(state);
                     if matches!(state.src_bytes.get(state.offset), Some(&b')') | None) {
                         break;
                     }
@@ -414,12 +414,12 @@ pub(super) fn parse_supports_condition<'a>(
 
                     // Check for and/or chains
                     loop {
-                        css_ws_comment_fast(state);
+                        ws_block_comment_scan(state);
                         let kw_cp = state.offset;
-                        if let Some(kw) = css_ident_fast(state) {
+                        if let Some(kw) = ident_scan_fast(state) {
                             match kw.as_str() {
                                 "and" => {
-                                    css_ws_comment_fast(state);
+                                    ws_block_comment_scan(state);
                                     if let Some(next) = parse_supports_condition(state) {
                                         let mut conds = match result {
                                             SupportsCondition::And(v) => v,
@@ -432,7 +432,7 @@ pub(super) fn parse_supports_condition<'a>(
                                     state.offset = kw_cp;
                                 }
                                 "or" => {
-                                    css_ws_comment_fast(state);
+                                    ws_block_comment_scan(state);
                                     if let Some(next) = parse_supports_condition(state) {
                                         let mut conds = match result {
                                             SupportsCondition::Or(v) => v,

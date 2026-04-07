@@ -395,7 +395,7 @@ impl RegexParser {
                                         crate::Span::new(__start, state.offset, state.src),
                                     )
                                 }?;
-                                crate::scan_number_span_json(state)
+                                crate::number_span_scan_strict(state)
                             })()?;
                             (|| {
                                 let __kept = {
@@ -415,7 +415,7 @@ impl RegexParser {
                                         }?;
                                         {
                                             let __cp = state.offset;
-                                            if (|| crate::scan_number_span_json(state))()
+                                            if (|| crate::number_span_scan_strict(state))()
                                                 .is_none()
                                             {
                                                 state.offset = __cp;

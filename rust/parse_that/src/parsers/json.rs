@@ -19,7 +19,7 @@ pub struct NumberSpan<'a> {
 /// Scans `[-]digits[.digits][(e|E)[+-]digits]` in one byte loop.
 /// Returns the span and whether the number is a pure integer (no `.` or `e`/`E`).
 #[inline(always)]
-pub fn number_span_fast_ex<'a>(state: &mut ParserState<'a>) -> Option<NumberSpan<'a>> {
+pub fn number_span_scan_ex<'a>(state: &mut ParserState<'a>) -> Option<NumberSpan<'a>> {
     let bytes = state.src_bytes;
     let start = state.offset;
     let len = bytes.len();
@@ -112,8 +112,8 @@ pub fn number_span_fast_ex<'a>(state: &mut ParserState<'a>) -> Option<NumberSpan
 
 /// Convenience wrapper returning just the span (used by SpanParser).
 #[inline(always)]
-pub fn number_span_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
-    number_span_fast_ex(state).map(|ns| ns.span)
+pub fn number_span_scan_strict<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+    number_span_scan_ex(state).map(|ns| ns.span)
 }
 
 /// Fused JSON number scanner + converter. Scans the number span AND accumulates
@@ -122,7 +122,7 @@ pub fn number_span_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
 /// Uses `scan_number_mantissa(JSON_CFG)` for the shared mantissa core,
 /// then `number_parts_to_f64` for integer fast path + Eisel-Lemire + fallback.
 #[inline(always)]
-pub fn number_scan_convert<'a>(state: &mut ParserState<'a>) -> Option<(Span<'a>, f64)> {
+pub fn number_fused_scan_convert<'a>(state: &mut ParserState<'a>) -> Option<(Span<'a>, f64)> {
     let start = state.offset;
     let (parts, end) = scan_number_mantissa(state.src_bytes, start, &JSON_NUMBER_CONFIG)?;
     state.offset = end;
@@ -142,7 +142,7 @@ pub fn number_scan_convert<'a>(state: &mut ParserState<'a>) -> Option<(Span<'a>,
 /// RFC 8259 leading-zero rejection) without constructing a `Span` that
 /// numeric-only callers immediately discard.
 #[inline(always)]
-pub fn scan_number_f64_json<'a>(state: &mut ParserState<'a>) -> Option<f64> {
+pub fn number_scan_f64_strict<'a>(state: &mut ParserState<'a>) -> Option<f64> {
     let start = state.offset;
     let (parts, end) = scan_number_mantissa(state.src_bytes, start, &JSON_NUMBER_CONFIG)?;
     state.offset = end;
@@ -180,7 +180,7 @@ fn decode_hex4(bytes: &[u8], start: usize) -> Option<u16> {
 /// When `include_quotes` is false, returns content between quotes (exclusive).
 /// When `include_quotes` is true, returns full span including delimiters.
 #[inline(always)]
-fn json_string_fast_inner<'a>(
+fn quoted_string_scan_inner<'a>(
     state: &mut ParserState<'a>,
     include_quotes: bool,
 ) -> Option<Span<'a>> {
@@ -246,23 +246,23 @@ fn json_string_fast_inner<'a>(
 /// Scans a JSON string `"..."` with `\`-escape handling using SIMD (memchr2).
 /// Returns the span of the *content* (between the quotes, exclusive of `"`).
 #[inline(always)]
-pub(crate) fn json_string_fast<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
-    json_string_fast_inner(state, false)
+pub(crate) fn quoted_string_scan_content<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+    quoted_string_scan_inner(state, false)
 }
 
 /// Scans a JSON string `"..."` with `\`-escape handling using SIMD (memchr2).
 /// Returns the span including the quote delimiters (matches regex behavior).
 #[inline(always)]
-pub fn json_string_fast_quoted<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
-    json_string_fast_inner(state, true)
+pub fn quoted_string_scan_full<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+    quoted_string_scan_inner(state, true)
 }
 
 // ── Utility: number_span_fast as a standalone Parser ──────────
 
 /// Monolithic number span parser — replaces the 12-combinator chain.
 #[inline]
-pub fn number_span_fast_parser<'a>() -> Parser<'a, Span<'a>> {
-    Parser::new(move |state: &mut ParserState<'a>| number_span_fast(state))
+pub fn number_span_scan_strict_parser<'a>() -> Parser<'a, Span<'a>> {
+    Parser::new(move |state: &mut ParserState<'a>| number_span_scan_strict(state))
 }
 
 // ── JSON Value types and parsers ──────────────────────────────
@@ -293,7 +293,7 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
 
     let json_number = || -> Parser<'a, JsonValue<'a>> {
         Parser::new(move |state: &mut ParserState<'a>| {
-            let (_, f) = number_scan_convert(state)?;
+            let (_, f) = number_fused_scan_convert(state)?;
             Some(JsonValue::Number(f))
         })
     };

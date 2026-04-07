@@ -95,7 +95,7 @@ pub(super) fn css_compound_selector<'a>() -> Parser<'a, CssSelector<'a>> {
         if let Some(&b'*') = state.src_bytes.get(state.offset) {
             state.offset += 1;
             parts.push(CssSelector::Universal);
-        } else if let Some(name) = css_ident_fast(state) {
+        } else if let Some(name) = ident_scan_fast(state) {
             // Only if not followed by ( — that would be a function
             if state.src_bytes.get(state.offset) == Some(&b'(') {
                 // Backtrack — it's a function, not a type selector
@@ -111,7 +111,7 @@ pub(super) fn css_compound_selector<'a>() -> Parser<'a, CssSelector<'a>> {
             match state.src_bytes.get(state.offset) {
                 Some(&b'.') => {
                     state.offset += 1;
-                    if let Some(name) = css_ident_fast(state) {
+                    if let Some(name) = ident_scan_fast(state) {
                         parts.push(CssSelector::Class(Span::new(
                             name.start - 1,
                             name.end,
@@ -124,7 +124,7 @@ pub(super) fn css_compound_selector<'a>() -> Parser<'a, CssSelector<'a>> {
                 }
                 Some(&b'#') => {
                     state.offset += 1;
-                    if let Some(name) = css_ident_fast(state) {
+                    if let Some(name) = ident_scan_fast(state) {
                         parts.push(CssSelector::Id(Span::new(
                             name.start - 1,
                             name.end,
