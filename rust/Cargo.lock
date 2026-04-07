@@ -76,6 +76,7 @@ dependencies = [
 name = "bbnf-ir"
 version = "0.1.6"
 dependencies = [
+ "bbnf-regex",
  "csp-solver",
  "parse_that",
  "rayon",
@@ -89,6 +90,7 @@ dependencies = [
 name = "bbnf-regex"
 version = "0.1.0"
 dependencies = [
+ "serde",
  "smallvec",
 ]
 

@@ -11,6 +11,8 @@
 //! - [`utf8`] — Codepoint range → UTF-8 byte sequence expansion
 
 pub mod automata;
+pub mod classify;
+pub mod first;
 pub mod hir;
 pub mod sets;
 pub mod unicode;
@@ -23,3 +25,6 @@ pub use automata::nfa::{Nfa, StateId, DEAD};
 pub use hir::{ByteRange, CharClass, CodepointRange, Hir, Look, ParseError, ParseOptions, Repetition};
 pub use crate::hir::parser::{parse, parse_with};
 pub use sets::byteset::ByteSet;
+pub use sets::charset::CharSet128;
+pub use classify::{RegexClass, classify_regex};
+pub use first::regex_first_chars;

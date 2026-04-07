@@ -20,6 +20,10 @@ pub use bbnf_regex::sets::byteset;
 pub use bbnf_regex::sets::equiv;
 pub use bbnf_regex::unicode;
 pub use bbnf_regex::utf8;
+pub use bbnf_regex::classify;
+pub use bbnf_regex::first;
+pub use bbnf_regex::sets::charset;
+pub use bbnf_regex::sets;
 
 /// Parse a regex pattern using the self-hosted generated parser + host fold.
 ///

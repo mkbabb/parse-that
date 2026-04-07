@@ -10,5 +10,10 @@ repository = "https://github.com/mkbabb/parse-that"
 name = "bbnf_regex"
 path = "src/lib.rs"
 
+[features]
+default = []
+serde = ["dep:serde"]
+
 [dependencies]
 smallvec = "1.13"
+serde = { version = "1", optional = true, features = ["derive"] }
