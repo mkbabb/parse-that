@@ -11,7 +11,8 @@ name = "parse_that"
 path = "src/lib.rs"
 
 [features]
-default = []
+default = ["combinators"]
+combinators = []
 diagnostics = ["dep:colored"]
 
 # ── parse_that benches ──────────────────────────────────────
