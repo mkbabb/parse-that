@@ -10,6 +10,7 @@
 //! - [`unicode`] — Unicode general-category property tables
 //! - [`utf8`] — Codepoint range → UTF-8 byte sequence expansion
 
+pub mod algebra;
 pub mod automata;
 pub mod classify;
 pub mod first;
