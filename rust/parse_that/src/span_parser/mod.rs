@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::leaf::{trim_leading_whitespace, trim_leading_whitespace_mut};
+use crate::scanners::{trim_leading_whitespace, trim_leading_whitespace_mut};
 use crate::parse::ParserFn;
 use crate::state::{ParserState, Span};
 

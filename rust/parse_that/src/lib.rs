@@ -14,17 +14,21 @@ pub use parse::*;
 pub mod state;
 pub use state::*;
 
+pub mod scanners;
+pub use scanners::*;
+
 pub mod regex;
 
 // Re-export memchr so generated monolithic code can reference it.
 pub use memchr;
 pub use smallvec;
 
-// ── Combinators + Scanners ──────────────────────────────────────────────
-//
-// Currently always compiled. The `combinators` feature exists as a marker
-// for the planned split of scanner functions from combinator infrastructure.
-// Generated parsers will eventually depend only on the core modules above.
+// ── Scanners (always available — used by generated parsers + codegen) ────
+
+pub mod parsers;
+pub use parsers::*;
+
+// ── Combinators (used by hand-written parsers, bootstrap, tests) ────────
 
 pub mod lazy;
 pub use lazy::*;
@@ -37,9 +41,6 @@ pub use combinators::*;
 
 pub mod span_parser;
 pub use span_parser::*;
-
-pub mod parsers;
-pub use parsers::*;
 
 pub mod debug;
 pub use debug::*;

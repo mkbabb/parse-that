@@ -1,6 +1,6 @@
 use smallbox::{space::S32, SmallBox};
 
-use crate::leaf::trim_leading_whitespace;
+use crate::scanners::trim_leading_whitespace;
 use crate::state::ParserState;
 
 /// Structured error returned by `Parser::parse_or_error()` on failure.

@@ -311,7 +311,7 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
 
         Parser::new(move |state: &mut ParserState<'a>| {
             open.call(state)?;
-            crate::leaf::trim_leading_whitespace_mut(state);
+            crate::scanners::trim_leading_whitespace_mut(state);
 
             if close.call(state).is_some() {
                 return Some(JsonValue::Array(Box::new(Vec::new())));
@@ -319,9 +319,9 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
 
             let mut items = Vec::with_capacity(4);
             loop {
-                crate::leaf::trim_leading_whitespace_mut(state);
+                crate::scanners::trim_leading_whitespace_mut(state);
                 items.push(value.call(state)?);
-                crate::leaf::trim_leading_whitespace_mut(state);
+                crate::scanners::trim_leading_whitespace_mut(state);
                 if comma.call(state).is_none() {
                     break;
                 }
@@ -344,7 +344,7 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
 
         Parser::new(move |state: &mut ParserState<'a>| {
             open.call(state)?;
-            crate::leaf::trim_leading_whitespace_mut(state);
+            crate::scanners::trim_leading_whitespace_mut(state);
 
             if close.call(state).is_some() {
                 return Some(JsonValue::Object(Box::new(Vec::new())));
@@ -352,12 +352,12 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
 
             let mut entries = Vec::with_capacity(4);
             loop {
-                crate::leaf::trim_leading_whitespace_mut(state);
+                crate::scanners::trim_leading_whitespace_mut(state);
                 let k = key.call(state)?;
                 colon.call(state)?;
                 let v = value.call(state)?;
                 entries.push((k, v));
-                crate::leaf::trim_leading_whitespace_mut(state);
+                crate::scanners::trim_leading_whitespace_mut(state);
                 if comma.call(state).is_none() {
                     break;
                 }

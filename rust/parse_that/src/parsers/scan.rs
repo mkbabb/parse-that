@@ -645,7 +645,7 @@ pub struct BalancedScanConfig {
 /// characters, and `memchr2` for SIMD-accelerated string skipping.
 #[inline(always)]
 pub fn scan_balanced(bytes: &[u8], config: &BalancedScanConfig) -> usize {
-    use crate::leaf::{build_nibble_luts, find_first_of_nibble_lut};
+    use crate::scanners::{build_nibble_luts, find_first_of_nibble_lut};
 
     // Pre-build nibble LUTs for all structural bytes (done once per call).
     let mut structural = [0u8; 8];

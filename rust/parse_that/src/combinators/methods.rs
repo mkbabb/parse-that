@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ops::RangeBounds;
 
-use crate::leaf::trim_leading_whitespace_mut;
+use crate::scanners::trim_leading_whitespace_mut;
 use crate::parse::Parser;
 use crate::state::ParserState;
 use crate::utils::extract_bounds;
