@@ -7,9 +7,9 @@
 
 use smallvec::SmallVec;
 
-use super::byteset::ByteSet;
-use super::hir::{CharClass, Hir, Look, Repetition};
-use super::utf8::Utf8Sequences;
+use crate::sets::byteset::ByteSet;
+use crate::hir::{CharClass, Hir, Look, Repetition};
+use crate::utf8::Utf8Sequences;
 
 /// NFA state identifier. `DEAD` is a sentinel for "no transition".
 pub type StateId = u32;
@@ -61,7 +61,7 @@ impl Nfa {
     ///
     /// Returns `None` if the pattern is invalid or uses unsupported features.
     pub fn from_pattern(pattern: &str) -> Option<Self> {
-        let hir = super::parse(pattern).ok()?;
+        let hir = crate::hir::parser::parse(pattern).ok()?;
         Self::from_hir(&hir)
     }
 
@@ -180,7 +180,7 @@ impl NfaBuilder {
         match class {
             CharClass::Bytes { ranges, negated } => {
                 let positive = if *negated {
-                    super::hir::negate_byte_ranges(ranges)
+                    crate::hir::negate_byte_ranges(ranges)
                 } else {
                     ranges.clone()
                 };
@@ -197,7 +197,7 @@ impl NfaBuilder {
             }
             CharClass::Unicode { ranges, negated } => {
                 let positive = if *negated {
-                    super::hir::negate_codepoint_ranges(ranges)
+                    crate::hir::negate_codepoint_ranges(ranges)
                 } else {
                     ranges.clone()
                 };
@@ -213,7 +213,7 @@ impl NfaBuilder {
     /// paths through the NFA.
     fn build_unicode_class(
         &mut self,
-        ranges: &[super::hir::CodepointRange],
+        ranges: &[crate::hir::CodepointRange],
     ) -> Option<Fragment> {
         let start = self.new_state();
         let accept = self.new_state();

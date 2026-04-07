@@ -6,7 +6,7 @@
 
 use std::collections::{BTreeSet, HashMap};
 
-use super::equiv::compute_byte_classes;
+use crate::sets::equiv::compute_byte_classes;
 use super::nfa::{Nfa, StateId, DEAD};
 
 /// A single DFA state.
@@ -65,10 +65,10 @@ impl Dfa {
 
     /// Compile with explicit options.
     pub fn compile_with(pattern: &str, opts: &DfaOptions) -> Option<Self> {
-        let parse_opts = super::hir::ParseOptions {
+        let parse_opts = crate::hir::ParseOptions {
             unicode: opts.unicode,
         };
-        let hir = super::parse_with(pattern, &parse_opts).ok()?;
+        let hir = crate::parse_with(pattern, &parse_opts).ok()?;
         let nfa = Nfa::from_hir(&hir)?;
         Self::from_nfa(&nfa, opts)
     }

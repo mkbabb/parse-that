@@ -1,5 +1,5 @@
 [workspace]
-members = ["src", "parse_that", "bootstrap"]
+members = ["src", "parse_that", "bootstrap", "regex"]
 resolver = "2"
 
 

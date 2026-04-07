@@ -86,6 +86,7 @@ harness = false
 # ── dependencies ────────────────────────────────────────────
 
 [dependencies]
+bbnf-regex = { version = "0.1", path = "../regex" }
 pprint = "0.3"
 colored = { version = "3", optional = true }
 memchr = "2.5.0"

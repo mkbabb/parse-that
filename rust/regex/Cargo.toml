@@ -1,0 +1,14 @@
+[package]
+name = "bbnf-regex"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Bespoke regex engine: HIR, NFA→DFA compilation, structural classification"
+repository = "https://github.com/mkbabb/parse-that"
+
+[lib]
+name = "bbnf_regex"
+path = "src/lib.rs"
+
+[dependencies]
+smallvec = "1.13"

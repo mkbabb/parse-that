@@ -7,7 +7,7 @@
 
 use smallvec::SmallVec;
 
-use super::byteset::ByteSet;
+use crate::sets::byteset::ByteSet;
 use super::dfa::Dfa;
 
 /// Acceleration strategy for a self-loop state.

@@ -14,8 +14,8 @@
 //! - Dot: `.`
 //! - Anchors: `^`, `$`
 
-use super::hir::*;
-use super::unicode::unicode_category_ranges;
+use super::*;
+use crate::unicode::unicode_category_ranges;
 
 // ── Parser state ────────────────────────────────────────────────────────
 

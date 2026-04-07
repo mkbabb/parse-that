@@ -61,11 +61,14 @@ name = "bbnf"
 version = "0.2.11"
 dependencies = [
  "bbnf-ir",
+ "bbnf-ser",
+ "csp-solver",
  "indexmap",
  "parse_that",
  "pprint",
  "proc-macro2",
  "quote",
+ "rustc-hash",
  "syn 2.0.117",
 ]
 
@@ -73,12 +76,28 @@ dependencies = [
 name = "bbnf-ir"
 version = "0.1.6"
 dependencies = [
+ "csp-solver",
  "parse_that",
  "rayon",
  "rmp-serde",
  "rustc-hash",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "bbnf-regex"
+version = "0.1.0"
+dependencies = [
+ "smallvec",
+]
+
+[[package]]
+name = "bbnf-ser"
+version = "0.1.0"
+dependencies = [
+ "itoa",
+ "ryu",
 ]
 
 [[package]]
@@ -259,6 +278,10 @@ dependencies = [
  "generic-array",
  "typenum",
 ]
+
+[[package]]
+name = "csp-solver"
+version = "0.1.0"
 
 [[package]]
 name = "cssparser"
@@ -813,6 +836,7 @@ name = "parse_that"
 version = "0.4.0"
 dependencies = [
  "aho-corasick",
+ "bbnf-regex",
  "bencher",
  "colored",
  "cssparser 0.34.0",

@@ -3,7 +3,7 @@
 //! Minimal codepoint ranges for `\p{Name}` / `\P{Name}` escapes.
 //! Covers the most common categories used by BBNF grammars.
 
-use super::hir::CodepointRange;
+use crate::hir::CodepointRange;
 
 /// Resolve a Unicode general category name to codepoint ranges.
 ///

@@ -3,6 +3,8 @@
 //! Replaces `regex_syntax::hir::*`. Key difference: `CharClass` retains a
 //! `negated` flag instead of materializing the complement as positive ranges.
 
+pub mod parser;
+
 // ── Byte-level range ────────────────────────────────────────────────────
 
 /// An inclusive byte range `[start, end]`.

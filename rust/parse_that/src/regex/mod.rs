@@ -1,35 +1,25 @@
-//! Bespoke regex engine: parsing, NFA→DFA compilation, SIMD-accelerated matching.
+//! Regex engine: re-exports from `bbnf_regex` + self-hosted parser path.
 //!
-//! - **hir** — High-level intermediate representation (Hir, CharClass, ByteRange, etc.)
-//! - **unicode** — Unicode general-category property tables
-//! - **parser** — Hand-written recursive descent regex parser (primary API)
-//! - **generated** — Auto-generated slab parser from bootstrap/regex.bbnf
-//! - **host** — Semantic fold: generated AST → Hir
-//! - **utf8** — Codepoint range → UTF-8 byte sequence expansion
-//! - **nfa** — Thompson NFA construction from Hir
-//! - **dfa** — DFA subset construction + Hopcroft minimization
-//! - **accel** — Self-loop state acceleration (memchr, SIMD nibble LUT)
-//! - **byteset** — Byte set operations for transition predicates
-//! - **equiv** — Byte equivalence class computation
+//! The core regex engine (HIR, NFA, DFA, byte sets, unicode, parser) lives in
+//! the standalone `bbnf-regex` crate. This module re-exports its public API
+//! and adds the self-hosted bootstrap path (`generated` + `host`).
 
-pub mod accel;
-pub mod byteset;
-pub mod dfa;
-pub mod equiv;
+// Self-hosted parser (coupled to parse-that combinators)
 pub mod generated;
-pub mod hir;
 pub mod host;
-pub mod nfa;
-pub mod parser;
-pub mod unicode;
-pub mod utf8;
 
-pub use accel::{AccelStrategy, StateAccel, detect_accel};
-pub use byteset::ByteSet;
-pub use dfa::{Dfa, DfaOptions, DfaState};
-pub use hir::{ByteRange, CharClass, CodepointRange, Hir, Look, ParseError, ParseOptions, Repetition};
-pub use nfa::{Nfa, StateId, DEAD};
-pub use parser::{parse, parse_with};
+// Re-export the entire regex engine from bbnf-regex
+pub use bbnf_regex::*;
+
+// Re-export sub-modules for path compatibility (crate::regex::dfa::Dfa, etc.)
+pub use bbnf_regex::automata::dfa;
+pub use bbnf_regex::automata::nfa;
+pub use bbnf_regex::automata::accel;
+pub use bbnf_regex::hir;
+pub use bbnf_regex::sets::byteset;
+pub use bbnf_regex::sets::equiv;
+pub use bbnf_regex::unicode;
+pub use bbnf_regex::utf8;
 
 /// Parse a regex pattern using the self-hosted generated parser + host fold.
 ///
