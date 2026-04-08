@@ -20,6 +20,11 @@ pub fn regex_first_chars(pattern: &str) -> Option<CharSet128> {
 /// treat it as "any byte" and return `None` (equivalent to the old `.` bail-out).
 const WILDCARD_THRESHOLD: usize = 126;
 
+/// Extract FIRST chars from an already-parsed HIR node.
+pub fn regex_first_chars_from_hir(hir: &Hir) -> Option<CharSet128> {
+    first_chars_from_hir(hir)
+}
+
 fn first_chars_from_hir(hir: &Hir) -> Option<CharSet128> {
     match hir {
         Hir::Empty => Some(CharSet128::new()),
