@@ -3,8 +3,8 @@
 //! `RegexInfo::analyze(pattern)` computes all properties in a single pass over the HIR.
 //! Consumers cache results by pattern identity (e.g., `StringId` in grammar IR).
 
-use crate::classify::{classify_regex, RegexClass};
-use crate::first::regex_first_chars;
+use crate::classify::{classify_known_pattern, classify_regex_from_hir, RegexClass};
+use crate::first::regex_first_chars_from_hir;
 use crate::hir::{CharClass, Hir, Repetition};
 use crate::sets::charset::CharSet128;
 
@@ -67,31 +67,54 @@ pub struct RegexInfo {
     // ── Cost estimation ──────────────────────────────────────────────────
     /// Estimated DFA state count (heuristic from NFA, avoids full compilation).
     pub dfa_size_estimate: Option<usize>,
+
+    // ── Emission hints ───────────────────────────────────────────────────
+    /// A single discriminating byte that `memchr` can use for acceleration.
+    /// `Some(b)` means `b` is guaranteed to appear in every match and can
+    /// drive a memchr-based fast scan.
+    pub accel_candidate: Option<u8>,
+    /// Whether the HIR emitter can compile this pattern to inline byte
+    /// operations (vs. falling back to a DFA). Checked once here to avoid
+    /// re-probing at each emission site.
+    pub hir_walkable: bool,
 }
 
 impl RegexInfo {
-    /// Analyze a regex pattern, computing all properties.
+    /// Analyze a regex pattern, computing all properties in a single parse.
     ///
     /// Returns `None` if the pattern fails to parse.
     pub fn analyze(pattern: &str) -> Option<Self> {
         let hir = crate::hir::parser::parse_with(pattern, &crate::hir::ParseOptions::byte_mode())
             .ok()?;
+        Some(Self::analyze_from_hir(pattern, &hir))
+    }
 
-        let classification = classify_regex(pattern);
-        let first_chars = regex_first_chars(pattern).unwrap_or_else(CharSet128::new);
-        let nullable = is_nullable(&hir);
-        let (min_len, max_len) = compute_match_width(&hir);
+    /// Analyze a regex from a pre-parsed HIR. Consumers that already have
+    /// the HIR should call this directly to avoid a redundant parse.
+    ///
+    /// `pattern` is still required for the known-pattern fast path in
+    /// `classify_regex` — if the consumer doesn't have the original string,
+    /// pass `""` (classification falls back to HIR-only structural checks).
+    pub fn analyze_from_hir(pattern: &str, hir: &Hir) -> Self {
+        // Classification: known-pattern fast path first, then structural.
+        let classification = classify_known_pattern(pattern)
+            .unwrap_or_else(|| classify_regex_from_hir(hir));
+        let first_chars = regex_first_chars_from_hir(hir).unwrap_or_else(CharSet128::new);
+        let nullable = is_nullable(hir);
+        let (min_len, max_len) = compute_match_width(hir);
         let must_consume = !nullable && min_len > 0;
-        let literal_prefix = extract_literal_prefix(&hir);
-        let literal_suffix = extract_literal_suffix(&hir);
-        let negated_class = detect_negated_class(&hir);
-        let quantified_class = detect_quantified_class(&hir);
-        let is_anchored = detect_anchored(&hir);
-        let hir_size = count_hir_nodes(&hir);
-        let one_pass = check_one_pass_eligible(&hir);
-        let dfa_estimate = estimate_dfa_size(&hir);
+        let literal_prefix = extract_literal_prefix(hir);
+        let literal_suffix = extract_literal_suffix(hir);
+        let negated_class = detect_negated_class(hir);
+        let quantified_class = detect_quantified_class(hir);
+        let is_anchored = detect_anchored(hir);
+        let hir_size = count_hir_nodes(hir);
+        let one_pass = check_one_pass_eligible(hir);
+        let dfa_estimate = estimate_dfa_size(hir);
+        let accel_candidate = detect_accel_candidate(hir, &literal_prefix, &literal_suffix);
+        let hir_walkable = is_hir_walkable(hir);
 
-        Some(RegexInfo {
+        RegexInfo {
             classification,
             literal_prefix,
             literal_suffix,
@@ -106,7 +129,59 @@ impl RegexInfo {
             min_match_len: min_len,
             max_match_len: max_len,
             dfa_size_estimate: dfa_estimate,
-        })
+            accel_candidate,
+            hir_walkable,
+        }
+    }
+}
+
+// ── Acceleration candidate detection ────────────────────────────────────────
+
+/// Find a single byte that must appear in every match, suitable for
+/// `memchr`-based acceleration. Prefers the first literal byte if the
+/// pattern starts with a fixed prefix; otherwise picks the first byte of
+/// a fixed suffix. Returns `None` for wholly variable patterns.
+fn detect_accel_candidate(
+    _hir: &Hir,
+    literal_prefix: &Option<Vec<u8>>,
+    literal_suffix: &Option<Vec<u8>>,
+) -> Option<u8> {
+    if let Some(prefix) = literal_prefix {
+        if let Some(&b) = prefix.first() {
+            return Some(b);
+        }
+    }
+    if let Some(suffix) = literal_suffix {
+        if let Some(&b) = suffix.first() {
+            return Some(b);
+        }
+    }
+    None
+}
+
+// ── HIR walkability check ───────────────────────────────────────────────────
+
+/// Whether the HIR walker can compile this pattern to inline byte operations.
+///
+/// Returns `false` for patterns containing constructs the walker doesn't
+/// handle: lazy quantifiers outside `.*?literal`, Unicode properties beyond
+/// ASCII, backreferences, or non-anchor look-around.
+///
+/// This is a conservative check used to skip the HIR-emit probe at backends
+/// that can cache `RegexInfo`. The actual walker may succeed or fail
+/// independently; a `true` here is a necessary (not sufficient) condition.
+fn is_hir_walkable(hir: &Hir) -> bool {
+    match hir {
+        Hir::Empty | Hir::Literal(_) | Hir::Class(_) => true,
+        Hir::Look(_) => true, // anchors are fine
+        Hir::Repetition(rep) => {
+            // Greedy only — lazy repetitions are only handled as part of
+            // the `.*?literal` special case in the walker.
+            rep.greedy && is_hir_walkable(&rep.sub)
+        }
+        Hir::Group(sub) => is_hir_walkable(sub),
+        Hir::Concat(seq) => seq.iter().all(is_hir_walkable),
+        Hir::Alternation(alts) => alts.iter().all(is_hir_walkable),
     }
 }
 

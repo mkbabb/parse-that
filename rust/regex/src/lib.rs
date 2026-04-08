@@ -28,6 +28,6 @@ pub use hir::{ByteRange, CharClass, CodepointRange, Hir, Look, ParseError, Parse
 pub use crate::hir::parser::{parse, parse_with};
 pub use sets::byteset::ByteSet;
 pub use sets::charset::CharSet128;
-pub use classify::{RegexClass, classify_regex};
-pub use first::regex_first_chars;
-pub use info::{RegexInfo, QuantifiedClassInfo};
+pub use classify::{RegexClass, classify_known_pattern, classify_regex, classify_regex_from_hir};
+pub use first::{regex_first_chars, regex_first_chars_from_hir};
+pub use info::{QuantifiedClassInfo, RegexInfo};

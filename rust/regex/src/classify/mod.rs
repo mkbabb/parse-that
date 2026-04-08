@@ -83,7 +83,7 @@ const IDENT_PATTERNS: &[&str] = &[
 const QUOTED_STRING_PATTERNS: &[&str] = &[r#""(?:[^"\\]|\\[\s\S])*"|'(?:[^'\\]|\\[\s\S])*'"#];
 
 /// Classify by exact match against known canonical patterns.
-fn classify_known_pattern(pattern: &str) -> Option<RegexClass> {
+pub fn classify_known_pattern(pattern: &str) -> Option<RegexClass> {
     if JSON_STRING_PATTERNS.contains(&pattern) {
         return Some(RegexClass::JsonString);
     }
@@ -104,6 +104,9 @@ fn classify_known_pattern(pattern: &str) -> Option<RegexClass> {
 
 /// Classify a regex pattern structurally via HIR, with known-pattern
 /// fast path checked first.
+///
+/// Prefer `classify_regex_from_hir` when the consumer already has a parsed
+/// `Hir` — this wrapper exists for callers that only have the pattern string.
 pub fn classify_regex(pattern: &str) -> RegexClass {
     // Fast path: exact match against known canonical patterns.
     if let Some(class) = classify_known_pattern(pattern) {
@@ -118,16 +121,27 @@ pub fn classify_regex(pattern: &str) -> RegexClass {
         Err(_) => return RegexClass::Unknown,
     };
 
-    if let Some(class) = try_classify_numeric(&hir) {
+    classify_regex_from_hir(&hir)
+}
+
+/// Classify a regex pattern from a pre-parsed HIR. The core implementation
+/// used by `classify_regex` after parsing, and by `RegexInfo::analyze` to
+/// avoid redundant parses.
+///
+/// Does not consult the known-pattern fast path — callers with only the
+/// pattern string should use `classify_regex` (which checks the fast path
+/// before calling this).
+pub fn classify_regex_from_hir(hir: &Hir) -> RegexClass {
+    if let Some(class) = try_classify_numeric(hir) {
         return class;
     }
-    if let Some(class) = try_classify_quoted_string(&hir) {
+    if let Some(class) = try_classify_quoted_string(hir) {
         return class;
     }
-    if try_classify_hex(&hir) {
+    if try_classify_hex(hir) {
         return RegexClass::HexDigits;
     }
-    if try_classify_identifier(&hir) {
+    if try_classify_identifier(hir) {
         return RegexClass::Identifier;
     }
     RegexClass::Unknown
