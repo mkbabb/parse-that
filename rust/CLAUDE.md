@@ -1,33 +1,69 @@
 # rust/
 
-Rust parser combinator workspace. Two crates: `parse_that` (library) and `parse_that_cli` (binary).
+Rust parser combinator workspace. Workspace members: `parse_that` (core library), `bbnf-regex` (bespoke regex engine — see `regex/CLAUDE.md`), `bootstrap`, and `parse_that_cli` (CLI binary).
 
 ## Structure
 
 ```
-Cargo.toml                Workspace root (members: src, parse_that)
+Cargo.toml                Workspace root (members: src, parse_that, bootstrap, regex)
 parse_that/               Core library crate
   src/
-    lib.rs                Barrel re-exports, #![feature(cold_path)]
-    parse.rs              Parser<'a, O> struct, ParseError, ParserFn trait
-    combinators.rs        impl block combinators (then, or, map, many, sep_by, recover, minus, negate, chain, memoize, etc.)
-    leaf.rs               Leaf parsers (string, regex, take_while, dispatch_byte, etc.)
+    lib.rs                Barrel re-exports, #![feature(cold_path, portable_simd, ...)]
+    parse.rs              Parser<'a, O> struct, ParserResult, ParserFn trait
+    state.rs              ParserState<'a>, Span<'a>, Diagnostic, Suggestion, SecondarySpan
+    bump_slab.rs          BumpSlab — byte-based bump allocator for monolithic codegen
     lazy.rs               LazyParser, lazy() function
-    span_parser.rs        SpanParser<'a> — enum-dispatched, vtable-free
-    span_constructors.rs  SpanParser leaf constructors (sp_string, sp_regex, sp_json_*, etc.)
-    span_methods.rs       SpanParser combinator methods and bridge helpers
-    span_scanner.rs       SpanScanner variants (CssIdent, CssWsComment, CssString, CssBlockComment)
+    leaf.rs               Leaf parsers (string, regex, take_while, dispatch_byte, etc.)
+    scanners.rs           Shared inline byte scanners (LUT, memchr fast-paths)
     span_trait.rs         ParserSpan trait (Span combinator aliases), ParserFlat trait
-    state.rs              ParserState<'a>, Span<'a>, Diagnostic, Suggestion, SecondarySpan (diagnostics feature)
-    debug.rs              Colored debug output, format_diagnostic(), format_all_diagnostics() (feature-gated)
     split.rs              split_balanced(), contains_delimiter() — format-time balanced splitting
-    utils.rs              extract_bounds(), get_cargo_root_path() (20 lines)
-    parsers/
+    debug.rs              Colored debug output, format_diagnostic() (feature-gated)
+    utils.rs              extract_bounds(), get_cargo_root_path()
+    combinators/          Parser<'a, O> combinators (directory module)
+      mod.rs              Module declarations
+      macros.rs           seq! / alt! flat N-ary macros
+      methods/            impl-block combinators split per category
+        mod.rs            Module declarations
+        sequence.rs       then, next, skip, chain
+        alternation.rs    or, dispatch_byte variants
+        repetition.rs     many, many1, repeat, optional
+        sep_by.rs         sep_by, sep_by1, trailing variants
+        minus.rs          minus (set-difference), negate, not
+        map.rs            map, map_with_span
+        recover.rs        recover — error-recovery combinator
+    span_parser/          SpanParser<'a> — enum-dispatched, vtable-free (directory module)
+      mod.rs              SpanParser struct, dispatch router, sp_new! macro
+      leaves.rs           Leaf SpanKind variants (StringLiteral, RegexMatch, Eof, …)
+      constructors.rs     sp_string, sp_regex, sp_json_* constructors
+      methods.rs          Combinator methods + bridge helpers
+      combinators.rs      Sequence / alternation SpanKind handlers
+      sep_by.rs           SpanParser sep_by variants
+      wrap.rs             Wrap (delim-bounded) handler
+      scan.rs             Inline scan dispatch (LUT, byte-class loops)
+      span_scanner.rs     SpanScanner variants (CssIdent, CssWsComment, CssString, CssBlockComment)
+      assertions.rs       Negate / not / eof assertion handlers
+    regex/                Internal bridge to bbnf-regex (generated DFA tables, host glue)
+      mod.rs              Module declarations
+      host.rs             Host-side regex runtime helpers
+      generated.rs        Pre-compiled DFA tables
+    parsers/              Domain parsers + scanner primitives (directory module)
       mod.rs              Module exports
+      utils.rs            escaped_span(), quoted_span(), number_span()
       json.rs             JsonValue<'a>, combinator + fast JSON + scanners
-      csv.rs              RFC 4180 CSV parser (47 lines)
-      css/                CSS L1.75 parser (types, scan, value, selector, declaration, media, mod)
-      utils.rs            escaped_span(), quoted_span(), number_span() (38 lines)
+      csv.rs              RFC 4180 CSV parser
+      css/                CSS L1.75 parser (types, scan, value, selector, declaration, media, specificity, mod)
+      scan/               Scanner primitives — number / ident / ws / quoted / balanced
+        mod.rs            Module declarations
+        number.rs         Integer + float scanners
+        number_f64.rs     css_number_scan_f64 fused scanner (Eisel-Lemire fast path)
+        ident.rs          Identifier scanners (css_ident_fast, etc.)
+        ws_comment.rs     Whitespace + comment-aware scanners
+        quoted.rs         Quoted-string scanners
+        balanced.rs       Balanced delimiter scanners
+      eisel_lemire/       Eisel-Lemire f64 conversion algorithm
+        mod.rs            Public surface
+        algorithm.rs      Core algorithm
+        table.rs          POWER_OF_FIVE_128 — 660 LOC of pure data (exempt from 500-LOC ceiling)
   tests/
     combinator_test.rs    Core combinator coverage
     css_parse_test.rs     CSS parser integration tests
@@ -35,21 +71,25 @@ parse_that/               Core library crate
     debug_test.rs         Diagnostics system tests (103 tests — labels, suggestions, spans, CSS grammar)
     json_test.rs          JSON parsing + escape edge cases
     csv_test.rs           CSV parsing + large file test
+    regex.rs              Regex bridge smoke test
+    regex/                Regex engine tests (accel, byteset, dfa, equiv, hir, nfa, parser, utf8)
   benches/
     README.md             Benchmark methodology & work equivalence
-    parse_that_combinator.rs  Parser<Span> JSON bench
-    nom.rs                nom 7.1.3
-    winnow.rs             winnow 0.7
-    pest.rs               pest 2.5.6
-    serde.rs              serde_json
-    serde_json_borrow.rs  serde_json_borrow 0.9
-    jiter.rs              jiter 0.8
-    simd_json.rs          simd-json 0.14
-    sonic_rs.rs           sonic-rs 0.5
+    parse_that/           Parser<Span> JSON benches
+    competitors/          nom / winnow / pest / serde_json / simd-json / sonic-rs / jiter baselines
+bootstrap/                Bootstrap grammar tooling (workspace member)
+regex/                    bbnf-regex workspace member — bespoke NFA/DFA regex engine (see regex/CLAUDE.md)
 src/                      CLI binary
   Cargo.toml              parse_that_cli
   main.rs                 JSON + CSV benchmark runner
 ```
+
+## Workspace Members
+
+- **parse_that** — this crate. Parser combinators, SpanParser, scanner primitives, domain parsers.
+- **bbnf-regex** (`regex/`) — separate workspace member; bespoke HIR → NFA → DFA regex engine. Has its own `regex/CLAUDE.md`. `parse_that` re-exports it via `parse_that::regex`.
+- **bootstrap** — bootstrap grammar tooling.
+- **parse_that_cli** (`src/`) — CLI binary: JSON + CSV benchmark runner.
 
 ## Build
 
