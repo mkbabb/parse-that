@@ -190,15 +190,41 @@ pub struct RegexInfo {
 impl RegexInfo {
     /// Analyze a regex pattern, computing all properties in a single parse.
     ///
+    /// Uses [`crate::egraph::RegexExtractionCost::default`] for HIR
+    /// canonicalization. Consumers with a non-default cost (e.g. the
+    /// bbnf-lang grammar pipeline reading from `ir.cost_config`) should
+    /// call [`Self::analyze_with_cost`] instead.
+    ///
     /// Returns `None` if the pattern fails to parse.
     pub fn analyze(pattern: &str) -> Option<Self> {
-        let hir = crate::hir::parser::parse_with(pattern, &crate::hir::ParseOptions::byte_mode())
-            .ok()?;
-        Some(Self::analyze_from_hir(pattern, &hir))
+        Self::analyze_with_cost(pattern, &crate::egraph::RegexExtractionCost::default())
     }
 
-    /// Analyze a regex from a pre-parsed HIR. Consumers that already have
-    /// the HIR should call this directly to avoid a redundant parse.
+    /// Analyze a regex pattern with an explicit cost model for HIR
+    /// canonicalization.
+    pub fn analyze_with_cost(
+        pattern: &str,
+        cost: &crate::egraph::RegexExtractionCost,
+    ) -> Option<Self> {
+        let hir = crate::hir::parser::parse_with(pattern, &crate::hir::ParseOptions::byte_mode())
+            .ok()?;
+        Some(Self::analyze_from_hir_with_cost(pattern, &hir, cost))
+    }
+
+    /// Analyze a regex from a pre-parsed HIR using the default cost model.
+    ///
+    /// See [`Self::analyze_from_hir_with_cost`] for the explicit-cost variant.
+    pub fn analyze_from_hir(pattern: &str, hir: &Hir) -> Self {
+        Self::analyze_from_hir_with_cost(
+            pattern,
+            hir,
+            &crate::egraph::RegexExtractionCost::default(),
+        )
+    }
+
+    /// Analyze a regex from a pre-parsed HIR with an explicit cost model.
+    /// Consumers that already have the HIR should call this directly to
+    /// avoid a redundant parse.
     ///
     /// `pattern` is still required for the known-pattern fast path in
     /// `classify_regex` — if the consumer doesn't have the original string,
@@ -211,12 +237,15 @@ impl RegexInfo {
     /// adjacent repetitions. Every downstream analysis (FIRST sets,
     /// nullable, width, DFA sizing) therefore sees the canonicalized
     /// HIR with zero caller-side awareness.
-    pub fn analyze_from_hir(pattern: &str, hir: &Hir) -> Self {
+    pub fn analyze_from_hir_with_cost(
+        pattern: &str,
+        hir: &Hir,
+        cost: &crate::egraph::RegexExtractionCost,
+    ) -> Self {
         // Canonicalize HIR via the cost-guided e-graph first. Every
         // downstream analysis runs against `canonical`, not the raw
         // input `hir`.
-        let cost = crate::egraph::RegexExtractionCost::default();
-        let canonical = crate::egraph::simplify_hir(hir, &cost);
+        let canonical = crate::egraph::simplify_hir(hir, cost);
         let hir = &canonical;
 
         // Classification: known-pattern fast path first, then structural.

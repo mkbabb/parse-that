@@ -7,7 +7,7 @@
 //! across tiers — splitting them would let branch-factoring and
 //! dispatch incentives drift between regex and grammar extraction.
 
-use egraph::{CostModel, CostWeights, Id};
+use egraph::{CostConfig, CostModel, CostWeights, Id};
 
 use crate::egraph::node::HirENode;
 
@@ -41,6 +41,26 @@ impl Default for RegexExtractionCost {
             class_cost: 1.5,
             repeat_cost: 1.0,
             merged_bonus: -1.0,
+        }
+    }
+}
+
+impl RegexExtractionCost {
+    /// Build a `RegexExtractionCost` from a shared
+    /// [`egraph::CostConfig`].
+    ///
+    /// Only the cross-tier `weights` substrate flows through the
+    /// shared config; HIR-specific knobs (literal-per-byte, class
+    /// cost, repeat cost, merged bonus) keep their `Default` values
+    /// because the egraph crate is deliberately domain-agnostic and
+    /// shouldn't carry HIR-specific tunables. Consumers that need
+    /// to override the HIR knobs (e.g. the bbnf-lang grammar
+    /// pipeline reading its `CostConfig.hir_*` fields) call this
+    /// constructor and then set the individual fields.
+    pub fn from_egraph_config(cfg: &CostConfig) -> Self {
+        Self {
+            weights: cfg.weights,
+            ..Self::default()
         }
     }
 }
