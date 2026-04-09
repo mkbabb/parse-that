@@ -95,7 +95,36 @@ impl RegexInfo {
     /// `pattern` is still required for the known-pattern fast path in
     /// `classify_regex` — if the consumer doesn't have the original string,
     /// pass `""` (classification falls back to HIR-only structural checks).
+    ///
+    /// Before analysis runs, the HIR is passed through
+    /// `crate::egraph::simplify_hir` — a cost-guided equality saturation
+    /// that canonicalizes alternations (dedup, superset absorption,
+    /// charclass union merge), flattens nested Alt/Concat, and absorbs
+    /// adjacent repetitions. Every downstream analysis (FIRST sets,
+    /// nullable, width, DFA sizing) therefore sees the canonicalized
+    /// HIR with zero caller-side awareness.
+    ///
+    /// The `BBNF_HIR_EGRAPH=0` environment variable disables the e-graph
+    /// pass for parity bisecting — used during Tranche H-7 to verify
+    /// that the bbnf-ir destructive `simplify_regex_algebra` /
+    /// `merge_regex_alts` passes can be safely deleted. This flag is
+    /// temporary and will be removed in H-7's commit once parity is
+    /// proven.
     pub fn analyze_from_hir(pattern: &str, hir: &Hir) -> Self {
+        // Canonicalize HIR via the cost-guided e-graph first. Every
+        // downstream analysis runs against `canonical`, not the raw
+        // input `hir`.
+        let use_egraph = std::env::var_os("BBNF_HIR_EGRAPH")
+            .map(|v| v != "0")
+            .unwrap_or(true);
+        let canonical = if use_egraph {
+            let cost = crate::egraph::RegexExtractionCost::default();
+            crate::egraph::simplify_hir(hir, &cost)
+        } else {
+            hir.clone()
+        };
+        let hir = &canonical;
+
         // Classification: known-pattern fast path first, then structural.
         let classification = classify_known_pattern(pattern)
             .unwrap_or_else(|| classify_regex_from_hir(hir));
