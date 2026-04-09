@@ -93,9 +93,11 @@ dependencies = [
 name = "bbnf-regex"
 version = "0.1.0"
 dependencies = [
+ "bencher",
  "csp-solver",
  "egraph",
  "egraph-derive",
+ "mimalloc",
  "serde",
  "smallvec",
 ]

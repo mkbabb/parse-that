@@ -9,7 +9,7 @@ mod union;
 pub use superset::is_superset;
 pub use union::try_union;
 
-use crate::hir::{ByteRange, CharClass, Hir};
+use crate::hir::{CharClass, Hir};
 use crate::sets::byteset::ByteSet;
 
 /// Extract the set of bytes matched by a single-char-class regex pattern.

@@ -25,3 +25,25 @@ serde = { version = "1", optional = true, features = ["derive"] }
 egraph = "0.1"
 egraph-derive = "0.1"
 csp-solver = "0.1"
+
+[dev-dependencies]
+bencher = "0.1"
+mimalloc = "0.1"
+
+# ── bbnf-regex benches (Tranche P) ──────────────────────────
+
+[[bench]]
+name = "regex_parse"
+harness = false
+
+[[bench]]
+name = "regex_classify"
+harness = false
+
+[[bench]]
+name = "regex_hir_egraph"
+harness = false
+
+[[bench]]
+name = "regex_dfa_compile"
+harness = false
