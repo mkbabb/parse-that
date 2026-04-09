@@ -9,6 +9,7 @@ mod ident;
 mod ws_comment;
 mod quoted;
 mod balanced;
+mod digits;
 
 pub use number::{
     GENERIC_NUMBER_CONFIG, JSON_NUMBER_CONFIG, NumberConfig, NumberParts,
@@ -19,3 +20,4 @@ pub use ident::scan_ident;
 pub use ws_comment::{scan_block_comment, scan_ws_block_comments};
 pub use quoted::scan_string_quoted;
 pub use balanced::{BalancedScanConfig, scan_balanced, scan_balanced_end};
+pub use digits::{scan_alnum_mut, scan_digits_mut, scan_digits_star_mut, scan_hex_mut};

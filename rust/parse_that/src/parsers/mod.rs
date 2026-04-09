@@ -22,6 +22,8 @@ pub mod utils;
 pub use scan::{
     scan_ident, scan_string_quoted, scan_ws_block_comments, scan_block_comment,
     scan_balanced_end, scan_balanced, BalancedScanConfig,
+    // Char-class quantified scanners (Tranche W phase 5d).
+    scan_alnum_mut, scan_digits_mut, scan_digits_star_mut, scan_hex_mut,
     // Number scanning core
     scan_number_span, scan_number_f64, parse_number_f64, parse_eight_digits,
     NumberParts, NumberConfig, scan_number_mantissa, number_parts_to_f64,
