@@ -6,7 +6,12 @@
 
 
 /// A compact 128-bit bitset representing a subset of ASCII characters (0..127).
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+///
+/// `Copy` since the underlying representation is two `u64` words (16 bytes
+/// total). Tranche W phase 4 — adding `Copy` lets the compiler eliminate
+/// `clone()` calls in hot O(branches²) loops in the dispatch builder
+/// without changing any consumer code.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CharSet128 {
     /// Two 64-bit words covering bytes 0..63 and 64..127.
