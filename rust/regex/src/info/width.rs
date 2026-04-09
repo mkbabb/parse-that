@@ -124,7 +124,7 @@ fn utf8_len(cp: u32) -> usize {
 
 // ── HIR node counting ────────────────────────────────────────────────────
 
-pub(super) fn count_hir_nodes(hir: &Hir) -> usize {
+pub(crate) fn count_hir_nodes(hir: &Hir) -> usize {
     match hir {
         Hir::Empty | Hir::Literal(_) | Hir::Class(_) | Hir::Look(_) => 1,
         Hir::Repetition(rep) => 1 + count_hir_nodes(&rep.sub),

@@ -31,7 +31,8 @@ use classify::{
 use dfa_size::estimate_dfa_size;
 use literal_prefix::{extract_literal_prefix, extract_literal_suffix};
 use one_pass::{check_one_pass_eligible, is_hir_walkable};
-use width::{compute_match_width, count_hir_nodes};
+use width::compute_match_width;
+pub(crate) use width::count_hir_nodes;
 
 /// Quantified character class info (e.g., `[a-z]+`, `\d*`, `[^"\\]+`).
 #[derive(Clone, Debug)]

@@ -46,6 +46,7 @@ pub use translate::{extract_hir, insert_hir};
 use egraph::{CspScheduler, EGraph, Id, NoAnalysis, RewriteFn, Scheduler};
 
 use crate::hir::Hir;
+use crate::info::count_hir_nodes;
 
 /// The HIR e-graph type — an `EGraph` parameterized on `HirENode`
 /// with the substrate `NoAnalysis` (no per-class lattice data is
@@ -55,8 +56,21 @@ pub type HirEGraph = EGraph<HirENode, NoAnalysis>;
 /// Build an e-graph from a single owning `Hir` tree. Returns the
 /// populated graph and the root e-class Id. After `build`, the
 /// graph is rebuild-clean and ready for saturation.
+///
+/// The hash-cons table is pre-sized via `EGraph::with_capacity` from the
+/// HIR node count so the dropped capacity stays proportional to actual
+/// occupancy. Without this, the default `FxHashMap` settles at the next
+/// power of two and `drop_in_place<EGraph<HirENode>>` becomes the
+/// dominant cost on small patterns (the same cliff that the grammar
+/// tier hit on `compile_bbnf`).
 pub fn build_hir_egraph(hir: &Hir) -> (HirEGraph, Id) {
-    let mut egraph: HirEGraph = EGraph::new();
+    // The five rewrite rules can introduce up to ~2x more e-nodes through
+    // flattening / canonicalization, so we double the input node count as
+    // the capacity hint. The cost is one Vec/HashMap reservation up front;
+    // the win is that the drop walks ~2N buckets instead of the next power
+    // of two above 2N.
+    let expected_nodes = count_hir_nodes(hir).saturating_mul(2);
+    let mut egraph: HirEGraph = EGraph::with_capacity(expected_nodes);
     let root = insert_hir(&mut egraph, hir);
     egraph.rebuild();
     (egraph, root)
@@ -114,8 +128,34 @@ pub fn extract_canonical(
 /// (FIRST sets, nullable, width, DFA sizing) sees it, so those
 /// analyses all receive the canonicalized HIR with zero
 /// caller-side awareness.
+///
+/// **Trivial-HIR fast path**: every retained rewrite rule
+/// (`FlattenAltConcat`, `DeduplicateAlternation`,
+/// `SupersetAbsorbClass`, `UnionMergeClass`, `AbsorbRepetition`)
+/// either targets an `Alternation` directly or requires a
+/// `Repetition` paired with a sibling `Repetition` inside a
+/// `Concat`. A pattern that contains zero `Alternation` and zero
+/// `Repetition` nodes therefore cannot trigger any rule — saturation
+/// is a guaranteed no-op and the build/rebuild/drop overhead is
+/// pure waste. The fast path returns the input HIR unchanged in
+/// that case, eliminating the dominant cost on simple character-class
+/// or literal patterns (the JSON / CSS L4 grammars are mostly these).
 pub fn simplify_hir(hir: &Hir, cost: &RegexExtractionCost) -> Hir {
+    if !needs_saturation(hir) {
+        return hir.clone();
+    }
     let (mut egraph, root) = build_hir_egraph(hir);
     saturate_hir_egraph(&mut egraph);
     extract_canonical(&egraph, root, cost)
+}
+
+/// Predicate: does this HIR contain any node that a retained rewrite
+/// rule could fire on? See [`simplify_hir`] for the rationale.
+fn needs_saturation(hir: &Hir) -> bool {
+    match hir {
+        Hir::Empty | Hir::Literal(_) | Hir::Class(_) | Hir::Look(_) => false,
+        Hir::Alternation(_) | Hir::Repetition(_) => true,
+        Hir::Group(sub) => needs_saturation(sub),
+        Hir::Concat(seq) => seq.iter().any(needs_saturation),
+    }
 }
