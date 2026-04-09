@@ -7,7 +7,9 @@
 //! across tiers — splitting them would let branch-factoring and
 //! dispatch incentives drift between regex and grammar extraction.
 
-use egraph::CostWeights;
+use egraph::{CostModel, CostWeights, Id};
+
+use crate::egraph::node::HirENode;
 
 /// Extraction cost model for the HIR e-graph. Used by
 /// `crate::egraph::extract_canonical` to pick the cheapest
@@ -39,6 +41,46 @@ impl Default for RegexExtractionCost {
             class_cost: 1.5,
             repeat_cost: 1.0,
             merged_bonus: -1.0,
+        }
+    }
+}
+
+/// Per-variant cost summation. Each variant pays the shared
+/// structural weight (from `CostWeights`) plus its domain-specific
+/// knob, plus the sum of its children's costs (via the
+/// `child_cost` closure). Alternations additionally pay
+/// `alt_per_branch` per child to encourage factoring.
+///
+/// Mirrors `bbnf_ir::egraph::GrammarCostModel::cost`: same
+/// structural weight plumbing, same alt-branch penalty. Diverges
+/// only on the leaf multipliers — literal byte count and
+/// char-class cardinality for the HIR tier, versus
+/// literal/regex/ref multipliers for the grammar tier.
+impl CostModel<HirENode> for RegexExtractionCost {
+    type Cost = f64;
+
+    fn cost(&self, node: &HirENode, child_cost: impl Fn(Id) -> f64) -> f64 {
+        let w = &self.weights;
+        match node {
+            HirENode::Empty => w.structural,
+            HirENode::Literal(bytes) => {
+                w.structural + self.literal_per_byte * bytes.len() as f64
+            }
+            HirENode::Class(_) => w.structural + self.class_cost,
+            HirENode::Look(_) => w.structural,
+            HirENode::Repetition { sub, .. } => {
+                w.structural + self.repeat_cost + child_cost(*sub)
+            }
+            HirENode::Group(inner) => w.structural + child_cost(*inner),
+            HirENode::Concat(children) => {
+                w.structural + children.iter().map(|&id| child_cost(id)).sum::<f64>()
+            }
+            HirENode::Alternation(children) => {
+                let branch_penalty = w.alt_per_branch * children.len() as f64;
+                w.structural
+                    + branch_penalty
+                    + children.iter().map(|&id| child_cost(id)).sum::<f64>()
+            }
         }
     }
 }
