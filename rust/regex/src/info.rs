@@ -103,26 +103,12 @@ impl RegexInfo {
     /// adjacent repetitions. Every downstream analysis (FIRST sets,
     /// nullable, width, DFA sizing) therefore sees the canonicalized
     /// HIR with zero caller-side awareness.
-    ///
-    /// The `BBNF_HIR_EGRAPH=0` environment variable disables the e-graph
-    /// pass for parity bisecting — used during Tranche H-7 to verify
-    /// that the bbnf-ir destructive `simplify_regex_algebra` /
-    /// `merge_regex_alts` passes can be safely deleted. This flag is
-    /// temporary and will be removed in H-7's commit once parity is
-    /// proven.
     pub fn analyze_from_hir(pattern: &str, hir: &Hir) -> Self {
         // Canonicalize HIR via the cost-guided e-graph first. Every
         // downstream analysis runs against `canonical`, not the raw
         // input `hir`.
-        let use_egraph = std::env::var_os("BBNF_HIR_EGRAPH")
-            .map(|v| v != "0")
-            .unwrap_or(true);
-        let canonical = if use_egraph {
-            let cost = crate::egraph::RegexExtractionCost::default();
-            crate::egraph::simplify_hir(hir, &cost)
-        } else {
-            hir.clone()
-        };
+        let cost = crate::egraph::RegexExtractionCost::default();
+        let canonical = crate::egraph::simplify_hir(hir, &cost);
         let hir = &canonical;
 
         // Classification: known-pattern fast path first, then structural.
