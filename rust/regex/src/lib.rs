@@ -13,6 +13,7 @@
 pub mod algebra;
 pub mod automata;
 pub mod classify;
+pub mod egraph;
 pub mod first;
 pub mod hir;
 pub mod info;
