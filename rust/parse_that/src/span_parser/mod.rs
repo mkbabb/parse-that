@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
-use crate::scanners::{trim_leading_whitespace, trim_leading_whitespace_mut};
 use crate::parse::ParserFn;
+use crate::scanners::trim_leading_whitespace;
 use crate::state::{ParserState, Span};
 
-use aho_corasick::{AhoCorasick, Anchored, Input};
+use aho_corasick::AhoCorasick;
 
 // ── Flags (same values as Parser flags) ───────────────────────
 
@@ -181,545 +181,67 @@ impl<'a> SpanParser<'a> {
     #[inline(always)]
     fn call_inner(&self, state: &mut ParserState<'a>) -> Option<Span<'a>> {
         match &self.kind {
-            SpanKind::StringLiteral(s_bytes) => {
-                let end = s_bytes.len();
-                if end == 0 {
-                    return Some(Span::new(state.offset, state.offset, state.src));
-                }
-                let slc = state.src_bytes.get(state.offset..)?;
-                if slc.len() >= end
-                    && slc[0] == s_bytes[0]
-                    && (end == 1 || slc[1..end].starts_with(&s_bytes[1..]))
-                {
-                    let start = state.offset;
-                    state.offset += end;
-                    Some(Span::new(start, state.offset, state.src))
-                } else {
-                    #[cfg(feature = "diagnostics")]
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                    None
-                }
-            }
+            // ── Leaf dispatch (leaves.rs) ─────────────────────
+            SpanKind::StringLiteral(s_bytes) => self.dispatch_string_literal(s_bytes, state),
+            SpanKind::CompiledDfa(dfa) => self.dispatch_compiled_dfa(dfa, state),
+            SpanKind::AhoCorasickMatch(ac) => self.dispatch_aho_corasick(ac, state),
+            SpanKind::TakeWhileByte(f) => self.dispatch_take_while_byte(*f, state),
+            SpanKind::TakeWhileChar(f) => self.dispatch_take_while_char(f.as_ref(), state),
+            SpanKind::NextN(amount) => self.dispatch_next_n(*amount, state),
+            SpanKind::Epsilon => self.dispatch_epsilon(state),
+            SpanKind::Scanner(scanner) => self.dispatch_scanner(scanner, state),
+            SpanKind::Eof => self.dispatch_eof(state),
+            SpanKind::Boxed(inner) => self.dispatch_boxed(inner.as_ref(), state),
 
-
-            SpanKind::CompiledDfa(dfa) => {
-                let bytes = &state.src_bytes[state.offset..];
-                match dfa.find_at(bytes, 0) {
-                    Some(end) => {
-                        let start = state.offset;
-                        state.offset += end;
-                        Some(Span::new(start, state.offset, state.src))
-                    }
-                    None => {
-                        #[cfg(feature = "diagnostics")]
-                        if let Some(lbl) = self.label {
-                            state.add_expected(lbl);
-                        }
-                        None
-                    }
-                }
-            }
-
-            SpanKind::AhoCorasickMatch(ac) => {
-                let slc = state.src.get(state.offset..)?;
-                let input = Input::new(slc).anchored(Anchored::Yes);
-                match ac.find(input) {
-                    Some(m) => {
-                        let start = state.offset;
-                        state.offset += m.end();
-                        Some(Span::new(start, state.offset, state.src))
-                    }
-                    None => {
-                        #[cfg(feature = "diagnostics")]
-                        if let Some(lbl) = self.label {
-                            state.add_expected(lbl);
-                        }
-                        None
-                    }
-                }
-            }
-
-            SpanKind::TakeWhileByte(f) => {
-                let bytes = state.src_bytes;
-                let start = state.offset;
-                let end = bytes.len();
-                let mut i = start;
-                while i < end && f(unsafe { *bytes.get_unchecked(i) }) {
-                    i += 1;
-                }
-                if i == start {
-                    #[cfg(feature = "diagnostics")]
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                    return None;
-                }
-                state.offset = i;
-                Some(Span::new(start, i, state.src))
-            }
-
-            SpanKind::TakeWhileChar(f) => {
-                let slc = state.src.get(state.offset..)?;
-                match slc
-                    .char_indices()
-                    .take_while(|(_, c)| f(*c))
-                    .map(|(i, _)| i)
-                    .last()
-                {
-                    Some(mut len) => {
-                        len += 1;
-                        while len < slc.len() && !slc.is_char_boundary(len) {
-                            len += 1;
-                        }
-                        let start = state.offset;
-                        state.offset += len;
-                        Some(Span::new(start, state.offset, state.src))
-                    }
-                    None => {
-                        #[cfg(feature = "diagnostics")]
-                        if let Some(lbl) = self.label {
-                            state.add_expected(lbl);
-                        }
-                        None
-                    }
-                }
-            }
-
-            SpanKind::NextN(amount) => {
-                let start = state.offset;
-                let new_offset = start + amount;
-                if new_offset > state.src.len() {
-                    #[cfg(feature = "diagnostics")]
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                    return None;
-                }
-                state.offset = new_offset;
-                Some(Span::new(start, new_offset, state.src))
-            }
-
-            SpanKind::Epsilon => Some(Span::new(state.offset, state.offset, state.src)),
-
-            // Domain-specific scanners delegate to SpanScanner dispatch
-            SpanKind::Scanner(scanner) => {
-                let result = scanner.call(state);
-                #[cfg(feature = "diagnostics")]
-                if result.is_none() {
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                }
-                result
-            }
-
-            SpanKind::TakeUntilAny1(b1) => {
-                let bytes = state.src_bytes;
-                let start = state.offset;
-                if start >= bytes.len() {
-                    #[cfg(feature = "diagnostics")]
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                    return None;
-                }
-                let scan_len = memchr::memchr(*b1, &bytes[start..]).unwrap_or(bytes.len() - start);
-                if scan_len == 0 {
-                    #[cfg(feature = "diagnostics")]
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                    return None;
-                }
-                let end = start + scan_len;
-                state.offset = end;
-                Some(Span::new(start, end, state.src))
-            }
-            SpanKind::TakeUntilAny2(b1, b2) => {
-                let bytes = state.src_bytes;
-                let start = state.offset;
-                if start >= bytes.len() {
-                    #[cfg(feature = "diagnostics")]
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                    return None;
-                }
-                let scan_len =
-                    memchr::memchr2(*b1, *b2, &bytes[start..]).unwrap_or(bytes.len() - start);
-                if scan_len == 0 {
-                    #[cfg(feature = "diagnostics")]
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                    return None;
-                }
-                let end = start + scan_len;
-                state.offset = end;
-                Some(Span::new(start, end, state.src))
-            }
+            // ── Negated-class byte scanners (scan.rs) ─────────
+            SpanKind::TakeUntilAny1(b1) => self.dispatch_take_until_any1(*b1, state),
+            SpanKind::TakeUntilAny2(b1, b2) => self.dispatch_take_until_any2(*b1, *b2, state),
             SpanKind::TakeUntilAny3(b1, b2, b3) => {
-                let bytes = state.src_bytes;
-                let start = state.offset;
-                if start >= bytes.len() {
-                    #[cfg(feature = "diagnostics")]
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                    return None;
-                }
-                let scan_len =
-                    memchr::memchr3(*b1, *b2, *b3, &bytes[start..]).unwrap_or(bytes.len() - start);
-                if scan_len == 0 {
-                    #[cfg(feature = "diagnostics")]
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                    return None;
-                }
-                let end = start + scan_len;
-                state.offset = end;
-                Some(Span::new(start, end, state.src))
+                self.dispatch_take_until_any3(*b1, *b2, *b3, state)
             }
-            SpanKind::TakeUntilAnyLut(lut) => {
-                let bytes = state.src_bytes;
-                let start = state.offset;
-                let end = bytes.len();
-                let mut i = start;
-                while i < end && !lut[unsafe { *bytes.get_unchecked(i) } as usize] {
-                    i += 1;
-                }
-                if i == start {
-                    #[cfg(feature = "diagnostics")]
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                    return None;
-                }
-                state.offset = i;
-                Some(Span::new(start, i, state.src))
-            }
+            SpanKind::TakeUntilAnyLut(lut) => self.dispatch_take_until_any_lut(lut, state),
             SpanKind::TakeUntilAnySIMD { lo_lut, hi_lut } => {
-                use std::simd::prelude::*;
-
-                let lo = u8x16::from_array(*lo_lut);
-                let hi = u8x16::from_array(*hi_lut);
-                let lo_mask_const = u8x16::splat(0x0F);
-
-                let bytes = state.src_bytes;
-                let start = state.offset;
-                let end = bytes.len();
-                let mut i = start;
-
-                // SIMD: classify 16 bytes at a time
-                while i + 16 <= end {
-                    let chunk = u8x16::from_slice(&bytes[i..i + 16]);
-                    let lo_nibbles = chunk & lo_mask_const;
-                    let hi_nibbles = chunk >> 4;
-
-                    let lo_result = lo.swizzle_dyn(lo_nibbles);
-                    let hi_result = hi.swizzle_dyn(hi_nibbles);
-                    let matched = lo_result & hi_result;
-
-                    let is_excluded = matched.simd_ne(u8x16::splat(0));
-                    if !is_excluded.any() {
-                        i += 16;
-                        continue;
-                    }
-                    i += is_excluded.to_bitmask().trailing_zeros() as usize;
-                    // Found an excluded byte — break to return result
-                    if i == start {
-                        #[cfg(feature = "diagnostics")]
-                        if let Some(lbl) = self.label {
-                            state.add_expected(lbl);
-                        }
-                        return None;
-                    }
-                    state.offset = i;
-                    return Some(Span::new(start, i, state.src));
-                }
-
-                // Scalar tail: use nibble LUTs for remaining bytes
-                while i < end {
-                    let b = unsafe { *bytes.get_unchecked(i) };
-                    if lo_lut[(b & 0x0F) as usize] & hi_lut[(b >> 4) as usize] != 0 {
-                        break;
-                    }
-                    i += 1;
-                }
-
-                if i == start {
-                    #[cfg(feature = "diagnostics")]
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                    return None;
-                }
-                state.offset = i;
-                Some(Span::new(start, i, state.src))
+                self.dispatch_take_until_any_simd(lo_lut, hi_lut, state)
             }
 
-            SpanKind::Seq(parsers) => {
-                let start = state.offset;
-                for p in parsers {
-                    p.call(state)?;
-                }
-                Some(Span::new(start, state.offset, state.src))
-            }
+            // ── Flat combinators (combinators.rs) ─────────────
+            SpanKind::Seq(parsers) => self.dispatch_seq(parsers, state),
+            SpanKind::OneOf(parsers) => self.dispatch_one_of(parsers, state),
+            SpanKind::Many { inner, lo, hi } => self.dispatch_many(inner, *lo, *hi, state),
+            SpanKind::Opt(inner) => self.dispatch_opt(inner, state),
+            SpanKind::Skip(first, second) => self.dispatch_skip(first, second, state),
+            SpanKind::Next(first, second) => self.dispatch_next(first, second, state),
 
-            SpanKind::OneOf(parsers) => {
-                for p in parsers {
-                    let cp = state.offset;
-                    if let Some(span) = p.call(state) {
-                        return Some(span);
-                    }
-                    state.furthest_offset = state.furthest_offset.max(state.offset);
-                    state.offset = cp;
-                }
-                None
-            }
+            // ── Wrap (wrap.rs) ────────────────────────────────
+            SpanKind::Wrap { left, inner, right } => self.dispatch_wrap(left, inner, right, state),
 
-            SpanKind::Many { inner, lo, hi } => {
-                let start = state.offset;
-                let mut end = state.offset;
-                let mut count = 0;
-                while count < *hi {
-                    let prev_offset = state.offset;
-                    match inner.call(state) {
-                        Some(span) => {
-                            end = span.end;
-                            count += 1;
-                            // Guard: break on zero-length match to prevent infinite loops.
-                            if state.offset == prev_offset {
-                                break;
-                            }
-                        }
-                        None => {
-                            state.offset = prev_offset;
-                            break;
-                        }
-                    }
-                }
-                if count >= *lo {
-                    Some(Span::new(start, end, state.src))
-                } else {
-                    None
-                }
-            }
-
+            // ── sep_by family (sep_by.rs) ─────────────────────
             SpanKind::SepBy { inner, sep, lo, hi } => {
-                let start = state.offset;
-                let mut count = 0;
-                // Parse first element
-                let Some(first_span) = inner.call(state) else {
-                    if *lo == 0 {
-                        return Some(Span::new(start, start, state.src));
-                    }
-                    return None;
-                };
-                let mut end = first_span.end;
-                count += 1;
-                // Parse (sep elem)* — checkpoint before separator to reject
-                // trailing separators.
-                while count < *hi {
-                    let cp = state.offset;
-                    if sep.call(state).is_none() {
-                        state.offset = cp;
-                        break;
-                    }
-                    if let Some(span) = inner.call(state) {
-                        end = span.end;
-                        count += 1;
-                    } else {
-                        // Element after separator failed — backtrack past
-                        // the separator (reject trailing sep).
-                        state.offset = cp;
-                        break;
-                    }
-                }
-                if count >= *lo {
-                    Some(Span::new(start, end, state.src))
-                } else {
-                    None
-                }
+                self.dispatch_sep_by(inner, sep, *lo, *hi, state)
             }
-
             SpanKind::SepByWs { inner, sep, lo, hi } => {
-                let start = state.offset;
-                let mut count = 0;
-                // Pre-trim before first element
-                trim_leading_whitespace_mut(state);
-                // Parse first element
-                if inner.call(state).is_none() {
-                    if *lo == 0 {
-                        return Some(Span::new(start, state.offset, state.src));
-                    }
-                    return None;
-                }
-                count += 1;
-                while count < *hi {
-                    let cp = state.offset;
-                    // Trim before separator
-                    trim_leading_whitespace_mut(state);
-                    if sep.call(state).is_none() {
-                        state.offset = cp;
-                        break;
-                    }
-                    // Trim before next element
-                    trim_leading_whitespace_mut(state);
-                    if inner.call(state).is_some() {
-                        count += 1;
-                    } else {
-                        state.offset = cp;
-                        break;
-                    }
-                }
-                if count >= *lo {
-                    // Post-trim after the last element
-                    trim_leading_whitespace_mut(state);
-                    Some(Span::new(start, state.offset, state.src))
-                } else {
-                    None
-                }
+                self.dispatch_sep_by_ws(inner, sep, *lo, *hi, state)
             }
 
-            SpanKind::Opt(inner) => {
-                let start = state.offset;
-                if inner.call(state).is_none() {
-                    return Some(Span::new(start, start, state.src));
-                }
-                Some(Span::new(start, state.offset, state.src))
-            }
-
-            SpanKind::Wrap { left, inner, right } => {
-                #[cfg(feature = "diagnostics")]
-                let open_offset = state.offset;
-                left.call(state)?;
-                #[cfg(feature = "diagnostics")]
-                let open_end = state.offset;
-                let middle = inner.call(state)?;
-                if right.call(state).is_some() {
-                    Some(Span::new(middle.start, middle.end, state.src))
-                } else {
-                    #[cfg(feature = "diagnostics")]
-                    {
-                        let delimiter = state.src[open_offset..open_end].to_string();
-                        state.add_suggestion(|| crate::state::Suggestion {
-                            kind: crate::state::SuggestionKind::UnclosedDelimiter {
-                                delimiter: delimiter.clone(),
-                                open_offset,
-                            },
-                            message: format!(
-                                "close the delimiter with matching `{}`",
-                                match delimiter.as_str() {
-                                    "{" => "}",
-                                    "[" => "]",
-                                    "(" => ")",
-                                    d => d,
-                                }
-                            ),
-                        });
-                        state.add_secondary_span(
-                            open_offset,
-                            format!("unclosed `{}` opened here", delimiter),
-                        );
-                    }
-                    None
-                }
-            }
-
-            SpanKind::Skip(first, second) => {
-                let span = first.call(state)?;
-                second.call(state)?;
-                Some(span)
-            }
-
-            SpanKind::Next(first, second) => {
-                first.call(state)?;
-                second.call(state)
-            }
-
-            SpanKind::Not(main, negated) => {
-                let span = main.call(state)?;
-                let checkpoint = state.offset;
-                let saved_furthest = state.furthest_offset;
-                if negated.call(state).is_none() {
-                    state.offset = checkpoint;
-                    state.furthest_offset = saved_furthest;
-                    return Some(span);
-                }
-                state.offset = checkpoint;
-                state.furthest_offset = saved_furthest;
-                None
-            }
-
-            SpanKind::Minus(main, excluded) => {
-                let checkpoint = state.offset;
-                let saved_furthest = state.furthest_offset;
-                if excluded.call(state).is_some() {
-                    state.offset = checkpoint;
-                    state.furthest_offset = saved_furthest;
-                    return None;
-                }
-                state.offset = checkpoint;
-                state.furthest_offset = saved_furthest;
-                main.call(state)
-            }
-
-            SpanKind::LookAhead(main, lookahead) => {
-                let span = main.call(state)?;
-                let offset_after = state.offset;
-                let result = lookahead.call(state);
-                state.offset = offset_after;
-                result?;
-                Some(span)
-            }
-
-            SpanKind::Negate(inner) => {
-                let checkpoint = state.offset;
-                let saved_furthest = state.furthest_offset;
-                if inner.call(state).is_none() {
-                    state.offset = checkpoint;
-                    state.furthest_offset = saved_furthest;
-                    return Some(Span::new(checkpoint, checkpoint, state.src));
-                }
-                state.offset = checkpoint;
-                state.furthest_offset = saved_furthest;
-                None
-            }
-
-            SpanKind::Peek(inner) => {
-                let checkpoint = state.offset;
-                let saved_furthest = state.furthest_offset;
-                let span = inner.call(state)?;
-                state.offset = checkpoint;
-                state.furthest_offset = saved_furthest;
-                Some(span)
-            }
-
-            SpanKind::Eof => {
-                if state.is_at_end() {
-                    Some(Span::new(state.offset, state.offset, state.src))
-                } else {
-                    #[cfg(feature = "diagnostics")]
-                    if let Some(lbl) = self.label {
-                        state.add_expected(lbl);
-                    }
-                    None
-                }
-            }
-
-            SpanKind::Boxed(inner) => inner.call(state),
+            // ── Assertions (assertions.rs) ────────────────────
+            SpanKind::Not(main, negated) => self.dispatch_not(main, negated, state),
+            SpanKind::Minus(main, excluded) => self.dispatch_minus(main, excluded, state),
+            SpanKind::LookAhead(main, lookahead) => self.dispatch_look_ahead(main, lookahead, state),
+            SpanKind::Negate(inner) => self.dispatch_negate(inner, state),
+            SpanKind::Peek(inner) => self.dispatch_peek(inner, state),
         }
     }
 }
 
+// ── Sub-modules (order matters: sp_new! must be defined above) ──
 mod span_scanner;
 pub(super) use span_scanner::SpanScanner;
-
+mod leaves;
+mod scan;
+mod combinators;
+mod wrap;
+mod sep_by;
+mod assertions;
 mod methods;
-
 mod constructors;
 pub use constructors::*;
