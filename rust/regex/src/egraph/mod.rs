@@ -9,8 +9,9 @@
 //! - [`HirENode`] — the e-node enum (variant-parallel to `Hir`,
 //!   with `Id` children). Derives `Language` via
 //!   `egraph_derive::Language`.
-//! - [`HirAnalysis`] — per-class lattice analysis (min_size,
-//!   nullable), mirroring `bbnf_ir::egraph::GrammarAnalysis`.
+//! - The substrate analysis is `egraph::NoAnalysis` — neither
+//!   tier consumes per-class lattice data, so the wrapper struct
+//!   was deleted in Tranche M.
 //! - [`insert_hir`] — recursive translator: owning `Hir` tree →
 //!   e-graph root Id.
 //! - [`extract_hir`] — recursive extractor: saturated e-graph +
@@ -32,25 +33,24 @@
 //!   This is the one consumers call from
 //!   `RegexInfo::analyze_from_hir` (Tranche H-6).
 
-pub mod analysis;
 pub mod cost;
 pub mod node;
 pub mod rules;
 pub mod translate;
 
-pub use analysis::{HirAnalysis, HirClassData};
 pub use cost::RegexExtractionCost;
 pub use node::HirENode;
 pub use rules::default_hir_rules;
 pub use translate::{extract_hir, insert_hir};
 
-use egraph::{CspScheduler, EGraph, Id, RewriteFn, Scheduler};
+use egraph::{CspScheduler, EGraph, Id, NoAnalysis, RewriteFn, Scheduler};
 
 use crate::hir::Hir;
 
 /// The HIR e-graph type — an `EGraph` parameterized on `HirENode`
-/// and the minimal `HirAnalysis` lattice.
-pub type HirEGraph = EGraph<HirENode, HirAnalysis>;
+/// with the substrate `NoAnalysis` (no per-class lattice data is
+/// consumed by any rule, cost model, or extractor in either tier).
+pub type HirEGraph = EGraph<HirENode, NoAnalysis>;
 
 /// Build an e-graph from a single owning `Hir` tree. Returns the
 /// populated graph and the root e-class Id. After `build`, the
@@ -69,8 +69,8 @@ pub fn build_hir_egraph(hir: &Hir) -> (HirEGraph, Id) {
 /// a run report with per-rule fire counts, mirroring the
 /// grammar-tier `BBNF_EGRAPH_REPORT`.
 pub fn saturate_hir_egraph(egraph: &mut HirEGraph) {
-    let rules = default_hir_rules::<HirAnalysis>();
-    let rule_refs: Vec<&dyn RewriteFn<HirENode, HirAnalysis>> =
+    let rules = default_hir_rules::<NoAnalysis>();
+    let rule_refs: Vec<&dyn RewriteFn<HirENode, NoAnalysis>> =
         rules.iter().map(|r| r.as_ref()).collect();
 
     let scheduler = CspScheduler::default();
