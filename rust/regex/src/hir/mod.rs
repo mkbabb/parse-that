@@ -8,7 +8,7 @@ pub mod parser;
 // ── Byte-level range ────────────────────────────────────────────────────
 
 /// An inclusive byte range `[start, end]`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ByteRange {
     pub start: u8,
     pub end: u8,
@@ -23,7 +23,7 @@ impl ByteRange {
 // ── Unicode codepoint range ─────────────────────────────────────────────
 
 /// An inclusive codepoint range `[start, end]`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct CodepointRange {
     pub start: char,
     pub end: char,
@@ -41,7 +41,7 @@ impl CodepointRange {
 ///
 /// Key difference from `regex-syntax`: retains `negated` flag. Consumers can
 /// call `negated()` directly instead of heuristic byte-count detection.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum CharClass {
     /// Byte-level class (ASCII patterns, `\d`, `\w`, `\s`, `[a-z]`, `[^abc]`).
     /// Ranges are sorted and non-overlapping.
@@ -175,7 +175,7 @@ fn add_codepoint_range(out: &mut Vec<CodepointRange>, lo: u32, hi: u32) {
 // ── Look assertions ─────────────────────────────────────────────────────
 
 /// Position assertions (zero-width).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Look {
     /// `^` — start of input (or start of line with `(?m)`).
     Start,
