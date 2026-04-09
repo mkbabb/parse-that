@@ -393,6 +393,7 @@ dependencies = [
 name = "egraph"
 version = "0.1.0"
 dependencies = [
+ "csp-solver",
  "rustc-hash",
  "smallvec",
 ]

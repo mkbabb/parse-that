@@ -44,7 +44,7 @@ pub use node::HirENode;
 pub use rules::default_hir_rules;
 pub use translate::{extract_hir, insert_hir};
 
-use egraph::{BackoffScheduler, EGraph, Id, RewriteFn, Scheduler};
+use egraph::{CspScheduler, EGraph, Id, RewriteFn, Scheduler};
 
 use crate::hir::Hir;
 
@@ -62,7 +62,7 @@ pub fn build_hir_egraph(hir: &Hir) -> (HirEGraph, Id) {
     (egraph, root)
 }
 
-/// Drive rewrites to fixed-point using `BackoffScheduler`.
+/// Drive rewrites to fixed-point using `CspScheduler`.
 /// Mirrors `bbnf_ir::egraph::build_and_saturate` exactly — same
 /// scheduler, same iteration cap, same growth limit. When
 /// `BBNF_HIR_EGRAPH_REPORT=1` is set in the environment, prints
@@ -73,7 +73,7 @@ pub fn saturate_hir_egraph(egraph: &mut HirEGraph) {
     let rule_refs: Vec<&dyn RewriteFn<HirENode, HirAnalysis>> =
         rules.iter().map(|r| r.as_ref()).collect();
 
-    let scheduler = BackoffScheduler::default();
+    let scheduler = CspScheduler::default();
     let report = scheduler.run(egraph, &rule_refs);
 
     if std::env::var("BBNF_HIR_EGRAPH_REPORT").is_ok() {
