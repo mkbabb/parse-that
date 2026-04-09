@@ -1,12 +1,15 @@
 //! Structural HIR classifiers for regex patterns.
 //!
 //! Pure HIR analyzers that decompose regex patterns into semantic categories
-//! (Numeric, QuotedString, HexDigits, Identifier) by walking the
-//! bespoke `parse_that::regex::hir` tree.
+//! (Numeric, QuotedString, HexDigits, Identifier, CharClassQuantified,
+//! PrefixThenClass) by walking the bespoke `parse_that::regex::hir` tree.
 
-use crate::hir::{ByteRange, CharClass, Hir};
+use smallvec::SmallVec;
 
-use super::{RegexClass, is_literal_byte, unwrap_group};
+use crate::hir::{ByteRange, CharClass, Hir, Repetition};
+use crate::sets::charset::CharSet128;
+
+use super::{ClassRangeInfo, RegexClass, is_literal_byte, unwrap_group};
 
 // ── Numeric ────────────────────────────────────────────────────────────────
 
@@ -394,4 +397,102 @@ fn is_word_class(hir: &Hir) -> bool {
         return has_lower && has_digit;
     }
     false
+}
+
+// ── CharClassQuantified ─────────────────────────────────────────────────────
+//
+// Tranche V structural classifier. Detects bare quantified char classes
+// (`[a-z]+`, `\d*`, `[^"\\]+`) that fall through every narrower classifier.
+// Captures the same data structure used by `RegexInfo.quantified_class` so
+// the kernel registry can hash and dedup signatures.
+
+pub(super) fn try_classify_charclass_quantified(hir: &Hir) -> Option<RegexClass> {
+    let info = extract_class_range_info(hir)?;
+    Some(RegexClass::CharClassQuantified(info))
+}
+
+fn extract_class_range_info(hir: &Hir) -> Option<ClassRangeInfo> {
+    let inner = unwrap_group(hir);
+    match inner {
+        Hir::Repetition(Repetition { sub, min, max, .. }) => {
+            let class = match unwrap_group(sub.as_ref()) {
+                Hir::Class(class) => class,
+                _ => return None,
+            };
+            Some(class_to_range_info(class, *min, *max))
+        }
+        // Bare class with implicit `{1,1}` (rare but valid).
+        Hir::Class(class) => Some(class_to_range_info(class, 1, Some(1))),
+        _ => None,
+    }
+}
+
+fn class_to_range_info(class: &CharClass, min: u32, max: Option<u32>) -> ClassRangeInfo {
+    let negated = class.negated();
+    let ranges = class.to_positive_byte_ranges();
+    let mut chars = CharSet128::new();
+    for r in &ranges {
+        let lo = r.start;
+        let hi = r.end.min(127);
+        if lo <= hi {
+            chars.add_range(lo, hi);
+        }
+    }
+    ClassRangeInfo {
+        chars,
+        negated,
+        min,
+        max,
+    }
+}
+
+// ── PrefixThenClass ────────────────────────────────────────────────────────
+//
+// Tranche V structural classifier. Detects fixed-byte literal prefix
+// followed by a quantified class tail: `--[\w-]+`, `@[a-z][\w-]*`,
+// `#[a-f0-9]+`. The prefix length is bounded by the SmallVec inline
+// capacity (8 bytes); longer prefixes fall to Unknown rather than
+// proliferating into a Vec.
+
+pub(super) fn try_classify_prefix_then_class(hir: &Hir) -> Option<RegexClass> {
+    let inner = unwrap_group(hir);
+    let parts = match inner {
+        Hir::Concat(parts) => parts.as_slice(),
+        _ => return None,
+    };
+    if parts.len() < 2 {
+        return None;
+    }
+
+    // Walk the leading literals into one fused prefix.
+    let mut prefix: SmallVec<[u8; 8]> = SmallVec::new();
+    let mut idx = 0;
+    while idx < parts.len() {
+        let p = unwrap_group(&parts[idx]);
+        match p {
+            Hir::Literal(bytes) => {
+                if prefix.len() + bytes.len() > 8 {
+                    return None;
+                }
+                prefix.extend_from_slice(bytes);
+                idx += 1;
+            }
+            _ => break,
+        }
+    }
+    if prefix.is_empty() || idx == parts.len() {
+        return None;
+    }
+
+    // The remaining parts must be exactly one quantified-class tail. The
+    // tail can be a single Repetition, or a sequence of (single-class +
+    // quantified-class) which we collapse into the larger of the two.
+    let tail_hir = if idx == parts.len() - 1 {
+        &parts[idx]
+    } else {
+        return None;
+    };
+
+    let tail = extract_class_range_info(tail_hir)?;
+    Some(RegexClass::PrefixThenClass { prefix, tail })
 }

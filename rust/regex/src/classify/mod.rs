@@ -10,11 +10,32 @@
 
 mod structural;
 
+use smallvec::SmallVec;
+
 use crate::hir::Hir;
+use crate::sets::charset::CharSet128;
 
 use structural::{
-    try_classify_hex, try_classify_identifier, try_classify_numeric, try_classify_quoted_string,
+    try_classify_charclass_quantified, try_classify_hex, try_classify_identifier,
+    try_classify_numeric, try_classify_prefix_then_class, try_classify_quoted_string,
 };
+
+/// Information about a quantified character class, used by both
+/// `RegexInfo::quantified_class` and the `RegexClass::CharClassQuantified`
+/// structural variant. Re-exported from `crate::info::QuantifiedClassInfo`
+/// once that module declares it; defined here to avoid the cyclic dependency
+/// (classify/ is consumed by info/).
+#[derive(Clone, Debug, PartialEq)]
+pub struct ClassRangeInfo {
+    /// Positive form of the byte set the class accepts (ASCII).
+    pub chars: CharSet128,
+    /// Whether the original class was negated (`[^...]`).
+    pub negated: bool,
+    /// Minimum repetition count.
+    pub min: u32,
+    /// Maximum repetition count (`None` = unbounded).
+    pub max: Option<u32>,
+}
 
 /// Classification result for a regex pattern.
 #[derive(Debug, Clone, PartialEq)]
@@ -52,6 +73,25 @@ pub enum RegexClass {
 
     /// CSS quoted string regex (double or single, with general escapes).
     CssQuotedString,
+
+    /// `[a-z]+`, `\d*`, `[^"\\]+`, etc. — quantified char class.
+    /// Tranche V: closes the gap where structural information was already
+    /// extracted into `RegexInfo.quantified_class` but no `RegexClass`
+    /// variant existed for it.
+    CharClassQuantified(ClassRangeInfo),
+
+    /// `--[\w-]+`, `@[a-z][\w-]*`, `#[a-f0-9]+`, etc. — fixed literal
+    /// prefix followed by a quantified class tail. Tranche V: closes the
+    /// "literal prefix + class suffix" coverage gap.
+    PrefixThenClass {
+        prefix: SmallVec<[u8; 8]>,
+        tail: ClassRangeInfo,
+    },
+
+    /// Pattern with a guaranteed mandatory byte that drives memchr
+    /// acceleration but doesn't fit a narrower family. Tranche V: gives
+    /// `RegexInfo.accel_candidate` a first-class home in the taxonomy.
+    AccelDriven(u8),
 
     /// Not classifiable — use general regex engine.
     Unknown,
@@ -131,6 +171,14 @@ pub fn classify_regex(pattern: &str) -> RegexClass {
 /// Does not consult the known-pattern fast path — callers with only the
 /// pattern string should use `classify_regex` (which checks the fast path
 /// before calling this).
+///
+/// Classifier order: narrower / value-bearing classes first
+/// (Numeric / QuotedString / Hex / Identifier), then the structural
+/// fallthroughs introduced in Tranche V (CharClassQuantified,
+/// PrefixThenClass) for patterns that previously fell to Unknown despite
+/// carrying enough structural signal for kernel emission. AccelDriven is
+/// not produced here because it depends on the literal prefix/suffix
+/// computed in info/, not from raw HIR.
 pub fn classify_regex_from_hir(hir: &Hir) -> RegexClass {
     if let Some(class) = try_classify_numeric(hir) {
         return class;
@@ -143,6 +191,12 @@ pub fn classify_regex_from_hir(hir: &Hir) -> RegexClass {
     }
     if try_classify_identifier(hir) {
         return RegexClass::Identifier;
+    }
+    if let Some(class) = try_classify_prefix_then_class(hir) {
+        return class;
+    }
+    if let Some(class) = try_classify_charclass_quantified(hir) {
+        return class;
     }
     RegexClass::Unknown
 }
