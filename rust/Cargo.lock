@@ -63,6 +63,7 @@ dependencies = [
  "bbnf-ir",
  "bbnf-ser",
  "csp-solver",
+ "egraph",
  "indexmap",
  "parse_that",
  "pprint",
@@ -78,6 +79,8 @@ version = "0.1.6"
 dependencies = [
  "bbnf-regex",
  "csp-solver",
+ "egraph",
+ "egraph-derive",
  "parse_that",
  "rayon",
  "rmp-serde",
@@ -90,6 +93,9 @@ dependencies = [
 name = "bbnf-regex"
 version = "0.1.0"
 dependencies = [
+ "csp-solver",
+ "egraph",
+ "egraph-derive",
  "serde",
  "smallvec",
 ]
@@ -381,6 +387,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd1511a7b6a56299bd043a9c167a6d2bfb37bf84a6dfceaba651168adfb43c87"
 dependencies = [
  "dtoa",
+]
+
+[[package]]
+name = "egraph"
+version = "0.1.0"
+dependencies = [
+ "rustc-hash",
+ "smallvec",
+]
+
+[[package]]
+name = "egraph-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
 ]
 
 [[package]]
