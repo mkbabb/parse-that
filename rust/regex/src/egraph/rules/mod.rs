@@ -37,10 +37,10 @@ mod union;
 mod util;
 
 pub use flatten::FlattenAltConcat;
-pub use redundant::DeduplicateAlternation;
-pub use repetition::AbsorbRepetition;
-pub use superset::SupersetAbsorbClass;
-pub use union::UnionMergeClass;
+pub use redundant::{DedupMatch, DeduplicateAlternation};
+pub use repetition::{AbsorbRepetition, AbsorbRepetitionMatch, merge_bounds};
+pub use superset::{AbsorbMatch, SupersetAbsorbClass};
+pub use union::{UnionMatch, UnionMergeClass};
 
 use egraph::{Analysis, RewriteFn};
 
