@@ -108,14 +108,12 @@ impl<A: Analysis<HirENode>> Rewrite<HirENode, A> for FlattenAltConcat {
         egraph: &mut EGraph<HirENode, A>,
         class_id: Id,
         m: Self::Match,
-    ) -> bool {
+    ) {
         let new_id = match m {
             FlattenMatch::Alt(flat) => egraph.add(HirENode::Alternation(flat)),
             FlattenMatch::Concat(flat) => egraph.add(HirENode::Concat(flat)),
         };
-        let before = egraph.find(class_id);
         egraph.union(class_id, new_id);
-        egraph.find(class_id) != before
     }
 }
 

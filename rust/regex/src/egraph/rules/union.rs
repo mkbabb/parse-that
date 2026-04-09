@@ -94,7 +94,7 @@ impl<A: Analysis<HirENode>> Rewrite<HirENode, A> for UnionMergeClass {
         egraph: &mut EGraph<HirENode, A>,
         class_id: Id,
         m: Self::Match,
-    ) -> bool {
+    ) {
         let merged_id = egraph.add(HirENode::Class(m.merged_class));
         let mut new_children: Vec<Id> = Vec::with_capacity(m.original_children.len() - 1);
         for (k, &id) in m.original_children.iter().enumerate() {
@@ -108,9 +108,7 @@ impl<A: Analysis<HirENode>> Rewrite<HirENode, A> for UnionMergeClass {
         } else {
             egraph.add(HirENode::Alternation(new_children.into_boxed_slice()))
         };
-        let before = egraph.find(class_id);
         egraph.union(class_id, new_id);
-        egraph.find(class_id) != before
     }
 }
 

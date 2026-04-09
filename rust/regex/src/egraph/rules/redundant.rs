@@ -62,15 +62,13 @@ impl<A: Analysis<HirENode>> Rewrite<HirENode, A> for DeduplicateAlternation {
         egraph: &mut EGraph<HirENode, A>,
         class_id: Id,
         m: Self::Match,
-    ) -> bool {
+    ) {
         let new_id = if m.deduped.len() == 1 {
             m.deduped[0]
         } else {
             egraph.add(HirENode::Alternation(m.deduped))
         };
-        let before = egraph.find(class_id);
         egraph.union(class_id, new_id);
-        egraph.find(class_id) != before
     }
 }
 

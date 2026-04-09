@@ -135,7 +135,7 @@ impl<A: Analysis<HirENode>> Rewrite<HirENode, A> for AbsorbRepetition {
         egraph: &mut EGraph<HirENode, A>,
         class_id: Id,
         m: Self::Match,
-    ) -> bool {
+    ) {
         let merged_id = egraph.add(HirENode::Repetition {
             sub: m.merged_sub,
             min: m.merged_min,
@@ -158,9 +158,7 @@ impl<A: Analysis<HirENode>> Rewrite<HirENode, A> for AbsorbRepetition {
         } else {
             egraph.add(HirENode::Concat(new_children.into_boxed_slice()))
         };
-        let before = egraph.find(class_id);
         egraph.union(class_id, new_id);
-        egraph.find(class_id) != before
     }
 }
 
