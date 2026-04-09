@@ -23,8 +23,10 @@
 
 pub mod cost;
 pub mod node;
+pub mod rules;
 pub mod translate;
 
 pub use cost::RegexExtractionCost;
 pub use node::HirENode;
+pub use rules::default_hir_rules;
 pub use translate::{extract_hir, insert_hir};
