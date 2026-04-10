@@ -182,13 +182,19 @@ pub fn scan_number_mantissa(
         i += 1;
         let frac_start = i;
         // Accumulate fractional digits into mantissa (same 8-digit chunks).
+        // Tranche Z.2: use the SWAR `all_eight_are_ascii_digits` helper
+        // here too — Y.8 introduced it for the integer loop but the
+        // fractional loop kept the older `iter().all()` form. Same
+        // SWAR semantics, so the fractional path now picks up the
+        // ~4-instruction inline check instead of an 8-iteration
+        // unvectorizable loop.
         while i + 8 <= len && total_digits + 8 <= 19 {
             let b = unsafe { *bytes.get_unchecked(i) };
             if !b.is_ascii_digit() {
                 break;
             }
             let chunk = &bytes[i..i + 8];
-            if chunk.iter().all(|b| b.is_ascii_digit()) {
+            if all_eight_are_ascii_digits(chunk) {
                 mantissa = mantissa
                     .wrapping_mul(100_000_000)
                     .wrapping_add(parse_eight_digits(chunk));
