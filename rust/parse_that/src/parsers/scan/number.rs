@@ -52,6 +52,35 @@ pub fn parse_eight_digits(s: &[u8]) -> u64 {
     (val & 0x0000_FFFF_0000_FFFF).wrapping_mul(0x0000_2710_0000_0001) >> 32
 }
 
+/// Tranche Y.8 — SWAR digit validation over 8 bytes.
+///
+/// Replaces `chunk.iter().all(|b| b.is_ascii_digit())` (8 loads + 8
+/// branches, O(8) instructions best case) with two parallel byte-class
+/// compares executed as one u64 arithmetic operation each.
+///
+/// The test:
+/// - `u - 0x3030_3030_3030_3030` has the high bit of any byte set
+///   iff that byte was `< 0x30` (wrap-around).
+/// - `u + 0x4646_4646_4646_4646` has the high bit of any byte set iff
+///   that byte was `>= 0x3A` (the additive complement of `0x7F - 0x39`).
+///
+/// If both masks are zero, every byte is in `[0x30, 0x39]` (ASCII digit).
+/// Compiles to ~4 instructions: one load, two `add`s, one `test`/`or`.
+///
+/// On `json_canada`, the scanner hot path is ~30% of self-time per the
+/// post-W profile. Half of that was the unvectorizable
+/// `chunk.iter().all(...)` — this SWAR check collapses it into
+/// constant-time operations that LLVM can schedule alongside the
+/// `parse_eight_digits` mantissa fold.
+#[inline(always)]
+fn all_eight_are_ascii_digits(chunk: &[u8]) -> bool {
+    debug_assert!(chunk.len() >= 8);
+    let u = u64::from_le_bytes(chunk[..8].try_into().unwrap());
+    let lt_zero = u.wrapping_sub(0x3030_3030_3030_3030) & 0x8080_8080_8080_8080;
+    let gt_nine = u.wrapping_add(0x4646_4646_4646_4646) & 0x8080_8080_8080_8080;
+    (lt_zero | gt_nine) == 0
+}
+
 /// Core number scanner: accumulates mantissa with 8-digit chunking.
 ///
 /// Scans a number from `bytes[start..]` according to `cfg`, accumulating the
@@ -94,13 +123,19 @@ pub fn scan_number_mantissa(
     let mut mantissa: u64 = 0;
 
     // 8-digit chunks (simdjson trick).
+    //
+    // Tranche Y.8: the per-chunk "are all 8 bytes digits?" check is
+    // the SWAR `all_eight_are_ascii_digits` helper, replacing the
+    // previous `iter().all()` loop. The leading single-byte guard
+    // at line below is retained because it fails the loop fast
+    // when the first byte isn't a digit (common on negative lookups).
     while i + 8 <= len {
         let b = unsafe { *bytes.get_unchecked(i) };
         if !b.is_ascii_digit() {
             break;
         }
         let chunk = &bytes[i..i + 8];
-        if chunk.iter().all(|b| b.is_ascii_digit()) {
+        if all_eight_are_ascii_digits(chunk) {
             let chunk_val = parse_eight_digits(chunk);
             mantissa = mantissa
                 .wrapping_mul(100_000_000)
