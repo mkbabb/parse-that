@@ -7,7 +7,7 @@
 //! redundant. Mirrors the grammar-tier `DeduplicateAltBranches`
 //! rule.
 
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 
 use egraph::{Analysis, EGraph, Id, Rewrite};
 
@@ -35,7 +35,7 @@ impl<A: Analysis<HirENode>> Rewrite<HirENode, A> for DeduplicateAlternation {
                 let HirENode::Alternation(children) = node else {
                     continue;
                 };
-                let mut seen: HashSet<Id> = HashSet::new();
+                let mut seen: FxHashSet<Id> = FxHashSet::default();
                 let mut deduped: Vec<Id> = Vec::with_capacity(children.len());
                 for &id in children.iter() {
                     let canon = egraph.find_ref(id);

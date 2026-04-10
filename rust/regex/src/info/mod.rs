@@ -211,6 +211,21 @@ impl RegexInfo {
         Some(Self::analyze_from_hir_with_cost(pattern, &hir, cost))
     }
 
+    /// Tranche X phase 3: cached variant of [`Self::analyze_with_cost`]
+    /// for the per-compile pipeline. Threads a per-compile
+    /// [`crate::egraph::SaturationCache`] through the HIR
+    /// canonicalization step so that repeated patterns within a
+    /// single compile pay the saturation cost at most once.
+    pub fn analyze_with_cost_cached(
+        pattern: &str,
+        cost: &crate::egraph::RegexExtractionCost,
+        cache: &mut crate::egraph::SaturationCache,
+    ) -> Option<Self> {
+        let hir = crate::hir::parser::parse_with(pattern, &crate::hir::ParseOptions::byte_mode())
+            .ok()?;
+        Some(Self::analyze_from_hir_with_cost_cached(pattern, &hir, cost, cache))
+    }
+
     /// Analyze a regex from a pre-parsed HIR using the default cost model.
     ///
     /// See [`Self::analyze_from_hir_with_cost`] for the explicit-cost variant.
@@ -246,7 +261,30 @@ impl RegexInfo {
         // downstream analysis runs against `canonical`, not the raw
         // input `hir`.
         let canonical = crate::egraph::simplify_hir(hir, cost);
-        let hir = &canonical;
+        Self::analyze_canonical(pattern, &canonical)
+    }
+
+    /// Tranche X phase 3: cached variant of
+    /// [`Self::analyze_from_hir_with_cost`] that consults the
+    /// per-compile [`crate::egraph::SaturationCache`] for the HIR
+    /// canonicalization step. The post-canonicalization analysis
+    /// passes (FIRST sets, nullable, width, DFA sizing, classify)
+    /// are unchanged — the cache only short-circuits the e-graph
+    /// `build → saturate → extract → drop` cycle.
+    pub fn analyze_from_hir_with_cost_cached(
+        pattern: &str,
+        hir: &Hir,
+        cost: &crate::egraph::RegexExtractionCost,
+        cache: &mut crate::egraph::SaturationCache,
+    ) -> Self {
+        let canonical = crate::egraph::simplify_hir_cached(hir, cost, cache);
+        Self::analyze_canonical(pattern, &canonical)
+    }
+
+    /// Shared post-canonicalization analysis used by both the cached
+    /// and non-cached entry points.
+    fn analyze_canonical(pattern: &str, canonical: &Hir) -> Self {
+        let hir = canonical;
 
         // Classification: known-pattern fast path first, then structural.
         let classification = classify_known_pattern(pattern)

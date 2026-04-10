@@ -17,6 +17,10 @@ serde = ["dep:serde"]
 [dependencies]
 smallvec = "1.13"
 serde = { version = "1", optional = true, features = ["derive"] }
+# Tranche X phase 2: FxHash for the per-iteration scratch state in
+# the HIR e-graph rewrite rules. Same hash strategy as the egraph
+# substrate crate (via rustc-hash 2).
+rustc-hash = "2"
 # Tranche H: HIR e-graph substrate. `egraph` + `egraph-derive` supply the
 # equality-saturation machinery; `csp-solver` schedules HIR rewrite
 # eligibility the same way the grammar tier schedules its CSP passes. All

@@ -36,11 +36,13 @@
 pub mod cost;
 pub mod node;
 pub mod rules;
+pub mod saturation_cache;
 pub mod translate;
 
 pub use cost::RegexExtractionCost;
 pub use node::HirENode;
 pub use rules::default_hir_rules;
+pub use saturation_cache::SaturationCache;
 pub use translate::{extract_hir, insert_hir};
 
 use egraph::{CspScheduler, EGraph, Id, NoAnalysis, RewriteFn, Scheduler};
@@ -147,6 +149,45 @@ pub fn simplify_hir(hir: &Hir, cost: &RegexExtractionCost) -> Hir {
     let (mut egraph, root) = build_hir_egraph(hir);
     saturate_hir_egraph(&mut egraph);
     extract_canonical(&egraph, root, cost)
+}
+
+/// Tranche X phase 3: per-compile cached variant of [`simplify_hir`].
+///
+/// JSON's 4-6 unique regex patterns previously paid the full
+/// `build → saturate → extract → drop` cycle on every compile of the
+/// same grammar (`compile_json` was 9.17% inclusive on
+/// `bbnf_regex::egraph::saturate_hir_egraph` per the post-W samply
+/// profile). The trivial-HIR `needs_saturation` skip in
+/// [`simplify_hir`] only handled `Empty / Literal / Class / Look`
+/// leaves; JSON's string and number patterns have nested
+/// `Alternation` and `Repetition` so they fell through to the full
+/// saturate path on every call.
+///
+/// `simplify_hir_cached` keys the canonical-HIR result on the
+/// (input HIR, cost) hash via the per-compile [`SaturationCache`].
+/// On hit, returns the cached canonical form. On miss, runs the full
+/// `simplify_hir` and stores the result. The cache is owned by the
+/// caller (`compute_regex_info` allocates one per compile and drops
+/// it at the end), so there is no global state to invalidate and no
+/// cross-compile leakage.
+pub fn simplify_hir_cached(
+    hir: &Hir,
+    cost: &RegexExtractionCost,
+    cache: &mut SaturationCache,
+) -> Hir {
+    if !needs_saturation(hir) {
+        return hir.clone();
+    }
+    if let Some(canonical) = cache.get(hir) {
+        return canonical.clone();
+    }
+    let canonical = {
+        let (mut egraph, root) = build_hir_egraph(hir);
+        saturate_hir_egraph(&mut egraph);
+        extract_canonical(&egraph, root, cost)
+    };
+    cache.insert(hir.clone(), canonical.clone());
+    canonical
 }
 
 /// Predicate: does this HIR contain any node that a retained rewrite

@@ -194,7 +194,10 @@ pub enum Look {
 // ── Repetition ──────────────────────────────────────────────────────────
 
 /// Quantified sub-expression.
-#[derive(Clone, Debug, PartialEq)]
+///
+/// Tranche X phase 3: derives `Eq + Hash` so saturated HIRs can key
+/// the per-compile saturation cache in `egraph::SaturationCache`.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Repetition {
     pub sub: Box<Hir>,
     pub min: u32,
@@ -207,7 +210,16 @@ pub struct Repetition {
 /// High-level intermediate representation for a regex pattern.
 ///
 /// Flat enum — match directly, no `.kind()` indirection.
-#[derive(Clone, Debug, PartialEq)]
+///
+/// Tranche X phase 3: derives `Eq + Hash` so input HIRs can key the
+/// per-compile saturation cache in `egraph::SaturationCache`. Every
+/// child type already derives Eq + Hash:
+/// - `Vec<u8>` (Literal payload) — std impls
+/// - `CharClass` — derived above
+/// - `Look` — derived above
+/// - `Repetition` — derived above
+/// - `Box<Hir>` / `Vec<Hir>` — recursive, hashable iff Hir is
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Hir {
     /// Matches the empty string.
     Empty,

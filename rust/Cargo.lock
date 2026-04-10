@@ -99,6 +99,7 @@ dependencies = [
  "egraph",
  "egraph-derive",
  "mimalloc",
+ "rustc-hash",
  "serde",
  "smallvec",
 ]
