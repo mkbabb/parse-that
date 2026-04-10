@@ -25,8 +25,6 @@ pub enum AccelStrategy {
         hi_lut: [u8; 16],
         exit_bytes: SmallVec<[u8; 8]>,
     },
-    /// 9+ exit bytes → 256-byte scalar lookup table.
-    ScalarLut(Box<[bool; 256]>),
     /// Not accelerable.
     None,
 }
@@ -101,13 +99,9 @@ pub fn detect_accel(dfa: &Dfa) -> Vec<StateAccel> {
                         exit_bytes,
                     }
                 }
-                9..=64 => {
-                    let mut lut = Box::new([false; 256]);
-                    for b in exit_byte_set.iter() {
-                        lut[b as usize] = true;
-                    }
-                    AccelStrategy::ScalarLut(lut)
-                }
+                // 9+ exit bytes: no accelerator (the former ScalarLut
+                // variant was dead code — detected here but never
+                // consumed by any emitter. Deleted in Tranche AA.10.)
                 _ => AccelStrategy::None,
             };
 

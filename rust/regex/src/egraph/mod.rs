@@ -94,9 +94,8 @@ pub fn saturate_hir_egraph(egraph: &mut HirEGraph) {
 
     if std::env::var("BBNF_HIR_EGRAPH_REPORT").is_ok() {
         eprintln!(
-            "hir-egraph saturation: rules={} rules_count={} iters={} applied={} initial_nodes={} final_nodes={} final_classes={} saturated={} iter_hit={} growth_hit={}",
+            "hir-egraph saturation: rules={} iters={} applied={} initial_nodes={} final_nodes={} final_classes={} saturated={} iter_hit={} growth_hit={}",
             rule_refs.len(),
-            rule_refs.iter().map(|r| r.name()).collect::<Vec<_>>().join(","),
             report.iterations,
             report.total_applied,
             egraph.total_nodes(),
@@ -106,6 +105,9 @@ pub fn saturate_hir_egraph(egraph: &mut HirEGraph) {
             report.iter_limit_hit,
             report.growth_limit_hit,
         );
+        for (rule_name, work) in &report.per_rule {
+            eprintln!("  rule={} work={}", rule_name, work);
+        }
     }
 }
 
