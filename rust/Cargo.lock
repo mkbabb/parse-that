@@ -62,6 +62,7 @@ version = "0.2.11"
 dependencies = [
  "bbnf-ir",
  "bbnf-ser",
+ "bbnf-tape",
  "csp-solver",
  "egraph",
  "indexmap",
@@ -111,6 +112,10 @@ dependencies = [
  "itoa",
  "ryu",
 ]
+
+[[package]]
+name = "bbnf-tape"
+version = "0.1.0"
 
 [[package]]
 name = "bbnf_derive"

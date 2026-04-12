@@ -176,7 +176,67 @@ fn decode_hex4(bytes: &[u8], start: usize) -> Option<u16> {
 
 // ── Monolithic JSON string scanner ────────────────────────────
 
+/// Validate escape sequences in a JSON string body.
+/// `bytes[content_start..content_end]` is the string content (between quotes).
+/// Returns `true` iff all escape sequences are valid JSON.
+#[inline(always)]
+fn validate_json_escapes(bytes: &[u8], content_start: usize, content_end: usize) -> bool {
+    let mut i = content_start;
+    while i < content_end {
+        if unsafe { *bytes.get_unchecked(i) } == b'\\' {
+            i += 1;
+            if i >= content_end {
+                return false;
+            }
+            match unsafe { *bytes.get_unchecked(i) } {
+                b'u' => {
+                    if i + 4 >= content_end {
+                        // May extend to closing quote position — check full bytes
+                        if i + 4 >= bytes.len() {
+                            return false;
+                        }
+                    }
+                    let hi = match decode_hex4(bytes, i + 1) {
+                        Some(v) => v,
+                        None => return false,
+                    };
+                    i += 5;
+                    if (0xD800..=0xDBFF).contains(&hi) {
+                        if i + 5 < bytes.len() && bytes[i] == b'\\' && bytes[i + 1] == b'u' {
+                            let lo = match decode_hex4(bytes, i + 2) {
+                                Some(v) => v,
+                                None => return false,
+                            };
+                            if !(0xDC00..=0xDFFF).contains(&lo) {
+                                return false;
+                            }
+                            i += 6;
+                        } else {
+                            return false;
+                        }
+                    } else if (0xDC00..=0xDFFF).contains(&hi) {
+                        return false;
+                    }
+                }
+                b'"' | b'\\' | b'/' | b'b' | b'f' | b'n' | b'r' | b't' => {
+                    i += 1;
+                }
+                _ => return false,
+            }
+        } else {
+            i += 1;
+        }
+    }
+    true
+}
+
 /// Core JSON string scanner with configurable span bounds.
+///
+/// Uses the SIMD escape-parity scanner to find the closing quote in bulk
+/// (16 bytes at a time, branchless escape handling), then validates escape
+/// sequences in a second pass when backslashes are present. Most JSON
+/// strings contain zero escapes, so the SIMD path dominates.
+///
 /// When `include_quotes` is false, returns content between quotes (exclusive).
 /// When `include_quotes` is true, returns full span including delimiters.
 #[inline(always)]
@@ -189,57 +249,31 @@ fn quoted_string_scan_inner<'a>(
     if bytes.get(start) != Some(&b'"') {
         return None;
     }
-    let mut i = start + 1;
-    loop {
-        // SIMD scan for next '"' or '\\'
-        match memchr::memchr2(b'"', b'\\', bytes.get(i..)?) {
-            None => return None, // unterminated string
-            Some(pos) => {
-                i += pos;
-                if unsafe { *bytes.get_unchecked(i) } == b'"' {
-                    i += 1; // consume closing quote
-                    state.offset = i;
-                    return if include_quotes {
-                        Some(Span::new(start, i, state.src))
-                    } else {
-                        Some(Span::new(start + 1, i - 1, state.src))
-                    };
-                }
-                // backslash: skip escape sequence
-                i += 1;
-                if i >= bytes.len() {
-                    return None;
-                }
-                match unsafe { *bytes.get_unchecked(i) } {
-                    b'u' => {
-                        if i + 4 >= bytes.len() {
-                            return None;
-                        }
-                        // Check for surrogate pairs: \uD800-\uDBFF must be followed by \uDC00-\uDFFF.
-                        let hi = decode_hex4(bytes, i + 1)?;
-                        i += 5; // skip u + 4 hex digits
-                        if (0xD800..=0xDBFF).contains(&hi) {
-                            // High surrogate — must be followed by \uDC00-\uDFFF
-                            if i + 5 < bytes.len() && bytes[i] == b'\\' && bytes[i + 1] == b'u' {
-                                let lo = decode_hex4(bytes, i + 2)?;
-                                if !(0xDC00..=0xDFFF).contains(&lo) {
-                                    return None; // not a valid low surrogate
-                                }
-                                i += 6; // skip \uXXXX for the low surrogate
-                            } else {
-                                return None; // lone high surrogate
-                            }
-                        } else if (0xDC00..=0xDFFF).contains(&hi) {
-                            return None; // lone low surrogate
-                        }
-                    }
-                    b'"' | b'\\' | b'/' | b'b' | b'f' | b'n' | b'r' | b't' => {
-                        i += 1;
-                    }
-                    _ => return None, // invalid escape sequence
-                }
-            }
+
+    let content_start = start + 1;
+
+    // SIMD path: find the closing quote handling escape parity in bulk.
+    let close_quote = super::scan::quoted_simd::scan_quoted_string_simd(
+        bytes,
+        content_start,
+    )?;
+
+    // Validate escape sequences between the quotes. This is a separate pass
+    // but only touches backslash positions — for escape-free strings (the
+    // common case), memchr finds no backslashes and we skip instantly.
+    if memchr::memchr(b'\\', &bytes[content_start..close_quote]).is_some() {
+        if !validate_json_escapes(bytes, content_start, close_quote) {
+            return None;
         }
+    }
+
+    let end = close_quote + 1; // past the closing quote
+    state.offset = end;
+
+    if include_quotes {
+        Some(Span::new(start, end, state.src))
+    } else {
+        Some(Span::new(content_start, close_quote, state.src))
     }
 }
 

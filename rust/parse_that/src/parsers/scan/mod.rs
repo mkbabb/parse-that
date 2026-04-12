@@ -10,6 +10,7 @@ mod ws_comment;
 mod quoted;
 mod balanced;
 mod digits;
+pub mod quoted_simd;
 
 pub use number::{
     GENERIC_NUMBER_CONFIG, JSON_NUMBER_CONFIG, NumberConfig, NumberParts,
