@@ -29,3 +29,6 @@ pub use scan::{
     NumberParts, NumberConfig, scan_number_mantissa, number_parts_to_f64,
     GENERIC_NUMBER_CONFIG, JSON_NUMBER_CONFIG,
 };
+
+// Structural bitmap pre-scanner (Tranche AM.5).
+pub use scan::structural::{scan_structural, StructuralIter};
