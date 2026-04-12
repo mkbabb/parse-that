@@ -110,7 +110,13 @@ const JSON_NUMBER_PATTERNS: &[&str] = &[
     r"-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?",
 ];
 
-const WS_BLOCK_COMMENT_PATTERNS: &[&str] = &[r"(?s)(?:\s|/\*.*?\*/)*", r"(?s)(?:\s|\/\*.*?\*\/)*"];
+const WS_BLOCK_COMMENT_PATTERNS: &[&str] = &[
+    r"(?s)(?:\s|/\*.*?\*/)*",
+    r"(?s)(?:\s|\/\*.*?\*\/)*",
+    // DFA-compatible variant (no lazy quantifiers):
+    r"(?s)(?:\s|/\*[^*]*(?:\*+[^/][^*]*)*\*+/)*",
+    r"(?s)(?:\s|\/\*[^*]*(?:\*+[^\/][^*]*)*\*+\/)*",
+];
 
 const IDENT_PATTERNS: &[&str] = &[
     r"[\-]?[a-zA-Z_][\w-]*|--[\w-]+",
