@@ -175,6 +175,14 @@ pub struct ParserState<'a> {
     #[pprint(skip)]
     pub context_ptr: *const (),
 
+    /// Whitespace bitmap cache — 64-byte window.
+    /// Bit `i` is set if byte at `ws_bitmap_start + i` is whitespace.
+    /// Avoids re-scanning the same region on consecutive `?w` calls.
+    #[pprint(skip)]
+    pub ws_bitmap: u64,
+    #[pprint(skip)]
+    pub ws_bitmap_start: usize,
+
     /// State-based memoization for monolithic slab parsers.
     /// Dropped with each parse — no cross-iteration cache retention.
     #[pprint(skip)]
@@ -200,6 +208,8 @@ impl Default for ParserState<'_> {
             offset: 0,
             furthest_offset: 0,
             context_ptr: std::ptr::null(),
+            ws_bitmap: 0,
+            ws_bitmap_start: usize::MAX,
             memo: MemoStore::new(),
             #[cfg(feature = "diagnostics")]
             expected: SmallVec::new(),
@@ -220,6 +230,8 @@ impl<'a> ParserState<'a> {
             offset: 0,
             furthest_offset: 0,
             context_ptr: std::ptr::null(),
+            ws_bitmap: 0,
+            ws_bitmap_start: usize::MAX,
             memo: MemoStore::new(),
             #[cfg(feature = "diagnostics")]
             expected: SmallVec::new(),
