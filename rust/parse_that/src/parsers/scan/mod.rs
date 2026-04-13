@@ -11,6 +11,7 @@ mod quoted;
 mod balanced;
 mod digits;
 pub mod quoted_simd;
+pub mod quote_parity;
 pub mod structural;
 
 pub use number::{
