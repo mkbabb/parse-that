@@ -178,6 +178,15 @@ pub struct ParserState<'a> {
     /// Whitespace bitmap cache — 64-byte window.
     /// Bit `i` is set if byte at `ws_bitmap_start + i` is whitespace.
     /// Avoids re-scanning the same region on consecutive `?w` calls.
+    ///
+    /// AQ.8.1 documentation: this bitmap is the unified ws / non-ws
+    /// fast path. The skip-leading-WS routine consults
+    /// `(ws_bitmap >> bit_offset).trailing_ones()` to advance past
+    /// the run of whitespace; the non-WS scan path consumes the
+    /// inverse — `(!ws_bitmap >> bit_offset).trailing_ones()` —
+    /// when callers want to find the next non-WS byte directly. No
+    /// separate `nospace_bits` cache is needed because both probes
+    /// share the same 64-bit window.
     #[pprint(skip)]
     pub ws_bitmap: u64,
     #[pprint(skip)]

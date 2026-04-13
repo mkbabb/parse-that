@@ -476,22 +476,49 @@ fn is_optional_dash_identifier(hir: &Hir) -> bool {
 }
 
 /// `--[\w-]+` — the CSS custom-property prefix.
+///
+/// The HIR parser sometimes splits the leading `--` into two separate
+/// single-byte literals (`Literal('-'), Literal('-')`) rather than
+/// fusing them into a single two-byte literal. Walk the leading
+/// literals to consume the `--` prefix regardless of how the parser
+/// chose to materialize it, then require a single `[\w-]+`-style
+/// repetition tail.
 fn is_double_dash_word_run(hir: &Hir) -> bool {
     let parts = match unwrap_group(hir) {
         Hir::Concat(parts) => parts.as_slice(),
         _ => return false,
     };
-    if parts.len() != 2 {
+    if parts.len() < 2 {
         return false;
     }
-    let leading_double_dash = match &parts[0] {
-        Hir::Literal(bytes) => bytes.as_slice() == b"--",
-        _ => false,
-    };
-    if !leading_double_dash {
+    // Walk leading literal bytes and check for `--` (any split shape).
+    let mut consumed_dashes = 0u32;
+    let mut idx = 0;
+    while idx < parts.len() && consumed_dashes < 2 {
+        match &parts[idx] {
+            Hir::Literal(bytes) => {
+                for &b in bytes.iter() {
+                    if b != b'-' {
+                        return false;
+                    }
+                    consumed_dashes += 1;
+                    if consumed_dashes == 2 {
+                        break;
+                    }
+                }
+                idx += 1;
+            }
+            _ => return false,
+        }
+    }
+    if consumed_dashes != 2 {
         return false;
     }
-    if let Hir::Repetition(rep) = &parts[1] {
+    // Exactly one repetition tail must follow.
+    if idx != parts.len() - 1 {
+        return false;
+    }
+    if let Hir::Repetition(rep) = &parts[idx] {
         if rep.min >= 1 {
             return is_word_class(unwrap_group(&rep.sub));
         }

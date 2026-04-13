@@ -77,3 +77,62 @@ fn test_width_bounds() {
     assert_eq!(info.min_match_len, 2);
     assert_eq!(info.max_match_len, Some(5));
 }
+
+// ── Identifier dialect coverage (AQ.7.1) ─────────────────────────────────
+//
+// Verifies that the parameterized `RegexClass::Identifier` correctly
+// distinguishes the three CSS dialects:
+// - bare ident: `[a-zA-Z_][\w-]*` (no flags)
+// - vendor prefix: `-?[a-zA-Z_][\w-]*` (allows_leading_dash)
+// - custom-property fold: `-?[a-zA-Z_][\w-]*|--[\w-]+` (both flags)
+
+#[test]
+fn test_identifier_bare() {
+    let info = RegexInfo::analyze(r"[a-zA-Z_][\w-]*").unwrap();
+    assert!(matches!(
+        info.classification,
+        RegexClass::Identifier {
+            allows_leading_dash: false,
+            allows_double_dash_prefix: false,
+        }
+    ));
+}
+
+#[test]
+fn test_identifier_vendor_prefix() {
+    let info = RegexInfo::analyze(r"-?[a-zA-Z_][\w-]*").unwrap();
+    assert!(matches!(
+        info.classification,
+        RegexClass::Identifier {
+            allows_leading_dash: true,
+            allows_double_dash_prefix: false,
+        }
+    ));
+}
+
+#[test]
+fn test_identifier_custom_property_fold() {
+    // The CSS `propertyName` shape: vendor-prefix branch + `--` custom
+    // property branch in a single alternation. The HIR parser may
+    // materialize the `--` prefix as two separate single-byte literals
+    // (`-` then `-`) rather than a single two-byte literal; the
+    // classifier walks adjacent leading literals to recognize either
+    // shape.
+    let info = RegexInfo::analyze(r"-?[a-zA-Z_][\w-]*|--[\w-]+").unwrap();
+    assert!(matches!(
+        info.classification,
+        RegexClass::Identifier {
+            allows_leading_dash: true,
+            allows_double_dash_prefix: true,
+        }
+    ));
+}
+
+#[test]
+fn test_identifier_double_dash_only() {
+    // Just the custom-property branch on its own is a `PrefixThenClass`,
+    // not an Identifier — the lone `--` literal is a fixed prefix
+    // followed by `[\w-]+`. Verify it does NOT classify as Identifier.
+    let info = RegexInfo::analyze(r"--[\w-]+").unwrap();
+    assert!(!matches!(info.classification, RegexClass::Identifier { .. }));
+}
