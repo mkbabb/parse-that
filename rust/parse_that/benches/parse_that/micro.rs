@@ -4,7 +4,10 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 extern crate bencher;
 use bencher::{Bencher, black_box};
 
-use parse_that::{sp_json_number, sp_json_string, sp_take_until_any};
+use parse_that::{
+    sp_number, sp_quoted_string, sp_take_until_any,
+    STRICT_NUMBER_CONFIG, STRICT_QUOTED_STRING_CONFIG,
+};
 
 fn bench_take_until(b: &mut Bencher, excluded: &'static [u8], stop_byte: u8) {
     let mut input = "a".repeat(8192);
@@ -42,7 +45,7 @@ fn json_string_unescaped(b: &mut Bencher) {
     let input = format!("\"{content}\"");
     b.bytes = input.len() as u64;
 
-    let parser = sp_json_string().into_parser();
+    let parser = sp_quoted_string(&STRICT_QUOTED_STRING_CONFIG).into_parser();
     b.iter(|| {
         let span = parser.parse(black_box(input.as_str())).unwrap();
         black_box(span.end)
@@ -56,7 +59,7 @@ beta	gamma\"delta\omegaA"#;
     let input = format!("\"{content}\"");
     b.bytes = input.len() as u64;
 
-    let parser = sp_json_string().into_parser();
+    let parser = sp_quoted_string(&STRICT_QUOTED_STRING_CONFIG).into_parser();
     b.iter(|| {
         let span = parser.parse(black_box(input.as_str())).unwrap();
         black_box(span.end)
@@ -65,7 +68,7 @@ beta	gamma\"delta\omegaA"#;
 
 fn bench_json_number(b: &mut Bencher, input: &'static str) {
     b.bytes = input.len() as u64;
-    let parser = sp_json_number().into_parser();
+    let parser = sp_number(&STRICT_NUMBER_CONFIG).into_parser();
     b.iter(|| {
         let span = parser.parse(black_box(input)).unwrap();
         black_box(span.end)

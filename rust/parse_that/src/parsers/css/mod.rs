@@ -29,15 +29,15 @@ fn css_at_rule<'a>() -> Parser<'a, CssNode<'a>> {
         let rule = css_rule();
         let decl_block = css_declaration_block();
         let kf_block = css_keyframe_block();
-        let ws = sp_css_ws_comment();
-        let ident = sp_css_ident();
+        let ws = sp_ws_comment();
+        let ident = sp_ident(&crate::CSS_IDENT_CONFIG);
         let at_sign = sp_string("@");
         let open_brace = sp_string("{");
         let close_brace = sp_string("}");
         let semi = sp_string(";");
         let skip_to_semi_brace = sp_take_until_any(b";}");
         let skip_to_close = sp_take_until_any(b"}");
-        let kf_name_parser = sp_css_ident().or(sp_css_string());
+        let kf_name_parser = sp_ident(&crate::CSS_IDENT_CONFIG).or(sp_quoted_string(&crate::GENERIC_QUOTED_STRING_CONFIG));
 
         Parser::new(move |state: &mut ParserState<'a>| {
             at_sign.call(state)?;
@@ -203,7 +203,7 @@ fn css_at_rule<'a>() -> Parser<'a, CssNode<'a>> {
 fn css_qualified_rule<'a>() -> Parser<'a, CssNode<'a>> {
     let sel_list = css_selector_list();
     let decl_block = css_declaration_block();
-    let ws = sp_css_ws_comment();
+    let ws = sp_ws_comment();
 
     Parser::new(move |state: &mut ParserState<'a>| {
         let selector_list = sel_list.call(state)?;
@@ -223,7 +223,7 @@ fn css_rule<'a>() -> Parser<'a, CssNode<'a>> {
     lazy(|| {
         let at_rule = css_at_rule();
         let qualified_rule = css_qualified_rule();
-        let comment = sp_css_block_comment();
+        let comment = sp_block_comment();
 
         Parser::new(move |state: &mut ParserState<'a>| {
             // Skip plain whitespace (not comments — those become AST nodes)

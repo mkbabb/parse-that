@@ -1,6 +1,6 @@
 // CSS declaration and keyframe block parsing.
 
-use super::super::scan::{scan_ident, scan_ws_block_comments};
+use super::super::scan::{scan_ident, scan_ws_block_comments, CSS_IDENT_CONFIG};
 use super::types::*;
 use super::value::*;
 use crate::parse::*;
@@ -13,7 +13,7 @@ pub(super) fn css_declaration<'a>() -> Parser<'a, CssDeclaration<'a>> {
 
     Parser::new(move |state: &mut ParserState<'a>| {
         scan_ws_block_comments(state);
-        let property = scan_ident(state)?;
+        let property = scan_ident(state, &CSS_IDENT_CONFIG)?;
         scan_ws_block_comments(state);
         if state.src_bytes.get(state.offset) != Some(&b':') {
             return None;
@@ -59,7 +59,7 @@ pub(super) fn css_declaration<'a>() -> Parser<'a, CssDeclaration<'a>> {
 
 pub(super) fn css_declaration_block<'a>() -> Parser<'a, DeclVec<'a>> {
     let decl = css_declaration();
-    let ws = sp_css_ws_comment();
+    let ws = sp_ws_comment();
     let open_brace = sp_string("{");
     let close_brace = sp_string("}");
     let skip = sp_take_until_any(b";}");
@@ -105,7 +105,7 @@ pub(super) fn css_keyframe_stop<'a>() -> Parser<'a, KeyframeStop> {
 
 pub(super) fn css_keyframe_block<'a>() -> Parser<'a, KeyframeBlock<'a>> {
     let stop = css_keyframe_stop();
-    let comma_ws = sp_css_ws_comment();
+    let comma_ws = sp_ws_comment();
     let comma_sp = sp_string(",");
     let comma = Parser::new(move |state: &mut ParserState<'a>| {
         comma_ws.call(state);
@@ -115,7 +115,7 @@ pub(super) fn css_keyframe_block<'a>() -> Parser<'a, KeyframeBlock<'a>> {
     });
     let stops_parser = stop.sep_by_small::<_, [KeyframeStop; 4]>(comma, 1..);
     let decl_block = css_declaration_block();
-    let ws = sp_css_ws_comment();
+    let ws = sp_ws_comment();
 
     Parser::new(move |state: &mut ParserState<'a>| {
         ws.call(state);

@@ -36,6 +36,6 @@ pub fn quoted_span(quote_string: &str) -> Parser<'_, Span<'_>> {
 
 pub fn number_span<'a>() -> Parser<'a, Span<'a>> {
     Parser::new(move |state: &mut crate::state::ParserState<'a>| {
-        crate::parsers::scan::scan_json_number_span(state)
+        crate::parsers::scan::scan_number_strict_span(state)
     })
 }

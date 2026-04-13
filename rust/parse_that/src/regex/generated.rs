@@ -395,7 +395,7 @@ impl RegexParser {
                                         crate::Span::new(__start, state.offset, state.src),
                                     )
                                 }?;
-                                crate::scan_json_number_span(state)
+                                crate::scan_number_strict_span(state)
                             })()?;
                             (|| {
                                 let __kept = {
@@ -415,7 +415,7 @@ impl RegexParser {
                                         }?;
                                         {
                                             let __cp = state.offset;
-                                            if (|| crate::scan_json_number_span(state))()
+                                            if (|| crate::scan_number_strict_span(state))()
                                                 .is_none()
                                             {
                                                 state.offset = __cp;
@@ -2022,7 +2022,7 @@ impl RegexParser {
                                                             None
                                                         }
                                                     })()?;
-                                                    crate::scan_ident(state)
+                                                    crate::scan_ident(state, &crate::DEFAULT_IDENT_CONFIG)
                                                 })()?;
                                                 if state.offset < state.src.len()
                                                     && state.src.as_bytes()[state.offset] == 125u8

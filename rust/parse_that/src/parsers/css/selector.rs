@@ -1,6 +1,6 @@
 // CSS selector parsing — compound, complex, attribute, and pseudo selectors.
 
-use super::super::scan::scan_ident;
+use super::super::scan::{scan_ident, CSS_IDENT_CONFIG};
 use super::types::*;
 use crate::lazy::lazy;
 use crate::parse::*;
@@ -9,7 +9,7 @@ use crate::state::{ParserState, Span};
 
 pub(super) fn css_selector_list<'a>() -> Parser<'a, SelectorVec<'a>> {
     let sel = css_complex_selector();
-    let ws = sp_css_ws_comment();
+    let ws = sp_ws_comment();
     let comma_sp = sp_string(",");
     let comma = Parser::new(move |state: &mut ParserState<'a>| {
         ws.call(state);
@@ -24,7 +24,7 @@ pub(super) fn css_complex_selector<'a>() -> Parser<'a, CssSelector<'a>> {
     lazy(|| {
         let compound = css_compound_selector();
         let recurse = css_complex_selector();
-        let ws = sp_css_ws_comment();
+        let ws = sp_ws_comment();
 
         Parser::new(move |state: &mut ParserState<'a>| {
             let left = compound.call(state)?;
@@ -95,7 +95,7 @@ pub(super) fn css_compound_selector<'a>() -> Parser<'a, CssSelector<'a>> {
         if let Some(&b'*') = state.src_bytes.get(state.offset) {
             state.offset += 1;
             parts.push(CssSelector::Universal);
-        } else if let Some(name) = scan_ident(state) {
+        } else if let Some(name) = scan_ident(state, &CSS_IDENT_CONFIG) {
             // Only if not followed by ( — that would be a function
             if state.src_bytes.get(state.offset) == Some(&b'(') {
                 // Backtrack — it's a function, not a type selector
@@ -111,7 +111,7 @@ pub(super) fn css_compound_selector<'a>() -> Parser<'a, CssSelector<'a>> {
             match state.src_bytes.get(state.offset) {
                 Some(&b'.') => {
                     state.offset += 1;
-                    if let Some(name) = scan_ident(state) {
+                    if let Some(name) = scan_ident(state, &CSS_IDENT_CONFIG) {
                         parts.push(CssSelector::Class(Span::new(
                             name.start - 1,
                             name.end,
@@ -124,7 +124,7 @@ pub(super) fn css_compound_selector<'a>() -> Parser<'a, CssSelector<'a>> {
                 }
                 Some(&b'#') => {
                     state.offset += 1;
-                    if let Some(name) = scan_ident(state) {
+                    if let Some(name) = scan_ident(state, &CSS_IDENT_CONFIG) {
                         parts.push(CssSelector::Id(Span::new(
                             name.start - 1,
                             name.end,
@@ -170,9 +170,9 @@ pub(super) fn css_compound_selector<'a>() -> Parser<'a, CssSelector<'a>> {
 pub(super) fn css_attribute_selector<'a>() -> Parser<'a, CssSelector<'a>> {
     let open_bracket = sp_string("[");
     let close_bracket = sp_string("]");
-    let ws = sp_css_ws_comment();
-    let ident = sp_css_ident();
-    let str_lit = sp_css_string();
+    let ws = sp_ws_comment();
+    let ident = sp_ident(&crate::CSS_IDENT_CONFIG);
+    let str_lit = sp_quoted_string(&crate::GENERIC_QUOTED_STRING_CONFIG);
     Parser::new(move |state: &mut ParserState<'a>| {
         open_bracket.call(state)?;
         ws.call(state);
@@ -222,10 +222,10 @@ pub(super) fn css_pseudo_selector<'a>() -> Parser<'a, CssSelector<'a>> {
     lazy(|| {
         let double_colon = sp_string("::");
         let single_colon = sp_string(":");
-        let ident = sp_css_ident();
+        let ident = sp_ident(&crate::CSS_IDENT_CONFIG);
         let open_paren = sp_string("(");
         let close_paren = sp_string(")");
-        let ws = sp_css_ws_comment();
+        let ws = sp_ws_comment();
         // Inline An+B parser — replaces regex
         let anb = Parser::new(|state: &mut ParserState<'a>| {
             let bytes = state.src_bytes;

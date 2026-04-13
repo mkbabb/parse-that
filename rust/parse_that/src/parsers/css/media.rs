@@ -1,6 +1,6 @@
 // Media queries and @supports conditions.
 
-use super::super::scan::{scan_ident, scan_ws_block_comments};
+use super::super::scan::{scan_ident, scan_ws_block_comments, CSS_IDENT_CONFIG};
 use super::types::*;
 use super::value::*;
 use crate::state::ParserState;
@@ -49,7 +49,7 @@ fn parse_media_feature<'a>(state: &mut ParserState<'a>) -> Option<MediaFeature<'
     let cp = state.offset;
 
     // First try: name [: value] or name op value
-    let name = scan_ident(state)?;
+    let name = scan_ident(state, &CSS_IDENT_CONFIG)?;
     scan_ws_block_comments(state);
 
     // Check for range op after name
@@ -114,7 +114,7 @@ fn parse_media_condition<'a>(state: &mut ParserState<'a>) -> Option<MediaConditi
 
     // Check for "not" prefix
     let cp = state.offset;
-    if let Some(ident) = scan_ident(state) {
+    if let Some(ident) = scan_ident(state, &CSS_IDENT_CONFIG) {
         if ident.as_str() == "not" {
             scan_ws_block_comments(state);
             if let Some(inner) = parse_media_condition(state) {
@@ -134,7 +134,7 @@ fn parse_media_condition<'a>(state: &mut ParserState<'a>) -> Option<MediaConditi
     loop {
         scan_ws_block_comments(state);
         let kw_cp = state.offset;
-        if let Some(kw) = scan_ident(state) {
+        if let Some(kw) = scan_ident(state, &CSS_IDENT_CONFIG) {
             match kw.as_str() {
                 "and" => {
                     scan_ws_block_comments(state);
@@ -187,12 +187,12 @@ fn parse_media_query<'a>(state: &mut ParserState<'a>) -> Option<MediaQuery<'a>> 
     let cp = state.offset;
 
     // Try modifier + media type: [not|only] <media-type>
-    if let Some(ident) = scan_ident(state) {
+    if let Some(ident) = scan_ident(state, &CSS_IDENT_CONFIG) {
         let s = ident.as_str();
         if s == "not" || s == "only" {
             modifier = Some(ident);
             scan_ws_block_comments(state);
-            if let Some(mt) = scan_ident(state) {
+            if let Some(mt) = scan_ident(state, &CSS_IDENT_CONFIG) {
                 media_type = Some(mt);
             } else {
                 // "not" might be a condition prefix, backtrack
@@ -209,7 +209,7 @@ fn parse_media_query<'a>(state: &mut ParserState<'a>) -> Option<MediaQuery<'a>> 
         // Check for "and" <condition>
         scan_ws_block_comments(state);
         let kw_cp = state.offset;
-        if let Some(kw) = scan_ident(state) {
+        if let Some(kw) = scan_ident(state, &CSS_IDENT_CONFIG) {
             if kw.as_str() == "and" {
                 scan_ws_block_comments(state);
                 if let Some(cond) = parse_media_condition(state) {
@@ -272,7 +272,7 @@ pub(super) fn parse_supports_condition<'a>(
 
     // Check for "not" prefix
     let cp = state.offset;
-    if let Some(ident) = scan_ident(state) {
+    if let Some(ident) = scan_ident(state, &CSS_IDENT_CONFIG) {
         if ident.as_str() == "not" {
             scan_ws_block_comments(state);
             if let Some(inner) = parse_supports_condition(state) {
@@ -282,7 +282,7 @@ pub(super) fn parse_supports_condition<'a>(
                 loop {
                     scan_ws_block_comments(state);
                     let kw_cp = state.offset;
-                    if let Some(kw) = scan_ident(state) {
+                    if let Some(kw) = scan_ident(state, &CSS_IDENT_CONFIG) {
                         match kw.as_str() {
                             "and" => {
                                 scan_ws_block_comments(state);
@@ -343,7 +343,7 @@ pub(super) fn parse_supports_condition<'a>(
                 loop {
                     scan_ws_block_comments(state);
                     let kw_cp = state.offset;
-                    if let Some(kw) = scan_ident(state) {
+                    if let Some(kw) = scan_ident(state, &CSS_IDENT_CONFIG) {
                         match kw.as_str() {
                             "and" => {
                                 scan_ws_block_comments(state);
@@ -385,7 +385,7 @@ pub(super) fn parse_supports_condition<'a>(
         }
 
         // Try declaration: property: value
-        if let Some(property) = scan_ident(state) {
+        if let Some(property) = scan_ident(state, &CSS_IDENT_CONFIG) {
             scan_ws_block_comments(state);
             if state.src_bytes.get(state.offset) == Some(&b':') {
                 state.offset += 1;
@@ -416,7 +416,7 @@ pub(super) fn parse_supports_condition<'a>(
                     loop {
                         scan_ws_block_comments(state);
                         let kw_cp = state.offset;
-                        if let Some(kw) = scan_ident(state) {
+                        if let Some(kw) = scan_ident(state, &CSS_IDENT_CONFIG) {
                             match kw.as_str() {
                                 "and" => {
                                     scan_ws_block_comments(state);

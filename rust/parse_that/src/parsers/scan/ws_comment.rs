@@ -25,7 +25,7 @@ static WS_LUT: [bool; 256] = {
 
 /// Inline the LUT check — one instruction, no branch predictor cost.
 #[inline(always)]
-fn is_css_ws(b: u8) -> bool {
+fn is_ascii_ws_no_vtab(b: u8) -> bool {
     WS_LUT[b as usize]
 }
 
@@ -52,7 +52,7 @@ pub fn scan_ws_block_comments<'a>(state: &mut ParserState<'a>) -> Option<Span<'a
     // parser) this is one instruction + one well-predicted branch.
     if start < len {
         let b = unsafe { *bytes.get_unchecked(start) };
-        if !is_css_ws(b) && b != b'/' {
+        if !is_ascii_ws_no_vtab(b) && b != b'/' {
             return Some(Span::new(start, start, state.src));
         }
     } else {
@@ -83,7 +83,7 @@ fn scan_ws_block_comments_slow<'a>(
         // vectorizes the read without needing explicit intrinsics.
         while i < len {
             let b = unsafe { *bytes.get_unchecked(i) };
-            if !is_css_ws(b) {
+            if !is_ascii_ws_no_vtab(b) {
                 break;
             }
             i += 1;

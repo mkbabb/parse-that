@@ -30,7 +30,7 @@ pub const GENERIC_NUMBER_CONFIG: NumberConfig = NumberConfig {
     reject_leading_zero: false,
 };
 
-pub const JSON_NUMBER_CONFIG: NumberConfig = NumberConfig {
+pub const STRICT_NUMBER_CONFIG: NumberConfig = NumberConfig {
     allow_plus_sign: false,
     allow_leading_dot: false,
     reject_leading_zero: true,

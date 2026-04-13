@@ -3,7 +3,7 @@
 use crate::state::{ParserState, Span};
 use crate::parsers::eisel_lemire::compute_f64;
 use super::number::{
-    NumberParts, GENERIC_NUMBER_CONFIG, JSON_NUMBER_CONFIG,
+    NumberParts, GENERIC_NUMBER_CONFIG, STRICT_NUMBER_CONFIG,
     parse_eight_digits, scan_number_mantissa,
 };
 
@@ -121,29 +121,29 @@ pub fn scan_number_f64<'a>(state: &mut ParserState<'a>) -> Option<f64> {
     Some(number_parts_to_f64(&parts, src))
 }
 
-// ── JSON-specific number scanners ────────────────────────────────────
+// ── Strict number scanners ───────────────────────────────────────────
 //
-// JSON numbers reject `+` sign, leading `.`, and enforce RFC 8259
+// Strict numbers reject `+` sign, leading `.`, and enforce RFC 8259
 // leading-zero rejection.  These are thin wrappers over the shared
-// `scan_number_mantissa(…, &JSON_NUMBER_CONFIG)` core.
+// `scan_number_mantissa(…, &STRICT_NUMBER_CONFIG)` core.
 
-/// JSON number span scanner: no `+`, no leading dot, RFC 8259
+/// Strict number span scanner: no `+`, no leading dot, RFC 8259
 /// leading-zero rejection.  Returns the matched span only.
 #[inline(always)]
-pub fn scan_json_number_span<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+pub fn scan_number_strict_span<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     let start = state.offset;
-    let (_, end) = scan_number_mantissa(state.src_bytes, start, &JSON_NUMBER_CONFIG)?;
+    let (_, end) = scan_number_mantissa(state.src_bytes, start, &STRICT_NUMBER_CONFIG)?;
     state.offset = end;
     Some(Span::new(start, end, state.src))
 }
 
-/// Fused JSON number scanner + converter.  Scans the number span AND
+/// Fused strict number scanner + converter.  Scans the number span AND
 /// accumulates the mantissa in one pass — no re-reading of digits.
 /// Returns `(Span, f64)`.
 #[inline(always)]
-pub fn scan_json_number_fused<'a>(state: &mut ParserState<'a>) -> Option<(Span<'a>, f64)> {
+pub fn scan_number_strict_fused<'a>(state: &mut ParserState<'a>) -> Option<(Span<'a>, f64)> {
     let start = state.offset;
-    let (parts, end) = scan_number_mantissa(state.src_bytes, start, &JSON_NUMBER_CONFIG)?;
+    let (parts, end) = scan_number_mantissa(state.src_bytes, start, &STRICT_NUMBER_CONFIG)?;
     state.offset = end;
     let span = Span::new(start, end, state.src);
     let f = if parts.is_integer && parts.n_digits == 1 && parts.mantissa == 0 {
@@ -154,11 +154,11 @@ pub fn scan_json_number_fused<'a>(state: &mut ParserState<'a>) -> Option<(Span<'
     Some((span, f))
 }
 
-/// Fused JSON number scanner returning just `f64` (no Span construction).
+/// Fused strict number scanner returning just `f64` (no Span construction).
 #[inline(always)]
-pub fn scan_json_number_f64<'a>(state: &mut ParserState<'a>) -> Option<f64> {
+pub fn scan_number_strict_f64<'a>(state: &mut ParserState<'a>) -> Option<f64> {
     let start = state.offset;
-    let (parts, end) = scan_number_mantissa(state.src_bytes, start, &JSON_NUMBER_CONFIG)?;
+    let (parts, end) = scan_number_mantissa(state.src_bytes, start, &STRICT_NUMBER_CONFIG)?;
     state.offset = end;
     let src = &state.src[start..end];
     Some(if parts.is_integer && parts.n_digits == 1 && parts.mantissa == 0 {

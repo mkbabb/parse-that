@@ -1,39 +1,48 @@
-// Domain-specific monolithic scanners, separated from generic SpanKind dispatch.
-// Each variant maps to a hand-written byte scanner that bypasses regex/combinator overhead.
+// Structural monolithic scanners, separated from generic SpanKind dispatch.
+//
+// Each variant maps to a hand-written byte scanner that bypasses
+// regex/combinator overhead. The variants are language-agnostic;
+// language-specific behavior (e.g., JSON-RFC-8259 vs CSS) is encoded
+// by the caller via `sp_*(config)` constructors.
 
 use crate::state::{ParserState, Span};
 
 pub enum SpanScanner {
-    // JSON scanners
-    /// [-]digits[.digits][(e|E)[+-]digits]
-    JsonNumber,
-    /// `"` ... `"` with `\`-escapes (memchr2). Returns content span (exclusive of quotes).
-    JsonString,
-    /// Like JsonString but returns span including quote delimiters (for BBNF codegen).
-    JsonStringQuoted,
+    /// `[-]digits[.digits][(e|E)[+-]digits]` with strict (RFC 8259)
+    /// rejection of `+`, leading `.`, and `007`-style leading zeros.
+    NumberStrict,
+    /// `"` ... `"` with strict (RFC 8259) escape validation.
+    /// Returns the *content* span (exclusive of the surrounding `"`).
+    QuotedStringStrictContent,
+    /// Same as `QuotedStringStrictContent` but returns the span
+    /// *including* the quote delimiters (matches regex behavior).
+    QuotedStringStrict,
 
-    // CSS scanners
-    /// -?[a-zA-Z_][\w-]* | --[\w-]+
-    CssIdent,
-    /// (\s | /\*...\*/)* — always succeeds (zero-width on no whitespace).
-    CssWsComment,
-    /// "..." or '...' with \-escapes (memchr2).
-    CssString,
-    /// /\*...\*/
-    CssBlockComment,
+    /// `-?[a-zA-Z_][\w-]* | --[\w-]+` — vendor prefixes + custom properties.
+    Identifier,
+    /// `(\s | /\*...\*/)*` — always succeeds (zero-width on no whitespace).
+    WsComment,
+    /// `"..."` or `'...'` with `\`-escape skipping (no validation).
+    QuotedString,
+    /// `/\*...\*/`.
+    BlockComment,
 }
 
 impl SpanScanner {
     #[inline(always)]
     pub fn call<'a>(&self, state: &mut ParserState<'a>) -> Option<Span<'a>> {
         match self {
-            Self::JsonNumber => crate::parsers::scan::scan_json_number_span(state),
-            Self::JsonString => crate::parsers::json::quoted_string_scan_content(state),
-            Self::JsonStringQuoted => crate::parsers::json::quoted_string_scan_full(state),
-            Self::CssIdent => crate::parsers::scan::scan_ident(state),
-            Self::CssWsComment => crate::parsers::scan::scan_ws_block_comments(state),
-            Self::CssString => crate::parsers::scan::scan_string_quoted(state),
-            Self::CssBlockComment => crate::parsers::scan::scan_block_comment(state),
+            Self::NumberStrict => crate::parsers::scan::scan_number_strict_span(state),
+            Self::QuotedStringStrictContent => {
+                crate::parsers::scan::scan_quoted_string_content(state)
+            }
+            Self::QuotedStringStrict => crate::parsers::scan::scan_quoted_string_strict(state),
+            Self::Identifier => {
+                crate::parsers::scan::scan_ident(state, &crate::parsers::scan::CSS_IDENT_CONFIG)
+            }
+            Self::WsComment => crate::parsers::scan::scan_ws_block_comments(state),
+            Self::QuotedString => crate::parsers::scan::scan_string_quoted(state),
+            Self::BlockComment => crate::parsers::scan::scan_block_comment(state),
         }
     }
 }

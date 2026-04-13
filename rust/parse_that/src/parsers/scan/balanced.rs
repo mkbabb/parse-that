@@ -108,16 +108,3 @@ pub fn scan_balanced(bytes: &[u8], config: &BalancedScanConfig) -> usize {
     len
 }
 
-/// CSS-specific balanced scanner: tracks `()` nesting, skips `""`/`''` strings,
-/// terminates at depth-0 `;`, `{`, or `}`.
-#[inline(always)]
-pub fn scan_balanced_end(bytes: &[u8]) -> usize {
-    static CSS_CONFIG: BalancedScanConfig = BalancedScanConfig {
-        open: b'(',
-        close: b')',
-        quotes: &[b'"', b'\''],
-        escape: b'\\',
-        terminators: &[b';', b'{', b'}'],
-    };
-    scan_balanced(bytes, &CSS_CONFIG)
-}

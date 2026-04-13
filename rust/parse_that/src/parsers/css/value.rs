@@ -1,6 +1,6 @@
 // CSS value parsing — inline dispatch for zero-vtable hot path.
 
-use super::super::scan::{scan_ident, scan_string_quoted, scan_ws_block_comments};
+use super::super::scan::{scan_ident, scan_string_quoted, scan_ws_block_comments, CSS_IDENT_CONFIG};
 use super::types::*;
 use crate::state::{ParserState, Span};
 
@@ -77,7 +77,7 @@ pub(super) fn parse_value_inline<'a>(state: &mut ParserState<'a>) -> Option<CssV
             let cp = state.offset;
             state.offset += 1;
             scan_ws_block_comments(state);
-            if let Some(s) = scan_ident(state) {
+            if let Some(s) = scan_ident(state, &CSS_IDENT_CONFIG) {
                 if s.as_str() == "important" {
                     // We'll mark important in the declaration, skip this value
                     return Some(CssValue::Ident(s)); // Let caller detect
@@ -101,7 +101,7 @@ pub(super) fn parse_number_value_inline<'a>(state: &mut ParserState<'a>) -> Opti
         return Some(CssValue::Percentage(num));
     }
     // Try unit
-    if let Some(u) = scan_ident(state) {
+    if let Some(u) = scan_ident(state, &CSS_IDENT_CONFIG) {
         return Some(CssValue::Dimension(num, u));
     }
     Some(CssValue::Number(num))
@@ -111,7 +111,7 @@ pub(super) fn parse_number_value_inline<'a>(state: &mut ParserState<'a>) -> Opti
 pub(super) fn parse_ident_or_function_inline<'a>(
     state: &mut ParserState<'a>,
 ) -> Option<CssValue<'a>> {
-    let name = scan_ident(state)?;
+    let name = scan_ident(state, &CSS_IDENT_CONFIG)?;
 
     // Check for function call
     if state.src_bytes.get(state.offset) == Some(&b'(') {

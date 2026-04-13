@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 
 use crate::parse::ParserFn;
+use crate::parsers::scan::{IdentConfig, NumberConfig, QuotedStringConfig, STRICT_NUMBER_CONFIG};
 use crate::state::Span;
 
 use super::{SpanKind, SpanParser, SpanScanner};
@@ -81,51 +82,84 @@ pub fn sp_epsilon<'a>() -> SpanParser<'a> {
     sp_new!(SpanKind::Epsilon)
 }
 
-// ── Domain-specific scanner constructors ─────────────────────
+// ── Structural scanner constructors ──────────────────────────
 
-/// Monolithic JSON number scanner.
+/// Monolithic number scanner.
+///
+/// Currently the only supported number config is `STRICT_NUMBER_CONFIG`
+/// (RFC 8259: no leading `+`, no leading `.`, no `007`-style leading
+/// zeros) — it dispatches through the `SpanScanner::NumberStrict`
+/// variant. Other configs require composing `scan_number_mantissa`
+/// directly via a custom `Boxed` parser.
 #[inline]
-pub fn sp_json_number<'a>() -> SpanParser<'a> {
-    sp_new!(SpanKind::Scanner(SpanScanner::JsonNumber), "number")
+pub fn sp_number<'a>(config: &NumberConfig) -> SpanParser<'a> {
+    if numeric_config_eq(config, &STRICT_NUMBER_CONFIG) {
+        sp_new!(SpanKind::Scanner(SpanScanner::NumberStrict), "number")
+    } else {
+        panic!(
+            "sp_number currently supports only STRICT_NUMBER_CONFIG; \
+             custom NumberConfig values must compose `scan_number_mantissa` directly"
+        );
+    }
 }
 
-/// Monolithic JSON string scanner (memchr2). Content span, exclusive of quotes.
 #[inline]
-pub fn sp_json_string<'a>() -> SpanParser<'a> {
-    sp_new!(SpanKind::Scanner(SpanScanner::JsonString), "string")
+fn numeric_config_eq(a: &NumberConfig, b: &NumberConfig) -> bool {
+    a.allow_plus_sign == b.allow_plus_sign
+        && a.allow_leading_dot == b.allow_leading_dot
+        && a.reject_leading_zero == b.reject_leading_zero
 }
 
-/// Monolithic JSON string scanner (memchr2). Span includes quote delimiters.
+/// Monolithic quoted-string scanner. Returns the span including the
+/// quote delimiters.
+///
+/// The strict variant validates RFC 8259 escape sequences; the generic
+/// variant (`QuotedStringConfig { allows_escapes: false, .. }`) treats
+/// `\` as a "skip next byte" without validation and accepts either `"`
+/// or `'`.
 #[inline]
-pub fn sp_json_string_quoted<'a>() -> SpanParser<'a> {
-    sp_new!(SpanKind::Scanner(SpanScanner::JsonStringQuoted), "string")
+pub fn sp_quoted_string<'a>(config: &QuotedStringConfig) -> SpanParser<'a> {
+    if config.quote_char == b'"' && config.allows_escapes && config.allows_u_escapes {
+        sp_new!(SpanKind::Scanner(SpanScanner::QuotedStringStrict), "string")
+    } else if !config.allows_escapes {
+        // Generic single/double-quote scanner with raw `\`-skip.
+        sp_new!(SpanKind::Scanner(SpanScanner::QuotedString), "string")
+    } else {
+        panic!(
+            "sp_quoted_string: only STRICT_QUOTED_STRING_CONFIG (full RFC 8259 escapes) \
+             or escape-free configs are currently supported"
+        );
+    }
 }
 
-/// Monolithic CSS identifier scanner — direct byte scanning.
+/// Monolithic identifier scanner.
+///
+/// Configures via [`IdentConfig`]. The CSS-flavored config
+/// (`CSS_IDENT_CONFIG`) accepts vendor prefixes (`-foo`) and custom
+/// properties (`--foo`); the default config restricts to plain
+/// `[a-zA-Z_][\w-]*`.
 #[inline]
-pub fn sp_css_ident<'a>() -> SpanParser<'a> {
-    sp_new!(SpanKind::Scanner(SpanScanner::CssIdent), "CSS identifier")
+pub fn sp_ident<'a>(config: &IdentConfig) -> SpanParser<'a> {
+    if config.allow_leading_dash && config.allow_double_dash_prefix {
+        sp_new!(SpanKind::Scanner(SpanScanner::Identifier), "identifier")
+    } else {
+        panic!(
+            "sp_ident: only CSS_IDENT_CONFIG is currently routed through SpanScanner; \
+             plain identifiers should call `scan_ident` via a `Boxed` parser"
+        );
+    }
 }
 
-/// Monolithic CSS whitespace + comment scanner. Always succeeds.
+/// Monolithic whitespace + block-comment scanner. Always succeeds.
 #[inline]
-pub fn sp_css_ws_comment<'a>() -> SpanParser<'a> {
-    sp_new!(SpanKind::Scanner(SpanScanner::CssWsComment))
+pub fn sp_ws_comment<'a>() -> SpanParser<'a> {
+    sp_new!(SpanKind::Scanner(SpanScanner::WsComment))
 }
 
-/// Monolithic CSS quoted string scanner (memchr2).
+/// Monolithic block-comment scanner: `/\*...\*/`.
 #[inline]
-pub fn sp_css_string<'a>() -> SpanParser<'a> {
-    sp_new!(SpanKind::Scanner(SpanScanner::CssString), "CSS string")
-}
-
-/// Monolithic CSS block comment scanner: /\*...\*/
-#[inline]
-pub fn sp_css_block_comment<'a>() -> SpanParser<'a> {
-    sp_new!(
-        SpanKind::Scanner(SpanScanner::CssBlockComment),
-        "CSS comment"
-    )
+pub fn sp_block_comment<'a>() -> SpanParser<'a> {
+    sp_new!(SpanKind::Scanner(SpanScanner::BlockComment), "comment")
 }
 
 /// Match one or more bytes until any byte in `excluded` is found.
