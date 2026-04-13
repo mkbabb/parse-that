@@ -1,6 +1,9 @@
 // Number scanning core — mantissa accumulation + config.
 //
 // Pure digit/mantissa scanning. f64 conversion lives in `number_f64.rs`.
+// SIMD digit accumulation (16 bytes at a time) lives in `number_simd.rs`.
+
+use super::number_simd;
 
 // ── Number scanning core ──────────────────────────────────────────
 
@@ -122,13 +125,17 @@ pub fn scan_number_mantissa(
     let digit_start = i;
     let mut mantissa: u64 = 0;
 
-    // 8-digit chunks (simdjson trick).
-    //
-    // Tranche Y.8: the per-chunk "are all 8 bytes digits?" check is
-    // the SWAR `all_eight_are_ascii_digits` helper, replacing the
-    // previous `iter().all()` loop. The leading single-byte guard
-    // at line below is retained because it fails the loop fast
-    // when the first byte isn't a digit (common on negative lookups).
+    // SIMD 16-digit fast path: scan up to 16 ASCII digit bytes at
+    // once using platform-specific SIMD intrinsics (NEON on aarch64,
+    // SSE4.2 on x86_64). Falls back to the 8-digit SWAR path below
+    // when < 16 bytes remain or the platform lacks SIMD support.
+    if let Some(result) = number_simd::scan_digits_simd(bytes, i) {
+        mantissa = result.value;
+        i += result.count as usize;
+    }
+
+    // 8-digit SWAR chunks for any remaining runs (after SIMD consumed
+    // an initial batch, or when SIMD wasn't available).
     while i + 8 <= len {
         let b = unsafe { *bytes.get_unchecked(i) };
         if !b.is_ascii_digit() {
@@ -181,13 +188,26 @@ pub fn scan_number_mantissa(
     {
         i += 1;
         let frac_start = i;
-        // Accumulate fractional digits into mantissa (same 8-digit chunks).
-        // Tranche Z.2: use the SWAR `all_eight_are_ascii_digits` helper
-        // here too — Y.8 introduced it for the integer loop but the
-        // fractional loop kept the older `iter().all()` form. Same
-        // SWAR semantics, so the fractional path now picks up the
-        // ~4-instruction inline check instead of an 8-iteration
-        // unvectorizable loop.
+        // Accumulate fractional digits into mantissa.
+        //
+        // SIMD 16-digit fast path: scan up to 16 leading digit bytes at
+        // once. If all scanned digits fit within the 19-digit mantissa
+        // budget, accumulate them in one shot. Otherwise fall through to
+        // the chunked/scalar loops that enforce the budget per-digit.
+        if total_digits < 19 {
+            if let Some(result) = number_simd::scan_digits_simd(bytes, i) {
+                if total_digits + result.count as usize <= 19 {
+                    // All scanned digits fit in the mantissa budget.
+                    mantissa = mantissa
+                        .wrapping_mul(number_simd::POW10[result.count as usize])
+                        .wrapping_add(result.value);
+                    i += result.count as usize;
+                    total_digits += result.count as usize;
+                }
+                // If they don't fit, fall through to chunked/scalar loops.
+            }
+        }
+        // 8-digit SWAR chunks for remaining fractional digits.
         while i + 8 <= len && total_digits + 8 <= 19 {
             let b = unsafe { *bytes.get_unchecked(i) };
             if !b.is_ascii_digit() {

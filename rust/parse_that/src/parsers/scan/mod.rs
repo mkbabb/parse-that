@@ -5,6 +5,7 @@
 
 mod number;
 mod number_f64;
+mod number_simd;
 mod ident;
 mod ws_comment;
 mod quoted;
