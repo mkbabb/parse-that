@@ -12,7 +12,7 @@
 //! - [`dfa_size`] — DFA/NFA state count estimation heuristics.
 //! - [`one_pass`] — one-pass eligibility and HIR walkability.
 
-use crate::classify::{classify_known_pattern, classify_regex_from_hir, RegexClass};
+use crate::classify::{classify_regex_from_hir, RegexClass};
 use crate::first::regex_first_chars_from_hir;
 use crate::hir::Hir;
 use crate::sets::charset::CharSet128;
@@ -284,11 +284,12 @@ impl RegexInfo {
     /// Shared post-canonicalization analysis used by both the cached
     /// and non-cached entry points.
     fn analyze_canonical(pattern: &str, canonical: &Hir) -> Self {
+        let _ = pattern;
         let hir = canonical;
 
-        // Classification: known-pattern fast path first, then structural.
-        let classification = classify_known_pattern(pattern)
-            .unwrap_or_else(|| classify_regex_from_hir(hir));
+        // Classification is purely structural — every dialect flag is
+        // recovered from the HIR walk in `classify_regex_from_hir`.
+        let classification = classify_regex_from_hir(hir);
         let first_chars = regex_first_chars_from_hir(hir).unwrap_or_else(CharSet128::new);
         let nullable = is_nullable(hir);
         let (min_len, max_len) = compute_match_width(hir);
@@ -396,12 +397,8 @@ fn derive_feasible_engines(
         RegexClass::Numeric { .. }
             | RegexClass::QuotedString { .. }
             | RegexClass::HexDigits
-            | RegexClass::Identifier
-            | RegexClass::JsonString
-            | RegexClass::JsonNumber
-            | RegexClass::WsBlockComment
-            | RegexClass::CssIdent
-            | RegexClass::CssQuotedString
+            | RegexClass::Identifier { .. }
+            | RegexClass::WhitespaceWithBlockComment
             | RegexClass::CharClassQuantified(_)
             | RegexClass::PrefixThenClass { .. }
             | RegexClass::AccelDriven(_)

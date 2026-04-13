@@ -35,8 +35,8 @@ rust/regex/
 │   │   ├── dfa.rs          NFA→DFA powerset + Hopcroft minimization + flat transition table
 │   │   └── accel.rs        AccelStrategy / StateAccel — single-byte hot-loop acceleration
 │   ├── classify/
-│   │   ├── mod.rs          RegexClass enum + classify_known_pattern + classify_regex
-│   │   └── structural.rs   classify_regex_from_hir — HIR-walking structural classifier
+│   │   ├── mod.rs          RegexClass enum (parameterized) + classify_regex + classify_regex_from_hir + canonical_pattern
+│   │   └── structural.rs   try_classify_numeric / quoted_string / hex / identifier / charclass / prefix-then-class
 │   ├── sets/
 │   │   ├── mod.rs          Re-exports
 │   │   ├── byteset.rs      ByteSet (256-bit set: u64 × 4 — full byte range)
@@ -73,7 +73,7 @@ rust/regex/
 │   └── info.rs
 └── benches/                (Tranche P — 4 bench binaries)
     ├── regex_parse.rs       HIR parser throughput on 50+ real-world patterns
-    ├── regex_classify.rs    classify_known_pattern (string) + classify_regex_from_hir (HIR walk)
+    ├── regex_classify.rs    classify_regex_from_hir throughput (pre-parsed HIRs)
     ├── regex_hir_egraph.rs  simplify_hir end-to-end (build → CspScheduler → extract)
     └── regex_dfa_compile.rs Dfa::compile + Dfa::find_at hot loop
 ```

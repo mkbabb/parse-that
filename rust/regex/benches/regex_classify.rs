@@ -1,12 +1,10 @@
 //! Tranche P: structural classification throughput.
 //!
 //! Pre-parses the pattern corpus once, then in the bench loop runs
-//! `classify_known_pattern` (string fast-path) followed by
-//! `classify_regex_from_hir` (HIR walk). Measures the cost of
-//! recognizing semantic categories — Numeric, HexDigits, Identifier,
-//! QuotedString, JsonNumber, JsonString — that drive
-//! `FnDescriptor` specialization in bbnf and `RegexInfo`'s
-//! classification field.
+//! `classify_regex_from_hir` over the parsed HIRs. Measures the cost
+//! of recognizing semantic categories — Numeric, HexDigits,
+//! Identifier, QuotedString — that drive `FnDescriptor`
+//! specialization in bbnf and `RegexInfo`'s classification field.
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -16,7 +14,7 @@ extern crate bencher;
 
 use bencher::{Bencher, black_box};
 
-use bbnf_regex::classify::{classify_known_pattern, classify_regex_from_hir};
+use bbnf_regex::classify::classify_regex_from_hir;
 use bbnf_regex::hir::{Hir, ParseOptions};
 use bbnf_regex::parse_with;
 
@@ -85,17 +83,6 @@ fn pre_parse() -> Vec<(&'static str, Hir)> {
         .collect()
 }
 
-fn classify_known(b: &mut Bencher) {
-    let total: usize = PATTERNS.iter().map(|p| p.len()).sum();
-    b.bytes = total as u64;
-
-    b.iter(|| {
-        for &pattern in PATTERNS {
-            let _ = black_box(classify_known_pattern(pattern));
-        }
-    });
-}
-
 fn classify_structural(b: &mut Bencher) {
     let parsed = pre_parse();
     let total: usize = parsed.iter().map(|(p, _)| p.len()).sum();
@@ -108,5 +95,5 @@ fn classify_structural(b: &mut Bencher) {
     });
 }
 
-benchmark_group!(regex_classify, classify_known, classify_structural);
+benchmark_group!(regex_classify, classify_structural);
 benchmark_main!(regex_classify);

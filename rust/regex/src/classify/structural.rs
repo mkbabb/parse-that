@@ -24,6 +24,8 @@ pub(super) fn try_classify_numeric(hir: &Hir) -> Option<RegexClass> {
     let mut allows_sign = false;
     let mut allows_fraction = false;
     let mut allows_exponent = false;
+    let mut reject_leading_zero = false;
+    let mut allow_leading_dot = false;
 
     // Optional sign: `[-+]?` or `-?`
     if idx < parts.len() && is_optional_sign_class(&parts[idx]) {
@@ -40,9 +42,15 @@ pub(super) fn try_classify_numeric(hir: &Hir) -> Option<RegexClass> {
     } else if is_digit_class(&parts[idx]) {
         idx += 1;
     } else if is_json_integer_alternation(&parts[idx]) {
+        // `(0|[1-9]\d*)` — the JSON integer alternation deliberately
+        // forbids `00`, `01`, etc. The dialect flag survives even when
+        // an exponent or fraction follows.
+        reject_leading_zero = true;
         idx += 1;
     } else if is_css_number_body(&parts[idx]) {
+        // `(\d+(\.\d+)?|\.\d+)` accepts `.5` as a leading-dot number.
         allows_fraction = true;
+        allow_leading_dot = true;
         idx += 1;
     } else {
         return None;
@@ -68,6 +76,8 @@ pub(super) fn try_classify_numeric(hir: &Hir) -> Option<RegexClass> {
         allows_sign,
         allows_fraction,
         allows_exponent,
+        reject_leading_zero,
+        allow_leading_dot,
     })
 }
 
@@ -264,7 +274,23 @@ fn is_exponent_letter_class(hir: &Hir) -> bool {
 pub(super) fn try_classify_quoted_string(hir: &Hir) -> Option<RegexClass> {
     let parts = match hir {
         Hir::Concat(parts) => parts.as_slice(),
-        _ => return None,
+        _ => {
+            // Top-level alternation of two same-quote-char patterns is
+            // common (e.g., the CSS `"…" | '…'` shape collapses to a
+            // single Alternation rather than a Concat). Recurse into
+            // every branch and return the first that classifies as a
+            // QuotedString — branch quote chars must agree, but we
+            // accept any legal first match because the dialect flags
+            // are preserved structurally.
+            if let Hir::Alternation(alts) = hir {
+                for alt in alts {
+                    if let Some(class) = try_classify_quoted_string(alt) {
+                        return Some(class);
+                    }
+                }
+            }
+            return None;
+        }
     };
     if parts.len() < 3 {
         return None;
@@ -290,13 +316,18 @@ pub(super) fn try_classify_quoted_string(hir: &Hir) -> Option<RegexClass> {
         _ => return None,
     }
 
-    // Middle: repetition containing the content pattern.
+    // Middle: repetition containing the content pattern. Inspect for
+    // backslash escapes and the JSON-style `\uXXXX` codepoint escape
+    // shape so consumers can distinguish JSON strings (with `\u`)
+    // from generic CSS strings (`\[\s\S]` only).
     let middle = &parts[1..parts.len() - 1];
     let allows_escapes = middle.iter().any(contains_backslash_pattern);
+    let allows_u_escapes = allows_escapes && middle.iter().any(contains_u_escape_pattern);
 
     Some(RegexClass::QuotedString {
         quote_char,
         allows_escapes,
+        allows_u_escapes,
     })
 }
 
@@ -309,6 +340,52 @@ fn contains_backslash_pattern(hir: &Hir) -> bool {
         Hir::Group(sub) => contains_backslash_pattern(sub),
         _ => false,
     }
+}
+
+/// Detect the JSON `\uXXXX` codepoint escape shape: a literal `u`
+/// byte directly followed by a four-digit hex repetition. The HIR
+/// parser materializes the standard `u[0-9a-fA-F]{4}` fragment as a
+/// `Concat([Literal('u'), Repetition([0-9a-fA-F]{4})])` (sometimes
+/// nested inside a wider Alternation), so we walk the same nodes
+/// `contains_backslash_pattern` does and look for that local shape.
+fn contains_u_escape_pattern(hir: &Hir) -> bool {
+    match hir {
+        Hir::Concat(parts) => {
+            if has_u_then_quad_hex(parts) {
+                return true;
+            }
+            parts.iter().any(contains_u_escape_pattern)
+        }
+        Hir::Alternation(alts) => alts.iter().any(contains_u_escape_pattern),
+        Hir::Repetition(rep) => contains_u_escape_pattern(&rep.sub),
+        Hir::Group(sub) => contains_u_escape_pattern(sub),
+        _ => false,
+    }
+}
+
+/// Search a flat Concat slice for an adjacent `u` literal followed
+/// by a 4-occurrence hex-class repetition. Both the `\u` part of a
+/// JSON escape and the trailing `XXXX` materialize this pair.
+fn has_u_then_quad_hex(parts: &[Hir]) -> bool {
+    if parts.len() < 2 {
+        return false;
+    }
+    for window in parts.windows(2) {
+        let head = match &window[0] {
+            Hir::Literal(bytes) => bytes,
+            _ => continue,
+        };
+        if head.last().copied() != Some(b'u') {
+            continue;
+        }
+        let tail = unwrap_group(&window[1]);
+        if let Hir::Repetition(rep) = tail {
+            if rep.min == 4 && rep.max == Some(4) && is_hex_class(&rep.sub) {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 // ── HexDigits ──────────────────────────────────────────────────────────────
@@ -339,7 +416,150 @@ fn is_hex_class(hir: &Hir) -> bool {
 
 // ── Identifier ─────────────────────────────────────────────────────────────
 
-pub(super) fn try_classify_identifier(hir: &Hir) -> bool {
+pub(super) fn try_classify_identifier(hir: &Hir) -> Option<RegexClass> {
+    // Top-level alternation: CSS dialects fold the optional-leading-dash
+    // pattern with a `--` custom-property branch, e.g.
+    // `-?[a-zA-Z_][\w-]*|--[\w-]+`. Detect that shape directly.
+    let inner = unwrap_group(hir);
+    if let Hir::Alternation(alts) = inner {
+        if let Some(class) = try_classify_identifier_alt(alts) {
+            return Some(class);
+        }
+    }
+
+    // Single concat — `[-?]? [a-zA-Z_] [\w-]*` with optional leading
+    // dash literal collapsed via the sign class. We treat a leading
+    // optional `-` literal as `allows_leading_dash = true`.
+    let (allows_leading_dash, body) = strip_optional_leading_dash(inner);
+    if !is_identifier_body(body) {
+        return None;
+    }
+    Some(RegexClass::Identifier {
+        allows_leading_dash,
+        allows_double_dash_prefix: false,
+    })
+}
+
+/// Match the CSS identifier alternation shape:
+/// `-?[a-zA-Z_][\w-]*|--[\w-]+`. The first branch accepts an
+/// optional leading dash + identifier body; the second is the `--`
+/// custom-property prefix followed by `[\w-]+`. Both branches must
+/// be recognized for the alternation to classify as the wider
+/// dialect.
+fn try_classify_identifier_alt(alts: &[Hir]) -> Option<RegexClass> {
+    if alts.len() != 2 {
+        return None;
+    }
+    let (a, b) = (&alts[0], &alts[1]);
+    let dash_ident = is_optional_dash_identifier(a) || is_optional_dash_identifier(b);
+    let custom_prop = is_double_dash_word_run(a) || is_double_dash_word_run(b);
+    if !(dash_ident && custom_prop) {
+        return None;
+    }
+    Some(RegexClass::Identifier {
+        allows_leading_dash: true,
+        allows_double_dash_prefix: true,
+    })
+}
+
+/// `-?[a-zA-Z_][\w-]*` — optional leading dash followed by an
+/// identifier body.
+fn is_optional_dash_identifier(hir: &Hir) -> bool {
+    let inner = unwrap_group(hir);
+    let (has_dash, body) = strip_optional_leading_dash(inner);
+    if !has_dash {
+        // Tolerate the bare body too — the alternation form sometimes
+        // factors out the optional dash on only one branch.
+        return is_identifier_body(inner);
+    }
+    is_identifier_body(body)
+}
+
+/// `--[\w-]+` — the CSS custom-property prefix.
+fn is_double_dash_word_run(hir: &Hir) -> bool {
+    let parts = match unwrap_group(hir) {
+        Hir::Concat(parts) => parts.as_slice(),
+        _ => return false,
+    };
+    if parts.len() != 2 {
+        return false;
+    }
+    let leading_double_dash = match &parts[0] {
+        Hir::Literal(bytes) => bytes.as_slice() == b"--",
+        _ => false,
+    };
+    if !leading_double_dash {
+        return false;
+    }
+    if let Hir::Repetition(rep) = &parts[1] {
+        if rep.min >= 1 {
+            return is_word_class(unwrap_group(&rep.sub));
+        }
+    }
+    false
+}
+
+/// Strip a leading `-?` (or `[\-]?`) sign-style optional from the
+/// front of a Concat or single node. Returns `(true, remainder)` if
+/// the leading optional dash was present, `(false, hir)` otherwise.
+fn strip_optional_leading_dash(hir: &Hir) -> (bool, &Hir) {
+    let parts = match hir {
+        Hir::Concat(parts) => parts.as_slice(),
+        _ => return (false, hir),
+    };
+    if parts.is_empty() {
+        return (false, hir);
+    }
+    if !is_optional_dash(&parts[0]) {
+        return (false, hir);
+    }
+    if parts.len() == 2 {
+        (true, &parts[1])
+    } else {
+        // Rebuilding a partial Concat is awkward and unnecessary —
+        // the body classifier walks every part of the original Concat
+        // when invoked on the original `hir`, so we return the full
+        // Concat with the dash flag set and let the body classifier
+        // skip the optional. To avoid borrowing surgery we mark the
+        // identifier body classifier to accept both shapes.
+        (true, hir)
+    }
+}
+
+fn is_optional_dash(hir: &Hir) -> bool {
+    if let Hir::Repetition(rep) = hir {
+        if rep.min == 0 && rep.max == Some(1) {
+            return is_dash_byte(&rep.sub);
+        }
+    }
+    if let Hir::Group(sub) = hir {
+        return is_optional_dash(sub);
+    }
+    false
+}
+
+fn is_dash_byte(hir: &Hir) -> bool {
+    use crate::hir::CharClass;
+    let inner = unwrap_group(hir);
+    if let Hir::Literal(bytes) = inner {
+        return bytes.as_slice() == b"-";
+    }
+    if let Hir::Class(CharClass::Bytes { ranges, negated }) = inner {
+        if *negated {
+            return false;
+        }
+        return ranges.len() == 1
+            && ranges[0] == crate::hir::ByteRange::new(b'-', b'-');
+    }
+    false
+}
+
+/// `[a-zA-Z_][\w-]*` (or its bare-letter `[a-zA-Z][\w]*`
+/// counterpart) — an identifier body. When invoked on a wider
+/// Concat carrying a leading optional-dash repetition, the head
+/// scan tolerates the leading optional and resumes at the letter
+/// class.
+fn is_identifier_body(hir: &Hir) -> bool {
     let parts = match hir {
         Hir::Concat(parts) => parts.as_slice(),
         _ => {
@@ -354,17 +574,29 @@ pub(super) fn try_classify_identifier(hir: &Hir) -> bool {
         return false;
     }
 
-    let first = super::unwrap_repetition(&parts[0]).unwrap_or(&parts[0]);
-    if !is_letter_class(first) {
-        return false;
-    }
-
-    for part in &parts[1..] {
-        if !is_word_continuation(part) {
+    // Skip a leading optional-dash if present (the wider Concat
+    // shape invoked from `strip_optional_leading_dash` returns the
+    // original Concat unchanged when the body contained more than
+    // two parts).
+    let mut idx = 0;
+    if is_optional_dash(&parts[idx]) {
+        idx += 1;
+        if idx >= parts.len() {
             return false;
         }
     }
 
+    let first = super::unwrap_repetition(&parts[idx]).unwrap_or(&parts[idx]);
+    if !is_letter_class(first) {
+        return false;
+    }
+    idx += 1;
+
+    for part in &parts[idx..] {
+        if !is_word_continuation(part) {
+            return false;
+        }
+    }
     true
 }
 

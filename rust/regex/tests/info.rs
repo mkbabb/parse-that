@@ -40,7 +40,16 @@ fn test_negated_class() {
 fn test_json_number_classification() {
     let info =
         RegexInfo::analyze(r"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?").unwrap();
-    assert_eq!(info.classification, RegexClass::JsonNumber);
+    assert!(matches!(
+        info.classification,
+        RegexClass::Numeric {
+            allows_sign: true,
+            allows_fraction: true,
+            allows_exponent: true,
+            reject_leading_zero: true,
+            allow_leading_dot: false,
+        }
+    ));
     assert!(!info.nullable);
     assert!(info.must_consume);
 }

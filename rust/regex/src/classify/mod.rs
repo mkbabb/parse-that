@@ -5,8 +5,12 @@
 //! More robust than string-level matching: normalizes `\d` / `[0-9]`,
 //! class orderings, group nesting, etc.
 //!
-//! Known-pattern detection via exact string match takes priority over HIR
-//! structural analysis, providing stable classification for canonical patterns.
+//! Classification is purely structural — every distinguishing flag
+//! (sign / fraction / exponent / leading-zero rejection / `\uXXXX`
+//! escapes / leading-dash identifiers) is recovered by walking the
+//! HIR. There is no nominal fast path: equivalent regexes that differ
+//! only in surface form (`\d` vs `[0-9]`, group nesting, ordering)
+//! collapse to the same parameterized variant.
 
 mod structural;
 
@@ -38,41 +42,57 @@ pub struct ClassRangeInfo {
 }
 
 /// Classification result for a regex pattern.
+///
+/// Every variant carries the structural parameters that distinguish
+/// related dialects. Two patterns that compile to the same HIR up to
+/// nesting and ordering produce the same `RegexClass` value with the
+/// same field bindings; consumers therefore never need to maintain a
+/// dialect dictionary or compare against canonical pattern strings.
 #[derive(Debug, Clone, PartialEq)]
 pub enum RegexClass {
-    /// Matches numeric values convertible to f64.
+    /// Numeric token convertible to `f64`. The flags collapse the
+    /// JSON / CSS / generic dialects into one variant.
     Numeric {
         allows_sign: bool,
         allows_fraction: bool,
         allows_exponent: bool,
+        /// `0|[1-9]\d*` integer alternation — JSON-style integer with
+        /// no leading zeros allowed beyond the single `0` literal.
+        reject_leading_zero: bool,
+        /// `\.\d+` is a valid first segment (CSS `.5` is a number).
+        allow_leading_dot: bool,
     },
 
-    /// Matches quoted strings: `"content"` or `'content'`.
+    /// Quoted string: `"content"` or `'content'`. Carries the quote
+    /// byte plus the escape-vocabulary flags so JSON strings (with
+    /// `\uXXXX`) and generic CSS strings (no `\u` escape) collapse
+    /// into one variant.
     QuotedString {
         quote_char: u8,
         allows_escapes: bool,
+        /// JSON-style `\uXXXX` codepoint escapes are valid inside the
+        /// content body.
+        allows_u_escapes: bool,
     },
 
-    /// Matches hex digit runs: `[0-9a-fA-F]+` or similar.
+    /// Hex-digit run: `[0-9a-fA-F]+` and quantified equivalents.
     HexDigits,
 
-    /// Matches identifier-class tokens: `[a-zA-Z_][\w-]*` or similar.
-    Identifier,
+    /// Identifier-class token: `[a-zA-Z_][\w-]*` and CSS dialects.
+    /// The flags collapse the generic / CSS-with-leading-dash /
+    /// CSS-with-`--` variants into one variant.
+    Identifier {
+        /// Pattern accepts an optional leading `-` (CSS `-foo`).
+        allows_leading_dash: bool,
+        /// Pattern accepts a CSS custom-property `--name` prefix.
+        allows_double_dash_prefix: bool,
+    },
 
-    /// Canonical JSON string regex — exact-match fast path.
-    JsonString,
-
-    /// Canonical JSON number regex — exact-match fast path.
-    JsonNumber,
-
-    /// Whitespace + block-comment regex (`(?s)(?:\s|/\*.*?\*/)*`).
-    WsBlockComment,
-
-    /// CSS identifier regex (known patterns with custom-property support).
-    CssIdent,
-
-    /// CSS quoted string regex (double or single, with general escapes).
-    CssQuotedString,
+    /// Whitespace + block-comment regex (`(?s)(?:\s|/\*.*?\*/)*`)
+    /// and DFA-compatible variants. Nullary because the family is
+    /// fully determined by the `\s` / block-comment alternation
+    /// pair; there is no other dimension worth parameterizing.
+    WhitespaceWithBlockComment,
 
     /// `[a-z]+`, `\d*`, `[^"\\]+`, etc. — quantified char class.
     /// Tranche V: closes the gap where structural information was already
@@ -97,68 +117,41 @@ pub enum RegexClass {
     Unknown,
 }
 
-// ── Known-pattern constants ───────────────────────────────────────────────
-
-const JSON_STRING_PATTERNS: &[&str] = &[
-    r#""(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*""#,
-    r#""(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9A-Fa-f]{4}))*""#,
-    r#""(?:[^"\\]|\\(?:["\\bfnrt]|u[0-9a-fA-F]{4}))*""#,
-];
-
-const JSON_NUMBER_PATTERNS: &[&str] = &[
-    r"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?",
-    r"-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?",
-];
-
-const WS_BLOCK_COMMENT_PATTERNS: &[&str] = &[
-    r"(?s)(?:\s|/\*.*?\*/)*",
-    r"(?s)(?:\s|\/\*.*?\*\/)*",
-    // DFA-compatible variant (no lazy quantifiers):
-    r"(?s)(?:\s|/\*[^*]*(?:\*+[^/][^*]*)*\*+/)*",
-    r"(?s)(?:\s|\/\*[^*]*(?:\*+[^\/][^*]*)*\*+\/)*",
-];
-
-const IDENT_PATTERNS: &[&str] = &[
-    r"[\-]?[a-zA-Z_][\w-]*|--[\w-]+",
-    r"-?[a-zA-Z_][\w-]*|--[\w-]+",
-    r"[a-zA-Z_][\w-]*|--[\w-]+|-[a-zA-Z][\w-]*",
-    r"[a-zA-Z_][\w-]*",
-    r"[a-zA-Z][\w-]*",
-];
-
-const QUOTED_STRING_PATTERNS: &[&str] = &[r#""(?:[^"\\]|\\[\s\S])*"|'(?:[^'\\]|\\[\s\S])*'"#];
-
-/// Classify by exact match against known canonical patterns.
-pub fn classify_known_pattern(pattern: &str) -> Option<RegexClass> {
-    if JSON_STRING_PATTERNS.contains(&pattern) {
-        return Some(RegexClass::JsonString);
+impl RegexClass {
+    /// Canonical regex-pattern string for a parameterized variant.
+    ///
+    /// Used by IR-side recognizer configuration to avoid hardcoding
+    /// pattern literals (e.g., `key_class_regex_pattern` consults this
+    /// rather than embedding `r"[a-zA-Z_][\w-]*"` directly). Returns
+    /// `None` for variants whose canonical form depends on data that
+    /// only the original pattern carried (`CharClassQuantified`,
+    /// `PrefixThenClass`, `AccelDriven`, `Unknown`).
+    pub fn canonical_pattern(&self) -> Option<&'static str> {
+        match self {
+            RegexClass::Identifier {
+                allows_leading_dash: true,
+                allows_double_dash_prefix: true,
+            } => Some(r"-?[a-zA-Z_][\w-]*|--[\w-]+"),
+            RegexClass::Identifier {
+                allows_leading_dash: false,
+                allows_double_dash_prefix: false,
+            } => Some(r"[a-zA-Z_][\w-]*"),
+            RegexClass::QuotedString {
+                quote_char: b'"', ..
+            } => Some(r#""(?:[^"\\]|\\[\s\S])*""#),
+            RegexClass::QuotedString {
+                quote_char: b'\'', ..
+            } => Some(r"'(?:[^'\\]|\\[\s\S])*'"),
+            _ => None,
+        }
     }
-    if JSON_NUMBER_PATTERNS.contains(&pattern) {
-        return Some(RegexClass::JsonNumber);
-    }
-    if WS_BLOCK_COMMENT_PATTERNS.contains(&pattern) {
-        return Some(RegexClass::WsBlockComment);
-    }
-    if IDENT_PATTERNS.contains(&pattern) {
-        return Some(RegexClass::CssIdent);
-    }
-    if QUOTED_STRING_PATTERNS.contains(&pattern) {
-        return Some(RegexClass::CssQuotedString);
-    }
-    None
 }
 
-/// Classify a regex pattern structurally via HIR, with known-pattern
-/// fast path checked first.
+/// Classify a regex pattern structurally via HIR.
 ///
 /// Prefer `classify_regex_from_hir` when the consumer already has a parsed
 /// `Hir` — this wrapper exists for callers that only have the pattern string.
 pub fn classify_regex(pattern: &str) -> RegexClass {
-    // Fast path: exact match against known canonical patterns.
-    if let Some(class) = classify_known_pattern(pattern) {
-        return class;
-    }
-
     let hir = match crate::hir::parser::parse_with(
         pattern,
         &crate::ParseOptions::byte_mode(),
@@ -173,10 +166,6 @@ pub fn classify_regex(pattern: &str) -> RegexClass {
 /// Classify a regex pattern from a pre-parsed HIR. The core implementation
 /// used by `classify_regex` after parsing, and by `RegexInfo::analyze` to
 /// avoid redundant parses.
-///
-/// Does not consult the known-pattern fast path — callers with only the
-/// pattern string should use `classify_regex` (which checks the fast path
-/// before calling this).
 ///
 /// Classifier order: narrower / value-bearing classes first
 /// (Numeric / QuotedString / Hex / Identifier), then the structural
@@ -195,8 +184,11 @@ pub fn classify_regex_from_hir(hir: &Hir) -> RegexClass {
     if try_classify_hex(hir) {
         return RegexClass::HexDigits;
     }
-    if try_classify_identifier(hir) {
-        return RegexClass::Identifier;
+    if let Some(class) = try_classify_identifier(hir) {
+        return class;
+    }
+    if let Some(class) = try_classify_whitespace_block_comment(hir) {
+        return class;
     }
     if let Some(class) = try_classify_prefix_then_class(hir) {
         return class;
@@ -229,4 +221,142 @@ pub(crate) fn unwrap_repetition(hir: &Hir) -> Option<&Hir> {
     } else {
         None
     }
+}
+
+// ── WhitespaceWithBlockComment ─────────────────────────────────────────────
+//
+// Detects the canonical comment-aware whitespace family
+// `(?s)(?:\s|/\*.*?\*/)*` and the DFA-compatible expansions
+// `(?s)(?:\s|/\*[^*]*(?:\*+[^/][^*]*)*\*+/)*`. Both shapes resolve
+// to a top-level Repetition over an Alternation whose two branches
+// are (a) the shorthand whitespace class `\s` and (b) any HIR
+// fragment that begins with the literal bytes `/*` and ends with
+// `*/`. The comment body's exact internal structure is irrelevant
+// to the classification — what matters is the surrounding
+// `(?:\s | /\*…\*/)*` envelope.
+
+fn try_classify_whitespace_block_comment(hir: &Hir) -> Option<RegexClass> {
+    // The `(?s)` flag marker materializes as a leading `Empty` node
+    // inside a Concat. Strip that wrapper so we can recognize the
+    // bare Repetition shape.
+    let inner = strip_leading_empty(unwrap_group(hir));
+    let rep = match inner {
+        Hir::Repetition(rep) => rep,
+        _ => return None,
+    };
+    if rep.min != 0 {
+        return None;
+    }
+    let alt_inner = unwrap_group(&rep.sub);
+    let alts = match alt_inner {
+        Hir::Alternation(alts) if alts.len() == 2 => alts,
+        _ => return None,
+    };
+    let (ws_branch, comment_branch) = if is_whitespace_shorthand(&alts[0]) {
+        (&alts[0], &alts[1])
+    } else if is_whitespace_shorthand(&alts[1]) {
+        (&alts[1], &alts[0])
+    } else {
+        return None;
+    };
+    let _ = ws_branch;
+    if !is_block_comment_body(comment_branch) {
+        return None;
+    }
+    Some(RegexClass::WhitespaceWithBlockComment)
+}
+
+/// Strip a leading `Empty` node from a Concat — the HIR parser
+/// emits `Empty` as a flag marker (e.g., `(?s)` produces
+/// `Concat([Empty, ...])`).
+fn strip_leading_empty(hir: &Hir) -> &Hir {
+    if let Hir::Concat(parts) = hir {
+        if parts.len() == 2 && matches!(&parts[0], Hir::Empty) {
+            return &parts[1];
+        }
+    }
+    hir
+}
+
+/// `\s` shorthand: the standard ASCII whitespace class
+/// `[\t\n\x0B\x0C\r ]` that the HIR parser materializes into a
+/// six-byte byte class.
+fn is_whitespace_shorthand(hir: &Hir) -> bool {
+    use crate::hir::{ByteRange, CharClass};
+    let inner = unwrap_group(hir);
+    if let Hir::Class(CharClass::Bytes { ranges, negated }) = inner {
+        if *negated {
+            return false;
+        }
+        let has_tab_to_cr = ranges
+            .iter()
+            .any(|r| *r == ByteRange::new(0x09, 0x0D));
+        let has_space = ranges.iter().any(|r| *r == ByteRange::new(b' ', b' '));
+        return has_tab_to_cr && has_space;
+    }
+    false
+}
+
+/// Block-comment body: every branch shape we recognize starts with
+/// the literal bytes `/*` and ends with the literal bytes `*/`. The
+/// HIR parser sometimes splits the leading and trailing two-byte
+/// literals into adjacent single-byte Literal nodes, so we walk
+/// the leading and trailing byte sequences to look for the
+/// `/`-then-`*` and `*`-then-`/` adjacency rather than requiring
+/// a single fused Literal.
+fn is_block_comment_body(hir: &Hir) -> bool {
+    let parts = match unwrap_group(hir) {
+        Hir::Concat(parts) => parts.as_slice(),
+        _ => return false,
+    };
+    if parts.len() < 2 {
+        return false;
+    }
+    leading_bytes_match(parts, b"/*") && trailing_bytes_match(parts, b"*/")
+}
+
+/// Walk leading Literal nodes and check whether they collectively
+/// begin with `expected`.
+fn leading_bytes_match(parts: &[Hir], expected: &[u8]) -> bool {
+    let mut idx = 0;
+    let mut consumed = 0;
+    while consumed < expected.len() && idx < parts.len() {
+        match &parts[idx] {
+            Hir::Literal(bytes) => {
+                let need = expected.len() - consumed;
+                let take = bytes.len().min(need);
+                if bytes[..take] != expected[consumed..consumed + take] {
+                    return false;
+                }
+                consumed += take;
+                idx += 1;
+            }
+            _ => return false,
+        }
+    }
+    consumed == expected.len()
+}
+
+/// Walk trailing Literal nodes and check whether they collectively
+/// end with `expected`.
+fn trailing_bytes_match(parts: &[Hir], expected: &[u8]) -> bool {
+    let mut idx = parts.len();
+    let mut consumed = 0;
+    while consumed < expected.len() && idx > 0 {
+        idx -= 1;
+        match &parts[idx] {
+            Hir::Literal(bytes) => {
+                let need = expected.len() - consumed;
+                let take = bytes.len().min(need);
+                let bytes_slice = &bytes[bytes.len() - take..];
+                let expected_slice = &expected[expected.len() - consumed - take..expected.len() - consumed];
+                if bytes_slice != expected_slice {
+                    return false;
+                }
+                consumed += take;
+            }
+            _ => return false,
+        }
+    }
+    consumed == expected.len()
 }
