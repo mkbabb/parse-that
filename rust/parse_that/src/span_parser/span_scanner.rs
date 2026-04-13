@@ -30,10 +30,10 @@ impl SpanScanner {
             Self::JsonNumber => crate::parsers::json::number_span_scan_strict(state),
             Self::JsonString => crate::parsers::json::quoted_string_scan_content(state),
             Self::JsonStringQuoted => crate::parsers::json::quoted_string_scan_full(state),
-            Self::CssIdent => crate::parsers::css::ident_scan_fast(state),
-            Self::CssWsComment => crate::parsers::css::ws_block_comment_scan(state),
-            Self::CssString => crate::parsers::css::quoted_string_scan_fast(state),
-            Self::CssBlockComment => crate::parsers::css::block_comment_scan(state),
+            Self::CssIdent => crate::parsers::scan::scan_ident(state),
+            Self::CssWsComment => crate::parsers::scan::scan_ws_block_comments(state),
+            Self::CssString => crate::parsers::scan::scan_string_quoted(state),
+            Self::CssBlockComment => crate::parsers::scan::scan_block_comment(state),
         }
     }
 }

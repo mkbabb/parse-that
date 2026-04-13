@@ -5,10 +5,6 @@ pub use json::{
 };
 
 pub mod css;
-pub use css::{
-    block_comment_scan, ident_scan_fast, balanced_scan_end, quoted_string_scan_fast,
-    ws_block_comment_scan,
-};
 
 pub mod scan;
 

@@ -1,6 +1,6 @@
 // CSS value parsing — inline dispatch for zero-vtable hot path.
 
-use super::scan::*;
+use super::super::scan::{scan_ident, scan_string_quoted, scan_ws_block_comments};
 use super::types::*;
 use crate::state::{ParserState, Span};
 
@@ -30,7 +30,7 @@ pub(super) fn parse_value_inline<'a>(state: &mut ParserState<'a>) -> Option<CssV
                 None
             }
         }
-        b'"' | b'\'' => quoted_string_scan_fast(state).map(CssValue::String),
+        b'"' | b'\'' => scan_string_quoted(state).map(CssValue::String),
         b',' => {
             state.offset += 1;
             Some(CssValue::Comma)
@@ -76,8 +76,8 @@ pub(super) fn parse_value_inline<'a>(state: &mut ParserState<'a>) -> Option<CssV
             // !important — the '!' is consumed, 'important' is next ident
             let cp = state.offset;
             state.offset += 1;
-            ws_block_comment_scan(state);
-            if let Some(s) = ident_scan_fast(state) {
+            scan_ws_block_comments(state);
+            if let Some(s) = scan_ident(state) {
                 if s.as_str() == "important" {
                     // We'll mark important in the declaration, skip this value
                     return Some(CssValue::Ident(s)); // Let caller detect
@@ -101,7 +101,7 @@ pub(super) fn parse_number_value_inline<'a>(state: &mut ParserState<'a>) -> Opti
         return Some(CssValue::Percentage(num));
     }
     // Try unit
-    if let Some(u) = ident_scan_fast(state) {
+    if let Some(u) = scan_ident(state) {
         return Some(CssValue::Dimension(num, u));
     }
     Some(CssValue::Number(num))
@@ -111,16 +111,16 @@ pub(super) fn parse_number_value_inline<'a>(state: &mut ParserState<'a>) -> Opti
 pub(super) fn parse_ident_or_function_inline<'a>(
     state: &mut ParserState<'a>,
 ) -> Option<CssValue<'a>> {
-    let name = ident_scan_fast(state)?;
+    let name = scan_ident(state)?;
 
     // Check for function call
     if state.src_bytes.get(state.offset) == Some(&b'(') {
         state.offset += 1;
-        ws_block_comment_scan(state);
+        scan_ws_block_comments(state);
 
         let mut args: FuncArgVec<'_> = Vec::with_capacity(4);
         loop {
-            ws_block_comment_scan(state);
+            scan_ws_block_comments(state);
             if state.src_bytes.get(state.offset) == Some(&b')') {
                 state.offset += 1;
                 break;
