@@ -209,28 +209,28 @@ fn trim_leading_whitespace_scan_and_cache(state: &mut ParserState<'_>) {
     let mut bitmap: u64 = 0;
     let window = &bytes[offset..offset + window_len];
 
-    // Process 8 bytes at a time for bitmap construction
-    let mut i = 0;
-    while i + 8 <= window_len {
-        let mut byte_bits: u64 = 0;
-        let mut j = 0;
-        while j < 8 {
-            let b = unsafe { *window.get_unchecked(i + j) };
+    // SIMD: process 16 bytes at a time for bitmap construction
+    {
+        use std::simd::prelude::*;
+        let mut i = 0;
+        while i + 16 <= window_len {
+            let chunk = u8x16::from_slice(&window[i..i + 16]);
+            let mask = chunk.simd_eq(u8x16::splat(b' '))
+                | chunk.simd_eq(u8x16::splat(b'\t'))
+                | chunk.simd_eq(u8x16::splat(b'\n'))
+                | chunk.simd_eq(u8x16::splat(b'\r'));
+            let bits = mask.to_bitmask() as u64;
+            bitmap |= bits << i;
+            i += 16;
+        }
+        // Scalar tail for remaining bytes (< 16)
+        while i < window_len {
+            let b = unsafe { *window.get_unchecked(i) };
             if matches!(b, b' ' | b'\t' | b'\n' | b'\r') {
-                byte_bits |= 1u64 << (i + j);
+                bitmap |= 1u64 << i;
             }
-            j += 1;
+            i += 1;
         }
-        bitmap |= byte_bits;
-        i += 8;
-    }
-    // Scalar tail for remaining bytes
-    while i < window_len {
-        let b = unsafe { *window.get_unchecked(i) };
-        if matches!(b, b' ' | b'\t' | b'\n' | b'\r') {
-            bitmap |= 1u64 << i;
-        }
-        i += 1;
     }
 
     state.ws_bitmap = bitmap;
