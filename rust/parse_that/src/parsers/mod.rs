@@ -13,7 +13,7 @@ pub use utils::number_span;
 // Behavior-named, language-agnostic. Codegen emits these names.
 
 pub use scan::{
-    scan_ident, IdentConfig, DEFAULT_IDENT_CONFIG, CSS_IDENT_CONFIG,
+    scan_ident, IdentConfig, DEFAULT_IDENT_CONFIG, CSS_IDENT_CONFIG, CSS_IDENT_ESCAPE_CONFIG,
     scan_string_quoted, scan_quoted_string_content, scan_quoted_string_strict,
     validate_strict_escapes,
     QuotedStringConfig, STRICT_QUOTED_STRING_CONFIG, GENERIC_QUOTED_STRING_CONFIG,

@@ -21,7 +21,7 @@ pub use number_f64::{
     number_parts_to_f64, parse_number_f64, scan_number_f64, scan_number_span,
     scan_number_strict_span, scan_number_strict_fused, scan_number_strict_f64,
 };
-pub use ident::{scan_ident, IdentConfig, DEFAULT_IDENT_CONFIG, CSS_IDENT_CONFIG};
+pub use ident::{scan_ident, IdentConfig, DEFAULT_IDENT_CONFIG, CSS_IDENT_CONFIG, CSS_IDENT_ESCAPE_CONFIG};
 pub use ws_comment::{scan_block_comment, scan_ws_block_comments};
 pub use quoted::{
     scan_string_quoted,

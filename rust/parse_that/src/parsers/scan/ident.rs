@@ -10,13 +10,17 @@ pub struct IdentConfig {
     /// Allow a `--` prefix followed by `[\w-]+`
     /// (CSS custom properties like `--theme-color`).
     pub allow_double_dash_prefix: bool,
+    /// Allow `\` followed by any non-newline byte as part of the identifier.
+    /// Used by CSS selector identifiers (`\:`, `\.`, `\\`, etc.).
+    pub allow_escapes: bool,
 }
 
-/// Default identifier config: no leading dash, no double-dash prefix.
+/// Default identifier config: no leading dash, no double-dash prefix, no escapes.
 /// Accepts `[a-zA-Z_][\w-]*`.
 pub const DEFAULT_IDENT_CONFIG: IdentConfig = IdentConfig {
     allow_leading_dash: false,
     allow_double_dash_prefix: false,
+    allow_escapes: false,
 };
 
 /// CSS identifier config: vendor prefixes (`-foo`) and custom properties (`--foo`).
@@ -24,6 +28,16 @@ pub const DEFAULT_IDENT_CONFIG: IdentConfig = IdentConfig {
 pub const CSS_IDENT_CONFIG: IdentConfig = IdentConfig {
     allow_leading_dash: true,
     allow_double_dash_prefix: true,
+    allow_escapes: false,
+};
+
+/// CSS identifier config with escape sequences.
+/// Accepts `-?([a-zA-Z_]|\\[^\n])([\w-]|\\[^\n])*` and `--[\w-]+`.
+/// Used by CSS selector identifiers where `\:`, `\.`, `\\`, etc. are valid.
+pub const CSS_IDENT_ESCAPE_CONFIG: IdentConfig = IdentConfig {
+    allow_leading_dash: true,
+    allow_double_dash_prefix: true,
+    allow_escapes: true,
 };
 
 /// Scan an identifier per the supplied configuration.
@@ -72,22 +86,44 @@ pub fn scan_ident<'a>(state: &mut ParserState<'a>, config: &IdentConfig) -> Opti
         if !config.allow_leading_dash {
             return None;
         }
-        // -[a-zA-Z_]...
-        if !(b1.is_ascii_alphabetic() || b1 == b'_') {
+        // -[a-zA-Z_]... or -\X (escape as first char after dash)
+        if b1.is_ascii_alphabetic() || b1 == b'_' {
+            i += 1;
+        } else if config.allow_escapes && b1 == b'\\' && i + 1 < len {
+            let next = unsafe { *bytes.get_unchecked(i + 1) };
+            if next != b'\n' {
+                i += 2; // consume \X as the first char after dash
+            } else {
+                return None;
+            }
+        } else {
             return None;
         }
-        i += 1;
     } else if b0.is_ascii_alphabetic() || b0 == b'_' {
         i += 1;
+    } else if config.allow_escapes && b0 == b'\\' && i + 1 < len {
+        let next = unsafe { *bytes.get_unchecked(i + 1) };
+        if next != b'\n' {
+            i += 2; // consume \X as the first char
+        } else {
+            return None;
+        }
     } else {
         return None;
     }
 
-    // Continue with [a-zA-Z0-9_-]*
+    // Continue with [a-zA-Z0-9_-]* (and optionally \X escapes)
     while i < len {
         let b = unsafe { *bytes.get_unchecked(i) };
         if b.is_ascii_alphanumeric() || b == b'_' || b == b'-' {
             i += 1;
+        } else if config.allow_escapes && b == b'\\' && i + 1 < len {
+            let next = unsafe { *bytes.get_unchecked(i + 1) };
+            if next != b'\n' {
+                i += 2; // consume backslash + escaped char
+            } else {
+                break;
+            }
         } else {
             break;
         }
