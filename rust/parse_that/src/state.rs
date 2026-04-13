@@ -183,16 +183,6 @@ pub struct ParserState<'a> {
     #[pprint(skip)]
     pub ws_bitmap_start: usize,
 
-    /// Structural byte index (pre-scanned positions). Null when inactive.
-    #[pprint(skip)]
-    pub structural_index: *const u32,
-    /// Length of the structural index.
-    #[pprint(skip)]
-    pub structural_len: u32,
-    /// Current cursor position in the structural index.
-    #[pprint(skip)]
-    pub structural_cursor: u32,
-
     /// State-based memoization for monolithic slab parsers.
     /// Dropped with each parse — no cross-iteration cache retention.
     #[pprint(skip)]
@@ -220,9 +210,6 @@ impl Default for ParserState<'_> {
             context_ptr: std::ptr::null(),
             ws_bitmap: 0,
             ws_bitmap_start: usize::MAX,
-            structural_index: std::ptr::null(),
-            structural_len: 0,
-            structural_cursor: 0,
             memo: MemoStore::new(),
             #[cfg(feature = "diagnostics")]
             expected: SmallVec::new(),
@@ -245,9 +232,6 @@ impl<'a> ParserState<'a> {
             context_ptr: std::ptr::null(),
             ws_bitmap: 0,
             ws_bitmap_start: usize::MAX,
-            structural_index: std::ptr::null(),
-            structural_len: 0,
-            structural_cursor: 0,
             memo: MemoStore::new(),
             #[cfg(feature = "diagnostics")]
             expected: SmallVec::new(),
@@ -266,36 +250,6 @@ impl<'a> ParserState<'a> {
 
     pub fn is_at_end(&self) -> bool {
         self.offset >= self.end
-    }
-
-    /// Check if structural mode is active.
-    #[inline]
-    pub fn has_structural_index(&self) -> bool {
-        !self.structural_index.is_null()
-    }
-
-    /// Peek at the byte at the current structural position.
-    #[inline]
-    pub fn peek_structural_byte(&self) -> Option<u8> {
-        if self.structural_index.is_null() || self.structural_cursor >= self.structural_len {
-            return None;
-        }
-        let pos =
-            unsafe { *self.structural_index.add(self.structural_cursor as usize) } as usize;
-        self.src_bytes.get(pos).copied()
-    }
-
-    /// Advance offset to the next structural position.
-    #[inline]
-    pub fn advance_to_structural(&mut self) -> Option<u8> {
-        if self.structural_index.is_null() || self.structural_cursor >= self.structural_len {
-            return None;
-        }
-        let pos =
-            unsafe { *self.structural_index.add(self.structural_cursor as usize) } as usize;
-        self.structural_cursor += 1;
-        self.offset = pos;
-        self.src_bytes.get(pos).copied()
     }
 
     pub fn get_column_number(&self) -> usize {

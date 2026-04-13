@@ -26,8 +26,3 @@ pub use scan::{
     scan_json_number_span, scan_json_number_fused, scan_json_number_f64,
 };
 
-// Structural bitmap pre-scanner (Tranche AM.5).
-pub use scan::structural::{scan_structural, StructuralIter};
-
-// Quote-parity filtering for structural indices (Tranche AO).
-pub use scan::quote_parity::filter_quote_parity;
