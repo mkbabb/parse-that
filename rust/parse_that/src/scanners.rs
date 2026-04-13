@@ -54,6 +54,40 @@ pub fn cached_dfa(pattern: &str) -> Arc<crate::regex::dfa::Dfa> {
     dfa
 }
 
+// ── Whitespace byte set ──────────────────────────────────────────────────────
+
+/// Default ASCII whitespace byte set: space, tab, newline, carriage return,
+/// form feed.
+pub const ASCII_WS: [u8; 5] = [b' ', b'\t', b'\n', b'\r', 0x0C];
+
+/// Trim leading whitespace using a custom byte set.
+///
+/// Scans forward from `state.offset`, skipping any bytes present in
+/// `ws_bytes`.  Advances the state offset past all matched whitespace.
+/// Uses a 256-byte LUT for O(1) per-byte classification.
+#[inline(always)]
+pub fn trim_leading_whitespace_with_set(state: &mut ParserState<'_>, ws_bytes: &[u8]) {
+    let bytes = state.src_bytes;
+    let mut i = state.offset;
+    let end = bytes.len();
+
+    if i >= end {
+        return;
+    }
+
+    // Build a 256-byte LUT for the custom set.
+    let mut lut = [false; 256];
+    for &b in ws_bytes {
+        lut[b as usize] = true;
+    }
+
+    while i < end && lut[unsafe { *bytes.get_unchecked(i) } as usize] {
+        i += 1;
+    }
+
+    state.offset = i;
+}
+
 #[inline(always)]
 pub fn trim_leading_whitespace(state: &ParserState<'_>) -> usize {
     let bytes = state.src_bytes;

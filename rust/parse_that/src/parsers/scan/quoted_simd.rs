@@ -18,14 +18,17 @@ const ODD_BITS: u32 = 0xAAAA; // bits 1, 3, 5, ...
 /// SIMD-accelerated quoted string scanner.
 ///
 /// Scans from `start` (the byte AFTER the opening quote) looking for the
-/// closing `"`, handling `\`-escape sequences. Returns the byte offset
-/// of the closing quote, or `None` if the string is unterminated.
+/// closing quote byte `quote`, handling `\`-escape sequences. Returns the
+/// byte offset of the closing quote, or `None` if the string is
+/// unterminated.
+///
+/// Pass `b'"'` for double-quoted strings, `b'\''` for single-quoted.
 ///
 /// This function only determines which quotes are real (not preceded by
 /// an odd number of backslashes). It does NOT validate escape sequence
 /// content (e.g. `\uXXXX`). Validation is the caller's job.
 #[inline(always)]
-pub fn scan_quoted_string_simd(bytes: &[u8], start: usize) -> Option<usize> {
+pub fn scan_quoted_string_simd(bytes: &[u8], start: usize, quote: u8) -> Option<usize> {
     let mut pos = start;
     let len = bytes.len();
 
@@ -33,7 +36,7 @@ pub fn scan_quoted_string_simd(bytes: &[u8], start: usize) -> Option<usize> {
     // run (meaning the first byte of the next chunk is escaped).
     let mut carry: u32 = 0;
 
-    let quote_splat = u8x16::splat(b'"');
+    let quote_splat = u8x16::splat(quote);
     let bs_splat = u8x16::splat(b'\\');
 
     while pos + CHUNK <= len {
@@ -65,7 +68,7 @@ pub fn scan_quoted_string_simd(bytes: &[u8], start: usize) -> Option<usize> {
     }
 
     // ── Scalar tail for the last < 16 bytes ──────────────────────────
-    scalar_tail(bytes, pos, carry != 0)
+    scalar_tail(bytes, pos, carry != 0, quote)
 }
 
 /// Compute a bitmask of "escaped" positions within a 16-byte chunk.
@@ -150,7 +153,7 @@ fn odd_parity_backslashes(bs_bits: u32, carry_in: u32) -> u32 {
 
 /// Scalar fallback for the tail bytes (< 16 remaining).
 #[inline(always)]
-fn scalar_tail(bytes: &[u8], mut pos: usize, byte0_escaped: bool) -> Option<usize> {
+fn scalar_tail(bytes: &[u8], mut pos: usize, byte0_escaped: bool, quote: u8) -> Option<usize> {
     let len = bytes.len();
 
     if byte0_escaped && pos < len {
@@ -159,7 +162,7 @@ fn scalar_tail(bytes: &[u8], mut pos: usize, byte0_escaped: bool) -> Option<usiz
 
     while pos < len {
         let b = unsafe { *bytes.get_unchecked(pos) };
-        if b == b'"' {
+        if b == quote {
             return Some(pos);
         }
         if b == b'\\' {
@@ -185,7 +188,7 @@ mod tests {
     fn scan(input: &str) -> Option<usize> {
         let bytes = input.as_bytes();
         assert_eq!(bytes[0], b'"');
-        scan_quoted_string_simd(bytes, 1)
+        scan_quoted_string_simd(bytes, 1, b'"')
     }
 
     fn scan_ref(bytes: &[u8], start: usize) -> Option<usize> {
@@ -335,7 +338,7 @@ mod tests {
         for _ in 0..16 { s.push('\\'); }
         s.push('"');
         let b = s.as_bytes();
-        assert_eq!(scan_quoted_string_simd(b, 1), scan_ref(b, 1));
+        assert_eq!(scan_quoted_string_simd(b, 1, b'"'), scan_ref(b, 1));
     }
 
     #[test]
@@ -344,7 +347,7 @@ mod tests {
         for _ in 0..15 { s.push('\\'); }
         s.push_str("\"x\"");
         let b = s.as_bytes();
-        assert_eq!(scan_quoted_string_simd(b, 1), scan_ref(b, 1));
+        assert_eq!(scan_quoted_string_simd(b, 1, b'"'), scan_ref(b, 1));
     }
 
     #[test]
@@ -353,7 +356,7 @@ mod tests {
         for _ in 0..32 { s.push('\\'); }
         s.push('"');
         let b = s.as_bytes();
-        assert_eq!(scan_quoted_string_simd(b, 1), scan_ref(b, 1));
+        assert_eq!(scan_quoted_string_simd(b, 1, b'"'), scan_ref(b, 1));
     }
 
     #[test]
@@ -362,7 +365,7 @@ mod tests {
         for _ in 0..31 { s.push('\\'); }
         s.push_str("\"x\"");
         let b = s.as_bytes();
-        assert_eq!(scan_quoted_string_simd(b, 1), scan_ref(b, 1));
+        assert_eq!(scan_quoted_string_simd(b, 1, b'"'), scan_ref(b, 1));
     }
 
     // ── Cross-validation ─────────────────────────────────────────
@@ -377,7 +380,7 @@ mod tests {
         ] {
             let b = pat.as_bytes();
             assert_eq!(
-                scan_quoted_string_simd(b, 1), scan_ref(b, 1),
+                scan_quoted_string_simd(b, 1, b'"'), scan_ref(b, 1),
                 "Mismatch for {:?}", pat
             );
         }
@@ -398,7 +401,7 @@ mod tests {
                     s.push('"');
                     let b = s.as_bytes();
                     assert_eq!(
-                        scan_quoted_string_simd(b, 1), scan_ref(b, 1),
+                        scan_quoted_string_simd(b, 1, b'"'), scan_ref(b, 1),
                         "prefix={n_prefix}, bs={n_bs}, post={has_post}"
                     );
                 }

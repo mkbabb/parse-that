@@ -556,67 +556,67 @@ mod tests {
 
     #[test]
     fn test_number_span_fast_integer() {
-        let p = number_span_fast_parser();
+        let p = number_span();
         assert_eq!(p.parse("42").unwrap().as_str(), "42");
     }
 
     #[test]
     fn test_number_span_fast_negative() {
-        let p = number_span_fast_parser();
+        let p = number_span();
         assert_eq!(p.parse("-42").unwrap().as_str(), "-42");
     }
 
     #[test]
     fn test_number_span_fast_float() {
-        let p = number_span_fast_parser();
+        let p = number_span();
         assert_eq!(p.parse("3.14").unwrap().as_str(), "3.14");
     }
 
     #[test]
     fn test_number_span_fast_exponent() {
-        let p = number_span_fast_parser();
+        let p = number_span();
         assert_eq!(p.parse("1e10").unwrap().as_str(), "1e10");
     }
 
     #[test]
     fn test_number_span_fast_neg_exponent() {
-        let p = number_span_fast_parser();
+        let p = number_span();
         assert_eq!(p.parse("1.5e-3").unwrap().as_str(), "1.5e-3");
     }
 
     #[test]
     fn test_number_span_fast_big_exponent() {
-        let p = number_span_fast_parser();
+        let p = number_span();
         assert_eq!(p.parse("1e308").unwrap().as_str(), "1e308");
     }
 
     #[test]
     fn test_number_span_fast_zero() {
-        let p = number_span_fast_parser();
+        let p = number_span();
         assert_eq!(p.parse("0").unwrap().as_str(), "0");
     }
 
     #[test]
     fn test_number_span_fast_neg_zero() {
-        let p = number_span_fast_parser();
+        let p = number_span();
         assert_eq!(p.parse("-0").unwrap().as_str(), "-0");
     }
 
     #[test]
     fn test_number_span_fast_no_match() {
-        let p = number_span_fast_parser();
+        let p = number_span();
         assert!(p.parse("abc").is_none());
     }
 
     #[test]
     fn test_number_span_fast_empty() {
-        let p = number_span_fast_parser();
+        let p = number_span();
         assert!(p.parse("").is_none());
     }
 
     #[test]
     fn test_number_span_fast_just_minus() {
-        let p = number_span_fast_parser();
+        let p = number_span();
         assert!(p.parse("-").is_none());
     }
 
@@ -785,7 +785,7 @@ mod tests {
             let number = gen_json_number(&mut seed);
             let suffix = suffixes[(next_rand(&mut seed) as usize) % suffixes.len()];
             let input = format!("{number}{suffix}");
-            let parser = number_span_fast_parser();
+            let parser = number_span();
             let span = parser.parse(&input).unwrap();
             assert_eq!(span.as_str(), number);
         }

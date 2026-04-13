@@ -1,7 +1,6 @@
 use crate::combinators::ParserSpan;
 use crate::leaf::*;
 use crate::parse::*;
-use crate::parsers::json::number_span_scan_strict_parser;
 use crate::span_parser::*;
 use crate::state::Span;
 
@@ -36,5 +35,7 @@ pub fn quoted_span(quote_string: &str) -> Parser<'_, Span<'_>> {
 }
 
 pub fn number_span<'a>() -> Parser<'a, Span<'a>> {
-    number_span_scan_strict_parser()
+    Parser::new(move |state: &mut crate::state::ParserState<'a>| {
+        crate::parsers::scan::scan_json_number_span(state)
+    })
 }

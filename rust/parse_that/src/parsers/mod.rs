@@ -1,8 +1,5 @@
 pub mod json;
-pub use json::{
-    quoted_string_scan_full, number_fused_scan_convert, number_span_scan_strict,
-    number_span_scan_ex, number_span_scan_strict_parser, number_scan_f64_strict,
-};
+pub use json::quoted_string_scan_full;
 
 pub mod css;
 
@@ -11,6 +8,7 @@ pub mod scan;
 pub mod csv;
 pub mod eisel_lemire;
 pub mod utils;
+pub use utils::number_span;
 
 // ── Generalized scanner re-exports ──────────────────────────────────────────
 // Behavior-named, language-agnostic. Codegen emits these names.
@@ -24,6 +22,8 @@ pub use scan::{
     scan_number_span, scan_number_f64, parse_number_f64, parse_eight_digits,
     NumberParts, NumberConfig, scan_number_mantissa, number_parts_to_f64,
     GENERIC_NUMBER_CONFIG, JSON_NUMBER_CONFIG,
+    // JSON-specific number scanners
+    scan_json_number_span, scan_json_number_fused, scan_json_number_f64,
 };
 
 // Structural bitmap pre-scanner (Tranche AM.5).

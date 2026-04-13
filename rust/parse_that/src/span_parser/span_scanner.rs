@@ -27,7 +27,7 @@ impl SpanScanner {
     #[inline(always)]
     pub fn call<'a>(&self, state: &mut ParserState<'a>) -> Option<Span<'a>> {
         match self {
-            Self::JsonNumber => crate::parsers::json::number_span_scan_strict(state),
+            Self::JsonNumber => crate::parsers::scan::scan_json_number_span(state),
             Self::JsonString => crate::parsers::json::quoted_string_scan_content(state),
             Self::JsonStringQuoted => crate::parsers::json::quoted_string_scan_full(state),
             Self::CssIdent => crate::parsers::scan::scan_ident(state),

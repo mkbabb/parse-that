@@ -18,7 +18,10 @@ pub use number::{
     GENERIC_NUMBER_CONFIG, JSON_NUMBER_CONFIG, NumberConfig, NumberParts,
     parse_eight_digits, scan_number_mantissa,
 };
-pub use number_f64::{number_parts_to_f64, parse_number_f64, scan_number_f64, scan_number_span};
+pub use number_f64::{
+    number_parts_to_f64, parse_number_f64, scan_number_f64, scan_number_span,
+    scan_json_number_span, scan_json_number_fused, scan_json_number_f64,
+};
 pub use ident::scan_ident;
 pub use ws_comment::{scan_block_comment, scan_ws_block_comments};
 pub use quoted::scan_string_quoted;

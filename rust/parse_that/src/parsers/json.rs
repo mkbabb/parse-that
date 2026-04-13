@@ -6,153 +6,7 @@ use crate::state::{ParserState, Span};
 
 use pprint::Pretty;
 
-use super::scan::{scan_number_mantissa, number_parts_to_f64, JSON_NUMBER_CONFIG};
-
-// ── Monolithic number scanner ─────────────────────────────────
-
-/// Result of number scanning: span + whether it's a pure integer.
-pub struct NumberSpan<'a> {
-    pub span: Span<'a>,
-    pub is_integer: bool,
-}
-
-/// Scans `[-]digits[.digits][(e|E)[+-]digits]` in one byte loop.
-/// Returns the span and whether the number is a pure integer (no `.` or `e`/`E`).
-#[inline(always)]
-pub fn number_span_scan_ex<'a>(state: &mut ParserState<'a>) -> Option<NumberSpan<'a>> {
-    let bytes = state.src_bytes;
-    let start = state.offset;
-    let len = bytes.len();
-    let mut i = start;
-    let mut is_integer = true;
-
-    if i >= len {
-        return None;
-    }
-
-    // Optional sign
-    if unsafe { *bytes.get_unchecked(i) } == b'-' {
-        i += 1;
-        if i >= len {
-            return None;
-        }
-    }
-
-    // Required integer digits
-    let digit_start = i;
-    while i < len && unsafe { *bytes.get_unchecked(i) }.is_ascii_digit() {
-        i += 1;
-    }
-    if i == digit_start {
-        return None; // no digits
-    }
-
-    // Leading-zero rejection (RFC 8259): only `0` or `0.x` allowed
-    let digit_count = i - digit_start;
-    if digit_count > 1 && unsafe { *bytes.get_unchecked(digit_start) } == b'0' {
-        // `007` etc. — return span of just the sign + `0`
-        i = digit_start + 1;
-        state.offset = i;
-        return Some(NumberSpan {
-            span: Span::new(start, i, state.src),
-            is_integer: true,
-        });
-    }
-
-    // Optional fraction
-    if i < len && unsafe { *bytes.get_unchecked(i) } == b'.' {
-        i += 1;
-        let frac_start = i;
-        while i < len && unsafe { *bytes.get_unchecked(i) }.is_ascii_digit() {
-            i += 1;
-        }
-        if i == frac_start {
-            // '.' with no digits after — backtrack the dot
-            i -= 1;
-        } else {
-            is_integer = false;
-        }
-    }
-
-    // Optional exponent
-    if i < len {
-        let b = unsafe { *bytes.get_unchecked(i) };
-        if b == b'e' || b == b'E' {
-            let exp_mark = i;
-            i += 1;
-            if i < len {
-                let b = unsafe { *bytes.get_unchecked(i) };
-                if b == b'+' || b == b'-' {
-                    i += 1;
-                }
-            }
-            let exp_digit_start = i;
-            while i < len && unsafe { *bytes.get_unchecked(i) }.is_ascii_digit() {
-                i += 1;
-            }
-            if i == exp_digit_start {
-                // 'e' with no digits — backtrack
-                i = exp_mark;
-            } else {
-                is_integer = false;
-            }
-        }
-    }
-
-    if i == start {
-        return None;
-    }
-
-    state.offset = i;
-    Some(NumberSpan {
-        span: Span::new(start, i, state.src),
-        is_integer,
-    })
-}
-
-/// Convenience wrapper returning just the span (used by SpanParser).
-#[inline(always)]
-pub fn number_span_scan_strict<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
-    number_span_scan_ex(state).map(|ns| ns.span)
-}
-
-/// Fused JSON number scanner + converter. Scans the number span AND accumulates
-/// the mantissa in one pass — no re-reading of digits. Returns `(Span, f64)`.
-///
-/// Uses `scan_number_mantissa(JSON_CFG)` for the shared mantissa core,
-/// then `number_parts_to_f64` for integer fast path + Eisel-Lemire + fallback.
-#[inline(always)]
-pub fn number_fused_scan_convert<'a>(state: &mut ParserState<'a>) -> Option<(Span<'a>, f64)> {
-    let start = state.offset;
-    let (parts, end) = scan_number_mantissa(state.src_bytes, start, &JSON_NUMBER_CONFIG)?;
-    state.offset = end;
-    let span = Span::new(start, end, state.src);
-    let f = if parts.is_integer && parts.n_digits == 1 && parts.mantissa == 0 {
-        // Leading-zero rejection produced a truncated "0" — preserve semantics.
-        0.0
-    } else {
-        number_parts_to_f64(&parts, span.as_str())
-    };
-    Some((span, f))
-}
-
-/// Fused JSON number scanner returning just `f64`.
-///
-/// This keeps the JSON-specific syntax gate (`no +`, `no leading dot`,
-/// RFC 8259 leading-zero rejection) without constructing a `Span` that
-/// numeric-only callers immediately discard.
-#[inline(always)]
-pub fn number_scan_f64_strict<'a>(state: &mut ParserState<'a>) -> Option<f64> {
-    let start = state.offset;
-    let (parts, end) = scan_number_mantissa(state.src_bytes, start, &JSON_NUMBER_CONFIG)?;
-    state.offset = end;
-    let src = &state.src[start..end];
-    Some(if parts.is_integer && parts.n_digits == 1 && parts.mantissa == 0 {
-        0.0
-    } else {
-        number_parts_to_f64(&parts, src)
-    })
-}
+use super::scan::scan_json_number_f64;
 
 #[inline(always)]
 fn decode_hex_nibble(b: u8) -> Option<u16> {
@@ -256,6 +110,7 @@ fn quoted_string_scan_inner<'a>(
     let close_quote = super::scan::quoted_simd::scan_quoted_string_simd(
         bytes,
         content_start,
+        b'"',
     )?;
 
     // Validate escape sequences between the quotes. This is a separate pass
@@ -291,14 +146,6 @@ pub fn quoted_string_scan_full<'a>(state: &mut ParserState<'a>) -> Option<Span<'
     quoted_string_scan_inner(state, true)
 }
 
-// ── Utility: number_span_fast as a standalone Parser ──────────
-
-/// Monolithic number span parser — replaces the 12-combinator chain.
-#[inline]
-pub fn number_span_scan_strict_parser<'a>() -> Parser<'a, Span<'a>> {
-    Parser::new(move |state: &mut ParserState<'a>| number_span_scan_strict(state))
-}
-
 // ── JSON Value types and parsers ──────────────────────────────
 
 #[derive(Pretty, Debug, Clone, PartialEq)]
@@ -327,7 +174,7 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
 
     let json_number = || -> Parser<'a, JsonValue<'a>> {
         Parser::new(move |state: &mut ParserState<'a>| {
-            let (_, f) = number_fused_scan_convert(state)?;
+            let f = scan_json_number_f64(state)?;
             Some(JsonValue::Number(f))
         })
     };
