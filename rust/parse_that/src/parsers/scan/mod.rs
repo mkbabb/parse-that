@@ -10,6 +10,7 @@ mod ident;
 mod ws_comment;
 mod quoted;
 mod balanced;
+mod decode;
 mod digits;
 pub mod quoted_simd;
 
@@ -29,4 +30,5 @@ pub use quoted::{
     QuotedStringConfig, STRICT_QUOTED_STRING_CONFIG, GENERIC_QUOTED_STRING_CONFIG,
 };
 pub use balanced::{BalancedScanConfig, scan_balanced};
+pub use decode::{StringPayload, decode_json_string_to_arena};
 pub use digits::{scan_alnum_mut, scan_digits_mut, scan_digits_star_mut, scan_hex_mut};
