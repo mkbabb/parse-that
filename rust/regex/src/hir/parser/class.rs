@@ -94,6 +94,21 @@ impl<'a> Parser<'a> {
                     byte_ranges.push(ByteRange::new(0x21, 255));
                     return Ok(());
                 }
+                // Hex escape inside class: \xHH
+                Some(b'x') => {
+                    self.advance();
+                    let hi = self.parse_hex_digit()?;
+                    let lo_d = self.parse_hex_digit()?;
+                    let val = (hi << 4) | lo_d;
+                    if self.peek() == Some(b'-') && self.src.get(self.pos + 1) != Some(&b']') {
+                        self.advance(); // consume '-'
+                        let range_hi = self.parse_class_atom_single()?;
+                        byte_ranges.push(ByteRange::new(val, range_hi));
+                    } else {
+                        byte_ranges.push(ByteRange::new(val, val));
+                    }
+                    return Ok(());
+                }
                 // Unicode escape inside class: \u{XXXX}
                 Some(b'u') => {
                     self.advance();
@@ -178,6 +193,11 @@ impl<'a> Parser<'a> {
             Some(b'f') => Ok(0x0C),
             Some(b'a') => Ok(0x07),
             Some(b'0') => Ok(0),
+            Some(b'x') => {
+                let hi = self.parse_hex_digit()?;
+                let lo = self.parse_hex_digit()?;
+                Ok((hi << 4) | lo)
+            }
             Some(b) if is_escapable(b) => Ok(b),
             Some(b) => Err(self.err(format!("invalid escape in class: \\{}", b as char))),
             None => Err(self.err("unexpected end after backslash in class".into())),
