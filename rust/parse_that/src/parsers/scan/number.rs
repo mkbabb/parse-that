@@ -125,17 +125,12 @@ pub fn scan_number_mantissa(
     let digit_start = i;
     let mut mantissa: u64 = 0;
 
-    // SIMD 16-digit fast path: scan up to 16 ASCII digit bytes at
-    // once using platform-specific SIMD intrinsics (NEON on aarch64,
-    // SSE4.2 on x86_64). Falls back to the 8-digit SWAR path below
-    // when < 16 bytes remain or the platform lacks SIMD support.
-    if let Some(result) = number_simd::scan_digits_simd(bytes, i) {
-        mantissa = result.value;
-        i += result.count as usize;
-    }
+    // No SIMD for the integer part: 85%+ of real-world numbers have
+    // short integer runs (1-4 digits) where a 16-byte NEON/SSE vector
+    // load costs more than scalar SWAR. SIMD is kept for the fractional
+    // part where long digit runs (12-15 bytes) are common.
 
-    // 8-digit SWAR chunks for any remaining runs (after SIMD consumed
-    // an initial batch, or when SIMD wasn't available).
+    // 8-digit SWAR chunks for the integer part.
     while i + 8 <= len {
         let b = unsafe { *bytes.get_unchecked(i) };
         if !b.is_ascii_digit() {
