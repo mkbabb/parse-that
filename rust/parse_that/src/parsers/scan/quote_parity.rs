@@ -28,6 +28,7 @@
 //! `x ^= x << 1; x ^= x << 2; … x ^= x << 32;`, which is five shifts
 //! and xors — still branchless, no per-byte work, O(1) per stripe.
 
+use crate::state::PaddedView;
 use super::quoted_simd::odd_parity_backslashes;
 
 const STRIPE: usize = 64;
@@ -100,8 +101,8 @@ fn escape_mask_64(bs_bits: u64, carry_bs: &mut u64) -> u64 {
     escaped
 }
 
-/// For each 64-byte stripe of `bytes`, invoke `f(offset, in_string,
-/// real_quotes)` where:
+/// For each 64-byte stripe of the public input, invoke
+/// `f(offset, in_string, real_quotes)` where:
 ///
 /// * `offset` is the byte position of the stripe's first byte,
 /// * `in_string` is a 64-bit mask; bit `i` is 1 iff byte `offset+i`
@@ -109,18 +110,26 @@ fn escape_mask_64(bs_bits: u64, carry_bs: &mut u64) -> u64 {
 /// * `real_quotes` is a 64-bit mask of unescaped `"` positions
 ///   within the stripe (bit `i` at `offset + i`).
 ///
-/// The final (possibly short) tail is handled via a scalar epilogue
-/// that computes the same masks byte-by-byte over < 64 bytes.
+/// Consumes the [`PaddedView`] witness: the backing buffer's trailing
+/// [`crate::state::INPUT_PAD_BYTES`] bytes are NUL, so every 64-byte
+/// stripe load lands inside the allocation without a per-stripe tail
+/// guard. The public stripe count is
+/// `(view.len() + STRIPE - 1) / STRIPE`; the final stripe may straddle
+/// the public end, with NUL-padded positions masked out of the
+/// `in_string` / `real_quotes` payload handed to `f`.
 #[inline]
-pub fn compute_in_string_bitmap<F>(bytes: &[u8], mut f: F)
+pub fn compute_in_string_bitmap<F>(view: PaddedView<'_>, mut f: F)
 where
     F: FnMut(usize, u64, u64),
 {
-    let len = bytes.len();
+    let bytes = view.bytes();
+    let len = view.len();
     let mut offset = 0;
     let mut prev_instring: u64 = 0;
     let mut carry_bs: u64 = 0;
 
+    // Walk every full-stripe window that lies entirely inside the
+    // public input.
     while offset + STRIPE <= len {
         let (quote_bits, bs_bits) = classify_stripe_64(bytes, offset);
         let escaped = escape_mask_64(bs_bits, &mut carry_bs);
@@ -134,20 +143,19 @@ where
         offset += STRIPE;
     }
 
+    // Straddling-tail stripe: the SIMD classify reads a full 64-byte
+    // window thanks to the padded-view invariant, but only the first
+    // `tail_len` bits belong to the public input — mask the rest
+    // before computing in-string state.
     if offset < len {
         let tail_len = len - offset;
-        let mut quote_bits = 0u64;
-        let mut bs_bits = 0u64;
-        for i in 0..tail_len {
-            let b = unsafe { *bytes.get_unchecked(offset + i) };
-            if b == b'"' {
-                quote_bits |= 1u64 << i;
-            } else if b == b'\\' {
-                bs_bits |= 1u64 << i;
-            }
-        }
+        let (quote_bits, bs_bits) = classify_stripe_64(bytes, offset);
         let escaped = escape_mask_64(bs_bits, &mut carry_bs);
-        let valid_mask = if tail_len >= 64 { !0u64 } else { (1u64 << tail_len) - 1 };
+        let valid_mask = if tail_len >= 64 {
+            !0u64
+        } else {
+            (1u64 << tail_len) - 1
+        };
         let real_quotes = quote_bits & !escaped & valid_mask;
         let in_string = (prefix_xor(real_quotes) ^ prev_instring) & valid_mask;
         f(offset, in_string, real_quotes);
@@ -159,16 +167,17 @@ where
 /// Replaces the deleted AO.0.3 scalar `filter_quote_parity` —
 /// O(input × quotes) scalar backwards-backslash scan becomes
 /// O(input / 64 + positions) SIMD stripe scan.
-pub fn filter_quote_parity(input: &[u8], positions: &mut Vec<u32>) {
+pub fn filter_quote_parity(view: PaddedView<'_>, positions: &mut Vec<u32>) {
     if positions.is_empty() {
         return;
     }
 
-    let len = input.len();
+    let input = view.bytes();
+    let len = view.len();
     let nwords = (len + 63) / 64;
     let mut in_string_map = vec![0u64; nwords];
 
-    compute_in_string_bitmap(input, |offset, in_string, _real_quotes| {
+    compute_in_string_bitmap(view, |offset, in_string, _real_quotes| {
         in_string_map[offset / 64] = in_string;
     });
 
@@ -198,10 +207,23 @@ pub fn filter_quote_parity(input: &[u8], positions: &mut Vec<u32>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::state::INPUT_PAD_BYTES;
+
+    /// Build a padded buffer mirroring `ParserState::new`: the first
+    /// `input.len()` bytes are the public input; the next
+    /// [`INPUT_PAD_BYTES`] bytes are NUL.
+    fn padded_buf(input: &[u8]) -> Vec<u8> {
+        let mut v = Vec::with_capacity(input.len() + INPUT_PAD_BYTES);
+        v.extend_from_slice(input);
+        v.resize(input.len() + INPUT_PAD_BYTES, 0);
+        v
+    }
 
     fn collect_in_string(input: &[u8]) -> Vec<bool> {
+        let buf = padded_buf(input);
+        let view = PaddedView::new(&buf, input.len());
         let mut out = vec![false; input.len()];
-        compute_in_string_bitmap(input, |offset, in_string, _| {
+        compute_in_string_bitmap(view, |offset, in_string, _| {
             for i in 0..64 {
                 let pos = offset + i;
                 if pos < input.len() {
@@ -263,16 +285,20 @@ mod tests {
     #[test]
     fn filter_basic() {
         let input = b"{\"key\":1}";
+        let buf = padded_buf(input);
+        let view = PaddedView::new(&buf, input.len());
         let mut positions = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
-        filter_quote_parity(input, &mut positions);
+        filter_quote_parity(view, &mut positions);
         assert_eq!(positions, vec![0, 1, 5, 6, 7, 8]);
     }
 
     #[test]
     fn filter_no_strings() {
         let input = b"[1,2,3]";
+        let buf = padded_buf(input);
+        let view = PaddedView::new(&buf, input.len());
         let mut positions = vec![0, 2, 4, 6];
-        filter_quote_parity(input, &mut positions);
+        filter_quote_parity(view, &mut positions);
         assert_eq!(positions, vec![0, 2, 4, 6]);
     }
 
