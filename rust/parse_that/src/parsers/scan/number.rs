@@ -135,15 +135,48 @@ pub fn scan_number_mantissa(
     let digit_start = i;
     let mut mantissa: u64 = 0;
 
-    // No SIMD for the integer part: 85%+ of real-world numbers have
-    // short integer runs (1-4 digits) where a 16-byte NEON/SSE vector
-    // load costs more than scalar SWAR. SIMD is kept for the fractional
-    // part where long digit runs (12-15 bytes) are common.
+    // 16-digit SIMD fast path for numeric-dense inputs (canada.json-
+    // style coordinates, scientific literals, large integer IDs).
+    //
+    // One NEON `vqtbl1q_u8` / SSE `_mm_max_epu8 / _mm_min_epu8` stripe
+    // classifies 16 bytes in a handful of cycles; when the stripe is
+    // all digits the whole run folds in one step. Shorter runs return
+    // their actual digit count (0..=15) so the SWAR fallback below
+    // never double-counts.
+    //
+    // Only enters the SIMD path while the mantissa budget still has
+    // room for another full 16-digit batch (total ≤ 19); otherwise
+    // the per-byte loop handles the budget accounting one digit at
+    // a time.
+    if i < len && unsafe { *bytes.get_unchecked(i) }.is_ascii_digit() {
+        while let Some(result) = number_simd::scan_digits_simd(view, i) {
+            let c = result.count as usize;
+            let new_total = (i - digit_start) + c;
+            if new_total <= 19 {
+                mantissa = mantissa
+                    .wrapping_mul(number_simd::POW10[c])
+                    .wrapping_add(result.value);
+                i += c;
+                if c < 16 {
+                    // Hit a non-digit inside the stripe — no more
+                    // digits in the integer part.
+                    break;
+                }
+            } else {
+                // A full 16-digit stripe would push past the 19-digit
+                // budget; fall through to per-digit SWAR below so the
+                // overflow guard fires at the exact digit.
+                break;
+            }
+        }
+    }
 
-    // 8-digit SWAR chunks for the integer part. Padded-view invariant:
-    // every 8-byte read at `i <= len` is in-bounds on the backing
-    // buffer; `all_eight_are_ascii_digits` rejects NUL so the loop
-    // terminates at the end of the public input naturally.
+    // 8-digit SWAR chunks for the tail. Runs here only when the SIMD
+    // path was skipped (leading non-digit) or terminated early on the
+    // budget guard. Padded-view invariant: every 8-byte read at
+    // `i <= len` is in-bounds on the backing buffer;
+    // `all_eight_are_ascii_digits` rejects NUL so the loop terminates
+    // at the end of the public input naturally.
     while i < len {
         let b = unsafe { *bytes.get_unchecked(i) };
         if !b.is_ascii_digit() {
