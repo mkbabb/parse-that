@@ -17,7 +17,7 @@
 //      chunk is entirely WS or contains a comment opener. Handles
 //      long runs and block-comment bodies.
 
-use crate::state::{ParserState, Span};
+use crate::state::{PaddedView, ParserState, Span};
 use super::structural_bitmap::classify_stripe;
 use std::simd::prelude::*;
 
@@ -97,21 +97,23 @@ fn classify_ws_slash_16(chunk: u8x16) -> u16 {
 #[inline(always)]
 pub fn scan_ws_block_comments<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     let start = state.offset;
-    let len = state.end;
+    let view = state.padded();
+    let len = view.len();
 
     if start >= len {
         return Some(Span::new(start, start, state.src));
     }
 
-    let padded = state.padded_bytes();
+    let padded = view.bytes();
     let b0 = unsafe { *padded.get_unchecked(start) };
     if !is_ws(b0) && b0 != b'/' {
         return Some(Span::new(start, start, state.src));
     }
 
-    // Tier 2: one 16-byte chunk classify. The padded view guarantees
-    // `start + 16` is in-bounds; NUL padding classifies as non-WS so
-    // stripes that straddle the public end terminate naturally.
+    // Tier 2: one 16-byte chunk classify. The padded-view invariant
+    // means `start + 16` is in-bounds on the backing buffer for any
+    // `start <= len`; NUL padding classifies as non-WS so stripes
+    // that straddle the public end terminate naturally.
     let chunk = u8x16::from_slice(unsafe {
         padded.get_unchecked(start..start + 16)
     });
@@ -131,7 +133,7 @@ pub fn scan_ws_block_comments<'a>(state: &mut ParserState<'a>) -> Option<Span<'a
         }
         // `/` before terminator — cold path handles the `/*` probe
         // so that the hot path stays branch-free.
-        let end = scan_ws_bitmap_cold(padded, start, len);
+        let end = scan_ws_bitmap_cold(view, start);
         state.offset = end;
         return Some(Span::new(start, end, state.src));
     }
@@ -139,7 +141,7 @@ pub fn scan_ws_block_comments<'a>(state: &mut ParserState<'a>) -> Option<Span<'a
     // Tier 3: the whole 16-byte chunk is WS or `/`. The run may be
     // long, or this may be a `/*…*/` comment. Delegate to the stripe
     // walker.
-    let end = scan_ws_bitmap_cold(padded, start, len);
+    let end = scan_ws_bitmap_cold(view, start);
     state.offset = end;
     Some(Span::new(start, end, state.src))
 }
@@ -154,25 +156,27 @@ fn slash_mask_16(chunk: u8x16) -> u16 {
 /// first byte that is NOT whitespace and is NOT part of a
 /// `/*…*/` block comment — i.e., where the ws scan terminates.
 ///
-/// `bytes` is the padded view from [`crate::state::ParserState::padded_bytes`]:
-/// the first `len` bytes mirror the public input; the next
-/// [`crate::state::INPUT_PAD_BYTES`] bytes are NUL. NUL classifies as
-/// neither ws nor `/`, so any stripe read that straddles the end of
-/// the public input terminates the scan naturally; the returned
-/// offset is clamped to `len` before it escapes the walker.
+/// Consumes the [`PaddedView`] witness: the backing buffer's trailing
+/// [`crate::state::INPUT_PAD_BYTES`] bytes are NUL, and the loop
+/// walks the public `view.len()` range. NUL classifies as neither ws
+/// nor `/`, so any stripe read that straddles the end of the public
+/// input terminates the scan naturally; the returned offset is
+/// clamped to `view.len()` before it escapes the walker.
 #[cold]
 #[inline(never)]
-fn scan_ws_bitmap_cold(bytes: &[u8], start: usize, len: usize) -> usize {
+fn scan_ws_bitmap_cold(view: PaddedView<'_>, start: usize) -> usize {
+    let bytes = view.bytes();
+    let len = view.len();
     let lo_v = u8x16::from_array(WS_SLASH_LO_LUT);
     let hi_v = u8x16::from_array(WS_SLASH_HI_LUT);
 
     let mut i = start;
 
     // Stripe-aligned bitmap walk. The padded-view guarantee means
-    // `i + 64` is always in-bounds whenever `i <= len`, so the loop
-    // can walk over the logical end and rely on the NUL classification
-    // to terminate. Every `return` site clamps to `len` so padded
-    // positions never escape.
+    // `i + 64` is always in-bounds on the backing buffer whenever
+    // `i <= len`, so the loop can walk over the logical end and rely
+    // on the NUL classification to terminate. Every `return` site
+    // clamps to `len` so padded positions never escape.
     while i < len {
         let mask = classify_stripe(bytes, i, lo_v, hi_v);
         let inv = !mask;
@@ -194,7 +198,7 @@ fn scan_ws_bitmap_cold(bytes: &[u8], start: usize, len: usize) -> usize {
                     && unsafe { *bytes.get_unchecked(slash_abs + 1) } == b'*'
                 {
                     // Block comment opens — skip body and restart.
-                    i = skip_block_comment_tail(bytes, slash_abs + 2, len);
+                    i = skip_block_comment_tail(view, slash_abs + 2);
                     continue;
                 }
                 // `/` without `*` — ws scan terminates at `/`.
@@ -219,7 +223,7 @@ fn scan_ws_bitmap_cold(bytes: &[u8], start: usize, len: usize) -> usize {
                 && unsafe { *bytes.get_unchecked(slash_abs + 1) } == b'*'
             {
                 // Block comment opens — skip body; i jumps past `*/`.
-                i = skip_block_comment_tail(bytes, slash_abs + 2, len);
+                i = skip_block_comment_tail(view, slash_abs + 2);
                 stripe_consumed = true;
                 break;
             }
@@ -238,6 +242,8 @@ fn scan_ws_bitmap_cold(bytes: &[u8], start: usize, len: usize) -> usize {
 }
 
 /// Bitmask of positions where byte == `/` within a 64-byte stripe.
+/// Caller guarantees `bytes.len() >= offset + 64` — supplied by the
+/// padded-view invariant in every call site.
 #[inline(always)]
 fn slash_mask_stripe(bytes: &[u8], offset: usize) -> u64 {
     let mut mask: u64 = 0;
@@ -253,9 +259,11 @@ fn slash_mask_stripe(bytes: &[u8], offset: usize) -> u64 {
 
 /// Skip the body of a block comment starting at `start` (just past
 /// the opening `/*`). Returns the offset just past the closing
-/// `*/`, or `len` if the comment is unterminated.
+/// `*/`, or `view.len()` if the comment is unterminated.
 #[inline(always)]
-fn skip_block_comment_tail(bytes: &[u8], start: usize, len: usize) -> usize {
+fn skip_block_comment_tail(view: PaddedView<'_>, start: usize) -> usize {
+    let bytes = view.bytes();
+    let len = view.len();
     let mut i = start;
     loop {
         match memchr::memchr(b'*', unsafe { bytes.get_unchecked(i..len) }) {
@@ -274,9 +282,10 @@ fn skip_block_comment_tail(bytes: &[u8], start: usize, len: usize) -> usize {
 /// delimiters. Returns `None` when input does NOT start with `/*`.
 #[inline(always)]
 pub fn scan_block_comment<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
-    let bytes = state.src_bytes;
+    let view = state.padded();
+    let bytes = view.bytes();
     let start = state.offset;
-    let len = bytes.len();
+    let len = view.len();
 
     if start + 1 >= len {
         return None;
@@ -287,9 +296,9 @@ pub fn scan_block_comment<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
         return None;
     }
 
-    let end = skip_block_comment_tail(bytes, start + 2, len);
-    // skip_block_comment_tail returns `len` on unterminated. A
-    // proper terminated comment ends with `/`; the sentinel is
+    let end = skip_block_comment_tail(view, start + 2);
+    // skip_block_comment_tail returns `view.len()` on unterminated.
+    // A proper terminated comment ends with `/`; the sentinel is
     // `end == len` AND (len < 2 OR bytes[len-1] != '/').
     if end == len
         && (len < 2
