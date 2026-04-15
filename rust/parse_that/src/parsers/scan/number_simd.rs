@@ -9,6 +9,8 @@
 //   - x86_64:  SSE4.2 with runtime feature detection
 //   - fallback: scalar 8-digit chunking
 
+use crate::state::PaddedView;
+
 /// Result of a SIMD digit scan: the accumulated u64 value and how many
 /// consecutive ASCII digit bytes were consumed (0..=16).
 #[derive(Debug, Clone, Copy)]
@@ -100,17 +102,31 @@ unsafe fn accumulate_digits_neon(ptr: *const u8, count: u32) -> u64 {
     }
 }
 
-/// Try to scan up to 16 leading ASCII digit bytes from `bytes[offset..]`
-/// using NEON intrinsics. Returns the accumulated value and digit count.
+/// Try to scan up to 16 leading ASCII digit bytes from
+/// `view.bytes()[offset..]` using NEON intrinsics. Returns the
+/// accumulated value and digit count.
 ///
-/// Returns `None` if fewer than 1 digit is available.
+/// The [`PaddedView`] witness carries the 64-byte-tail guarantee at
+/// the type level; the kernel loads a full 16-byte NEON register at
+/// `offset` without a per-call `remaining < 16` tail guard. Positions
+/// beyond `view.len()` read the NUL-padded region, which always
+/// classifies as non-digit, so the leading-digit count naturally
+/// clamps to the number of real input digits.
+///
+/// Returns `None` when the first byte is not a digit.
 #[cfg(target_arch = "aarch64")]
 #[inline(always)]
-pub fn scan_digits_simd(bytes: &[u8], offset: usize) -> Option<SimdDigitResult> {
-    let remaining = bytes.len() - offset;
-    if remaining < 16 {
-        return None;
-    }
+pub fn scan_digits_simd(
+    view: PaddedView<'_>,
+    offset: usize,
+) -> Option<SimdDigitResult> {
+    let bytes = view.bytes();
+    debug_assert!(
+        offset + 16 <= bytes.len(),
+        "scan_digits_simd: offset {} + 16 exceeds padded buffer len {}",
+        offset,
+        bytes.len(),
+    );
 
     unsafe {
         let ptr = bytes.as_ptr().add(offset);
@@ -189,15 +205,26 @@ unsafe fn accumulate_digits_sse(ptr: *const u8, count: u32) -> u64 {
     }
 }
 
-/// Try to scan up to 16 leading ASCII digit bytes from `bytes[offset..]`
-/// using SSE4.2 intrinsics. Returns the accumulated value and digit count.
+/// Try to scan up to 16 leading ASCII digit bytes from
+/// `view.bytes()[offset..]` using SSE4.2 intrinsics. Returns the
+/// accumulated value and digit count.
+///
+/// The [`PaddedView`] witness carries the 64-byte-tail guarantee at
+/// the type level; the kernel loads a full 16-byte XMM register at
+/// `offset` without a per-call `remaining < 16` tail guard.
 #[cfg(target_arch = "x86_64")]
 #[inline(always)]
-pub fn scan_digits_simd(bytes: &[u8], offset: usize) -> Option<SimdDigitResult> {
-    let remaining = bytes.len() - offset;
-    if remaining < 16 {
-        return None;
-    }
+pub fn scan_digits_simd(
+    view: PaddedView<'_>,
+    offset: usize,
+) -> Option<SimdDigitResult> {
+    let bytes = view.bytes();
+    debug_assert!(
+        offset + 16 <= bytes.len(),
+        "scan_digits_simd: offset {} + 16 exceeds padded buffer len {}",
+        offset,
+        bytes.len(),
+    );
 
     // Runtime feature detection for SSE4.2.
     if !is_x86_feature_detected!("sse4.2") {
@@ -219,7 +246,10 @@ pub fn scan_digits_simd(bytes: &[u8], offset: usize) -> Option<SimdDigitResult> 
 
 #[cfg(not(any(target_arch = "aarch64", target_arch = "x86_64")))]
 #[inline(always)]
-pub fn scan_digits_simd(_bytes: &[u8], _offset: usize) -> Option<SimdDigitResult> {
+pub fn scan_digits_simd(
+    _view: PaddedView<'_>,
+    _offset: usize,
+) -> Option<SimdDigitResult> {
     None
 }
 
@@ -252,11 +282,28 @@ pub static POW10: [u64; 17] = [
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::state::INPUT_PAD_BYTES;
+
+    /// Build a padded buffer mirroring `ParserState::new`: the first
+    /// `input.len()` bytes are the public input; the next
+    /// [`INPUT_PAD_BYTES`] bytes are NUL.
+    fn padded_buf(input: &[u8]) -> Vec<u8> {
+        let mut v = Vec::with_capacity(input.len() + INPUT_PAD_BYTES);
+        v.extend_from_slice(input);
+        v.resize(input.len() + INPUT_PAD_BYTES, 0);
+        v
+    }
+
+    fn scan(input: &[u8], offset: usize) -> Option<SimdDigitResult> {
+        let buf = padded_buf(input);
+        let view = PaddedView::new(&buf, input.len());
+        scan_digits_simd(view, offset)
+    }
 
     #[test]
     fn scan_all_digits_16() {
         let input = b"1234567890123456xyz";
-        let result = scan_digits_simd(input, 0).unwrap();
+        let result = scan(input, 0).unwrap();
         assert_eq!(result.count, 16);
         assert_eq!(result.value, 1234567890123456);
     }
@@ -264,7 +311,7 @@ mod tests {
     #[test]
     fn scan_partial_digits() {
         let input = b"12345abc00000000";
-        let result = scan_digits_simd(input, 0).unwrap();
+        let result = scan(input, 0).unwrap();
         assert_eq!(result.count, 5);
         assert_eq!(result.value, 12345);
     }
@@ -272,7 +319,7 @@ mod tests {
     #[test]
     fn scan_single_digit() {
         let input = b"7_______________";
-        let result = scan_digits_simd(input, 0).unwrap();
+        let result = scan(input, 0).unwrap();
         assert_eq!(result.count, 1);
         assert_eq!(result.value, 7);
     }
@@ -280,19 +327,25 @@ mod tests {
     #[test]
     fn scan_no_digits() {
         let input = b"abcdefghijklmnop";
-        assert!(scan_digits_simd(input, 0).is_none());
+        assert!(scan(input, 0).is_none());
     }
 
+    /// Under the padded-view contract, a short public input still has
+    /// a full 16-byte window available — the padded region is NUL,
+    /// which classifies as non-digit. The scanner returns the digits
+    /// that are present rather than short-circuiting on length.
     #[test]
-    fn scan_too_short() {
+    fn scan_short_input_returns_available_digits() {
         let input = b"12345";
-        assert!(scan_digits_simd(input, 0).is_none());
+        let result = scan(input, 0).unwrap();
+        assert_eq!(result.count, 5);
+        assert_eq!(result.value, 12345);
     }
 
     #[test]
     fn scan_with_offset() {
         let input = b"abc1234567890123456xyz";
-        let result = scan_digits_simd(input, 3).unwrap();
+        let result = scan(input, 3).unwrap();
         assert_eq!(result.count, 16);
         assert_eq!(result.value, 1234567890123456);
     }
@@ -301,7 +354,7 @@ mod tests {
     fn scan_nine_digits() {
         // 9 digits exercises the two-group path (8 + 1).
         let input = b"123456789_______";
-        let result = scan_digits_simd(input, 0).unwrap();
+        let result = scan(input, 0).unwrap();
         assert_eq!(result.count, 9);
         assert_eq!(result.value, 123456789);
     }
@@ -309,7 +362,7 @@ mod tests {
     #[test]
     fn scan_all_zeros() {
         let input = b"0000000000000000";
-        let result = scan_digits_simd(input, 0).unwrap();
+        let result = scan(input, 0).unwrap();
         assert_eq!(result.count, 16);
         assert_eq!(result.value, 0);
     }
@@ -317,7 +370,7 @@ mod tests {
     #[test]
     fn scan_all_nines() {
         let input = b"9999999999999999";
-        let result = scan_digits_simd(input, 0).unwrap();
+        let result = scan(input, 0).unwrap();
         assert_eq!(result.count, 16);
         assert_eq!(result.value, 9999999999999999);
     }
@@ -326,14 +379,14 @@ mod tests {
     fn scan_boundary_below_zero() {
         // Bytes just below '0' (0x30): '/' is 0x2F
         let input = b"/234567890123456";
-        assert!(scan_digits_simd(input, 0).is_none());
+        assert!(scan(input, 0).is_none());
     }
 
     #[test]
     fn scan_boundary_above_nine() {
         // ':' is 0x3A, just above '9'
         let input = b":234567890123456";
-        assert!(scan_digits_simd(input, 0).is_none());
+        assert!(scan(input, 0).is_none());
     }
 
     /// Cross-validate SIMD against scalar for all digit counts 1..=16.
@@ -356,7 +409,7 @@ mod tests {
                 scalar_val = scalar_val * 10 + (input[j] - b'0') as u64;
             }
 
-            if let Some(result) = scan_digits_simd(&input, 0) {
+            if let Some(result) = scan(&input, 0) {
                 assert_eq!(
                     result.count, count,
                     "count mismatch for {count} digits"
@@ -367,8 +420,8 @@ mod tests {
                     result.value, scalar_val
                 );
             }
-            // If scan_digits_simd returns None (< 16 bytes remaining),
-            // that's fine — the scalar path handles it.
+            // If scan_digits_simd returns None (leading byte is not
+            // an ASCII digit), that's fine — the scalar path handles it.
         }
     }
 }

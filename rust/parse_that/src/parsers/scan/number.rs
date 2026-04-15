@@ -3,6 +3,7 @@
 // Pure digit/mantissa scanning. f64 conversion lives in `number_f64.rs`.
 // SIMD digit accumulation (16 bytes at a time) lives in `number_simd.rs`.
 
+use crate::state::PaddedView;
 use super::number_simd;
 
 // ── Number scanning core ──────────────────────────────────────────
@@ -86,16 +87,25 @@ fn all_eight_are_ascii_digits(chunk: &[u8]) -> bool {
 
 /// Core number scanner: accumulates mantissa with 8-digit chunking.
 ///
-/// Scans a number from `bytes[start..]` according to `cfg`, accumulating the
-/// mantissa and tracking the decimal exponent in a single pass.
-/// Returns `(parts, end_offset)` or `None` if no valid number found.
+/// Scans a number from `view.bytes()[start..]` according to `cfg`,
+/// accumulating the mantissa and tracking the decimal exponent in a
+/// single pass. Returns `(parts, end_offset)` or `None` if no valid
+/// number was found.
+///
+/// The [`PaddedView`] witness lets the inner SIMD digit scan load a
+/// full 16-byte window at any offset `<= view.len()` without a
+/// per-chunk tail guard; the NUL-padded region classifies as
+/// non-digit, so every digit-walking loop terminates naturally at the
+/// public input boundary. `view.len()` bounds every forward scan so
+/// padded positions never leak as returned offsets.
 #[inline(always)]
 pub fn scan_number_mantissa(
-    bytes: &[u8],
+    view: PaddedView<'_>,
     start: usize,
     cfg: &NumberConfig,
 ) -> Option<(NumberParts, usize)> {
-    let len = bytes.len();
+    let bytes = view.bytes();
+    let len = view.len();
     let mut i = start;
 
     if i >= len {
@@ -130,13 +140,16 @@ pub fn scan_number_mantissa(
     // load costs more than scalar SWAR. SIMD is kept for the fractional
     // part where long digit runs (12-15 bytes) are common.
 
-    // 8-digit SWAR chunks for the integer part.
-    while i + 8 <= len {
+    // 8-digit SWAR chunks for the integer part. Padded-view invariant:
+    // every 8-byte read at `i <= len` is in-bounds on the backing
+    // buffer; `all_eight_are_ascii_digits` rejects NUL so the loop
+    // terminates at the end of the public input naturally.
+    while i < len {
         let b = unsafe { *bytes.get_unchecked(i) };
         if !b.is_ascii_digit() {
             break;
         }
-        let chunk = &bytes[i..i + 8];
+        let chunk = unsafe { bytes.get_unchecked(i..i + 8) };
         if all_eight_are_ascii_digits(chunk) {
             let chunk_val = parse_eight_digits(chunk);
             mantissa = mantissa
@@ -147,7 +160,8 @@ pub fn scan_number_mantissa(
             break;
         }
     }
-    // Remaining digits (< 8).
+    // Remaining digits (< 8) — SWAR may have stopped mid-run when a
+    // partial chunk mixed digits with non-digits; finish byte-by-byte.
     while i < len && unsafe { *bytes.get_unchecked(i) }.is_ascii_digit() {
         mantissa = mantissa * 10 + (unsafe { *bytes.get_unchecked(i) } - b'0') as u64;
         i += 1;
@@ -189,8 +203,8 @@ pub fn scan_number_mantissa(
         // once. If all scanned digits fit within the 19-digit mantissa
         // budget, accumulate them in one shot. Otherwise fall through to
         // the chunked/scalar loops that enforce the budget per-digit.
-        if total_digits < 19 {
-            if let Some(result) = number_simd::scan_digits_simd(bytes, i) {
+        if total_digits < 19 && i < len {
+            if let Some(result) = number_simd::scan_digits_simd(view, i) {
                 if total_digits + result.count as usize <= 19 {
                     // All scanned digits fit in the mantissa budget.
                     mantissa = mantissa
@@ -203,12 +217,12 @@ pub fn scan_number_mantissa(
             }
         }
         // 8-digit SWAR chunks for remaining fractional digits.
-        while i + 8 <= len && total_digits + 8 <= 19 {
+        while i < len && total_digits + 8 <= 19 {
             let b = unsafe { *bytes.get_unchecked(i) };
             if !b.is_ascii_digit() {
                 break;
             }
-            let chunk = &bytes[i..i + 8];
+            let chunk = unsafe { bytes.get_unchecked(i..i + 8) };
             if all_eight_are_ascii_digits(chunk) {
                 mantissa = mantissa
                     .wrapping_mul(100_000_000)
