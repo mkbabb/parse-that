@@ -156,3 +156,80 @@ pub fn scan_hex_mut<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     state.offset = i;
     Some(Span::new(start, i, state.src))
 }
+
+// ── AV.0.3 Bug 2b: scanner-to-payload i64 threading ──────────────
+//
+// The `*_parse_i64_mut` variants mirror the span-only scanners above
+// but thread the accumulated integer value through as their return.
+// Callers that want both the matched span AND the parsed scalar use
+// these instead of `scan_digits_mut` / `scan_hex_mut` + a follow-up
+// `i64::from_str` on the span text.
+//
+// Overflow policy: the accumulators are `u64` internally; on overflow
+// the scanner continues consuming digits (so the span match stays
+// coherent) but the returned `i64` value is undefined for inputs
+// whose numeric value exceeds `i64::MAX`. BBNF's `int_lit -> i64`
+// accepts any `[0-9]+` at the grammar level — the grammar author is
+// responsible for staying within range, same as `i64::from_str`.
+
+/// Scan one-or-more ASCII digits and accumulate the decimal value.
+/// Advances `state.offset` to the end of the digit run and returns
+/// the accumulated `i64`. Returns `None` when no digits are present
+/// at the current offset.
+///
+/// Same byte-class LUT walk as `scan_digits_mut`, but folds each
+/// digit into the accumulator during the walk. LLVM fuses the LUT
+/// check and the `mantissa * 10 + d` step.
+#[inline(always)]
+pub fn scan_digits_parse_i64_mut<'a>(state: &mut ParserState<'a>) -> Option<i64> {
+    let bytes = state.src_bytes;
+    let start = state.offset;
+    let len = bytes.len();
+    let mut i = start;
+    let mut value: u64 = 0;
+    while i < len {
+        let b = unsafe { *bytes.get_unchecked(i) };
+        if !DIGIT_LUT[b as usize] {
+            break;
+        }
+        value = value.wrapping_mul(10).wrapping_add((b - b'0') as u64);
+        i += 1;
+    }
+    if i == start {
+        return None;
+    }
+    state.offset = i;
+    Some(value as i64)
+}
+
+/// Scan one-or-more ASCII hex digits and accumulate the hexadecimal
+/// value. Advances `state.offset` to the end of the hex run and
+/// returns the accumulated `i64`. Returns `None` when no hex digits
+/// are present at the current offset.
+#[inline(always)]
+pub fn scan_hex_parse_i64_mut<'a>(state: &mut ParserState<'a>) -> Option<i64> {
+    let bytes = state.src_bytes;
+    let start = state.offset;
+    let len = bytes.len();
+    let mut i = start;
+    let mut value: u64 = 0;
+    while i < len {
+        let b = unsafe { *bytes.get_unchecked(i) };
+        if !HEX_LUT[b as usize] {
+            break;
+        }
+        let d = match b {
+            b'0'..=b'9' => b - b'0',
+            b'a'..=b'f' => b - b'a' + 10,
+            b'A'..=b'F' => b - b'A' + 10,
+            _ => unreachable!(), // LUT guard above guarantees hex class
+        };
+        value = value.wrapping_shl(4).wrapping_add(d as u64);
+        i += 1;
+    }
+    if i == start {
+        return None;
+    }
+    state.offset = i;
+    Some(value as i64)
+}
