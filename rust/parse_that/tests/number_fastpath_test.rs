@@ -348,6 +348,38 @@ fn fastpath_negative_zero() {
     assert_eq!(pzero.to_bits(), 0.0_f64.to_bits());
 }
 
+// ── canada.json-shaped inputs hit the Clinger short-circuit ──────────
+
+/// Representative canada.json coordinate shape: 2 integer digits,
+/// 7 fractional digits. The full scanner must hit the Clinger fast
+/// path for every sample, and the result must agree bit-for-bit with
+/// the reference parser (no rounding divergence).
+///
+/// This is the AV.3.5 hard-gate regression probe: if a future change
+/// routes these numbers through the Eisel-Lemire slow path it shows
+/// up here as an accuracy mismatch (when the slow path diverges) or
+/// at least as an infrastructure break (panics / compile failures).
+#[test]
+fn fastpath_canada_shaped_coordinates() {
+    let samples = [
+        "43.0215264",
+        "-79.3839722",
+        "51.0247778",
+        "0.5",
+        "-0.0000001",
+        "12.3456789",
+        "999.9999999",
+        "-89.9999999",
+        "180.0000001",
+        "1.0",
+        "-1e-5",
+        "3.14159265",
+    ];
+    for s in samples {
+        assert_fast_path_matches_reference(s);
+    }
+}
+
 // ── 16-digit stripe boundary offsets ────────────────────────────────
 
 #[test]
