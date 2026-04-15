@@ -202,6 +202,110 @@ pub fn scan_digits_parse_i64_mut<'a>(state: &mut ParserState<'a>) -> Option<i64>
     Some(value as i64)
 }
 
+/// Parse an `i64` from the numeric prefix of `bytes`, accepting
+/// optional leading sign (`+` / `-`), optional `0x` / `0X` hex
+/// prefix, and a decimal or hex digit run. Stops at the first
+/// non-digit byte; trailing junk (`\w*` tails from regex patterns
+/// like `[0-9]+\w*`) is ignored.
+///
+/// Returns `None` when the prefix contains no valid numeric body
+/// (e.g. a bare `-` with no following digit, or an empty slice).
+/// Overflow wraps silently — consistent with
+/// `scan_digits_parse_i64_mut`'s u64-accumulator semantics.
+///
+/// Consumed by bbnf-lang's rule-body scalar-payload capture step
+/// (AV.0.3). The matched span is `state.src_bytes[__span_lo..__end]`
+/// and may include a `\w*` junk tail from `int_lit`'s regex; this
+/// helper extracts the numeric prefix without a second scan.
+#[inline]
+pub fn parse_i64_from_bytes(bytes: &[u8]) -> Option<i64> {
+    let len = bytes.len();
+    if len == 0 {
+        return None;
+    }
+    let mut i = 0usize;
+    let mut neg = false;
+    let b0 = unsafe { *bytes.get_unchecked(0) };
+    if b0 == b'-' {
+        neg = true;
+        i = 1;
+    } else if b0 == b'+' {
+        i = 1;
+    }
+    if i >= len {
+        return None;
+    }
+    // Hex prefix.
+    let hex_start = if i + 1 < len
+        && unsafe { *bytes.get_unchecked(i) } == b'0'
+        && matches!(unsafe { *bytes.get_unchecked(i + 1) }, b'x' | b'X')
+    {
+        Some(i + 2)
+    } else {
+        None
+    };
+    let mut value: u64 = 0;
+    let digit_start = hex_start.unwrap_or(i);
+    let mut j = digit_start;
+    if hex_start.is_some() {
+        while j < len {
+            let b = unsafe { *bytes.get_unchecked(j) };
+            if !HEX_LUT[b as usize] {
+                break;
+            }
+            let d = match b {
+                b'0'..=b'9' => b - b'0',
+                b'a'..=b'f' => b - b'a' + 10,
+                b'A'..=b'F' => b - b'A' + 10,
+                _ => unreachable!(),
+            };
+            value = value.wrapping_shl(4).wrapping_add(d as u64);
+            j += 1;
+        }
+    } else {
+        while j < len {
+            let b = unsafe { *bytes.get_unchecked(j) };
+            if !DIGIT_LUT[b as usize] {
+                break;
+            }
+            value = value.wrapping_mul(10).wrapping_add((b - b'0') as u64);
+            j += 1;
+        }
+    }
+    if j == digit_start {
+        return None;
+    }
+    let signed = value as i64;
+    Some(if neg { signed.wrapping_neg() } else { signed })
+}
+
+/// Parse an `f64` from the numeric prefix of `bytes` — supports the
+/// full `[sign]? digits ('.' digits)? ([eE] [sign]? digits)?` form
+/// accepted by BBNF's `float_lit` regex, with optional trailing
+/// `\w*` junk that is ignored.
+///
+/// Returns `None` when the prefix contains no valid float body.
+/// Delegates the actual float construction to `fast_float2::parse_partial`
+/// which both handles rounding correctness and reports the consumed
+/// prefix length.
+///
+/// Consumed by bbnf-lang's rule-body scalar-payload capture step for
+/// `-> f64` rules (AV.0.3) — the span may include a `\w*` junk tail
+/// from `float_lit`'s regex.
+#[inline]
+pub fn parse_f64_from_bytes(bytes: &[u8]) -> Option<f64> {
+    if bytes.is_empty() {
+        return None;
+    }
+    // fast_float2::parse_partial consumes as many bytes as form a
+    // valid float prefix, returning (value, consumed). A zero-length
+    // consumption is a parse failure.
+    match fast_float2::parse_partial::<f64, _>(bytes) {
+        Ok((v, consumed)) if consumed > 0 => Some(v),
+        _ => None,
+    }
+}
+
 /// Scan one-or-more ASCII hex digits and accumulate the hexadecimal
 /// value. Advances `state.offset` to the end of the hex run and
 /// returns the accumulated `i64`. Returns `None` when no hex digits

@@ -21,8 +21,9 @@ pub use scan::{
     scan_balanced, BalancedScanConfig,
     // Char-class quantified scanners (Tranche W phase 5d).
     scan_alnum_mut, scan_digits_mut, scan_digits_star_mut, scan_hex_mut,
-    // AV.0.3 Bug 2b: parse-and-return-scalar variants.
+    // AV.0.3 Bug 2b: parse-and-return-scalar variants + span→scalar helpers.
     scan_digits_parse_i64_mut, scan_hex_parse_i64_mut,
+    parse_i64_from_bytes, parse_f64_from_bytes,
     // Number scanning core
     scan_number_span, scan_number_f64, parse_number_f64, parse_eight_digits,
     NumberParts, NumberConfig, scan_number_mantissa, number_parts_to_f64,

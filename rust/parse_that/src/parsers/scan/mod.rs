@@ -34,8 +34,8 @@ pub use quoted::{
 pub use balanced::{BalancedScanConfig, scan_balanced};
 pub use decode::{StringPayload, decode_json_string_to_arena};
 pub use digits::{
-    scan_alnum_mut, scan_digits_mut, scan_digits_parse_i64_mut, scan_digits_star_mut,
-    scan_hex_mut, scan_hex_parse_i64_mut,
+    parse_f64_from_bytes, parse_i64_from_bytes, scan_alnum_mut, scan_digits_mut,
+    scan_digits_parse_i64_mut, scan_digits_star_mut, scan_hex_mut, scan_hex_parse_i64_mut,
 };
 pub use quote_parity::{compute_in_string_bitmap, filter_quote_parity};
 pub use structural_bitmap::{
