@@ -11,9 +11,6 @@ pub enum SpanScanner {
     /// `[-]digits[.digits][(e|E)[+-]digits]` with strict (RFC 8259)
     /// rejection of `+`, leading `.`, and `007`-style leading zeros.
     NumberStrict,
-    /// `"` ... `"` with strict (RFC 8259) escape validation.
-    /// Returns the *content* span (exclusive of the surrounding `"`).
-    QuotedStringStrictContent,
     /// Same as `QuotedStringStrictContent` but returns the span
     /// *including* the quote delimiters (matches regex behavior).
     QuotedStringStrict,
@@ -33,9 +30,6 @@ impl SpanScanner {
     pub fn call<'a>(&self, state: &mut ParserState<'a>) -> Option<Span<'a>> {
         match self {
             Self::NumberStrict => crate::parsers::scan::scan_number_strict_span(state),
-            Self::QuotedStringStrictContent => {
-                crate::parsers::scan::scan_quoted_string_content(state)
-            }
             Self::QuotedStringStrict => crate::parsers::scan::scan_quoted_string_strict(state),
             Self::Identifier => {
                 crate::parsers::scan::scan_ident(state, &crate::parsers::scan::CSS_IDENT_CONFIG)

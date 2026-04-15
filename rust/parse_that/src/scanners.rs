@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
-use crate::state::{ParserState, Span};
+use crate::state::ParserState;
 
-use aho_corasick::{AhoCorasick, AhoCorasickBuilder, Anchored, Input, MatchKind, StartKind};
+use aho_corasick::{AhoCorasick, AhoCorasickBuilder, MatchKind, StartKind};
 
 /// Global Aho-Corasick cache — avoids rebuilding automata on repeated parser construction.
 /// Key is the sorted, joined pattern list.
@@ -466,4 +466,3 @@ pub fn find_first_of_3(haystack: &[u8], b0: u8, b1: u8, b2: u8) -> Option<(usize
 
     None
 }
-

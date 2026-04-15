@@ -1,9 +1,7 @@
-use std::sync::Arc;
-
 use crate::parse::Parser;
 use crate::state::{ParserState, Span};
 
-use aho_corasick::{AhoCorasick, Anchored, Input, MatchKind};
+use aho_corasick::{Anchored, Input};
 
 #[inline]
 pub fn epsilon<'a>() -> Parser<'a, ()> {

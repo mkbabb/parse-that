@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 #![feature(portable_simd)]
 #![feature(fmt_helpers_for_derive)]
 #![feature(stmt_expr_attributes)]

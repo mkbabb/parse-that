@@ -870,8 +870,7 @@ impl RegexParser {
                                                                                         {
                                                                                             let __start = state.offset;
                                                                                             if let Some(&__b) = state.src_bytes.get(__start) {
-                                                                                                if #[allow(non_exhaustive_omitted_patterns)]
-                                                                                                match __b {
+                                                                                                if match __b {
                                                                                                     b'd' | b'D' | b'w' | b'W' | b's' | b'S' => true,
                                                                                                     _ => false,
                                                                                                 } {
@@ -1228,8 +1227,7 @@ impl RegexParser {
                                                                                             {
                                                                                                 let __start = state.offset;
                                                                                                 if let Some(&__b) = state.src_bytes.get(__start) {
-                                                                                                    if #[allow(non_exhaustive_omitted_patterns)]
-                                                                                                    match __b {
+                                                                                                    if match __b {
                                                                                                         b'd' | b'D' | b'w' | b'W' | b's' | b'S' => true,
                                                                                                         _ => false,
                                                                                                     } {
@@ -1588,8 +1586,7 @@ impl RegexParser {
                                                                         {
                                                                             let __start = state.offset;
                                                                             if let Some(&__b) = state.src_bytes.get(__start) {
-                                                                                if #[allow(non_exhaustive_omitted_patterns)]
-                                                                                match __b {
+                                                                                if match __b {
                                                                                     b'd' | b'D' | b'w' | b'W' | b's' | b'S' => true,
                                                                                     _ => false,
                                                                                 } {
@@ -1951,8 +1948,7 @@ impl RegexParser {
                                                 {
                                                     let __start = state.offset;
                                                     if let Some(&__b) = state.src_bytes.get(__start) {
-                                                        if #[allow(non_exhaustive_omitted_patterns)]
-                                                        match __b {
+                                                        if match __b {
                                                             b'd' | b'D' | b'w' | b'W' | b's' | b'S' => true,
                                                             _ => false,
                                                         } {
@@ -1993,8 +1989,7 @@ impl RegexParser {
                                                             {
                                                                 let __start = state.offset;
                                                                 if let Some(&__b) = state.src_bytes.get(__start) {
-                                                                    if #[allow(non_exhaustive_omitted_patterns)]
-                                                                    match __b {
+                                                                    if match __b {
                                                                         b'p' | b'P' => true,
                                                                         _ => false,
                                                                     } {
