@@ -119,7 +119,7 @@ fn escaped_mask(bs_bits: u32, carry: &mut u32) -> u32 {
 /// (even) from the extended run's start, so the odd-parity positions
 /// within the continuation are at odd offsets (1, 3, 5, ...) from bit 0.
 #[inline(always)]
-fn odd_parity_backslashes(bs_bits: u32, carry_in: u32) -> u32 {
+pub(super) fn odd_parity_backslashes(bs_bits: u32, carry_in: u32) -> u32 {
     let mut odd = 0u32;
     let mut i = 0u32;
 

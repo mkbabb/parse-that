@@ -27,4 +27,7 @@ pub use scan::{
     GENERIC_NUMBER_CONFIG, STRICT_NUMBER_CONFIG,
     // Strict number scanners
     scan_number_strict_span, scan_number_strict_fused, scan_number_strict_f64,
+    // Tranche AU.2.7 — SIMD structural bitmap v2 + quote-parity filter.
+    compute_in_string_bitmap, filter_quote_parity,
+    NibbleBitmapIter, classify_stripe, expand_byte_lut, find_next_structural_from,
 };

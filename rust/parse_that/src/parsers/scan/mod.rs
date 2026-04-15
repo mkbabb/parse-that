@@ -13,6 +13,8 @@ mod balanced;
 mod decode;
 mod digits;
 pub mod quoted_simd;
+pub mod quote_parity;
+pub mod structural_bitmap;
 
 pub use number::{
     GENERIC_NUMBER_CONFIG, STRICT_NUMBER_CONFIG, NumberConfig, NumberParts,
@@ -32,3 +34,7 @@ pub use quoted::{
 pub use balanced::{BalancedScanConfig, scan_balanced};
 pub use decode::{StringPayload, decode_json_string_to_arena};
 pub use digits::{scan_alnum_mut, scan_digits_mut, scan_digits_star_mut, scan_hex_mut};
+pub use quote_parity::{compute_in_string_bitmap, filter_quote_parity};
+pub use structural_bitmap::{
+    NibbleBitmapIter, classify_stripe, expand_byte_lut, find_next_structural_from,
+};
