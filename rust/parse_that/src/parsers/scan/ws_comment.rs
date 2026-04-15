@@ -1,15 +1,21 @@
-// Whitespace + block comment scanners — SIMD bitmap inner loop.
+// Whitespace + block comment scanners — tiered SIMD inner loop.
 //
-// AU.2.7: the inner loop consumes a stripe-classified byte-set bitmap
-// covering whitespace + `/` (the two bytes that continue the scan).
-// Positions that are `/` are probed for `/*` digraph; the scan skips
-// to `*/` via memchr(b'*'). No byte-at-a-time scalar inner loop —
-// the short < 64-byte tail is a bounded scalar epilogue, not a
-// separate "slow" function.
+// Grammar-driven profiling on CSS bootstrap/normalize/tailwind shows
+// whitespace runs skew tiny: 84–100% of runs are ≤ 4 bytes, and 63%
+// are exactly one byte (`\n` between declarations). A 64-byte stripe
+// kernel is overkill for these runs; the per-call overhead (4 ×
+// `u8x16` classify, AND, to_bitmask, CTZ) dominates the 1–3 byte
+// advance.
 //
-// The deleted `scan_ws_block_comments_slow` cold-path helper is
-// subsumed: the main entry handles the hot short-circuit AND the
-// bitmap inner loop in one body, no split.
+// Tiered fast path:
+//   1. Inline single-byte short-circuit — bails the no-op WS sites
+//      (~300 in the CSS L4 generated parser).
+//   2. Inline 16-byte SIMD chunk — classifies one `u8x16`, CTZ
+//      finds the terminating byte. Resolves every run ≤ 16 bytes,
+//      which covers ~100% of CSS and essentially all JSON WS.
+//   3. Cold 64-byte stripe walker — only reached when a 16-byte
+//      chunk is entirely WS or contains a comment opener. Handles
+//      long runs and block-comment bodies.
 
 use crate::state::{ParserState, Span};
 use super::structural_bitmap::classify_stripe;
@@ -60,17 +66,34 @@ fn is_ws(b: u8) -> bool {
     WS_LUT[b as usize]
 }
 
+/// Classify one `u8x16` chunk against the WS|`/` byte set. Returns a
+/// 16-bit mask with bit `i` set iff `chunk[i]` is WS or `/`.
+#[inline(always)]
+fn classify_ws_slash_16(chunk: u8x16) -> u16 {
+    let lo = u8x16::from_array(WS_SLASH_LO_LUT);
+    let hi = u8x16::from_array(WS_SLASH_HI_LUT);
+    let lo_mask = u8x16::splat(0x0F);
+    let lo_n = chunk & lo_mask;
+    let hi_n = chunk >> 4;
+    let lo_r = lo.swizzle_dyn(lo_n);
+    let hi_r = hi.swizzle_dyn(hi_n);
+    let matched = lo_r & hi_r;
+    matched.simd_ne(u8x16::splat(0)).to_bitmask() as u16
+}
+
 /// Scan whitespace and block comments: `(\s | /\*…\*/)*`. Always
 /// succeeds (empty span on no-op).
 ///
-/// Hot path: single-byte check short-circuits when the next byte is
-/// neither whitespace nor `/`. On the no-op call sites (~300 in the
-/// CSS L4 generated parser) this is one LUT load + one
-/// well-predicted branch.
+/// Tier 1 (inline, ~300 call sites): single-byte LUT + branch. Bails
+/// immediately when the next byte is neither WS nor `/`.
 ///
-/// Long path: bitmap-driven. 64-byte stripes classified via the
-/// ws/`/` nibble-LUT; each `/` hit probes `+1` for `*` and, if
-/// positive, skips the block comment body via memchr.
+/// Tier 2 (inline, ~25k WS hits in CSS bootstrap): one 16-byte SIMD
+/// classify. If any bit in the mask is clear AND the first `/` (if
+/// any) is not followed by `*`, CTZ-advance to the terminator and
+/// return — no cold call. Resolves all runs ≤ 16 bytes.
+///
+/// Tier 3 (cold): 64-byte stripe walker for long runs and block
+/// comments.
 #[inline(always)]
 pub fn scan_ws_block_comments<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     let start = state.offset;
@@ -80,22 +103,51 @@ pub fn scan_ws_block_comments<'a>(state: &mut ParserState<'a>) -> Option<Span<'a
         return Some(Span::new(start, start, state.src));
     }
 
-    let bytes = state.src_bytes;
-    let b0 = unsafe { *bytes.get_unchecked(start) };
+    let padded = state.padded_bytes();
+    let b0 = unsafe { *padded.get_unchecked(start) };
     if !is_ws(b0) && b0 != b'/' {
         return Some(Span::new(start, start, state.src));
     }
 
-    // Hand the padded view to the stripe walker so it can read a full
-    // 64-byte stripe over the tail without the per-chunk
-    // `i + 64 <= len` guard. The padded region is NUL, which is
-    // classified as non-ws / non-`/`, so a stripe that straddles the
-    // end of the public input terminates the scan naturally at the
-    // first padded byte — and the clamp in `scan_ws_bitmap_cold`
-    // ensures the returned offset never exceeds `len`.
-    let end = scan_ws_bitmap_cold(state.padded_bytes(), start, len);
+    // Tier 2: one 16-byte chunk classify. The padded view guarantees
+    // `start + 16` is in-bounds; NUL padding classifies as non-WS so
+    // stripes that straddle the public end terminate naturally.
+    let chunk = u8x16::from_slice(unsafe {
+        padded.get_unchecked(start..start + 16)
+    });
+    let ws_slash_mask = classify_ws_slash_16(chunk);
+    let non_ws_mask = !ws_slash_mask & 0xFFFFu16;
+
+    if non_ws_mask != 0 {
+        // Some byte in the chunk is neither WS nor `/`. If there is
+        // no earlier `/` the scan terminates at that byte. A `/`
+        // before the terminator may open a block comment (cold path).
+        let non_ws_rel = non_ws_mask.trailing_zeros() as usize;
+        let slash_mask = slash_mask_16(chunk) & ((1u16 << non_ws_rel) - 1);
+        if slash_mask == 0 {
+            let end = (start + non_ws_rel).min(len);
+            state.offset = end;
+            return Some(Span::new(start, end, state.src));
+        }
+        // `/` before terminator — cold path handles the `/*` probe
+        // so that the hot path stays branch-free.
+        let end = scan_ws_bitmap_cold(padded, start, len);
+        state.offset = end;
+        return Some(Span::new(start, end, state.src));
+    }
+
+    // Tier 3: the whole 16-byte chunk is WS or `/`. The run may be
+    // long, or this may be a `/*…*/` comment. Delegate to the stripe
+    // walker.
+    let end = scan_ws_bitmap_cold(padded, start, len);
     state.offset = end;
     Some(Span::new(start, end, state.src))
+}
+
+/// Bitmask of positions where byte == `/` within a 16-byte chunk.
+#[inline(always)]
+fn slash_mask_16(chunk: u8x16) -> u16 {
+    chunk.simd_eq(u8x16::splat(b'/')).to_bitmask() as u16
 }
 
 /// Outlined cold-path SIMD bitmap walker. Returns the offset of the
