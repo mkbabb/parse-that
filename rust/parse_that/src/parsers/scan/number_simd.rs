@@ -72,11 +72,22 @@ unsafe fn count_leading_digits_neon(ptr: *const u8) -> u32 {
 #[cfg(target_arch = "aarch64")]
 #[inline(always)]
 unsafe fn accumulate_digits_neon(ptr: *const u8, count: u32) -> u64 {
-    // For counts <= 8, use byte-by-byte scalar accumulation.
-    // For counts 9..=16, use two groups: 8-digit SWAR + scalar tail.
     debug_assert!(count >= 1 && count <= 16);
 
-    if count <= 8 {
+    if count == 16 {
+        // Full stripe — two 8-digit SWAR folds. Each
+        // `parse_eight_digits` is three multiply-shift operations.
+        let hi = unsafe {
+            super::parse_eight_digits(core::slice::from_raw_parts(ptr, 8))
+        };
+        let lo = unsafe {
+            super::parse_eight_digits(core::slice::from_raw_parts(ptr.add(8), 8))
+        };
+        hi * 100_000_000 + lo
+    } else if count <= 8 {
+        // Short run — byte-by-byte. Each scalar step is 2 ops
+        // (multiply + add); avoids the classification overhead of a
+        // partial SWAR fold.
         let mut val: u64 = 0;
         for j in 0..count {
             unsafe {
@@ -85,11 +96,10 @@ unsafe fn accumulate_digits_neon(ptr: *const u8, count: u32) -> u64 {
         }
         val
     } else {
-        // First 8 digits via SWAR.
+        // 9..=15 digits — one 8-digit SWAR fold + scalar tail.
         let hi = unsafe {
             super::parse_eight_digits(core::slice::from_raw_parts(ptr, 8))
         };
-        // Remaining digits scalar.
         let mut lo: u64 = 0;
         let tail = count - 8;
         for j in 0..tail {
@@ -97,7 +107,6 @@ unsafe fn accumulate_digits_neon(ptr: *const u8, count: u32) -> u64 {
                 lo = lo * 10 + (*ptr.add(8 + j as usize) - b'0') as u64;
             }
         }
-        // Combine: hi * 10^tail + lo
         hi * POW10[tail as usize] + lo
     }
 }
@@ -182,7 +191,16 @@ unsafe fn count_leading_digits_sse(ptr: *const u8) -> u32 {
 unsafe fn accumulate_digits_sse(ptr: *const u8, count: u32) -> u64 {
     debug_assert!(count >= 1 && count <= 16);
 
-    if count <= 8 {
+    if count == 16 {
+        // Full stripe — two 8-digit SWAR folds.
+        let hi = unsafe {
+            super::parse_eight_digits(core::slice::from_raw_parts(ptr, 8))
+        };
+        let lo = unsafe {
+            super::parse_eight_digits(core::slice::from_raw_parts(ptr.add(8), 8))
+        };
+        hi * 100_000_000 + lo
+    } else if count <= 8 {
         let mut val: u64 = 0;
         for j in 0..count {
             unsafe {

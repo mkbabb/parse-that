@@ -135,62 +135,54 @@ pub fn scan_number_mantissa(
     let digit_start = i;
     let mut mantissa: u64 = 0;
 
-    // 16-digit SIMD fast path for numeric-dense inputs (canada.json-
-    // style coordinates, scientific literals, large integer IDs).
+    // 8-digit SWAR classification is the universal first step: ~85%
+    // of real-world numbers have integer runs of 1-4 digits where a
+    // 16-byte NEON stripe's classification cost (byte-subtract,
+    // compare, horizontal bitmask pack) outweighs the per-run savings.
+    // One 8-byte `all_eight_are_ascii_digits` probe serves double
+    // duty: it captures the short-run fast case AND acts as the
+    // admission test for escalating to 16-byte SIMD.
     //
-    // One NEON `vqtbl1q_u8` / SSE `_mm_max_epu8 / _mm_min_epu8` stripe
-    // classifies 16 bytes in a handful of cycles; when the stripe is
-    // all digits the whole run folds in one step. Shorter runs return
-    // their actual digit count (0..=15) so the SWAR fallback below
-    // never double-counts.
+    // If the first 8-byte probe passes we commit that batch, then
+    // pivot to `scan_digits_simd` for the tail — only numeric-dense
+    // inputs (canada.json, scientific literals, large IDs) reach the
+    // vector path, and they reach it exactly once per number instead
+    // of paying the classification cost up front.
     //
-    // Only enters the SIMD path while the mantissa budget still has
-    // room for another full 16-digit batch (total ≤ 19); otherwise
-    // the per-byte loop handles the budget accounting one digit at
-    // a time.
+    // Padded-view invariant: every 8-byte read at `i <= len` is
+    // in-bounds on the backing buffer; `all_eight_are_ascii_digits`
+    // rejects NUL so the loop terminates at the public-input boundary
+    // naturally.
     if i < len && unsafe { *bytes.get_unchecked(i) }.is_ascii_digit() {
-        while let Some(result) = number_simd::scan_digits_simd(view, i) {
-            let c = result.count as usize;
-            let new_total = (i - digit_start) + c;
-            if new_total <= 19 {
-                mantissa = mantissa
-                    .wrapping_mul(number_simd::POW10[c])
-                    .wrapping_add(result.value);
-                i += c;
-                if c < 16 {
-                    // Hit a non-digit inside the stripe — no more
-                    // digits in the integer part.
-                    break;
-                }
-            } else {
-                // A full 16-digit stripe would push past the 19-digit
-                // budget; fall through to per-digit SWAR below so the
-                // overflow guard fires at the exact digit.
-                break;
-            }
-        }
-    }
-
-    // 8-digit SWAR chunks for the tail. Runs here only when the SIMD
-    // path was skipped (leading non-digit) or terminated early on the
-    // budget guard. Padded-view invariant: every 8-byte read at
-    // `i <= len` is in-bounds on the backing buffer;
-    // `all_eight_are_ascii_digits` rejects NUL so the loop terminates
-    // at the end of the public input naturally.
-    while i < len {
-        let b = unsafe { *bytes.get_unchecked(i) };
-        if !b.is_ascii_digit() {
-            break;
-        }
         let chunk = unsafe { bytes.get_unchecked(i..i + 8) };
         if all_eight_are_ascii_digits(chunk) {
-            let chunk_val = parse_eight_digits(chunk);
             mantissa = mantissa
                 .wrapping_mul(100_000_000)
-                .wrapping_add(chunk_val);
+                .wrapping_add(parse_eight_digits(chunk));
             i += 8;
-        } else {
-            break;
+
+            // Pivot to 16-byte SIMD for the tail. Every stripe that
+            // returns 16 extends the run by 16 digits; a stripe
+            // returning < 16 signals the end of the integer part
+            // (or a budget break).
+            while let Some(result) = number_simd::scan_digits_simd(view, i) {
+                let c = result.count as usize;
+                let new_total = (i - digit_start) + c;
+                if new_total <= 19 {
+                    mantissa = mantissa
+                        .wrapping_mul(number_simd::POW10[c])
+                        .wrapping_add(result.value);
+                    i += c;
+                    if c < 16 {
+                        break;
+                    }
+                } else {
+                    // A full 16-digit stripe would push past the
+                    // 19-digit budget; fall through to per-digit
+                    // wrap below so the accumulator stays deterministic.
+                    break;
+                }
+            }
         }
     }
     // Remaining digits (< 8) — SWAR may have stopped mid-run when a
