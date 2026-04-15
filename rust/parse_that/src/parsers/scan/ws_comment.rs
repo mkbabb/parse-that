@@ -73,20 +73,27 @@ fn is_ws(b: u8) -> bool {
 /// positive, skips the block comment body via memchr.
 #[inline(always)]
 pub fn scan_ws_block_comments<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
-    let bytes = state.src_bytes;
     let start = state.offset;
-    let len = bytes.len();
+    let len = state.end;
 
     if start >= len {
         return Some(Span::new(start, start, state.src));
     }
 
+    let bytes = state.src_bytes;
     let b0 = unsafe { *bytes.get_unchecked(start) };
     if !is_ws(b0) && b0 != b'/' {
         return Some(Span::new(start, start, state.src));
     }
 
-    let end = scan_ws_bitmap_cold(bytes, start, len);
+    // Hand the padded view to the stripe walker so it can read a full
+    // 64-byte stripe over the tail without the per-chunk
+    // `i + 64 <= len` guard. The padded region is NUL, which is
+    // classified as non-ws / non-`/`, so a stripe that straddles the
+    // end of the public input terminates the scan naturally at the
+    // first padded byte — and the clamp in `scan_ws_bitmap_cold`
+    // ensures the returned offset never exceeds `len`.
+    let end = scan_ws_bitmap_cold(state.padded_bytes(), start, len);
     state.offset = end;
     Some(Span::new(start, end, state.src))
 }
@@ -94,6 +101,13 @@ pub fn scan_ws_block_comments<'a>(state: &mut ParserState<'a>) -> Option<Span<'a
 /// Outlined cold-path SIMD bitmap walker. Returns the offset of the
 /// first byte that is NOT whitespace and is NOT part of a
 /// `/*…*/` block comment — i.e., where the ws scan terminates.
+///
+/// `bytes` is the padded view from [`crate::state::ParserState::padded_bytes`]:
+/// the first `len` bytes mirror the public input; the next
+/// [`crate::state::INPUT_PAD_BYTES`] bytes are NUL. NUL classifies as
+/// neither ws nor `/`, so any stripe read that straddles the end of
+/// the public input terminates the scan naturally; the returned
+/// offset is clamped to `len` before it escapes the walker.
 #[cold]
 #[inline(never)]
 fn scan_ws_bitmap_cold(bytes: &[u8], start: usize, len: usize) -> usize {
@@ -102,84 +116,73 @@ fn scan_ws_bitmap_cold(bytes: &[u8], start: usize, len: usize) -> usize {
 
     let mut i = start;
 
-    loop {
-        // Stripe-aligned bitmap walk.
-        while i + 64 <= len {
-            let mask = classify_stripe(bytes, i, lo_v, hi_v);
-            let inv = !mask;
-            if inv != 0 {
-                // First non-(ws|`/`) byte in this stripe.
-                let non_ws_rel = inv.trailing_zeros() as usize;
-                let non_ws_abs = i + non_ws_rel;
-                // A `/` before the non-ws may open a block comment.
-                let slash_mask = slash_mask_stripe(bytes, i)
-                    & ((1u64 << non_ws_rel) - 1);
-                if slash_mask != 0 {
-                    let slash_rel = slash_mask.trailing_zeros() as usize;
-                    let slash_abs = i + slash_rel;
-                    if slash_abs + 1 < len
-                        && unsafe { *bytes.get_unchecked(slash_abs + 1) } == b'*'
-                    {
-                        // Block comment opens — skip body and
-                        // restart from the closing `*/` end.
-                        i = skip_block_comment_tail(bytes, slash_abs + 2, len);
-                        break;
-                    }
-                    // `/` without `*` — ws scan terminates at `/`.
-                    return slash_abs;
+    // Stripe-aligned bitmap walk. The padded-view guarantee means
+    // `i + 64` is always in-bounds whenever `i <= len`, so the loop
+    // can walk over the logical end and rely on the NUL classification
+    // to terminate. Every `return` site clamps to `len` so padded
+    // positions never escape.
+    while i < len {
+        let mask = classify_stripe(bytes, i, lo_v, hi_v);
+        let inv = !mask;
+        if inv != 0 {
+            // First non-(ws|`/`) byte in this stripe. May fall in the
+            // padded region when the final stripe straddles `len`.
+            let non_ws_rel = inv.trailing_zeros() as usize;
+            let non_ws_abs = (i + non_ws_rel).min(len);
+            // A `/` before the non-ws may open a block comment.
+            let slash_mask = slash_mask_stripe(bytes, i)
+                & ((1u64 << non_ws_rel) - 1);
+            if slash_mask != 0 {
+                let slash_rel = slash_mask.trailing_zeros() as usize;
+                let slash_abs = i + slash_rel;
+                if slash_abs >= len {
+                    return len;
                 }
-                // No `/` before the non-ws — scan terminates at
-                // non_ws_abs.
-                return non_ws_abs;
-            }
-            // Entire stripe is ws or `/`. Probe each `/` for `*`.
-            let mut slash_mask = slash_mask_stripe(bytes, i);
-            let mut stripe_consumed = false;
-            while slash_mask != 0 {
-                let bit = slash_mask.trailing_zeros() as usize;
-                let slash_abs = i + bit;
-                slash_mask &= !(1u64 << bit);
                 if slash_abs + 1 < len
                     && unsafe { *bytes.get_unchecked(slash_abs + 1) } == b'*'
                 {
-                    // Block comment opens — skip body; i jumps past
-                    // `*/`. Break out of the stripe loop and restart
-                    // from the new i.
+                    // Block comment opens — skip body and restart.
                     i = skip_block_comment_tail(bytes, slash_abs + 2, len);
-                    stripe_consumed = true;
-                    break;
+                    continue;
                 }
-                // `/` not followed by `*` inside an all-ws stripe —
-                // scan terminates at this `/`.
+                // `/` without `*` — ws scan terminates at `/`.
                 return slash_abs;
             }
-            if !stripe_consumed {
-                // No `/` in this stripe (or all `/` paired into `*`
-                // which is impossible here because we'd have taken
-                // the break). Advance a full stripe.
-                i += 64;
-            }
+            // No `/` before the non-ws — scan terminates at non_ws_abs.
+            return non_ws_abs;
         }
-
-        // Short tail (< 64 bytes remaining).
-        while i < len {
-            let b = unsafe { *bytes.get_unchecked(i) };
-            if !is_ws(b) && b != b'/' {
-                return i;
+        // Entire stripe is ws or `/` (in the public region — padded
+        // NUL bytes are non-ws so `inv != 0` above handles them).
+        // Probe each `/` for `*`.
+        let mut slash_mask = slash_mask_stripe(bytes, i);
+        let mut stripe_consumed = false;
+        while slash_mask != 0 {
+            let bit = slash_mask.trailing_zeros() as usize;
+            let slash_abs = i + bit;
+            slash_mask &= !(1u64 << bit);
+            if slash_abs >= len {
+                return len;
             }
-            if b == b'/' {
-                if i + 1 < len && unsafe { *bytes.get_unchecked(i + 1) } == b'*' {
-                    i = skip_block_comment_tail(bytes, i + 2, len);
-                    break;
-                }
-                return i;
+            if slash_abs + 1 < len
+                && unsafe { *bytes.get_unchecked(slash_abs + 1) } == b'*'
+            {
+                // Block comment opens — skip body; i jumps past `*/`.
+                i = skip_block_comment_tail(bytes, slash_abs + 2, len);
+                stripe_consumed = true;
+                break;
             }
-            i += 1;
+            // `/` not followed by `*` inside an all-ws stripe —
+            // scan terminates at this `/`.
+            return slash_abs;
         }
-        if i >= len {
-            return i;
+        if !stripe_consumed {
+            // Full stripe is ws; advance by the stripe width. The
+            // next iteration's stripe read is still in-bounds on the
+            // padded view even when `i + 64` exceeds `len`.
+            i += 64;
         }
     }
+    len
 }
 
 /// Bitmask of positions where byte == `/` within a 64-byte stripe.

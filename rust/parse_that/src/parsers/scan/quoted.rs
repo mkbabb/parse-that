@@ -56,19 +56,29 @@ pub const GENERIC_QUOTED_STRING_CONFIG: QuotedStringConfig = QuotedStringConfig 
 /// tracking, replacing the previous `memchr2` + per-backslash-skip loop.
 #[inline(always)]
 pub fn scan_string_quoted<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
-    let bytes = state.src_bytes;
     let start = state.offset;
-    if start >= bytes.len() {
+    let len = state.end;
+    if start >= len {
         return None;
     }
 
+    let bytes = state.src_bytes;
     let quote = unsafe { *bytes.get_unchecked(start) };
     if quote != b'"' && quote != b'\'' {
         return None;
     }
 
-    // SIMD scan from byte after the opening quote.
-    let close_pos = scan_quoted_string_simd(bytes, start + 1, quote)?;
+    // SIMD scan from byte after the opening quote. Use the padded
+    // view so the 16-byte chunk loop can run to the logical end
+    // without a scalar tail; the closing quote of a well-formed
+    // input is inside `src_bytes`, and the NUL-padded region past
+    // the end matches neither `"` nor `'` nor `\`, so an
+    // unterminated string still returns `None` as before.
+    let padded = state.padded_bytes();
+    let close_pos = scan_quoted_string_simd(padded, start + 1, quote)?;
+    if close_pos >= len {
+        return None;
+    }
     state.offset = close_pos + 1; // advance past the closing quote
     Some(Span::new(start, close_pos + 1, state.src))
 }
@@ -165,6 +175,7 @@ fn scan_quoted_string_inner_strict<'a>(
 ) -> Option<Span<'a>> {
     let bytes = state.src_bytes;
     let start = state.offset;
+    let len = state.end;
     if bytes.get(start) != Some(&b'"') {
         return None;
     }
@@ -172,7 +183,15 @@ fn scan_quoted_string_inner_strict<'a>(
     let content_start = start + 1;
 
     // SIMD path: find the closing quote handling escape parity in bulk.
-    let close_quote = scan_quoted_string_simd(bytes, content_start, b'"')?;
+    // The padded view removes the 16-byte tail bounds check; the
+    // NUL-padded region does not match `"` or `\`, so an unterminated
+    // JSON string returns `None` after the SIMD scan exhausts the
+    // padded bytes.
+    let padded = state.padded_bytes();
+    let close_quote = scan_quoted_string_simd(padded, content_start, b'"')?;
+    if close_quote >= len {
+        return None;
+    }
 
     // Validate escape sequences between the quotes. This is a separate pass
     // but only touches backslash positions — for escape-free strings (the

@@ -132,6 +132,67 @@ pub struct Diagnostic {
     pub found: String,
 }
 
+/// Trailing zero padding appended to the source buffer at
+/// `ParserState::new`. Lets every SIMD kernel load a full SIMD vector
+/// across the last byte of the public input without per-chunk tail
+/// bounds checks. 64 bytes covers a full 64-byte stripe (four 16-byte
+/// NEON / SSE loads, one 64-byte AVX-512 load, one cache line).
+///
+/// Callers that opt into the padded view do so via
+/// [`ParserState::padded_bytes`]. The public `src_bytes` / `src`
+/// accessors still report the original length; padding is never leaked
+/// to consumers that compute byte offsets against the input length.
+pub const INPUT_PAD_BYTES: usize = 64;
+
+/// Cache-line-sized, 64-byte-aligned chunk used as the backing
+/// allocation for [`ParserState::padded_buf`]. The `repr(C, align(64))`
+/// forces `Vec<PaddedChunk>` to allocate 64-byte-aligned memory,
+/// satisfying NEON u8x16, SSE u8x16, and AVX-512 `zmm` load alignment
+/// at the start of the buffer.
+#[repr(C, align(64))]
+#[derive(Clone, Copy, Debug)]
+struct PaddedChunk([u8; 64]);
+
+/// Allocate a 64-byte-aligned buffer containing `input` followed by
+/// [`INPUT_PAD_BYTES`] of trailing zeros. Returns the backing
+/// `Vec<PaddedChunk>`; callers expose a slice view via
+/// [`ParserState::padded_bytes`]. The buffer is sized to the next
+/// whole chunk so the final SIMD load can read a full stripe at
+/// `offset = end` without straying past the allocation.
+///
+/// The implementation avoids double-touching memory: the input region
+/// is populated via a single `copy_nonoverlapping`, and only the
+/// trailing `(n_chunks * 64) - input.len()` bytes (which always
+/// include the [`INPUT_PAD_BYTES`] contract) are explicitly zeroed.
+/// For a 2 MB input this costs one `memcpy(2 MB)` plus
+/// `write_bytes(<= 64 + 63 B, 0)` instead of a 2 MB `memset(0)`
+/// followed by a 2 MB `memcpy`.
+fn allocate_padded_buf(input: &[u8]) -> Vec<PaddedChunk> {
+    let padded_len = input.len() + INPUT_PAD_BYTES;
+    let n_chunks = padded_len.div_ceil(64);
+    let total_bytes = n_chunks * 64;
+    let mut buf: Vec<PaddedChunk> = Vec::with_capacity(n_chunks);
+    // SAFETY: `with_capacity` allocated contiguous storage for
+    // `n_chunks * 64` bytes starting at a 64-byte-aligned address.
+    // We fill the first `input.len()` bytes via `copy_nonoverlapping`
+    // and zero the remainder (at least `INPUT_PAD_BYTES`, up to
+    // `INPUT_PAD_BYTES + 63` when `padded_len` is not chunk-aligned),
+    // so every byte reachable through `padded_bytes()` is initialised.
+    // The `set_len` call is sound: the `PaddedChunk` layout has no
+    // padding bytes of its own and every element is now initialised
+    // from some byte-valid value (input bytes are always valid for
+    // `PaddedChunk`, which is `[u8; 64]`).
+    unsafe {
+        let dst = buf.as_mut_ptr() as *mut u8;
+        if !input.is_empty() {
+            std::ptr::copy_nonoverlapping(input.as_ptr(), dst, input.len());
+        }
+        std::ptr::write_bytes(dst.add(input.len()), 0, total_bytes - input.len());
+        buf.set_len(n_chunks);
+    }
+    buf
+}
+
 #[derive(Pretty, Debug, Default, PartialEq, Clone, Copy, Hash, Eq)]
 pub struct Span<'a> {
     pub start: usize,
@@ -174,6 +235,19 @@ pub struct ParserState<'a> {
     pub furthest_offset: usize,
     #[pprint(skip)]
     pub context_ptr: *const (),
+
+    /// Owned, 64-byte-aligned padded copy of the input. The first
+    /// `end` bytes mirror `src_bytes`; the next [`INPUT_PAD_BYTES`]
+    /// bytes are zero. `padded_buf.len() == end + INPUT_PAD_BYTES`,
+    /// allocated at [`ParserState::new`] so SIMD kernels can load a
+    /// full stripe over the tail without the per-chunk
+    /// `i + STRIDE <= len` guard.
+    ///
+    /// Empty `Vec` when the state is built via [`Default::default`]
+    /// (e.g. during tests or direct struct literals); consumers must
+    /// check `end` or `src_bytes.len()` before indexing.
+    #[pprint(skip)]
+    padded_buf: Vec<PaddedChunk>,
 
     /// Whitespace bitmap cache — 64-byte window.
     /// Bit `i` is set if byte at `ws_bitmap_start + i` is whitespace.
@@ -220,6 +294,7 @@ impl Default for ParserState<'_> {
             ws_bitmap: 0,
             ws_bitmap_start: usize::MAX,
             memo: MemoStore::new(),
+            padded_buf: Vec::new(),
             #[cfg(feature = "diagnostics")]
             expected: SmallVec::new(),
             #[cfg(feature = "diagnostics")]
@@ -231,17 +306,26 @@ impl Default for ParserState<'_> {
 }
 
 impl<'a> ParserState<'a> {
+    /// Build a `ParserState` over `src`. Allocates a 64-byte-aligned
+    /// padded copy of the input bytes with [`INPUT_PAD_BYTES`] trailing
+    /// zero bytes, reachable via [`Self::padded_bytes`]. The public
+    /// `src` / `src_bytes` views are unchanged from prior tranches —
+    /// consumers that compute byte offsets against the input length
+    /// still see `src.len()`.
     pub fn new(src: &'a str) -> ParserState<'a> {
+        let end = src.len();
+        let padded_buf = allocate_padded_buf(src.as_bytes());
         ParserState {
             src,
             src_bytes: src.as_bytes(),
-            end: src.len(),
+            end,
             offset: 0,
             furthest_offset: 0,
             context_ptr: std::ptr::null(),
             ws_bitmap: 0,
             ws_bitmap_start: usize::MAX,
             memo: MemoStore::new(),
+            padded_buf,
             #[cfg(feature = "diagnostics")]
             expected: SmallVec::new(),
             #[cfg(feature = "diagnostics")]
@@ -255,6 +339,39 @@ impl<'a> ParserState<'a> {
         let mut state = Self::new(src);
         state.context_ptr = context as *const C as *const ();
         state
+    }
+
+    /// Return the padded view of the input: the first `end` bytes
+    /// mirror `src_bytes`; the next [`INPUT_PAD_BYTES`] bytes are
+    /// guaranteed to be zero. The returned slice is 64-byte-aligned
+    /// at byte 0 and is safe to load at any offset `i` where
+    /// `i + STRIDE <= src_bytes.len() + INPUT_PAD_BYTES` for every
+    /// SIMD stride in use (`STRIDE <= INPUT_PAD_BYTES`).
+    ///
+    /// Kernels that iterate over input bytes with a fixed-width SIMD
+    /// load (`u8x16`, `u8x32`, `u8x64`) may substitute this for
+    /// `src_bytes` to eliminate the per-chunk `i + STRIDE <= len`
+    /// tail bounds check. The returned length is
+    /// `src_bytes.len() + INPUT_PAD_BYTES`. Positions beyond
+    /// `src_bytes.len()` read zeros and must NOT be reported as
+    /// match positions — callers that compute byte offsets against
+    /// the public input length should clamp results to `end`.
+    ///
+    /// Invariants:
+    /// * `padded_bytes()[0..end] == src_bytes`
+    /// * `padded_bytes()[end..end + INPUT_PAD_BYTES] == [0; 64]`
+    /// * `padded_bytes().as_ptr() as usize % 64 == 0`
+    #[inline(always)]
+    pub fn padded_bytes(&self) -> &[u8] {
+        debug_assert!(
+            self.padded_buf.len() * 64 >= self.end + INPUT_PAD_BYTES,
+            "padded_buf under-sized: have {}, need {}",
+            self.padded_buf.len() * 64,
+            self.end + INPUT_PAD_BYTES,
+        );
+        let ptr = self.padded_buf.as_ptr() as *const u8;
+        let len = self.end + INPUT_PAD_BYTES;
+        unsafe { std::slice::from_raw_parts(ptr, len) }
     }
 
     pub fn is_at_end(&self) -> bool {

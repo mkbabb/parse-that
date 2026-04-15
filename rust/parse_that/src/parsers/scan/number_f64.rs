@@ -112,10 +112,16 @@ pub fn scan_number_span<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
 /// Fused generic number scanner + converter. Scans CSS-compatible numbers (allows `+`,
 /// leading `.` like `.5`, no leading-zero rejection) and converts to f64 in a single
 /// pass using mantissa accumulation + Eisel-Lemire. Returns `Option<f64>` directly.
+///
+/// Routes the digit walker over the padded view so
+/// `scan_digits_simd`'s `remaining < 16` guard ceases to short-circuit
+/// at end-of-input; the scanner's outer `is_ascii_digit` loop
+/// terminates on the NUL-padded region naturally.
 #[inline(always)]
 pub fn scan_number_f64<'a>(state: &mut ParserState<'a>) -> Option<f64> {
     let start = state.offset;
-    let (parts, end) = scan_number_mantissa(state.src_bytes, start, &GENERIC_NUMBER_CONFIG)?;
+    let (parts, end) =
+        scan_number_mantissa(state.padded_bytes(), start, &GENERIC_NUMBER_CONFIG)?;
     state.offset = end;
     let src = &state.src[start..end];
     Some(number_parts_to_f64(&parts, src))
@@ -132,7 +138,8 @@ pub fn scan_number_f64<'a>(state: &mut ParserState<'a>) -> Option<f64> {
 #[inline(always)]
 pub fn scan_number_strict_span<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     let start = state.offset;
-    let (_, end) = scan_number_mantissa(state.src_bytes, start, &STRICT_NUMBER_CONFIG)?;
+    let (_, end) =
+        scan_number_mantissa(state.padded_bytes(), start, &STRICT_NUMBER_CONFIG)?;
     state.offset = end;
     Some(Span::new(start, end, state.src))
 }
@@ -143,7 +150,8 @@ pub fn scan_number_strict_span<'a>(state: &mut ParserState<'a>) -> Option<Span<'
 #[inline(always)]
 pub fn scan_number_strict_fused<'a>(state: &mut ParserState<'a>) -> Option<(Span<'a>, f64)> {
     let start = state.offset;
-    let (parts, end) = scan_number_mantissa(state.src_bytes, start, &STRICT_NUMBER_CONFIG)?;
+    let (parts, end) =
+        scan_number_mantissa(state.padded_bytes(), start, &STRICT_NUMBER_CONFIG)?;
     state.offset = end;
     let span = Span::new(start, end, state.src);
     let f = if parts.is_integer && parts.n_digits == 1 && parts.mantissa == 0 {
@@ -158,7 +166,8 @@ pub fn scan_number_strict_fused<'a>(state: &mut ParserState<'a>) -> Option<(Span
 #[inline(always)]
 pub fn scan_number_strict_f64<'a>(state: &mut ParserState<'a>) -> Option<f64> {
     let start = state.offset;
-    let (parts, end) = scan_number_mantissa(state.src_bytes, start, &STRICT_NUMBER_CONFIG)?;
+    let (parts, end) =
+        scan_number_mantissa(state.padded_bytes(), start, &STRICT_NUMBER_CONFIG)?;
     state.offset = end;
     let src = &state.src[start..end];
     Some(if parts.is_integer && parts.n_digits == 1 && parts.mantissa == 0 {
