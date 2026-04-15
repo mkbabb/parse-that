@@ -193,6 +193,70 @@ fn allocate_padded_buf(input: &[u8]) -> Vec<PaddedChunk> {
     buf
 }
 
+/// Zero-cost padded-view witness.
+///
+/// Carries an immutable slice whose first `len` bytes are the public
+/// input and whose next [`INPUT_PAD_BYTES`] bytes are guaranteed to be
+/// zero. SIMD scanners that accept `PaddedView` may load any fixed-width
+/// stripe at offset `i` where `i + STRIDE <= len + INPUT_PAD_BYTES` for
+/// `STRIDE <= INPUT_PAD_BYTES` without a per-chunk bounds guard.
+///
+/// The caller constructs this via [`ParserState::padded`]; the returned
+/// view's `bytes` is the full `padded_bytes()` slice (length
+/// `len + INPUT_PAD_BYTES`) and `len` is the public input length.
+/// Positions `>= len` read NUL bytes and MUST be clamped to `len` in
+/// any returned offset.
+#[derive(Clone, Copy, Debug)]
+pub struct PaddedView<'a> {
+    /// Backing buffer: the first `len` bytes mirror the public input;
+    /// the next [`INPUT_PAD_BYTES`] bytes are NUL.
+    bytes: &'a [u8],
+    /// Public input length. `bytes.len() == len + INPUT_PAD_BYTES`.
+    len: usize,
+}
+
+impl<'a> PaddedView<'a> {
+    /// Construct a view from `bytes` whose trailing
+    /// [`INPUT_PAD_BYTES`] bytes are zero. `bytes.len()` must equal
+    /// `len + INPUT_PAD_BYTES`.
+    #[inline(always)]
+    pub fn new(bytes: &'a [u8], len: usize) -> Self {
+        debug_assert!(
+            bytes.len() == len + INPUT_PAD_BYTES,
+            "PaddedView::new: bytes.len() = {}, expected len + INPUT_PAD_BYTES = {}",
+            bytes.len(),
+            len + INPUT_PAD_BYTES,
+        );
+        debug_assert!(
+            bytes[len..].iter().all(|&b| b == 0),
+            "PaddedView::new: trailing INPUT_PAD_BYTES bytes must be NUL",
+        );
+        Self { bytes, len }
+    }
+
+    /// Backing buffer of length `len + INPUT_PAD_BYTES`. SIMD kernels
+    /// load from this slice at any offset `i` where
+    /// `i + STRIDE <= bytes().len()` without a per-chunk bounds check.
+    #[inline(always)]
+    pub fn bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Public input length. Kernels that scan forward through input
+    /// positions terminate when `i >= len()`.
+    #[inline(always)]
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    /// `true` when the public input is empty. Kernels short-circuit
+    /// ahead of any SIMD load in this case.
+    #[inline(always)]
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+}
+
 #[derive(Pretty, Debug, Default, PartialEq, Clone, Copy, Hash, Eq)]
 pub struct Span<'a> {
     pub start: usize,
@@ -372,6 +436,20 @@ impl<'a> ParserState<'a> {
         let ptr = self.padded_buf.as_ptr() as *const u8;
         let len = self.end + INPUT_PAD_BYTES;
         unsafe { std::slice::from_raw_parts(ptr, len) }
+    }
+
+    /// Borrow the padded view as a [`PaddedView`] witness. The returned
+    /// value carries the padded-backing-buffer invariant at the type
+    /// level: SIMD kernels that accept `PaddedView` may load a full
+    /// fixed-width stripe at any offset `i` where
+    /// `i + STRIDE <= view.bytes().len()` without a per-chunk bounds
+    /// guard.
+    #[inline(always)]
+    pub fn padded(&self) -> PaddedView<'_> {
+        PaddedView {
+            bytes: self.padded_bytes(),
+            len: self.end,
+        }
     }
 
     pub fn is_at_end(&self) -> bool {
