@@ -195,8 +195,14 @@ pub fn scan_number_mantissa(
     }
     // Remaining digits (< 8) — SWAR may have stopped mid-run when a
     // partial chunk mixed digits with non-digits; finish byte-by-byte.
+    // Wrapping arithmetic matches the SIMD/SWAR folds above: the
+    // 19-digit mantissa budget is enforced by `number_parts_to_f64`
+    // (which routes n_digits > 18 through `fast_float2`), so the
+    // integer accumulator is allowed to wrap at u64 boundaries here.
     while i < len && unsafe { *bytes.get_unchecked(i) }.is_ascii_digit() {
-        mantissa = mantissa * 10 + (unsafe { *bytes.get_unchecked(i) } - b'0') as u64;
+        mantissa = mantissa
+            .wrapping_mul(10)
+            .wrapping_add((unsafe { *bytes.get_unchecked(i) } - b'0') as u64);
         i += 1;
     }
     let digit_count = i - digit_start;
