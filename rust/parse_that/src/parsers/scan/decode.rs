@@ -4,8 +4,24 @@
 // RFC 8259 escape sequences. Decoded content is either borrowed directly
 // from the input (zero-copy, when no escapes are present) or written to
 // a caller-supplied arena `Vec<u8>`.
+//
+// ## SIMD strategy (AV.4.3, simdjson stage-2 tape_builder pattern)
+//
+// One pass over the input: 16-byte stripes classified by SIMD into
+// `quote_bits | bs_bits = stop_bits`. In escape-free mode the inner
+// loop ticks one stripe per iteration with no per-byte branch — when
+// every stripe arrives with `stop_bits == 0` we copy nothing (Borrowed
+// path) or copy a full `u8x16` (Owned path) and continue. The first
+// stripe carrying a real backslash forces owned mode; from there each
+// escape-free run between escapes copies stripe-strided into the arena
+// before scalar handling decodes the escape itself.
 
-use super::quoted_simd::scan_quoted_string_simd;
+use std::simd::prelude::*;
+
+use super::quoted_simd::odd_parity_backslashes;
+
+const CHUNK: usize = 16;
+const MASK16: u32 = 0xFFFF;
 
 /// Payload for a decoded JSON string.
 ///
@@ -28,9 +44,10 @@ pub enum StringPayload {
 /// quote. Returns `None` on malformed input (unterminated string,
 /// invalid escape, bad surrogate pair).
 ///
-/// **Fast path**: uses `memchr` to locate the first backslash. If none
-/// is found before the closing quote, returns `Borrowed` with zero
-/// arena writes.
+/// The fused SIMD scan classifies escape and quote bytes in the same
+/// `u8x16` stripe pass: an escape-free input takes the Borrowed path
+/// without ever touching the arena; an escape-bearing input copies
+/// each escape-free run between escapes 16 bytes at a time.
 #[inline]
 pub fn decode_json_string_to_arena(
     bytes: &[u8],
@@ -40,114 +57,269 @@ pub fn decode_json_string_to_arena(
     if bytes.get(start) != Some(&b'"') {
         return None;
     }
-
     let content_start = start + 1;
+    simd_scan_or_decode(bytes, content_start, arena)
+}
 
-    // Find the closing quote via the SIMD scanner (handles escape parity).
-    let close_quote = scan_quoted_string_simd(bytes, content_start, b'"')?;
-    let end = close_quote + 1;
+/// Walk the input in 16-byte stripes looking for the first real stop
+/// (closing `"` or unescaped `\`). On a real quote, return Borrowed.
+/// On a real backslash, hand off to owned-mode escape decoding.
+#[inline]
+fn simd_scan_or_decode(
+    bytes: &[u8],
+    content_start: usize,
+    arena: &mut Vec<u8>,
+) -> Option<(StringPayload, usize)> {
+    let len = bytes.len();
+    let mut pos = content_start;
+    let mut carry: u32 = 0;
 
-    // Fast path: no backslash before the closing quote => zero-copy borrow.
-    let content = &bytes[content_start..close_quote];
-    match memchr::memchr(b'\\', content) {
-        None => {
+    let quote_splat = u8x16::splat(b'"');
+    let bs_splat = u8x16::splat(b'\\');
+
+    while pos + CHUNK <= len {
+        let chunk = u8x16::from_slice(unsafe { bytes.get_unchecked(pos..pos + CHUNK) });
+        let quote_bits = chunk.simd_eq(quote_splat).to_bitmask() as u32;
+        let bs_bits = chunk.simd_eq(bs_splat).to_bitmask() as u32;
+
+        // Escape-free fast stripe: no backslash in stripe and no
+        // pending carry from a previous odd-length backslash run.
+        if (quote_bits | bs_bits) == 0 && carry == 0 {
+            pos += CHUNK;
+            continue;
+        }
+
+        // Resolve escape parity: which positions in this stripe are
+        // preceded by an odd-length backslash run (and so are escaped).
+        let escaped = if bs_bits == 0 {
+            let e = carry;
+            carry = 0;
+            e
+        } else {
+            let odd = odd_parity_backslashes(bs_bits, carry);
+            let e = ((odd << 1) | carry) & MASK16;
+            carry = (odd >> 15) & 1;
+            e
+        };
+
+        let real_quotes = quote_bits & !escaped;
+        let real_bs = bs_bits & !escaped;
+        let real_stops = real_quotes | real_bs;
+
+        if real_stops == 0 {
+            pos += CHUNK;
+            continue;
+        }
+
+        let off = real_stops.trailing_zeros() as usize;
+        let abs = pos + off;
+
+        if (real_quotes >> off) & 1 == 1 {
+            // Closing quote — clean Borrowed path.
             let payload = StringPayload::Borrowed {
                 start: content_start as u32,
-                end: close_quote as u32,
+                end: abs as u32,
             };
-            Some((payload, end))
+            return Some((payload, abs + 1));
         }
-        Some(first_bs) => {
-            // Slow path: decode escapes into arena.
-            let arena_offset = arena.len() as u32;
 
-            // Copy the prefix before the first backslash.
-            arena.extend_from_slice(&content[..first_bs]);
+        // First real backslash — switch to owned decode.
+        return owned_decode(bytes, content_start, abs, arena);
+    }
 
-            // Decode from the first backslash onward.
-            let ok = decode_escapes(bytes, content_start + first_bs, close_quote, arena);
-            if !ok {
-                // Roll back partial arena writes.
-                arena.truncate(arena_offset as usize);
-                return None;
+    // ── Scalar tail (< 16 bytes remaining) ──────────────────────────
+    scalar_scan_or_decode(bytes, content_start, pos, carry != 0, arena)
+}
+
+/// Owned-mode decode: append the escape-free prefix
+/// [`content_start`..`first_bs`] in bulk, then SIMD-stride copy
+/// escape-free runs interleaved with scalar escape handling.
+#[inline]
+fn owned_decode(
+    bytes: &[u8],
+    content_start: usize,
+    first_bs: usize,
+    arena: &mut Vec<u8>,
+) -> Option<(StringPayload, usize)> {
+    let arena_offset = arena.len() as u32;
+
+    arena.extend_from_slice(unsafe { bytes.get_unchecked(content_start..first_bs) });
+
+    let end_pos = match decode_escapes_simd(bytes, first_bs, arena) {
+        Some(end) => end,
+        None => {
+            arena.truncate(arena_offset as usize);
+            return None;
+        }
+    };
+
+    let len = arena.len() as u32 - arena_offset;
+    let payload = StringPayload::Owned { arena_offset, len };
+    Some((payload, end_pos + 1))
+}
+
+/// Decode escape sequences and copy escape-free runs from `bytes[pos..]`
+/// (where `pos` points at a `\`) until the closing quote. Appends to
+/// `arena`. Returns the byte index of the closing quote, or `None` on
+/// invalid input.
+///
+/// Inside the loop, escape-free 16-byte stripes copy via
+/// `arena.extend_from_slice` (lowering to a single 128-bit
+/// `vst1q_u8` / `_mm_storeu_si128` after loop-invariant hoisting).
+/// Sub-stripe runs copy the prefix up to the next stop byte.
+#[inline]
+fn decode_escapes_simd(bytes: &[u8], mut pos: usize, arena: &mut Vec<u8>) -> Option<usize> {
+    let len = bytes.len();
+    let quote_splat = u8x16::splat(b'"');
+    let bs_splat = u8x16::splat(b'\\');
+
+    loop {
+        // Peel any pending escape sequence(s) at `pos`.
+        while pos < len && unsafe { *bytes.get_unchecked(pos) } == b'\\' {
+            pos = decode_one_escape(bytes, pos, arena)?;
+        }
+
+        if pos >= len {
+            return None;
+        }
+
+        // SIMD-stride copy escape-free bytes until next stop.
+        while pos + CHUNK <= len {
+            let chunk = u8x16::from_slice(unsafe { bytes.get_unchecked(pos..pos + CHUNK) });
+            let quote_bits = chunk.simd_eq(quote_splat).to_bitmask() as u32;
+            let bs_bits = chunk.simd_eq(bs_splat).to_bitmask() as u32;
+            let stop_bits = quote_bits | bs_bits;
+
+            if stop_bits == 0 {
+                arena.extend_from_slice(unsafe { bytes.get_unchecked(pos..pos + CHUNK) });
+                pos += CHUNK;
+                continue;
             }
 
-            let len = arena.len() as u32 - arena_offset;
-            let payload = StringPayload::Owned { arena_offset, len };
-            Some((payload, end))
+            let off = stop_bits.trailing_zeros() as usize;
+
+            if off > 0 {
+                arena.extend_from_slice(unsafe { bytes.get_unchecked(pos..pos + off) });
+            }
+            let abs = pos + off;
+
+            if (quote_bits >> off) & 1 == 1 {
+                return Some(abs);
+            }
+
+            // Backslash at `abs` — break to outer loop, peel escape(s).
+            pos = abs;
+            break;
+        }
+
+        if pos + CHUNK > len {
+            return scalar_decode_tail(bytes, pos, arena);
         }
     }
 }
 
-/// Decode escape sequences from `bytes[pos..end]` (where `pos` points
-/// at the first `\`), appending decoded UTF-8 to `arena`.
-///
-/// Returns `true` on success, `false` on any invalid escape.
+/// Scalar drain when fewer than 16 bytes remain in owned-mode decode.
+/// Walks per-byte, honouring escapes and stopping at the closing quote.
 #[inline]
-fn decode_escapes(bytes: &[u8], mut pos: usize, end: usize, arena: &mut Vec<u8>) -> bool {
-    while pos < end {
+fn scalar_decode_tail(bytes: &[u8], mut pos: usize, arena: &mut Vec<u8>) -> Option<usize> {
+    let len = bytes.len();
+    while pos < len {
         let b = unsafe { *bytes.get_unchecked(pos) };
-        if b != b'\\' {
-            // Scan forward to next backslash or end -- bulk copy.
-            let run_start = pos;
-            pos += 1;
-            while pos < end && unsafe { *bytes.get_unchecked(pos) } != b'\\' {
-                pos += 1;
-            }
-            arena.extend_from_slice(&bytes[run_start..pos]);
+        if b == b'"' {
+            return Some(pos);
+        }
+        if b == b'\\' {
+            pos = decode_one_escape(bytes, pos, arena)?;
             continue;
         }
-
-        // Backslash at `pos`.
+        arena.push(b);
         pos += 1;
-        if pos >= end {
-            return false;
-        }
-
-        match unsafe { *bytes.get_unchecked(pos) } {
-            b'"' => { arena.push(b'"'); pos += 1; }
-            b'\\' => { arena.push(b'\\'); pos += 1; }
-            b'/' => { arena.push(b'/'); pos += 1; }
-            b'b' => { arena.push(0x08); pos += 1; }
-            b'f' => { arena.push(0x0C); pos += 1; }
-            b'n' => { arena.push(0x0A); pos += 1; }
-            b'r' => { arena.push(0x0D); pos += 1; }
-            b't' => { arena.push(0x09); pos += 1; }
-            b'u' => {
-                pos += 1;
-                let Some(hi) = decode_hex4(bytes, pos) else { return false; };
-                pos += 4;
-
-                let codepoint = if (0xD800..=0xDBFF).contains(&hi) {
-                    // High surrogate -- must be followed by \uDC00..DFFF.
-                    if pos + 5 < bytes.len()
-                        && bytes.get(pos) == Some(&b'\\')
-                        && bytes.get(pos + 1) == Some(&b'u')
-                    {
-                        let Some(lo) = decode_hex4(bytes, pos + 2) else { return false; };
-                        if !(0xDC00..=0xDFFF).contains(&lo) {
-                            return false;
-                        }
-                        pos += 6;
-                        // Combine surrogate pair.
-                        0x10000 + ((hi as u32 - 0xD800) << 10) + (lo as u32 - 0xDC00)
-                    } else {
-                        return false;
-                    }
-                } else if (0xDC00..=0xDFFF).contains(&hi) {
-                    // Lone low surrogate is invalid.
-                    return false;
-                } else {
-                    hi as u32
-                };
-
-                // Encode codepoint as UTF-8.
-                encode_utf8(codepoint, arena);
-            }
-            _ => return false,
-        }
     }
-    true
+    None
+}
+
+/// Scalar fallback for the last < 16 bytes of the borrowed-mode pass.
+/// Mirrors the SIMD loop's behaviour: real quote → Borrowed; real
+/// backslash → handoff to owned decode.
+#[inline]
+fn scalar_scan_or_decode(
+    bytes: &[u8],
+    content_start: usize,
+    mut pos: usize,
+    mut byte0_escaped: bool,
+    arena: &mut Vec<u8>,
+) -> Option<(StringPayload, usize)> {
+    let len = bytes.len();
+    while pos < len {
+        if byte0_escaped {
+            byte0_escaped = false;
+            pos += 1;
+            continue;
+        }
+        let b = unsafe { *bytes.get_unchecked(pos) };
+        if b == b'"' {
+            let payload = StringPayload::Borrowed {
+                start: content_start as u32,
+                end: pos as u32,
+            };
+            return Some((payload, pos + 1));
+        }
+        if b == b'\\' {
+            return owned_decode(bytes, content_start, pos, arena);
+        }
+        pos += 1;
+    }
+    None
+}
+
+/// Handle one escape sequence at `bytes[pos]` (which is `\`). Appends
+/// the decoded bytes to `arena` and returns the position past the
+/// escape. Surrogate pairs consume both halves.
+#[inline]
+fn decode_one_escape(bytes: &[u8], pos: usize, arena: &mut Vec<u8>) -> Option<usize> {
+    debug_assert_eq!(bytes.get(pos), Some(&b'\\'));
+    let len = bytes.len();
+    if pos + 1 >= len {
+        return None;
+    }
+    match unsafe { *bytes.get_unchecked(pos + 1) } {
+        b'"' => { arena.push(b'"'); Some(pos + 2) }
+        b'\\' => { arena.push(b'\\'); Some(pos + 2) }
+        b'/' => { arena.push(b'/'); Some(pos + 2) }
+        b'b' => { arena.push(0x08); Some(pos + 2) }
+        b'f' => { arena.push(0x0C); Some(pos + 2) }
+        b'n' => { arena.push(0x0A); Some(pos + 2) }
+        b'r' => { arena.push(0x0D); Some(pos + 2) }
+        b't' => { arena.push(0x09); Some(pos + 2) }
+        b'u' => {
+            let hi = decode_hex4(bytes, pos + 2)?;
+            let mut next = pos + 6;
+
+            let codepoint = if (0xD800..=0xDBFF).contains(&hi) {
+                if next + 5 < len
+                    && unsafe { *bytes.get_unchecked(next) } == b'\\'
+                    && unsafe { *bytes.get_unchecked(next + 1) } == b'u'
+                {
+                    let lo = decode_hex4(bytes, next + 2)?;
+                    if !(0xDC00..=0xDFFF).contains(&lo) {
+                        return None;
+                    }
+                    next += 6;
+                    0x10000 + ((hi as u32 - 0xD800) << 10) + (lo as u32 - 0xDC00)
+                } else {
+                    return None;
+                }
+            } else if (0xDC00..=0xDFFF).contains(&hi) {
+                return None;
+            } else {
+                hi as u32
+            };
+
+            encode_utf8(codepoint, arena);
+            Some(next)
+        }
+        _ => None,
+    }
 }
 
 /// Decode four hex digits from `bytes[start..start+4]` into a `u16`.
