@@ -330,11 +330,6 @@ pub struct ParserState<'a> {
     #[pprint(skip)]
     pub ws_bitmap_start: usize,
 
-    /// State-based memoization for monolithic slab parsers.
-    /// Dropped with each parse — no cross-iteration cache retention.
-    #[pprint(skip)]
-    pub memo: MemoStore,
-
     #[cfg(feature = "diagnostics")]
     #[pprint(skip)]
     pub expected: SmallVec<[&'static str; 8]>,
@@ -357,7 +352,6 @@ impl Default for ParserState<'_> {
             context_ptr: std::ptr::null(),
             ws_bitmap: 0,
             ws_bitmap_start: usize::MAX,
-            memo: MemoStore::new(),
             padded_buf: Vec::new(),
             #[cfg(feature = "diagnostics")]
             expected: SmallVec::new(),
@@ -388,7 +382,6 @@ impl<'a> ParserState<'a> {
             context_ptr: std::ptr::null(),
             ws_bitmap: 0,
             ws_bitmap_start: usize::MAX,
-            memo: MemoStore::new(),
             padded_buf,
             #[cfg(feature = "diagnostics")]
             expected: SmallVec::new(),
