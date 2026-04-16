@@ -527,3 +527,116 @@ fn simd_owned_close_quote_at_stripe_high_bit() {
     let got = decoded_str(&input).unwrap();
     assert_eq!(got, want);
 }
+
+// ─── Smoke microbench (DECODE_BENCH=1) ──────────────────────────────
+//
+// Self-timing measurement of `decode_json_string_to_arena` over a
+// fixed input distribution. Gated by the `DECODE_BENCH` env var —
+// `cargo test` does not run it. To execute:
+//
+//     DECODE_BENCH=1 cargo test --release --test decode_test \
+//         decode_microbench -- --nocapture --ignored
+//
+// Reported numbers are bytes-per-iteration / nanoseconds-per-iteration.
+// This is a smoke harness, not a criterion run; numbers are reproducible
+// to ~5%.
+
+#[test]
+#[ignore]
+fn decode_microbench() {
+    if std::env::var("DECODE_BENCH").is_err() {
+        return;
+    }
+
+    use std::hint::black_box;
+    use std::time::Instant;
+
+    fn time<F: FnMut() -> usize>(label: &str, bytes_per_iter: usize, mut f: F) {
+        for _ in 0..1_000 {
+            black_box(f());
+        }
+        let iters = 50_000usize;
+        let start = Instant::now();
+        let mut sink = 0usize;
+        for _ in 0..iters {
+            sink = sink.wrapping_add(black_box(f()));
+        }
+        let elapsed = start.elapsed();
+        let ns_per = elapsed.as_nanos() as f64 / iters as f64;
+        let mb_per_s = (bytes_per_iter as f64 / ns_per) * 1000.0;
+        println!(
+            "{label:48}  {ns_per:>9.2} ns/iter  {mb_per_s:>8.2} MB/s   bytes={bytes_per_iter} sink={sink}"
+        );
+    }
+
+    let mut arena = Vec::with_capacity(64 * 1024);
+
+    let s_short_clean = format!("\"{}\"", "abcdefghij_screen_name");
+    let bytes_short_clean = s_short_clean.as_bytes().to_vec();
+
+    let s_med_clean = format!("\"{}\"", "a".repeat(64));
+    let bytes_med_clean = s_med_clean.as_bytes().to_vec();
+
+    let s_long_clean = format!("\"{}\"", "x".repeat(512));
+    let bytes_long_clean = s_long_clean.as_bytes().to_vec();
+
+    let s_med_one_esc = format!("\"{}\\n{}\"", "p".repeat(32), "q".repeat(32));
+    let bytes_med_one_esc = s_med_one_esc.as_bytes().to_vec();
+
+    let unit = "abcdefghijklmnop\\n";
+    let mut s_periodic = String::from("\"");
+    for _ in 0..32 {
+        s_periodic.push_str(unit);
+    }
+    s_periodic.push('"');
+    let bytes_periodic = s_periodic.as_bytes().to_vec();
+
+    println!();
+    println!("── decode_json_string_to_arena microbench ─────────────────────────");
+    time(
+        "escape-free 22 B (twitter-shape)",
+        bytes_short_clean.len(),
+        || {
+            arena.clear();
+            let (_, end) =
+                decode_json_string_to_arena(&bytes_short_clean, 0, &mut arena).unwrap();
+            end
+        },
+    );
+    time(
+        "escape-free 66 B (citm-shape)",
+        bytes_med_clean.len(),
+        || {
+            arena.clear();
+            let (_, end) =
+                decode_json_string_to_arena(&bytes_med_clean, 0, &mut arena).unwrap();
+            end
+        },
+    );
+    time("escape-free 514 B (long)", bytes_long_clean.len(), || {
+        arena.clear();
+        let (_, end) =
+            decode_json_string_to_arena(&bytes_long_clean, 0, &mut arena).unwrap();
+        end
+    });
+    time(
+        "one-escape 67 B (sparse)",
+        bytes_med_one_esc.len(),
+        || {
+            arena.clear();
+            let (_, end) =
+                decode_json_string_to_arena(&bytes_med_one_esc, 0, &mut arena).unwrap();
+            end
+        },
+    );
+    time(
+        "periodic-escape 578 B (dense)",
+        bytes_periodic.len(),
+        || {
+            arena.clear();
+            let (_, end) = decode_json_string_to_arena(&bytes_periodic, 0, &mut arena).unwrap();
+            end
+        },
+    );
+    println!();
+}
