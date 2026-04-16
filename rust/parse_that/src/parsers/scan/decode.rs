@@ -163,9 +163,9 @@ fn owned_decode(
 /// `arena`. Returns the byte index of the closing quote, or `None` on
 /// invalid input.
 ///
-/// Inside the loop, escape-free 16-byte stripes copy via
-/// `arena.extend_from_slice` (lowering to a single 128-bit
-/// `vst1q_u8` / `_mm_storeu_si128` after loop-invariant hoisting).
+/// Inside the loop, escape-free 16-byte stripes copy through a
+/// `u8x16` register store ([`store_chunk`]) — one `vst1q_u8` (NEON) /
+/// `_mm_storeu_si128` (x86) per stripe with no per-byte branch.
 /// Sub-stripe runs copy the prefix up to the next stop byte.
 #[inline]
 fn decode_escapes_simd(bytes: &[u8], mut pos: usize, arena: &mut Vec<u8>) -> Option<usize> {
@@ -191,7 +191,7 @@ fn decode_escapes_simd(bytes: &[u8], mut pos: usize, arena: &mut Vec<u8>) -> Opt
             let stop_bits = quote_bits | bs_bits;
 
             if stop_bits == 0 {
-                arena.extend_from_slice(unsafe { bytes.get_unchecked(pos..pos + CHUNK) });
+                store_chunk(arena, chunk);
                 pos += CHUNK;
                 continue;
             }
@@ -215,6 +215,23 @@ fn decode_escapes_simd(bytes: &[u8], mut pos: usize, arena: &mut Vec<u8>) -> Opt
         if pos + CHUNK > len {
             return scalar_decode_tail(bytes, pos, arena);
         }
+    }
+}
+
+/// Append a `u8x16` register's contents to `arena` as a single 128-bit
+/// store (`vst1q_u8` on NEON, `_mm_storeu_si128` on x86). Reserves
+/// space if needed, then writes the lane bytes through a raw pointer
+/// before bumping `len` — the register never round-trips through a
+/// stack temporary.
+#[inline(always)]
+fn store_chunk(arena: &mut Vec<u8>, chunk: u8x16) {
+    let old_len = arena.len();
+    arena.reserve(CHUNK);
+    unsafe {
+        let dst = arena.as_mut_ptr().add(old_len);
+        // u8x16 → [u8; 16] lowers to a single SIMD store at dst.
+        std::ptr::write_unaligned(dst as *mut [u8; CHUNK], chunk.to_array());
+        arena.set_len(old_len + CHUNK);
     }
 }
 
