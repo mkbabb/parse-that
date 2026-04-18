@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::parse::ParserFn;
-use crate::scanners::trim_leading_whitespace;
+use crate::scanners::trim_leading_whitespace_mut;
 use crate::state::{ParserState, Span};
 
 use aho_corasick::AhoCorasick;
@@ -141,10 +141,10 @@ impl<'a> SpanParser<'a> {
         }
         // Fast path: trim_ws only (most common flag combination)
         if self.flags == FLAG_TRIM_WS {
-            state.offset += trim_leading_whitespace(state);
+            trim_leading_whitespace_mut(state);
             let result = self.call_inner(state);
             if result.is_some() {
-                state.offset += trim_leading_whitespace(state);
+                trim_leading_whitespace_mut(state);
             }
             return result;
         }
@@ -154,7 +154,7 @@ impl<'a> SpanParser<'a> {
     #[inline(never)]
     fn call_with_flags_cold(&self, state: &mut ParserState<'a>) -> Option<Span<'a>> {
         if self.flags & FLAG_TRIM_WS != 0 {
-            state.offset += trim_leading_whitespace(state);
+            trim_leading_whitespace_mut(state);
         }
         let checkpoint = if self.flags & FLAG_SAVE_STATE != 0 {
             Some(state.offset)
@@ -173,7 +173,7 @@ impl<'a> SpanParser<'a> {
         }
         // Skip post-trim on failure
         if result.is_some() && self.flags & FLAG_TRIM_WS != 0 {
-            state.offset += trim_leading_whitespace(state);
+            trim_leading_whitespace_mut(state);
         }
         result
     }

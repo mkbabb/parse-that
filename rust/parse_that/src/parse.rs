@@ -1,6 +1,6 @@
 use smallbox::{space::S32, SmallBox};
 
-use crate::scanners::trim_leading_whitespace;
+use crate::scanners::trim_leading_whitespace_mut;
 use crate::state::ParserState;
 
 /// Structured error returned by `Parser::parse_or_error()` on failure.
@@ -84,10 +84,10 @@ where
         }
         // Fast path: trim_ws only (most common flag combination)
         if self.flags == FLAG_TRIM_WS {
-            state.offset += trim_leading_whitespace(state);
+            trim_leading_whitespace_mut(state);
             let result = self.parser_fn.call(state);
             if result.is_some() {
-                state.offset += trim_leading_whitespace(state);
+                trim_leading_whitespace_mut(state);
             }
             return result;
         }
@@ -98,7 +98,7 @@ where
     fn call_with_flags_cold(&self, state: &mut ParserState<'a>) -> Option<Output> {
         // Pre: trim whitespace
         if self.flags & FLAG_TRIM_WS != 0 {
-            state.offset += trim_leading_whitespace(state);
+            trim_leading_whitespace_mut(state);
         }
 
         // Pre: save state for backtracking
@@ -121,7 +121,7 @@ where
 
         // Post: trim whitespace — skip on failure
         if result.is_some() && self.flags & FLAG_TRIM_WS != 0 {
-            state.offset += trim_leading_whitespace(state);
+            trim_leading_whitespace_mut(state);
         }
 
         // Post: EOF check

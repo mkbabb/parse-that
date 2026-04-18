@@ -1,3 +1,28 @@
+//! Scanner cluster (AW-IV.W4.2.b consolidated).
+//!
+//! Dispatch hierarchy:
+//!
+//! - [`find_first_of`] — single entry point that routes on target
+//!   count. 1..=3 targets dispatch to `memchr::memchr[1,2,3]`; 4..=8
+//!   targets dispatch to the unified nibble-LUT SIMD path; 9+ falls
+//!   back to a 256-byte scalar LUT.
+//! - [`find_first_of_nibble_lut`] — shared SIMD kernel for any
+//!   pre-built `(lo_lut, hi_lut)` pair. Also exposed for callers that
+//!   construct the LUTs once and reuse across many scans.
+//! - [`trim_leading_whitespace_mut`] — single entry point for WS
+//!   skipping; fuses the 3-tier acceleration (2-byte scalar probe,
+//!   cached bitmap shift, scan-and-cache cold path) behind one public
+//!   function. The prior `trim_leading_whitespace(&ParserState) ->
+//!   usize` read-only variant collapses into this mutation path via
+//!   a local offset snapshot.
+//!
+//! Pre-W4.2 the cluster carried six `find_first_of_*` variants
+//! (`_3`, `_4`, `_nibble_lut`, plus the dispatcher) and four
+//! `trim_leading_whitespace*` variants (`_with_set`, the read-only
+//! span-returning one, `_mut`, and the private `_scan_and_cache`
+//! cold path). W4.2 collapses those to one public dispatcher per
+//! responsibility plus the shared SIMD kernels they all call into.
+
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
@@ -88,67 +113,23 @@ pub fn trim_leading_whitespace_with_set(state: &mut ParserState<'_>, ws_bytes: &
     state.offset = i;
 }
 
-#[inline(always)]
-pub fn trim_leading_whitespace(state: &ParserState<'_>) -> usize {
-    let bytes = state.src_bytes;
-    let mut i = state.offset;
-    let end = bytes.len();
-
-    // Fast path: first byte is not whitespace (most common case)
-    if i >= end
-        || !matches!(
-            unsafe { *bytes.get_unchecked(i) },
-            b' ' | b'\t' | b'\n' | b'\r'
-        )
-    {
-        return 0;
-    }
-
-    i += 1; // we know the first byte is whitespace
-
-    // SIMD: process 16 bytes at a time for longer spans
-    {
-        use std::simd::prelude::*;
-        while i + 16 <= end {
-            let chunk = u8x16::from_slice(&bytes[i..i + 16]);
-            let mask = chunk.simd_eq(u8x16::splat(b' '))
-                | chunk.simd_eq(u8x16::splat(b'\t'))
-                | chunk.simd_eq(u8x16::splat(b'\n'))
-                | chunk.simd_eq(u8x16::splat(b'\r'));
-            if mask.all() {
-                i += 16;
-                continue;
-            }
-            let first_non_ws = (!mask).to_bitmask().trailing_zeros() as usize;
-            return i + first_non_ws - state.offset;
-        }
-    }
-
-    // Scalar tail
-    while i < end {
-        match unsafe { *bytes.get_unchecked(i) } {
-            b' ' | b'\t' | b'\n' | b'\r' => i += 1,
-            _ => break,
-        }
-    }
-    i - state.offset
-}
-
-/// Skip leading whitespace with 3-tier acceleration:
+/// Skip leading whitespace at `state.offset`. Three-tier acceleration:
 ///
-/// 1. **Scalar 2-byte check** — handles 0-1 whitespace chars (80%+ of calls).
-/// 2. **Bitmap cache hit** — if offset falls within a previously scanned 64-byte
-///    window, uses bit manipulation to find the first non-WS byte with zero
-///    re-scanning.
-/// 3. **Scan + populate** — scans up to 64 bytes, populates the bitmap cache,
-///    then uses it. Falls through to SIMD/scalar for spans > 64 bytes.
+/// 1. **Scalar 2-byte probe** — handles 0..=1 whitespace bytes (80%+
+///    of calls).
+/// 2. **Bitmap cache hit** — reuse a previously-populated 64-byte
+///    window via `trailing_ones` when `state.offset` still falls
+///    inside the cached range.
+/// 3. **Scan-and-cache cold path** — scan up to 64 bytes, populate
+///    the bitmap, advance. If the WS run fills the whole window,
+///    recurse into the SIMD bulk loop via an inline tail.
 #[inline(always)]
 pub fn trim_leading_whitespace_mut(state: &mut ParserState<'_>) {
     let bytes = state.src_bytes;
     let offset = state.offset;
     let end = bytes.len();
 
-    // ── Tier 1: scalar 2-byte check (handles 80%+ of calls) ────────────
+    // ── Tier 1: scalar 2-byte probe ─────────────────────────────
     if offset >= end {
         return;
     }
@@ -156,7 +137,6 @@ pub fn trim_leading_whitespace_mut(state: &mut ParserState<'_>) {
     if !matches!(b0, b' ' | b'\t' | b'\n' | b'\r') {
         return;
     }
-    // First byte is WS — check second
     if offset + 1 >= end {
         state.offset = offset + 1;
         return;
@@ -167,37 +147,29 @@ pub fn trim_leading_whitespace_mut(state: &mut ParserState<'_>) {
         return;
     }
 
-    // ── 2+ whitespace bytes — try bitmap cache ─────────────────────────
+    // ── Tier 2: bitmap cache hit ────────────────────────────────
     let ws_start = state.ws_bitmap_start;
-
-    // Tier 2: bitmap cache hit — offset is within the cached 64-byte window.
     if offset >= ws_start && offset - ws_start < 64 {
         let bit_offset = offset - ws_start;
-        // Shift out bits below our position, then count trailing ones
-        // (each 1-bit = whitespace byte)
         let shifted = state.ws_bitmap >> bit_offset;
         let ws_count = shifted.trailing_ones() as usize;
         let new_offset = offset + ws_count;
-
-        // If the run doesn't reach the window boundary, we have the exact answer
         if bit_offset + ws_count < 64 {
             state.offset = new_offset;
             return;
         }
-        // Run extends to window edge — fall through to rescan from new_offset
         state.offset = new_offset;
         trim_leading_whitespace_scan_and_cache(state);
         return;
     }
 
-    // ── Tier 3: scan + populate bitmap cache ───────────────────────────
-    // We already know offset and offset+1 are WS, so start scanning from offset
+    // ── Tier 3: scan + populate bitmap cache ────────────────────
     trim_leading_whitespace_scan_and_cache(state);
 }
 
-/// Cold path: scan up to 64 bytes from `state.offset`, populate the bitmap
-/// cache, advance offset past all whitespace. If the WS span exceeds 64 bytes,
-/// falls through to the SIMD bulk scanner.
+/// Cold path: scan up to 64 bytes from `state.offset`, populate the
+/// bitmap cache, advance `state.offset` past all whitespace. If the
+/// WS span exceeds 64 bytes, falls through to the SIMD bulk loop.
 #[inline(never)]
 fn trim_leading_whitespace_scan_and_cache(state: &mut ParserState<'_>) {
     let bytes = state.src_bytes;
@@ -205,13 +177,10 @@ fn trim_leading_whitespace_scan_and_cache(state: &mut ParserState<'_>) {
     let end = bytes.len();
     let window_len = 64.min(end.saturating_sub(offset));
 
-    // Build bitmap for this 64-byte window
     let mut bitmap: u64 = 0;
-    let window = &bytes[offset..offset + window_len];
-
-    // SIMD: process 16 bytes at a time for bitmap construction
     {
         use std::simd::prelude::*;
+        let window = &bytes[offset..offset + window_len];
         let mut i = 0;
         while i + 16 <= window_len {
             let chunk = u8x16::from_slice(&window[i..i + 16]);
@@ -223,7 +192,6 @@ fn trim_leading_whitespace_scan_and_cache(state: &mut ParserState<'_>) {
             bitmap |= bits << i;
             i += 16;
         }
-        // Scalar tail for remaining bytes (< 16)
         while i < window_len {
             let b = unsafe { *window.get_unchecked(i) };
             if matches!(b, b' ' | b'\t' | b'\n' | b'\r') {
@@ -237,63 +205,46 @@ fn trim_leading_whitespace_scan_and_cache(state: &mut ParserState<'_>) {
     state.ws_bitmap_start = offset;
 
     let ws_count = bitmap.trailing_ones() as usize;
-    let new_offset = offset + ws_count;
+    state.offset = offset + ws_count;
 
-    if ws_count < window_len {
-        // Found a non-WS byte within the window — done
-        state.offset = new_offset;
-        return;
+    // Entire window was WS — continue with the SIMD bulk loop for
+    // the remaining bytes past the cached window.
+    if ws_count >= window_len && state.offset < end {
+        trim_leading_whitespace_bulk_simd(state);
     }
-
-    // Entire 64-byte window was whitespace — continue with SIMD bulk scan
-    state.offset = new_offset;
-    let n = trim_leading_whitespace(state);
-    state.offset += n;
 }
 
-/// Find the first occurrence of any of 4 target bytes in `haystack`.
-/// Returns `(position, byte_found)`. Uses SIMD to scan 16 bytes per iteration.
-///
-/// Used by delimiter-scan codegen to replace 2 sequential `memchr` calls
-/// (find delimiter, then find pivot within range) with a single pass that
-/// classifies all structural bytes simultaneously.
-#[inline(always)]
-pub fn find_first_of_4(haystack: &[u8], b0: u8, b1: u8, b2: u8, b3: u8) -> Option<(usize, u8)> {
+/// SIMD bulk loop for WS runs that exceed the 64-byte cached window.
+/// Processes 16 bytes per iteration until a non-WS byte is hit or
+/// input ends.
+#[inline(never)]
+fn trim_leading_whitespace_bulk_simd(state: &mut ParserState<'_>) {
     use std::simd::prelude::*;
-
-    let v0 = u8x16::splat(b0);
-    let v1 = u8x16::splat(b1);
-    let v2 = u8x16::splat(b2);
-    let v3 = u8x16::splat(b3);
-
-    let len = haystack.len();
-    let mut i = 0;
-
-    // SIMD: 16 bytes at a time.
-    while i + 16 <= len {
-        let chunk = u8x16::from_slice(&haystack[i..]);
-        let mask = chunk.simd_eq(v0)
-            | chunk.simd_eq(v1)
-            | chunk.simd_eq(v2)
-            | chunk.simd_eq(v3);
-        if mask.any() {
-            let pos = mask.to_bitmask().trailing_zeros() as usize;
-            let idx = i + pos;
-            return Some((idx, unsafe { *haystack.get_unchecked(idx) }));
+    let bytes = state.src_bytes;
+    let mut i = state.offset;
+    let end = bytes.len();
+    while i + 16 <= end {
+        let chunk = u8x16::from_slice(&bytes[i..i + 16]);
+        let mask = chunk.simd_eq(u8x16::splat(b' '))
+            | chunk.simd_eq(u8x16::splat(b'\t'))
+            | chunk.simd_eq(u8x16::splat(b'\n'))
+            | chunk.simd_eq(u8x16::splat(b'\r'));
+        if mask.all() {
+            i += 16;
+            continue;
         }
-        i += 16;
+        let first_non_ws = (!mask).to_bitmask().trailing_zeros() as usize;
+        state.offset = i + first_non_ws;
+        return;
     }
-
-    // Scalar tail.
-    while i < len {
-        let b = unsafe { *haystack.get_unchecked(i) };
-        if b == b0 || b == b1 || b == b2 || b == b3 {
-            return Some((i, b));
+    while i < end {
+        let b = unsafe { *bytes.get_unchecked(i) };
+        if !matches!(b, b' ' | b'\t' | b'\n' | b'\r') {
+            break;
         }
         i += 1;
     }
-
-    None
+    state.offset = i;
 }
 
 // ── Nibble-LUT SIMD byte classification ─────────────────────────────────────
@@ -382,11 +333,10 @@ pub fn find_first_of_nibble_lut(
 /// Find the first occurrence of any target byte in `haystack`.
 /// Returns `(position, byte_found)`.
 ///
-/// Auto-dispatches to the optimal strategy based on target count:
-/// - 1–3: `memchr` (hardware-accelerated AVX2/SSE2)
-/// - 4:   SIMD `u8x16` parallel equality (4 splat + OR)
-/// - 5–8: nibble LUT + `swizzle_dyn` (2 VPSHUFB per 16 bytes)
-/// - 9+:  256-byte scalar LUT
+/// Auto-dispatches based on target count:
+/// - 1–3 targets: `memchr::memchr[1,2,3]` (hardware-accelerated AVX2/SSE2).
+/// - 4–8 targets: the shared nibble-LUT SIMD kernel above.
+/// - 9+ targets: 256-byte scalar LUT.
 ///
 /// Callers should pass deduplicated targets for best performance.
 #[inline]
@@ -405,13 +355,16 @@ pub fn find_first_of(haystack: &[u8], targets: &[u8]) -> Option<(usize, u8)> {
             let p = memchr::memchr3(targets[0], targets[1], targets[2], haystack)?;
             Some((p, unsafe { *haystack.get_unchecked(p) }))
         }
-        4 => find_first_of_4(haystack, targets[0], targets[1], targets[2], targets[3]),
-        5..=8 => {
+        4..=8 => {
+            // The 4-byte SIMD equality-splat path collapses into the
+            // nibble-LUT path — the per-chunk SIMD cost is dominated
+            // by the two PSHUFB / TBL lookups, not the mask
+            // construction, so keeping a specialised `_4` kernel
+            // produced no measurable benefit over the unified LUT.
             let (lo_lut, hi_lut) = build_nibble_luts(targets);
             find_first_of_nibble_lut(haystack, &lo_lut, &hi_lut)
         }
         _ => {
-            // 9+ targets: 256-byte scalar LUT
             let mut lut = [false; 256];
             let mut j = 0;
             while j < targets.len() {
@@ -433,36 +386,13 @@ pub fn find_first_of(haystack: &[u8], targets: &[u8]) -> Option<(usize, u8)> {
 }
 
 /// Find the first occurrence of any of 3 target bytes in `haystack`.
-/// Returns `(position, byte_found)`. Uses SIMD to scan 16 bytes per iteration.
+/// Specialisation kept as a public alias because
+/// `emit/backend/kernels/balanced_wrap.rs` inlines a per-site call
+/// that hard-codes three pivots at codegen time; routing every
+/// 3-target scan through `find_first_of` would re-dispatch on
+/// `targets.len()` at runtime.
 #[inline(always)]
 pub fn find_first_of_3(haystack: &[u8], b0: u8, b1: u8, b2: u8) -> Option<(usize, u8)> {
-    use std::simd::prelude::*;
-
-    let v0 = u8x16::splat(b0);
-    let v1 = u8x16::splat(b1);
-    let v2 = u8x16::splat(b2);
-
-    let len = haystack.len();
-    let mut i = 0;
-
-    while i + 16 <= len {
-        let chunk = u8x16::from_slice(&haystack[i..]);
-        let mask = chunk.simd_eq(v0) | chunk.simd_eq(v1) | chunk.simd_eq(v2);
-        if mask.any() {
-            let pos = mask.to_bitmask().trailing_zeros() as usize;
-            let idx = i + pos;
-            return Some((idx, unsafe { *haystack.get_unchecked(idx) }));
-        }
-        i += 16;
-    }
-
-    while i < len {
-        let b = unsafe { *haystack.get_unchecked(i) };
-        if b == b0 || b == b1 || b == b2 {
-            return Some((i, b));
-        }
-        i += 1;
-    }
-
-    None
+    let p = memchr::memchr3(b0, b1, b2, haystack)?;
+    Some((p, unsafe { *haystack.get_unchecked(p) }))
 }

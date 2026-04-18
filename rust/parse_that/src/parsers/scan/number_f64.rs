@@ -1,10 +1,23 @@
-// f64 conversion + high-level number scanners built on top of `number.rs`.
+// f64 conversion + high-level number scanners — AW-IV.W4.2.b consolidated.
+//
+// Every number-scan entry point reduces to one of two shapes:
+//   1. Span-only: `scan_number_span_cfg(state, cfg)`.
+//   2. Fused span + f64: `scan_number_fused_cfg(state, cfg)`.
+//
+// The span-only variants return the matched `Span<'a>` and advance
+// the cursor; the fused variants also compute the f64 via
+// `number_parts_to_f64`. The six public entry points are thin
+// dialect-specific wrappers that pick between
+// `GENERIC_NUMBER_CONFIG` (CSS-style: `+` sign, `.5` leading dot,
+// no leading-zero rejection) and `STRICT_NUMBER_CONFIG` (RFC 8259:
+// `-` only, no leading dot, reject `007`).
 
-use crate::state::{ParserState, Span};
 use crate::parsers::eisel_lemire::compute_f64;
+use crate::state::{ParserState, Span};
+
 use super::number::{
-    NumberParts, GENERIC_NUMBER_CONFIG, STRICT_NUMBER_CONFIG,
-    parse_eight_digits, scan_number_mantissa,
+    GENERIC_NUMBER_CONFIG, NumberConfig, NumberParts, STRICT_NUMBER_CONFIG, parse_eight_digits,
+    scan_number_mantissa,
 };
 
 /// Convert `NumberParts` to f64. Integer fast path + Eisel-Lemire + fast_float2 fallback.
@@ -27,166 +40,74 @@ pub fn number_parts_to_f64(parts: &NumberParts, src: &str) -> f64 {
     fast_float2::parse(src).expect("valid number string")
 }
 
-// ── High-level number scanners ────────────────────────────────────
+// ── Generic (CSS-style) ──────────────────────────────────────────
 
-/// Generic number span scanner: accepts `+`, leading `.`, no leading-zero rejection.
-/// Handles: `-1`, `+1`, `1.5`, `.5`, `1e10`, `1.5e-3`, etc.
 #[inline(always)]
-pub fn scan_number_span<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
-    let bytes = state.src_bytes;
+fn scan_with_cfg<'a>(
+    state: &mut ParserState<'a>,
+    cfg: &NumberConfig,
+) -> Option<(NumberParts, Span<'a>)> {
     let start = state.offset;
-    let len = bytes.len();
-    let mut i = start;
-
-    if i >= len {
-        return None;
-    }
-
-    // Optional sign: + or -
-    let b = unsafe { *bytes.get_unchecked(i) };
-    if b == b'-' || b == b'+' {
-        i += 1;
-        if i >= len {
-            return None;
-        }
-    }
-
-    // Digits before dot (optional for CSS — `.5` is valid).
-    let pre_dot_start = i;
-    while i < len && unsafe { *bytes.get_unchecked(i) }.is_ascii_digit() {
-        i += 1;
-    }
-    let has_pre_dot_digits = i > pre_dot_start;
-
-    // Optional fraction.
-    let mut has_fraction = false;
-    if i < len && unsafe { *bytes.get_unchecked(i) } == b'.' {
-        i += 1;
-        let frac_start = i;
-        while i < len && unsafe { *bytes.get_unchecked(i) }.is_ascii_digit() {
-            i += 1;
-        }
-        if i > frac_start {
-            has_fraction = true;
-        } else {
-            // '.' with no digits — backtrack.
-            i -= 1;
-        }
-    }
-
-    // Must have at least some digits (before or after dot).
-    if !has_pre_dot_digits && !has_fraction {
-        return None;
-    }
-
-    // Optional exponent.
-    if i < len {
-        let b = unsafe { *bytes.get_unchecked(i) };
-        if b == b'e' || b == b'E' {
-            let exp_mark = i;
-            i += 1;
-            if i < len {
-                let b = unsafe { *bytes.get_unchecked(i) };
-                if b == b'+' || b == b'-' {
-                    i += 1;
-                }
-            }
-            let exp_digit_start = i;
-            while i < len && unsafe { *bytes.get_unchecked(i) }.is_ascii_digit() {
-                i += 1;
-            }
-            if i == exp_digit_start {
-                i = exp_mark; // backtrack
-            }
-        }
-    }
-
-    if i == start {
-        return None;
-    }
-
-    state.offset = i;
-    Some(Span::new(start, i, state.src))
+    let (parts, end) = scan_number_mantissa(state.padded(), start, cfg)?;
+    state.offset = end;
+    Some((parts, Span::new(start, end, state.src)))
 }
 
-/// Fused generic number scanner + converter. Scans CSS-compatible numbers (allows `+`,
-/// leading `.` like `.5`, no leading-zero rejection) and converts to f64 in a single
-/// pass using mantissa accumulation + Eisel-Lemire. Returns `Option<f64>` directly.
-///
-/// Routes the digit walker over the [`crate::state::PaddedView`]
-/// witness so the downstream SIMD digit kernel drops its tail guard
-/// entirely; the scanner's outer `is_ascii_digit` loop terminates on
-/// the NUL-padded region naturally.
 #[inline(always)]
-pub fn scan_number_f64<'a>(state: &mut ParserState<'a>) -> Option<f64> {
-    let start = state.offset;
-    let (parts, end) =
-        scan_number_mantissa(state.padded(), start, &GENERIC_NUMBER_CONFIG)?;
-    state.offset = end;
-    let src = &state.src[start..end];
-    Some(number_parts_to_f64(&parts, src))
-}
-
-// ── Strict number scanners ───────────────────────────────────────────
-//
-// Strict numbers reject `+` sign, leading `.`, and enforce RFC 8259
-// leading-zero rejection.  These are thin wrappers over the shared
-// `scan_number_mantissa(…, &STRICT_NUMBER_CONFIG)` core.
-
-/// Strict number span scanner: no `+`, no leading dot, RFC 8259
-/// leading-zero rejection.  Returns the matched span only.
-#[inline(always)]
-pub fn scan_number_strict_span<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
-    let start = state.offset;
-    let (_, end) =
-        scan_number_mantissa(state.padded(), start, &STRICT_NUMBER_CONFIG)?;
-    state.offset = end;
-    Some(Span::new(start, end, state.src))
-}
-
-/// Fused strict number scanner + converter.  Scans the number span AND
-/// accumulates the mantissa in one pass — no re-reading of digits.
-/// Returns `(Span, f64)`.
-#[inline(always)]
-pub fn scan_number_strict_fused<'a>(state: &mut ParserState<'a>) -> Option<(Span<'a>, f64)> {
-    let start = state.offset;
-    let (parts, end) =
-        scan_number_mantissa(state.padded(), start, &STRICT_NUMBER_CONFIG)?;
-    state.offset = end;
-    let span = Span::new(start, end, state.src);
-    let f = if parts.is_integer && parts.n_digits == 1 && parts.mantissa == 0 {
+fn fused_f64_with_cfg(parts: &NumberParts, span: Span<'_>) -> f64 {
+    if parts.is_integer && parts.n_digits == 1 && parts.mantissa == 0 {
         0.0
     } else {
-        number_parts_to_f64(&parts, span.as_str())
-    };
+        number_parts_to_f64(parts, span.as_str())
+    }
+}
+
+/// Generic number span scanner: accepts `+`, leading `.`, no
+/// leading-zero rejection.
+#[inline(always)]
+pub fn scan_number_span<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+    scan_with_cfg(state, &GENERIC_NUMBER_CONFIG).map(|(_, span)| span)
+}
+
+/// Fused generic number scanner + converter.
+#[inline(always)]
+pub fn scan_number_f64<'a>(state: &mut ParserState<'a>) -> Option<f64> {
+    let (parts, span) = scan_with_cfg(state, &GENERIC_NUMBER_CONFIG)?;
+    Some(number_parts_to_f64(&parts, span.as_str()))
+}
+
+// ── Strict (RFC 8259) ────────────────────────────────────────────
+
+/// Strict number span scanner: no `+`, no leading dot, RFC 8259
+/// leading-zero rejection. Returns the matched span only.
+#[inline(always)]
+pub fn scan_number_strict_span<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+    scan_with_cfg(state, &STRICT_NUMBER_CONFIG).map(|(_, span)| span)
+}
+
+/// Fused strict number scanner + converter. Returns `(Span, f64)`.
+#[inline(always)]
+pub fn scan_number_strict_fused<'a>(state: &mut ParserState<'a>) -> Option<(Span<'a>, f64)> {
+    let (parts, span) = scan_with_cfg(state, &STRICT_NUMBER_CONFIG)?;
+    let f = fused_f64_with_cfg(&parts, span);
     Some((span, f))
 }
 
 /// Fused strict number scanner returning just `f64` (no Span construction).
 #[inline(always)]
 pub fn scan_number_strict_f64<'a>(state: &mut ParserState<'a>) -> Option<f64> {
-    let start = state.offset;
-    let (parts, end) =
-        scan_number_mantissa(state.padded(), start, &STRICT_NUMBER_CONFIG)?;
-    state.offset = end;
-    let src = &state.src[start..end];
-    Some(if parts.is_integer && parts.n_digits == 1 && parts.mantissa == 0 {
-        0.0
-    } else {
-        number_parts_to_f64(&parts, src)
-    })
+    let (parts, span) = scan_with_cfg(state, &STRICT_NUMBER_CONFIG)?;
+    Some(fused_f64_with_cfg(&parts, span))
 }
 
-// ── Standalone conversion ───────────────────────────────────────────
+// ── Standalone conversion ───────────────────────────────────────
 
 /// Parse a number string to f64.
 ///
-/// Uses the integer fast path (8-digit chunks, direct u64->f64 cast) for pure
-/// integers <= 18 digits. Falls back to `fast_float2::parse` for floats, which
-/// has its own highly-optimized digit scanning.
-///
-/// For the true zero-re-read path, use `scan_number_f64` which accumulates
-/// mantissa DURING the initial scan and calls Eisel-Lemire directly.
+/// Integer fast path (8-digit chunks, direct u64->f64) for pure
+/// integers <= 18 digits; falls back to `fast_float2::parse` for
+/// floats / large mantissas. For zero-re-read throughput use
+/// `scan_number_f64`, which accumulates DURING the scan.
 #[inline(always)]
 pub fn parse_number_f64(s: &str) -> f64 {
     let bytes = s.as_bytes();
@@ -197,26 +118,23 @@ pub fn parse_number_f64(s: &str) -> f64 {
     let (neg, digits_start) = if bytes[0] == b'-' {
         (true, 1)
     } else if bytes[0] == b'+' {
-        (true, 1) // parse_number_f64 historically only handled '-'; keep `+` safe
+        (true, 1)
     } else {
         (false, 0)
     };
 
-    // Find where integer digits end.
     let mut i = digits_start;
     while i < bytes.len() && bytes[i].is_ascii_digit() {
         i += 1;
     }
     let digit_count = i - digits_start;
 
-    // Float or too many digits -> fast_float2 (already near-optimal).
     let is_pure_int =
         i >= bytes.len() || (bytes[i] != b'.' && bytes[i] != b'e' && bytes[i] != b'E');
     if !is_pure_int || digit_count == 0 || digit_count > 18 {
         return fast_float2::parse(s).expect("number scanner produced unparseable span");
     }
 
-    // Integer fast path: 8-digit chunk accumulation.
     let digits = &bytes[digits_start..i];
     let mut mantissa: u64 = 0;
     let mut j = 0;
