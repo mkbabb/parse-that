@@ -143,7 +143,7 @@ fn try_fast_path_f64(exponent: i64, mantissa: u64, negative: bool) -> Option<f64
 /// Returns `Some(f64)` on success. Returns `None` when the result is
 /// ambiguous (near a rounding tie) — caller should fall back to
 /// `fast_float2::parse()` on the original string.
-#[inline]
+#[inline(always)]
 pub fn compute_f64(exponent: i64, mantissa: u64, negative: bool) -> Option<f64> {
     if mantissa == 0 {
         return Some(if negative { -0.0 } else { 0.0 });

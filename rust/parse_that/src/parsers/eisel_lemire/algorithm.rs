@@ -11,7 +11,7 @@ use super::{
 };
 
 /// Returns (mantissa, power2). power2 == -1 means ambiguous.
-#[inline]
+#[inline(always)]
 pub(super) fn compute_float(q: i64, mut w: u64) -> (u64, i32) {
     if w == 0 || q < SMALLEST_POWER_OF_FIVE as i64 {
         return (0, 0);
@@ -62,18 +62,18 @@ pub(super) fn compute_float(q: i64, mut w: u64) -> (u64, i32) {
     (mantissa, power2)
 }
 
-#[inline]
+#[inline(always)]
 fn power(q: i32) -> i32 {
     (q.wrapping_mul(152_170 + 65536) >> 16) + 63
 }
 
-#[inline]
+#[inline(always)]
 fn full_multiplication(a: u64, b: u64) -> (u64, u64) {
     let r = (a as u128) * (b as u128);
     (r as u64, (r >> 64) as u64)
 }
 
-#[inline]
+#[inline(always)]
 fn compute_product_approx(q: i64, w: u64, precision: usize) -> (u64, u64) {
     let mask = if precision < 64 {
         0xFFFF_FFFF_FFFF_FFFF_u64 >> precision

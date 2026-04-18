@@ -62,6 +62,7 @@ version = "0.2.11"
 dependencies = [
  "bbnf-ir",
  "bbnf-ser",
+ "bbnf-simd-scan",
  "bbnf-tape",
  "csp-solver",
  "egraph",
@@ -114,8 +115,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "bbnf-simd-scan"
+version = "0.1.0"
+dependencies = [
+ "bbnf-tape",
+]
+
+[[package]]
 name = "bbnf-tape"
 version = "0.1.0"
+dependencies = [
+ "rayon",
+]
 
 [[package]]
 name = "bbnf_derive"

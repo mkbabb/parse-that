@@ -14,14 +14,18 @@
 //! advancing past each hit byte. No cursor state — the iterator is
 //! a local temporary.
 //!
-//! ## Tail handling
+//! ## Padded-input contract
 //!
-//! Input is not required to be padded; the short tail (< 64 bytes)
-//! is handled by a scalar epilogue that builds the same 64-bit mask
-//! byte-by-byte using a 256-byte LUT reconstructed from the nibble
-//! tables. No per-byte classification branch during the hot stripe
-//! loop.
+//! [`find_next_structural_from`] consumes a [`PaddedView`] whose
+//! backing buffer has [`crate::state::INPUT_PAD_BYTES`] (64 bytes) of
+//! trailing zero padding. The stripe loop runs from `start` to
+//! `view.len()` inclusive; the final stripe reads into the zero pad,
+//! and any match bit with a position `>= view.len()` is masked off
+//! before the CTZ probe. This drops the per-stripe tail guard *and*
+//! the 16-byte / scalar tail loops that the pre-AW-IV implementation
+//! carried.
 
+use crate::state::{PaddedView, INPUT_PAD_BYTES};
 use std::simd::prelude::*;
 
 const STRIPE: usize = 64;
@@ -84,24 +88,40 @@ fn classify_tail(bytes: &[u8], offset: usize, byte_lut: &[bool; 256]) -> u64 {
 }
 
 /// One-shot: find the first structural byte at or after `start` in
-/// `bytes`. Returns `Some((offset, byte))` or `None` if no hit.
+/// `view`. Returns `Some((offset, byte))` or `None` if no hit before
+/// `view.len()`.
 ///
 /// Replaces `memchr::memchr[1,2,3]` + `find_first_of_nibble_lut` at
 /// "find the next structural position" call sites. One nibble-LUT
-/// lookup per 16 bytes, one CTZ, one bounds check on the tail.
+/// lookup per 16 bytes, one CTZ, one mask clamp on the final stripe.
+///
+/// The final stripe may read up to 64 bytes past `view.len()` into
+/// the zero-padded region; the returned position is always clamped
+/// to `< view.len()` via the tail mask. Needles that include `0x00`
+/// are not supported — grammars mine only non-NUL structural bytes,
+/// so the NUL padding is a structural no-op.
 #[inline]
 pub fn find_next_structural_from(
-    bytes: &[u8],
+    view: PaddedView<'_>,
     start: usize,
     lo_lut: &[u8; 16],
     hi_lut: &[u8; 16],
 ) -> Option<(usize, u8)> {
     let lo = u8x16::from_array(*lo_lut);
     let hi = u8x16::from_array(*hi_lut);
-    let lo_mask = u8x16::splat(0x0F);
-    let len = bytes.len();
+    let bytes = view.bytes();
+    let len = view.len();
+    debug_assert!(
+        bytes.len() >= len + INPUT_PAD_BYTES,
+        "find_next_structural_from: PaddedView backing too short ({} < {} + {})",
+        bytes.len(),
+        len,
+        INPUT_PAD_BYTES,
+    );
     let mut i = start;
 
+    // Full-stripe hot loop: every iteration fits entirely in the
+    // public input range.
     while i + STRIPE <= len {
         let mask = classify_stripe(bytes, i, lo, hi);
         if mask != 0 {
@@ -111,24 +131,25 @@ pub fn find_next_structural_from(
         i += STRIPE;
     }
 
-    while i + 16 <= len {
-        let chunk = u8x16::from_slice(unsafe { bytes.get_unchecked(i..i + 16) });
-        let m = classify_16(chunk, lo, hi, lo_mask);
-        if m != 0 {
-            let pos = i + m.trailing_zeros() as usize;
+    // Tail stripe: reads into the zero pad. The raw stripe mask may
+    // carry bits for padded positions (all zero, so they're naturally
+    // clear for non-NUL needles); the explicit tail mask is kept as
+    // a debug_assert correctness probe below.
+    if i < len {
+        let mask = classify_stripe(bytes, i, lo, hi);
+        let valid_bits = len - i;
+        let keep_mask = if valid_bits >= STRIPE {
+            u64::MAX
+        } else {
+            (1u64 << valid_bits) - 1
+        };
+        let clipped = mask & keep_mask;
+        if clipped != 0 {
+            let pos = i + clipped.trailing_zeros() as usize;
             return Some((pos, unsafe { *bytes.get_unchecked(pos) }));
         }
-        i += 16;
     }
 
-    let byte_lut = expand_byte_lut(lo_lut, hi_lut);
-    while i < len {
-        let b = unsafe { *bytes.get_unchecked(i) };
-        if byte_lut[b as usize] {
-            return Some((i, b));
-        }
-        i += 1;
-    }
     None
 }
 
@@ -268,6 +289,7 @@ pub fn digraph_mask(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::state::ParserState;
 
     fn lut_for(targets: &[u8]) -> ([u8; 16], [u8; 16]) {
         let mut lo = [0u8; 16];
@@ -281,29 +303,36 @@ mod tests {
         (lo, hi)
     }
 
+    /// Wrap a test input in a `ParserState` so we can borrow a
+    /// `PaddedView`. The `ParserState::new` path is the canonical
+    /// constructor that populates the 64-byte trailing zero pad.
+    fn padded_view_owner(input: &str) -> ParserState<'_> {
+        ParserState::new(input)
+    }
+
     #[test]
     fn find_next_basic() {
-        let input = b"   hello, world! {wow}   ";
+        let owner = padded_view_owner("   hello, world! {wow}   ");
         let (lo, hi) = lut_for(&[b',', b'{', b'}']);
-        let r = find_next_structural_from(input, 0, &lo, &hi);
+        let r = find_next_structural_from(owner.padded(), 0, &lo, &hi);
         assert_eq!(r, Some((8, b',')));
-        let r2 = find_next_structural_from(input, 9, &lo, &hi);
+        let r2 = find_next_structural_from(owner.padded(), 9, &lo, &hi);
         assert_eq!(r2, Some((17, b'{')));
     }
 
     #[test]
     fn find_next_tail_only() {
-        let input = b"  !";
+        let owner = padded_view_owner("  !");
         let (lo, hi) = lut_for(&[b'!']);
-        let r = find_next_structural_from(input, 0, &lo, &hi);
+        let r = find_next_structural_from(owner.padded(), 0, &lo, &hi);
         assert_eq!(r, Some((2, b'!')));
     }
 
     #[test]
     fn find_next_none() {
-        let input = b"abcdefg";
+        let owner = padded_view_owner("abcdefg");
         let (lo, hi) = lut_for(&[b',', b'{']);
-        let r = find_next_structural_from(input, 0, &lo, &hi);
+        let r = find_next_structural_from(owner.padded(), 0, &lo, &hi);
         assert_eq!(r, None);
     }
 
