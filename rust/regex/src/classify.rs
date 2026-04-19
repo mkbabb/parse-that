@@ -340,23 +340,51 @@ fn leading_bytes_match(parts: &[Hir], expected: &[u8]) -> bool {
     consumed == expected.len()
 }
 
-/// Walk trailing Literal nodes and check whether they collectively
-/// end with `expected`.
+/// Walk trailing nodes and check whether they collectively end with
+/// `expected`. Accepts both `Literal` nodes (contributing their
+/// literal trailing bytes) and `Repetition { sub: Literal, min >= 1 }`
+/// nodes whose sub-literal is a single byte (contributing that byte;
+/// `*+` in `\*+\/` materialises as one such repetition and ends in
+/// its sub-byte). This admits both the canonical
+/// `(?s)(?:\s|/\*.*?\*/)*` shape and the DFA-compatible expansion
+/// `(?s)(?:\s|/\*[^*]*(?:\*+[^/][^*]*)*\*+/)*` whose trailing
+/// component is `\*+\/` (a `*+` repetition followed by a `/`
+/// literal).
 fn trailing_bytes_match(parts: &[Hir], expected: &[u8]) -> bool {
     let mut idx = parts.len();
     let mut consumed = 0;
     while consumed < expected.len() && idx > 0 {
         idx -= 1;
+        // The tail byte we're trying to consume next (reading right-to-
+        // left from `expected`).
+        let need = expected.len() - consumed;
         match &parts[idx] {
             Hir::Literal(bytes) => {
-                let need = expected.len() - consumed;
                 let take = bytes.len().min(need);
                 let bytes_slice = &bytes[bytes.len() - take..];
-                let expected_slice = &expected[expected.len() - consumed - take..expected.len() - consumed];
+                let expected_slice =
+                    &expected[need - take..need];
                 if bytes_slice != expected_slice {
                     return false;
                 }
                 consumed += take;
+            }
+            Hir::Repetition(rep) if rep.min >= 1 => {
+                // A `+` (or `{min,}` with min >= 1) repetition
+                // materialises at least one instance of `rep.sub`.
+                // Only a single-byte-literal sub contributes a
+                // deterministic trailing byte.
+                let Hir::Literal(sub_bytes) = &*rep.sub else {
+                    return false;
+                };
+                if sub_bytes.len() != 1 {
+                    return false;
+                }
+                let expected_byte = expected[need - 1];
+                if sub_bytes[0] != expected_byte {
+                    return false;
+                }
+                consumed += 1;
             }
             _ => return false,
         }
@@ -632,19 +660,32 @@ fn try_classify_quoted_string(hir: &Hir) -> Option<RegexClass> {
     let parts = match hir {
         Hir::Concat(parts) => parts.as_slice(),
         _ => {
-            // Top-level alternation of two same-quote-char patterns is
-            // common (e.g., the CSS `"…" | '…'` shape collapses to a
-            // single Alternation rather than a Concat). Recurse into
-            // every branch and return the first that classifies as a
-            // QuotedString — branch quote chars must agree, but we
-            // accept any legal first match because the dialect flags
-            // are preserved structurally.
+            // Top-level alternation: classify only when EVERY branch
+            // is a quoted string AND they all agree on `quote_char`.
+            // CSS `string = /"…"/ | /'…'/` fails this check (mixed
+            // delimiters) and falls through to HRegex, whose scan
+            // honours the actual regex pattern. The original CSS
+            // `'…' | "…"` comment was optimistic — the fast-path
+            // String emitter is hardcoded to a single `quote_char`
+            // and cannot serve a mixed-delimiter rule.
             if let Hir::Alternation(alts) = hir {
-                for alt in alts {
-                    if let Some(class) = try_classify_quoted_string(alt) {
-                        return Some(class);
-                    }
+                let classes: Vec<Option<RegexClass>> =
+                    alts.iter().map(try_classify_quoted_string).collect();
+                if classes.iter().any(|c| c.is_none()) {
+                    return None;
                 }
+                let first = classes[0].clone();
+                let all_same_quote = classes.iter().all(|c| match (&first, c) {
+                    (
+                        Some(RegexClass::QuotedString { quote_char: a, .. }),
+                        Some(RegexClass::QuotedString { quote_char: b, .. }),
+                    ) => a == b,
+                    _ => false,
+                });
+                if all_same_quote {
+                    return first;
+                }
+                return None;
             }
             return None;
         }
