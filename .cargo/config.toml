@@ -1,0 +1,44 @@
+# .cargo/config.toml — parse-that sibling repo
+#
+# Mirrors bbnf-lang's toolchain posture so cross-repo path-patched
+# builds (bbnf-regex + parse_that pulled into bbnf-lang's Cargo.toml
+# via [patch.crates-io]) observe the same rustflags + ax-iter profile.
+# Source of truth for pin is bbnf-lang's rust-toolchain.toml (mirrored
+# into this repo as a same-date twin per B1.W2.c propagation).
+
+[build]
+rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+
+# macOS arm64: default system ld64 via clang. lld is opt-in; developers
+# who want it must `brew install lld` (separate formula from llvm) and
+# uncomment the block below, adjusting the path from `brew --prefix lld`.
+[target.aarch64-apple-darwin]
+rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+
+# Opt-in lld (requires `brew install lld`):
+# [target.aarch64-apple-darwin]
+# linker    = "clang"
+# rustflags = [
+#     "-C", "link-arg=-fuse-ld=/opt/homebrew/opt/lld/bin/ld.lld",
+#     "-Zthreads=8",
+#     "-Zshare-generics=y",
+# ]
+
+# Linux x86_64: bundled rust-lld, no extra install.
+[target.x86_64-unknown-linux-gnu]
+rustflags = [
+    "-C", "link-arg=-fuse-ld=lld",
+    "-Zthreads=8",
+    "-Zshare-generics=y",
+]
+
+[profile.ax-iter]
+inherits      = "dev"
+opt-level     = 0
+debug         = "line-tables-only"
+incremental   = true
+codegen-units = 256
+
+[alias]
+iter-check = "check --profile ax-iter"
+iter-test  = "nextest run --cargo-profile ax-iter"

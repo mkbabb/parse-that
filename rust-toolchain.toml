@@ -1,0 +1,46 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# rust-toolchain.toml — bbnf-lang workspace pin
+#
+# The workspace is nightly-only (parallel rustc front-end, cranelift backend,
+# -Zshare-generics, rustc_codegen_cranelift-preview). Without a pin the repo
+# rides whichever nightly each developer last ran `rustup update` against —
+# the exact mode that produced 93 `rustc-ice-*.txt` files at master root
+# between 2026-04-15 and 2026-04-22, every one panicking at
+# `rustc_middle/src/query/on_disk_cache.rs:663: cannot decode AttrId`.
+#
+# Pin target: `nightly-2026-04-11`. On-host probe at audit close:
+# `rustup run nightly-2026-04-11 rustc --version` resolves to
+# `rustc 1.96.0-nightly (02c7f9bec 2026-04-10)`. The resolved rustc
+# commit is past the ICE-observed `9602bda1d 2026-04-05`; the
+# incremental-cache-decoder panic at `on_disk_cache.rs:663:
+# cannot decode AttrId` is therefore expected to not reproduce on
+# this pin. Final confirmation requires a `cargo iter-check-full`
+# cold-wall under the pin; land that run before merging B1.W0.
+#
+# Upgrade procedure (cadence: every 4-6 weeks, or on demand):
+#   1. `rustup install nightly-YYYY-MM-DD`.
+#   2. Bisect the ICE reproducer (TOOLCHAIN-MIGRATION §ICE reproducer).
+#      A nightly that still emits the ICE is rejected; bisect forward.
+#   3. Bump `channel` below in one commit; include a benchmark-parity pass
+#      (`make bench` comparison against the previous pin's baselines).
+#   4. Rotate the comment block above to cite the new commit SHA range.
+#
+# Components rationale:
+# - `rustfmt`, `clippy`: ambient developer expectations.
+# - `rust-src`: unlocks `-Zbuild-std` for WASM/size experiments (extension).
+# - `rustc-codegen-cranelift`: dev-profile codegen backend under ax-iter
+#   (~5-15% wall reduction on dev builds). Release profile keeps LLVM.
+#
+# `profile = "minimal"` keeps `rustup install` lean; components above are
+# additive and loaded on demand.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[toolchain]
+channel = "nightly-2026-04-11"
+components = [
+    "rustfmt",
+    "clippy",
+    "rust-src",
+    "rustc-codegen-cranelift",
+]
+profile = "minimal"
