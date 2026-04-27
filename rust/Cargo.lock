@@ -965,9 +965,9 @@ version = "0.4.0"
 dependencies = [
  "aho-corasick",
  "bbnf-regex",
- "bencher",
  "colored",
  "cssparser 0.34.0",
+ "divan",
  "fast-float2",
  "jiter",
  "lightningcss",
