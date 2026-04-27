@@ -6,7 +6,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bencher::{Bencher, benchmark_group, benchmark_main};
+use divan::Bencher;
 
 /// Comprehensive pattern suite — every regex pattern class from BBNF grammars.
 const PATTERNS: &[&str] = &[
@@ -54,21 +54,24 @@ const PATTERNS: &[&str] = &[
     r"[-+]?\d*n",
 ];
 
-fn bench_handwritten(b: &mut Bencher) {
-    b.iter(|| {
+#[divan::bench]
+fn bench_handwritten(b: Bencher) {
+    b.bench(|| {
         for &pattern in PATTERNS {
             let _ = parse_that::regex::parse(pattern);
         }
     });
 }
 
-fn bench_generated(b: &mut Bencher) {
-    b.iter(|| {
+#[divan::bench]
+fn bench_generated(b: Bencher) {
+    b.bench(|| {
         for &pattern in PATTERNS {
             let _ = regex_bootstrap::parse_generated(pattern);
         }
     });
 }
 
-benchmark_group!(regex_parsers, bench_handwritten, bench_generated);
-benchmark_main!(regex_parsers);
+fn main() {
+    divan::main();
+}
