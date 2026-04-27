@@ -11,10 +11,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[macro_use]
-extern crate bencher;
-
-use bencher::{Bencher, black_box};
+use divan::{Bencher, black_box};
 
 use bbnf_regex::egraph::{RegexExtractionCost, simplify_hir};
 use bbnf_regex::hir::{Hir, ParseOptions};
@@ -96,18 +93,18 @@ fn pre_parse() -> Vec<Hir> {
         .collect()
 }
 
-fn simplify_corpus(b: &mut Bencher) {
+#[divan::bench]
+fn simplify_corpus(b: Bencher) {
     let parsed = pre_parse();
-    let total: usize = PATTERNS.iter().map(|p| p.len()).sum();
-    b.bytes = total as u64;
     let cost = RegexExtractionCost::default();
 
-    b.iter(|| {
+    b.bench(|| {
         for hir in &parsed {
             let _ = black_box(simplify_hir(hir, &cost));
         }
     });
 }
 
-benchmark_group!(regex_hir_egraph, simplify_corpus);
-benchmark_main!(regex_hir_egraph);
+fn main() {
+    divan::main();
+}

@@ -31,7 +31,7 @@ egraph-derive = "0.1"
 csp-solver = "0.1"
 
 [dev-dependencies]
-bencher = "0.1"
+divan = "0.1"
 mimalloc = "0.1"
 
 # ── bbnf-regex benches (Tranche P) ──────────────────────────

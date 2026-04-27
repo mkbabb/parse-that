@@ -14,10 +14,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[macro_use]
-extern crate bencher;
-
-use bencher::{Bencher, black_box};
+use divan::{Bencher, black_box};
 
 use bbnf_regex::Dfa;
 
@@ -54,27 +51,25 @@ const MATCH_INPUT: &str = "the quick brown fox 12345 jumped over 3.14159 lazy \
 dogs at https://example.com on 2026-04-09 with hex \
 deadBEEF and 192.168.1.100 plus 0x7FFF and #FFAACC";
 
-fn dfa_compile(b: &mut Bencher) {
-    let total: usize = COMPILE_PATTERNS.iter().map(|p| p.len()).sum();
-    b.bytes = total as u64;
-
-    b.iter(|| {
+#[divan::bench]
+fn dfa_compile(b: Bencher) {
+    b.bench(|| {
         for &pattern in COMPILE_PATTERNS {
             let _ = black_box(Dfa::compile(pattern));
         }
     });
 }
 
-fn dfa_find_at(b: &mut Bencher) {
+#[divan::bench]
+fn dfa_find_at(b: Bencher) {
     // Pre-compile a representative subset.
     let dfas: Vec<Dfa> = [r"\d+", r"\w+", r"[a-zA-Z_]\w*", r"#[0-9a-fA-F]{3,6}"]
         .iter()
         .filter_map(|&p| Dfa::compile(p))
         .collect();
     let bytes = MATCH_INPUT.as_bytes();
-    b.bytes = bytes.len() as u64 * dfas.len() as u64;
 
-    b.iter(|| {
+    b.bench(|| {
         for dfa in &dfas {
             let mut offset = 0;
             while offset < bytes.len() {
@@ -90,5 +85,6 @@ fn dfa_find_at(b: &mut Bencher) {
     });
 }
 
-benchmark_group!(regex_dfa_compile, dfa_compile, dfa_find_at);
-benchmark_main!(regex_dfa_compile);
+fn main() {
+    divan::main();
+}

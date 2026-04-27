@@ -9,10 +9,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[macro_use]
-extern crate bencher;
-
-use bencher::{Bencher, black_box};
+use divan::{Bencher, black_box};
 
 use bbnf_regex::classify::classify_regex_from_hir;
 use bbnf_regex::hir::{Hir, ParseOptions};
@@ -83,17 +80,17 @@ fn pre_parse() -> Vec<(&'static str, Hir)> {
         .collect()
 }
 
-fn classify_structural(b: &mut Bencher) {
+#[divan::bench]
+fn classify_structural(b: Bencher) {
     let parsed = pre_parse();
-    let total: usize = parsed.iter().map(|(p, _)| p.len()).sum();
-    b.bytes = total as u64;
 
-    b.iter(|| {
+    b.bench(|| {
         for (_, hir) in &parsed {
             let _ = black_box(classify_regex_from_hir(hir));
         }
     });
 }
 
-benchmark_group!(regex_classify, classify_structural);
-benchmark_main!(regex_classify);
+fn main() {
+    divan::main();
+}

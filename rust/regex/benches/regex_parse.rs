@@ -8,10 +8,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[macro_use]
-extern crate bencher;
-
-use bencher::{Bencher, black_box};
+use divan::{Bencher, black_box};
 
 use bbnf_regex::hir::ParseOptions;
 use bbnf_regex::parse_with;
@@ -94,29 +91,28 @@ const PATTERNS: &[&str] = &[
     r"\([^)]*\)",
 ];
 
-fn parse_corpus(b: &mut Bencher) {
+#[divan::bench]
+fn parse_corpus(b: Bencher) {
     let opts = ParseOptions::byte_mode();
-    let total: usize = PATTERNS.iter().map(|p| p.len()).sum();
-    b.bytes = total as u64;
 
-    b.iter(|| {
+    b.bench(|| {
         for &pattern in PATTERNS {
             let _ = black_box(parse_with(pattern, &opts));
         }
     });
 }
 
-fn parse_unicode(b: &mut Bencher) {
+#[divan::bench]
+fn parse_unicode(b: Bencher) {
     let opts = ParseOptions { unicode: true };
-    let total: usize = PATTERNS.iter().map(|p| p.len()).sum();
-    b.bytes = total as u64;
 
-    b.iter(|| {
+    b.bench(|| {
         for &pattern in PATTERNS {
             let _ = black_box(parse_with(pattern, &opts));
         }
     });
 }
 
-benchmark_group!(regex_parse, parse_corpus, parse_unicode);
-benchmark_main!(regex_parse);
+fn main() {
+    divan::main();
+}
