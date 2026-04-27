@@ -32,12 +32,41 @@ rustflags = [
     "-Zshare-generics=y",
 ]
 
+# ── Profiles ────────────────────────────────────────────────────────────────
+# Three-tier surface mirrored from bbnf-lang's .cargo/config.toml so cross-
+# repo path-patched builds observe identical profile semantics:
+#   * ax-iter  — dev-loop iteration (fast compile, minimal debuginfo).
+#   * ay-final — release tier for correctness benches + publishable binaries.
+#   * bench-ci — iai-callgrind under valgrind on Linux CI; full debuginfo,
+#                no LTO (valgrind instruments un-LTO'd IR).
+
 [profile.ax-iter]
 inherits      = "dev"
 opt-level     = 0
 debug         = "line-tables-only"
 incremental   = true
 codegen-units = 256
+
+# ay-final: release profile tuned for correctness benchmarks and publishable
+# binaries (parse-that bench parity, regex DFA codegen). Fat LTO + single
+# codegen unit. Mirrors bbnf-lang's [profile.ay-final].
+[profile.ay-final]
+inherits        = "release"
+lto             = "fat"
+codegen-units   = 1
+debug           = 1                   # keep samply-resolvable symbols
+strip           = false
+split-debuginfo = "packed"
+
+# bench-ci: for iai-callgrind runs under valgrind on Linux CI. Full
+# debuginfo (callgrind needs it for source attribution) and no LTO
+# (valgrind instruments the un-LTO'd IR). Mirrors bbnf-lang's
+# [profile.bench-ci].
+[profile.bench-ci]
+inherits        = "release"
+debug           = "full"
+lto             = "off"
+codegen-units   = 1
 
 [alias]
 iter-check = "check --profile ax-iter"

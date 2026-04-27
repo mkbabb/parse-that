@@ -29,15 +29,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: clippy
+      # Pinned toolchain lives in rust-toolchain.toml (nightly-2026-04-11).
+      # rustup honours the committed file automatically; no explicit
+      # channel override here — the pin is the source of truth, mirrored
+      # across bbnf-lang and parse-that per B1.W2.c propagation.
+      - name: show toolchain resolution
+        run: |
+          rustup show
+          rustc --version
+          cargo --version
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: rust
-      - run: cargo clippy --workspace -- -D warnings
+      - name: install cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+      - name: clippy (ax-iter)
+        run: cargo clippy --profile ax-iter --workspace -- -D warnings
         working-directory: rust
-      - run: cargo test --workspace
+      # `--cargo-profile ax-iter` selects the cargo build profile defined
+      # in .cargo/config.toml (parse-that has no .config/nextest.toml; the
+      # nextest runner uses its built-in `default` profile). Mirrors the
+      # existing `iter-test` alias shape and satisfies the iter-profile-
+      # always invariant (every iteration cargo command carries ax-iter).
+      - name: workspace tests (nextest, ax-iter)
+        run: cargo nextest run --cargo-profile ax-iter --workspace --no-fail-fast
         working-directory: rust
-      - run: cargo test --workspace --features diagnostics
+      - name: workspace tests with diagnostics (nextest, ax-iter)
+        run: cargo nextest run --cargo-profile ax-iter --workspace --features diagnostics --no-fail-fast
         working-directory: rust
