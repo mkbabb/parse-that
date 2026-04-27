@@ -1,10 +1,10 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 use std::path::Path;
 
-#[macro_use]
-extern crate bencher;
-use bencher::{black_box, Bencher};
+use divan::counter::BytesCount;
+use divan::{black_box, Bencher};
 
 use cssparser::{
     AtRuleParser, CowRcStr, DeclarationParser, ParseError, Parser, ParserInput,
@@ -15,15 +15,18 @@ fn data_dir() -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/css")
 }
 
-fn normalize(b: &mut Bencher) {
+#[divan::bench]
+fn normalize(b: Bencher) {
     parse(b, "normalize.css")
 }
 
-fn bootstrap(b: &mut Bencher) {
+#[divan::bench]
+fn bootstrap(b: Bencher) {
     parse(b, "bootstrap.css")
 }
 
-fn tailwind(b: &mut Bencher) {
+#[divan::bench]
+fn tailwind(b: Bencher) {
     parse(b, "tailwind-output.css")
 }
 
@@ -118,29 +121,29 @@ impl<'i> RuleBodyItemParser<'i, (), ()> for RuleCounter {
     }
 }
 
-fn parse(b: &mut Bencher, filepath: &str) {
+fn parse(b: Bencher, filepath: &str) {
     let filepath = data_dir().join(filepath);
     let data = std::fs::read_to_string(&filepath)
         .unwrap_or_else(|e| panic!("Failed to read {}: {}", filepath.display(), e));
-    b.bytes = data.len() as u64;
 
-    b.iter(|| {
-        let buf = black_box(&data);
-        let mut input = ParserInput::new(buf);
-        let mut parser = Parser::new(&mut input);
-        let mut counter = RuleCounter {
-            rule_count: 0,
-            decl_count: 0,
-        };
+    b.counter(BytesCount::new(data.len()))
+        .bench_local(|| {
+            let buf = black_box(&data);
+            let mut input = ParserInput::new(buf);
+            let mut parser = Parser::new(&mut input);
+            let mut counter = RuleCounter {
+                rule_count: 0,
+                decl_count: 0,
+            };
 
-        let rule_parser = StyleSheetParser::new(&mut parser, &mut counter);
-        for result in rule_parser {
-            let _ = black_box(result);
-        }
-        black_box((counter.rule_count, counter.decl_count))
-    })
+            let rule_parser = StyleSheetParser::new(&mut parser, &mut counter);
+            for result in rule_parser {
+                let _ = black_box(result);
+            }
+            black_box((counter.rule_count, counter.decl_count))
+        });
 }
 
-benchmark_group!(css, normalize, bootstrap, tailwind);
-
-benchmark_main!(css);
+fn main() {
+    divan::main();
+}
