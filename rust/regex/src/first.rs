@@ -11,8 +11,8 @@ use crate::sets::charset::CharSet128;
 /// Returns `None` for patterns containing wildcards (`.`) or unsupported constructs
 /// whose FIRST set cannot be usefully constrained.
 pub fn regex_first_chars(pattern: &str) -> Option<CharSet128> {
-    let hir = crate::hir::parser::parse_with(pattern, &crate::hir::ParseOptions::byte_mode())
-        .ok()?;
+    let hir =
+        crate::hir::parser::parse_with(pattern, &crate::hir::ParseOptions::byte_mode()).ok()?;
     first_chars_from_hir(&hir)
 }
 

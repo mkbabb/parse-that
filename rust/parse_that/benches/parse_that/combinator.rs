@@ -4,7 +4,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use std::path::Path;
 
 use divan::counter::BytesCount;
-use divan::{black_box, Bencher};
+use divan::{Bencher, black_box};
 
 use parse_that::json::json_parser;
 
@@ -49,11 +49,10 @@ fn parse(b: Bencher, filepath: &str) {
 
     let parser = json_parser();
 
-    b.counter(BytesCount::new(data.len()))
-        .bench_local(|| {
-            let buf = black_box(&data);
-            parser.parse(buf).unwrap()
-        });
+    b.counter(BytesCount::new(data.len())).bench_local(|| {
+        let buf = black_box(&data);
+        parser.parse(buf).unwrap()
+    });
 }
 
 fn main() {

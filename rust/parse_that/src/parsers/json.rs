@@ -6,7 +6,7 @@ use crate::state::ParserState;
 
 use pprint::Pretty;
 
-use super::scan::{scan_number_strict_f64, STRICT_QUOTED_STRING_CONFIG};
+use super::scan::{STRICT_QUOTED_STRING_CONFIG, scan_number_strict_f64};
 
 // ── JSON Value types and parsers ──────────────────────────────
 
@@ -26,8 +26,7 @@ pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
     // Returns raw spans (no unescape) — zero-copy.
 
     let json_string_content = || -> Parser<'a, Cow<'a, str>> {
-        sp_quoted_string(&STRICT_QUOTED_STRING_CONFIG)
-            .map(|s| Cow::Borrowed(s.as_str()))
+        sp_quoted_string(&STRICT_QUOTED_STRING_CONFIG).map(|s| Cow::Borrowed(s.as_str()))
     };
 
     // ── Leaf values ───────────────────────────────────────────

@@ -110,8 +110,7 @@ impl<A: Analysis<HirENode>> Rewrite<HirENode, A> for AbsorbRepetition {
                     if sub_l != sub_r || greedy_l != greedy_r {
                         continue;
                     }
-                    let (merged_min, merged_max) =
-                        merge_bounds((min_l, max_l), (min_r, max_r));
+                    let (merged_min, merged_max) = merge_bounds((min_l, max_l), (min_r, max_r));
                     matches.push((
                         class.id,
                         AbsorbRepetitionMatch {
@@ -130,20 +129,14 @@ impl<A: Analysis<HirENode>> Rewrite<HirENode, A> for AbsorbRepetition {
         matches
     }
 
-    fn apply(
-        &self,
-        egraph: &mut EGraph<HirENode, A>,
-        class_id: Id,
-        m: Self::Match,
-    ) {
+    fn apply(&self, egraph: &mut EGraph<HirENode, A>, class_id: Id, m: Self::Match) {
         let merged_id = egraph.add(HirENode::Repetition {
             sub: m.merged_sub,
             min: m.merged_min,
             max: m.merged_max,
             greedy: m.merged_greedy,
         });
-        let mut new_children: Vec<Id> =
-            Vec::with_capacity(m.original_children.len() - 1);
+        let mut new_children: Vec<Id> = Vec::with_capacity(m.original_children.len() - 1);
         for (k, &id) in m.original_children.iter().enumerate() {
             if k == m.merge_idx {
                 new_children.push(merged_id);

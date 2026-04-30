@@ -83,14 +83,10 @@ impl CostModel<HirENode> for RegexExtractionCost {
         let w = &self.weights;
         match node {
             HirENode::Empty => w.structural,
-            HirENode::Literal(bytes) => {
-                w.structural + self.literal_per_byte * bytes.len() as f64
-            }
+            HirENode::Literal(bytes) => w.structural + self.literal_per_byte * bytes.len() as f64,
             HirENode::Class(_) => w.structural + self.class_cost,
             HirENode::Look(_) => w.structural,
-            HirENode::Repetition { sub, .. } => {
-                w.structural + self.repeat_cost + child_cost(*sub)
-            }
+            HirENode::Repetition { sub, .. } => w.structural + self.repeat_cost + child_cost(*sub),
             HirENode::Group(inner) => w.structural + child_cost(*inner),
             HirENode::Concat(children) => {
                 w.structural + children.iter().map(|&id| child_cost(id)).sum::<f64>()

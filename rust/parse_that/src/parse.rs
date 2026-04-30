@@ -1,4 +1,4 @@
-use smallbox::{space::S32, SmallBox};
+use smallbox::{SmallBox, space::S32};
 
 use crate::scanners::trim_leading_whitespace_mut;
 use crate::state::ParserState;

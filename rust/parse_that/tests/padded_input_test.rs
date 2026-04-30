@@ -65,7 +65,9 @@ fn stripe_boundary_input_padding() {
 fn long_input_padding() {
     // ~4 KB input: crosses many cache lines and verifies the
     // allocation scales.
-    let src: String = (0..4096).map(|i| ((b'0' + (i % 10) as u8) as char)).collect();
+    let src: String = (0..4096)
+        .map(|i| ((b'0' + (i % 10) as u8) as char))
+        .collect();
     check_padding_invariants(&src);
 }
 

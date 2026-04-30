@@ -4,7 +4,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use std::path::Path;
 
 use divan::counter::BytesCount;
-use divan::{black_box, Bencher};
+use divan::{Bencher, black_box};
 
 use cssparser::{
     AtRuleParser, CowRcStr, DeclarationParser, ParseError, Parser, ParserInput,
@@ -126,22 +126,21 @@ fn parse(b: Bencher, filepath: &str) {
     let data = std::fs::read_to_string(&filepath)
         .unwrap_or_else(|e| panic!("Failed to read {}: {}", filepath.display(), e));
 
-    b.counter(BytesCount::new(data.len()))
-        .bench_local(|| {
-            let buf = black_box(&data);
-            let mut input = ParserInput::new(buf);
-            let mut parser = Parser::new(&mut input);
-            let mut counter = RuleCounter {
-                rule_count: 0,
-                decl_count: 0,
-            };
+    b.counter(BytesCount::new(data.len())).bench_local(|| {
+        let buf = black_box(&data);
+        let mut input = ParserInput::new(buf);
+        let mut parser = Parser::new(&mut input);
+        let mut counter = RuleCounter {
+            rule_count: 0,
+            decl_count: 0,
+        };
 
-            let rule_parser = StyleSheetParser::new(&mut parser, &mut counter);
-            for result in rule_parser {
-                let _ = black_box(result);
-            }
-            black_box((counter.rule_count, counter.decl_count))
-        });
+        let rule_parser = StyleSheetParser::new(&mut parser, &mut counter);
+        for result in rule_parser {
+            let _ = black_box(result);
+        }
+        black_box((counter.rule_count, counter.decl_count))
+    });
 }
 
 fn main() {

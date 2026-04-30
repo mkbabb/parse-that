@@ -1,6 +1,6 @@
 // CSS selector parsing — compound, complex, attribute, and pseudo selectors.
 
-use super::super::scan::{scan_ident, CSS_IDENT_CONFIG};
+use super::super::scan::{CSS_IDENT_CONFIG, scan_ident};
 use super::types::*;
 use crate::lazy::lazy;
 use crate::parse::*;
@@ -261,7 +261,7 @@ pub(super) fn css_pseudo_selector<'a>() -> Parser<'a, CssSelector<'a>> {
             if i < len && bytes[i] == b'n' {
                 // An+B form: [+-]?\d*n\s*([+-]\s*\d+)?
                 i += 1; // skip 'n'
-                        // Skip whitespace
+                // Skip whitespace
                 while i < len && matches!(bytes[i], b' ' | b'\t') {
                     i += 1;
                 }

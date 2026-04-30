@@ -25,7 +25,11 @@ pub fn lower(ast: &RegexParserEnum<'_>, src: &str, opts: &ParseOptions) -> Resul
     lower_node(ast, src, &mut ctx)
 }
 
-fn lower_node(node: &RegexParserEnum<'_>, src: &str, ctx: &mut LowerCtx) -> Result<Hir, ParseError> {
+fn lower_node(
+    node: &RegexParserEnum<'_>,
+    src: &str,
+    ctx: &mut LowerCtx,
+) -> Result<Hir, ParseError> {
     match node {
         RegexParserEnum::regex(inner) => lower_node(inner, src, ctx),
 
@@ -175,7 +179,12 @@ fn lower_quantifier(
 ) -> Result<Hir, ParseError> {
     let span = match quant {
         RegexParserEnum::quantifier(s) => s.as_str(),
-        _ => return Err(ParseError { message: "expected quantifier".into(), offset: 0 }),
+        _ => {
+            return Err(ParseError {
+                message: "expected quantifier".into(),
+                offset: 0,
+            });
+        }
     };
 
     let bytes = span.as_bytes();
@@ -210,10 +219,13 @@ fn parse_braced_quantifier(s: &str) -> Result<(u32, Option<u32>, &[u8]), ParseEr
     };
 
     if let Some(comma_pos) = num_part.find(',') {
-        let n: u32 = num_part[..comma_pos].trim().parse().map_err(|_| ParseError {
-            message: "invalid repetition bound".into(),
-            offset: 0,
-        })?;
+        let n: u32 = num_part[..comma_pos]
+            .trim()
+            .parse()
+            .map_err(|_| ParseError {
+                message: "invalid repetition bound".into(),
+                offset: 0,
+            })?;
         let after_comma = num_part[comma_pos + 1..].trim();
         let max = if after_comma.is_empty() {
             None
@@ -353,13 +365,22 @@ fn lower_char_class(
 
     for item in items {
         match lower_node(item, src, ctx)? {
-            Hir::Class(CharClass::Bytes { ranges, negated: false }) => {
+            Hir::Class(CharClass::Bytes {
+                ranges,
+                negated: false,
+            }) => {
                 byte_ranges.extend(ranges);
             }
-            Hir::Class(CharClass::Unicode { ranges, negated: false }) => {
+            Hir::Class(CharClass::Unicode {
+                ranges,
+                negated: false,
+            }) => {
                 cp_ranges.extend(ranges);
             }
-            Hir::Class(CharClass::Bytes { ranges, negated: true }) => {
+            Hir::Class(CharClass::Bytes {
+                ranges,
+                negated: true,
+            }) => {
                 // Negated shorthand inside class — expand to positive ranges
                 let positive = negate_byte_ranges(&ranges);
                 byte_ranges.extend(positive);
@@ -374,14 +395,20 @@ fn lower_char_class(
     if cp_ranges.is_empty() {
         byte_ranges.sort();
         byte_ranges = merge_byte_ranges(byte_ranges);
-        Ok(Hir::Class(CharClass::Bytes { ranges: byte_ranges, negated }))
+        Ok(Hir::Class(CharClass::Bytes {
+            ranges: byte_ranges,
+            negated,
+        }))
     } else {
         for br in &byte_ranges {
             cp_ranges.push(CodepointRange::new(br.start as char, br.end as char));
         }
         cp_ranges.sort();
         cp_ranges.dedup();
-        Ok(Hir::Class(CharClass::Unicode { ranges: cp_ranges, negated }))
+        Ok(Hir::Class(CharClass::Unicode {
+            ranges: cp_ranges,
+            negated,
+        }))
     }
 }
 
@@ -474,10 +501,7 @@ fn shorthand_word(negated: bool) -> Hir {
 
 fn shorthand_space(negated: bool) -> Hir {
     Hir::Class(CharClass::Bytes {
-        ranges: vec![
-            ByteRange::new(0x09, 0x0D),
-            ByteRange::new(0x20, 0x20),
-        ],
+        ranges: vec![ByteRange::new(0x09, 0x0D), ByteRange::new(0x20, 0x20)],
         negated,
     })
 }

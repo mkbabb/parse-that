@@ -42,56 +42,28 @@ impl<'a> ::core::fmt::Debug for RegexParserEnum<'a> {
                 ::core::fmt::Formatter::debug_tuple_field1_finish(f, "escape", &__self_0)
             }
             RegexParserEnum::quantifier(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(
-                    f,
-                    "quantifier",
-                    &__self_0,
-                )
+                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "quantifier", &__self_0)
             }
             RegexParserEnum::class_escape(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(
-                    f,
-                    "class_escape",
-                    &__self_0,
-                )
+                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "class_escape", &__self_0)
             }
             RegexParserEnum::literal(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(
-                    f,
-                    "literal",
-                    &__self_0,
-                )
+                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "literal", &__self_0)
             }
             RegexParserEnum::class_atom(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(
-                    f,
-                    "class_atom",
-                    &__self_0,
-                )
+                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "class_atom", &__self_0)
             }
             RegexParserEnum::class_item(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(
-                    f,
-                    "class_item",
-                    &__self_0,
-                )
+                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "class_item", &__self_0)
             }
             RegexParserEnum::char_class(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(
-                    f,
-                    "char_class",
-                    &__self_0,
-                )
+                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "char_class", &__self_0)
             }
             RegexParserEnum::group(__self_0) => {
                 ::core::fmt::Formatter::debug_tuple_field1_finish(f, "group", &__self_0)
             }
             RegexParserEnum::alternation(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(
-                    f,
-                    "alternation",
-                    &__self_0,
-                )
+                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "alternation", &__self_0)
             }
             RegexParserEnum::atom(__self_0) => {
                 ::core::fmt::Formatter::debug_tuple_field1_finish(f, "atom", &__self_0)
@@ -100,59 +72,31 @@ impl<'a> ::core::fmt::Debug for RegexParserEnum<'a> {
                 ::core::fmt::Formatter::debug_tuple_field1_finish(f, "concat", &__self_0)
             }
             RegexParserEnum::quantified(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(
-                    f,
-                    "quantified",
-                    &__self_0,
-                )
+                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "quantified", &__self_0)
             }
             RegexParserEnum::regex(__self_0) => {
                 ::core::fmt::Formatter::debug_tuple_field1_finish(f, "regex", &__self_0)
             }
             RegexParserEnum::class_atom_0(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(
-                    f,
-                    "class_atom_0",
-                    &__self_0,
-                )
+                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "class_atom_0", &__self_0)
             }
             RegexParserEnum::class_item_0(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(
-                    f,
-                    "class_item_0",
-                    &__self_0,
-                )
+                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "class_item_0", &__self_0)
             }
             RegexParserEnum::class_item_1(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(
-                    f,
-                    "class_item_1",
-                    &__self_0,
-                )
+                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "class_item_1", &__self_0)
             }
             RegexParserEnum::group_0(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(
-                    f,
-                    "group_0",
-                    &__self_0,
-                )
+                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "group_0", &__self_0)
             }
             RegexParserEnum::group_1(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(
-                    f,
-                    "group_1",
-                    &__self_0,
-                )
+                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "group_1", &__self_0)
             }
             RegexParserEnum::atom_0(__self_0) => {
                 ::core::fmt::Formatter::debug_tuple_field1_finish(f, "atom_0", &__self_0)
             }
             RegexParserEnum::__Phantom(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(
-                    f,
-                    "__Phantom",
-                    &__self_0,
-                )
+                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "__Phantom", &__self_0)
             }
         }
     }
@@ -258,9 +202,7 @@ impl<'a> __RegexParserEnumCtx<'a> {
 }
 #[allow(non_snake_case)]
 #[inline(always)]
-fn __RegexParserEnum_alloc<'a>(
-    state: &crate::ParserState<'a>,
-) -> &'a __RegexParserEnumCtx<'a> {
+fn __RegexParserEnum_alloc<'a>(state: &crate::ParserState<'a>) -> &'a __RegexParserEnumCtx<'a> {
     if true {
         if !!state.context_ptr.is_null() {
             panic!("slab parser requires parse_with_context()");
@@ -270,146 +212,116 @@ fn __RegexParserEnum_alloc<'a>(
 }
 impl RegexParser {
     #[allow(non_snake_case)]
-    fn __quantifier<'a>(
-        state: &mut crate::ParserState<'a>,
-    ) -> Option<RegexParserEnum<'a>> {
+    fn __quantifier<'a>(state: &mut crate::ParserState<'a>) -> Option<RegexParserEnum<'a>> {
         (|| {
             if state.offset < state.src.len() {
                 match state.src.as_bytes()[state.offset] {
-                    42u8 => {
-                        (|| {
-                            let __sp_start = state.offset;
-                            {
-                                let __start = state.offset;
-                                state.offset += 1;
-                                Some(
-                                    crate::Span::new(__start, state.offset, state.src),
-                                )
-                            }?;
-                            {
-                                let __cp = state.offset;
-                                if (|| {
-                                    if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 63u8
-                                    {
-                                        let __start = state.offset;
-                                        state.offset += 1;
-                                        Some(
-                                            crate::Span::new(__start, state.offset, state.src),
-                                        )
-                                    } else {
-                                        None
-                                    }
-                                })()
-                                    .is_none()
-                                {
-                                    state.offset = __cp;
-                                }
-                                Some(crate::Span::new(__cp, state.offset, state.src))
-                            }?;
-                            Some(
-                                crate::Span::new(__sp_start, state.offset, state.src),
-                            )
-                        })()
-                    }
-                    43u8 => {
-                        (|| {
-                            let __sp_start = state.offset;
-                            {
-                                let __start = state.offset;
-                                state.offset += 1;
-                                Some(
-                                    crate::Span::new(__start, state.offset, state.src),
-                                )
-                            }?;
-                            {
-                                let __cp = state.offset;
-                                if (|| {
-                                    if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 63u8
-                                    {
-                                        let __start = state.offset;
-                                        state.offset += 1;
-                                        Some(
-                                            crate::Span::new(__start, state.offset, state.src),
-                                        )
-                                    } else {
-                                        None
-                                    }
-                                })()
-                                    .is_none()
-                                {
-                                    state.offset = __cp;
-                                }
-                                Some(crate::Span::new(__cp, state.offset, state.src))
-                            }?;
-                            Some(
-                                crate::Span::new(__sp_start, state.offset, state.src),
-                            )
-                        })()
-                    }
-                    63u8 => {
-                        (|| {
-                            let __sp_start = state.offset;
-                            {
-                                let __start = state.offset;
-                                state.offset += 1;
-                                Some(
-                                    crate::Span::new(__start, state.offset, state.src),
-                                )
-                            }?;
-                            {
-                                let __cp = state.offset;
-                                if (|| {
-                                    if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 63u8
-                                    {
-                                        let __start = state.offset;
-                                        state.offset += 1;
-                                        Some(
-                                            crate::Span::new(__start, state.offset, state.src),
-                                        )
-                                    } else {
-                                        None
-                                    }
-                                })()
-                                    .is_none()
-                                {
-                                    state.offset = __cp;
-                                }
-                                Some(crate::Span::new(__cp, state.offset, state.src))
-                            }?;
-                            Some(
-                                crate::Span::new(__sp_start, state.offset, state.src),
-                            )
-                        })()
-                    }
-                    123u8 => {
-                        (|| {
-                            let __sp_start = state.offset;
-                            (|| {
+                    42u8 => (|| {
+                        let __sp_start = state.offset;
+                        {
+                            let __start = state.offset;
+                            state.offset += 1;
+                            Some(crate::Span::new(__start, state.offset, state.src))
+                        }?;
+                        {
+                            let __cp = state.offset;
+                            if (|| {
+                                if state.offset < state.src.len()
+                                    && state.src.as_bytes()[state.offset] == 63u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
-                                    Some(
-                                        crate::Span::new(__start, state.offset, state.src),
-                                    )
-                                }?;
-                                crate::scan_number_strict_span(state)
-                            })()?;
-                            (|| {
-                                let __kept = {
-                                    let __cp = state.offset;
-                                    if (|| (|| {
+                                    Some(crate::Span::new(__start, state.offset, state.src))
+                                } else {
+                                    None
+                                }
+                            })()
+                            .is_none()
+                            {
+                                state.offset = __cp;
+                            }
+                            Some(crate::Span::new(__cp, state.offset, state.src))
+                        }?;
+                        Some(crate::Span::new(__sp_start, state.offset, state.src))
+                    })(),
+                    43u8 => (|| {
+                        let __sp_start = state.offset;
+                        {
+                            let __start = state.offset;
+                            state.offset += 1;
+                            Some(crate::Span::new(__start, state.offset, state.src))
+                        }?;
+                        {
+                            let __cp = state.offset;
+                            if (|| {
+                                if state.offset < state.src.len()
+                                    && state.src.as_bytes()[state.offset] == 63u8
+                                {
+                                    let __start = state.offset;
+                                    state.offset += 1;
+                                    Some(crate::Span::new(__start, state.offset, state.src))
+                                } else {
+                                    None
+                                }
+                            })()
+                            .is_none()
+                            {
+                                state.offset = __cp;
+                            }
+                            Some(crate::Span::new(__cp, state.offset, state.src))
+                        }?;
+                        Some(crate::Span::new(__sp_start, state.offset, state.src))
+                    })(),
+                    63u8 => (|| {
+                        let __sp_start = state.offset;
+                        {
+                            let __start = state.offset;
+                            state.offset += 1;
+                            Some(crate::Span::new(__start, state.offset, state.src))
+                        }?;
+                        {
+                            let __cp = state.offset;
+                            if (|| {
+                                if state.offset < state.src.len()
+                                    && state.src.as_bytes()[state.offset] == 63u8
+                                {
+                                    let __start = state.offset;
+                                    state.offset += 1;
+                                    Some(crate::Span::new(__start, state.offset, state.src))
+                                } else {
+                                    None
+                                }
+                            })()
+                            .is_none()
+                            {
+                                state.offset = __cp;
+                            }
+                            Some(crate::Span::new(__cp, state.offset, state.src))
+                        }?;
+                        Some(crate::Span::new(__sp_start, state.offset, state.src))
+                    })(),
+                    123u8 => (|| {
+                        let __sp_start = state.offset;
+                        (|| {
+                            {
+                                let __start = state.offset;
+                                state.offset += 1;
+                                Some(crate::Span::new(__start, state.offset, state.src))
+                            }?;
+                            crate::scan_number_strict_span(state)
+                        })()?;
+                        (|| {
+                            let __kept = {
+                                let __cp = state.offset;
+                                if (|| {
+                                    (|| {
                                         let __sp_start = state.offset;
                                         if state.offset < state.src.len()
                                             && state.src.as_bytes()[state.offset] == 44u8
                                         {
                                             let __start = state.offset;
                                             state.offset += 1;
-                                            Some(
-                                                crate::Span::new(__start, state.offset, state.src),
-                                            )
+                                            Some(crate::Span::new(__start, state.offset, state.src))
                                         } else {
                                             None
                                         }?;
@@ -422,70 +334,60 @@ impl RegexParser {
                                             }
                                             Some(crate::Span::new(__cp, state.offset, state.src))
                                         }?;
-                                        Some(
-                                            crate::Span::new(__sp_start, state.offset, state.src),
-                                        )
-                                    })())()
-                                        .is_none()
-                                    {
-                                        state.offset = __cp;
-                                    }
-                                    Some(crate::Span::new(__cp, state.offset, state.src))
-                                }?;
-                                if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 125u8
-                                {
-                                    let __start = state.offset;
-                                    state.offset += 1;
-                                    Some(
-                                        crate::Span::new(__start, state.offset, state.src),
-                                    )
-                                } else {
-                                    None
-                                }?;
-                                Some(__kept)
-                            })()?;
-                            {
-                                let __cp = state.offset;
-                                if (|| {
-                                    if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 63u8
-                                    {
-                                        let __start = state.offset;
-                                        state.offset += 1;
-                                        Some(
-                                            crate::Span::new(__start, state.offset, state.src),
-                                        )
-                                    } else {
-                                        None
-                                    }
+                                        Some(crate::Span::new(__sp_start, state.offset, state.src))
+                                    })()
                                 })()
-                                    .is_none()
+                                .is_none()
                                 {
                                     state.offset = __cp;
                                 }
                                 Some(crate::Span::new(__cp, state.offset, state.src))
                             }?;
-                            Some(
-                                crate::Span::new(__sp_start, state.offset, state.src),
-                            )
-                        })()
-                    }
+                            if state.offset < state.src.len()
+                                && state.src.as_bytes()[state.offset] == 125u8
+                            {
+                                let __start = state.offset;
+                                state.offset += 1;
+                                Some(crate::Span::new(__start, state.offset, state.src))
+                            } else {
+                                None
+                            }?;
+                            Some(__kept)
+                        })()?;
+                        {
+                            let __cp = state.offset;
+                            if (|| {
+                                if state.offset < state.src.len()
+                                    && state.src.as_bytes()[state.offset] == 63u8
+                                {
+                                    let __start = state.offset;
+                                    state.offset += 1;
+                                    Some(crate::Span::new(__start, state.offset, state.src))
+                                } else {
+                                    None
+                                }
+                            })()
+                            .is_none()
+                            {
+                                state.offset = __cp;
+                            }
+                            Some(crate::Span::new(__cp, state.offset, state.src))
+                        }?;
+                        Some(crate::Span::new(__sp_start, state.offset, state.src))
+                    })(),
                     _ => None,
                 }
             } else {
                 None
             }
         })()
-            .map(|__x| RegexParserEnum::quantifier(__x))
+        .map(|__x| RegexParserEnum::quantifier(__x))
     }
     pub fn quantifier<'a>() -> Parser<'a, RegexParserEnum<'a>> {
         Parser::new(Self::__quantifier)
     }
     #[allow(non_snake_case)]
-    fn __alternation<'a>(
-        state: &mut crate::ParserState<'a>,
-    ) -> Option<RegexParserEnum<'a>> {
+    fn __alternation<'a>(state: &mut crate::ParserState<'a>) -> Option<RegexParserEnum<'a>> {
         (|| {
             (|| {
                 let __v2 = Self::__concat(state)
@@ -500,9 +402,7 @@ impl RegexParser {
                             {
                                 let __start = state.offset;
                                 state.offset += 1;
-                                Some(
-                                    crate::Span::new(__start, state.offset, state.src),
-                                )
+                                Some(crate::Span::new(__start, state.offset, state.src))
                             } else {
                                 None
                             }?;
@@ -525,15 +425,13 @@ impl RegexParser {
                 Some((__v2, __v3))
             })()
         })()
-            .map(|__x| RegexParserEnum::alternation(__x))
+        .map(|__x| RegexParserEnum::alternation(__x))
     }
     pub fn alternation<'a>() -> Parser<'a, RegexParserEnum<'a>> {
         Parser::new(Self::__alternation)
     }
     #[allow(non_snake_case)]
-    fn __concat<'a>(
-        state: &mut crate::ParserState<'a>,
-    ) -> Option<RegexParserEnum<'a>> {
+    fn __concat<'a>(state: &mut crate::ParserState<'a>) -> Option<RegexParserEnum<'a>> {
         (|| {
             {
                 let __depth14 = __RegexParserEnum_alloc(state).__s0().len();
@@ -2375,14 +2273,11 @@ impl RegexParser {
         Parser::new(Self::__concat)
     }
     #[allow(non_snake_case)]
-    fn __regex<'a>(
-        state: &mut crate::ParserState<'a>,
-    ) -> Option<RegexParserEnum<'a>> {
+    fn __regex<'a>(state: &mut crate::ParserState<'a>) -> Option<RegexParserEnum<'a>> {
         (|| {
-            Self::__alternation(state)
-                .map(|__v| &*__RegexParserEnum_alloc(state).slab().alloc(__v))
+            Self::__alternation(state).map(|__v| &*__RegexParserEnum_alloc(state).slab().alloc(__v))
         })()
-            .map(|__x| RegexParserEnum::regex(__x))
+        .map(|__x| RegexParserEnum::regex(__x))
     }
     pub fn regex<'a>() -> Parser<'a, RegexParserEnum<'a>> {
         Parser::new(Self::__regex)

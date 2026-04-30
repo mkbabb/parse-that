@@ -12,11 +12,14 @@ fn empty() {
 
 #[test]
 fn literal() {
-    assert_eq!(p("abc"), Hir::Concat(vec![
-        Hir::Literal(vec![b'a']),
-        Hir::Literal(vec![b'b']),
-        Hir::Literal(vec![b'c']),
-    ]));
+    assert_eq!(
+        p("abc"),
+        Hir::Concat(vec![
+            Hir::Literal(vec![b'a']),
+            Hir::Literal(vec![b'b']),
+            Hir::Literal(vec![b'c']),
+        ])
+    );
 }
 
 #[test]
@@ -49,15 +52,30 @@ fn alternation() {
 #[test]
 fn quantifiers() {
     match p("a*") {
-        Hir::Repetition(Repetition { min: 0, max: None, greedy: true, .. }) => {}
+        Hir::Repetition(Repetition {
+            min: 0,
+            max: None,
+            greedy: true,
+            ..
+        }) => {}
         other => panic!("expected star, got {:?}", other),
     }
     match p("a+") {
-        Hir::Repetition(Repetition { min: 1, max: None, greedy: true, .. }) => {}
+        Hir::Repetition(Repetition {
+            min: 1,
+            max: None,
+            greedy: true,
+            ..
+        }) => {}
         other => panic!("expected plus, got {:?}", other),
     }
     match p("a?") {
-        Hir::Repetition(Repetition { min: 0, max: Some(1), greedy: true, .. }) => {}
+        Hir::Repetition(Repetition {
+            min: 0,
+            max: Some(1),
+            greedy: true,
+            ..
+        }) => {}
         other => panic!("expected optional, got {:?}", other),
     }
 }
@@ -65,7 +83,12 @@ fn quantifiers() {
 #[test]
 fn lazy_quantifier() {
     match p("a*?") {
-        Hir::Repetition(Repetition { min: 0, max: None, greedy: false, .. }) => {}
+        Hir::Repetition(Repetition {
+            min: 0,
+            max: None,
+            greedy: false,
+            ..
+        }) => {}
         other => panic!("expected lazy star, got {:?}", other),
     }
 }
@@ -73,7 +96,11 @@ fn lazy_quantifier() {
 #[test]
 fn bounded_repetition() {
     match p("a{3,5}") {
-        Hir::Repetition(Repetition { min: 3, max: Some(5), .. }) => {}
+        Hir::Repetition(Repetition {
+            min: 3,
+            max: Some(5),
+            ..
+        }) => {}
         other => panic!("expected {{3,5}}, got {:?}", other),
     }
 }
@@ -95,7 +122,10 @@ fn dotall_flag_unicode() {
         Hir::Concat(items) => {
             assert_eq!(items.len(), 2); // Empty (from flag group) + dot
             match &items[1] {
-                Hir::Class(CharClass::Unicode { ranges, negated: false }) => {
+                Hir::Class(CharClass::Unicode {
+                    ranges,
+                    negated: false,
+                }) => {
                     assert_eq!(ranges[0], CodepointRange::new('\0', '\u{10FFFF}'));
                 }
                 other => panic!("expected Unicode class for dotall, got {:?}", other),
@@ -110,14 +140,15 @@ fn dotall_flag_byte_mode() {
     // (?s). in byte mode → Bytes class matching all bytes.
     let hir = parse_with("(?s).", &ParseOptions::byte_mode()).unwrap();
     match hir {
-        Hir::Concat(items) => {
-            match &items[1] {
-                Hir::Class(CharClass::Bytes { ranges, negated: false }) => {
-                    assert_eq!(ranges[0], ByteRange::new(0, 255));
-                }
-                other => panic!("expected Bytes class for dotall byte mode, got {:?}", other),
+        Hir::Concat(items) => match &items[1] {
+            Hir::Class(CharClass::Bytes {
+                ranges,
+                negated: false,
+            }) => {
+                assert_eq!(ranges[0], ByteRange::new(0, 255));
             }
-        }
+            other => panic!("expected Bytes class for dotall byte mode, got {:?}", other),
+        },
         other => panic!("expected Concat, got {:?}", other),
     }
 }
@@ -125,13 +156,19 @@ fn dotall_flag_byte_mode() {
 #[test]
 fn shorthand_classes() {
     match p(r"\d") {
-        Hir::Class(CharClass::Bytes { ranges, negated: false }) => {
+        Hir::Class(CharClass::Bytes {
+            ranges,
+            negated: false,
+        }) => {
             assert_eq!(ranges, vec![ByteRange::new(b'0', b'9')]);
         }
         other => panic!("expected digit class, got {:?}", other),
     }
     match p(r"\w") {
-        Hir::Class(CharClass::Bytes { ranges, negated: false }) => {
+        Hir::Class(CharClass::Bytes {
+            ranges,
+            negated: false,
+        }) => {
             assert_eq!(ranges.len(), 4); // 0-9, A-Z, _, a-z
         }
         other => panic!("expected word class, got {:?}", other),
@@ -196,7 +233,10 @@ fn byte_mode() {
 #[test]
 fn dot_default() {
     match p(".") {
-        Hir::Class(CharClass::Bytes { negated: true, ranges }) => {
+        Hir::Class(CharClass::Bytes {
+            negated: true,
+            ranges,
+        }) => {
             assert_eq!(ranges, vec![ByteRange::new(b'\n', b'\n')]);
         }
         other => panic!("expected negated class for dot, got {:?}", other),

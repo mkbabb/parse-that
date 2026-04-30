@@ -92,4 +92,3 @@ fn compute_classes_large(byte_sets: &[ByteSet]) -> ([u8; 256], u16) {
 
     (classes, next_class as u16)
 }
-

@@ -226,7 +226,9 @@ impl<'a> SpanParser<'a> {
             // ── Assertions (assertions.rs) ────────────────────
             SpanKind::Not(main, negated) => self.dispatch_not(main, negated, state),
             SpanKind::Minus(main, excluded) => self.dispatch_minus(main, excluded, state),
-            SpanKind::LookAhead(main, lookahead) => self.dispatch_look_ahead(main, lookahead, state),
+            SpanKind::LookAhead(main, lookahead) => {
+                self.dispatch_look_ahead(main, lookahead, state)
+            }
             SpanKind::Negate(inner) => self.dispatch_negate(inner, state),
             SpanKind::Peek(inner) => self.dispatch_peek(inner, state),
         }
@@ -236,12 +238,12 @@ impl<'a> SpanParser<'a> {
 // ── Sub-modules (order matters: sp_new! must be defined above) ──
 mod span_scanner;
 pub(super) use span_scanner::SpanScanner;
-mod leaves;
-mod scan;
-mod combinators;
-mod wrap;
-mod sep_by;
 mod assertions;
-mod methods;
+mod combinators;
 mod constructors;
+mod leaves;
+mod methods;
+mod scan;
+mod sep_by;
+mod wrap;
 pub use constructors::*;

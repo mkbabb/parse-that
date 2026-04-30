@@ -4,7 +4,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use std::path::{Path, PathBuf};
 
 use divan::counter::BytesCount;
-use divan::{black_box, Bencher};
+use divan::{Bencher, black_box};
 
 fn data_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/json")
@@ -48,11 +48,10 @@ fn parse(b: Bencher, filepath: &str) {
     let data = std::fs::read_to_string(&filepath)
         .unwrap_or_else(|e| panic!("Failed to read {}: {}", filepath.display(), e));
 
-    b.counter(BytesCount::new(data.len()))
-        .bench_local(|| {
-            let buf = black_box(data.as_str());
-            sonic_rs::from_str::<sonic_rs::Value>(buf).unwrap()
-        });
+    b.counter(BytesCount::new(data.len())).bench_local(|| {
+        let buf = black_box(data.as_str());
+        sonic_rs::from_str::<sonic_rs::Value>(buf).unwrap()
+    });
 }
 
 fn main() {

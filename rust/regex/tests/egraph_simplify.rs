@@ -24,10 +24,7 @@ fn simplify_hir_preserves_structure() {
     // A pattern with no applicable rewrites should extract back to
     // something equivalent. Since the cost model picks the
     // cheapest, we check semantic — not byte — equivalence.
-    let hir = Hir::Alternation(vec![
-        mk_class(&[(b'a', b'c')]),
-        mk_class(&[(b'd', b'f')]),
-    ]);
+    let hir = Hir::Alternation(vec![mk_class(&[(b'a', b'c')]), mk_class(&[(b'd', b'f')])]);
     let cost = RegexExtractionCost::default();
     let out = simplify_hir(&hir, &cost);
     // After union-merge + cost-guided extraction, the cheapest form
@@ -44,11 +41,7 @@ fn simplify_hir_preserves_structure() {
                 }
             }
             for b in b'a'..=b'f' {
-                assert!(
-                    covered[b as usize],
-                    "merged class must cover {}",
-                    b as char
-                );
+                assert!(covered[b as usize], "merged class must cover {}", b as char);
             }
         }
         other => panic!("expected merged Class, got {:?}", other),

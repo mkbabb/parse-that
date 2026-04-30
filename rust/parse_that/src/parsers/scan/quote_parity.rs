@@ -28,8 +28,8 @@
 //! `x ^= x << 1; x ^= x << 2; … x ^= x << 32;`, which is five shifts
 //! and xors — still branchless, no per-byte work, O(1) per stripe.
 
-use crate::state::PaddedView;
 use super::quoted_simd::odd_parity_backslashes;
+use crate::state::PaddedView;
 
 const STRIPE: usize = 64;
 
@@ -140,7 +140,11 @@ where
 
         f(offset, in_string, real_quotes);
 
-        prev_instring = if (in_string >> 63) & 1 == 1 { !0u64 } else { 0u64 };
+        prev_instring = if (in_string >> 63) & 1 == 1 {
+            !0u64
+        } else {
+            0u64
+        };
         offset += STRIPE;
     }
 
@@ -204,4 +208,3 @@ pub fn filter_quote_parity(view: PaddedView<'_>, positions: &mut Vec<u32>) {
     }
     positions.truncate(write);
 }
-

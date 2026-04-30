@@ -41,7 +41,10 @@ pub fn scan_balanced(bytes: &[u8], config: &BalancedScanConfig) -> usize {
         structural[n] = t;
         n += 1;
     }
-    debug_assert!(n <= 8, "scan_balanced: too many structural bytes for nibble LUT");
+    debug_assert!(
+        n <= 8,
+        "scan_balanced: too many structural bytes for nibble LUT"
+    );
     let (lo_lut, hi_lut) = build_nibble_luts(&structural[..n]);
 
     let len = bytes.len();
@@ -107,4 +110,3 @@ pub fn scan_balanced(bytes: &[u8], config: &BalancedScanConfig) -> usize {
 
     len
 }
-

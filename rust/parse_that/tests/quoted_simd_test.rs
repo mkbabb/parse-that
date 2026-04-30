@@ -28,10 +28,14 @@ fn scan_ref(bytes: &[u8], start: usize) -> Option<usize> {
 // ── Basic ────────────────────────────────────────────────────
 
 #[test]
-fn empty_string() { assert_eq!(scan(r#""""#), Some(1)); }
+fn empty_string() {
+    assert_eq!(scan(r#""""#), Some(1));
+}
 
 #[test]
-fn simple_string() { assert_eq!(scan(r#""hello""#), Some(6)); }
+fn simple_string() {
+    assert_eq!(scan(r#""hello""#), Some(6));
+}
 
 #[test]
 fn escaped_quote() {
@@ -62,10 +66,14 @@ fn only_escapes() {
 }
 
 #[test]
-fn unterminated() { assert_eq!(scan("\"hello"), None); }
+fn unterminated() {
+    assert_eq!(scan("\"hello"), None);
+}
 
 #[test]
-fn unterminated_backslash() { assert_eq!(scan("\"hello\\"), None); }
+fn unterminated_backslash() {
+    assert_eq!(scan("\"hello\\"), None);
+}
 
 // ── Backslash parity ─────────────────────────────────────────
 
@@ -101,8 +109,7 @@ fn long_no_escapes() {
 
 #[test]
 fn long_with_escapes() {
-    let content = format!("{}\\\"{}",
-        "a".repeat(50), "b".repeat(50));
+    let content = format!("{}\\\"{}", "a".repeat(50), "b".repeat(50));
     let input = format!("\"{}\"", content);
     assert_eq!(scan(&input), Some(input.len() - 1));
 }
@@ -150,7 +157,9 @@ fn exactly_16_byte_content() {
 #[test]
 fn all_bs_even() {
     let mut s = String::from("\"");
-    for _ in 0..16 { s.push('\\'); }
+    for _ in 0..16 {
+        s.push('\\');
+    }
     s.push('"');
     let b = s.as_bytes();
     assert_eq!(scan_quoted_string_simd(b, 1, b'"'), scan_ref(b, 1));
@@ -159,7 +168,9 @@ fn all_bs_even() {
 #[test]
 fn all_bs_odd() {
     let mut s = String::from("\"");
-    for _ in 0..15 { s.push('\\'); }
+    for _ in 0..15 {
+        s.push('\\');
+    }
     s.push_str("\"x\"");
     let b = s.as_bytes();
     assert_eq!(scan_quoted_string_simd(b, 1, b'"'), scan_ref(b, 1));
@@ -168,7 +179,9 @@ fn all_bs_odd() {
 #[test]
 fn two_chunks_bs() {
     let mut s = String::from("\"");
-    for _ in 0..32 { s.push('\\'); }
+    for _ in 0..32 {
+        s.push('\\');
+    }
     s.push('"');
     let b = s.as_bytes();
     assert_eq!(scan_quoted_string_simd(b, 1, b'"'), scan_ref(b, 1));
@@ -177,7 +190,9 @@ fn two_chunks_bs() {
 #[test]
 fn two_chunks_bs_odd() {
     let mut s = String::from("\"");
-    for _ in 0..31 { s.push('\\'); }
+    for _ in 0..31 {
+        s.push('\\');
+    }
     s.push_str("\"x\"");
     let b = s.as_bytes();
     assert_eq!(scan_quoted_string_simd(b, 1, b'"'), scan_ref(b, 1));
@@ -188,27 +203,37 @@ fn two_chunks_bs_odd() {
 #[test]
 fn cross_validate_patterns() {
     for &pat in &[
-        r#""simple""#,  r#""""#,  r#""\"""#,  r#""\\""#,
-        r#""\\\"""#,  r#""\\\\""#,  r#""hello\"world""#,
-        r#""a\nb\tc""#,  "\"\\u0041\\u0042\"",
+        r#""simple""#,
+        r#""""#,
+        r#""\"""#,
+        r#""\\""#,
+        r#""\\\"""#,
+        r#""\\\\""#,
+        r#""hello\"world""#,
+        r#""a\nb\tc""#,
+        "\"\\u0041\\u0042\"",
         "\"hello\\\\\\\"end\"",
     ] {
         let b = pat.as_bytes();
         assert_eq!(
-            scan_quoted_string_simd(b, 1, b'"'), scan_ref(b, 1),
-            "Mismatch for {:?}", pat
+            scan_quoted_string_simd(b, 1, b'"'),
+            scan_ref(b, 1),
+            "Mismatch for {:?}",
+            pat
         );
     }
 }
 
 #[test]
 fn cross_validate_generated() {
-    for n_prefix in [0,1,5,14,15,16,20,31,32,48,63,64] {
+    for n_prefix in [0, 1, 5, 14, 15, 16, 20, 31, 32, 48, 63, 64] {
         for n_bs in 0..=10 {
             for has_post in [false, true] {
                 let mut s = String::from("\"");
                 s.push_str(&"a".repeat(n_prefix));
-                for _ in 0..n_bs { s.push('\\'); }
+                for _ in 0..n_bs {
+                    s.push('\\');
+                }
                 if has_post && n_bs % 2 == 1 {
                     s.push('"');
                     s.push('x');
@@ -216,7 +241,8 @@ fn cross_validate_generated() {
                 s.push('"');
                 let b = s.as_bytes();
                 assert_eq!(
-                    scan_quoted_string_simd(b, 1, b'"'), scan_ref(b, 1),
+                    scan_quoted_string_simd(b, 1, b'"'),
+                    scan_ref(b, 1),
                     "prefix={n_prefix}, bs={n_bs}, post={has_post}"
                 );
             }
@@ -227,16 +253,44 @@ fn cross_validate_generated() {
 // ── escaped_mask unit tests ──────────────────────────────────
 
 #[test]
-fn em_no_bs()          { let mut c=0; assert_eq!(escaped_mask(0,&mut c),0); assert_eq!(c,0); }
+fn em_no_bs() {
+    let mut c = 0;
+    assert_eq!(escaped_mask(0, &mut c), 0);
+    assert_eq!(c, 0);
+}
 #[test]
-fn em_no_bs_carry()    { let mut c=1; assert_eq!(escaped_mask(0,&mut c),1); assert_eq!(c,0); }
+fn em_no_bs_carry() {
+    let mut c = 1;
+    assert_eq!(escaped_mask(0, &mut c), 1);
+    assert_eq!(c, 0);
+}
 #[test]
-fn em_1bs()            { let mut c=0; assert_eq!(escaped_mask(0b1,&mut c),0b10);   assert_eq!(c,0); }
+fn em_1bs() {
+    let mut c = 0;
+    assert_eq!(escaped_mask(0b1, &mut c), 0b10);
+    assert_eq!(c, 0);
+}
 #[test]
-fn em_2bs()            { let mut c=0; assert_eq!(escaped_mask(0b11,&mut c),0b10);  assert_eq!(c,0); }
+fn em_2bs() {
+    let mut c = 0;
+    assert_eq!(escaped_mask(0b11, &mut c), 0b10);
+    assert_eq!(c, 0);
+}
 #[test]
-fn em_3bs()            { let mut c=0; assert_eq!(escaped_mask(0b111,&mut c),0b1010); assert_eq!(c,0); }
+fn em_3bs() {
+    let mut c = 0;
+    assert_eq!(escaped_mask(0b111, &mut c), 0b1010);
+    assert_eq!(c, 0);
+}
 #[test]
-fn em_carry_1bs()      { let mut c=1; assert_eq!(escaped_mask(0b1,&mut c),0b01);   assert_eq!(c,0); }
+fn em_carry_1bs() {
+    let mut c = 1;
+    assert_eq!(escaped_mask(0b1, &mut c), 0b01);
+    assert_eq!(c, 0);
+}
 #[test]
-fn em_carry_2bs()      { let mut c=1; assert_eq!(escaped_mask(0b11,&mut c),0b101); assert_eq!(c,0); }
+fn em_carry_2bs() {
+    let mut c = 1;
+    assert_eq!(escaped_mask(0b11, &mut c), 0b101);
+    assert_eq!(c, 0);
+}

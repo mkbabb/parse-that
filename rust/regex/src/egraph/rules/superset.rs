@@ -79,12 +79,7 @@ impl<A: Analysis<HirENode>> Rewrite<HirENode, A> for SupersetAbsorbClass {
         matches
     }
 
-    fn apply(
-        &self,
-        egraph: &mut EGraph<HirENode, A>,
-        class_id: Id,
-        m: Self::Match,
-    ) {
+    fn apply(&self, egraph: &mut EGraph<HirENode, A>, class_id: Id, m: Self::Match) {
         let new_id = if m.survivors.len() == 1 {
             m.survivors[0]
         } else {

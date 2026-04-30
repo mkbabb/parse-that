@@ -69,9 +69,7 @@ pub(super) fn compute_match_width(hir: &Hir) -> (usize, Option<usize>) {
             (total_lo, total_hi)
         }
 
-        Hir::Repetition(Repetition {
-            sub, min, max, ..
-        }) => {
+        Hir::Repetition(Repetition { sub, min, max, .. }) => {
             let (sub_lo, sub_hi) = compute_match_width(sub);
             let rep_lo = (*min as usize).saturating_mul(sub_lo);
             let rep_hi = match (max, sub_hi) {

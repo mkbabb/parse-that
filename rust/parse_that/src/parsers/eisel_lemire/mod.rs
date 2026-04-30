@@ -58,8 +58,8 @@ const MAX_EXPONENT_DISGUISED_FAST_PATH: i64 = 37;
 /// Exactly-representable powers of ten for the Clinger fast path.
 /// Index `n` is `10^n` as an f64; indices 0..=22 are the valid range.
 const FAST_PATH_POW10: [f64; 23] = [
-    1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11,
-    1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19, 1e20, 1e21, 1e22,
+    1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16,
+    1e17, 1e18, 1e19, 1e20, 1e21, 1e22,
 ];
 
 /// Integer powers of ten for the disguised-path mantissa pre-scale.
@@ -152,7 +152,11 @@ pub fn compute_f64(exponent: i64, mantissa: u64, negative: bool) -> Option<f64> 
         return Some(if negative { -0.0 } else { 0.0 });
     }
     if exponent > LARGEST_POWER_OF_FIVE as i64 {
-        return Some(if negative { f64::NEG_INFINITY } else { f64::INFINITY });
+        return Some(if negative {
+            f64::NEG_INFINITY
+        } else {
+            f64::INFINITY
+        });
     }
 
     if let Some(f) = try_fast_path_f64(exponent, mantissa, negative) {

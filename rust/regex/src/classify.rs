@@ -155,10 +155,7 @@ impl RegexClass {
 /// Prefer `classify_regex_from_hir` when the consumer already has a parsed
 /// `Hir` — this wrapper exists for callers that only have the pattern string.
 pub fn classify_regex(pattern: &str) -> RegexClass {
-    let hir = match crate::hir::parser::parse_with(
-        pattern,
-        &crate::ParseOptions::byte_mode(),
-    ) {
+    let hir = match crate::hir::parser::parse_with(pattern, &crate::ParseOptions::byte_mode()) {
         Ok(h) => h,
         Err(_) => return RegexClass::Unknown,
     };
@@ -291,9 +288,7 @@ fn is_whitespace_shorthand(hir: &Hir) -> bool {
         if *negated {
             return false;
         }
-        let has_tab_to_cr = ranges
-            .iter()
-            .any(|r| *r == ByteRange::new(0x09, 0x0D));
+        let has_tab_to_cr = ranges.iter().any(|r| *r == ByteRange::new(0x09, 0x0D));
         let has_space = ranges.iter().any(|r| *r == ByteRange::new(b' ', b' '));
         return has_tab_to_cr && has_space;
     }
@@ -362,8 +357,7 @@ fn trailing_bytes_match(parts: &[Hir], expected: &[u8]) -> bool {
             Hir::Literal(bytes) => {
                 let take = bytes.len().min(need);
                 let bytes_slice = &bytes[bytes.len() - take..];
-                let expected_slice =
-                    &expected[need - take..need];
+                let expected_slice = &expected[need - take..need];
                 if bytes_slice != expected_slice {
                     return false;
                 }
@@ -973,8 +967,7 @@ fn is_dash_byte(hir: &Hir) -> bool {
         if *negated {
             return false;
         }
-        return ranges.len() == 1
-            && ranges[0] == crate::hir::ByteRange::new(b'-', b'-');
+        return ranges.len() == 1 && ranges[0] == crate::hir::ByteRange::new(b'-', b'-');
     }
     false
 }

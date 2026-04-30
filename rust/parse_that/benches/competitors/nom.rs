@@ -5,10 +5,11 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use divan::counter::BytesCount;
-use divan::{black_box, Bencher};
+use divan::{Bencher, black_box};
 
 extern crate nom;
 use nom::{
+    IResult,
     branch::alt,
     bytes::complete::{escaped, tag, take_while, take_while1},
     character::complete::{char, one_of},
@@ -16,7 +17,6 @@ use nom::{
     multi::separated_list0,
     number::complete::double,
     sequence::{delimited, pair, preceded, separated_pair, terminated},
-    IResult,
 };
 use std::str;
 
@@ -160,16 +160,15 @@ fn parse(b: Bencher, filepath: &str) {
     let data = std::fs::read_to_string(&filepath)
         .unwrap_or_else(|e| panic!("Failed to read {}: {}", filepath.display(), e));
 
-    b.counter(BytesCount::new(data.len()))
-        .bench_local(|| {
-            let buf = black_box(&data);
-            match root(buf) {
-                Ok((_, o)) => o,
-                Err(err) => {
-                    panic!("got err: {:?}", err)
-                }
+    b.counter(BytesCount::new(data.len())).bench_local(|| {
+        let buf = black_box(&data);
+        match root(buf) {
+            Ok((_, o)) => o,
+            Err(err) => {
+                panic!("got err: {:?}", err)
             }
-        });
+        }
+    });
 }
 
 fn main() {

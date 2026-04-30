@@ -50,10 +50,10 @@ fn simple_string() {
     // closing quote → bit flips back to 0 (outside resumes).
     assert_eq!(got[0], false);
     assert_eq!(got[1], false);
-    assert_eq!(got[2], true);  // opening quote (inside from here)
-    assert_eq!(got[3], true);  // 'k'
-    assert_eq!(got[4], true);  // 'e'
-    assert_eq!(got[5], true);  // 'y'
+    assert_eq!(got[2], true); // opening quote (inside from here)
+    assert_eq!(got[3], true); // 'k'
+    assert_eq!(got[4], true); // 'e'
+    assert_eq!(got[5], true); // 'y'
     assert_eq!(got[6], false); // closing quote (outside resumes)
     assert_eq!(got[7], false);
 }
@@ -65,11 +65,11 @@ fn escaped_quote() {
     let input = br#"{"k\"y":1}"#;
     let got = collect_in_string(input);
     assert_eq!(got[0], false); // {
-    assert_eq!(got[1], true);  // opening " (inside starts here)
-    assert_eq!(got[2], true);  // k
-    assert_eq!(got[3], true);  // \
-    assert_eq!(got[4], true);  // escaped "
-    assert_eq!(got[5], true);  // y
+    assert_eq!(got[1], true); // opening " (inside starts here)
+    assert_eq!(got[2], true); // k
+    assert_eq!(got[3], true); // \
+    assert_eq!(got[4], true); // escaped "
+    assert_eq!(got[5], true); // y
     assert_eq!(got[6], false); // closing " (outside resumes)
     assert_eq!(got[7], false); // :
     assert_eq!(got[8], false); // 1

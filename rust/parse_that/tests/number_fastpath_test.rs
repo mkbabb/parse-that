@@ -33,8 +33,8 @@ fn padded_buf(input: &[u8]) -> Vec<u8> {
 fn scan_generic(input: &str) -> (u64, i32, u32, bool, usize) {
     let buf = padded_buf(input.as_bytes());
     let view = PaddedView::new(&buf, input.len());
-    let (parts, end) = scan_number_mantissa(view, 0, &GENERIC_NUMBER_CONFIG)
-        .expect("number scan must succeed");
+    let (parts, end) =
+        scan_number_mantissa(view, 0, &GENERIC_NUMBER_CONFIG).expect("number scan must succeed");
     (
         parts.mantissa,
         parts.exponent,
@@ -200,10 +200,7 @@ fn integer_cross_validate_all_lengths() {
         for b in s.bytes() {
             ref_m = ref_m.wrapping_mul(10).wrapping_add((b - b'0') as u64);
         }
-        assert_eq!(
-            simd_m, ref_m,
-            "mantissa mismatch for {n}-digit input {s:?}"
-        );
+        assert_eq!(simd_m, ref_m, "mantissa mismatch for {n}-digit input {s:?}");
         assert_eq!(simd_n as usize, n, "n_digits mismatch for {n}-digit input");
         assert_eq!(simd_end, n, "end offset mismatch for {n}-digit input");
     }
@@ -219,8 +216,8 @@ fn assert_fast_path_matches_reference(input: &str) {
         &{
             let buf = padded_buf(input.as_bytes());
             let view = PaddedView::new(&buf, input.len());
-            let (parts, _) = scan_number_mantissa(view, 0, &GENERIC_NUMBER_CONFIG)
-                .expect("scan should succeed");
+            let (parts, _) =
+                scan_number_mantissa(view, 0, &GENERIC_NUMBER_CONFIG).expect("scan should succeed");
             parts
         },
         input,
@@ -264,9 +261,9 @@ fn fastpath_integers_to_2_53() {
         "0",
         "1",
         "-1",
-        "1000000000000000",     // 10^15
-        "9007199254740991",     // 2^53 - 1 (max exact integer)
-        "9007199254740992",     // 2^53 (still exact)
+        "1000000000000000", // 10^15
+        "9007199254740991", // 2^53 - 1 (max exact integer)
+        "9007199254740992", // 2^53 (still exact)
         "-9007199254740992",
     ] {
         assert_fast_path_matches_reference(s);
@@ -277,13 +274,7 @@ fn fastpath_integers_to_2_53() {
 fn fastpath_scientific_in_range() {
     // Exponents that land inside the [-22, 37] fast-path window.
     for s in [
-        "1e0",
-        "1e5",
-        "1e22",
-        "1e-22",
-        "1.5e10",
-        "3.14e-10",
-        "1e37",       // disguised path
+        "1e0", "1e5", "1e22", "1e-22", "1.5e10", "3.14e-10", "1e37", // disguised path
         "1e-15",
     ] {
         assert_fast_path_matches_reference(s);
@@ -294,12 +285,7 @@ fn fastpath_scientific_in_range() {
 fn fastpath_out_of_range_falls_through() {
     // Exponents outside [-22, 37] — Eisel-Lemire slow path takes
     // over; result must still match the reference parser.
-    for s in [
-        "1e38",
-        "1e-23",
-        "1e100",
-        "1.23456789012345e50",
-    ] {
+    for s in ["1e38", "1e-23", "1e100", "1.23456789012345e50"] {
         assert_fast_path_matches_reference(s);
     }
 }

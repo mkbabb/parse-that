@@ -1,4 +1,4 @@
-use parse_that::regex::accel::{detect_accel, AccelStrategy};
+use parse_that::regex::accel::{AccelStrategy, detect_accel};
 use parse_that::regex::dfa::{Dfa, DfaOptions};
 
 #[test]
@@ -6,7 +6,11 @@ fn no_accel_for_non_looping() {
     // Simple literal "abc" — no self-loops.
     let dfa = Dfa::compile("abc").unwrap();
     let accels = detect_accel(&dfa);
-    assert!(accels.iter().all(|a| matches!(a.strategy, AccelStrategy::None)));
+    assert!(
+        accels
+            .iter()
+            .all(|a| matches!(a.strategy, AccelStrategy::None))
+    );
 }
 
 #[test]
@@ -28,8 +32,14 @@ fn memchr_for_negated_class() {
                 | AccelStrategy::Memchr3(_, _, _)
         )
     });
-    assert!(has_accel, "Expected memchr acceleration for [^\\n]+, got: {:?}",
-        accels.iter().map(|a| format!("{:?}", a.strategy)).collect::<Vec<_>>());
+    assert!(
+        has_accel,
+        "Expected memchr acceleration for [^\\n]+, got: {:?}",
+        accels
+            .iter()
+            .map(|a| format!("{:?}", a.strategy))
+            .collect::<Vec<_>>()
+    );
 }
 
 #[test]
@@ -49,8 +59,14 @@ fn memchr2_for_json_string() {
                 | AccelStrategy::Memchr3(_, _, _)
         )
     });
-    assert!(has_memchr, "Expected memchr acceleration for [^\"\\\\]+, got: {:?}",
-        accels.iter().map(|a| format!("{:?}", a.strategy)).collect::<Vec<_>>());
+    assert!(
+        has_memchr,
+        "Expected memchr acceleration for [^\"\\\\]+, got: {:?}",
+        accels
+            .iter()
+            .map(|a| format!("{:?}", a.strategy))
+            .collect::<Vec<_>>()
+    );
 }
 
 #[test]
@@ -62,7 +78,15 @@ fn accel_for_wider_negated_class() {
     };
     let dfa = Dfa::compile_with(r"[^abcde]+", &opts).unwrap();
     let accels = detect_accel(&dfa);
-    let has_accel = accels.iter().any(|a| !matches!(a.strategy, AccelStrategy::None));
-    assert!(has_accel, "Expected some acceleration for [^abcde]+, got: {:?}",
-        accels.iter().map(|a| format!("{:?}", a.strategy)).collect::<Vec<_>>());
+    let has_accel = accels
+        .iter()
+        .any(|a| !matches!(a.strategy, AccelStrategy::None));
+    assert!(
+        has_accel,
+        "Expected some acceleration for [^abcde]+, got: {:?}",
+        accels
+            .iter()
+            .map(|a| format!("{:?}", a.strategy))
+            .collect::<Vec<_>>()
+    );
 }

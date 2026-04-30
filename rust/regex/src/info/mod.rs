@@ -12,7 +12,7 @@
 //! - [`dfa_size`] — DFA/NFA state count estimation heuristics.
 //! - [`one_pass`] — one-pass eligibility and HIR walkability.
 
-use crate::classify::{classify_regex_from_hir, RegexClass};
+use crate::classify::{RegexClass, classify_regex_from_hir};
 use crate::first::regex_first_chars_from_hir;
 use crate::hir::Hir;
 use crate::sets::charset::CharSet128;
@@ -206,8 +206,8 @@ impl RegexInfo {
         pattern: &str,
         cost: &crate::egraph::RegexExtractionCost,
     ) -> Option<Self> {
-        let hir = crate::hir::parser::parse_with(pattern, &crate::hir::ParseOptions::byte_mode())
-            .ok()?;
+        let hir =
+            crate::hir::parser::parse_with(pattern, &crate::hir::ParseOptions::byte_mode()).ok()?;
         Some(Self::analyze_from_hir_with_cost(pattern, &hir, cost))
     }
 
@@ -221,9 +221,11 @@ impl RegexInfo {
         cost: &crate::egraph::RegexExtractionCost,
         cache: &mut crate::egraph::SaturationCache,
     ) -> Option<Self> {
-        let hir = crate::hir::parser::parse_with(pattern, &crate::hir::ParseOptions::byte_mode())
-            .ok()?;
-        Some(Self::analyze_from_hir_with_cost_cached(pattern, &hir, cost, cache))
+        let hir =
+            crate::hir::parser::parse_with(pattern, &crate::hir::ParseOptions::byte_mode()).ok()?;
+        Some(Self::analyze_from_hir_with_cost_cached(
+            pattern, &hir, cost, cache,
+        ))
     }
 
     /// Analyze a regex from a pre-parsed HIR using the default cost model.

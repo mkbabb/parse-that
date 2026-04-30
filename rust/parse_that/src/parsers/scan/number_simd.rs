@@ -56,11 +56,7 @@ unsafe fn count_leading_digits_neon(ptr: *const u8) -> u32 {
 
         let mask = lo_sum | (hi_sum << 8);
 
-        if mask == 0 {
-            16
-        } else {
-            mask.trailing_zeros()
-        }
+        if mask == 0 { 16 } else { mask.trailing_zeros() }
     }
 }
 
@@ -77,12 +73,8 @@ unsafe fn accumulate_digits_neon(ptr: *const u8, count: u32) -> u64 {
     if count == 16 {
         // Full stripe — two 8-digit SWAR folds. Each
         // `parse_eight_digits` is three multiply-shift operations.
-        let hi = unsafe {
-            super::parse_eight_digits(core::slice::from_raw_parts(ptr, 8))
-        };
-        let lo = unsafe {
-            super::parse_eight_digits(core::slice::from_raw_parts(ptr.add(8), 8))
-        };
+        let hi = unsafe { super::parse_eight_digits(core::slice::from_raw_parts(ptr, 8)) };
+        let lo = unsafe { super::parse_eight_digits(core::slice::from_raw_parts(ptr.add(8), 8)) };
         hi * 100_000_000 + lo
     } else if count <= 8 {
         // Short run — byte-by-byte. Each scalar step is 2 ops
@@ -97,9 +89,7 @@ unsafe fn accumulate_digits_neon(ptr: *const u8, count: u32) -> u64 {
         val
     } else {
         // 9..=15 digits — one 8-digit SWAR fold + scalar tail.
-        let hi = unsafe {
-            super::parse_eight_digits(core::slice::from_raw_parts(ptr, 8))
-        };
+        let hi = unsafe { super::parse_eight_digits(core::slice::from_raw_parts(ptr, 8)) };
         let mut lo: u64 = 0;
         let tail = count - 8;
         for j in 0..tail {
@@ -125,10 +115,7 @@ unsafe fn accumulate_digits_neon(ptr: *const u8, count: u32) -> u64 {
 /// Returns `None` when the first byte is not a digit.
 #[cfg(target_arch = "aarch64")]
 #[inline(always)]
-pub fn scan_digits_simd(
-    view: PaddedView<'_>,
-    offset: usize,
-) -> Option<SimdDigitResult> {
+pub fn scan_digits_simd(view: PaddedView<'_>, offset: usize) -> Option<SimdDigitResult> {
     let bytes = view.bytes();
     debug_assert!(
         offset + 16 <= bytes.len(),
@@ -175,11 +162,7 @@ unsafe fn count_leading_digits_sse(ptr: *const u8) -> u32 {
         let is_non_digit = _mm_andnot_si128(is_digit, _mm_set1_epi8(-1));
         let mask = _mm_movemask_epi8(is_non_digit) as u32;
 
-        if mask == 0 {
-            16
-        } else {
-            mask.trailing_zeros()
-        }
+        if mask == 0 { 16 } else { mask.trailing_zeros() }
     }
 }
 
@@ -193,12 +176,8 @@ unsafe fn accumulate_digits_sse(ptr: *const u8, count: u32) -> u64 {
 
     if count == 16 {
         // Full stripe — two 8-digit SWAR folds.
-        let hi = unsafe {
-            super::parse_eight_digits(core::slice::from_raw_parts(ptr, 8))
-        };
-        let lo = unsafe {
-            super::parse_eight_digits(core::slice::from_raw_parts(ptr.add(8), 8))
-        };
+        let hi = unsafe { super::parse_eight_digits(core::slice::from_raw_parts(ptr, 8)) };
+        let lo = unsafe { super::parse_eight_digits(core::slice::from_raw_parts(ptr.add(8), 8)) };
         hi * 100_000_000 + lo
     } else if count <= 8 {
         let mut val: u64 = 0;
@@ -209,9 +188,7 @@ unsafe fn accumulate_digits_sse(ptr: *const u8, count: u32) -> u64 {
         }
         val
     } else {
-        let hi = unsafe {
-            super::parse_eight_digits(core::slice::from_raw_parts(ptr, 8))
-        };
+        let hi = unsafe { super::parse_eight_digits(core::slice::from_raw_parts(ptr, 8)) };
         let mut lo: u64 = 0;
         let tail = count - 8;
         for j in 0..tail {
@@ -232,10 +209,7 @@ unsafe fn accumulate_digits_sse(ptr: *const u8, count: u32) -> u64 {
 /// `offset` without a per-call `remaining < 16` tail guard.
 #[cfg(target_arch = "x86_64")]
 #[inline(always)]
-pub fn scan_digits_simd(
-    view: PaddedView<'_>,
-    offset: usize,
-) -> Option<SimdDigitResult> {
+pub fn scan_digits_simd(view: PaddedView<'_>, offset: usize) -> Option<SimdDigitResult> {
     let bytes = view.bytes();
     debug_assert!(
         offset + 16 <= bytes.len(),
@@ -264,10 +238,7 @@ pub fn scan_digits_simd(
 
 #[cfg(not(any(target_arch = "aarch64", target_arch = "x86_64")))]
 #[inline(always)]
-pub fn scan_digits_simd(
-    _view: PaddedView<'_>,
-    _offset: usize,
-) -> Option<SimdDigitResult> {
+pub fn scan_digits_simd(_view: PaddedView<'_>, _offset: usize) -> Option<SimdDigitResult> {
     None
 }
 
@@ -276,21 +247,21 @@ pub fn scan_digits_simd(
 /// Powers of 10 for combining two digit groups: `POW10[n] = 10^n`.
 /// Index range: 0..=16 covers all digit-group combination widths.
 pub static POW10: [u64; 17] = [
-    1,                   // 10^0
-    10,                  // 10^1
-    100,                 // 10^2
-    1_000,               // 10^3
-    10_000,              // 10^4
-    100_000,             // 10^5
-    1_000_000,           // 10^6
-    10_000_000,          // 10^7
-    100_000_000,         // 10^8
-    1_000_000_000,       // 10^9
-    10_000_000_000,      // 10^10
-    100_000_000_000,     // 10^11
-    1_000_000_000_000,   // 10^12
-    10_000_000_000_000,  // 10^13
-    100_000_000_000_000, // 10^14
-    1_000_000_000_000_000, // 10^15
+    1,                      // 10^0
+    10,                     // 10^1
+    100,                    // 10^2
+    1_000,                  // 10^3
+    10_000,                 // 10^4
+    100_000,                // 10^5
+    1_000_000,              // 10^6
+    10_000_000,             // 10^7
+    100_000_000,            // 10^8
+    1_000_000_000,          // 10^9
+    10_000_000_000,         // 10^10
+    100_000_000_000,        // 10^11
+    1_000_000_000_000,      // 10^12
+    10_000_000_000_000,     // 10^13
+    100_000_000_000_000,    // 10^14
+    1_000_000_000_000_000,  // 10^15
     10_000_000_000_000_000, // 10^16
 ];

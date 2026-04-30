@@ -12,18 +12,18 @@ pub mod host;
 pub use bbnf_regex::*;
 
 // Re-export sub-modules for path compatibility (crate::regex::dfa::Dfa, etc.)
+pub use bbnf_regex::automata::accel;
 pub use bbnf_regex::automata::dfa;
 pub use bbnf_regex::automata::nfa;
-pub use bbnf_regex::automata::accel;
+pub use bbnf_regex::classify;
+pub use bbnf_regex::first;
 pub use bbnf_regex::hir;
+pub use bbnf_regex::sets;
 pub use bbnf_regex::sets::byteset;
+pub use bbnf_regex::sets::charset;
 pub use bbnf_regex::sets::equiv;
 pub use bbnf_regex::unicode;
 pub use bbnf_regex::utf8;
-pub use bbnf_regex::classify;
-pub use bbnf_regex::first;
-pub use bbnf_regex::sets::charset;
-pub use bbnf_regex::sets;
 
 /// Parse a regex pattern using the self-hosted generated parser + host fold.
 ///

@@ -17,11 +17,8 @@ use crate::sets::byteset::ByteSet;
 /// Returns `None` if the pattern is not a simple char class (e.g., has
 /// alternation, repetition beyond the top level, or negated classes).
 pub fn extract_char_class_bytes(pattern: &str) -> Option<ByteSet> {
-    let hir = crate::hir::parser::parse_with(
-        pattern,
-        &crate::hir::ParseOptions::byte_mode(),
-    )
-    .ok()?;
+    let hir =
+        crate::hir::parser::parse_with(pattern, &crate::hir::ParseOptions::byte_mode()).ok()?;
     hir_to_byteset(&hir)
 }
 

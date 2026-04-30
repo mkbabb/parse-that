@@ -134,11 +134,9 @@ mod tests {
     }
 
     fn stylesheet<'a>() -> Parser<'a, Vec<(Vec<&'a str>, Vec<&'a str>)>> {
-        ignorable().many(0..).next(
-            recovered_rule()
-                .skip(ignorable().many(0..))
-                .many(0..),
-        )
+        ignorable()
+            .many(0..)
+            .next(recovered_rule().skip(ignorable().many(0..)).many(0..))
     }
 
     // ═════════════════════════════════════════════════════════════════
@@ -189,7 +187,12 @@ mod tests {
         let (result, state) = p.parse_return_state("color: ; font-size: 16px;");
         assert!(result.is_some());
         let decls = result.unwrap();
-        assert_eq!(decls.len(), 2, "should have 2 declarations, got {:?}", decls);
+        assert_eq!(
+            decls.len(),
+            2,
+            "should have 2 declarations, got {:?}",
+            decls
+        );
         assert_eq!(decls[0], "RECOVERED");
         assert_eq!(decls[1], "font-size");
         assert_eq!(get_collected_diagnostics().len(), 1);
@@ -227,12 +230,15 @@ mod tests {
 
     #[test]
     fn test_complex_css_file_recovers_partial_results() {
-        use parse_that::parsers::css::{css_parser, CssNode};
+        use parse_that::parsers::css::{CssNode, css_parser};
 
         let css_content = include_str!("../../../grammar/tests/css/complex-errors.css");
         let p = css_parser();
         let (result, _) = p.parse_return_state(css_content);
-        assert!(result.is_some(), "real css_parser should always return Some");
+        assert!(
+            result.is_some(),
+            "real css_parser should always return Some"
+        );
 
         let nodes = result.unwrap();
         assert!(!nodes.is_empty(), "should recover at least some CSS nodes");

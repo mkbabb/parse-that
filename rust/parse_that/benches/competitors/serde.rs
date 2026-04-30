@@ -4,7 +4,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use std::path::{Path, PathBuf};
 
 use divan::counter::BytesCount;
-use divan::{black_box, Bencher};
+use divan::{Bencher, black_box};
 
 extern crate serde;
 extern crate serde_json;
@@ -48,11 +48,10 @@ fn parse(b: Bencher, filepath: &str) {
     let filepath = data_dir().join(filepath);
     let data = std::fs::read_to_string(filepath).unwrap();
 
-    b.counter(BytesCount::new(data.len()))
-        .bench_local(|| {
-            let buf = black_box(data.as_str());
-            serde_json::from_str::<Value>(buf).unwrap()
-        });
+    b.counter(BytesCount::new(data.len())).bench_local(|| {
+        let buf = black_box(data.as_str());
+        serde_json::from_str::<Value>(buf).unwrap()
+    });
 }
 
 fn main() {

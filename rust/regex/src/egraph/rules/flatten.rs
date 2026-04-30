@@ -61,10 +61,7 @@ impl<A: Analysis<HirENode>> Rewrite<HirENode, A> for FlattenAltConcat {
                             }
                         }
                         if nested {
-                            matches.push((
-                                class.id,
-                                FlattenMatch::Alt(flat.into_boxed_slice()),
-                            ));
+                            matches.push((class.id, FlattenMatch::Alt(flat.into_boxed_slice())));
                             break;
                         }
                     }
@@ -89,10 +86,7 @@ impl<A: Analysis<HirENode>> Rewrite<HirENode, A> for FlattenAltConcat {
                             }
                         }
                         if nested {
-                            matches.push((
-                                class.id,
-                                FlattenMatch::Concat(flat.into_boxed_slice()),
-                            ));
+                            matches.push((class.id, FlattenMatch::Concat(flat.into_boxed_slice())));
                             break;
                         }
                     }
@@ -103,12 +97,7 @@ impl<A: Analysis<HirENode>> Rewrite<HirENode, A> for FlattenAltConcat {
         matches
     }
 
-    fn apply(
-        &self,
-        egraph: &mut EGraph<HirENode, A>,
-        class_id: Id,
-        m: Self::Match,
-    ) {
+    fn apply(&self, egraph: &mut EGraph<HirENode, A>, class_id: Id, m: Self::Match) {
         let new_id = match m {
             FlattenMatch::Alt(flat) => egraph.add(HirENode::Alternation(flat)),
             FlattenMatch::Concat(flat) => egraph.add(HirENode::Concat(flat)),

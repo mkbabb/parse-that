@@ -156,14 +156,12 @@ fn test_child_combinator() {
     let nodes = parse_css("ul > li { list-style: none; }");
     assert_eq!(nodes.len(), 1);
     match &nodes[0] {
-        CssNode::QualifiedRule { selector_list, .. } => {
-            match &selector_list[0] {
-                CssSelector::Complex { combinator, .. } => {
-                    assert_eq!(combinator.as_str(), ">");
-                }
-                other => panic!("expected Complex, got {:?}", other),
+        CssNode::QualifiedRule { selector_list, .. } => match &selector_list[0] {
+            CssSelector::Complex { combinator, .. } => {
+                assert_eq!(combinator.as_str(), ">");
             }
-        }
+            other => panic!("expected Complex, got {:?}", other),
+        },
         _ => panic!("expected QualifiedRule"),
     }
 }
@@ -185,18 +183,16 @@ fn test_pseudo_class() {
     let nodes = parse_css("a:hover { color: blue; }");
     assert_eq!(nodes.len(), 1);
     match &nodes[0] {
-        CssNode::QualifiedRule { selector_list, .. } => {
-            match &selector_list[0] {
-                CssSelector::Compound(parts) => {
-                    assert!(parts.len() >= 2);
-                    match &parts[1] {
-                        CssSelector::PseudoClass(s) => assert_eq!(s.as_str(), "hover"),
-                        other => panic!("expected PseudoClass, got {:?}", other),
-                    }
+        CssNode::QualifiedRule { selector_list, .. } => match &selector_list[0] {
+            CssSelector::Compound(parts) => {
+                assert!(parts.len() >= 2);
+                match &parts[1] {
+                    CssSelector::PseudoClass(s) => assert_eq!(s.as_str(), "hover"),
+                    other => panic!("expected PseudoClass, got {:?}", other),
                 }
-                other => panic!("expected Compound, got {:?}", other),
             }
-        }
+            other => panic!("expected Compound, got {:?}", other),
+        },
         _ => panic!("expected QualifiedRule"),
     }
 }
@@ -206,18 +202,16 @@ fn test_pseudo_element() {
     let nodes = parse_css("p::before { content: ''; }");
     assert_eq!(nodes.len(), 1);
     match &nodes[0] {
-        CssNode::QualifiedRule { selector_list, .. } => {
-            match &selector_list[0] {
-                CssSelector::Compound(parts) => {
-                    assert!(parts.len() >= 2);
-                    match &parts[1] {
-                        CssSelector::PseudoElement(s) => assert_eq!(s.as_str(), "before"),
-                        other => panic!("expected PseudoElement, got {:?}", other),
-                    }
+        CssNode::QualifiedRule { selector_list, .. } => match &selector_list[0] {
+            CssSelector::Compound(parts) => {
+                assert!(parts.len() >= 2);
+                match &parts[1] {
+                    CssSelector::PseudoElement(s) => assert_eq!(s.as_str(), "before"),
+                    other => panic!("expected PseudoElement, got {:?}", other),
                 }
-                other => panic!("expected Compound, got {:?}", other),
             }
-        }
+            other => panic!("expected Compound, got {:?}", other),
+        },
         _ => panic!("expected QualifiedRule"),
     }
 }
@@ -227,16 +221,18 @@ fn test_attribute_selector() {
     let nodes = parse_css("[data-value=\"test\"] { display: none; }");
     assert_eq!(nodes.len(), 1);
     match &nodes[0] {
-        CssNode::QualifiedRule { selector_list, .. } => {
-            match &selector_list[0] {
-                CssSelector::Attribute { name, matcher, value } => {
-                    assert_eq!(name.as_str(), "data-value");
-                    assert!(matcher.is_some());
-                    assert!(value.is_some());
-                }
-                other => panic!("expected Attribute, got {:?}", other),
+        CssNode::QualifiedRule { selector_list, .. } => match &selector_list[0] {
+            CssSelector::Attribute {
+                name,
+                matcher,
+                value,
+            } => {
+                assert_eq!(name.as_str(), "data-value");
+                assert!(matcher.is_some());
+                assert!(value.is_some());
             }
-        }
+            other => panic!("expected Attribute, got {:?}", other),
+        },
         _ => panic!("expected QualifiedRule"),
     }
 }
@@ -284,14 +280,12 @@ fn test_dimension_values() {
 fn test_hex_color() {
     let nodes = parse_css(".x { color: #ff0000; }");
     match &nodes[0] {
-        CssNode::QualifiedRule { declarations, .. } => {
-            match &declarations[0].values[0] {
-                CssValue::Color(CssColor::Hex(s)) => {
-                    assert_eq!(s.as_str(), "#ff0000");
-                }
-                other => panic!("expected Hex color, got {:?}", other),
+        CssNode::QualifiedRule { declarations, .. } => match &declarations[0].values[0] {
+            CssValue::Color(CssColor::Hex(s)) => {
+                assert_eq!(s.as_str(), "#ff0000");
             }
-        }
+            other => panic!("expected Hex color, got {:?}", other),
+        },
         _ => panic!("expected QualifiedRule"),
     }
 }
@@ -318,14 +312,12 @@ fn test_rgb_function() {
 fn test_calc_function() {
     let nodes = parse_css(".x { width: calc(100% - 20px); }");
     match &nodes[0] {
-        CssNode::QualifiedRule { declarations, .. } => {
-            match &declarations[0].values[0] {
-                CssValue::Function { name, .. } => {
-                    assert_eq!(name.as_str(), "calc");
-                }
-                other => panic!("expected Function, got {:?}", other),
+        CssNode::QualifiedRule { declarations, .. } => match &declarations[0].values[0] {
+            CssValue::Function { name, .. } => {
+                assert_eq!(name.as_str(), "calc");
             }
-        }
+            other => panic!("expected Function, got {:?}", other),
+        },
         _ => panic!("expected QualifiedRule"),
     }
 }
@@ -334,19 +326,17 @@ fn test_calc_function() {
 fn test_var_function() {
     let nodes = parse_css(".x { color: var(--main-color); }");
     match &nodes[0] {
-        CssNode::QualifiedRule { declarations, .. } => {
-            match &declarations[0].values[0] {
-                CssValue::Function { name, args } => {
-                    assert_eq!(name.as_str(), "var");
-                    assert!(args.len() >= 1);
-                    match &args[0] {
-                        CssValue::Ident(s) => assert_eq!(s.as_str(), "--main-color"),
-                        other => panic!("expected Ident, got {:?}", other),
-                    }
+        CssNode::QualifiedRule { declarations, .. } => match &declarations[0].values[0] {
+            CssValue::Function { name, args } => {
+                assert_eq!(name.as_str(), "var");
+                assert!(args.len() >= 1);
+                match &args[0] {
+                    CssValue::Ident(s) => assert_eq!(s.as_str(), "--main-color"),
+                    other => panic!("expected Ident, got {:?}", other),
                 }
-                other => panic!("expected Function, got {:?}", other),
             }
-        }
+            other => panic!("expected Function, got {:?}", other),
+        },
         _ => panic!("expected QualifiedRule"),
     }
 }
@@ -355,14 +345,12 @@ fn test_var_function() {
 fn test_string_value() {
     let nodes = parse_css(".x { content: \"hello\"; }");
     match &nodes[0] {
-        CssNode::QualifiedRule { declarations, .. } => {
-            match &declarations[0].values[0] {
-                CssValue::String(s) => {
-                    assert_eq!(s.as_str(), "\"hello\"");
-                }
-                other => panic!("expected String, got {:?}", other),
+        CssNode::QualifiedRule { declarations, .. } => match &declarations[0].values[0] {
+            CssValue::String(s) => {
+                assert_eq!(s.as_str(), "\"hello\"");
             }
-        }
+            other => panic!("expected String, got {:?}", other),
+        },
         _ => panic!("expected QualifiedRule"),
     }
 }
@@ -385,7 +373,8 @@ fn test_at_media() {
 
 #[test]
 fn test_at_keyframes() {
-    let css = "@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }";
+    let css =
+        "@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }";
     let nodes = parse_css(css);
     assert_eq!(nodes.len(), 1);
     match &nodes[0] {
@@ -530,15 +519,13 @@ fn test_custom_property_declaration() {
 fn test_negative_dimension() {
     let nodes = parse_css(".x { margin: -10px; }");
     match &nodes[0] {
-        CssNode::QualifiedRule { declarations, .. } => {
-            match &declarations[0].values[0] {
-                CssValue::Dimension(n, u) => {
-                    assert_eq!(*n, -10.0);
-                    assert_eq!(u.as_str(), "px");
-                }
-                other => panic!("expected Dimension, got {:?}", other),
+        CssNode::QualifiedRule { declarations, .. } => match &declarations[0].values[0] {
+            CssValue::Dimension(n, u) => {
+                assert_eq!(*n, -10.0);
+                assert_eq!(u.as_str(), "px");
             }
-        }
+            other => panic!("expected Dimension, got {:?}", other),
+        },
         _ => panic!("expected QualifiedRule"),
     }
 }
@@ -548,12 +535,10 @@ fn test_universal_selector() {
     let nodes = parse_css("* { box-sizing: border-box; }");
     assert_eq!(nodes.len(), 1);
     match &nodes[0] {
-        CssNode::QualifiedRule { selector_list, .. } => {
-            match &selector_list[0] {
-                CssSelector::Universal => {}
-                other => panic!("expected Universal, got {:?}", other),
-            }
-        }
+        CssNode::QualifiedRule { selector_list, .. } => match &selector_list[0] {
+            CssSelector::Universal => {}
+            other => panic!("expected Universal, got {:?}", other),
+        },
         _ => panic!("expected QualifiedRule"),
     }
 }
@@ -634,7 +619,8 @@ fn test_media_query_list() {
 
 #[test]
 fn test_media_query_and_conditions() {
-    let nodes = parse_css("@media (min-width: 768px) and (max-width: 1024px) { .x { color: red; } }");
+    let nodes =
+        parse_css("@media (min-width: 768px) and (max-width: 1024px) { .x { color: red; } }");
     match &nodes[0] {
         CssNode::AtMedia { queries, .. } => {
             assert_eq!(queries.len(), 1);
@@ -675,19 +661,15 @@ fn test_supports_declaration() {
 fn test_supports_not() {
     let nodes = parse_css("@supports not (display: grid) { .x { float: left; } }");
     match &nodes[0] {
-        CssNode::AtSupports { condition, .. } => {
-            match condition {
-                SupportsCondition::Not(inner) => {
-                    match inner.as_ref() {
-                        SupportsCondition::Declaration { property, .. } => {
-                            assert_eq!(property.as_str(), "display");
-                        }
-                        other => panic!("expected Declaration, got {:?}", other),
-                    }
+        CssNode::AtSupports { condition, .. } => match condition {
+            SupportsCondition::Not(inner) => match inner.as_ref() {
+                SupportsCondition::Declaration { property, .. } => {
+                    assert_eq!(property.as_str(), "display");
                 }
-                other => panic!("expected Not, got {:?}", other),
-            }
-        }
+                other => panic!("expected Declaration, got {:?}", other),
+            },
+            other => panic!("expected Not, got {:?}", other),
+        },
         other => panic!("expected AtSupports, got {:?}", other),
     }
 }
@@ -696,14 +678,12 @@ fn test_supports_not() {
 fn test_supports_and() {
     let nodes = parse_css("@supports (display: grid) and (gap: 10px) { .x { display: grid; } }");
     match &nodes[0] {
-        CssNode::AtSupports { condition, .. } => {
-            match condition {
-                SupportsCondition::And(conds) => {
-                    assert_eq!(conds.len(), 2);
-                }
-                other => panic!("expected And, got {:?}", other),
+        CssNode::AtSupports { condition, .. } => match condition {
+            SupportsCondition::And(conds) => {
+                assert_eq!(conds.len(), 2);
             }
-        }
+            other => panic!("expected And, got {:?}", other),
+        },
         other => panic!("expected AtSupports, got {:?}", other),
     }
 }
@@ -806,12 +786,10 @@ fn test_block_comment_multiline() {
 fn test_hex_color_3() {
     let nodes = parse_css(".x { color: #f00; }");
     match &nodes[0] {
-        CssNode::QualifiedRule { declarations, .. } => {
-            match &declarations[0].values[0] {
-                CssValue::Color(CssColor::Hex(s)) => assert_eq!(s.as_str(), "#f00"),
-                other => panic!("expected Hex, got {:?}", other),
-            }
-        }
+        CssNode::QualifiedRule { declarations, .. } => match &declarations[0].values[0] {
+            CssValue::Color(CssColor::Hex(s)) => assert_eq!(s.as_str(), "#f00"),
+            other => panic!("expected Hex, got {:?}", other),
+        },
         _ => panic!("expected QualifiedRule"),
     }
 }
@@ -820,12 +798,10 @@ fn test_hex_color_3() {
 fn test_hex_color_8() {
     let nodes = parse_css(".x { color: #ff000080; }");
     match &nodes[0] {
-        CssNode::QualifiedRule { declarations, .. } => {
-            match &declarations[0].values[0] {
-                CssValue::Color(CssColor::Hex(s)) => assert_eq!(s.as_str(), "#ff000080"),
-                other => panic!("expected Hex, got {:?}", other),
-            }
-        }
+        CssNode::QualifiedRule { declarations, .. } => match &declarations[0].values[0] {
+            CssValue::Color(CssColor::Hex(s)) => assert_eq!(s.as_str(), "#ff000080"),
+            other => panic!("expected Hex, got {:?}", other),
+        },
         _ => panic!("expected QualifiedRule"),
     }
 }

@@ -38,8 +38,7 @@ fn test_negated_class() {
 
 #[test]
 fn test_json_number_classification() {
-    let info =
-        RegexInfo::analyze(r"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?").unwrap();
+    let info = RegexInfo::analyze(r"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?").unwrap();
     assert!(matches!(
         info.classification,
         RegexClass::Numeric {
@@ -134,5 +133,8 @@ fn test_identifier_double_dash_only() {
     // not an Identifier — the lone `--` literal is a fixed prefix
     // followed by `[\w-]+`. Verify it does NOT classify as Identifier.
     let info = RegexInfo::analyze(r"--[\w-]+").unwrap();
-    assert!(!matches!(info.classification, RegexClass::Identifier { .. }));
+    assert!(!matches!(
+        info.classification,
+        RegexClass::Identifier { .. }
+    ));
 }

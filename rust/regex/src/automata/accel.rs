@@ -7,8 +7,8 @@
 
 use smallvec::SmallVec;
 
-use crate::sets::byteset::ByteSet;
 use super::dfa::Dfa;
+use crate::sets::byteset::ByteSet;
 
 /// Acceleration strategy for a self-loop state.
 #[derive(Clone, Debug)]
@@ -129,4 +129,3 @@ fn build_nibble_luts(targets: &[u8]) -> ([u8; 16], [u8; 16]) {
 
     (lo_lut, hi_lut)
 }
-

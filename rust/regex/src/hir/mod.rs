@@ -80,7 +80,9 @@ impl CharClass {
                 negate_byte_ranges(ranges)
             }
             CharClass::Unicode { .. } => {
-                panic!("to_positive_byte_ranges() not valid for Unicode classes; use UTF-8 expansion")
+                panic!(
+                    "to_positive_byte_ranges() not valid for Unicode classes; use UTF-8 expansion"
+                )
             }
         }
     }
@@ -145,24 +147,15 @@ fn add_codepoint_range(out: &mut Vec<CodepointRange>, lo: u32, hi: u32) {
     // Split around surrogate range D800..DFFF
     if lo <= 0xD7FF && hi >= 0xD800 {
         if lo <= 0xD7FF {
-            out.push(CodepointRange::new(
-                char::from_u32(lo).unwrap(),
-                '\u{D7FF}',
-            ));
+            out.push(CodepointRange::new(char::from_u32(lo).unwrap(), '\u{D7FF}'));
         }
         if hi >= 0xE000 {
-            out.push(CodepointRange::new(
-                '\u{E000}',
-                char::from_u32(hi).unwrap(),
-            ));
+            out.push(CodepointRange::new('\u{E000}', char::from_u32(hi).unwrap()));
         }
     } else if lo >= 0xD800 && lo <= 0xDFFF {
         // Start is in surrogate range — skip to E000.
         if hi >= 0xE000 {
-            out.push(CodepointRange::new(
-                '\u{E000}',
-                char::from_u32(hi).unwrap(),
-            ));
+            out.push(CodepointRange::new('\u{E000}', char::from_u32(hi).unwrap()));
         }
     } else {
         out.push(CodepointRange::new(
@@ -250,7 +243,11 @@ pub struct ParseError {
 
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "regex parse error at byte {}: {}", self.offset, self.message)
+        write!(
+            f,
+            "regex parse error at byte {}: {}",
+            self.offset, self.message
+        )
     }
 }
 
@@ -278,4 +275,3 @@ impl ParseOptions {
         Self { unicode: false }
     }
 }
-

@@ -4,7 +4,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use std::path::Path;
 
 use divan::counter::BytesCount;
-use divan::{black_box, Bencher};
+use divan::{Bencher, black_box};
 
 use lightningcss::stylesheet::{ParserOptions, StyleSheet};
 
@@ -35,17 +35,19 @@ fn parse(b: Bencher, filepath: &str) {
     // Verify parse succeeds at least once
     let test = StyleSheet::parse(&data, ParserOptions::default());
     if test.is_err() {
-        eprintln!("WARNING: lightningcss failed to parse {}, skipping", filepath.display());
+        eprintln!(
+            "WARNING: lightningcss failed to parse {}, skipping",
+            filepath.display()
+        );
         return;
     }
 
-    b.counter(BytesCount::new(data.len()))
-        .bench_local(|| {
-            let buf = black_box(&data);
-            // lightningcss performs L2 parse (more work than our L1.5)
-            let result = StyleSheet::parse(buf, ParserOptions::default());
-            black_box(result)
-        });
+    b.counter(BytesCount::new(data.len())).bench_local(|| {
+        let buf = black_box(&data);
+        // lightningcss performs L2 parse (more work than our L1.5)
+        let result = StyleSheet::parse(buf, ParserOptions::default());
+        black_box(result)
+    });
 }
 
 fn main() {

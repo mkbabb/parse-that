@@ -300,14 +300,38 @@ fn decode_one_escape(bytes: &[u8], pos: usize, arena: &mut Vec<u8>) -> Option<us
         return None;
     }
     match unsafe { *bytes.get_unchecked(pos + 1) } {
-        b'"' => { arena.push(b'"'); Some(pos + 2) }
-        b'\\' => { arena.push(b'\\'); Some(pos + 2) }
-        b'/' => { arena.push(b'/'); Some(pos + 2) }
-        b'b' => { arena.push(0x08); Some(pos + 2) }
-        b'f' => { arena.push(0x0C); Some(pos + 2) }
-        b'n' => { arena.push(0x0A); Some(pos + 2) }
-        b'r' => { arena.push(0x0D); Some(pos + 2) }
-        b't' => { arena.push(0x09); Some(pos + 2) }
+        b'"' => {
+            arena.push(b'"');
+            Some(pos + 2)
+        }
+        b'\\' => {
+            arena.push(b'\\');
+            Some(pos + 2)
+        }
+        b'/' => {
+            arena.push(b'/');
+            Some(pos + 2)
+        }
+        b'b' => {
+            arena.push(0x08);
+            Some(pos + 2)
+        }
+        b'f' => {
+            arena.push(0x0C);
+            Some(pos + 2)
+        }
+        b'n' => {
+            arena.push(0x0A);
+            Some(pos + 2)
+        }
+        b'r' => {
+            arena.push(0x0D);
+            Some(pos + 2)
+        }
+        b't' => {
+            arena.push(0x09);
+            Some(pos + 2)
+        }
         b'u' => {
             let hi = decode_hex4(bytes, pos + 2)?;
             let mut next = pos + 6;

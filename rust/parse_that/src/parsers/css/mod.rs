@@ -37,7 +37,8 @@ fn css_at_rule<'a>() -> Parser<'a, CssNode<'a>> {
         let semi = sp_string(";");
         let skip_to_semi_brace = sp_take_until_any(b";}");
         let skip_to_close = sp_take_until_any(b"}");
-        let kf_name_parser = sp_ident(&crate::CSS_IDENT_CONFIG).or(sp_quoted_string(&crate::GENERIC_QUOTED_STRING_CONFIG));
+        let kf_name_parser = sp_ident(&crate::CSS_IDENT_CONFIG)
+            .or(sp_quoted_string(&crate::GENERIC_QUOTED_STRING_CONFIG));
 
         Parser::new(move |state: &mut ParserState<'a>| {
             at_sign.call(state)?;
@@ -155,7 +156,8 @@ fn css_at_rule<'a>() -> Parser<'a, CssNode<'a>> {
                 }
                 _ => {
                     let skip = sp_take_until_any(b"{;");
-                    let prelude_span = skip.call(state)
+                    let prelude_span = skip
+                        .call(state)
                         .unwrap_or_else(|| Span::new(state.offset, state.offset, state.src));
 
                     let has_block = if open_brace.call(state).is_some() {

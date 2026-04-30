@@ -248,10 +248,7 @@ fn css_block_comment_dotall_greedy() {
 
     // Verify divergence from regex crate.
     let re = regex::Regex::new(r"\A(?:(?s)/\*.*?\*/)").unwrap();
-    assert_eq!(
-        re.find("/* a */ b /* c */").map(|m| m.end()),
-        Some(7)
-    ); // regex: shortest
+    assert_eq!(re.find("/* a */ b /* c */").map(|m| m.end()), Some(7)); // regex: shortest
 }
 
 #[test]
@@ -259,10 +256,7 @@ fn css_block_comment_no_dotall_greedy() {
     // Without (?s), `.` does not match newlines — but still greedy.
     let dfa = Dfa::compile(r"/\*.*?\*/").unwrap();
     assert_eq!(dfa.find_at(b"/* single line */", 0), Some(17)); // 17 bytes total
-    assert_eq!(
-        dfa.find_at(b"/* a */ more /* b */", 0),
-        Some(20)
-    ); // greedy: matches to last `*/` (20 bytes)
+    assert_eq!(dfa.find_at(b"/* a */ more /* b */", 0), Some(20)); // greedy: matches to last `*/` (20 bytes)
     assert_eq!(dfa.find_at(b"/* no\nnewline */", 0), None); // dot stops at \n
     assert_eq!(dfa.find_at(b"/**/", 0), Some(4));
 }
@@ -505,7 +499,14 @@ fn oracle_whitespace() {
 fn oracle_hex_color() {
     assert_dfa_fidelity(
         r"#[0-9a-fA-F]{3,8}",
-        &["#fff", "#FF00CC", "#12345678", "#12", "#abcdefgh", "no-hash"],
+        &[
+            "#fff",
+            "#FF00CC",
+            "#12345678",
+            "#12",
+            "#abcdefgh",
+            "no-hash",
+        ],
     );
 }
 
@@ -544,17 +545,7 @@ fn oracle_css_number() {
     assert_dfa_fidelity(
         r"[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?",
         &[
-            "3.14",
-            "-42",
-            "+0.5",
-            ".75",
-            "1e10",
-            "2.5E-3",
-            "abc",
-            "",
-            ".",
-            "+",
-            "1.",
+            "3.14", "-42", "+0.5", ".75", "1e10", "2.5E-3", "abc", "", ".", "+", "1.",
         ],
     );
 }
@@ -581,8 +572,8 @@ fn oracle_pipe_literal() {
     assert_dfa_fidelity(
         "rem|rlh|em|ex|ch|vw|vh|vmin|vmax|cm|mm|in|pt|pc|px|%",
         &[
-            "rem", "rlh", "em", "ex", "ch", "vw", "vh", "vmin", "vmax", "cm", "mm", "in",
-            "pt", "pc", "px", "%", "remx", "r", "v", "",
+            "rem", "rlh", "em", "ex", "ch", "vw", "vh", "vmin", "vmax", "cm", "mm", "in", "pt",
+            "pc", "px", "%", "remx", "r", "v", "",
         ],
     );
 }

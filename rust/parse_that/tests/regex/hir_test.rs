@@ -1,4 +1,4 @@
-use parse_that::regex::hir::{negate_byte_ranges, ByteRange, CharClass};
+use parse_that::regex::hir::{ByteRange, CharClass, negate_byte_ranges};
 
 #[test]
 fn negate_empty() {
@@ -16,10 +16,10 @@ fn negate_full() {
 fn negate_middle() {
     // [a-z] → [0, 96] ∪ [123, 255]
     let neg = negate_byte_ranges(&[ByteRange::new(b'a', b'z')]);
-    assert_eq!(neg, vec![
-        ByteRange::new(0, b'a' - 1),
-        ByteRange::new(b'z' + 1, 255),
-    ]);
+    assert_eq!(
+        neg,
+        vec![ByteRange::new(0, b'a' - 1), ByteRange::new(b'z' + 1, 255),]
+    );
 }
 
 #[test]

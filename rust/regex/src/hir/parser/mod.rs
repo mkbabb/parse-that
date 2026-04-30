@@ -55,8 +55,7 @@ impl<'a> Parser<'a> {
         if !self.at_end() {
             return Err(self.err(format!(
                 "unexpected character '{}' at position {}",
-                self.src[self.pos] as char,
-                self.pos
+                self.src[self.pos] as char, self.pos
             )));
         }
         Ok(hir)
@@ -102,8 +101,7 @@ impl<'a> Parser<'a> {
 fn is_literal_char(b: u8) -> bool {
     !matches!(
         b,
-        b'(' | b')' | b'[' | b']' | b'{' | b'|' | b'*' | b'+' | b'?' | b'.' | b'^'
-            | b'$' | b'\\'
+        b'(' | b')' | b'[' | b']' | b'{' | b'|' | b'*' | b'+' | b'?' | b'.' | b'^' | b'$' | b'\\'
     )
 }
 

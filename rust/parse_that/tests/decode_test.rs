@@ -9,9 +9,9 @@ fn decode(input: &str) -> Option<(StringPayload, usize, Vec<u8>)> {
 fn decoded_str(input: &str) -> Option<String> {
     let (payload, _, arena) = decode(input)?;
     match payload {
-        StringPayload::Borrowed { start, end } => {
-            Some(String::from_utf8(input.as_bytes()[start as usize..end as usize].to_vec()).unwrap())
-        }
+        StringPayload::Borrowed { start, end } => Some(
+            String::from_utf8(input.as_bytes()[start as usize..end as usize].to_vec()).unwrap(),
+        ),
         StringPayload::Owned { arena_offset, len } => {
             let slice = &arena[arena_offset as usize..(arena_offset + len) as usize];
             Some(String::from_utf8(slice.to_vec()).unwrap())
@@ -44,7 +44,10 @@ fn borrowed_no_escapes_at_all() {
     let (payload, _end, arena) = decode(r#""no escapes at all""#).unwrap();
     assert!(matches!(payload, StringPayload::Borrowed { .. }));
     assert!(arena.is_empty());
-    assert_eq!(decoded_str(r#""no escapes at all""#).unwrap(), "no escapes at all");
+    assert_eq!(
+        decoded_str(r#""no escapes at all""#).unwrap(),
+        "no escapes at all"
+    );
 }
 
 // ── Owned (decoded) paths ───────────────────────────────────────────
@@ -101,8 +104,7 @@ fn arena_offset_respects_existing_data() {
     let pre_len = arena.len();
 
     let input = r#""hello\nworld""#;
-    let (payload, _end) =
-        decode_json_string_to_arena(input.as_bytes(), 0, &mut arena).unwrap();
+    let (payload, _end) = decode_json_string_to_arena(input.as_bytes(), 0, &mut arena).unwrap();
 
     match payload {
         StringPayload::Owned { arena_offset, len } => {
@@ -164,8 +166,14 @@ fn sequential_decodes_share_arena() {
     // Both payloads reference non-overlapping slices in the same arena.
     match (p1, p2) {
         (
-            StringPayload::Owned { arena_offset: o1, len: l1 },
-            StringPayload::Owned { arena_offset: o2, len: l2 },
+            StringPayload::Owned {
+                arena_offset: o1,
+                len: l1,
+            },
+            StringPayload::Owned {
+                arena_offset: o2,
+                len: l2,
+            },
         ) => {
             assert_eq!(o2 as usize, (o1 + l1) as usize);
             let s1 = std::str::from_utf8(&arena[o1 as usize..(o1 + l1) as usize]).unwrap();
@@ -430,7 +438,9 @@ fn simd_cross_validate_grid() {
                 b'"' => return Some(out),
                 b'\\' => {
                     i += 1;
-                    if i >= bytes.len() { return None; }
+                    if i >= bytes.len() {
+                        return None;
+                    }
                     match bytes[i] {
                         b'"' => out.push('"'),
                         b'\\' => out.push('\\'),
@@ -598,8 +608,7 @@ fn decode_microbench() {
         bytes_short_clean.len(),
         || {
             arena.clear();
-            let (_, end) =
-                decode_json_string_to_arena(&bytes_short_clean, 0, &mut arena).unwrap();
+            let (_, end) = decode_json_string_to_arena(&bytes_short_clean, 0, &mut arena).unwrap();
             end
         },
     );
@@ -608,27 +617,20 @@ fn decode_microbench() {
         bytes_med_clean.len(),
         || {
             arena.clear();
-            let (_, end) =
-                decode_json_string_to_arena(&bytes_med_clean, 0, &mut arena).unwrap();
+            let (_, end) = decode_json_string_to_arena(&bytes_med_clean, 0, &mut arena).unwrap();
             end
         },
     );
     time("escape-free 514 B (long)", bytes_long_clean.len(), || {
         arena.clear();
-        let (_, end) =
-            decode_json_string_to_arena(&bytes_long_clean, 0, &mut arena).unwrap();
+        let (_, end) = decode_json_string_to_arena(&bytes_long_clean, 0, &mut arena).unwrap();
         end
     });
-    time(
-        "one-escape 67 B (sparse)",
-        bytes_med_one_esc.len(),
-        || {
-            arena.clear();
-            let (_, end) =
-                decode_json_string_to_arena(&bytes_med_one_esc, 0, &mut arena).unwrap();
-            end
-        },
-    );
+    time("one-escape 67 B (sparse)", bytes_med_one_esc.len(), || {
+        arena.clear();
+        let (_, end) = decode_json_string_to_arena(&bytes_med_one_esc, 0, &mut arena).unwrap();
+        end
+    });
     time(
         "periodic-escape 578 B (dense)",
         bytes_periodic.len(),

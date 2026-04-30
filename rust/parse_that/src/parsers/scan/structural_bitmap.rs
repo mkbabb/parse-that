@@ -25,7 +25,7 @@
 //! the 16-byte / scalar tail loops that the pre-AW-IV implementation
 //! carried.
 
-use crate::state::{PaddedView, INPUT_PAD_BYTES};
+use crate::state::{INPUT_PAD_BYTES, PaddedView};
 use std::simd::prelude::*;
 
 const STRIPE: usize = 64;
@@ -266,12 +266,7 @@ impl<'a> NibbleBitmapIter<'a> {
 /// byte AND byte `i+1` is the second byte. Used for `/\*`, `\*/`,
 /// `->` digraph detection.
 #[inline]
-pub fn digraph_mask(
-    bytes: &[u8],
-    offset: usize,
-    first_mask: u64,
-    second: u8,
-) -> u64 {
+pub fn digraph_mask(bytes: &[u8], offset: usize, first_mask: u64, second: u8) -> u64 {
     let len = bytes.len();
     let end = (offset + 64).min(len);
     let mut second_mask: u64 = 0;

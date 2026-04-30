@@ -1,6 +1,6 @@
 // Media queries and @supports conditions.
 
-use super::super::scan::{scan_ident, scan_ws_block_comments, CSS_IDENT_CONFIG};
+use super::super::scan::{CSS_IDENT_CONFIG, scan_ident, scan_ws_block_comments};
 use super::types::*;
 use super::value::*;
 use crate::state::ParserState;

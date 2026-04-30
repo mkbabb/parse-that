@@ -127,10 +127,7 @@ fn cross_validate_all_counts() {
         }
 
         if let Some(result) = scan(&input, 0) {
-            assert_eq!(
-                result.count, count,
-                "count mismatch for {count} digits"
-            );
+            assert_eq!(result.count, count, "count mismatch for {count} digits");
             assert_eq!(
                 result.value, scalar_val,
                 "value mismatch for {count} digits: SIMD={}, scalar={}",

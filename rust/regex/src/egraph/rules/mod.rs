@@ -61,8 +61,8 @@ use crate::egraph::node::HirENode;
 /// - [`AbsorbRepetition`] — `a+a* → a+`, `a*a* → a*`, `a?a* → a*`,
 ///   `aa+ → a+a`. Genuine equality-saturation wins; only
 ///   cost-guided extraction picks the right form.
-pub fn default_hir_rules<A: Analysis<HirENode> + 'static>()
--> Vec<Box<dyn RewriteFn<HirENode, A>>> {
+pub fn default_hir_rules<A: Analysis<HirENode> + 'static>() -> Vec<Box<dyn RewriteFn<HirENode, A>>>
+{
     vec![
         Box::new(FlattenAltConcat),
         Box::new(DeduplicateAlternation),

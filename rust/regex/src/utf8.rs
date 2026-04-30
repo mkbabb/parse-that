@@ -68,10 +68,10 @@ impl Iterator for Utf8Sequences {
 
 /// UTF-8 byte-length boundaries.
 const BOUNDARIES: [(u32, u32); 4] = [
-    (0x0000, 0x007F),     // 1-byte
-    (0x0080, 0x07FF),     // 2-byte
-    (0x0800, 0xFFFF),     // 3-byte (includes surrogate gap)
-    (0x10000, 0x10FFFF),  // 4-byte
+    (0x0000, 0x007F),    // 1-byte
+    (0x0080, 0x07FF),    // 2-byte
+    (0x0800, 0xFFFF),    // 3-byte (includes surrogate gap)
+    (0x10000, 0x10FFFF), // 4-byte
 ];
 
 /// Encode the codepoint range `[lo, hi]` into minimal UTF-8 byte sequences.
@@ -123,12 +123,7 @@ fn encode_partition(out: &mut Vec<Utf8Sequence>, lo: u32, hi: u32) {
 
 /// Recursively split a UTF-8 byte range into sequences where each byte
 /// position covers a contiguous range.
-fn split_range(
-    out: &mut Vec<Utf8Sequence>,
-    lo: &[u8],
-    hi: &[u8],
-    depth: usize,
-) {
+fn split_range(out: &mut Vec<Utf8Sequence>, lo: &[u8], hi: &[u8], depth: usize) {
     if depth >= lo.len() {
         return;
     }
@@ -187,12 +182,7 @@ fn split_range(
 /// 1. `lo[depth]` with lo's continuation → max continuation
 /// 2. `lo[depth]+1 .. hi[depth]-1` with full continuation range
 /// 3. `hi[depth]` with min continuation → hi's continuation
-fn split_at_boundary(
-    out: &mut Vec<Utf8Sequence>,
-    lo: &[u8],
-    hi: &[u8],
-    depth: usize,
-) {
+fn split_at_boundary(out: &mut Vec<Utf8Sequence>, lo: &[u8], hi: &[u8], depth: usize) {
     let len = lo.len();
     let cont_min = 0x80u8;
     let cont_max = 0xBFu8;
@@ -251,4 +241,3 @@ fn encode_utf8(cp: u32) -> Vec<u8> {
     let s = ch.encode_utf8(&mut buf);
     s.as_bytes().to_vec()
 }
-

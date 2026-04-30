@@ -18,13 +18,10 @@ fn search_matches(hir: Hir) -> Vec<AbsorbMatch> {
     let mut egraph: EGraph<HirENode, NoAnalysis> = EGraph::new();
     let _root = insert_hir(&mut egraph, &hir);
     egraph.rebuild();
-    <SupersetAbsorbClass as Rewrite<HirENode, NoAnalysis>>::search(
-        &SupersetAbsorbClass,
-        &egraph,
-    )
-    .into_iter()
-    .map(|(_, m)| m)
-    .collect()
+    <SupersetAbsorbClass as Rewrite<HirENode, NoAnalysis>>::search(&SupersetAbsorbClass, &egraph)
+        .into_iter()
+        .map(|(_, m)| m)
+        .collect()
 }
 
 #[test]
@@ -40,5 +37,8 @@ fn superset_absorbs_subset() {
 fn disjoint_classes_not_absorbed() {
     let hir = Hir::Alternation(vec![mk_class(&[(b'a', b'c')]), mk_class(&[(b'd', b'f')])]);
     let ms = search_matches(hir);
-    assert!(ms.is_empty(), "superset rule must not match disjoint classes");
+    assert!(
+        ms.is_empty(),
+        "superset rule must not match disjoint classes"
+    );
 }

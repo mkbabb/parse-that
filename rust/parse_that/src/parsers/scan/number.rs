@@ -3,8 +3,8 @@
 // Pure digit/mantissa scanning. f64 conversion lives in `number_f64.rs`.
 // SIMD digit accumulation (16 bytes at a time) lives in `number_simd.rs`.
 
-use crate::state::PaddedView;
 use super::number_simd;
+use crate::state::PaddedView;
 
 // ── Number scanning core ──────────────────────────────────────────
 
@@ -201,7 +201,10 @@ pub fn scan_number_mantissa(
     let has_pre_dot_digits = digit_count > 0;
 
     // ── Leading-zero rejection ────────────────────────────────
-    if cfg.reject_leading_zero && digit_count > 1 && unsafe { *bytes.get_unchecked(digit_start) } == b'0' {
+    if cfg.reject_leading_zero
+        && digit_count > 1
+        && unsafe { *bytes.get_unchecked(digit_start) } == b'0'
+    {
         // `007` etc. — clamp to just the sign + `0`.
         i = digit_start + 1;
         return Some((
@@ -223,7 +226,8 @@ pub fn scan_number_mantissa(
     // ── Fractional part ───────────────────────────────────────
     let mut has_frac = false;
     // Gate: only enter the dot if we have pre-dot digits OR leading-dot is allowed.
-    if i < len && unsafe { *bytes.get_unchecked(i) } == b'.'
+    if i < len
+        && unsafe { *bytes.get_unchecked(i) } == b'.'
         && (has_pre_dot_digits || cfg.allow_leading_dot)
     {
         i += 1;

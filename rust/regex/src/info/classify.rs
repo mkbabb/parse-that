@@ -72,9 +72,7 @@ pub(super) fn class_to_charset_positive(hir: &Hir) -> CharSet128 {
 /// Detect patterns like `[a-z]+`, `\d*`, `[^"\\]+` — a quantified character class.
 pub(super) fn detect_quantified_class(hir: &Hir) -> Option<QuantifiedClassInfo> {
     match hir {
-        Hir::Repetition(Repetition {
-            sub, min, max, ..
-        }) => {
+        Hir::Repetition(Repetition { sub, min, max, .. }) => {
             if let Hir::Class(class) = sub.as_ref() {
                 let negated = class.negated();
                 let ranges = class.to_positive_byte_ranges();

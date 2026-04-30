@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use divan::counter::BytesCount;
-use divan::{black_box, Bencher};
+use divan::{Bencher, black_box};
 
 extern crate pest;
 extern crate pest_grammars;
@@ -95,15 +95,11 @@ fn parse(b: Bencher, filepath: &str) {
     let filepath = data_dir().join(filepath);
     let data = std::fs::read_to_string(filepath).unwrap();
 
-    b.counter(BytesCount::new(data.len()))
-        .bench_local(|| {
-            let buf = black_box(&data);
-            let pair = JsonParser::parse(Rule::json, buf)
-                .unwrap()
-                .next()
-                .unwrap();
-            consume(pair)
-        });
+    b.counter(BytesCount::new(data.len())).bench_local(|| {
+        let buf = black_box(&data);
+        let pair = JsonParser::parse(Rule::json, buf).unwrap().next().unwrap();
+        consume(pair)
+    });
 }
 
 fn main() {

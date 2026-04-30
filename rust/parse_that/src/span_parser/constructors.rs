@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-
 use crate::parse::ParserFn;
 use crate::parsers::scan::{IdentConfig, NumberConfig, QuotedStringConfig, STRICT_NUMBER_CONFIG};
 use crate::state::Span;

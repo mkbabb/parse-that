@@ -6,8 +6,8 @@
 
 use std::collections::{BTreeSet, HashMap};
 
+use super::nfa::{DEAD, Nfa, StateId};
 use crate::sets::equiv::compute_byte_classes;
-use super::nfa::{Nfa, StateId, DEAD};
 
 /// A single DFA state.
 #[derive(Clone, Debug)]
@@ -411,7 +411,9 @@ fn hopcroft_minimize(dfa: &Dfa) -> Dfa {
 
     // Fill transitions.
     for block in 0..num_blocks {
-        let Some(rep) = block_rep[block] else { continue };
+        let Some(rep) = block_rep[block] else {
+            continue;
+        };
         let new_id = block_to_new[block];
         if new_id == DEAD {
             continue;
@@ -434,4 +436,3 @@ fn hopcroft_minimize(dfa: &Dfa) -> Dfa {
         num_classes: dfa.num_classes,
     }
 }
-

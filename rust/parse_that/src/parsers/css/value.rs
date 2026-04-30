@@ -1,6 +1,8 @@
 // CSS value parsing — inline dispatch for zero-vtable hot path.
 
-use super::super::scan::{scan_ident, scan_string_quoted, scan_ws_block_comments, CSS_IDENT_CONFIG};
+use super::super::scan::{
+    CSS_IDENT_CONFIG, scan_ident, scan_string_quoted, scan_ws_block_comments,
+};
 use super::types::*;
 use crate::state::{ParserState, Span};
 

@@ -128,7 +128,11 @@ pub(super) fn odd_parity_backslashes(bs_bits: u32, carry_in: u32) -> u32 {
     // the first run continues from the previous chunk with inverted parity.
     if carry_in == 1 && (bs_bits & 1) != 0 {
         let run_len = (!bs_bits).trailing_zeros().min(16);
-        let run_mask = if run_len >= 16 { MASK16 } else { (1u32 << run_len) - 1 };
+        let run_mask = if run_len >= 16 {
+            MASK16
+        } else {
+            (1u32 << run_len) - 1
+        };
         // Previous chunk's last backslash was odd (carry=1), so bit 0 is
         // even, bit 1 is odd, bit 2 is even, ... → odd at ODD indices.
         odd |= run_mask & ODD_BITS;
@@ -143,7 +147,11 @@ pub(super) fn odd_parity_backslashes(bs_bits: u32, carry_in: u32) -> u32 {
         }
         let shifted = bs_bits >> i;
         let run_len = (!shifted).trailing_zeros().min(16 - i);
-        let run_mask = if run_len >= 32 { u32::MAX } else { (1u32 << run_len) - 1 };
+        let run_mask = if run_len >= 32 {
+            u32::MAX
+        } else {
+            (1u32 << run_len) - 1
+        };
         // Odd-parity positions are at offsets 0, 2, 4, ... from run start.
         odd |= (run_mask & 0x5555) << i;
         i += run_len;

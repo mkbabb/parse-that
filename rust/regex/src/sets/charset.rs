@@ -3,8 +3,6 @@
 //! Uses `[u64; 2]` for compact storage and efficient bitwise operations.
 //! Serializable via serde for WASM boundary transfer.
 
-
-
 /// A compact 128-bit bitset representing a subset of ASCII characters (0..127).
 ///
 /// `Copy` since the underlying representation is two `u64` words (16 bytes

@@ -237,7 +237,10 @@ impl Iterator for ByteSetIter {
     fn size_hint(&self) -> (usize, Option<usize>) {
         let remaining = self.bits.count_ones() as usize
             + if self.word + 1 < 4 {
-                self.set.0[self.word + 1..].iter().map(|w| w.count_ones() as usize).sum()
+                self.set.0[self.word + 1..]
+                    .iter()
+                    .map(|w| w.count_ones() as usize)
+                    .sum()
             } else {
                 0
             };
@@ -246,4 +249,3 @@ impl Iterator for ByteSetIter {
 }
 
 impl ExactSizeIterator for ByteSetIter {}
-

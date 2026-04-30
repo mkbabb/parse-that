@@ -19,7 +19,7 @@ fn estimate_nfa_states(hir: &Hir) -> usize {
         Hir::Empty => 1,
         Hir::Look(_) => 1,
         Hir::Literal(bytes) => bytes.len() + 1, // one state per byte + accept
-        Hir::Class(_) => 2,                      // one transition state + accept
+        Hir::Class(_) => 2,                     // one transition state + accept
         Hir::Alternation(alts) => {
             2 + alts.iter().map(estimate_nfa_states).sum::<usize>() // split + join
         }
@@ -27,8 +27,8 @@ fn estimate_nfa_states(hir: &Hir) -> usize {
         Hir::Repetition(rep) => {
             let sub = estimate_nfa_states(&rep.sub);
             match (rep.min, rep.max) {
-                (0, None) => sub + 2,     // Kleene star: ε-loop
-                (1, None) => sub + 1,     // Plus: body + loop-back
+                (0, None) => sub + 2,                          // Kleene star: ε-loop
+                (1, None) => sub + 1,                          // Plus: body + loop-back
                 (_, Some(m)) => sub * (m as usize).max(1) + 1, // Bounded: unroll
                 _ => sub + 2,
             }

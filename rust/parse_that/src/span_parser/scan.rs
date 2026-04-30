@@ -79,8 +79,7 @@ impl<'a> SpanParser<'a> {
             }
             return None;
         }
-        let scan_len =
-            memchr::memchr3(b1, b2, b3, &bytes[start..]).unwrap_or(bytes.len() - start);
+        let scan_len = memchr::memchr3(b1, b2, b3, &bytes[start..]).unwrap_or(bytes.len() - start);
         if scan_len == 0 {
             #[cfg(feature = "diagnostics")]
             if let Some(lbl) = self.label {

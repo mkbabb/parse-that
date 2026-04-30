@@ -98,14 +98,12 @@ impl<'a> Parser<'a> {
 
     pub(super) fn parse_hex_digit(&mut self) -> Result<u8, ParseError> {
         match self.advance() {
-            Some(b) if b.is_ascii_hexdigit() => {
-                Ok(match b {
-                    b'0'..=b'9' => b - b'0',
-                    b'a'..=b'f' => b - b'a' + 10,
-                    b'A'..=b'F' => b - b'A' + 10,
-                    _ => unreachable!(),
-                })
-            }
+            Some(b) if b.is_ascii_hexdigit() => Ok(match b {
+                b'0'..=b'9' => b - b'0',
+                b'a'..=b'f' => b - b'a' + 10,
+                b'A'..=b'F' => b - b'A' + 10,
+                _ => unreachable!(),
+            }),
             Some(b) => Err(self.err(format!("expected hex digit, found '{}'", b as char))),
             None => Err(self.err("expected hex digit, found end of pattern".into())),
         }
@@ -120,8 +118,7 @@ impl<'a> Parser<'a> {
             return Err(self.err("expected hex digits in \\u{...}".into()));
         }
         let s = std::str::from_utf8(&self.src[start..self.pos]).unwrap();
-        u32::from_str_radix(s, 16)
-            .map_err(|_| self.err("hex codepoint too large".into()))
+        u32::from_str_radix(s, 16).map_err(|_| self.err("hex codepoint too large".into()))
     }
 
     // ── Shorthand classes ───────────────────────────────────────────

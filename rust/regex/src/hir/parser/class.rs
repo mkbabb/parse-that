@@ -35,7 +35,10 @@ impl<'a> Parser<'a> {
         if cp_ranges.is_empty() {
             byte_ranges.sort();
             byte_ranges = merge_byte_ranges(byte_ranges);
-            Ok(Hir::Class(CharClass::Bytes { ranges: byte_ranges, negated }))
+            Ok(Hir::Class(CharClass::Bytes {
+                ranges: byte_ranges,
+                negated,
+            }))
         } else {
             // Promote byte ranges to codepoint ranges and merge.
             for br in &byte_ranges {
@@ -43,7 +46,10 @@ impl<'a> Parser<'a> {
             }
             cp_ranges.sort();
             cp_ranges.dedup();
-            Ok(Hir::Class(CharClass::Unicode { ranges: cp_ranges, negated }))
+            Ok(Hir::Class(CharClass::Unicode {
+                ranges: cp_ranges,
+                negated,
+            }))
         }
     }
 
@@ -57,7 +63,11 @@ impl<'a> Parser<'a> {
             self.advance();
             match self.peek() {
                 // Shorthand classes — expand directly into byte ranges.
-                Some(b'd') => { self.advance(); byte_ranges.push(ByteRange::new(b'0', b'9')); return Ok(()); }
+                Some(b'd') => {
+                    self.advance();
+                    byte_ranges.push(ByteRange::new(b'0', b'9'));
+                    return Ok(());
+                }
                 Some(b'D') => {
                     self.advance();
                     byte_ranges.push(ByteRange::new(0, b'0' - 1));
@@ -121,8 +131,9 @@ impl<'a> Parser<'a> {
                         self.expect(b'\\')?;
                         self.expect(b'u')?;
                         let cp_hi = self.parse_class_unicode_codepoint()?;
-                        let ch_hi = char::from_u32(cp_hi)
-                            .ok_or_else(|| self.err(format!("invalid codepoint U+{:04X}", cp_hi)))?;
+                        let ch_hi = char::from_u32(cp_hi).ok_or_else(|| {
+                            self.err(format!("invalid codepoint U+{:04X}", cp_hi))
+                        })?;
                         cp_ranges.push(CodepointRange::new(ch, ch_hi));
                     } else {
                         cp_ranges.push(CodepointRange::new(ch, ch));

@@ -15,10 +15,8 @@ fn search_matches(hir: Hir) -> usize {
     let mut egraph: EGraph<HirENode, NoAnalysis> = EGraph::new();
     let _root = insert_hir(&mut egraph, &hir);
     egraph.rebuild();
-    let matches = <FlattenAltConcat as Rewrite<HirENode, NoAnalysis>>::search(
-        &FlattenAltConcat,
-        &egraph,
-    );
+    let matches =
+        <FlattenAltConcat as Rewrite<HirENode, NoAnalysis>>::search(&FlattenAltConcat, &egraph);
     matches.len()
 }
 

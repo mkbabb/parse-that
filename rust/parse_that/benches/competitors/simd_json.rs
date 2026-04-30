@@ -4,7 +4,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use std::path::{Path, PathBuf};
 
 use divan::counter::BytesCount;
-use divan::{black_box, Bencher};
+use divan::{Bencher, black_box};
 
 fn data_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/json")
@@ -49,12 +49,11 @@ fn parse(b: Bencher, filepath: &str) {
     // cost of the library. We use to_borrowed_value for fairness (returns Cow<str> strings,
     // zero-copy when no escapes — comparable to jiter's approach).
     // The borrowed value references `buf`, so we consume it inside the closure via black_box.
-    b.counter(BytesCount::new(data.len()))
-        .bench_local(|| {
-            let mut buf = black_box(data.as_bytes()).to_vec();
-            let val = simd_json::to_borrowed_value(&mut buf).unwrap();
-            black_box(&val);
-        });
+    b.counter(BytesCount::new(data.len())).bench_local(|| {
+        let mut buf = black_box(data.as_bytes()).to_vec();
+        let val = simd_json::to_borrowed_value(&mut buf).unwrap();
+        black_box(&val);
+    });
 }
 
 fn main() {

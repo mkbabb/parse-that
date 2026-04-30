@@ -4,7 +4,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use std::path::Path;
 
 use divan::counter::BytesCount;
-use divan::{black_box, Bencher};
+use divan::{Bencher, black_box};
 
 use parse_that::parsers::css::css_parser;
 use parse_that::state::ParserState;
@@ -35,13 +35,12 @@ fn parse(b: Bencher, filepath: &str) {
 
     let parser = css_parser();
 
-    b.counter(BytesCount::new(data.len()))
-        .bench_local(|| {
-            let buf = black_box(&data);
-            let mut state = ParserState::new(buf);
-            let result = parser.call(&mut state);
-            black_box(result)
-        });
+    b.counter(BytesCount::new(data.len())).bench_local(|| {
+        let buf = black_box(&data);
+        let mut state = ParserState::new(buf);
+        let result = parser.call(&mut state);
+        black_box(result)
+    });
 }
 
 fn main() {

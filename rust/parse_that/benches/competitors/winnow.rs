@@ -5,12 +5,13 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use divan::counter::BytesCount;
-use divan::{black_box, Bencher};
+use divan::{Bencher, black_box};
 
-use winnow::combinator::{delimited, dispatch, fail, peek, preceded, separated,
-                          separated_pair, terminated};
-use winnow::prelude::*;
 use winnow::ascii::float;
+use winnow::combinator::{
+    delimited, dispatch, fail, peek, preceded, separated, separated_pair, terminated,
+};
+use winnow::prelude::*;
 use winnow::token::{any, take, take_while};
 
 // ── JSON Value type (borrowed strings for zero-copy fairness) ────────────
@@ -56,8 +57,7 @@ fn string<'i>(input: &mut &'i str) -> ModalResult<&'i str> {
 fn string_content<'i>(input: &mut &'i str) -> ModalResult<&'i str> {
     let start = *input;
     loop {
-        let _: &str = take_while(0.., |c: char| c != '"' && c != '\\')
-            .parse_next(input)?;
+        let _: &str = take_while(0.., |c: char| c != '"' && c != '\\').parse_next(input)?;
 
         if input.is_empty() || input.starts_with('"') {
             let consumed = start.len() - input.len();
@@ -147,11 +147,10 @@ fn parse(b: Bencher, filepath: &str) {
     let data = std::fs::read_to_string(&filepath)
         .unwrap_or_else(|e| panic!("Failed to read {}: {}", filepath.display(), e));
 
-    b.counter(BytesCount::new(data.len()))
-        .bench_local(|| {
-            let buf = black_box(data.as_str());
-            json.parse(buf).unwrap()
-        });
+    b.counter(BytesCount::new(data.len())).bench_local(|| {
+        let buf = black_box(data.as_str());
+        json.parse(buf).unwrap()
+    });
 }
 
 fn main() {

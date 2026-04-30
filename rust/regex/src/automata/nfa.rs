@@ -7,8 +7,8 @@
 
 use smallvec::SmallVec;
 
-use crate::sets::byteset::ByteSet;
 use crate::hir::{CharClass, Hir, Look, Repetition};
+use crate::sets::byteset::ByteSet;
 use crate::utf8::Utf8Sequences;
 
 /// NFA state identifier. `DEAD` is a sentinel for "no transition".
@@ -211,10 +211,7 @@ impl NfaBuilder {
     /// Uses `Utf8Sequences` to convert codepoint ranges into byte-level NFA
     /// transitions. Each range may expand into multiple UTF-8 byte sequence
     /// paths through the NFA.
-    fn build_unicode_class(
-        &mut self,
-        ranges: &[crate::hir::CodepointRange],
-    ) -> Option<Fragment> {
+    fn build_unicode_class(&mut self, ranges: &[crate::hir::CodepointRange]) -> Option<Fragment> {
         let start = self.new_state();
         let accept = self.new_state();
 
@@ -257,8 +254,12 @@ impl NfaBuilder {
     fn build_look(&mut self, look: Look) -> Option<Fragment> {
         // Look assertions are zero-width: start == accept.
         match look {
-            Look::Start | Look::StartLF | Look::StartCRLF
-            | Look::End | Look::EndLF | Look::EndCRLF => {
+            Look::Start
+            | Look::StartLF
+            | Look::StartCRLF
+            | Look::End
+            | Look::EndLF
+            | Look::EndCRLF => {
                 let s = self.new_state();
                 Some(Fragment {
                     start: s,
@@ -446,4 +447,3 @@ impl NfaBuilder {
         })
     }
 }
-

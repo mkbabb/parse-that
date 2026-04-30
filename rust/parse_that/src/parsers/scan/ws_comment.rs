@@ -17,8 +17,8 @@
 //      chunk is entirely WS or contains a comment opener. Handles
 //      long runs and block-comment bodies.
 
-use crate::state::{PaddedView, ParserState, Span};
 use super::structural_bitmap::classify_stripe;
+use crate::state::{PaddedView, ParserState, Span};
 use std::simd::prelude::*;
 
 /// Byte-class lookup table for ASCII whitespace only.
@@ -114,9 +114,7 @@ pub fn scan_ws_block_comments<'a>(state: &mut ParserState<'a>) -> Option<Span<'a
     // means `start + 16` is in-bounds on the backing buffer for any
     // `start <= len`; NUL padding classifies as non-WS so stripes
     // that straddle the public end terminate naturally.
-    let chunk = u8x16::from_slice(unsafe {
-        padded.get_unchecked(start..start + 16)
-    });
+    let chunk = u8x16::from_slice(unsafe { padded.get_unchecked(start..start + 16) });
     let ws_slash_mask = classify_ws_slash_16(chunk);
     let non_ws_mask = !ws_slash_mask & 0xFFFFu16;
 
@@ -186,17 +184,14 @@ fn scan_ws_bitmap_cold(view: PaddedView<'_>, start: usize) -> usize {
             let non_ws_rel = inv.trailing_zeros() as usize;
             let non_ws_abs = (i + non_ws_rel).min(len);
             // A `/` before the non-ws may open a block comment.
-            let slash_mask = slash_mask_stripe(bytes, i)
-                & ((1u64 << non_ws_rel) - 1);
+            let slash_mask = slash_mask_stripe(bytes, i) & ((1u64 << non_ws_rel) - 1);
             if slash_mask != 0 {
                 let slash_rel = slash_mask.trailing_zeros() as usize;
                 let slash_abs = i + slash_rel;
                 if slash_abs >= len {
                     return len;
                 }
-                if slash_abs + 1 < len
-                    && unsafe { *bytes.get_unchecked(slash_abs + 1) } == b'*'
-                {
+                if slash_abs + 1 < len && unsafe { *bytes.get_unchecked(slash_abs + 1) } == b'*' {
                     // Block comment opens — skip body and restart.
                     i = skip_block_comment_tail(view, slash_abs + 2);
                     continue;
@@ -219,9 +214,7 @@ fn scan_ws_bitmap_cold(view: PaddedView<'_>, start: usize) -> usize {
             if slash_abs >= len {
                 return len;
             }
-            if slash_abs + 1 < len
-                && unsafe { *bytes.get_unchecked(slash_abs + 1) } == b'*'
-            {
+            if slash_abs + 1 < len && unsafe { *bytes.get_unchecked(slash_abs + 1) } == b'*' {
                 // Block comment opens — skip body; i jumps past `*/`.
                 i = skip_block_comment_tail(view, slash_abs + 2);
                 stripe_consumed = true;

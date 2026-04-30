@@ -2,11 +2,11 @@
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use divan::counter::BytesCount;
-use divan::{black_box, Bencher};
+use divan::{Bencher, black_box};
 
 use parse_that::{
-    sp_number, sp_quoted_string, sp_take_until_any,
-    STRICT_NUMBER_CONFIG, STRICT_QUOTED_STRING_CONFIG,
+    STRICT_NUMBER_CONFIG, STRICT_QUOTED_STRING_CONFIG, sp_number, sp_quoted_string,
+    sp_take_until_any,
 };
 
 fn bench_take_until(b: Bencher, excluded: &'static [u8], stop_byte: u8) {
@@ -17,11 +17,10 @@ fn bench_take_until(b: Bencher, excluded: &'static [u8], stop_byte: u8) {
     let parser = sp_take_until_any(excluded).into_parser();
     let bytes = input.len();
 
-    b.counter(BytesCount::new(bytes))
-        .bench_local(|| {
-            let span = parser.parse(black_box(input.as_str())).unwrap();
-            black_box(span.end)
-        });
+    b.counter(BytesCount::new(bytes)).bench_local(|| {
+        let span = parser.parse(black_box(input.as_str())).unwrap();
+        black_box(span.end)
+    });
 }
 
 #[divan::bench]
@@ -52,11 +51,10 @@ fn json_string_unescaped(b: Bencher) {
     let bytes = input.len();
 
     let parser = sp_quoted_string(&STRICT_QUOTED_STRING_CONFIG).into_parser();
-    b.counter(BytesCount::new(bytes))
-        .bench_local(|| {
-            let span = parser.parse(black_box(input.as_str())).unwrap();
-            black_box(span.end)
-        });
+    b.counter(BytesCount::new(bytes)).bench_local(|| {
+        let span = parser.parse(black_box(input.as_str())).unwrap();
+        black_box(span.end)
+    });
 }
 
 #[divan::bench]
@@ -67,20 +65,18 @@ fn json_string_escaped(b: Bencher) {
     let bytes = input.len();
 
     let parser = sp_quoted_string(&STRICT_QUOTED_STRING_CONFIG).into_parser();
-    b.counter(BytesCount::new(bytes))
-        .bench_local(|| {
-            let span = parser.parse(black_box(input.as_str())).unwrap();
-            black_box(span.end)
-        });
+    b.counter(BytesCount::new(bytes)).bench_local(|| {
+        let span = parser.parse(black_box(input.as_str())).unwrap();
+        black_box(span.end)
+    });
 }
 
 fn bench_json_number(b: Bencher, input: &'static str) {
     let parser = sp_number(&STRICT_NUMBER_CONFIG).into_parser();
-    b.counter(BytesCount::new(input.len()))
-        .bench_local(|| {
-            let span = parser.parse(black_box(input)).unwrap();
-            black_box(span.end)
-        });
+    b.counter(BytesCount::new(input.len())).bench_local(|| {
+        let span = parser.parse(black_box(input)).unwrap();
+        black_box(span.end)
+    });
 }
 
 #[divan::bench]

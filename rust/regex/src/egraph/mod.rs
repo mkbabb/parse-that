@@ -116,11 +116,7 @@ pub fn saturate_hir_egraph(egraph: &mut HirEGraph) {
 ///
 /// Wraps `extract_hir` (the low-level translator) for API
 /// symmetry with `build_hir_egraph` / `saturate_hir_egraph`.
-pub fn extract_canonical(
-    egraph: &HirEGraph,
-    root: Id,
-    cost: &RegexExtractionCost,
-) -> Hir {
+pub fn extract_canonical(egraph: &HirEGraph, root: Id, cost: &RegexExtractionCost) -> Hir {
     extract_hir(egraph, root, cost)
 }
 
