@@ -17,6 +17,7 @@ pub mod egraph;
 pub mod first;
 pub mod hir;
 pub mod info;
+pub mod path_lexer;
 pub mod sets;
 pub mod unicode;
 pub mod utf8;
@@ -32,5 +33,6 @@ pub use hir::{
     ByteRange, CharClass, CodepointRange, Hir, Look, ParseError, ParseOptions, Repetition,
 };
 pub use info::{EngineSet, QuantifiedClassInfo, RegexInfo};
+pub use path_lexer::{PathLexError, PathToken, PathTokenKind, lex_path};
 pub use sets::byteset::ByteSet;
 pub use sets::charset::CharSet128;

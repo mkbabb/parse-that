@@ -71,6 +71,7 @@ dependencies = [
  "egraph",
  "egraph-derive",
  "mimalloc",
+ "proc-macro2",
  "rustc-hash",
  "serde",
  "smallvec",
