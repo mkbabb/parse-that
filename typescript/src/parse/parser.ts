@@ -16,14 +16,6 @@ export type ParserFunction<T = string> = (
 
 let PARSER_ID = 0;
 
-const MEMO = new Map<number, ParserState<unknown>>();
-const LEFT_RECURSION_COUNTS = new Map<number, number>();
-
-// Numeric memo key: eliminates string allocation per lookup.
-// Max offset 2^20 (~1M chars) allows parser IDs up to 2^11 = 2048.
-const MEMO_OFFSET_BITS = 20;
-const MEMO_MAX_OFFSET = (1 << MEMO_OFFSET_BITS) - 1;
-
 const FLAG_NONE = 0;
 const FLAG_TRIM_WS = 1;
 const FLAG_EOF = 2;
@@ -38,14 +30,7 @@ export class Parser<T = string> {
         public context: ParserContext = {},
     ) {}
 
-    reset() {
-        MEMO.clear();
-        LEFT_RECURSION_COUNTS.clear();
-    }
-
     parseState(val: string) {
-        this.reset();
-
         const state = new ParserState(val) as ParserState<T>;
         this.parser(state);
 
@@ -73,81 +58,6 @@ export class Parser<T = string> {
 
     parse(val: string) {
         return this.parseState(val).value;
-    }
-
-    getCijKey(state: ParserState<T>): number {
-        return (this.id << MEMO_OFFSET_BITS) | (state.offset & MEMO_MAX_OFFSET);
-    }
-
-    atLeftRecursionLimit(state: ParserState<T>) {
-        const cij = LEFT_RECURSION_COUNTS.get(this.getCijKey(state)) ?? 0;
-        return cij > state.src.length - state.offset;
-    }
-
-    memoize() {
-        const memoize = (state: ParserState<T>) => {
-            const cijKey = this.getCijKey(state);
-            const cij = LEFT_RECURSION_COUNTS.get(cijKey) ?? 0;
-
-            const cached = MEMO.get(this.id) as ParserState<T> | undefined;
-
-            if (cached && cached.offset >= state.offset) {
-                // Restore from cache into mutable state
-                state.offset = cached.offset;
-                state.value = cached.value;
-                state.isError = cached.isError;
-                return state;
-            } else if (this.atLeftRecursionLimit(state)) {
-                state.isError = true;
-                return state;
-            }
-
-            LEFT_RECURSION_COUNTS.set(cijKey, cij + 1);
-            this.parser(state);
-
-            const cachedAfter = MEMO.get(this.id) as ParserState<T> | undefined;
-
-            if (cachedAfter && cachedAfter.offset > state.offset) {
-                state.offset = cachedAfter.offset;
-            } else if (!cachedAfter) {
-                // Clone before storing so the cache is immutable
-                MEMO.set(this.id, state.clone() as ParserState<unknown>);
-            }
-
-            return state;
-        };
-        return new Parser(
-            memoize as ParserFunction<T>,
-            createParserContext("memoize", this as Parser<unknown>),
-        );
-    }
-
-    mergeMemos() {
-        const mergeMemo = (state: ParserState<T>) => {
-            const cached = MEMO.get(this.id) as ParserState<T> | undefined;
-            if (cached) {
-                state.offset = cached.offset;
-                state.value = cached.value;
-                state.isError = cached.isError;
-                return state;
-            } else if (this.atLeftRecursionLimit(state)) {
-                state.isError = true;
-                return state;
-            }
-
-            this.parser(state);
-
-            const cachedAfter = MEMO.get(this.id) as ParserState<T> | undefined;
-            if (!cachedAfter) {
-                MEMO.set(this.id, state.clone() as ParserState<unknown>);
-            }
-            return state;
-        };
-
-        return new Parser(
-            mergeMemo as ParserFunction<T>,
-            createParserContext("mergeMemo", this as Parser<unknown>),
-        );
     }
 
     then<S>(next: Parser<S | T>) {

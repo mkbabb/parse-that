@@ -1,27 +1,32 @@
-import { regex, string, all, Parser, any } from "../src/parse";
+import { regex, string, all, Parser, any, eof, memoize, mergeMemos, resetPackrat } from "../src/parse";
+import { ParserState } from "../src/parse/state.js";
 
-import { expect, describe, it } from "vitest";
+import { expect, describe, it, beforeEach } from "vitest";
 
 import { generateMathExpression } from "./utils";
 
 const digits = regex(/[0-9]+/);
 
-describe("Memoization & left recursion", () => {
+// Packrat is opt-in (PT-WAVE-2): the default parse() no longer clears the
+// caches, so a left-recursive grammar resets the packrat state per parse.
+describe("Memoization & left recursion (opt-in packrat)", () => {
+    beforeEach(() => resetPackrat());
+
     it("should 123456", () => {
-        const expr: Parser<any> = Parser.lazy(() => expr.or(digits)).memoize();
+        const expr: Parser<any> = memoize(Parser.lazy(() => expr.or(digits)));
         const result = expr.parse("12356");
         expect(result).toEqual("12356");
     });
 
     it("should mSL", () => {
         const ms = string("s");
-        const mSL: Parser<any> = Parser.lazy(() => mSL.then(mSL).then(ms))
-            .opt()
-            .memoize();
+        const mSL: Parser<any> = memoize(
+            Parser.lazy(() => mSL.then(mSL).then(ms)).opt(),
+        );
         const mz = string("z");
-        const mZ: Parser<any> = Parser.lazy(() => mZ.or(mY).or(mz)).memoize();
+        const mZ: Parser<any> = memoize(Parser.lazy(() => mZ.or(mY).or(mz)));
 
-        const mY: Parser<any> = Parser.lazy(() => mZ.then(mSL)).memoize();
+        const mY: Parser<any> = memoize(Parser.lazy(() => mZ.then(mSL)));
 
         const input = "zss";
 
@@ -32,9 +37,9 @@ describe("Memoization & left recursion", () => {
 
     it("should sS", () => {
         const s = string("s");
-        const sS: Parser<any> = Parser.lazy(() => s.then(sS).then(sS))
-            .opt()
-            .memoize();
+        const sS: Parser<any> = memoize(
+            Parser.lazy(() => s.then(sS).then(sS)).opt(),
+        );
 
         const input = "ssssssssssssssss";
 
@@ -47,20 +52,85 @@ describe("Memoization & left recursion", () => {
     it("should math again", () => {
         const operators = any(string("+"), string("-"), string("*"), string("/"));
         const number = regex(/-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/);
-        const expression: Parser<any> = Parser.lazy(() =>
-            all(expression, operators.then(expression).opt()).mergeMemos().or(number)
-        )
-            .opt()
-            .trim()
-            .memoize();
+        const expression: Parser<any> = memoize(
+            Parser.lazy(() =>
+                mergeMemos(all(expression, operators.then(expression).opt())).or(number)
+            )
+                .opt()
+                .trim(),
+        );
 
         const parser = expression;
 
         for (let i = 0; i < 1; i++) {
+            resetPackrat();
             const expr = generateMathExpression(10);
             const parsed = parser.parse(expr) ?? [];
             const flat = parsed.flat(Infinity).join("");
             expect(flat).toEqual(expr.replaceAll(" ", ""));
         }
+    });
+
+    // ── KNOWN UNSOUND: id-only memo key (PT-WAVE-2 WITHHELD soundness fix) ──
+    //
+    // proof-of-defect: the opt-in packrat MEMO is keyed on the parser id only,
+    // not (id, offset). The seed-sharing this enables is what the mutual /
+    // indirect left-recursion grow (the mSL / math tests above) relies on — and
+    // it is latently UNSOUND for the non-recursive same-parser-at-two-offsets
+    // case. The sound replacement is the full Warth-Douglass-Millstein
+    // head-recursion algorithm keyed on (id, offset); a from-scratch
+    // reimplementation with real correctness blast radius on a tier with zero
+    // production consumers, BOOKED as a dedicated packrat-soundness tranche.
+    //
+    // This test pins the CURRENT (defective) behaviour so the booked fix has a
+    // falsifiable target: when (id, offset)-keying lands, the mis-restore below
+    // becomes an error (the sound result) and this assertion flips.
+    it("id-only memo mis-restores across offsets (booked: position-keyed Warth)", () => {
+        resetPackrat();
+        const P = memoize(regex(/[a-z]+/));
+        // alt1 caches P's "hello" at offset 6, then eof fails → backtrack to 0.
+        // alt2 applies P at offset 0 where [a-z]+ cannot match 'X'. SOUND: error.
+        const p = string("X").next(P).skip(eof()).or(P);
+        const st = new ParserState("Xhello!");
+        p.parser(st);
+
+        // CURRENT (unsound): the offset-6 cache mis-restores at offset 0.
+        expect(st.isError).toBe(false);
+        expect(st.offset).toBe(6);
+        expect(st.value).toBe("hello");
+        // SOUND target (flips when (id, offset)-keying lands):
+        //   expect(st.isError).toBe(true);
+    });
+
+    // Isolation gate: packrat is OFF the default parse path. A non-memoized
+    // grammar parses with no packrat cache involvement, so the same parser at
+    // two distinct offsets yields independent results (no cross-offset hazard).
+    it("default path (no opt-in) has no packrat: same parser, two offsets, independent", () => {
+        resetPackrat();
+        const d = regex(/[0-9]+/); // NOT memoized — default path
+        const grammar = d.skip(string("-")).then(d);
+        const result = grammar.parse("12-999");
+        expect(result).toEqual(["12", "999"]);
+    });
+
+    // proof:reset-tax-gone — the default parse() path no longer clears the
+    // packrat caches per parse (the MEMO.clear() tax is gone). A seeded packrat
+    // cache survives an intervening default top-level parse(): before PT-WAVE-2
+    // every parse() ran reset() → MEMO.clear(), so the seed would be wiped.
+    it("default parse() does not clear the packrat cache (reset-tax removed)", () => {
+        resetPackrat();
+        // Seed the packrat cache via a memoized parse.
+        const seeded = memoize(string("ab"));
+        expect(seeded.parse("ab")).toBe("ab");
+        // Run an unrelated DEFAULT (non-memoized) top-level parse. Pre-PT-WAVE-2
+        // this called reset() → MEMO.clear(), wiping the seed.
+        const plain = string("xy");
+        expect(plain.parse("xy")).toBe("xy");
+        // The seed must still be present: re-running the memoized parse hits the
+        // cache (the cached offset-2 result restores even at a fresh state).
+        const st = new ParserState("ab");
+        seeded.parser(st);
+        expect(st.isError).toBe(false);
+        expect(st.offset).toBe(2);
     });
 });
