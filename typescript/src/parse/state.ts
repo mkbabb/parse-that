@@ -18,16 +18,38 @@ export function mergeSpans(a: Span, b: Span): Span {
     return { start: a.start, end: b.end };
 }
 
+// ── Diagnostic substate types ────────────────────────────────
+// These live with ParserState because the diagnostic accumulator is per-parse
+// state, threaded through the parse, not a module global.
+
+export interface Suggestion {
+    kind: "unclosed-delimiter" | "trailing-content";
+    message: string;
+    openOffset?: number;
+}
+
+export interface SecondarySpan {
+    offset: number;
+    label: string;
+}
+
 export class ParserState<T = unknown> {
-    /** Parser names/descriptions that were expected at the failure point. */
+    /**
+     * Furthest-offset error tracking, threaded per-parse (the Rust port's
+     * `state.furthest_offset` model). `expected` is the accumulated label set
+     * at `furthest`; `suggestions`/`secondarySpans` are the diagnostic extras
+     * collected at `furthest` when diagnostics are enabled.
+     */
     expected?: string[];
+    suggestions: Suggestion[] = [];
+    secondarySpans: SecondarySpan[] = [];
 
     constructor(
         public src: string,
         public value: T = undefined as T,
         public offset: number = 0,
         public isError: boolean = false,
-        public furthest: number = 0,
+        public furthest: number = -1,
     ) {}
 
     ok<S>(value: S, offset: number = 0): ParserState<S> {

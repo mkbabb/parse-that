@@ -215,7 +215,7 @@ export function wrapSpan(
         state.unsafeCall(right);
         if (state.isError) {
             mergeErrorState(state as ParserState<unknown>);
-            reportUnclosedDelimiter(state.src.slice(savedOffset, openEnd), savedOffset);
+            reportUnclosedDelimiter(state as ParserState<unknown>, state.src.slice(savedOffset, openEnd), savedOffset);
             state.offset = savedOffset;
             state.isError = true;
             return state;

@@ -16,13 +16,6 @@ import {
     statePrint,
     formatExpected,
 } from "../src/parse/debug.js";
-import {
-    mergeErrorState,
-    resetErrorState,
-    getLastExpected,
-    getLastSuggestions,
-    getLastSecondarySpans,
-} from "../src/parse/utils.js";
 
 /** Strip ANSI escape codes for comparison. */
 function stripAnsi(s: string): string {
@@ -81,66 +74,53 @@ describe("Diagnostics Infrastructure", () => {
 
     describe("Expected set tracking", () => {
         it("should accumulate labels at same offset", () => {
-            resetErrorState();
             const state = new ParserState("xyz");
             // string("a") fails at offset 0, string("b") also fails at offset 0
             const p = any(string("a"), string("b"), string("c"));
             p.parser(state);
 
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected).toContain('"a"');
             expect(expected).toContain('"b"');
             expect(expected).toContain('"c"');
         });
 
         it("should clear labels when advancing to new furthest", () => {
-            resetErrorState();
             const state = new ParserState("ax");
             // First "a" succeeds, then "b" fails at offset 1
             const p = string("a").skip(string("b"));
             p.parser(state);
 
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected).toContain('"b"');
             expect(expected).not.toContain('"a"');
         });
 
         it("should track regex labels", () => {
-            resetErrorState();
             const state = new ParserState("hello");
             const p = regex(/\d+/);
             p.parser(state);
 
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected.length).toBeGreaterThan(0);
             expect(expected[0]).toContain("\\d+");
         });
 
         it("should track eof label", () => {
-            resetErrorState();
-            const state = new ParserState("hello");
-            const p = string("hello").eof();
-            // First skip eof - parseState triggers reset, just test with lower level
-            string("hello").parser(state);
-            // Now offset = 5, src.length = 5, so eof should succeed
-            // Instead test eof failure:
-            resetErrorState();
-            const state2 = new ParserState("hello world");
-            string("hello").parser(state2);
-            // state2 is at offset 5, there's still " world" remaining
-            // We need the EOF flag path — use call() through the eof() method
+            // Exercise the EOF flag path via call(): "hello world" leaves
+            // " world" after "hello", so eof() fails and tracks its label on
+            // the state it parsed into.
             const pEof = string("hello").eof();
             const state3 = new ParserState<string>("hello world");
             pEof.call(state3);
 
-            const expected = getLastExpected();
+            const expected = (state3.expected ?? []);
             expect(expected).toContain("<end of input>");
         });
     });
 
     describe("Dispatch labels", () => {
         it("should build dispatch label from table", () => {
-            resetErrorState();
             const table: Record<string, Parser<string>> = {
                 a: string("abc"),
                 b: string("bcd"),
@@ -149,7 +129,7 @@ describe("Diagnostics Infrastructure", () => {
             const state = new ParserState("xyz");
             p.parser(state);
 
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected.length).toBe(1);
             expect(expected[0]).toContain("one of");
         });
@@ -157,26 +137,24 @@ describe("Diagnostics Infrastructure", () => {
 
     describe("Suggestions", () => {
         it("should track unclosed delimiter from wrap", () => {
-            resetErrorState();
             // Wrap: open "[" inner: string("hello") close: "]"
             // Input has no closing bracket
             const p = string("hello").wrap(string("["), string("]"));
             const state = new ParserState("[hello");
             p.parser(state);
 
-            const suggestions = getLastSuggestions();
+            const suggestions = state.suggestions;
             expect(suggestions.length).toBeGreaterThan(0);
             expect(suggestions[0].kind).toBe("unclosed-delimiter");
             expect(suggestions[0].message).toContain("]");
         });
 
         it("should track secondary spans for unclosed delimiter", () => {
-            resetErrorState();
             const p = string("hello").wrap(string("["), string("]"));
             const state = new ParserState("[hello");
             p.parser(state);
 
-            const spans = getLastSecondarySpans();
+            const spans = state.secondarySpans;
             expect(spans.length).toBeGreaterThan(0);
             expect(spans[0].label).toContain("opened here");
             expect(spans[0].offset).toBe(0);

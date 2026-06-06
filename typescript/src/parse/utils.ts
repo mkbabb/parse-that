@@ -1,4 +1,6 @@
-import type { ParserState } from "./state.js";
+import type { ParserState, Suggestion, SecondarySpan } from "./state.js";
+
+export type { Suggestion, SecondarySpan } from "./state.js";
 
 // ── Diagnostics Flag ─────────────────────────────────────────
 let diagnosticsEnabled = false;
@@ -15,119 +17,66 @@ export function isDiagnosticsEnabled() {
     return diagnosticsEnabled;
 }
 
-// ── Diagnostic Types ─────────────────────────────────────────
-export interface Suggestion {
-    kind: "unclosed-delimiter" | "trailing-content";
-    message: string;
-    openOffset?: number;
-}
-
-export interface SecondarySpan {
-    offset: number;
-    label: string;
-}
-
-// ── Error Tracking Globals ───────────────────────────────────
-let lastFurthestOffset = -1;
-let lastState: ParserState<unknown> | undefined;
-let lastExpected: string[] = [];
-let lastSuggestions: Suggestion[] = [];
-let lastSecondarySpans: SecondarySpan[] = [];
+// ── Per-parse error tracking (threaded onto ParserState) ─────
+//
+// The furthest-offset / expected-set / suggestions / secondarySpans live on the
+// ParserState instance (the Rust port's `state.furthest_offset` model), not on
+// module globals. This makes a parse reentrant and interleave-safe: a nested
+// `.parse()` mid-rule operates on its own state and cannot corrupt the outer
+// parse's error tracking.
 
 export function mergeErrorState(state: ParserState<unknown>, label?: string) {
-    if (state.offset > lastFurthestOffset) {
-        lastFurthestOffset = state.offset;
-        lastState = state;
-        // New furthest offset — clear and start fresh
+    if (state.offset > state.furthest) {
+        // New furthest offset — clear and start fresh. The expected-set is a
+        // diagnostic feature: only seed it when diagnostics are enabled.
+        state.furthest = state.offset;
+        state.expected = diagnosticsEnabled && label ? [label] : undefined;
+        state.suggestions = [];
+        state.secondarySpans = [];
+    } else if (state.offset === state.furthest) {
+        // Same furthest offset — accumulate the label (diagnostics only).
         if (diagnosticsEnabled && label) {
-            lastExpected = [label];
-        } else {
-            lastExpected = [];
-        }
-        lastSuggestions = [];
-        lastSecondarySpans = [];
-        // Also maintain backward-compat expected on state
-        if (label) {
-            state.expected = [label];
-        } else {
-            state.expected = undefined;
-        }
-    } else if (state.offset === lastFurthestOffset) {
-        if (diagnosticsEnabled && label) {
-            if (!lastExpected.includes(label)) {
-                lastExpected.push(label);
-            }
-        }
-        if (label) {
-            const target = lastState;
-            if (!target) {
-                throw new Error("mergeErrorState invariant violated: lastState missing");
-            }
-            if (target.expected) {
-                if (!target.expected.includes(label)) {
-                    target.expected.push(label);
+            if (state.expected) {
+                if (!state.expected.includes(label)) {
+                    state.expected.push(label);
                 }
             } else {
-                target.expected = [label];
+                state.expected = [label];
             }
         }
     }
-    return lastState;
+    return state;
 }
 
-export function addSuggestion(suggestion: Suggestion) {
+export function addSuggestion(state: ParserState<unknown>, suggestion: Suggestion) {
     if (diagnosticsEnabled) {
-        lastSuggestions.push(suggestion);
+        state.suggestions.push(suggestion);
     }
 }
 
-export function addSecondarySpan(offset: number, label: string) {
+export function addSecondarySpan(state: ParserState<unknown>, offset: number, label: string) {
     if (diagnosticsEnabled) {
-        lastSecondarySpans.push({ offset, label });
+        state.secondarySpans.push({ offset, label });
     }
 }
 
 /**
  * Report an unclosed delimiter diagnostic. Shared by wrap() and wrapSpan().
  */
-export function reportUnclosedDelimiter(openText: string, openOffset: number) {
+export function reportUnclosedDelimiter(
+    state: ParserState<unknown>,
+    openText: string,
+    openOffset: number,
+) {
     if (!diagnosticsEnabled) return;
     const closeText =
         openText === "{" ? "}" : openText === "[" ? "]" : openText === "(" ? ")" : openText;
-    addSuggestion({
+    addSuggestion(state, {
         kind: "unclosed-delimiter",
         message: `close the delimiter with \`${closeText}\``,
         openOffset,
     });
-    addSecondarySpan(openOffset, `unclosed \`${openText}\` opened here`);
-}
-
-export function resetErrorState() {
-    lastState = undefined;
-    lastFurthestOffset = -1;
-    lastExpected = [];
-    lastSuggestions = [];
-    lastSecondarySpans = [];
-}
-
-export function getLastState() {
-    return lastState;
-}
-
-export function getLastFurthestOffset() {
-    return lastFurthestOffset;
-}
-
-export function getLastExpected(): readonly string[] {
-    return lastExpected;
-}
-
-export function getLastSuggestions(): readonly Suggestion[] {
-    return lastSuggestions;
-}
-
-export function getLastSecondarySpans(): readonly SecondarySpan[] {
-    return lastSecondarySpans;
+    addSecondarySpan(state, openOffset, `unclosed \`${openText}\` opened here`);
 }
 
 // ── Collected Diagnostics (for error recovery) ──────────────
@@ -146,12 +95,13 @@ export interface Diagnostic {
 let collectedDiagnostics: Diagnostic[] = [];
 
 /**
- * Snapshot the current global error state into a Diagnostic object,
- * push it to the collection, then reset the error state so the next
+ * Snapshot the parse state's current error tracking into a Diagnostic object,
+ * push it to the collection, then reset the state's error tracking so the next
  * error starts fresh.
  */
-export function collectDiagnostic(src: string, errorOffset: number): void {
-    const furthest = lastFurthestOffset >= 0 ? lastFurthestOffset : errorOffset;
+export function collectDiagnostic(state: ParserState<unknown>, errorOffset: number): void {
+    const src = state.src;
+    const furthest = state.furthest >= 0 ? state.furthest : errorOffset;
 
     // Compute line/column from the furthest offset
     const before = src.slice(0, furthest);
@@ -167,14 +117,22 @@ export function collectDiagnostic(src: string, errorOffset: number): void {
         furthestOffset: furthest,
         line,
         column,
-        expected: [...lastExpected],
-        suggestions: [...lastSuggestions],
-        secondarySpans: [...lastSecondarySpans],
+        expected: state.expected ? [...state.expected] : [],
+        suggestions: [...state.suggestions],
+        secondarySpans: [...state.secondarySpans],
         found,
     });
 
     // Reset so the next parse error starts fresh
-    resetErrorState();
+    resetErrorState(state);
+}
+
+/** Reset the per-parse error tracking on a state. */
+export function resetErrorState(state: ParserState<unknown>): void {
+    state.furthest = -1;
+    state.expected = undefined;
+    state.suggestions = [];
+    state.secondarySpans = [];
 }
 
 export function getCollectedDiagnostics(): readonly Diagnostic[] {

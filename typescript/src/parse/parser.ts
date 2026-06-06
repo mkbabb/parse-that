@@ -1,7 +1,7 @@
 import { createParserContext, ParserState } from "./state.js";
 import type { ParserContext, Span } from "./state.js";
 import { parserDebug, parserPrint } from "./debug.js";
-import { mergeErrorState, resetErrorState, getLastState, getLastFurthestOffset, addSuggestion, isDiagnosticsEnabled, getLastExpected, getLastSuggestions, getLastSecondarySpans, collectDiagnostic, popLastDiagnostic, reportUnclosedDelimiter } from "./utils.js";
+import { mergeErrorState, addSuggestion, isDiagnosticsEnabled, collectDiagnostic, popLastDiagnostic, reportUnclosedDelimiter } from "./utils.js";
 import { createLazyCached } from "./lazy.js";
 import { trimStateWhitespace, eof, all, _initWhitespace, whitespace } from "./leaf.js";
 
@@ -39,7 +39,6 @@ export class Parser<T = string> {
     ) {}
 
     reset() {
-        resetErrorState();
         MEMO.clear();
         LEFT_RECURSION_COUNTS.clear();
     }
@@ -50,18 +49,23 @@ export class Parser<T = string> {
         const state = new ParserState(val) as ParserState<T>;
         this.parser(state);
 
-        const lastState = getLastState();
-        if (state.isError && lastState) {
-            // Build error display from the furthest offset reached
-            const lastFurthestOffset = getLastFurthestOffset();
-            const errorState = new ParserState(val, undefined, lastFurthestOffset, true);
+        if (state.isError) {
+            // Build the error display at the furthest offset the parse reached.
+            // The furthest-offset / expected-set / diagnostics now live on the
+            // state instance, so the display is rendered directly from it: copy
+            // the error tracking onto a view positioned at `furthest`.
+            const furthest = state.furthest >= 0 ? state.furthest : state.offset;
+            const errorState = new ParserState(val, undefined, furthest, true);
+            errorState.expected = state.expected;
+            errorState.suggestions = state.suggestions;
+            errorState.secondarySpans = state.secondarySpans;
+            errorState.furthest = furthest;
             this.state = errorState as ParserState<T>;
-            console.error(this.state.toString());
+            if (isDiagnosticsEnabled()) {
+                console.error(this.state.toString());
+            }
         } else {
             this.state = state;
-            if (state.isError) {
-                console.error(state.toString());
-            }
         }
 
         return state;
@@ -480,7 +484,7 @@ export class Parser<T = string> {
             state.unsafeCallRaw(end as Parser<unknown>);
             if (state.isError) {
                 mergeErrorState(state as ParserState<unknown>);
-                reportUnclosedDelimiter(state.src.slice(savedOffset, openEnd), savedOffset);
+                reportUnclosedDelimiter(state as ParserState<unknown>, state.src.slice(savedOffset, openEnd), savedOffset);
                 state.offset = savedOffset;
                 state.isError = true;
                 return state;
@@ -530,12 +534,10 @@ export class Parser<T = string> {
         if (this.flags & FLAG_EOF) {
             if (state.offset < state.src.length) {
                 mergeErrorState(state as ParserState<unknown>, "<end of input>");
-                if (isDiagnosticsEnabled()) {
-                    addSuggestion({
-                        kind: "trailing-content",
-                        message: "unexpected trailing content after parsed value",
-                    });
-                }
+                addSuggestion(state as ParserState<unknown>, {
+                    kind: "trailing-content",
+                    message: "unexpected trailing content after parsed value",
+                });
                 state.offset = savedOffset;
                 state.isError = true;
             }
@@ -729,7 +731,7 @@ export class Parser<T = string> {
             // Snapshot current error state into a diagnostic, then try
             // to sync forward. If sync fails, pop the diagnostic back
             // off — the error propagates normally (e.g. at EOF).
-            collectDiagnostic(state.src, checkpoint);
+            collectDiagnostic(state as ParserState<unknown>, checkpoint);
 
             state.isError = false;
             state.offset = checkpoint;

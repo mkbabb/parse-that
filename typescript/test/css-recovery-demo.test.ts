@@ -13,7 +13,6 @@ import {
     getCollectedDiagnostics,
 } from "../src/parse/index.js";
 import { formatDiagnostic, formatAllDiagnostics } from "../src/parse/debug.js";
-import { resetErrorState } from "../src/parse/utils.js";
 
 /** Strip ANSI escape codes for snapshot comparison. */
 function stripAnsi(s: string): string {
@@ -99,7 +98,6 @@ const stylesheet = ignorable.many().next(
 describe("CSS Error Recovery Demo", () => {
     beforeEach(() => {
         enableDiagnostics();
-        resetErrorState();
         clearCollectedDiagnostics();
     });
 

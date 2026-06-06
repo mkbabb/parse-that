@@ -3,7 +3,7 @@ import { getLazyParser } from "./lazy.js";
 import { Parser } from "./parser.js";
 import type { ParserFunction } from "./parser.js";
 import { bold, dim, italic, red, green, yellow, cyan, gray, bgRed, bgGreen } from "./ansi.js";
-import { isDiagnosticsEnabled, getLastExpected, getLastSuggestions, getLastSecondarySpans } from "./utils.js";
+import { isDiagnosticsEnabled } from "./utils.js";
 import type { Suggestion, SecondarySpan, Diagnostic } from "./utils.js";
 
 const MAX_LINES = 4;
@@ -169,19 +169,20 @@ export function statePrint(
 
     let output = `${header}\n${body}`;
 
-    // Diagnostic extras (only when diagnostics enabled)
+    // Diagnostic extras (only when diagnostics enabled) — read from the
+    // state's per-parse error tracking, not module globals.
     if (isError && isDiagnosticsEnabled()) {
-        const expected = getLastExpected();
+        const expected = state.expected ?? [];
         if (expected.length > 0) {
             output += `\n   ${cyan(formatExpected(expected))}`;
         }
 
-        const secondarySpans = getLastSecondarySpans();
+        const secondarySpans = state.secondarySpans;
         if (secondarySpans.length > 0) {
             output += `\n${formatSecondarySpans(state.src, secondarySpans)}`;
         }
 
-        const suggestions = getLastSuggestions();
+        const suggestions = state.suggestions;
         if (suggestions.length > 0) {
             output += `\n${formatSuggestions(suggestions)}`;
         }

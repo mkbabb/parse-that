@@ -16,12 +16,6 @@ import {
     addCursor,
     summarizeLine,
 } from "../src/parse/debug.js";
-import {
-    resetErrorState,
-    getLastExpected,
-    getLastSuggestions,
-    getLastSecondarySpans,
-} from "../src/parse/utils.js";
 
 /** Strip ANSI escape codes for snapshot comparison. */
 function stripAnsi(s: string): string {
@@ -189,7 +183,6 @@ const keyframesRule = string("@keyframes")
 describe("CSS Diagnostics", () => {
     beforeEach(() => {
         enableDiagnostics();
-        resetErrorState();
     });
 
     afterEach(() => {
@@ -199,7 +192,6 @@ describe("CSS Diagnostics", () => {
     // ── Sanity: parsers work on valid input ───────────────────────────
     describe("Parser sanity checks", () => {
         it("should parse hex colors", () => {
-            resetErrorState();
             const state = new ParserState("#ff00aa");
             cssColor.parser(state);
             expect(state.isError).toBe(false);
@@ -207,21 +199,18 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should parse rgb colors", () => {
-            resetErrorState();
             const state = new ParserState("rgb(255,0,128)");
             cssColor.parser(state);
             expect(state.isError).toBe(false);
         });
 
         it("should parse named colors", () => {
-            resetErrorState();
             const state = new ParserState("red");
             cssColor.parser(state);
             expect(state.isError).toBe(false);
         });
 
         it("should parse class selectors", () => {
-            resetErrorState();
             const state = new ParserState(".container");
             simpleSelector.parser(state);
             expect(state.isError).toBe(false);
@@ -229,7 +218,6 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should parse a full CSS rule", () => {
-            resetErrorState();
             const state = new ParserState(".foo { color: red; }");
             cssRule.parser(state);
             expect(state.isError).toBe(false);
@@ -239,12 +227,11 @@ describe("CSS Diagnostics", () => {
     // ── Color parser errors ──────────────────────────────────────────
     describe("Color parser errors", () => {
         it("should report dispatch alternatives on invalid first char", () => {
-            resetErrorState();
             const state = new ParserState("xyz");
             cssColor.parser(state);
 
             expect(state.isError).toBe(true);
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             // dispatch uses fallback → namedColor = any(string("red"), ...).
             // "xyz" starts with 'x' which doesn't match '#', 'r', or 'h' in
             // the dispatch table, so the fallback fires. The fallback is
@@ -254,12 +241,11 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should accumulate all named color alternatives at same offset", () => {
-            resetErrorState();
             const state = new ParserState("xyz");
             namedColor.parser(state);
 
             expect(state.isError).toBe(true);
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             // All 6 named colors fail at offset 0 → all are listed
             expect(expected).toContain('"red"');
             expect(expected).toContain('"green"');
@@ -271,11 +257,10 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should format named color alternatives with Oxford comma", () => {
-            resetErrorState();
             const state = new ParserState("xyz");
             namedColor.parser(state);
 
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             const formatted = formatExpected(expected);
             // 6 items → Oxford comma: "expected ..., ..., ..., or ..."
             expect(formatted).toContain(", or ");
@@ -283,23 +268,21 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should report error at missing closing paren in rgb", () => {
-            resetErrorState();
             const state = new ParserState("rgb(255,0,128");
             cssColor.parser(state);
 
             expect(state.isError).toBe(true);
-            const suggestions = getLastSuggestions();
+            const suggestions = state.suggestions;
             expect(suggestions.length).toBeGreaterThan(0);
             expect(suggestions.some((s) => s.kind === "unclosed-delimiter")).toBe(true);
             expect(suggestions.some((s) => s.message.includes(")"))).toBe(true);
         });
 
         it("should emit secondary span pointing to rgb open paren", () => {
-            resetErrorState();
             const state = new ParserState("rgb(255,0,128");
             cssColor.parser(state);
 
-            const spans = getLastSecondarySpans();
+            const spans = state.secondarySpans;
             expect(spans.length).toBeGreaterThan(0);
             expect(spans.some((s) => s.label.includes("opened here"))).toBe(true);
             // The "(" is at offset 3
@@ -307,26 +290,24 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should report hex color with invalid digits", () => {
-            resetErrorState();
             const state = new ParserState("#xyz");
             hexColor.parser(state);
 
             expect(state.isError).toBe(true);
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             // After "#" matches, the hexDigits regex fails. The expected
             // label should reference the hex digits pattern.
             expect(expected.length).toBeGreaterThan(0);
         });
 
         it("should report error at the third rgb argument", () => {
-            resetErrorState();
             const state = new ParserState("rgb(255,0,)");
             cssColor.parser(state);
 
             expect(state.isError).toBe(true);
             // Error should be deep in the parse — the expected should
             // mention what was expected for the third arg, not "rgb" at start
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected.length).toBeGreaterThan(0);
         });
     });
@@ -334,12 +315,11 @@ describe("CSS Diagnostics", () => {
     // ── Selector parser errors ───────────────────────────────────────
     describe("Selector parser errors", () => {
         it("should accumulate all simple selector alternatives", () => {
-            resetErrorState();
             const state = new ParserState("123");
             simpleSelector.parser(state);
 
             expect(state.isError).toBe(true);
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             // simpleSelector = any(classSelector, idSelector, attrSelector,
             //                      pseudoSelector, typeSelector)
             // classSelector starts with string(".") → label '"."'
@@ -356,18 +336,16 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should format 5 selector alternatives with Oxford comma", () => {
-            resetErrorState();
             const state = new ParserState("123");
             simpleSelector.parser(state);
 
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             const formatted = formatExpected(expected);
             expect(formatted).toContain(", or ");
             expect(formatted).toMatch(/^expected /);
         });
 
         it("should report unclosed attribute selector bracket", () => {
-            resetErrorState();
             // "[attr=val" is missing the closing "]"
             // attrSelector = string("[").next(ident).then(...).skip(string("]"))
             // But attrSelector is built as a chained skip, not wrap, so no
@@ -377,7 +355,7 @@ describe("CSS Diagnostics", () => {
             attrSelector.parser(state);
 
             expect(state.isError).toBe(true);
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             // The parser reached past "[attr=val" successfully for the
             // next/then parts, but then "]" fails at offset 9. Expected
             // should mention '"]"'.
@@ -385,7 +363,6 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should report error after combinator expecting selector", () => {
-            resetErrorState();
             // ".foo > " then no valid selector follows
             const state = new ParserState(".foo > 123");
             compoundSelector.parser(state);
@@ -400,7 +377,6 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should report error in selector list with bad separator", () => {
-            resetErrorState();
             const state = new ParserState(".foo; .bar");
             selectorList.parser(state);
 
@@ -415,54 +391,49 @@ describe("CSS Diagnostics", () => {
     // ── Declaration & Rule errors ────────────────────────────────────
     describe("Declaration & Rule errors", () => {
         it("should report error for missing value after colon", () => {
-            resetErrorState();
             const state = new ParserState("color: ;");
             declaration.parser(state);
 
             expect(state.isError).toBe(true);
             // "color" matches ident, ":" matches, then ";" is not a valid
             // cssValue. The error offset should be past the colon+whitespace.
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected.length).toBeGreaterThan(0);
         });
 
         it("should report error for missing semicolon after value", () => {
-            resetErrorState();
             const state = new ParserState("color: red}");
             declaration.parser(state);
 
             expect(state.isError).toBe(true);
             // "color" matches, ":" matches, "red" matches as cssIdent, then
             // "}" is not ";" → error. Expected should mention '";"'.
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected).toContain('";"');
         });
 
         it("should report unclosed brace in declaration block", () => {
-            resetErrorState();
             const state = new ParserState("{ color: red; ");
             declarationBlock.parser(state);
 
             expect(state.isError).toBe(true);
-            const suggestions = getLastSuggestions();
+            const suggestions = state.suggestions;
             expect(suggestions.length).toBeGreaterThan(0);
             expect(suggestions.some((s) => s.kind === "unclosed-delimiter")).toBe(true);
             expect(suggestions.some((s) => s.message.includes("}"))).toBe(true);
         });
 
         it("should emit secondary span pointing to opening brace", () => {
-            resetErrorState();
             const state = new ParserState("{ color: red; ");
             declarationBlock.parser(state);
 
-            const spans = getLastSecondarySpans();
+            const spans = state.secondarySpans;
             expect(spans.length).toBeGreaterThan(0);
             expect(spans.some((s) => s.label.includes("opened here"))).toBe(true);
             expect(spans.some((s) => s.offset === 0)).toBe(true);
         });
 
         it("should report error for completely invalid declaration", () => {
-            resetErrorState();
             const state = new ParserState("{ 123: red; }");
             declarationBlock.parser(state);
 
@@ -474,13 +445,12 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should report error in full rule with bad property value", () => {
-            resetErrorState();
             const state = new ParserState(".btn { font-size: ; }");
             cssRule.parser(state);
 
             expect(state.isError).toBe(true);
             // Error should be deep — at the empty value position after ":"
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected.length).toBeGreaterThan(0);
         });
     });
@@ -488,7 +458,6 @@ describe("CSS Diagnostics", () => {
     // ── Keyframes errors ─────────────────────────────────────────────
     describe("Keyframes errors", () => {
         it("should parse valid keyframes", () => {
-            resetErrorState();
             const input = "@keyframes fade { from { opacity: 1; } to { opacity: 0; } }";
             const state = new ParserState(input);
             keyframesRule.parser(state);
@@ -496,30 +465,27 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should report unclosed outer brace in keyframes", () => {
-            resetErrorState();
             const input = "@keyframes fade { from { opacity: 1; }";
             const state = new ParserState(input);
             keyframesRule.parser(state);
 
             expect(state.isError).toBe(true);
-            const suggestions = getLastSuggestions();
+            const suggestions = state.suggestions;
             expect(suggestions.some((s) => s.kind === "unclosed-delimiter")).toBe(true);
         });
 
         it("should report unclosed inner brace in keyframe block", () => {
-            resetErrorState();
             const input = "@keyframes fade { from { opacity: 1; }";
             const state = new ParserState(input);
             keyframesRule.parser(state);
 
             expect(state.isError).toBe(true);
             // The outer "}" is missing, which produces an unclosed-delimiter
-            const suggestions = getLastSuggestions();
+            const suggestions = state.suggestions;
             expect(suggestions.length).toBeGreaterThan(0);
         });
 
         it("should report error for invalid keyframe stop", () => {
-            resetErrorState();
             // "xyz" is not "from", "to", or a percentage
             const input = "@keyframes fade { xyz { opacity: 0; } }";
             const state = new ParserState(input);
@@ -529,7 +495,6 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should report error for missing @keyframes name", () => {
-            resetErrorState();
             const input = "@keyframes { from { opacity: 1; } }";
             const state = new ParserState(input);
             keyframesRule.parser(state);
@@ -542,7 +507,6 @@ describe("CSS Diagnostics", () => {
     // ── Multiline diagnostics ────────────────────────────────────────
     describe("Multiline diagnostics", () => {
         it("should show correct line in multi-line CSS with error on line 3", () => {
-            resetErrorState();
             const input = `.container {
   color: red;
   font-size: ;
@@ -556,12 +520,11 @@ describe("CSS Diagnostics", () => {
             // Create error state at the furthest offset for display
             // font-size: ; → error at ";" (offset of ";" on line 3)
             // Line 3 is "  font-size: ;" — the error is at the ";"
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected.length).toBeGreaterThan(0);
         });
 
         it("should produce statePrint with correct line numbers", () => {
-            resetErrorState();
             const input = `body {
   color: red;
   background: ;
@@ -626,7 +589,6 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should produce truncated output in statePrint for long CSS", () => {
-            resetErrorState();
             const longProp = "background: " + "x".repeat(200) + ";";
             const input = `.foo { ${longProp} }`;
             const state = new ParserState(input, undefined, 15, true);
@@ -640,18 +602,16 @@ describe("CSS Diagnostics", () => {
     // ── EOF / trailing content ───────────────────────────────────────
     describe("EOF and trailing content", () => {
         it("should report end of input expected with .eof()", () => {
-            resetErrorState();
             const colorEof = cssColor.skip(eof());
             const state = new ParserState("red GARBAGE");
             colorEof.parser(state);
 
             expect(state.isError).toBe(true);
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected).toContain("<end of input>");
         });
 
         it("should report trailing content with FLAG_EOF via call()", () => {
-            resetErrorState();
             const colorParser = namedColor;
             // Manually set FLAG_EOF (value is 2)
             const wrappedParser = new Parser((state: ParserState<string>) => {
@@ -663,16 +623,15 @@ describe("CSS Diagnostics", () => {
             wrappedParser.call(state);
 
             expect(state.isError).toBe(true);
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected).toContain("<end of input>");
 
-            const suggestions = getLastSuggestions();
+            const suggestions = state.suggestions;
             expect(suggestions.some((s) => s.kind === "trailing-content")).toBe(true);
             expect(suggestions.some((s) => s.message.includes("trailing"))).toBe(true);
         });
 
         it("should not error when eof matches correctly", () => {
-            resetErrorState();
             const colorEof = cssColor.skip(eof());
             const state = new ParserState("blue");
             colorEof.parser(state);
@@ -684,14 +643,13 @@ describe("CSS Diagnostics", () => {
     // ── Furthest offset tracking ─────────────────────────────────────
     describe("Furthest offset tracking", () => {
         it("should track error at furthest offset, not start", () => {
-            resetErrorState();
             // "rgb(255,0,)" — the error is at ")" after the second comma,
             // not at the start "r".
             const state = new ParserState("rgb(255,0,)");
             rgbColor.parser(state);
 
             expect(state.isError).toBe(true);
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             // The furthest offset should be at 10 (the ")"), and the
             // expected should be about what was expected there (a number
             // for the 3rd argument).
@@ -701,19 +659,17 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should report error deep inside declaration value", () => {
-            resetErrorState();
             const state = new ParserState("color: ;");
             declaration.parser(state);
 
             expect(state.isError).toBe(true);
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             // Error should be after ": " — the property and colon matched
             // fine. Expected should list value alternatives, not ":" or ident.
             expect(expected.length).toBeGreaterThan(0);
         });
 
         it("should clear earlier labels when advancing past them", () => {
-            resetErrorState();
             // "red;" → namedColor matches "red", then expect ";" to follow
             // but actually let's make the test more precise:
             // Parse "az" against any(string("ab"), string("ac"))
@@ -725,13 +681,12 @@ describe("CSS Diagnostics", () => {
             const state = new ParserState("az");
             p.parser(state);
 
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected).toContain('"ab"');
             expect(expected).toContain('"ac"');
         });
 
         it("should only show labels from furthest offset", () => {
-            resetErrorState();
             // string("abc").skip(string("def"))
             // on input "abcxyz":
             // - "abc" succeeds at offset 0→3
@@ -741,7 +696,7 @@ describe("CSS Diagnostics", () => {
             const state = new ParserState("abcxyz");
             p.parser(state);
 
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected).toContain('"def"');
             expect(expected).not.toContain('"abc"');
         });
@@ -751,35 +706,31 @@ describe("CSS Diagnostics", () => {
     describe("Edge cases", () => {
         it("should not leak labels across separate parses", () => {
             // First parse succeeds
-            resetErrorState();
             const state1 = new ParserState("red");
             namedColor.parser(state1);
             expect(state1.isError).toBe(false);
 
             // Second parse fails
-            resetErrorState();
             const state2 = new ParserState("xyz");
             namedColor.parser(state2);
             expect(state2.isError).toBe(true);
 
-            const expected = getLastExpected();
-            // Should only have labels from the second parse
+            const expected = (state2.expected ?? []);
+            // Per-parse error state: state2 holds only the second parse's labels
             expect(expected.length).toBe(6); // all 6 named colors
             expect(expected).toContain('"red"');
         });
 
         it("should handle empty input gracefully", () => {
-            resetErrorState();
             const state = new ParserState("");
             cssColor.parser(state);
 
             expect(state.isError).toBe(true);
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected.length).toBeGreaterThan(0);
         });
 
         it("should handle dispatch with no matching char and no fallback", () => {
-            resetErrorState();
             const noFallback = dispatch({
                 a: string("abc"),
                 b: string("bcd"),
@@ -788,7 +739,7 @@ describe("CSS Diagnostics", () => {
             noFallback.parser(state);
 
             expect(state.isError).toBe(true);
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected.length).toBe(1);
             expect(expected[0]).toContain("one of");
             expect(expected[0]).toContain("'a'");
@@ -796,7 +747,6 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should handle dispatch with range syntax in label", () => {
-            resetErrorState();
             const numDispatch = dispatch({
                 "0-9": cssNumber,
             });
@@ -804,7 +754,7 @@ describe("CSS Diagnostics", () => {
             numDispatch.parser(state);
 
             expect(state.isError).toBe(true);
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected.length).toBe(1);
             expect(expected[0]).toContain("'0'-'9'");
         });
@@ -825,7 +775,6 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should handle nested wraps — inner unclosed reported", () => {
-            resetErrorState();
             // Inner wrap missing close: "([hello)" — the "(" opens,
             // then "[hello" is parsed but inner "]" is missing
             const inner = string("hello").wrap(string("["), string("]"));
@@ -834,19 +783,18 @@ describe("CSS Diagnostics", () => {
             outer.parser(state);
 
             expect(state.isError).toBe(true);
-            const suggestions = getLastSuggestions();
+            const suggestions = state.suggestions;
             // Should have unclosed-delimiter for the "[" bracket
             expect(suggestions.some((s) => s.kind === "unclosed-delimiter")).toBe(true);
         });
 
         it("should report correct open offset in secondary span for nested wrap", () => {
-            resetErrorState();
             const inner = string("hello").wrap(string("["), string("]"));
             const outer = inner.wrap(string("("), string(")"));
             const state = new ParserState("([hello)");
             outer.parser(state);
 
-            const spans = getLastSecondarySpans();
+            const spans = state.secondarySpans;
             expect(spans.length).toBeGreaterThan(0);
             // The "[" is at offset 1
             expect(spans.some((s) => s.offset === 1)).toBe(true);
@@ -856,7 +804,6 @@ describe("CSS Diagnostics", () => {
     // ── Complex nested errors ────────────────────────────────────────
     describe("Complex nested errors", () => {
         it("should report error in keyframes with malformed declaration", () => {
-            resetErrorState();
             const input = "@keyframes spin { from { : red; } }";
             const state = new ParserState(input);
             keyframesRule.parser(state);
@@ -865,19 +812,17 @@ describe("CSS Diagnostics", () => {
         });
 
         it("should report error in multi-selector rule", () => {
-            resetErrorState();
             // Multiple declarations — error in second one
             const input = ".foo { color: red; font: ; }";
             const state = new ParserState(input);
             cssRule.parser(state);
 
             expect(state.isError).toBe(true);
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected.length).toBeGreaterThan(0);
         });
 
         it("should track furthest offset through deeply nested structure", () => {
-            resetErrorState();
             const input = "@keyframes fade { from { opacity: 1; } to { opacity: ; } }";
             const state = new ParserState(input);
             keyframesRule.parser(state);
@@ -885,12 +830,11 @@ describe("CSS Diagnostics", () => {
             expect(state.isError).toBe(true);
             // The error is at the ";" after "opacity: " in the "to" block
             // Expected should mention value alternatives
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected.length).toBeGreaterThan(0);
         });
 
         it("should handle multiple wrap failures producing multiple suggestions", () => {
-            resetErrorState();
             // Try to parse "(hello" with wrap — missing ")"
             // Then try "[world" with another wrap — missing "]"
             // When using any(), only the furthest offset matters
@@ -905,13 +849,12 @@ describe("CSS Diagnostics", () => {
             // p1 gets further (matches "(hello" then fails at close)
             // p2 fails at start (no "[")
             // So the suggestions should be from p1 (furthest)
-            const suggestions = getLastSuggestions();
+            const suggestions = state.suggestions;
             expect(suggestions.some((s) => s.kind === "unclosed-delimiter")).toBe(true);
             expect(suggestions.some((s) => s.message.includes(")"))).toBe(true);
         });
 
         it("should preserve correct error state after backtracking", () => {
-            resetErrorState();
             // any(rgb_that_fails_late, named_that_fails_early)
             // rgb gets further → its labels should win
             const p = any(rgbColor, namedColor);
@@ -919,7 +862,7 @@ describe("CSS Diagnostics", () => {
             p.parser(state);
 
             expect(state.isError).toBe(true);
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             // rgbColor got to offset 10 before failing
             // namedColor fails at offset 0
             // Expected should be from offset 10 (rgb's deeper failure)
@@ -933,49 +876,41 @@ describe("CSS Diagnostics", () => {
     // ── statePrint integration ───────────────────────────────────────
     describe("statePrint integration", () => {
         it("should include expected in error output", () => {
-            resetErrorState();
             const state = new ParserState("xyz");
             namedColor.parser(state);
 
-            const errorState = new ParserState("xyz", undefined, 0, true);
-            const output = stripAnsi(statePrint(errorState));
+            // statePrint renders the diagnostics threaded onto the state.
+            const output = stripAnsi(statePrint(state));
             expect(output).toContain("Err");
 
-            // With diagnostics enabled, statePrint reads global expected
-            const expected = getLastExpected();
+            const expected = (state.expected ?? []);
             expect(expected.length).toBeGreaterThan(0);
             const formatted = formatExpected(expected);
             // statePrint output should include the formatted expected message
-            expect(stripAnsi(statePrint(errorState))).toContain(
-                stripAnsi(formatted),
-            );
+            expect(output).toContain(stripAnsi(formatted));
         });
 
         it("should include suggestions in error output for unclosed delimiter", () => {
-            resetErrorState();
             const p = string("hello").wrap(string("("), string(")"));
             const state = new ParserState("(hello");
             p.parser(state);
 
-            const errorState = new ParserState("(hello", undefined, 6, true);
-            const output = stripAnsi(statePrint(errorState));
+            const output = stripAnsi(statePrint(state));
 
             // statePrint should include the suggestion text
-            const suggestions = getLastSuggestions();
+            const suggestions = state.suggestions;
             expect(suggestions.length).toBeGreaterThan(0);
             expect(output).toContain("close the delimiter");
         });
 
         it("should include secondary spans in error output", () => {
-            resetErrorState();
             const p = string("hello").wrap(string("{"), string("}"));
             const state = new ParserState("{hello");
             p.parser(state);
 
-            const errorState = new ParserState("{hello", undefined, 6, true);
-            const output = stripAnsi(statePrint(errorState));
+            const output = stripAnsi(statePrint(state));
 
-            const spans = getLastSecondarySpans();
+            const spans = state.secondarySpans;
             expect(spans.length).toBeGreaterThan(0);
             expect(output).toContain("opened here");
         });
