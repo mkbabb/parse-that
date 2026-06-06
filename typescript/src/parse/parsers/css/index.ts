@@ -33,6 +33,11 @@ export type {
 
 export { specificity } from "./specificity.js";
 
+// Single-value reader: the first-char-dispatch single-pass CSS value reader.
+// Exposed for consumers (e.g. value.js) that adopt the SOTA reader directly
+// instead of re-implementing it (the §1.5 additive expose).
+export { parseSingleValue, parseFunctionArgs } from "./value.js";
+
 // ── Stylesheet entry point ──────────────────────────────────
 
 export const cssParser = new Parser<CssNode[]>((state) => {

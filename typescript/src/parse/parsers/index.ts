@@ -1,6 +1,6 @@
 export { jsonParser } from "./json.js";
 export type { JsonValue } from "./json.js";
-export { cssParser, specificity } from "./css/index.js";
+export { cssParser, specificity, parseSingleValue, parseFunctionArgs } from "./css/index.js";
 export type {
     CssNode,
     CssValue,
