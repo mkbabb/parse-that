@@ -1,6 +1,7 @@
 # A — PROGRESS
 
-Opened: 2026-06-18. Status: **DEVELOPMENT** (charter authored; waves pending ratification).
+Opened: 2026-06-18. **CLOSED + PUBLISHED 2026-06-19 → `@mkbabb/parse-that@0.11.0` live on npm.**
+Branch `tranche-a` (pushed to origin). All gates GREEN; 108 tests pass; tsc 0.
 
 ---
 
@@ -8,14 +9,41 @@ Opened: 2026-06-18. Status: **DEVELOPMENT** (charter authored; waves pending rat
 
 | Wave | Title | Status | Gate | Notes |
 |---|---|---|---|---|
-| **A.W0** | Manifest hygiene | `PENDING` | `manifest-gate.mjs` — born-RED (typesVersions stale path confirmed live: `dist/src/parse/` does not exist) | Lowest-risk; ships first as 0.9.1 |
-| **A.W1** | CSS-parser removal | `PENDING` | `proof:no-css-surface` — born-RED (all 16 CSS symbols confirmed in `dist/index.d.ts` today) | Contracting change → 0.10.0; harvest scanners first |
-| **A.W2** | Packrat `(id,offset)` FIX | `PENDING` | `memoize.test.ts` "id-only memo mis-restores" — born-RED (defective assertion currently PASSES; the fix makes it RED until SOUND assertion flips) | Surgical: 4 MEMO call sites in `packrat.ts` |
-| **A.W3** | Subpath split + SpanParser | `PENDING` | Gate 1: subpath-gate.mjs (born-RED: `./core` subpath absent); Gate 2: span-dispatch.bench.ts (born-RED: SpanParser type absent) | Depends on A.W1 (clean parsers/); A.W2 can parallelize |
+| **A.W0** | Manifest hygiene | ✅ `DONE` (0.9.1) | `proof:manifest` GREEN | typesVersions purged, sideEffects:false |
+| **A.W1** | CSS-parser removal | ✅ `DONE` (0.10.0) | `proof:no-css-surface` GREEN | 8 src + 6 test files deleted (incl. expose.test.ts, a 6th CSS-surface test the charter missed); scanners harvested; bundle 75.3→51.0 kB (−32%). **Gate CORRECTED**: the charter grepped `index.d.ts` (only `export *` lines — UNSOUND); the real gate observes the runtime export surface of the bundled `dist/parse.js` |
+| **A.W2** | Packrat `(id,offset)` FIX | ✅ `DONE` (folded into 0.11.0) | `memoize.test.ts` SOUND flip GREEN + 4 LR tests | **Charter premise FALSIFIED**: the "surgical key-swap" breaks left-recursion (the id-only MEMO is the load-bearing recursion-breaker). The CORRECT fix landed: the full Warth-Douglass-Millstein packrat-with-LR (position-keyed seed-grow + in-progress marker + a general multi-occurrence ε rule). Stress-tested + adversarially re-verified |
+| **A.W3** | Subpath split + SpanParser | ✅ `DONE` (0.11.0) | Gate 1 `proof:subpath` GREEN; Gate 2 **FALSIFIED** | Subpath split (./core ./diagnostics ./packrat ./utils) ships. SpanParser tagged-union measured **~10–14% SLOWER** on V8/TS (the §7 jump-table hypothesis does not transfer from Rust) → RETIRED from the public surface, kept module-internal as the codegen data foundation. future-research.md §7 re-scoped |
 
 ---
 
 ## Events
+
+### 2026-06-19 — Tranche A IMPLEMENTED, CLOSED, PUBLISHED (0.11.0)
+
+Implemented via team-lead orchestration (surgical waves direct; A.W2/A.W3 via a
+3-agent + adversarial-verify workflow in isolated worktrees). Three findings shaped
+the close, each a vindication of the campaign's observable-truth discipline:
+
+1. **A.W1 gate was unsound as charted.** The `proof:no-css-surface` gate grepped
+   `dist/index.d.ts` for CSS symbols — but the barrel re-exports via `export *`, so
+   the symbols live in `dist/parsers/css/*.d.ts`, never inlined in `index.d.ts`. The
+   gate would have passed GREEN with the CSS parser still shipping. CORRECTED to
+   observe the bundled runtime export surface of `dist/parse.js`.
+
+2. **A.W2's "surgical fix" (D4) was algorithmically unsound.** Swapping `MEMO.get(p.id)`
+   → `MEMO.get(getCijKey(...))` makes the soundness test pass but BREAKS left-recursion
+   (2 LR tests collapse): the id-only seed is the load-bearing recursion-breaker, and
+   `.trim()` shifts the re-entry offset so position-keying misses it. The correct fix
+   is the full WDM packrat-with-LR — which the original author had correctly flagged as
+   "a from-scratch reimplementation." It landed, stress-tested (200 iters, n≤24) and
+   adversarially re-verified with fresh probes.
+
+3. **A.W3's SpanParser perf hypothesis (D7/§7) was FALSIFIED.** The tagged-union is
+   ~10–14% SLOWER than closures on V8/TS (the opposite of the Rust regime). The agent
+   reported the missed target honestly rather than fabricating. Retired from the public
+   API; kept internal as the BBNF-codegen data foundation. future-research.md §7 re-scoped.
+
+Final: 0.9.1 (W0) → 0.10.0 (W1) → 0.11.0 (W2+W3 folded). Published to npm, branch pushed.
 
 ### 2026-06-18 — Charter authored
 
@@ -86,8 +114,8 @@ in `span.ts`; the bench import would fail at module resolution.
 
 | Invariant | Status |
 |---|---|
-| inv-A-1 — zero CSS surface | RED (16 CSS symbols in dist today) |
-| inv-A-2 — packrat sound | RED (defective MEMO keying confirmed) |
-| inv-A-3 — manifest resolves | RED (typesVersions stale path confirmed) |
-| inv-A-4 — json and csv unbroken | GREEN (no CSS deletion yet) |
-| inv-A-5 — value.js edge unbroken | GREEN (value.js imports zero CSS symbols) |
+| inv-A-1 — zero CSS surface | ✅ GREEN (49 runtime exports, zero CSS; gate observes the bundled surface) |
+| inv-A-2 — packrat sound | ✅ GREEN (full WDM (id,offset) seed-grow; 7/7 memoize, stress-verified) |
+| inv-A-3 — manifest resolves | ✅ GREEN (typesVersions purged, sideEffects:false) |
+| inv-A-4 — json and csv unbroken | ✅ GREEN (108 tests pass) |
+| inv-A-5 — value.js edge unbroken | ✅ GREEN (value.js imports core combinators only; re-pins ^0.11.0 at O.W2) |
