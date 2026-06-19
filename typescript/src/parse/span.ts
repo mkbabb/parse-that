@@ -546,21 +546,31 @@ export function lookAheadSpan(inner: Parser<Span>, lookahead: Parser<unknown>): 
     );
 }
 
-// ── SpanParser tagged-union (A.W3) ───────────────────────────
+// ── SpanParser tagged-union (A.W3) — @internal, NOT a public export ──
 //
-// The closure-based span combinators above each allocate a unique closure
-// shape; when a hot loop invokes them through `state.unsafeCall(parser)` the
-// V8 inline cache at that call site goes megamorphic (>4 distinct function
-// targets → generic `CallFunction` dispatch, documented in
-// `perf-optimization-ts.md §5`). The `SpanParser` discriminated union is the
-// `future-research.md §7` cure: a numeric `kind` tag + a single `switch` in
-// `callSpan()` that V8 lowers to a jump table. No closure-per-combinator, one
-// monomorphic call site, the scan body inlined per arm.
+// HYPOTHESIS (future-research.md §7 / campaign D7): the closure-based span
+// combinators each allocate a unique closure shape, so a hot loop invoking them
+// through `state.unsafeCall(parser)` drives the V8 inline cache at that call
+// site megamorphic (>4 distinct targets → generic dispatch). A numeric `kind`
+// tag + a single `switch` in `callSpan()` should let V8 lower dispatch to a jump
+// table — one monomorphic call site, the scan body inlined per arm.
 //
-// This is the Rust `SpanParser`/`SpanKind` enum (rust/parse_that/src/
-// span_parser/mod.rs) ported to a TS tagged union. It is a parallel,
-// allocation-free dispatch lane that composes back into the `Parser<Span>`
-// combinator tier via `spanParserToParser()`.
+// MEASURED + FALSIFIED on V8/TS (A.W3 bench, span-dispatch.bench.ts): the tagged
+// `callSpan` switch-dispatch is ~10–14% SLOWER than the closure `altSpan` lane on
+// a representative 8-arm CSS-value alt-token scan, reproduced across three
+// workloads (tagged lost every time). V8's monomorphic-per-call-site closure
+// dispatch with inlining beats the recursive switch — the OPPOSITE of the Rust
+// `enum`-vs-`Box<dyn>` regime that motivated §7. The Rust port wins there; the
+// premise does not transfer to V8. The §7 "jump-table speedup" claim is RETIRED.
+//
+// RETAINED (NOT deleted, NOT a public API surface): this is the introspectable,
+// allocation-free, *data* representation of a span grammar (one flat structure,
+// no captured closures) — the prerequisite for the deferred BBNF codegen tier
+// (a serializer/codegen cannot walk opaque closures). It is kept module-internal
+// behind the bench as the falsification record and the codegen foundation; it is
+// deliberately NOT re-exported from the package barrel or the ./core subpath
+// (it offers no dispatch-speed win, so publishing it would mislead). The closure
+// span combinators above remain the canonical, faster dispatch path.
 
 /**
  * Discriminated-union tag for {@link SpanParser}. A numeric (const) enum so the

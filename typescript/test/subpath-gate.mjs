@@ -45,8 +45,10 @@ const packrat = await import(packratPath);
 if (typeof core.Parser !== "function") {
     fail("./core did not export `Parser` as a function");
 }
-if (typeof core.callSpan !== "function") {
-    fail("./core did not export the SpanParser dispatch `callSpan`");
+// The closure span combinator (the canonical, faster dispatch — the SpanParser
+// tagged-union is module-internal, not on the public ./core surface; see span.ts).
+if (typeof core.altSpan !== "function") {
+    fail("./core did not export the span combinator `altSpan`");
 }
 if (typeof packrat.memoize !== "function") {
     fail("./packrat did not export `memoize` as a function");
@@ -54,5 +56,5 @@ if (typeof packrat.memoize !== "function") {
 
 console.log(
     `proof:subpath GREEN — ${subpaths.length} subpaths resolve; ` +
-        `./core{Parser,callSpan} + ./packrat{memoize} are live functions.`,
+        `./core{Parser,altSpan} + ./packrat{memoize} are live functions.`,
 );

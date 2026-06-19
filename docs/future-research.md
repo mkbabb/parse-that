@@ -68,18 +68,35 @@ that runs benchmarks on PRs and posts a comparison comment.
 
 ---
 
-## 7. TS SpanParser Equivalent
+## 7. TS SpanParser Equivalent — perf hypothesis FALSIFIED (Tranche A.W3, 2026-06-19)
 
 **Current**: TypeScript has `regexSpan()`, `manySpan()`, `sepBySpan()`, `wrapSpan()`
 as individual functions — no unified enum-dispatched type.
 
-**Approach**: Introduce a `SpanParser` tagged union (discriminated union in TS) that
-mirrors the Rust `SpanParser` enum. Each variant stores its configuration inline.
-`call()` dispatches via a `switch` on the tag — V8 optimizes this to a jump table,
-eliminating closure allocation and virtual dispatch overhead.
+**Approach (hypothesis)**: Introduce a `SpanParser` tagged union (discriminated union
+in TS) mirroring the Rust `SpanParser` enum. Each variant stores config inline;
+`callSpan()` dispatches via a `switch` on a numeric tag — V8 "should" lower this to a
+jump table, escaping the megamorphic IC of >4 distinct closure targets at one call site.
 
-**Expected impact**: ~10–20% improvement for BBNF-generated TS parsers on
-span-eligible rules. Requires changes to the TS BBNF codegen path.
+**Expected impact (claimed)**: ~10–20% improvement on span-eligible rules.
+
+**MEASURED + FALSIFIED on V8/TS (A.W3, `typescript/test/benchmarks/span-dispatch.bench.ts`)**:
+the tagged `callSpan` switch-dispatch is **~10–14% SLOWER** than the closure span lane on a
+representative 8-arm CSS-value alt-token scan, reproduced across three workloads (the tagged
+path lost every time; an independent adversarial re-run measured −14%). V8's
+monomorphic-per-call-site closure dispatch with inlining beats the recursive switch — the
+OPPOSITE of the Rust `enum`-vs-`Box<dyn>` regime that motivated this item. The jump-table
+*speedup* premise does **not** transfer from Rust to V8/TS. The tagged-union was implemented
+(byte-identical behavior, verified) but is kept **module-internal in `span.ts`** — NOT a
+public export, NOT a hot-path dispatch — because it offers no speed win.
+
+**What survives**: the tagged union remains valuable as the *introspectable, allocation-free
+data representation* of a span grammar (a flat structure, no captured closures) — the
+prerequisite for the deferred **BBNF→hand-rolled codegen** tier (#11), which a serializer/
+codegen can walk but cannot extract from opaque closures. Re-scoped: §7 is a **codegen
+foundation**, not a dispatch-speed optimization. Do not re-attempt the perf claim on V8
+without a fundamentally different encoding (e.g. flat array-of-ops + a generated specialized
+dispatcher, not a recursive runtime `switch`).
 
 ---
 
