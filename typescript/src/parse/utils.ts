@@ -146,3 +146,41 @@ export function clearCollectedDiagnostics(): void {
 export function popLastDiagnostic(): Diagnostic | undefined {
     return collectedDiagnostics.pop();
 }
+
+// ── Imperative byte-scanners (harvested from the removed CSS parser, A.W1) ──
+//
+// The monolithic byte-loop technique (D7): a tight charCode/indexOf scan that
+// mutates `state.offset` in place — no closure-per-step, no Parser allocation.
+// These are the primitives a hand-rolled grammar (value.js's canonical CSS
+// grammar) drives its hot paths with, distinct from the `whitespace` Parser
+// combinator. Kept after the CSS grammar itself left for value.js (D2/D3).
+
+/** Skip ASCII whitespace (charCode <= 32) in place. No comment handling. */
+export function skipWhitespace(state: ParserState<unknown>): void {
+    const src = state.src;
+    let i = state.offset;
+    while (i < src.length && src.charCodeAt(i) <= 32) i++;
+    state.offset = i;
+}
+
+/** Skip whitespace and CSS block comments in place (memchr-style closing-token
+ *  scan via indexOf). An unterminated comment stops the scan at its start. */
+export function skipBlockComments(state: ParserState<unknown>): void {
+    const src = state.src;
+    let i = state.offset;
+    while (i < src.length) {
+        const ch = src.charCodeAt(i);
+        if (ch <= 32) {
+            i++;
+            continue;
+        }
+        if (ch === 47 /* / */ && src.charCodeAt(i + 1) === 42 /* * */) {
+            const end = src.indexOf("*/", i + 2);
+            if (end === -1) break;
+            i = end + 2;
+            continue;
+        }
+        break;
+    }
+    state.offset = i;
+}

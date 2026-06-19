@@ -59,4 +59,23 @@ describe("dist surface == source surface (PT-WAVE-3a publish-discipline)", () =>
         const missing = spanFns.filter((fn) => !new RegExp(`\\b${fn}\\b`).test(dist));
         expect(missing, `dist missing span fns: ${missing.join(", ")}`).toEqual([]);
     });
+
+    // A.W1 (inv-A-1) — the CSS surface left for value.js (D2/D3). The source
+    // barrel must no longer name any CSS symbol. (The runtime-surface gate is
+    // proof:no-css-surface; this is the source-side complement.)
+    it("the source barrel names zero CSS symbols", () => {
+        const src = readFileSync(SRC_INDEX, "utf8");
+        const parsersBarrel = readFileSync(
+            resolve(__dirname, "../src/parse/parsers/index.ts"),
+            "utf8",
+        );
+        const CSS_SYMBOLS = [
+            "cssParser", "parseSingleValue", "parseFunctionArgs", "CssNode",
+            "CssColor", "CssSelector", "KeyframeBlock", "MediaQuery", "specificity",
+        ];
+        const leaked = CSS_SYMBOLS.filter(
+            (s) => new RegExp(`\\b${s}\\b`).test(src) || new RegExp(`\\b${s}\\b`).test(parsersBarrel),
+        );
+        expect(leaked, `CSS symbols still named in source: ${leaked.join(", ")}`).toEqual([]);
+    });
 });
