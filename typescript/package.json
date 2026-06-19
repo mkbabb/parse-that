@@ -9,6 +9,26 @@
             "types": "./dist/index.d.ts",
             "import": "./dist/parse.js",
             "require": "./dist/parse.cjs"
+        },
+        "./core": {
+            "types": "./dist/core.d.ts",
+            "import": "./dist/core.js",
+            "require": "./dist/core.cjs"
+        },
+        "./diagnostics": {
+            "types": "./dist/diagnostics.d.ts",
+            "import": "./dist/diagnostics.js",
+            "require": "./dist/diagnostics.cjs"
+        },
+        "./packrat": {
+            "types": "./dist/packrat-entry.d.ts",
+            "import": "./dist/packrat.js",
+            "require": "./dist/packrat.cjs"
+        },
+        "./utils": {
+            "types": "./dist/utils-entry.d.ts",
+            "import": "./dist/utils.js",
+            "require": "./dist/utils.cjs"
         }
     },
     "scripts": {
@@ -16,7 +36,8 @@
         "test:watch": "vitest",
         "build": "vite build",
         "proof:manifest": "node test/manifest-gate.mjs",
-        "proof:no-css-surface": "node scripts/proof-no-css-surface.mjs"
+        "proof:no-css-surface": "node scripts/proof-no-css-surface.mjs",
+        "proof:subpath": "node test/subpath-gate.mjs"
     },
     "files": [
         "./dist"
