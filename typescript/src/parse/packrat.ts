@@ -3,121 +3,304 @@ import type { ParserFunction } from "./parser.js";
 import { createParserContext } from "./state.js";
 import type { ParserState } from "./state.js";
 
-// ── Opt-in packrat memoization + bounded left-recursion ──────
+// ── Opt-in packrat memoization + (id, offset)-keyed left-recursion ───────────
 //
-// This is the count-bounded seed-grow packrat tier. It is OFF the default parse
-// path: non-backtracking LL(1)-ish grammars (CSS values, JSON, CSV) do not need
-// it, and the Rust port — the project's SOTA-performance artifact — omits
-// left-recursion / packrat entirely. The default parse() no longer pays a
-// per-parse MEMO.clear() tax; a left-recursive grammar opts in by wrapping its
-// recursive parser with memoize() / mergeMemos() and resetting the caches per
-// parse via resetPackrat().
+// This is the Warth-Douglass-Millstein packrat-with-left-recursion algorithm
+// ("Packrat Parsers Can Support Left Recursion", PEPM '08), keyed on
+// (id, offset). It is OFF the default parse path: non-backtracking LL(1)-ish
+// grammars (CSS values, JSON, CSV) do not need it, and the Rust port — the
+// project's SOTA-performance artifact — omits left-recursion / packrat entirely.
+// The default parse() pays no per-parse MEMO.clear() tax; a left-recursive
+// grammar opts in by wrapping its recursive parser with memoize() / mergeMemos()
+// and resetting the caches per parse via resetPackrat().
 //
-// KNOWN LIMITATION (recorded, NOT on the default path): the MEMO is keyed on the
-// parser id only, not (id, offset). This is the seed-sharing mechanism the
-// mutual/indirect left-recursion grow relies on — and it is latently unsound for
-// the *non-recursive* same-parser-at-two-offsets case (see memoize.test.ts
-// "id-only memo is unsound across offsets"). The sound replacement is the full
-// Warth-Douglass-Millstein head-recursion algorithm keyed on (id, offset); that
-// is a from-scratch reimplementation with real correctness blast radius on a
-// tier with zero production consumers, BOOKED as a dedicated packrat-soundness
-// tranche rather than bolted on here. Isolating the tier off the default path
-// already removes the unsoundness (and the reset tax) from every non-recursive
-// parse — only an explicit memoize() opt-in is exposed to it.
+// THE (id, offset) SOUNDNESS FIX. The memo table MEMO is keyed strictly on
+// (id, offset) — getCijKey(p, offset). A memoized result for parser P at offset
+// O1 lives at a DIFFERENT key from P at offset O2, so a non-recursive reuse of P
+// at a later/disjoint offset can NEVER mis-restore the earlier result. This
+// closes the id-only hazard, where a P-at-offset-6 result mis-restored for an
+// independent P-at-offset-0 because the key ignored position (see
+// memoize.test.ts "(id, offset)-keyed memo does NOT mis-restore across
+// offsets").
+//
+// LEFT RECURSION. Soundness alone would forbid the seed-sharing a left-recursive
+// grammar needs, so the WDM machinery layers on top of the (id, offset) memo:
+//
+//   * A memo entry may hold either a finished ParserState OR an in-progress `LR`
+//     marker. On re-entry, recall() returns the marker's growing seed and notes
+//     (via the LR stack + head records) which rules are "involved" in the
+//     recursion at that position.
+//   * setupLR / growLR drive the seed-and-grow: the head re-evaluates its body,
+//     and while each pass advances strictly past the recorded seed it re-stores
+//     the longer result and repeats; a non-advancing pass stops the grow. The
+//     involved-set bookkeeping is what lets a head appear MULTIPLE times in its
+//     own body (mSL), recurse through OTHER rules (mutual / indirect LR: mZ→mY→
+//     mZ), and re-enter at a post-.trim() offset (the math grammar) — each
+//     correctly served the seed at the right (id, offset).
+//
+// MULTI-OCCURRENCE HEAD. A head that names itself MORE THAN ONCE in its own body
+// (mSL's `mSL.then(mSL).then(ms)`) needs the SECOND occurrence — reached at a
+// later position still inside the head's growing span — to contribute an empty
+// (ε) match without spawning an independent sub-head that greedily over-consumes
+// the tail. The GROWING table records each head's growing (id, offset) cell
+// during its grow phase; recall() serves such an in-span second occurrence a
+// non-advancing ε so the rest of the body tiles the remaining input.
+//
+// Strictly-monotonic seed advance bounds the grow; the involved-set evalSet
+// bounds re-evaluation within a grow pass. No count cap is needed.
 
-const MEMO = new Map<number, ParserState<unknown>>();
-const LEFT_RECURSION_COUNTS = new Map<number, number>();
-
-// Numeric LR-count key: eliminates string allocation per lookup.
-// Max offset 2^20 (~1M chars) allows parser IDs up to 2^11 = 2048.
 const MEMO_OFFSET_BITS = 20;
 const MEMO_MAX_OFFSET = (1 << MEMO_OFFSET_BITS) - 1;
 
-function getCijKey(parser: Parser<unknown>, state: ParserState<unknown>): number {
-    return (parser.id << MEMO_OFFSET_BITS) | (state.offset & MEMO_MAX_OFFSET);
+function getCijKey(parser: Parser<unknown>, offset: number): number {
+    return (parser.id << MEMO_OFFSET_BITS) | (offset & MEMO_MAX_OFFSET);
 }
 
-function atLeftRecursionLimit(parser: Parser<unknown>, state: ParserState<unknown>): boolean {
-    const cij = LEFT_RECURSION_COUNTS.get(getCijKey(parser, state)) ?? 0;
-    return cij > state.src.length - state.offset;
+/** A finished parse result snapshot at a memo position. */
+interface Answer {
+    offset: number;
+    value: unknown;
+    isError: boolean;
 }
 
-/** Clear the packrat caches. Call once before a top-level parse of a
- *  left-recursive grammar (the default parse() path does NOT do this). */
+/** In-progress left-recursion marker held in a memo cell during evaluation. */
+interface LR {
+    seed: Answer;
+    parser: Parser<unknown>;
+    head: Head | undefined;
+    next: LR | undefined;
+}
+
+/** Head record for the rule heading a left-recursion at a given position. */
+interface Head {
+    parser: Parser<unknown>;
+    involvedSet: Set<number>;
+    evalSet: Set<number>;
+}
+
+/** A memo cell holds either a finished Answer or an in-progress LR marker. */
+interface MemoCell {
+    ans: Answer | LR;
+}
+
+function isLR(x: Answer | LR): x is LR {
+    return (x as LR).parser !== undefined;
+}
+
+const MEMO = new Map<number, MemoCell>();
+const HEADS = new Map<number, Head>();
+let LR_STACK: LR | undefined;
+
+// Heads currently in their grow phase, keyed by parser id → the (id, pos) key of
+// the growing seed. Used to serve a SECOND occurrence of the head that appears
+// inside its own body at a LATER position still within the seed's span (e.g.
+// mSL's `mSL.then(mSL)`): such an occurrence restores the seed non-advancingly
+// rather than spawning an independent, over-consuming head.
+const GROWING = new Map<number, number>();
+
+function snapshot(state: ParserState<unknown>): Answer {
+    return { offset: state.offset, value: state.value, isError: state.isError };
+}
+
+function applyAnswer<T>(state: ParserState<T>, ans: Answer): void {
+    state.offset = ans.offset;
+    state.value = ans.value as T;
+    state.isError = ans.isError;
+}
+
 export function resetPackrat(): void {
     MEMO.clear();
-    LEFT_RECURSION_COUNTS.clear();
+    HEADS.clear();
+    GROWING.clear();
+    LR_STACK = undefined;
 }
 
 /**
- * Packrat memoize with count-bounded left-recursion (seed-and-grow).
+ * Build the memoized wrapper. memoize() and mergeMemos() share the SAME
+ * left-recursion machinery — they differ only in the `name` recorded on the
+ * parser context — so a head and the alternation merged into it cooperate at the
+ * same (id, offset) cells.
  */
-export function memoize<T>(parser: Parser<T>): Parser<T> {
+function makeMemoized<T>(
+    parser: Parser<T>,
+    name: "memoize" | "mergeMemo",
+): Parser<T> {
     const p = parser as Parser<unknown>;
+
+    // EVAL: run the wrapped parser from a clean state at `pos`, return the result.
+    const evalParser = (state: ParserState<T>, pos: number): void => {
+        state.offset = pos;
+        state.isError = false;
+        state.value = undefined as T;
+        parser.parser(state);
+    };
+
+    // recall(): the LR-aware memo lookup. Returns the cell to use, or undefined
+    // to signal "evaluate fresh". `live` supplies the source for scratch
+    // re-evaluation within a grow pass.
+    const recall = (pos: number, live: ParserState<T>): MemoCell | undefined => {
+        const key = getCijKey(p, pos);
+        const cell = MEMO.get(key);
+        const head = HEADS.get(pos);
+
+        // A SECOND occurrence of this head inside its own body, at a later
+        // position still within the growing seed's span: serve the seed
+        // (non-advancing at this offset) so the occurrence contributes the head's
+        // value WITHOUT spawning an independent, over-consuming sub-head. This is
+        // what lets `H.then(H)`-style bodies tile correctly (mSL).
+        if (cell === undefined) {
+            const growKey = GROWING.get(p.id);
+            if (growKey !== undefined) {
+                const growSeed = MEMO.get(growKey)?.ans;
+                if (
+                    growSeed !== undefined &&
+                    !isLR(growSeed) &&
+                    pos > (growKey & MEMO_MAX_OFFSET) &&
+                    pos <= growSeed.offset
+                ) {
+                    // Non-advancing empty (ε) contribution: the occurrence stays
+                    // at `pos` and yields no value, so the rest of the body
+                    // consumes the remaining input rather than re-counting the
+                    // head's already-accumulated value.
+                    return { ans: { offset: pos, value: undefined, isError: false } };
+                }
+            }
+        }
+
+        // No active head at pos → ordinary memoization.
+        if (head === undefined) return cell;
+
+        // Active head, but this parser is neither the head nor involved and has
+        // no cell yet → it must FAIL (it is not allowed to grow at this pos).
+        if (
+            cell === undefined &&
+            head.parser.id !== p.id &&
+            !head.involvedSet.has(p.id)
+        ) {
+            return { ans: { offset: pos, value: undefined, isError: true } };
+        }
+
+        // This parser is in the head's eval set → remove it and re-evaluate so
+        // it can grow within the current grow pass.
+        if (head.evalSet.has(p.id)) {
+            head.evalSet.delete(p.id);
+            const scratch = live.clone();
+            scratch.offset = pos;
+            scratch.isError = false;
+            scratch.value = undefined as T;
+            parser.parser(scratch);
+            const ans = snapshot(scratch as ParserState<unknown>);
+            if (cell !== undefined) cell.ans = ans;
+            else MEMO.set(key, { ans });
+            return MEMO.get(key);
+        }
+        return cell;
+    };
+
+    // setupLR: thread the head record down the LR stack for an active recursion.
+    const setupLR = (lr: LR): void => {
+        if (lr.head === undefined) {
+            lr.head = { parser: p, involvedSet: new Set(), evalSet: new Set() };
+        }
+        const head = lr.head;
+        let s = LR_STACK;
+        while (s !== undefined && s.head !== head) {
+            s.head = head;
+            head.involvedSet.add(s.parser.id);
+            s = s.next;
+        }
+    };
+
+    // growLR: iteratively re-evaluate the head, growing the seed while it
+    // advances. Restores the final seed into `state`.
+    const growLR = (state: ParserState<T>, pos: number, key: number, head: Head): void => {
+        HEADS.set(pos, head);
+        const prevGrowing = GROWING.get(p.id);
+        GROWING.set(p.id, key);
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+            head.evalSet = new Set(head.involvedSet);
+            evalParser(state, pos);
+            const ans = snapshot(state);
+            const seed = (MEMO.get(key)!.ans as Answer);
+            // Stop when the pass errors or fails to advance past the seed.
+            if (ans.isError || ans.offset <= seed.offset) break;
+            MEMO.set(key, { ans });
+        }
+        if (prevGrowing !== undefined) GROWING.set(p.id, prevGrowing);
+        else GROWING.delete(p.id);
+        HEADS.delete(pos);
+        applyAnswer(state, MEMO.get(key)!.ans as Answer);
+    };
+
+    // lrAnswer: resolve a memo cell whose ans became an LR marker.
+    const lrAnswer = (state: ParserState<T>, pos: number, key: number, lr: LR): void => {
+        const head = lr.head!;
+        if (head.parser.id !== p.id) {
+            // This parser is not the head — return the seed as the answer.
+            applyAnswer(state, lr.seed);
+            return;
+        }
+        // This parser IS the head — install the seed and grow it.
+        MEMO.set(key, { ans: lr.seed });
+        if (lr.seed.isError) {
+            applyAnswer(state, lr.seed);
+            return;
+        }
+        growLR(state, pos, key, head);
+    };
+
     const memoizeFn = (state: ParserState<T>) => {
-        const cijKey = getCijKey(p, state as ParserState<unknown>);
-        const cij = LEFT_RECURSION_COUNTS.get(cijKey) ?? 0;
+        const pos = state.offset;
+        const key = getCijKey(p, pos);
 
-        const cached = MEMO.get(p.id) as ParserState<T> | undefined;
+        const m = recall(pos, state);
 
-        if (cached && cached.offset >= state.offset) {
-            state.offset = cached.offset;
-            state.value = cached.value;
-            state.isError = cached.isError;
-            return state;
-        } else if (atLeftRecursionLimit(p, state as ParserState<unknown>)) {
-            state.isError = true;
+        if (m === undefined) {
+            // No memo: set up an LR marker (FAIL seed), evaluate, resolve.
+            const lr: LR = {
+                seed: { offset: pos, value: undefined, isError: true },
+                parser: p,
+                head: undefined,
+                next: LR_STACK,
+            };
+            LR_STACK = lr;
+            MEMO.set(key, { ans: lr });
+
+            evalParser(state, pos);
+
+            LR_STACK = lr.next;
+            const cell = MEMO.get(key)!;
+
+            if (lr.head !== undefined) {
+                // Left recursion was detected involving this position.
+                lr.seed = snapshot(state);
+                lrAnswer(state, pos, key, lr);
+            } else {
+                // No left recursion — store the plain answer.
+                cell.ans = snapshot(state);
+                applyAnswer(state, cell.ans as Answer);
+            }
             return state;
         }
 
-        LEFT_RECURSION_COUNTS.set(cijKey, cij + 1);
-        parser.parser(state);
-
-        const cachedAfter = MEMO.get(p.id) as ParserState<T> | undefined;
-
-        if (cachedAfter && cachedAfter.offset > state.offset) {
-            state.offset = cachedAfter.offset;
-        } else if (!cachedAfter) {
-            // Clone before storing so the cache is immutable.
-            MEMO.set(p.id, state.clone() as ParserState<unknown>);
+        // Memo hit.
+        if (isLR(m.ans)) {
+            setupLR(m.ans);
+            applyAnswer(state, m.ans.seed);
+            return state;
         }
-
+        applyAnswer(state, m.ans);
         return state;
     };
-    return new Parser(
-        memoizeFn as ParserFunction<T>,
-        createParserContext("memoize", p),
-    );
+
+    return new Parser(memoizeFn as ParserFunction<T>, createParserContext(name, p));
 }
 
-/**
- * Companion to memoize() for left-factored alternation.
- */
+export function memoize<T>(parser: Parser<T>): Parser<T> {
+    return makeMemoized(parser, "memoize");
+}
+
 export function mergeMemos<T>(parser: Parser<T>): Parser<T> {
-    const p = parser as Parser<unknown>;
-    const mergeMemoFn = (state: ParserState<T>) => {
-        const cached = MEMO.get(p.id) as ParserState<T> | undefined;
-        if (cached) {
-            state.offset = cached.offset;
-            state.value = cached.value;
-            state.isError = cached.isError;
-            return state;
-        } else if (atLeftRecursionLimit(p, state as ParserState<unknown>)) {
-            state.isError = true;
-            return state;
-        }
-
-        parser.parser(state);
-
-        const cachedAfter = MEMO.get(p.id) as ParserState<T> | undefined;
-        if (!cachedAfter) {
-            MEMO.set(p.id, state.clone() as ParserState<unknown>);
-        }
-        return state;
-    };
-
-    return new Parser(
-        mergeMemoFn as ParserFunction<T>,
-        createParserContext("mergeMemo", p),
-    );
+    return makeMemoized(parser, "mergeMemo");
 }

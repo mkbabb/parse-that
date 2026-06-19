@@ -71,21 +71,22 @@ describe("Memoization & left recursion (opt-in packrat)", () => {
         }
     });
 
-    // ── KNOWN UNSOUND: id-only memo key (PT-WAVE-2 WITHHELD soundness fix) ──
+    // ── SOUND: (id, offset)-keyed memo (A.W2 landed soundness fix) ──
     //
-    // proof-of-defect: the opt-in packrat MEMO is keyed on the parser id only,
-    // not (id, offset). The seed-sharing this enables is what the mutual /
-    // indirect left-recursion grow (the mSL / math tests above) relies on — and
-    // it is latently UNSOUND for the non-recursive same-parser-at-two-offsets
-    // case. The sound replacement is the full Warth-Douglass-Millstein
-    // head-recursion algorithm keyed on (id, offset); a from-scratch
-    // reimplementation with real correctness blast radius on a tier with zero
-    // production consumers, BOOKED as a dedicated packrat-soundness tranche.
+    // The opt-in packrat MEMO is now keyed on (id, offset), not the parser id
+    // alone. A result cached for parser P at one offset can NO LONGER mis-restore
+    // when P is later applied at a distinct offset: distinct offsets are distinct
+    // memo keys, so the cross-offset hazard is eliminated. The seed-and-grow that
+    // the mutual / indirect left-recursion grow relies on is preserved because
+    // re-entry during LR resolution lands at the SAME head offset (the same key),
+    // where it finds the in-progress seed and breaks the recursion — the
+    // Warth-Douglass-Millstein head-recursion algorithm.
     //
-    // This test pins the CURRENT (defective) behaviour so the booked fix has a
-    // falsifiable target: when (id, offset)-keying lands, the mis-restore below
-    // becomes an error (the sound result) and this assertion flips.
-    it("id-only memo mis-restores across offsets (booked: position-keyed Warth)", () => {
+    // This pins the SOUND behaviour: P caches "hello" at offset 6 inside alt1,
+    // alt1's eof fails → backtrack to 0, then alt2 applies P at offset 0 where
+    // [a-z]+ cannot match 'X'. The offset-6 cache lives at a DIFFERENT key, so it
+    // cannot restore at offset 0 — the parse correctly errors.
+    it("(id, offset)-keyed memo does NOT mis-restore across offsets", () => {
         resetPackrat();
         const P = memoize(regex(/[a-z]+/));
         // alt1 caches P's "hello" at offset 6, then eof fails → backtrack to 0.
@@ -94,12 +95,9 @@ describe("Memoization & left recursion (opt-in packrat)", () => {
         const st = new ParserState("Xhello!");
         p.parser(st);
 
-        // CURRENT (unsound): the offset-6 cache mis-restores at offset 0.
-        expect(st.isError).toBe(false);
-        expect(st.offset).toBe(6);
-        expect(st.value).toBe("hello");
-        // SOUND target (flips when (id, offset)-keying lands):
-        //   expect(st.isError).toBe(true);
+        // SOUND: the offset-6 cache lives at a distinct (id, offset) key and
+        // cannot mis-restore at offset 0 — the parse errors.
+        expect(st.isError).toBe(true);
     });
 
     // Isolation gate: packrat is OFF the default parse path. A non-memoized
