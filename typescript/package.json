@@ -1,6 +1,6 @@
 {
     "name": "@mkbabb/parse-that",
-    "version": "0.11.0",
+    "version": "0.12.0",
     "description": "Parser combinators for TypeScript",
     "type": "module",
     "sideEffects": false,
@@ -35,9 +35,14 @@
         "test": "NODE_OPTIONS='--max-old-space-size=8192' vitest run",
         "test:watch": "vitest",
         "build": "vite build",
+        "bench": "vitest bench",
         "proof:manifest": "node test/manifest-gate.mjs",
         "proof:no-css-surface": "node scripts/proof-no-css-surface.mjs",
-        "proof:subpath": "node test/subpath-gate.mjs"
+        "proof:subpath": "node test/subpath-gate.mjs",
+        "proof:packrat-cross-input": "node scripts/proof-packrat-cross-input.mjs",
+        "proof:span-parser-killed": "node scripts/proof-span-parser-killed.mjs",
+        "proof:perf": "NODE_OPTIONS='--expose-gc' node scripts/proof-perf.mjs",
+        "proof:all": "npm run proof:manifest && npm run proof:no-css-surface && npm run proof:subpath && npm run proof:packrat-cross-input && npm run proof:span-parser-killed && npm run proof:perf"
     },
     "files": [
         "./dist"

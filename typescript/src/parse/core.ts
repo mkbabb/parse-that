@@ -3,8 +3,7 @@
 // The zero-side-effect primitive set: the Parser core, state, leaf parsers, the
 // closure span combinators, lazy, and the balanced-split helpers. A consumer that
 // imports only this never pulls the diagnostics accumulator, the packrat tier, or
-// the json/csv domain parsers. (The SpanParser tagged-union in span.ts is NOT
-// re-exported — falsified §7 perf; kept module-internal as the codegen foundation.)
+// the json/csv domain parsers.
 export { Parser, type ParserFunction } from "./parser.js";
 export {
     ParserState,

@@ -68,35 +68,41 @@ that runs benchmarks on PRs and posts a comparison comment.
 
 ---
 
-## 7. TS SpanParser Equivalent — perf hypothesis FALSIFIED (Tranche A.W3, 2026-06-19)
+## 7. TS SpanParser Equivalent — perf hypothesis FALSIFIED + tier KILLED (Tranche A.W3 / B.W0, 2026-06-19/22)
 
 **Current**: TypeScript has `regexSpan()`, `manySpan()`, `sepBySpan()`, `wrapSpan()`
 as individual functions — no unified enum-dispatched type.
 
-**Approach (hypothesis)**: Introduce a `SpanParser` tagged union (discriminated union
+**Approach (hypothesis, A.W3)**: Introduce a `SpanParser` tagged union (discriminated union
 in TS) mirroring the Rust `SpanParser` enum. Each variant stores config inline;
 `callSpan()` dispatches via a `switch` on a numeric tag — V8 "should" lower this to a
 jump table, escaping the megamorphic IC of >4 distinct closure targets at one call site.
 
 **Expected impact (claimed)**: ~10–20% improvement on span-eligible rules.
 
-**MEASURED + FALSIFIED on V8/TS (A.W3, `typescript/test/benchmarks/span-dispatch.bench.ts`)**:
+**MEASURED + FALSIFIED on V8/TS (A.W3, `span-dispatch.bench.ts`)**:
 the tagged `callSpan` switch-dispatch is **~10–14% SLOWER** than the closure span lane on a
 representative 8-arm CSS-value alt-token scan, reproduced across three workloads (the tagged
 path lost every time; an independent adversarial re-run measured −14%). V8's
 monomorphic-per-call-site closure dispatch with inlining beats the recursive switch — the
 OPPOSITE of the Rust `enum`-vs-`Box<dyn>` regime that motivated this item. The jump-table
 *speedup* premise does **not** transfer from Rust to V8/TS. The tagged-union was implemented
-(byte-identical behavior, verified) but is kept **module-internal in `span.ts`** — NOT a
-public export, NOT a hot-path dispatch — because it offers no speed win.
+(byte-identical behavior, verified) but offered no speed win.
 
-**What survives**: the tagged union remains valuable as the *introspectable, allocation-free
-data representation* of a span grammar (a flat structure, no captured closures) — the
-prerequisite for the deferred **BBNF→hand-rolled codegen** tier (#11), which a serializer/
-codegen can walk but cannot extract from opaque closures. Re-scoped: §7 is a **codegen
-foundation**, not a dispatch-speed optimization. Do not re-attempt the perf claim on V8
-without a fundamentally different encoding (e.g. flat array-of-ops + a generated specialized
-dispatcher, not a recursive runtime `switch`).
+**KILLED (Tranche B.W0, P-inv-28, 2026-06-22)**: The SpanParser tagged-union
+(`SpanParserKind`, `SpanParser` type, all `*Node` constructors, `callSpan()`,
+`spanParserToParser()`) and the `span-dispatch.bench.ts` A.W3 bench artifact have been
+deleted. Its only production rationale (the codegen foundation for BBNF) moved to a
+separate bbnf-lang session outside this campaign's scope. With no in-realm consumer
+(confirmed: zero hits across `parse-that/src`, `value.js/src`, `keyframes.js/src` —
+all production grammars route through `dispatch()+regex`/`all`/`any`/closure-span
+combinators), P-invariant-28 resolves to KILL, not a 4th bare carry.
+
+**What survives**: The closure span combinators (`altSpan`, `manySpan`, `regexSpan`, etc.)
+remain the canonical, public API for span-producing parsers. The A.W3 falsification result
+is recorded here as documentation: do not re-attempt the runtime-switch SpanParser approach
+on V8 without a fundamentally different encoding (e.g., a flat array-of-ops with a
+generated specialized dispatcher — not a recursive runtime `switch`).
 
 ---
 

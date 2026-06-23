@@ -1,5 +1,6 @@
 import { regex, string, all, Parser, any, eof, memoize, mergeMemos, resetPackrat } from "../src/parse";
 import { ParserState } from "../src/parse/state.js";
+import { getCijKey } from "../src/parse/packrat.js";
 
 import { expect, describe, it, beforeEach } from "vitest";
 
@@ -130,5 +131,46 @@ describe("Memoization & left recursion (opt-in packrat)", () => {
         seeded.parser(st);
         expect(st.isError).toBe(false);
         expect(st.offset).toBe(2);
+    });
+});
+
+// ── PT-B1: cross-input soundness (the BLOCKER — no resetPackrat discipline) ───
+// The (id, offset) memo is module-global with NO src component. Before the
+// src-epoch guard a memoized parser re-run on a DIFFERENT source mis-restored the
+// prior input's cells (memoize(p).parse('hello') then .parse('world') → 'hello').
+// These tests deliberately do NOT call resetPackrat() between parses — the
+// auto-reset must hold on its own, with zero caller discipline.
+describe("PT-B1 packrat cross-input soundness (auto-reset, no caller discipline)", () => {
+    it("memoize(p).parse(A) then .parse(B) does not return A's stale result", () => {
+        const word = memoize(regex(/[a-z]+/));
+        expect(word.parse("hello")).toBe("hello");
+        // SAME memoized parser, different input, NO resetPackrat() between:
+        expect(word.parse("world")).toBe("world");
+        expect(word.parse("hello")).toBe("hello"); // and back again
+    });
+
+    it("a composite memoized parser re-memoizes across inputs", () => {
+        const num = regex(/[0-9]+/);
+        const w = regex(/[a-z]+/);
+        const pair = memoize(all(w, string("-"), num));
+        expect(pair.parse("abc-123")).toEqual(["abc", "-", "123"]);
+        // no resetPackrat() — the second input must not restore the first:
+        expect(pair.parse("xyz-789")).toEqual(["xyz", "-", "789"]);
+    });
+
+    it("getCijKey does not alias across the int32 `<< 20` overflow (id >= 4096)", () => {
+        // The old key `(id << 20) | offset` overflowed int32 at id >= 4096:
+        // getCijKey({id:4096},0) === getCijKey({id:0},0) === 0. The float64
+        // multiply key keeps distinct parsers' cells distinct.
+        expect(getCijKey({ id: 4096 } as never, 0)).not.toBe(
+            getCijKey({ id: 0 } as never, 0),
+        );
+        expect(getCijKey({ id: 8192 } as never, 0)).not.toBe(
+            getCijKey({ id: 4096 } as never, 0),
+        );
+        // distinct offsets within one parser stay distinct too:
+        expect(getCijKey({ id: 1 } as never, 5)).not.toBe(
+            getCijKey({ id: 1 } as never, 6),
+        );
     });
 });

@@ -84,6 +84,40 @@ export class Parser<T = string> {
         );
     }
 
+    /**
+     * PT-B3 fused `then`+`map`: parse `this` then `next`, applying `fn(a, b)`
+     * to the two results WITHOUT materializing the `[a, b]` intermediate tuple
+     * that `this.then(next).map(([a,b]) => fn(a,b))` allocates per call. Same
+     * backtracking + offset-restore as `then()` (on either arm's failure the
+     * offset is restored and the error merged). This is the zero-tuple seam for
+     * the hot `a.then(b).map(f)` shape; `then()` itself is unchanged (its `[a,b]`
+     * tuple is load-bearing for `Object.fromEntries`-style consumers).
+     */
+    thenMap<S, R>(next: Parser<S>, fn: (a: T, b: S) => R) {
+        const self = this;
+        const thenMap = (state: ParserState<T>) => {
+            const savedOffset = state.offset;
+            self.parser(state);
+
+            if (!state.isError) {
+                const value1 = state.value as T;
+                state.unsafeCallRaw(next as Parser<unknown>);
+                if (!state.isError) {
+                    return state.ok(fn(value1, state.value as unknown as S));
+                }
+            }
+            mergeErrorState(state as ParserState<unknown>);
+            state.offset = savedOffset;
+            state.isError = true;
+            return state;
+        };
+
+        return new Parser(
+            thenMap as ParserFunction<R>,
+            createParserContext("then", this as Parser<unknown>, this, next),
+        );
+    }
+
     or<S>(other: Parser<S | T>) {
         const or = (state: ParserState<T>) => {
             const savedOffset = state.offset;

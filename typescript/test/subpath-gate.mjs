@@ -45,8 +45,8 @@ const packrat = await import(packratPath);
 if (typeof core.Parser !== "function") {
     fail("./core did not export `Parser` as a function");
 }
-// The closure span combinator (the canonical, faster dispatch — the SpanParser
-// tagged-union is module-internal, not on the public ./core surface; see span.ts).
+// The closure span combinator is the canonical public API (the SpanParser
+// tagged-union was killed at PT-B4 — no in-realm consumer, P-inv-28).
 if (typeof core.altSpan !== "function") {
     fail("./core did not export the span combinator `altSpan`");
 }

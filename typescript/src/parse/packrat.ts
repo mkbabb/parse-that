@@ -51,9 +51,20 @@ import type { ParserState } from "./state.js";
 
 const MEMO_OFFSET_BITS = 20;
 const MEMO_MAX_OFFSET = (1 << MEMO_OFFSET_BITS) - 1;
+const MEMO_OFFSET_SPAN = MEMO_MAX_OFFSET + 1; // 2^20 = 1_048_576
 
-function getCijKey(parser: Parser<unknown>, offset: number): number {
-    return (parser.id << MEMO_OFFSET_BITS) | (offset & MEMO_MAX_OFFSET);
+export function getCijKey(parser: Parser<unknown>, offset: number): number {
+    // FLOAT64-SAFE multiply key. The old `parser.id << MEMO_OFFSET_BITS` was a
+    // 32-bit SIGNED shift: at parser.id >= 4096 (2^12) it overflows int32 and
+    // aliases — getCijKey(4096, 0) === getCijKey(0, 0) === 0 — silently colliding
+    // two distinct parsers' memo cells. Parser.id is a process-global PARSER_ID++,
+    // so any non-trivial grammar (value.js's CSS value grammar) routinely exceeds
+    // 4096 parser instances. A JS number is a float64: `id * 2^20 + offset` is
+    // exact for id up to 2^33 with offset < 2^20, and a Map keyed on that number
+    // is exactly as fast as an int32 key. The offset is extracted elsewhere with
+    // `key % MEMO_OFFSET_SPAN` (NOT `& MEMO_MAX_OFFSET`, which would re-truncate to
+    // int32 on a large key).
+    return parser.id * MEMO_OFFSET_SPAN + (offset & MEMO_MAX_OFFSET);
 }
 
 /** A finished parse result snapshot at a memo position. */
@@ -91,6 +102,18 @@ const MEMO = new Map<number, MemoCell>();
 const HEADS = new Map<number, Head>();
 let LR_STACK: LR | undefined;
 
+// CROSS-INPUT SOUNDNESS — the src-epoch guard. MEMO/HEADS/GROWING are
+// module-global and keyed on (id, offset) with NO source component. A memoized
+// parser re-run against a DIFFERENT source would mis-restore the previous input's
+// cells — `memoize(p).parse('hello')` then `.parse('world')` returning 'hello'
+// (a silent-wrong-answer correctness BLOCKER for any hot re-parse session). We
+// auto-reset when the source identity changes. The reset fires at most ONCE per
+// top-level parse — the first memoized node of a new src; every clone within a
+// single parse preserves `state.src` — so a caller needs ZERO resetPackrat()
+// discipline. packrat is opt-in and OFF the default LL(1) parse path, so this
+// per-session reference compare never touches the fast path.
+let CURRENT_SRC: string | undefined;
+
 // Heads currently in their grow phase, keyed by parser id → the (id, pos) key of
 // the growing seed. Used to serve a SECOND occurrence of the head that appears
 // inside its own body at a LATER position still within the seed's span (e.g.
@@ -113,6 +136,7 @@ export function resetPackrat(): void {
     HEADS.clear();
     GROWING.clear();
     LR_STACK = undefined;
+    CURRENT_SRC = undefined;
 }
 
 /**
@@ -155,7 +179,7 @@ function makeMemoized<T>(
                 if (
                     growSeed !== undefined &&
                     !isLR(growSeed) &&
-                    pos > (growKey & MEMO_MAX_OFFSET) &&
+                    pos > (growKey % MEMO_OFFSET_SPAN) &&
                     pos <= growSeed.offset
                 ) {
                     // Non-advancing empty (ε) contribution: the occurrence stays
@@ -251,6 +275,13 @@ function makeMemoized<T>(
     };
 
     const memoizeFn = (state: ParserState<T>) => {
+        // src-epoch guard: a new top-level source auto-invalidates the
+        // cross-input-unsafe (id, offset) memo before the first lookup, so the
+        // caller needs no resetPackrat() discipline. Fires at most once per parse.
+        if (state.src !== CURRENT_SRC) {
+            resetPackrat();
+            CURRENT_SRC = state.src;
+        }
         const pos = state.offset;
         const key = getCijKey(p, pos);
 

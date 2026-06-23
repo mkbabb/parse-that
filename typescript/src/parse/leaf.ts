@@ -27,23 +27,53 @@ export function eof<T>() {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function any<T extends Array<Parser<any>>>(...parsers: T) {
     type Result = T[number] extends Parser<infer V> ? V : never;
-    const anyParser = (state: ParserState<Result>) => {
-        const savedOffset = state.offset;
-        for (const parser of parsers) {
-            parser.parser(state);
-            if (!state.isError) {
-                return state;
-            }
+    const n = parsers.length;
+
+    // PT-B3 fusion (semantics-preserving): indexed `for` (no `for…of` iterator
+    // object), monomorphic over the static parser list. Each arm restores
+    // `savedOffset` + clears the error before the next trial — the EXACT
+    // sequential-trial backtracking of the original. The arity-2 arm is fully
+    // unrolled (the dominant `or`-style 2-way alternation) so V8 sees two
+    // constant-bound positional trials with no array load in the hot path.
+    let anyParser: ParserFunction<Result>;
+    if (n === 2) {
+        const p0 = parsers[0];
+        const p1 = parsers[1];
+        anyParser = ((state: ParserState<Result>) => {
+            const savedOffset = state.offset;
+            p0.parser(state as ParserState<unknown>);
+            if (!state.isError) return state;
             state.offset = savedOffset;
             state.isError = false;
-        }
-        mergeErrorState(state as ParserState<unknown>);
-        state.isError = true;
-        return state;
-    };
+
+            p1.parser(state as ParserState<unknown>);
+            if (!state.isError) return state;
+            state.offset = savedOffset;
+            state.isError = false;
+
+            mergeErrorState(state as ParserState<unknown>);
+            state.isError = true;
+            return state;
+        }) as ParserFunction<Result>;
+    } else {
+        anyParser = ((state: ParserState<Result>) => {
+            const savedOffset = state.offset;
+            for (let i = 0; i < n; i++) {
+                parsers[i].parser(state as ParserState<unknown>);
+                if (!state.isError) {
+                    return state;
+                }
+                state.offset = savedOffset;
+                state.isError = false;
+            }
+            mergeErrorState(state as ParserState<unknown>);
+            state.isError = true;
+            return state;
+        }) as ParserFunction<Result>;
+    }
 
     return makeParser(
-        parsers.length === 1 ? parsers[0].parser : anyParser,
+        n === 1 ? parsers[0].parser : anyParser,
         createParserContext("any", undefined, ...parsers),
     ) as Parser<Result>;
 }
@@ -55,18 +85,39 @@ export function any<T extends Array<Parser<any>>>(...parsers: T) {
  *
  * @param table - Maps characters (or char ranges) to parsers.
  *   Keys can be single chars ("a"), ranges ("0-9"), or multi-char ("tf" = 't' or 'f').
+ * @param subTable - PT-B3 16-bit widening (OPTIONAL, BC-additive). For first
+ *   chars where many tokens collide (value.js's `c`-bucket: calc/clamp/cos/conic/
+ *   cubic), a second-level length+second-byte discriminator flattens the residual
+ *   megamorphism the first-char LUT leaves. Keyed `firstChar → { secondChar →
+ *   parser }`; when the first byte hits a sub-table, the second byte refines the
+ *   choice (IDENTICAL-RESULT: each refined parser is the SAME one the author would
+ *   have placed behind a sequential `any()` arm). A first byte with NO sub-table —
+ *   or a second byte absent from its sub-table — falls back to the first-char LUT
+ *   entry unchanged. Callers who omit `subTable` get the EXACT prior behavior.
+ *
+ *   Honest scope (FULL-LOOP correction): the widening disambiguates only
+ *   second-byte-DISTINCT tokens. `co` (cos vs conic) still shares a second byte —
+ *   route it to a 2-deep residual `any()` parser, NOT a third LUT level.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function dispatch<T>(table: Record<string, Parser<T>>) {
+export function dispatch<T>(
+    table: Record<string, Parser<T>>,
+    subTable?: Record<string, Record<string, Parser<T>>>,
+) {
     const tbl = new Int8Array(128).fill(-1);
     const parsers: Parser<T>[] = [];
 
-    for (const [chars, parser] of Object.entries(table)) {
+    const internParser = (parser: Parser<T>): number => {
         let idx = parsers.indexOf(parser);
         if (idx === -1) {
             idx = parsers.length;
             parsers.push(parser);
         }
+        return idx;
+    };
+
+    for (const [chars, parser] of Object.entries(table)) {
+        const idx = internParser(parser);
         // Support "0-9" range syntax
         if (chars.length === 3 && chars[1] === '-') {
             const lo = chars.charCodeAt(0);
@@ -79,16 +130,76 @@ export function dispatch<T>(table: Record<string, Parser<T>>) {
         }
     }
 
+    // PT-B3 second-byte sub-tables. For each first char with a sub-table we build
+    // a 128-entry Int8Array indexed by the SECOND byte → parser index (or -1).
+    // `subByFirst[firstByte]` is the sub-LUT, or undefined (no widening here).
+    // This is allocated only when `subTable` is provided, so the un-widened
+    // dispatch path is byte-identical to before.
+    let subByFirst: Array<Int8Array | undefined> | undefined;
+    if (subTable !== undefined) {
+        subByFirst = new Array<Int8Array | undefined>(128);
+        for (const [firstChar, inner] of Object.entries(subTable)) {
+            const fc = firstChar.charCodeAt(0);
+            if (fc >= 128) continue;
+            const sub = new Int8Array(128).fill(-1);
+            for (const [secondChar, parser] of Object.entries(inner)) {
+                const sidx = internParser(parser);
+                for (let i = 0; i < secondChar.length; i++) {
+                    sub[secondChar.charCodeAt(i)] = sidx;
+                }
+            }
+            subByFirst[fc] = sub;
+            // Ensure the first byte is "live" in the primary LUT even if the
+            // author only declared it via the sub-table: a first-char miss must
+            // not short-circuit to the error label before the sub-LUT is tried.
+            if (tbl[fc] === -1 && !(firstChar in table)) {
+                // Sentinel-only first byte: routed exclusively by second byte.
+                // Mark it live with a -2 sentinel meaning "sub-table only".
+                tbl[fc] = -2;
+            }
+        }
+    }
+
     // Pre-compute label at construction time
-    const labelChars = Object.keys(table).map(k => {
+    const labelKeys = Object.keys(table);
+    if (subTable !== undefined) {
+        for (const fk of Object.keys(subTable)) {
+            for (const sk of Object.keys(subTable[fk]!)) labelKeys.push(fk + sk);
+        }
+    }
+    const labelChars = labelKeys.map(k => {
         if (k.length === 3 && k[1] === '-') return `'${k[0]}'-'${k[2]}'`;
         return [...k].map(c => `'${c}'`).join(", ");
     }).join(", ");
     const label = `one of [${labelChars}]`;
 
+    const sub = subByFirst;
     const dispatchParser = (state: ParserState<T>) => {
-        const ch = state.src.charCodeAt(state.offset);
+        const off = state.offset;
+        const ch = state.src.charCodeAt(off);
         const idx = ch < 128 ? tbl[ch] : -1;
+
+        if (sub !== undefined && idx !== -1) {
+            const inner = sub[ch];
+            if (inner !== undefined) {
+                // Refine by the second byte. A missing second byte (or off the
+                // end of input) falls back to the first-char entry — UNLESS the
+                // first byte is sub-table-only (-2), where a miss is a real miss.
+                const ch2 = state.src.charCodeAt(off + 1);
+                const sidx = ch2 < 128 ? inner[ch2] : -1;
+                if (sidx >= 0) {
+                    return parsers[sidx].parser(state);
+                }
+                if (idx >= 0) {
+                    return parsers[idx].parser(state);
+                }
+                // idx === -2 (sub-only) with no second-byte hit → real miss.
+                mergeErrorState(state as ParserState<unknown>, label);
+                state.isError = true;
+                return state;
+            }
+        }
+
         if (idx >= 0) {
             return parsers[idx].parser(state);
         }
@@ -109,28 +220,143 @@ export function all<T extends Array<Parser<any>>>(...parsers: T) {
         [K in keyof T]: T[K] extends Parser<infer V> ? V : never;
     };
     type Result = ExtractValue<T>;
-    const allParser = (state: ParserState<Result>): ParserState<Result> => {
-        const matches: unknown[] = [];
-        const savedOffset = state.offset;
 
-        for (const parser of parsers) {
-            parser.parser(state);
+    return makeParser(
+        parsers.length === 1 ? parsers[0].parser : fuseAll<Result>(parsers),
+        createParserContext("all", undefined, ...parsers),
+    ) as Parser<Result>;
+}
 
+/**
+ * PT-B3 fusion (semantics-preserving): build the monomorphic sequencing
+ * closure for a static parser list. ONE result array per call (the deliverable),
+ * grown by index — NO per-element `push`-growth realloc, NO `for…of` iterator
+ * object, and the EXACT drop-`undefined` + backtracking/offset-restore semantics
+ * of the original `all()`. Arity-2 / arity-3 are fully unrolled into positional
+ * closures (the value.js hot shapes — 59 `all()` sites) so V8 sees a monomorphic
+ * call site with constant-folded parser bindings; the general arm threads by
+ * index. The fused closure threads state by position and never allocates an
+ * intermediate tuple (the unfused `a.then(b).then(c)` builds N−1 nested 2-tuples;
+ * the fused list builds exactly one flat array).
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fuseAll<Result = unknown[]>(parsers: Array<Parser<any>>): ParserFunction<Result> {
+    const n = parsers.length;
+
+    // Arity-2: fully unrolled, two positional bindings, no array indexing.
+    if (n === 2) {
+        const p0 = parsers[0];
+        const p1 = parsers[1];
+        return ((state: ParserState<Result>): ParserState<Result> => {
+            const savedOffset = state.offset;
+            // one result array — the deliverable, sized to the max (2); trimmed
+            // to the live count when an arm yields `undefined`.
+            let w = 0;
+            const out: unknown[] = [undefined, undefined];
+
+            p0.parser(state as ParserState<unknown>);
             if (state.isError) {
                 state.offset = savedOffset;
                 state.isError = true;
-                return state as ParserState<Result>;
+                return state;
             }
+            if (state.value !== undefined) out[w++] = state.value;
 
-            if (state.value !== undefined) {
-                matches.push(state.value);
+            p1.parser(state as ParserState<unknown>);
+            if (state.isError) {
+                state.offset = savedOffset;
+                state.isError = true;
+                return state;
             }
+            if (state.value !== undefined) out[w++] = state.value;
+
+            if (w !== 2) out.length = w;
+            return state.ok(out) as ParserState<Result>;
+        }) as ParserFunction<Result>;
+    }
+
+    // Arity-3: the hottest value.js shape (calc/rgb/hsl triples), fully unrolled.
+    if (n === 3) {
+        const p0 = parsers[0];
+        const p1 = parsers[1];
+        const p2 = parsers[2];
+        return ((state: ParserState<Result>): ParserState<Result> => {
+            const savedOffset = state.offset;
+            let w = 0;
+            const out: unknown[] = [undefined, undefined, undefined];
+
+            p0.parser(state as ParserState<unknown>);
+            if (state.isError) {
+                state.offset = savedOffset;
+                state.isError = true;
+                return state;
+            }
+            if (state.value !== undefined) out[w++] = state.value;
+
+            p1.parser(state as ParserState<unknown>);
+            if (state.isError) {
+                state.offset = savedOffset;
+                state.isError = true;
+                return state;
+            }
+            if (state.value !== undefined) out[w++] = state.value;
+
+            p2.parser(state as ParserState<unknown>);
+            if (state.isError) {
+                state.offset = savedOffset;
+                state.isError = true;
+                return state;
+            }
+            if (state.value !== undefined) out[w++] = state.value;
+
+            if (w !== 3) out.length = w;
+            return state.ok(out) as ParserState<Result>;
+        }) as ParserFunction<Result>;
+    }
+
+    // General arity: ONE pre-sized array, indexed write cursor, classic `for`
+    // (no `for…of` iterator). Identical drop-undefined + backtracking.
+    return ((state: ParserState<Result>): ParserState<Result> => {
+        const savedOffset = state.offset;
+        const out: unknown[] = new Array(n);
+        let w = 0;
+
+        for (let i = 0; i < n; i++) {
+            parsers[i].parser(state as ParserState<unknown>);
+            if (state.isError) {
+                state.offset = savedOffset;
+                state.isError = true;
+                return state;
+            }
+            if (state.value !== undefined) out[w++] = state.value;
         }
-        return state.ok(matches) as ParserState<Result>;
+
+        if (w !== n) out.length = w;
+        return state.ok(out) as ParserState<Result>;
+    }) as ParserFunction<Result>;
+}
+
+/**
+ * PT-B3 fusion entry — collapse a static `all`-shaped chain into ONE monomorphic
+ * sequencing closure with a single flat result array and ZERO intermediate
+ * tuples. This is the standalone, reusable form of the sequencer `all()` runs
+ * internally (the same `fuseAll` core), exposed so a value.js / kf hot path can
+ * fuse an N-ary positional sequence directly without re-deriving the closure.
+ *
+ * Semantics are IDENTICAL to `all(...parsers)`: in-order trial, full
+ * offset-restore backtracking on the first failing arm, drop-`undefined` from
+ * the result, single result array. The fused closure rides the existing `all`
+ * context so the printer/debug tier renders it unchanged.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function fuse<T extends Array<Parser<any>>>(...parsers: T) {
+    type ExtractValue<T extends ReadonlyArray<Parser<unknown>>> = {
+        [K in keyof T]: T[K] extends Parser<infer V> ? V : never;
     };
+    type Result = ExtractValue<T>;
 
     return makeParser(
-        parsers.length === 1 ? parsers[0].parser : allParser,
+        parsers.length === 1 ? parsers[0].parser : fuseAll<Result>(parsers),
         createParserContext("all", undefined, ...parsers),
     ) as Parser<Result>;
 }
