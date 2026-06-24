@@ -11,12 +11,12 @@
 //       proof script (scripts/proof-perf.mjs) which runs under --expose-gc and
 //       diffs retained heap; this bench records the throughput side.
 //
-//   (2) 2-char DISPATCH widening — a calc/clamp/cubic/cos/conic corpus through
-//       the widened length+second-byte `dispatch()` vs the sequential-trial
-//       `any()`. The ca/cl/cu tokens are 2nd-byte-DISTINCT (fully flattened);
-//       `co` (cos vs conic) shares its 2nd byte and routes to a 2-deep residual
-//       `any()` — the honest scope (FULL-LOOP correction): ≥40% is claimed only
-//       for the flattened ca/cl/cu arms, `co` is a 2-deep residual.
+//   (2) DISPATCH on the REAL CSS function-name bucket (PT-Q5 re-anchor) — the
+//       value.js `Function_ = dispatch({...})` shape: first-char O(1) jump over the
+//       CSS math/color/transform/gradient function tokens vs the sequential-trial
+//       `any()` it replaced. The speculative 2nd-byte subTable widening was
+//       RETRACTED (zero consumers); this measures the SURVIVING first-char
+//       primitive on the application path, not a synthetic ca/cl/cu corpus.
 //
 //   (3) json-comprehensive BASELINE — the parse-that JSON shape, the regression
 //       anchor proof:perf reds CI against (checked-in baseline JSON).
@@ -49,49 +49,62 @@ describe("PT-B3 fusion — all(a,b,c) vs a.then(b).then(c)", () => {
     }, options);
 });
 
-// ── (2) 2-char dispatch widening corpus ─────────────────────────────────────
-// A realistic deep `c`-bucket (8 CSS-math/color functions colliding on 'c').
-// 2nd-byte DISTINCT: calc(a) clamp(l) cubic(u) ceil(e) cross(r) — flattened.
-// 2nd-byte COLLIDING on 'o': color/counter/contrast → a residual any() (the
-// honest `co` residual: the widening does NOT flatten a shared second byte).
-const calc = string("calc(");
-const clamp = string("clamp(");
-const cubic = string("cubic(");
-const ceil = string("ceil(");
-const cross = string("cross(");
-const color = string("color(");
-const counter = string("counter(");
-const contrast = string("contrast(");
-const oResidual = any(color, counter, contrast);
+// ── (2) Real CSS function-name dispatch corpus (PT-Q5 re-anchor) ────────────
+// The actual CSS math/color/transform/gradient function tokens value.js's
+// `Function_ = dispatch({...})` runs. First chars collide heavily (c, r, s, t, l)
+// — exactly the megamorphism a sequential any() pays for and a first-char O(1)
+// dispatch flattens.
+const cssFns: Record<string, ReturnType<typeof string>> = {
+    "calc(": string("calc("),
+    "clamp(": string("clamp("),
+    "cos(": string("cos("),
+    "min(": string("min("),
+    "max(": string("max("),
+    "var(": string("var("),
+    "rgb(": string("rgb("),
+    "rgba(": string("rgba("),
+    "hsl(": string("hsl("),
+    "rotate(": string("rotate("),
+    "scale(": string("scale("),
+    "translate(": string("translate("),
+    "skew(": string("skew("),
+    "linear-gradient(": string("linear-gradient("),
+    "url(": string("url("),
+};
+const cssTokens = Object.keys(cssFns);
 
-// Sequential-trial baseline: an any() over all 8 (worst case when the target
-// token is LATE in the trial order).
-const seqAny = any(calc, clamp, cubic, ceil, cross, color, counter, contrast);
+// Sequential-trial baseline: an any() over all tokens (the megamorphic shape the
+// first-char dispatch primitive replaced).
+const seqAny = any(...Object.values(cssFns));
 
-// Widened dispatch: first byte 'c' is sub-table-only; the 2nd byte routes.
-const widened = dispatch(
-    {},
-    { c: { a: calc, l: clamp, u: cubic, e: ceil, r: cross, o: oResidual } },
-);
+// First-char dispatch — the SURVIVING, consumed primitive (single-arg). Group
+// tokens by first char into a residual any() per bucket (the real grammar shape).
+const byFirst: Record<string, ReturnType<typeof string>[]> = {};
+for (const t of cssTokens) (byFirst[t[0]!] ??= []).push(cssFns[t]!);
+const dispatchTable: Record<string, ReturnType<typeof any>> = {};
+for (const [fc, ps] of Object.entries(byFirst)) {
+    dispatchTable[fc] = ps.length === 1 ? ps[0]! : any(...ps);
+}
+const dispatched = dispatch(dispatchTable);
 
-// Flattened arms with the target token late in any() order (worst case).
-const corpus = ["cross(", "ceil(", "cubic(", "clamp(", "calc("];
+// Target tokens LATE in the any() order (worst case for sequential trial).
+const corpus = ["url(", "linear-gradient(", "translate(", "scale(", "rotate("];
 
-describe("PT-B3 2-char dispatch — widened vs sequential any()", () => {
-    bench("sequential any(8-deep c-bucket)", () => {
+describe("PT-Q5 first-char dispatch — real CSS fn bucket vs sequential any()", () => {
+    bench("sequential any(15 CSS fns)", () => {
         for (const s of corpus) seqAny.parse(s);
     }, options);
 
-    bench("widened dispatch (2nd-byte LUT)", () => {
-        for (const s of corpus) widened.parse(s);
+    bench("first-char dispatch (O(1) LUT)", () => {
+        for (const s of corpus) dispatched.parse(s);
     }, options);
 
-    // Worst-case single token: the 5th sequential arm (cross) vs widened.
-    bench("sequential any — worst case (cross, 5th arm)", () => {
-        seqAny.parse("cross(");
+    // Worst-case single token: url( sits late in any() order vs O(1) dispatch.
+    bench("sequential any — worst case (url, late arm)", () => {
+        seqAny.parse("url(");
     }, options);
-    bench("widened dispatch — cross (O(1) 2nd-byte jump)", () => {
-        widened.parse("cross(");
+    bench("first-char dispatch — url (O(1) jump)", () => {
+        dispatched.parse("url(");
     }, options);
 });
 

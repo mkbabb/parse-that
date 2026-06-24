@@ -4,6 +4,7 @@ import { parserDebug, parserPrint } from "./debug.js";
 import { mergeErrorState, addSuggestion, isDiagnosticsEnabled, collectDiagnostic, popLastDiagnostic, reportUnclosedDelimiter } from "./utils.js";
 import { createLazyCached } from "./lazy.js";
 import { trimStateWhitespace, eof, all, _initWhitespace, whitespace } from "./leaf.js";
+import { packratEnter, packratExit } from "./packrat.js";
 
 type ExtractValue<T extends ReadonlyArray<Parser<unknown>>> = {
     [K in keyof T]: T[K] extends Parser<infer V> ? V : never;
@@ -31,6 +32,23 @@ export class Parser<T = string> {
     ) {}
 
     parseState(val: string) {
+        // PT-Q1 — open a packrat epoch at the parseState ENTRY boundary. A nested
+        // top-level parse (e.g. a `.map` callback that re-parses a different src
+        // mid-grow) gets its OWN clean packrat tables and, on return, the parent's
+        // tables are restored from the snapshot. The try/finally guarantees the
+        // restore even if the parse throws — re-entrancy SOUND, with the LR
+        // machinery unwound on any throw. packrat is opt-in / off the default LL(1)
+        // path, so this snapshot is a no-op-cost reference swap for non-memoized
+        // grammars.
+        const epoch = packratEnter();
+        try {
+            return this.parseStateInner(val);
+        } finally {
+            packratExit(epoch);
+        }
+    }
+
+    private parseStateInner(val: string) {
         const state = new ParserState(val) as ParserState<T>;
         this.parser(state);
 
@@ -80,40 +98,6 @@ export class Parser<T = string> {
 
         return new Parser(
             then as ParserFunction<[T, S]>,
-            createParserContext("then", this as Parser<unknown>, this, next),
-        );
-    }
-
-    /**
-     * PT-B3 fused `then`+`map`: parse `this` then `next`, applying `fn(a, b)`
-     * to the two results WITHOUT materializing the `[a, b]` intermediate tuple
-     * that `this.then(next).map(([a,b]) => fn(a,b))` allocates per call. Same
-     * backtracking + offset-restore as `then()` (on either arm's failure the
-     * offset is restored and the error merged). This is the zero-tuple seam for
-     * the hot `a.then(b).map(f)` shape; `then()` itself is unchanged (its `[a,b]`
-     * tuple is load-bearing for `Object.fromEntries`-style consumers).
-     */
-    thenMap<S, R>(next: Parser<S>, fn: (a: T, b: S) => R) {
-        const self = this;
-        const thenMap = (state: ParserState<T>) => {
-            const savedOffset = state.offset;
-            self.parser(state);
-
-            if (!state.isError) {
-                const value1 = state.value as T;
-                state.unsafeCallRaw(next as Parser<unknown>);
-                if (!state.isError) {
-                    return state.ok(fn(value1, state.value as unknown as S));
-                }
-            }
-            mergeErrorState(state as ParserState<unknown>);
-            state.offset = savedOffset;
-            state.isError = true;
-            return state;
-        };
-
-        return new Parser(
-            thenMap as ParserFunction<R>,
             createParserContext("then", this as Parser<unknown>, this, next),
         );
     }

@@ -84,26 +84,20 @@ export function any<T extends Array<Parser<any>>>(...parsers: T) {
  * sequential trial-and-error like any().
  *
  * @param table - Maps characters (or char ranges) to parsers.
- *   Keys can be single chars ("a"), ranges ("0-9"), or multi-char ("tf" = 't' or 'f').
- * @param subTable - PT-B3 16-bit widening (OPTIONAL, BC-additive). For first
- *   chars where many tokens collide (value.js's `c`-bucket: calc/clamp/cos/conic/
- *   cubic), a second-level length+second-byte discriminator flattens the residual
- *   megamorphism the first-char LUT leaves. Keyed `firstChar → { secondChar →
- *   parser }`; when the first byte hits a sub-table, the second byte refines the
- *   choice (IDENTICAL-RESULT: each refined parser is the SAME one the author would
- *   have placed behind a sequential `any()` arm). A first byte with NO sub-table —
- *   or a second byte absent from its sub-table — falls back to the first-char LUT
- *   entry unchanged. Callers who omit `subTable` get the EXACT prior behavior.
+ *   Keys can be single chars ("a"), ranges ("0-9"), or multi-char ("tf" = 't' or 'f").
  *
- *   Honest scope (FULL-LOOP correction): the widening disambiguates only
- *   second-byte-DISTINCT tokens. `co` (cos vs conic) still shares a second byte —
- *   route it to a 2-deep residual `any()` parser, NOT a third LUT level.
+ * PT-Q5 RETRACT note: a speculative 2nd-byte `subTable` widening shipped in
+ * 0.12.0 to flatten the residual megamorphism of a deep first-char bucket
+ * (value.js's `c`-bucket: calc/clamp/cos/conic/cubic). It had ZERO production
+ * consumers — value.js's only `dispatch()` calls pass NO subTable — so the
+ * widening was a no-consumer perf seam gated against a SYNTHETIC corpus no
+ * consumer runs. Per the terminal-or-KILL disposition it is RETRACTED in 0.13.0:
+ * the seam is a localized revert (no consumer passed the 2nd arg, so removing it
+ * breaks no published contract). If value.js's coordinated Q session measures an
+ * on-path win, the widening is re-introduced as the CONSUME upgrade with the perf
+ * gate re-anchored to value.js's real `c`-bucket grammar — not before.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function dispatch<T>(
-    table: Record<string, Parser<T>>,
-    subTable?: Record<string, Record<string, Parser<T>>>,
-) {
+export function dispatch<T>(table: Record<string, Parser<T>>) {
     const tbl = new Int8Array(128).fill(-1);
     const parsers: Parser<T>[] = [];
 
@@ -130,75 +124,17 @@ export function dispatch<T>(
         }
     }
 
-    // PT-B3 second-byte sub-tables. For each first char with a sub-table we build
-    // a 128-entry Int8Array indexed by the SECOND byte → parser index (or -1).
-    // `subByFirst[firstByte]` is the sub-LUT, or undefined (no widening here).
-    // This is allocated only when `subTable` is provided, so the un-widened
-    // dispatch path is byte-identical to before.
-    let subByFirst: Array<Int8Array | undefined> | undefined;
-    if (subTable !== undefined) {
-        subByFirst = new Array<Int8Array | undefined>(128);
-        for (const [firstChar, inner] of Object.entries(subTable)) {
-            const fc = firstChar.charCodeAt(0);
-            if (fc >= 128) continue;
-            const sub = new Int8Array(128).fill(-1);
-            for (const [secondChar, parser] of Object.entries(inner)) {
-                const sidx = internParser(parser);
-                for (let i = 0; i < secondChar.length; i++) {
-                    sub[secondChar.charCodeAt(i)] = sidx;
-                }
-            }
-            subByFirst[fc] = sub;
-            // Ensure the first byte is "live" in the primary LUT even if the
-            // author only declared it via the sub-table: a first-char miss must
-            // not short-circuit to the error label before the sub-LUT is tried.
-            if (tbl[fc] === -1 && !(firstChar in table)) {
-                // Sentinel-only first byte: routed exclusively by second byte.
-                // Mark it live with a -2 sentinel meaning "sub-table only".
-                tbl[fc] = -2;
-            }
-        }
-    }
-
     // Pre-compute label at construction time
-    const labelKeys = Object.keys(table);
-    if (subTable !== undefined) {
-        for (const fk of Object.keys(subTable)) {
-            for (const sk of Object.keys(subTable[fk]!)) labelKeys.push(fk + sk);
-        }
-    }
-    const labelChars = labelKeys.map(k => {
+    const labelChars = Object.keys(table).map(k => {
         if (k.length === 3 && k[1] === '-') return `'${k[0]}'-'${k[2]}'`;
         return [...k].map(c => `'${c}'`).join(", ");
     }).join(", ");
     const label = `one of [${labelChars}]`;
 
-    const sub = subByFirst;
     const dispatchParser = (state: ParserState<T>) => {
         const off = state.offset;
         const ch = state.src.charCodeAt(off);
         const idx = ch < 128 ? tbl[ch] : -1;
-
-        if (sub !== undefined && idx !== -1) {
-            const inner = sub[ch];
-            if (inner !== undefined) {
-                // Refine by the second byte. A missing second byte (or off the
-                // end of input) falls back to the first-char entry — UNLESS the
-                // first byte is sub-table-only (-2), where a miss is a real miss.
-                const ch2 = state.src.charCodeAt(off + 1);
-                const sidx = ch2 < 128 ? inner[ch2] : -1;
-                if (sidx >= 0) {
-                    return parsers[sidx].parser(state);
-                }
-                if (idx >= 0) {
-                    return parsers[idx].parser(state);
-                }
-                // idx === -2 (sub-only) with no second-byte hit → real miss.
-                mergeErrorState(state as ParserState<unknown>, label);
-                state.isError = true;
-                return state;
-            }
-        }
 
         if (idx >= 0) {
             return parsers[idx].parser(state);
@@ -334,31 +270,6 @@ function fuseAll<Result = unknown[]>(parsers: Array<Parser<any>>): ParserFunctio
         if (w !== n) out.length = w;
         return state.ok(out) as ParserState<Result>;
     }) as ParserFunction<Result>;
-}
-
-/**
- * PT-B3 fusion entry — collapse a static `all`-shaped chain into ONE monomorphic
- * sequencing closure with a single flat result array and ZERO intermediate
- * tuples. This is the standalone, reusable form of the sequencer `all()` runs
- * internally (the same `fuseAll` core), exposed so a value.js / kf hot path can
- * fuse an N-ary positional sequence directly without re-deriving the closure.
- *
- * Semantics are IDENTICAL to `all(...parsers)`: in-order trial, full
- * offset-restore backtracking on the first failing arm, drop-`undefined` from
- * the result, single result array. The fused closure rides the existing `all`
- * context so the printer/debug tier renders it unchanged.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function fuse<T extends Array<Parser<any>>>(...parsers: T) {
-    type ExtractValue<T extends ReadonlyArray<Parser<unknown>>> = {
-        [K in keyof T]: T[K] extends Parser<infer V> ? V : never;
-    };
-    type Result = ExtractValue<T>;
-
-    return makeParser(
-        parsers.length === 1 ? parsers[0].parser : fuseAll<Result>(parsers),
-        createParserContext("all", undefined, ...parsers),
-    ) as Parser<Result>;
 }
 
 // Step 2: string() with startsWith + single-char charCodeAt fast path

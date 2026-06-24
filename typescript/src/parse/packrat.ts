@@ -49,9 +49,32 @@ import type { ParserState } from "./state.js";
 // Strictly-monotonic seed advance bounds the grow; the involved-set evalSet
 // bounds re-evaluation within a grow pass. No count cap is needed.
 
-const MEMO_OFFSET_BITS = 20;
-const MEMO_MAX_OFFSET = (1 << MEMO_OFFSET_BITS) - 1;
-const MEMO_OFFSET_SPAN = MEMO_MAX_OFFSET + 1; // 2^20 = 1_048_576
+// OFFSET BUDGET — widened to the full safe-integer headroom (PT-Q2). The memo key
+// is the float64 expression `id * MEMO_OFFSET_SPAN + offset`. The offset component
+// must NOT alias: two distinct offsets under the same parser id must yield two
+// distinct keys, so the span has to exceed any source length we will ever memoize.
+//
+// The OLD budget was 20 bits (MEMO_OFFSET_SPAN = 2^20 = 1_048_576). That silently
+// aliased memo cells for any source ≥ 1MB: `getCijKey(1, 2^20 + 3) === getCijKey(1, 3)`
+// because the offset was masked with `& (2^20 - 1)`. A >1MB memoized parse then
+// mis-restored cells from offsets exactly 1MB apart — a silent-wrong-answer residual.
+//
+// The cure: choose the span so that BOTH (a) the offset never aliases for any
+// realistic source AND (b) the composite key stays a SAFE integer (≤ 2^53 − 1, the
+// float64 mantissa ceiling) for every parser id we mint. JS strings cap at
+// 2^53 − 1 chars but practical sources are bounded by the ~512MB-string V8 ceiling
+// (< 2^29). A 32-bit span (4_294_967_296) covers any addressable source with margin,
+// and leaves the id ~2^21 (≈ 2.1M distinct parser instances) of safe-integer
+// headroom (32 + 21 = 53). Parser ids are a process-global counter; 2M instances is
+// far beyond any grammar (value.js's CSS grammar mints a few thousand). The offset
+// is NO LONGER masked — it is added whole, so it cannot alias below the span.
+const MEMO_OFFSET_BITS = 32;
+const MEMO_OFFSET_SPAN = 2 ** MEMO_OFFSET_BITS; // 4_294_967_296 — > any addressable source
+// Above this id the composite key `id * SPAN + offset` could exceed
+// Number.MAX_SAFE_INTEGER and lose precision → silent key collisions. We fail loud
+// rather than alias (the PT-Q2 fail-loud arm), so an out-of-budget grammar is a
+// throw at memo time, never a wrong answer.
+const MEMO_MAX_ID = Math.floor(Number.MAX_SAFE_INTEGER / MEMO_OFFSET_SPAN); // ≈ 2_097_151
 
 export function getCijKey(parser: Parser<unknown>, offset: number): number {
     // FLOAT64-SAFE multiply key. The old `parser.id << MEMO_OFFSET_BITS` was a
@@ -59,12 +82,21 @@ export function getCijKey(parser: Parser<unknown>, offset: number): number {
     // aliases — getCijKey(4096, 0) === getCijKey(0, 0) === 0 — silently colliding
     // two distinct parsers' memo cells. Parser.id is a process-global PARSER_ID++,
     // so any non-trivial grammar (value.js's CSS value grammar) routinely exceeds
-    // 4096 parser instances. A JS number is a float64: `id * 2^20 + offset` is
-    // exact for id up to 2^33 with offset < 2^20, and a Map keyed on that number
-    // is exactly as fast as an int32 key. The offset is extracted elsewhere with
-    // `key % MEMO_OFFSET_SPAN` (NOT `& MEMO_MAX_OFFSET`, which would re-truncate to
-    // int32 on a large key).
-    return parser.id * MEMO_OFFSET_SPAN + (offset & MEMO_MAX_OFFSET);
+    // 4096 parser instances. A JS number is a float64: `id * MEMO_OFFSET_SPAN +
+    // offset` is EXACT as long as the sum stays ≤ Number.MAX_SAFE_INTEGER (2^53 − 1).
+    // With a 2^32 span, that holds for every id ≤ MEMO_MAX_ID (≈ 2.1M) and every
+    // offset < 2^32 (any addressable source) — so the offset is added WHOLE (no mask)
+    // and cannot alias. A Map keyed on that number is exactly as fast as an int32 key.
+    if (parser.id > MEMO_MAX_ID || offset >= MEMO_OFFSET_SPAN) {
+        // Fail loud at the boundary rather than silently alias a memo cell. This is
+        // unreachable for any realistic grammar/source; it guards the float64
+        // mantissa ceiling so a degenerate input can never produce a wrong answer.
+        throw new RangeError(
+            `packrat memo key out of float64-safe budget: parser.id=${parser.id} ` +
+                `(max ${MEMO_MAX_ID}), offset=${offset} (max ${MEMO_OFFSET_SPAN - 1})`,
+        );
+    }
+    return parser.id * MEMO_OFFSET_SPAN + offset;
 }
 
 /** A finished parse result snapshot at a memo position. */
@@ -98,20 +130,38 @@ function isLR(x: Answer | LR): x is LR {
     return (x as LR).parser !== undefined;
 }
 
-const MEMO = new Map<number, MemoCell>();
-const HEADS = new Map<number, Head>();
+let MEMO = new Map<number, MemoCell>();
+let HEADS = new Map<number, Head>();
 let LR_STACK: LR | undefined;
 
-// CROSS-INPUT SOUNDNESS — the src-epoch guard. MEMO/HEADS/GROWING are
-// module-global and keyed on (id, offset) with NO source component. A memoized
-// parser re-run against a DIFFERENT source would mis-restore the previous input's
-// cells — `memoize(p).parse('hello')` then `.parse('world')` returning 'hello'
-// (a silent-wrong-answer correctness BLOCKER for any hot re-parse session). We
-// auto-reset when the source identity changes. The reset fires at most ONCE per
-// top-level parse — the first memoized node of a new src; every clone within a
-// single parse preserves `state.src` — so a caller needs ZERO resetPackrat()
-// discipline. packrat is opt-in and OFF the default LL(1) parse path, so this
-// per-session reference compare never touches the fast path.
+// CROSS-INPUT + RE-ENTRANCY SOUNDNESS — the parseState-entry epoch (PT-Q1).
+//
+// MEMO/HEADS/GROWING/LR_STACK are module-global and keyed on (id, offset) with NO
+// source component. Two soundness hazards arise:
+//
+//   1. CROSS-INPUT (PT-B1, fixed at 0.12.0): a memoized parser re-run against a
+//      DIFFERENT source would mis-restore the previous input's cells —
+//      `memoize(p).parse('hello')` then `.parse('world')` returning 'hello'.
+//
+//   2. RE-ENTRANCY (PT-Q1, the 0.12.0 regression this fixes): the 0.12.0 cure put
+//      the reset INSIDE `memoizeFn`, firing per-node whenever `state.src !==
+//      CURRENT_SRC`. A memoized parser whose `.map` runs a NESTED top-level
+//      `.parse(differentSrc)` mid-grow then wiped the OUTER grow's in-progress
+//      cells → `growLR` non-null-asserted a just-deleted cell → `TypeError`.
+//
+// The cure is a SYNCHRONOUS parse-stack SAVE/RESTORE at the parseState ENTRY
+// boundary (`parser.ts` → packratEnter/packratExit). Each top-level `parse()`
+// snapshots the current packrat tables (the outer parse's, or empty at depth-0)
+// and installs fresh ones; on return it restores the snapshot. A nested
+// `parse(differentSrc)` therefore runs with its OWN clean tables (no cross-input
+// alias) AND, on return, the outer parse resumes against its own UN-WIPED MEMO
+// (re-entrancy sound). The cost is one snapshot per top-level parse — cheaper than
+// the per-node reference compare it replaces — and packrat is opt-in / OFF the
+// default LL(1) path, so the fast path is untouched.
+//
+// CURRENT_SRC is retained only as a within-epoch assertion anchor (a single epoch
+// owns exactly one src); it is part of the snapshot so a nested epoch's src never
+// leaks into the parent's.
 let CURRENT_SRC: string | undefined;
 
 // Heads currently in their grow phase, keyed by parser id → the (id, pos) key of
@@ -119,7 +169,53 @@ let CURRENT_SRC: string | undefined;
 // inside its own body at a LATER position still within the seed's span (e.g.
 // mSL's `mSL.then(mSL)`): such an occurrence restores the seed non-advancingly
 // rather than spawning an independent, over-consuming head.
-const GROWING = new Map<number, number>();
+let GROWING = new Map<number, number>();
+
+/** A frozen snapshot of the full module-global packrat state. */
+interface PackratEpoch {
+    memo: Map<number, MemoCell>;
+    heads: Map<number, Head>;
+    growing: Map<number, number>;
+    lrStack: LR | undefined;
+    currentSrc: string | undefined;
+}
+
+/**
+ * packratEnter — open a fresh packrat epoch at the parseState entry boundary.
+ * Returns the OUTER epoch's snapshot, which the caller hands back to
+ * packratExit() to restore the parent. Installs empty tables so the child parse
+ * starts clean (cross-input sound) and cannot see the parent's in-progress cells.
+ */
+export function packratEnter(): PackratEpoch {
+    const saved: PackratEpoch = {
+        memo: MEMO,
+        heads: HEADS,
+        growing: GROWING,
+        lrStack: LR_STACK,
+        currentSrc: CURRENT_SRC,
+    };
+    MEMO = new Map();
+    HEADS = new Map();
+    GROWING = new Map();
+    LR_STACK = undefined;
+    CURRENT_SRC = undefined;
+    return saved;
+}
+
+/**
+ * packratExit — close the current epoch and restore the parent's snapshot. Called
+ * from a `finally` so the parent's tables are restored even if the child parse
+ * threw mid-grow (the try/finally unwind hardening — the LR machinery the child
+ * dirtied is discarded wholesale with its epoch's tables, never left dangling on
+ * the parent's stacks).
+ */
+export function packratExit(saved: PackratEpoch): void {
+    MEMO = saved.memo;
+    HEADS = saved.heads;
+    GROWING = saved.growing;
+    LR_STACK = saved.lrStack;
+    CURRENT_SRC = saved.currentSrc;
+}
 
 function snapshot(state: ParserState<unknown>): Answer {
     return { offset: state.offset, value: state.value, isError: state.isError };
@@ -241,20 +337,29 @@ function makeMemoized<T>(
         HEADS.set(pos, head);
         const prevGrowing = GROWING.get(p.id);
         GROWING.set(p.id, key);
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-            head.evalSet = new Set(head.involvedSet);
-            evalParser(state, pos);
-            const ans = snapshot(state);
-            const seed = (MEMO.get(key)!.ans as Answer);
-            // Stop when the pass errors or fails to advance past the seed.
-            if (ans.isError || ans.offset <= seed.offset) break;
-            MEMO.set(key, { ans });
+        // try/finally unwind hardening (PT-Q1): if a pass throws mid-grow (a nested
+        // parse defect, an out-of-budget memo key, a user .map throw), the per-head
+        // GROWING / HEADS bookkeeping is restored so the surrounding epoch's tables
+        // are left in a consistent state for the unwinding parseState boundary. The
+        // grow's accumulated seed is discarded with the throw; the parent epoch
+        // (restored by packratExit) is never corrupted.
+        try {
+            // eslint-disable-next-line no-constant-condition
+            while (true) {
+                head.evalSet = new Set(head.involvedSet);
+                evalParser(state, pos);
+                const ans = snapshot(state);
+                const seed = (MEMO.get(key)!.ans as Answer);
+                // Stop when the pass errors or fails to advance past the seed.
+                if (ans.isError || ans.offset <= seed.offset) break;
+                MEMO.set(key, { ans });
+            }
+            applyAnswer(state, MEMO.get(key)!.ans as Answer);
+        } finally {
+            if (prevGrowing !== undefined) GROWING.set(p.id, prevGrowing);
+            else GROWING.delete(p.id);
+            HEADS.delete(pos);
         }
-        if (prevGrowing !== undefined) GROWING.set(p.id, prevGrowing);
-        else GROWING.delete(p.id);
-        HEADS.delete(pos);
-        applyAnswer(state, MEMO.get(key)!.ans as Answer);
     };
 
     // lrAnswer: resolve a memo cell whose ans became an LR marker.
@@ -275,11 +380,13 @@ function makeMemoized<T>(
     };
 
     const memoizeFn = (state: ParserState<T>) => {
-        // src-epoch guard: a new top-level source auto-invalidates the
-        // cross-input-unsafe (id, offset) memo before the first lookup, so the
-        // caller needs no resetPackrat() discipline. Fires at most once per parse.
-        if (state.src !== CURRENT_SRC) {
-            resetPackrat();
+        // Within a single epoch every node shares ONE src (the epoch is opened per
+        // top-level parse by packratEnter at the parseState entry boundary, which
+        // installs empty tables). We record the epoch's src on the first memoized
+        // node purely as a within-epoch consistency anchor — the reset itself has
+        // moved OUT of the hot path to packratEnter (PT-Q1: no per-node reset, so a
+        // nested parse(differentSrc) can no longer wipe the outer grow's cells).
+        if (CURRENT_SRC === undefined) {
             CURRENT_SRC = state.src;
         }
         const pos = state.offset;

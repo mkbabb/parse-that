@@ -9,9 +9,25 @@ function makeParser<T>(parser: ParserFunction<T>, context?: ParserContext): Pars
 }
 
 // ── Leaf Span Combinators ────────────────────────────────────
+//
+// DEPRECATION (PT-Q4, 0.13.0) — scheduled for removal in 1.0.0.
+//
+// The 15 closure-based `*Span` builders below are a zero-consumer published
+// surface: no source in parse-that, value.js, or keyframes.js consumes ANY of
+// them, yet they sit on the package barrel (`index.ts`) and `core` subpath. They
+// were kept through 0.12.0 only to honor that release's BC-additive promise; a
+// perpetual "kept for BC" punt contradicts parse-that's own substrate-deadcode
+// precept (zero-workspace-consumer surface → retire). Per the terminal-or-KILL
+// disposition, 0.13.0 tags all 15 `@deprecated` with a removal-version note (the
+// next major, 1.0.0) — a RECORDED removal plan, not a forever-keep. If value.js's
+// coordinated Q session adopts a `*Span` builder on a real hot leaf, the
+// `@deprecated` tag is dropped from the consumed builder(s) (the adopt arm); until
+// then every builder carries the schedule.
 
 /**
  * Match exact string literal, returning a Span.
+ *
+ * @deprecated 0.13.0 — zero in-realm consumers; scheduled for removal in 1.0.0.
  */
 export function stringSpan(s: string): Parser<Span> {
     const len = s.length;
@@ -39,6 +55,8 @@ export function stringSpan(s: string): Parser<Span> {
 /**
  * Like regex(), but returns a Span instead of a substring.
  * Avoids substring allocation entirely — use spanToString(span, src) when needed.
+ *
+ * @deprecated 0.13.0 — zero in-realm consumers; scheduled for removal in 1.0.0.
  */
 export function regexSpan(r: RegExp): Parser<Span> {
     const flags = r.flags.replace(/y/g, "");
@@ -81,6 +99,8 @@ export function regexSpan(r: RegExp): Parser<Span> {
 /**
  * Like many(), but coalesces all matches into a single Span {start, end}
  * instead of building a T[] array.
+ *
+ * @deprecated 0.13.0 — zero in-realm consumers; scheduled for removal in 1.0.0.
  */
 export function manySpan(
     inner: Parser<Span>,
@@ -122,6 +142,8 @@ export function manySpan(
 /**
  * Like sepBy(), but coalesces all matches into a single Span.
  * Strictly interleaving: `elem (sep elem)*`. Never accepts trailing separators.
+ *
+ * @deprecated 0.13.0 — zero in-realm consumers; scheduled for removal in 1.0.0.
  */
 export function sepBySpan<S>(
     inner: Parser<Span>,
@@ -189,6 +211,8 @@ export function sepBySpan<S>(
 
 /**
  * Like wrap(), but returns only the middle Span, merging adjacent spans.
+ *
+ * @deprecated 0.13.0 — zero in-realm consumers; scheduled for removal in 1.0.0.
  */
 export function wrapSpan(
     inner: Parser<Span>,
@@ -236,6 +260,8 @@ export function wrapSpan(
 /**
  * Optional span: returns the inner Span if matched, or an empty Span at
  * the current position on failure.
+ *
+ * @deprecated 0.13.0 — zero in-realm consumers; scheduled for removal in 1.0.0.
  */
 export function optSpan(inner: Parser<Span>): Parser<Span> {
     const optSpanParser = (state: ParserState<Span>) => {
@@ -257,6 +283,8 @@ export function optSpan(inner: Parser<Span>): Parser<Span> {
 
 /**
  * Parse `keep` then `skip` — return only the Span from `keep`.
+ *
+ * @deprecated 0.13.0 — zero in-realm consumers; scheduled for removal in 1.0.0.
  */
 export function skipSpan(keep: Parser<Span>, skip: Parser<unknown>): Parser<Span> {
     const skipSpanParser = (state: ParserState<Span>) => {
@@ -287,6 +315,8 @@ export function skipSpan(keep: Parser<Span>, skip: Parser<unknown>): Parser<Span
 
 /**
  * Parse `skip` then `keep` — return only the Span from `keep`.
+ *
+ * @deprecated 0.13.0 — zero in-realm consumers; scheduled for removal in 1.0.0.
  */
 export function nextSpan(skip: Parser<unknown>, keep: Parser<Span>): Parser<Span> {
     const nextSpanParser = (state: ParserState<Span>) => {
@@ -319,6 +349,8 @@ export function nextSpan(skip: Parser<unknown>, keep: Parser<Span>): Parser<Span
  * Tries each parser in order — first success wins.
  * More efficient than `any(...).map(span => span)` since it avoids
  * boxing/unboxing through the generic alternation path.
+ *
+ * @deprecated 0.13.0 — zero in-realm consumers; scheduled for removal in 1.0.0.
  */
 export function altSpan(...parsers: Parser<Span>[]): Parser<Span> {
     if (parsers.length === 0) {
@@ -357,6 +389,8 @@ export function altSpan(...parsers: Parser<Span>[]): Parser<Span> {
  * Byte-class scanner: match one or more characters NOT in `excluded`.
  * TS equivalent of Rust's `take_until_any_span` — uses a LUT for O(1)
  * per-character lookup instead of regex NFA overhead.
+ *
+ * @deprecated 0.13.0 — zero in-realm consumers; scheduled for removal in 1.0.0.
  */
 export function takeUntilAnySpan(excluded: string): Parser<Span> {
     // Build 128-entry ASCII lookup table.
@@ -402,6 +436,8 @@ export function takeUntilAnySpan(excluded: string): Parser<Span> {
  * Zero-width negative assertion: succeed with an empty Span when `inner`
  * fails, fail when `inner` succeeds. Never consumes input.
  * Mirrors Rust `negate_span()`.
+ *
+ * @deprecated 0.13.0 — zero in-realm consumers; scheduled for removal in 1.0.0.
  */
 export function negateSpan(inner: Parser<Span>): Parser<Span> {
     const negateSpanParser = (state: ParserState<Span>) => {
@@ -428,6 +464,8 @@ export function negateSpan(inner: Parser<Span>): Parser<Span> {
  * Zero-width positive assertion: succeed with `inner`'s Span when `inner`
  * matches, but don't consume input.
  * Mirrors Rust `peek_span()`.
+ *
+ * @deprecated 0.13.0 — zero in-realm consumers; scheduled for removal in 1.0.0.
  */
 export function peekSpan(inner: Parser<Span>): Parser<Span> {
     const peekSpanParser = (state: ParserState<Span>) => {
@@ -453,6 +491,8 @@ export function peekSpan(inner: Parser<Span>): Parser<Span> {
  * Consuming negative lookahead for Spans: parse `inner`, then reject
  * if `excluded` matches at the resulting position.
  * Mirrors Rust `not_span()`.
+ *
+ * @deprecated 0.13.0 — zero in-realm consumers; scheduled for removal in 1.0.0.
  */
 export function notSpan(inner: Parser<Span>, excluded: Parser<unknown>): Parser<Span> {
     const notSpanParser = (state: ParserState<Span>) => {
@@ -488,6 +528,8 @@ export function notSpan(inner: Parser<Span>, excluded: Parser<unknown>): Parser<
  * Set difference for Spans: reject if `excluded` matches at the same
  * start position, then try `inner`.
  * Mirrors Rust `minus_span()`.
+ *
+ * @deprecated 0.13.0 — zero in-realm consumers; scheduled for removal in 1.0.0.
  */
 export function minusSpan(inner: Parser<Span>, excluded: Parser<unknown>): Parser<Span> {
     const minusSpanParser = (state: ParserState<Span>) => {
@@ -517,6 +559,8 @@ export function minusSpan(inner: Parser<Span>, excluded: Parser<unknown>): Parse
  * that `lookahead` matches at the resulting position (zero-width).
  * Returns `inner`'s Span.
  * Mirrors Rust `look_ahead_span()`.
+ *
+ * @deprecated 0.13.0 — zero in-realm consumers; scheduled for removal in 1.0.0.
  */
 export function lookAheadSpan(inner: Parser<Span>, lookahead: Parser<unknown>): Parser<Span> {
     const lookAheadSpanParser = (state: ParserState<Span>) => {

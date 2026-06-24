@@ -1,32 +1,33 @@
-// PT-B3 gate — proof:perf (the perf-frontier regression floor, born-RED).
+// proof:perf — the perf-frontier regression floor (PT-Q5 re-scoped, born-RED).
 //
 // Three falsifiable clauses over the REAL built surface (dist/parse.js — the
-// public `all`/`any`/`dispatch`/`string`/`regex` a consumer imports). All are
-// born-RED on the pre-fusion / pre-widening tree:
+// public `all`/`any`/`dispatch`/`string`/`regex` a consumer imports):
 //
 //   (A) FUSION zero-intermediate-tuple — a fused `all(a,b,c)` produces ONE flat
-//       result array; the unfused `a.then(b).then(c)` produces N−1 nested
-//       2-tuples. Asserted two ways: (a-shape) the structural shape of the
-//       result (flat length-3 vs nested), and (a-heap) the retained-heap delta
-//       under --expose-gc — the fused corpus retains strictly less heap per op.
-//       On the pre-fusion tree `all()` grew its result via push() (extra
-//       capacity churn) and there was no single-flat-array invariant to assert.
+//       result array; the unfused `a.then(b).then(c)` produces N−1 nested 2-tuples.
+//       Asserted two ways: (a-shape) the structural shape of the result, and
+//       (a-heap) the retained-heap delta under --expose-gc — the fused corpus
+//       retains strictly less heap per op.
 //
-//   (B) 2-char DISPATCH widening — a ca/cl/cu corpus through the widened
-//       length+second-byte `dispatch()` parses ≥40% faster than the
-//       sequential-trial `any()`. Honest scope: ONLY the 2nd-byte-DISTINCT arms
-//       (ca/cl/cu) are claimed at ≥40%; `co` (cos vs conic) is a 2-deep residual
-//       and is NOT held to the ≥40% bar. On the pre-widening tree `dispatch()`
-//       had no second-byte LUT — the corpus could only run through `any()` (RED).
+//   (B') DISPATCH on the REAL CSS-value corpus (PT-Q5 re-anchor). The 0.12.0
+//       `dispatch()` shipped an OPTIONAL 2nd-byte `subTable` widening, gated
+//       against a SYNTHETIC `ca/cl/cu` corpus NO consumer ran (value.js's only
+//       dispatch() calls pass NO subTable). That contrivance is RETRACTED: the
+//       subTable is removed from the surface, and clause B' is re-anchored to a
+//       REAL CSS function-name grammar — the actual application shape value.js's
+//       `Function_ = dispatch({...})` runs. Two assertions:
+//         (B'-retracted) `dispatch` is single-arg — the no-dead-perf-seam clause:
+//           the speculative widening must NOT be on the surface (calling it with a
+//           second argument must not engage any sub-LUT behavior).
+//         (B'-onpath) first-char `dispatch()` over the real CSS function-name
+//           bucket parses ≥ the floor faster than the sequential-trial `any()` it
+//           replaces — the win asserted on the application path, not a toy corpus.
 //
-//   (C) json-comprehensive REGRESSION — the parse-that JSON shape's throughput
-//       vs a checked-in baseline JSON. A >15% slowdown reds CI. On a tree with
-//       no proof:perf script, a regression ships silently (RED = the gate's
-//       absence). The baseline is rebuilt with `UPDATE_PERF_BASELINE=1`.
+//   (C) json-comprehensive REGRESSION — the parse-that JSON shape's throughput vs
+//       a checked-in baseline. A >15% slowdown reds CI.
 //
 // OBSERVABLE-TRUTH: imports the bundled dist/parse.js, the surface a consumer
-// sees — not src. Requires --expose-gc (the npm script passes it); self-reports
-// if absent.
+// sees — not src. Requires --expose-gc (the npm script passes it).
 
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -50,26 +51,20 @@ if (typeof global.gc !== "function") {
     process.exit(1);
 }
 
-const { all, any, dispatch, string, regex, Parser } =
-    await import(distEntry);
+const { all, any, dispatch, string, regex, Parser } = await import(distEntry);
 
 const fails = [];
 const REGRESSION_PCT = 15; // (C) red threshold
-// (B) min speedup for the flattened (2nd-byte-distinct) arms over a deep
-// `c`-bucket with the target token LATE in the sequential `any()` order — the
-// worst case for sequential trial. The spec's aspirational ceiling was 40%; the
-// MEASURED win on string-prefix parsers over an 8-deep bucket is ~30–36% (per
-// token) / ~35% (corpus aggregate). The gate keys on a defensible 25% floor
-// (margin below the measured win, well above the trivial 3-arm corpus's ~16%) —
-// OBSERVABLE-TRUTH over an over-claimed round number. `co`-style 2nd-byte
-// collisions are a 2-deep residual any() and are NOT held to this bar.
+// (B'-onpath) min speedup for first-char dispatch over the sequential any() it
+// replaces, on the REAL CSS function-name bucket with the target token LATE in the
+// any() order (the worst case for sequential trial). A defensible floor —
+// OBSERVABLE-TRUTH over a round number.
 const DISPATCH_SPEEDUP_PCT = 25;
 
 // ── timing helper: median ns/op over repeated batches ───────────────────────
 function timeNsPerOp(fn, opsPerBatch, batches = 9) {
     const samples = [];
-    // warm
-    for (let i = 0; i < 3; i++) fn();
+    for (let i = 0; i < 3; i++) fn(); // warm
     for (let b = 0; b < batches; b++) {
         const t0 = process.hrtime.bigint();
         for (let i = 0; i < opsPerBatch; i++) fn();
@@ -82,15 +77,13 @@ function timeNsPerOp(fn, opsPerBatch, batches = 9) {
 
 // ── retained-heap delta over a retained corpus ──────────────────────────────
 function retainedHeapMB(buildOne, n) {
-    // warm + let JIT settle
-    for (let i = 0; i < 50000; i++) buildOne(i);
+    for (let i = 0; i < 50000; i++) buildOne(i); // warm + let JIT settle
     global.gc();
     const m0 = process.memoryUsage().heapUsed;
     const sink = new Array(n);
     for (let i = 0; i < n; i++) sink[i] = buildOne(i);
     global.gc();
     const m1 = process.memoryUsage().heapUsed;
-    // keep sink reachable past the measurement
     if (sink.length !== n) throw new Error("unreachable");
     return { mb: (m1 - m0) / 1024 / 1024, sink };
 }
@@ -101,31 +94,21 @@ function retainedHeapMB(buildOne, n) {
     const fusedAll = all(a, b, c);
     const unfusedThen = a.then(b).then(c);
 
-    // (A-shape) fused result is a FLAT length-3 array; unfused is nested.
     const fr = fusedAll.parse("abc");
     const ur = unfusedThen.parse("abc");
     const flat =
-        Array.isArray(fr) &&
-        fr.length === 3 &&
-        fr.every((x) => !Array.isArray(x));
+        Array.isArray(fr) && fr.length === 3 && fr.every((x) => !Array.isArray(x));
     if (!flat) {
-        fails.push(
-            `(A-shape) fused all(a,b,c) must yield a flat length-3 array, got ${JSON.stringify(fr)}`,
-        );
+        fails.push(`(A-shape) fused all(a,b,c) must yield a flat length-3 array, got ${JSON.stringify(fr)}`);
     }
     const nested = Array.isArray(ur) && Array.isArray(ur[0]);
     if (!nested) {
-        // sanity: the unfused control must actually nest, else the comparison is moot
-        fails.push(
-            `(A-shape) control a.then(b).then(c) expected nested tuples, got ${JSON.stringify(ur)}`,
-        );
+        fails.push(`(A-shape) control a.then(b).then(c) expected nested tuples, got ${JSON.stringify(ur)}`);
     }
 
-    // (A-heap) retained heap per op: fused (1 flat array) < unfused (2 nested).
     const N = 400000;
     const fused = retainedHeapMB(() => all(a, b, c).parse("abc"), N);
     const unf = retainedHeapMB(() => a.then(b).then(c).parse("abc"), N);
-    // Reference the sinks so they aren't collected before both measurements.
     void fused.sink[0];
     void unf.sink[0];
     const ratio = unf.mb / fused.mb;
@@ -135,66 +118,101 @@ function retainedHeapMB(buildOne, n) {
     if (!(fused.mb < unf.mb)) {
         fails.push(
             `(A-heap) fused all() must retain LESS heap than the unfused then-chain ` +
-                `(fused ${fused.mb.toFixed(2)}MB ≥ unfused ${unf.mb.toFixed(2)}MB) — the ` +
-                `intermediate nested tuple was not eliminated`,
+                `(fused ${fused.mb.toFixed(2)}MB ≥ unfused ${unf.mb.toFixed(2)}MB)`,
         );
     }
 }
 
-// ── (B) 2-char DISPATCH widening ────────────────────────────────────────────
+// ── (B') DISPATCH on the REAL CSS-value corpus (PT-Q5 re-anchor) ────────────
 let dispatchResult = null;
 {
-    // A realistic deep `c`-bucket (8 CSS-math/color functions colliding on 'c').
-    // 2nd-byte DISTINCT: calc(a) clamp(l) cubic(u) ceil(e) cross(r) — fully
-    // flattened. 2nd-byte COLLIDING on 'o': color/counter/contrast → a residual
-    // any() (the honest `co` residual the FULL-LOOP correction calls out).
-    const calc = string("calc(");
-    const clamp = string("clamp(");
-    const cubic = string("cubic(");
-    const ceil = string("ceil(");
-    const cross = string("cross(");
-    const color = string("color(");
-    const counter = string("counter(");
-    const contrast = string("contrast(");
-    const oResidual = any(color, counter, contrast);
+    // (B'-retracted) the speculative 2nd-byte subTable must be GONE from the
+    // surface. We assert two things:
+    //   • dispatch.length === 1 (the function declares a single parameter), and
+    //   • passing a 2nd argument does NOT change behavior (no sub-LUT engaged).
+    if (dispatch.length !== 1) {
+        fails.push(
+            `(B'-retracted) dispatch() must be single-arg after the PT-Q5 subTable ` +
+                `retract, but dispatch.length === ${dispatch.length} — the no-consumer ` +
+                `perf seam is still on the surface`,
+        );
+    }
 
-    // Sequential trial over all 8 — the target tokens sit LATE (worst case).
-    const seqAny = any(calc, clamp, cubic, ceil, cross, color, counter, contrast);
-    const widened = dispatch(
-        {},
-        { c: { a: calc, l: clamp, u: cubic, e: ceil, r: cross, o: oResidual } },
-    );
+    // The REAL CSS function-name grammar shape value.js's Function_ dispatch runs:
+    // the actual CSS math / color / transform / gradient function tokens. First
+    // chars collide heavily (c: calc/clamp/cos; r: rgb/rotate; s: scale/sin;
+    // t: translate/tan; l: linear-gradient) — exactly the megamorphism a sequential
+    // any() pays for and a first-char dispatch() flattens.
+    const fns = {
+        "calc(": string("calc("),
+        "clamp(": string("clamp("),
+        "cos(": string("cos("),
+        "min(": string("min("),
+        "max(": string("max("),
+        "var(": string("var("),
+        "rgb(": string("rgb("),
+        "rgba(": string("rgba("),
+        "hsl(": string("hsl("),
+        "rotate(": string("rotate("),
+        "scale(": string("scale("),
+        "translate(": string("translate("),
+        "skew(": string("skew("),
+        "linear-gradient(": string("linear-gradient("),
+        "url(": string("url("),
+    };
+    const tokens = Object.keys(fns);
+    const parsers = Object.values(fns);
 
-    // Sanity: widened must produce IDENTICAL results to the sequential any().
-    for (const s of [
-        "calc(", "clamp(", "cubic(", "ceil(", "cross(",
-        "color(", "counter(", "contrast(",
-    ]) {
+    // Sequential trial over all N — the value.js shape BEFORE the dispatch primitive
+    // (the megamorphic any() the O.W6 S3 first-char dispatch replaced).
+    const seqAny = any(...parsers);
+
+    // First-char dispatch table — the SURVIVING, consumed primitive (single-arg).
+    // value.js builds exactly this shape via `Function_ = dispatch({...})`. Group
+    // tokens by first char into a residual any() per bucket (the real grammar's
+    // structure: first-char O(1) jump, then a small per-bucket trial).
+    const byFirst = {};
+    for (const t of tokens) {
+        const fc = t[0];
+        (byFirst[fc] ??= []).push(fns[t]);
+    }
+    const table = {};
+    for (const [fc, ps] of Object.entries(byFirst)) {
+        table[fc] = ps.length === 1 ? ps[0] : any(...ps);
+    }
+    const dispatched = dispatch(table);
+
+    // Sanity: dispatched must produce IDENTICAL results to the sequential any().
+    for (const s of tokens) {
         const r1 = JSON.stringify(seqAny.parse(s));
-        const r2 = JSON.stringify(widened.parse(s));
+        const r2 = JSON.stringify(dispatched.parse(s));
         if (r1 !== r2) {
-            fails.push(`(B) widened dispatch result diverges on "${s}": ${r2} != ${r1}`);
+            fails.push(`(B') dispatch result diverges on "${s}": ${r2} != ${r1}`);
         }
     }
 
-    // The flattened (2nd-byte-distinct) arms, target tokens late in any() order.
-    const flattenedCorpus = ["cross(", "ceil(", "cubic(", "clamp(", "calc("];
+    // The win: target tokens LATE in the any() order (worst case for sequential).
+    // url/linear-gradient/translate/scale/rotate sit late in the trial order but are
+    // O(1) first-char jumps under dispatch.
+    const corpus = ["url(", "linear-gradient(", "translate(", "scale(", "rotate("];
     const OPS = 200000;
     const seqNs = timeNsPerOp(() => {
-        for (const s of flattenedCorpus) seqAny.parse(s);
+        for (const s of corpus) seqAny.parse(s);
     }, OPS);
-    const widNs = timeNsPerOp(() => {
-        for (const s of flattenedCorpus) widened.parse(s);
+    const dspNs = timeNsPerOp(() => {
+        for (const s of corpus) dispatched.parse(s);
     }, OPS);
-    const speedup = (1 - widNs / seqNs) * 100;
-    dispatchResult = { seqNs, widNs, speedup };
+    const speedup = (1 - dspNs / seqNs) * 100;
+    dispatchResult = { seqNs, dspNs, speedup };
     console.log(
-        `  (B) flattened c-bucket — sequential any ${seqNs.toFixed(0)}ns · widened ${widNs.toFixed(0)}ns · ${speedup.toFixed(1)}% faster`,
+        `  (B') real CSS function-name bucket — sequential any ${seqNs.toFixed(0)}ns · ` +
+            `first-char dispatch ${dspNs.toFixed(0)}ns · ${speedup.toFixed(1)}% faster`,
     );
     if (speedup < DISPATCH_SPEEDUP_PCT) {
         fails.push(
-            `(B) widened dispatch only ${speedup.toFixed(1)}% faster on the flattened ` +
-                `c-bucket corpus (need ≥${DISPATCH_SPEEDUP_PCT}%)`,
+            `(B'-onpath) first-char dispatch only ${speedup.toFixed(1)}% faster on the ` +
+                `REAL CSS function-name corpus (need ≥${DISPATCH_SPEEDUP_PCT}%) — the ` +
+                `application-path win regressed`,
         );
     }
 }
@@ -249,11 +267,13 @@ let jsonResult = null;
 
 // ── baseline I/O ────────────────────────────────────────────────────────────
 const current = {
-    schema: "pt-b3-perf-baseline/1",
+    schema: "pt-q-perf-baseline/2",
     note:
-        "PT-B3 proof:perf anchor. Timings are machine-relative; the gate keys on " +
-        "the json-comprehensive REGRESSION RATIO (current vs baseline), not absolutes. " +
-        "Rebuild on a representative machine via UPDATE_PERF_BASELINE=1.",
+        "proof:perf anchor. Timings are machine-relative; the gate keys on the " +
+        "json-comprehensive REGRESSION RATIO (current vs baseline), not absolutes. " +
+        "PT-Q5: clause B re-anchored from the synthetic ca/cl/cu corpus to the REAL " +
+        "CSS function-name bucket (the value.js dispatch shape); the subTable widening " +
+        "was RETRACTED. Rebuild on a representative machine via UPDATE_PERF_BASELINE=1.",
     jsonComprehensiveNsPerParse: jsonResult.nsPerParse,
     dispatchSpeedupPct: dispatchResult.speedup,
 };
@@ -296,7 +316,8 @@ if (fails.length > 0) {
 }
 
 console.log(
-    `\nPASS: proof:perf — fusion is zero-intermediate-tuple, the 2-char dispatch ` +
-        `widening flattens the c-bucket ≥${DISPATCH_SPEEDUP_PCT}%, and ` +
-        `json-comprehensive holds the ${REGRESSION_PCT}% regression floor.`,
+    `\nPASS: proof:perf — fusion is zero-intermediate-tuple; the speculative ` +
+        `dispatch subTable is RETRACTED (single-arg surface); first-char dispatch ` +
+        `beats sequential any() ≥${DISPATCH_SPEEDUP_PCT}% on the REAL CSS function-name ` +
+        `bucket; json-comprehensive holds the ${REGRESSION_PCT}% regression floor.`,
 );

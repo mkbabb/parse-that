@@ -1,6 +1,6 @@
 {
-    "schema": "pt-b3-perf-baseline/1",
-    "note": "PT-B3 proof:perf anchor. Timings are machine-relative; the gate keys on the json-comprehensive REGRESSION RATIO (current vs baseline), not absolutes. This seed is the GATE'S OWN in-process (C) median on the post-fusion source (darwin-arm64, node 26) ~1660 ns/parse — seed from the gate, not an isolated probe, so clause (A)'s heap pressure is already folded in and the ratio centers near 1.0. Re-seed on the canonical CI runner on first green via UPDATE_PERF_BASELINE=1 node --expose-gc scripts/proof-perf.mjs; the 15% threshold absorbs cross-machine jitter.",
-    "jsonComprehensiveNsPerParse": 1660,
-    "dispatchSpeedupPct": 25
+    "schema": "pt-q-perf-baseline/2",
+    "note": "proof:perf anchor. Timings are machine-relative; the gate keys on the json-comprehensive REGRESSION RATIO (current vs baseline), not absolutes. PT-Q5: clause B re-anchored from the synthetic ca/cl/cu corpus to the REAL CSS function-name bucket (the value.js dispatch shape); the subTable widening was RETRACTED. Rebuild on a representative machine via UPDATE_PERF_BASELINE=1.",
+    "jsonComprehensiveNsPerParse": 1742.455,
+    "dispatchSpeedupPct": 38.12315856723158
 }
