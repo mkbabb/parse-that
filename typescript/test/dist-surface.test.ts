@@ -49,15 +49,32 @@ describe("dist surface == source surface (PT-WAVE-3a publish-discipline)", () =>
         expect(missing, `dist is missing source exports: ${missing.join(", ")}`).toEqual([]);
     });
 
-    it.skipIf(!hasDist)("all 15 span fns are present in the dist (the 8-of-15 drift target)", () => {
+    // S.H2 (fold row 48, DQ-2) — the 1.0.0 breaking cut EXCISED the 15 `*Span`
+    // builders (deprecated in 0.13.0, zero consumers). This keep-gate was the
+    // inverse: it asserted their PRESENCE (the 8-of-15 drift target). It is now
+    // FLIPPED to assert their ABSENCE from the built dist AND the source barrel —
+    // the terminal runtime-tier owner is `proof:no-span-surface`; this is the
+    // source/dist complement inside the vitest suite.
+    it.skipIf(!hasDist)("the 15 *Span fns are ABSENT from the dist (S.H2 1.0.0 cut)", () => {
         const dist = readFileSync(DIST_INDEX, "utf8");
         const spanFns = [
             "stringSpan", "regexSpan", "manySpan", "sepBySpan", "wrapSpan",
             "optSpan", "skipSpan", "nextSpan", "altSpan", "takeUntilAnySpan",
             "negateSpan", "peekSpan", "notSpan", "minusSpan", "lookAheadSpan",
         ];
-        const missing = spanFns.filter((fn) => !new RegExp(`\\b${fn}\\b`).test(dist));
-        expect(missing, `dist missing span fns: ${missing.join(", ")}`).toEqual([]);
+        const present = spanFns.filter((fn) => new RegExp(`\\b${fn}\\b`).test(dist));
+        expect(present, `dist still exports excised *Span fns: ${present.join(", ")}`).toEqual([]);
+    });
+
+    it("the source barrel names zero *Span symbols (S.H2 1.0.0 cut)", () => {
+        const src = readFileSync(SRC_INDEX, "utf8");
+        const spanFns = [
+            "stringSpan", "regexSpan", "manySpan", "sepBySpan", "wrapSpan",
+            "optSpan", "skipSpan", "nextSpan", "altSpan", "takeUntilAnySpan",
+            "negateSpan", "peekSpan", "notSpan", "minusSpan", "lookAheadSpan",
+        ];
+        const present = spanFns.filter((fn) => new RegExp(`\\b${fn}\\b`).test(src));
+        expect(present, `source barrel still names *Span: ${present.join(", ")}`).toEqual([]);
     });
 
     // A.W1 (inv-A-1) — the CSS surface left for value.js (D2/D3). The source

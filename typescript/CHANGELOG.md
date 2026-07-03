@@ -39,6 +39,40 @@ publish itself land later, at S.H4 — this section is the payload, not the rele
   throughput-% gate** — a percentage threshold is workload-dependent and a
   confirmed flake trap (<2% on long strings).
 
+### Removed — BREAKING: the `*Span` surface is excised (S.H2; fold row 48, DQ-2)
+
+- **The 15 closure-based `*Span` builders are DELETED.** `stringSpan`, `regexSpan`,
+  `manySpan`, `sepBySpan`, `wrapSpan`, `optSpan`, `skipSpan`, `nextSpan`, `altSpan`,
+  `takeUntilAnySpan`, `negateSpan`, `peekSpan`, `notSpan`, `minusSpan`,
+  `lookAheadSpan` — deprecated in 0.13.0 (PT-Q4), zero consumers across value.js +
+  keyframes.js. `span.ts` is removed wholesale and both barrels (`.` and `./core`)
+  no longer export them. This is the **source-breaking** change that makes the cut
+  a 1.0.0. The `Span` type and its two helpers (`spanToString`, `mergeSpans`) are
+  UNAFFECTED — they operate on the surviving `Span` value, not the deleted
+  builders. Gate: **`proof:no-span-surface`** (born-RED against the pre-cut tree,
+  reading the built dist surface) — it SUPERSEDES the retired `proof:span-surface-resolved`
+  (its deprecate-then-remove disposition is now fulfilled) and folds in
+  `proof:span-parser-killed`'s A.W3 falsification record.
+
+### Fixed — BREAKING: `chain()` threads falsy seeds; `chainError` retired (S.H2; C-16, fold row 50)
+
+- **`chain()` no longer drops a falsy-but-valid seed.** The pre-1.0.0 body gated
+  the continuation on `state.value || chainError`, so a successful parse whose value
+  was `0` / `''` / `false` silently skipped `fn` and returned the seed. The fix is
+  C-16 Option A — truly additive: on a successful parse, ALWAYS thread the value:
+  ```ts
+  if (state.isError) return state;
+  return fn(state.value).parser(state);
+  ```
+- **The `chainError` parameter is retired (breaking).** It was dead-on-error (the
+  `isError` branch returns first) and had **zero callers** across value.js +
+  parse-that src (recorded scan: the 4 live value.js `.chain()` sites all pass a
+  single argument; the identifier appears as live code nowhere). Removed in the
+  same 1.0.0 cut — a documented removal, not a silent drop. r6's
+  `!state.isError || chainError` was rejected: it would silently resurrect a
+  continue-on-error path nothing uses. Gate: **`test/chain.test.ts`** — falsy-seed
+  thread (red-then-green), genuine-error short-circuit, and the 0-caller arity scan.
+
 ## 0.13.0 — Tranche Q (the no-deferral terminal: shipped-defect cure + no-legacy retirement)
 
 The keyframes.js Tranche Q constellation drive (dispatch `KF-TO-PARSETHAT-Q.md`).

@@ -165,20 +165,9 @@ export const parserNames = [
     "dispatch",
     "debug",
     "mapState",
-    "regexSpan",
-    "manySpan",
-    "sepBySpan",
-    "wrapSpan",
-    "altSpan",
-    "takeUntilAnySpan",
     "recover",
     "peek",
     "lookAhead",
-    "negateSpan",
-    "peekSpan",
-    "notSpan",
-    "minusSpan",
-    "lookAheadSpan",
 ] as const;
 
 export type ParserContext = {

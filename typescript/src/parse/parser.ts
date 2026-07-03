@@ -121,16 +121,20 @@ export class Parser<T = string> {
         );
     }
 
-    chain<S>(fn: (value: T) => Parser<S | T>, chainError: boolean = false) {
+    chain<S>(fn: (value: T) => Parser<S | T>) {
+        // C-16 Option A (fold row 50): on a SUCCESSFUL parse, always thread the
+        // value into the continuation. The pre-1.0.0 code gated the continuation
+        // on `state.value || chainError`, so a falsy-but-valid seed (0 / '' /
+        // false) was silently dropped. The retired `chainError` param was
+        // dead-on-error (the isError branch already returns first) and had zero
+        // callers across value.js + parse-that — removed in the 1.0.0 breaking cut.
         const chain = (state: ParserState<T>) => {
             this.parser(state);
 
             if (state.isError) {
                 return state;
-            } else if (state.value || chainError) {
-                return fn(state.value).parser(state as ParserState<S | T>);
             }
-            return state;
+            return fn(state.value).parser(state as ParserState<S | T>);
         };
 
         return new Parser(

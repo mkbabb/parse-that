@@ -1,54 +1,60 @@
 # typescript/
 
-TypeScript parser combinator library. Published as `@mkbabb/parse-that` v0.8.2.
+TypeScript parser combinator library. Published as `@mkbabb/parse-that` v0.13.0;
+Tranche S stages a **1.0.0 breaking cut** (the `*Span` surface excision + the
+`chain()` falsy-seed fix / `chainError` retirement — bump/publish at S.H4).
 
 ## Structure
 
 ```
 src/parse/
-  index.ts          Barrel re-exports from all sub-modules
-  parser.ts         Parser<T> class, combinators, recover(), ParserFunction type, memoization, flags
+  index.ts          Barrel (the `.` export) — re-exports from all sub-modules
+  core.ts           `./core` subpath — the zero-side-effect primitive set
+  parser.ts         Parser<T> class + combinators (then/or/chain/map/many/wrap/…), recover(), ParserFunction, flags
   leaf.ts           Leaf parsers: string, regex, eof, any, dispatch, all, whitespace
+  packrat.ts        Opt-in packrat memoization + WDM left recursion (memoize/mergeMemos); armed behind PACKRAT_ARMED
+  packrat-entry.ts  `./packrat` subpath entry
   lazy.ts           getLazyParser(), createLazyCached(), lazy decorator
-  span.ts           stringSpan(), regexSpan(), manySpan(), sepBySpan(), wrapSpan(), optSpan(), skipSpan(), nextSpan(), altSpan(), takeUntilAnySpan()
   split.ts          splitBalanced(), containsDelimiter() — format-time balanced splitting
-  state.ts          ParserState<T>, Span, ParserContext types
+  state.ts          ParserState<T>, Span, ParserContext, spanToString(), mergeSpans()
   ansi.ts           Zero-dep ANSI helpers (bold, red, green, etc.) — NO_COLOR + TTY aware
   utils.ts          mergeErrorState(), Diagnostic, collectDiagnostic(), Suggestion, SecondarySpan
+  utils-entry.ts    `./utils` subpath entry
   debug.ts          parserDebug(), statePrint(), formatDiagnostic(), formatAllDiagnostics()
+  diagnostics.ts    `./diagnostics` subpath entry
   parsers/
     index.ts        Barrel re-exports for domain parsers
     json.ts         JsonValue type, jsonParser() — combinator JSON
     csv.ts          csvParser() — RFC 4180 CSV
-    css/            CSS L1.75 parser (types, scan, value, selector, rule, media, specificity)
     utils.ts        escapedString(), quotedString(), numberParser()
-test/
+test/                          # 13 *.test.ts files (derive: `ls test/*.test.ts | wc -l`)
+  chain.test.ts             chain() falsy-seed thread + error short-circuit + chainError 0-caller scan (C-16)
   csv.test.ts               CSV parsing with quoted fields
-  css-diagnostics.test.ts   CSS-grammar integration tests for diagnostics system
-  css-fairness-validation.test.ts  Cross-parser CSS fairness checks
-  css-parse.test.ts         CSS parser integration tests
-  css-recovery-demo.test.ts Multi-error recovery via recover() combinator (13 tests)
   debug.test.ts             Diagnostics unit tests (summarizeLine, formatExpected, labels, suggestions)
+  dist-surface.test.ts      Publish-discipline: dist == source surface; zero `*Span`, zero CSS symbols
   json.test.ts              JSON combinator parser
   json-vectors.test.ts      Shared JSON test vectors (grammar/tests/json/)
-  math.test.ts              Math expressions with operator precedence
+  math.test.ts              Math expressions with operator precedence (left recursion)
   memoize.test.ts           Left recursion via .memoize() / .mergeMemos()
   print.test.ts             parserPrint() output
+  reentrancy.test.ts        Per-parse error state + nested/interleaved parse re-entrancy
   split.test.ts             splitBalanced() format-time splitting
   validate-parsers.test.ts  Competitor parsers vs JSON.parse()
   verify-parse-output.test.ts  Hand-written JSON correctness
   setup.ts                  CWD setup
   utils.ts                  Test helpers
   benchmarks/               Competitor implementations + comprehensive bench suite
+scripts/                       # proof-*.mjs runtime gates (wired to npm run proof:*)
 ```
 
 ## Build
 
 ```bash
 npm ci
-npm test          # vitest (pool: forks, 8GB heap) — 14 test files
-npm run build     # vite → dist/parse.js (ES) + parse.cjs (CJS) + .d.ts
+npm test          # vitest (pool: forks, 8GB heap) — 13 test files
+npm run build     # vite → dist/parse.js (ES) + parse.cjs (CJS) + .d.ts (multi-entry: parse/core/diagnostics/packrat/utils)
 npx tsc --noEmit  # type check
+npm run proof:all # runtime gate roster (manifest, subpath, packrat-*, no-span-surface, no-dead-combinator, perf, …)
 ```
 
 ## Key Exports
@@ -58,15 +64,17 @@ npx tsc --noEmit  # type check
 Parser<T>, ParserState<T>, ParserFunction<T>, Span
 
 // Leaf parsers (leaf.ts)
-string(s), regex(r), eof(), any(...), all(...), dispatch(table, fallback?), whitespace
+string(s), regex(r), eof(), any(...), all(...), dispatch(table), whitespace
 
 // Lazy (lazy.ts)
 Parser.lazy(fn), getLazyParser(), createLazyCached()
 
-// Span variants (span.ts — zero-copy)
-stringSpan(), regexSpan(), manySpan(), sepBySpan(), wrapSpan()
-optSpan(), skipSpan(), nextSpan(), altSpan(), takeUntilAnySpan()
+// Span helpers (state.ts) — the Span TYPE + its two helpers survive; the 15
+// closure `*Span` BUILDERS were excised in the 1.0.0 cut (S.H2, zero consumers).
 mergeSpans(a, b), spanToString(span, src)
+
+// Packrat / left recursion (packrat.ts, opt-in — off the default LL(1) path)
+memoize(p), mergeMemos(p), resetPackrat()
 
 // Balanced splitting (split.ts)
 splitBalanced(), containsDelimiter()
@@ -92,8 +100,16 @@ parser.recover(sync, sentinel)        // parse past errors, collect Diagnostic s
 - Single export path: `.` → `dist/parse.js`
 - No `src/bbnf/` — extracted to [`bbnf-lang`](https://github.com/mkbabb/bbnf-lang)
 - Mutable ParserState with `save()`/`restore()` for backtracking
-- Numeric memo keys: `(parserId << 20) | offset` — no string alloc
-- `dispatch(table)` for O(1) ASCII first-char branching
-- Flag-based trim/EOF inlined in `Parser.call()` hot path
-- `sep_by` strictly interleaving `elem (sep elem)*` — never accepts trailing separators
-- Span combinators use `.call()` (not `.parser()`) to respect flag system (whitespace trim, memoization)
+- Float64-safe numeric memo keys: `parser.id * 2**32 + offset` (offset added WHOLE,
+  no mask; fail-loud `RangeError` past the safe-integer ceiling — PT-Q2). The old
+  `<< 20` shift aliased at id ≥ 4096 and masked offsets ≥ 1 MB — both fixed.
+- Packrat is OPT-IN and OFF the default LL(1) path. The epoch machinery is armed
+  behind a `PACKRAT_ARMED` latch that trips on the first `memoize()`/`mergeMemos()`
+  construction (S.H1) — `packratEnter`/`packratExit`/`resetPackrat` are no-ops until
+  then, so a non-memoizing grammar allocates zero packrat Maps per parse.
+- `dispatch(table)` for O(1) ASCII first-char branching (single-arg; the speculative
+  2nd-byte subTable was retracted at PT-Q5)
+- Flag-based trim/EOF inlined in the `Parser` hot path
+- `sepBy` strictly interleaving `elem (sep elem)*` — never accepts trailing separators
+- `chain(fn)` threads EVERY successful value (including falsy `0`/`''`/`false`) into
+  the continuation; it short-circuits only on error (C-16, the 1.0.0 cut)

@@ -45,10 +45,10 @@ const packrat = await import(packratPath);
 if (typeof core.Parser !== "function") {
     fail("./core did not export `Parser` as a function");
 }
-// The closure span combinator is the canonical public API (the SpanParser
-// tagged-union was killed at PT-B4 — no in-realm consumer, P-inv-28).
-if (typeof core.altSpan !== "function") {
-    fail("./core did not export the span combinator `altSpan`");
+// A canonical leaf combinator of the primitive core (the `*Span` builders were
+// excised in the 1.0.0 cut — S.H2, fold row 48; gate: proof:no-span-surface).
+if (typeof core.dispatch !== "function") {
+    fail("./core did not export the leaf combinator `dispatch`");
 }
 if (typeof packrat.memoize !== "function") {
     fail("./packrat did not export `memoize` as a function");
@@ -56,5 +56,5 @@ if (typeof packrat.memoize !== "function") {
 
 console.log(
     `proof:subpath GREEN — ${subpaths.length} subpaths resolve; ` +
-        `./core{Parser,altSpan} + ./packrat{memoize} are live functions.`,
+        `./core{Parser,dispatch} + ./packrat{memoize} are live functions.`,
 );

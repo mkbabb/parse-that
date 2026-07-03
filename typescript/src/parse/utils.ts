@@ -61,7 +61,7 @@ export function addSecondarySpan(state: ParserState<unknown>, offset: number, la
 }
 
 /**
- * Report an unclosed delimiter diagnostic. Shared by wrap() and wrapSpan().
+ * Report an unclosed delimiter diagnostic. Used by wrap().
  */
 export function reportUnclosedDelimiter(
     state: ParserState<unknown>,
