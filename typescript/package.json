@@ -42,11 +42,12 @@
         "proof:packrat-cross-input": "node scripts/proof-packrat-cross-input.mjs",
         "proof:packrat-reentrant": "node scripts/proof-packrat-reentrant.mjs",
         "proof:packrat-large-offset": "node scripts/proof-packrat-large-offset.mjs",
+        "proof:packrat-armed": "node scripts/proof-packrat-armed.mjs",
         "proof:span-parser-killed": "node scripts/proof-span-parser-killed.mjs",
         "proof:span-surface-resolved": "node scripts/proof-span-surface-resolved.mjs",
         "proof:no-dead-combinator": "node scripts/proof-no-dead-combinator.mjs",
         "proof:perf": "NODE_OPTIONS='--expose-gc' node scripts/proof-perf.mjs",
-        "proof:all": "npm run proof:manifest && npm run proof:no-css-surface && npm run proof:subpath && npm run proof:packrat-cross-input && npm run proof:packrat-reentrant && npm run proof:packrat-large-offset && npm run proof:span-parser-killed && npm run proof:span-surface-resolved && npm run proof:no-dead-combinator && npm run proof:perf"
+        "proof:all": "npm run proof:manifest && npm run proof:no-css-surface && npm run proof:subpath && npm run proof:packrat-cross-input && npm run proof:packrat-reentrant && npm run proof:packrat-large-offset && npm run proof:packrat-armed && npm run proof:span-parser-killed && npm run proof:span-surface-resolved && npm run proof:no-dead-combinator && npm run proof:perf"
     },
     "files": [
         "./dist"

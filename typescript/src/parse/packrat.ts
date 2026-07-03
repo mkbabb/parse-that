@@ -134,6 +134,27 @@ let MEMO = new Map<number, MemoCell>();
 let HEADS = new Map<number, Head>();
 let LR_STACK: LR | undefined;
 
+// PACKRAT_ARMED — the epoch latch (S.H1; fold row 49, p11-confirmed).
+//
+// packratEnter opens a fresh packrat epoch — three Maps (MEMO/HEADS/GROWING) — at
+// EVERY parseState entry boundary, so the default LL(1) parse path (CSS values,
+// JSON, CSV — grammars that never memoize) paid a three-Map allocation on every
+// top-level parse for machinery it never used (~30 ns / 3-Map alloc per parse;
+// mid-teens % throughput on short CSS values). Packrat is strictly opt-in: nothing
+// consults MEMO/HEADS/GROWING unless a memoize()/mergeMemos() wrapper is on the
+// parse path. So the epoch is only needed once a memoizer EXISTS in the process.
+//
+// The latch arms on the FIRST memoize()/mergeMemos() CONSTRUCTION (makeMemoized)
+// and NEVER disarms: a memoized parser, once built, could be invoked at any later
+// parse (directly, or nested inside another parser's .map), so from the moment any
+// memoizer exists the epoch machinery must run for cross-input + re-entrancy
+// soundness (PT-B1 / PT-Q1). Until then, packratEnter / packratExit / resetPackrat
+// are TRUE NO-OPS. Once armed the memoize path is BYTE-IDENTICAL to before —
+// arming precedes any memoized invocation, so every memoized parse still opens its
+// epoch exactly as it always did (soundness proven armed: left recursion 2/2,
+// p11 F6). The do-not-touch surface (C-14 REFINE) is that armed path.
+let PACKRAT_ARMED = false;
+
 // CROSS-INPUT + RE-ENTRANCY SOUNDNESS — the parseState-entry epoch (PT-Q1).
 //
 // MEMO/HEADS/GROWING/LR_STACK are module-global and keyed on (id, offset) with NO
@@ -185,8 +206,15 @@ interface PackratEpoch {
  * Returns the OUTER epoch's snapshot, which the caller hands back to
  * packratExit() to restore the parent. Installs empty tables so the child parse
  * starts clean (cross-input sound) and cannot see the parent's in-progress cells.
+ *
+ * NO-OP UNTIL ARMED (S.H1): when no memoize()/mergeMemos() has been constructed
+ * the packrat machinery is inert, so entering an epoch would allocate three Maps
+ * for nothing. In that state packratEnter returns `null` and touches no globals;
+ * packratExit(null) is likewise a no-op. Once the latch arms (first makeMemoized)
+ * this is the byte-identical epoch open it always was.
  */
-export function packratEnter(): PackratEpoch {
+export function packratEnter(): PackratEpoch | null {
+    if (!PACKRAT_ARMED) return null;
     const saved: PackratEpoch = {
         memo: MEMO,
         heads: HEADS,
@@ -208,8 +236,12 @@ export function packratEnter(): PackratEpoch {
  * threw mid-grow (the try/finally unwind hardening — the LR machinery the child
  * dirtied is discarded wholesale with its epoch's tables, never left dangling on
  * the parent's stacks).
+ *
+ * NULL-GUARD (S.H1): a `null` saved value means the matching packratEnter ran
+ * unarmed (no epoch was opened), so there is nothing to restore — return early.
  */
-export function packratExit(saved: PackratEpoch): void {
+export function packratExit(saved: PackratEpoch | null): void {
+    if (saved === null) return;
     MEMO = saved.memo;
     HEADS = saved.heads;
     GROWING = saved.growing;
@@ -228,6 +260,10 @@ function applyAnswer<T>(state: ParserState<T>, ans: Answer): void {
 }
 
 export function resetPackrat(): void {
+    // Symmetric with the enter/exit no-ops (S.H1): if no memoizer has ever been
+    // constructed the tables are the pristine module-init empties, so there is
+    // nothing to clear — return early rather than touch three unused Maps.
+    if (!PACKRAT_ARMED) return;
     MEMO.clear();
     HEADS.clear();
     GROWING.clear();
@@ -245,6 +281,14 @@ function makeMemoized<T>(
     parser: Parser<T>,
     name: "memoize" | "mergeMemo",
 ): Parser<T> {
+    // ARM THE EPOCH LATCH (S.H1). Constructing ANY memoized wrapper means a
+    // memoizer now exists in the process and could be invoked at any later parse
+    // (directly or nested), so packratEnter/packratExit/resetPackrat must run for
+    // cross-input + re-entrancy soundness from here on. Arming at CONSTRUCTION (not
+    // first invocation) guarantees the latch is set before any memoized parse can
+    // open its epoch — the armed path stays byte-identical. The latch never disarms.
+    PACKRAT_ARMED = true;
+
     const p = parser as Parser<unknown>;
 
     // EVAL: run the wrapped parser from a clean state at `pos`, return the result.

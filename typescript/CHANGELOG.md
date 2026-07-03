@@ -2,6 +2,43 @@
 
 All notable changes to `@mkbabb/parse-that` are recorded here.
 
+## Unreleased — Tranche S (the 1.0.0-bound cut: packrat arming + the legacy/chain breaking cut)
+
+The keyframes.js Tranche S dispatch (waves S.H1, S.H2). Two independent motions on
+disjoint surface, staged for a single **1.0.0** publish (the version bump and the
+publish itself land later, at S.H4 — this section is the payload, not the release).
+
+### Performance — the packrat epoch is armed behind a latch (S.H1; fold row 49)
+
+- **The default parse path no longer allocates the packrat epoch.** `packratEnter`
+  opened a fresh epoch — **three Maps (`MEMO`/`HEADS`/`GROWING`)** — at every
+  parseState entry boundary, so an LL(1) grammar that never memoizes (CSS values,
+  JSON, CSV) still paid a **~30 ns / 3-Map allocation on every top-level parse** for
+  machinery it never consulted. Packrat is strictly opt-in, so the epoch is now
+  gated behind a `PACKRAT_ARMED` module latch: `packratEnter` / `packratExit` /
+  `resetPackrat` are **true no-ops until the first `memoize()` / `mergeMemos()`
+  construction** arms the latch (arming at construction, not invocation, so the
+  latch is set before any memoized parse can open its epoch). The latch **never
+  disarms** — once a memoizer exists in the process the epoch machinery runs for
+  every parse, preserving the cross-input + re-entrancy soundness fixes (PT-B1 /
+  PT-Q1). The armed memoize path is **byte-identical** to before (left recursion
+  soundness holds armed: 2/2).
+- **Measured effect (workload-scoped — not a single headline number).** Removing
+  the per-parse 3-Map allocation is **mid-teens % throughput on short CSS values,
+  negligible on long strings** (the allocation is a fixed per-parse cost, so its
+  share shrinks as the parse body grows), and **~34% less retained heap** on the
+  short-value corpus. The gain is workload-dependent by construction; a flat
+  percentage would misrepresent it.
+- **Type ripple.** `packratEnter()` now returns `PackratEpoch | null` (`null` when
+  unarmed); `packratExit(saved)` null-guards; `resetPackrat()` early-returns when
+  unarmed. Gate: **`proof:packrat-armed`** — a retained-heap clause asserting **N
+  non-memoized parses allocate flat (zero packrat Maps)**, run in a **memoize-free
+  process** (the latch never disarms, so a stray `memoize()` anywhere in the gate's
+  process would arm it and false-RED the flat probe; the gate's poison self-check
+  spawns a separate armed child to prove the isolation bites). There is **no
+  throughput-% gate** — a percentage threshold is workload-dependent and a
+  confirmed flake trap (<2% on long strings).
+
 ## 0.13.0 — Tranche Q (the no-deferral terminal: shipped-defect cure + no-legacy retirement)
 
 The keyframes.js Tranche Q constellation drive (dispatch `KF-TO-PARSETHAT-Q.md`).
