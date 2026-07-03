@@ -1,8 +1,9 @@
 # typescript/
 
-TypeScript parser combinator library. Published as `@mkbabb/parse-that` v0.13.0;
-Tranche S stages a **1.0.0 breaking cut** (the `*Span` surface excision + the
-`chain()` falsy-seed fix / `chainError` retirement — bump/publish at S.H4).
+TypeScript parser combinator library. Published as `@mkbabb/parse-that` v1.0.0 —
+the Tranche S **breaking cut** (the `*Span` surface excision + the `chain()`
+falsy-seed fix / `chainError` retirement + the `PACKRAT_ARMED` epoch latch; cut at
+S.H4). Reaches keyframes.js only via value.js's `^1.0.0`-carrying 2.0.x follow-on.
 
 ## Structure
 

@@ -98,9 +98,13 @@ separate bbnf-lang session outside this campaign's scope. With no in-realm consu
 all production grammars route through `dispatch()+regex`/`all`/`any`/closure-span
 combinators), P-invariant-28 resolves to KILL, not a 4th bare carry.
 
-**What survives**: The closure span combinators (`altSpan`, `manySpan`, `regexSpan`, etc.)
-remain the canonical, public API for span-producing parsers. The A.W3 falsification result
-is recorded here as documentation: do not re-attempt the runtime-switch SpanParser approach
+**What survives**: only the `Span` *value* type and its two helpers (`spanToString`,
+`mergeSpans`), which operate on a `Span`, not on any span-producing builder. The 15 closure
+`*Span` combinators (`altSpan`, `manySpan`, `regexSpan`, …) — previously the public
+span-producing API — were themselves **removed in the 1.0.0 breaking cut** (Tranche S / S.H2,
+fold row 48; zero consumers across the constellation), so parse-that no longer ships a
+span-producing combinator surface at all. The A.W3 falsification result is recorded here as
+documentation: do not re-attempt the runtime-switch SpanParser approach
 on V8 without a fundamentally different encoding (e.g., a flat array-of-ops with a
 generated specialized dispatcher — not a recursive runtime `switch`).
 
@@ -186,6 +190,39 @@ modes — `JsonValue` for convenience, tape for throughput-critical paths.
 
 **Expected impact**: 40-60% throughput improvement, approaching jiter/simd-json
 territory.
+
+---
+
+## 17. Recorded decisions — Tranche S 1.0.0 cut (S.H4, 2026-07-03)
+
+Not open research — settled decisions recorded here so a future pass does not silently
+re-litigate them.
+
+**Deliberate non-goals of the 1.0.0 cut**: token streams, incremental parsing, Squirrel
+LR, and SpanParser resurrection are out of scope by design. The cut is combinator-tier
+only — **no bbnf-lang / grammar-DSL work** (a separate session owns that). The SpanParser
+tagged-union tier stays permanently KILLED (§7 above).
+
+**r6 #6 — do NOT zone-partition parse-that**: the subpath export map (`.` / `core` /
+`diagnostics` / `packrat` / `utils`) IS the zone map; splitting the ~711-LOC `parser.ts`
+is net-negative and is not pursued.
+
+**r6 #8 — zero-copy is delegated to value.js's scanner layer**: the `*Span` retirement (the
+1.0.0 cut) is the correct direction for the real consumer; parse-that does not build a
+zero-copy span surface of its own.
+
+**The WDM/LR left-recursion tier keep is PROVISIONAL**: `PACKRAT_ARMED` (S.H1) makes the
+packrat/LR tier free for the LL(1) constellation — but **only for memoize-free processes**
+(the latch never disarms; this is the honest framing, distinct from a blanket "made free").
+The tier is kept pending the bbnf-lang LR-consumer question — bbnf-lang is the one grammar-DSL
+that would exercise it. There is deliberately **NO throughput-% gate** on the arming (a
+workload-dependent flake trap; the retained-heap flat clause is the only born-RED perf oracle).
+If no LR consumer materializes, a future cut may retire the tier.
+
+**Ledger rows closed**: DQ-1 (fold row 47, packrat re-entrancy) verified landed in 0.13.0
+(PT-Q1, `proof:packrat-reentrant`); DQ-2 (fold row 48, the dead `*Span` API) excised at 1.0.0
+(S.H2, `proof:no-span-surface`); `color2Into` (fold row 46) is verified at the value.js re-pin
+(born-SPECIFIED — value.js's `^1.0.0`-carrying 2.0.x follow-on), never silently re-WATCHed.
 
 ---
 

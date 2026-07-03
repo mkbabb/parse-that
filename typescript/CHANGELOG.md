@@ -2,11 +2,18 @@
 
 All notable changes to `@mkbabb/parse-that` are recorded here.
 
-## Unreleased — Tranche S (the 1.0.0-bound cut: packrat arming + the legacy/chain breaking cut)
+## 1.0.0 — Tranche S (packrat arming + the legacy/chain breaking cut) — 2026-07-03
 
-The keyframes.js Tranche S dispatch (waves S.H1, S.H2). Two independent motions on
-disjoint surface, staged for a single **1.0.0** publish (the version bump and the
-publish itself land later, at S.H4 — this section is the payload, not the release).
+The keyframes.js Tranche S dispatch (waves S.H1, S.H2, S.H4) — the single **1.0.0**
+breaking cut. Two independent motions on disjoint surface — the packrat epoch armed
+behind a latch (S.H1) and the `*Span`/`chain` breaking cut (S.H2) — ship in ONE
+publish; S.H4 closes the R-dropped ledger rows, records the deliberate non-goals and
+the two r6-mandated decisions, and cuts this release. Breaking changes: the `*Span`
+surface is removed, the `chainError` parameter is removed, and the packrat epoch is
+armed (behavior-preserving, but a source-visible type ripple). This is the **first
+leg of Tranche S's single external SPINE**: 1.0.0 reaches keyframes.js ONLY via
+value.js's `^1.0.0`-carrying 2.0.x follow-on (kf is parse-that-free), with exactly
+one kf re-pin at S.C4/S2 (owner ruling 6).
 
 ### Performance — the packrat epoch is armed behind a latch (S.H1; fold row 49)
 
@@ -72,6 +79,36 @@ publish itself land later, at S.H4 — this section is the payload, not the rele
   `!state.isError || chainError` was rejected: it would silently resurrect a
   continue-on-error path nothing uses. Gate: **`test/chain.test.ts`** — falsy-seed
   thread (red-then-green), genuine-error short-circuit, and the 0-caller arity scan.
+
+### Ledger closure + recorded decisions (S.H4)
+
+- **DQ-1 / DQ-2 verified landed (fold rows 47, 48).** The two R-dropped ledger rows
+  are confirmed against this tree: **DQ-1** (packrat re-entrancy) shipped in 0.13.0
+  (PT-Q1) — `proof:packrat-reentrant` GREEN; **DQ-2** (the dead `*Span` API) is fully
+  excised by S.H2 — `proof:no-span-surface` GREEN (span.ts gone, zero `*Span` on the
+  built dist).
+- **`color2Into` (fold row 46) is verified AT THE RE-PIN, not here.** The cross-repo
+  `color2Into` WATCH is a value.js dispatch whose green is asserted by the value.js
+  suite running against the published 1.0.0 at the later re-pin (born-SPECIFIED — it
+  fires at value.js's `^1.0.0`-carrying 2.0.x follow-on, not at this cut). If it
+  cannot be verified there, the named exit fires — it is never silently re-WATCHed.
+- **Deliberate non-goals of the 1.0.0 cut.** **Token streams · incremental parsing ·
+  Squirrel LR · SpanParser resurrection** are out of scope by design. The cut is
+  combinator-tier only — **no bbnf-lang / grammar-DSL work** (a separate session's
+  job). The SpanParser tagged-union tier stays permanently KILLED (its V8 perf
+  hypothesis was falsified; see `docs/future-research.md` §7).
+- **Two r6-mandated decisions (recorded).** (**r6 #6**) parse-that is **not**
+  zone-partitioned — the subpath export map (`.` / `core` / `diagnostics` / `packrat`
+  / `utils`) IS the zone map, and splitting the ~711-LOC `parser.ts` is net-negative.
+  (**r6 #8**) zero-copy is **deliberately delegated to value.js's scanner layer** —
+  the `*Span` retirement above is the correct direction for the real consumer, not a
+  parse-that-side zero-copy build-out.
+- **The WDM/LR (Warth–Douglass–Millstein left-recursion) tier keep is PROVISIONAL.**
+  Arming (S.H1) makes the packrat/LR tier free for the LL(1) constellation, but this
+  is **NOT** a blanket "made free" claim: the latch **never disarms**, so "free"
+  holds **only for memoize-free processes**. The tier is kept pending the bbnf-lang
+  LR-consumer question (bbnf-lang is the one grammar-DSL that would exercise it); if
+  that consumer never materializes, a future cut may retire the tier.
 
 ## 0.13.0 — Tranche Q (the no-deferral terminal: shipped-defect cure + no-legacy retirement)
 

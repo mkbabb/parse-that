@@ -1,6 +1,6 @@
 {
     "name": "@mkbabb/parse-that",
-    "version": "0.13.0",
+    "version": "1.0.0",
     "description": "Parser combinators for TypeScript",
     "type": "module",
     "sideEffects": false,
