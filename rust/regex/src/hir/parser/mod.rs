@@ -23,6 +23,8 @@ mod escape;
 mod group;
 mod repetition;
 
+const DEFAULT_NESTING_LIMIT: usize = 256;
+
 // ── Parser state ────────────────────────────────────────────────────────
 
 struct Parser<'a> {
@@ -34,16 +36,21 @@ struct Parser<'a> {
     unicode: bool,
     /// Case-insensitive mode — literals match both cases.
     case_insensitive: bool,
+    /// Current and maximum recursive group nesting.
+    nesting_depth: usize,
+    nesting_limit: usize,
 }
 
 impl<'a> Parser<'a> {
-    fn new(src: &'a str, opts: &ParseOptions) -> Self {
+    fn new(src: &'a str, opts: &ParseOptions, nesting_limit: usize) -> Self {
         Self {
             src: src.as_bytes(),
             pos: 0,
             dotall: false,
             unicode: opts.unicode,
             case_insensitive: false,
+            nesting_depth: 0,
+            nesting_limit,
         }
     }
 
@@ -138,7 +145,7 @@ fn merge_byte_ranges(mut ranges: Vec<ByteRange>) -> Vec<ByteRange> {
     let mut merged = vec![ranges[0]];
     for r in &ranges[1..] {
         let last = merged.last_mut().unwrap();
-        if r.start <= last.end + 1 {
+        if last.end == u8::MAX || r.start <= last.end + 1 {
             last.end = last.end.max(r.end);
         } else {
             merged.push(*r);
@@ -156,6 +163,14 @@ pub fn parse(pattern: &str) -> Result<Hir, ParseError> {
 
 /// Parse a regex pattern into HIR with explicit options.
 pub fn parse_with(pattern: &str, opts: &ParseOptions) -> Result<Hir, ParseError> {
-    let mut parser = Parser::new(pattern, opts);
+    parse_with_nesting_limit(pattern, opts, DEFAULT_NESTING_LIMIT)
+}
+
+pub(crate) fn parse_with_nesting_limit(
+    pattern: &str,
+    opts: &ParseOptions,
+    nesting_limit: usize,
+) -> Result<Hir, ParseError> {
+    let mut parser = Parser::new(pattern, opts, nesting_limit);
     parser.parse_regex()
 }

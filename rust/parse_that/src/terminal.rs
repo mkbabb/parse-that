@@ -22,8 +22,11 @@ impl<'p> RegexPlan<'p> {
         transitions: &'p [u32],
         accepting: &'p [bool],
     ) -> Result<Self, RegexPlanError> {
+        if class_count == 0 || class_count > 256 {
+            return Err(RegexPlanError::ClassCount);
+        }
         if state_count == 0
-            || class_count == 0
+            || state_count > u32::MAX as usize
             || start_state >= state_count
             || accepting.len() != state_count
         {
@@ -67,6 +70,7 @@ impl<'p> RegexPlan<'p> {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum RegexPlanError {
+    ClassCount,
     StateShape,
     ByteClass,
     TransitionShape,

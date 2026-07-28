@@ -8,7 +8,7 @@
 use std::fmt;
 
 use crate::automata::dfa::{Dfa, DfaOptions};
-use crate::automata::nfa::{DEAD, Nfa};
+use crate::automata::nfa::{DEAD, Nfa, NfaBuildError};
 use crate::hir::{Hir, Look, ParseError, ParseOptions};
 
 const MAGIC: [u8; 8] = *b"BBRTBL01";
@@ -20,21 +20,23 @@ pub const DEAD_STATE: u32 = u32::MAX;
 /// Compilation controls for a table plan.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct TablePlanOptions {
+    /// Maximum recursive syntax/HIR nesting accepted before lowering.
+    pub nesting_limit: usize,
+    /// Maximum number of NFA states accepted during Thompson construction.
+    pub nfa_state_limit: usize,
     /// Maximum number of DFA states accepted during subset construction.
     pub state_limit: usize,
     /// Whether to minimize the DFA after subset construction.
     pub minimize: bool,
-    /// Whether regex syntax is parsed in Unicode mode.
-    pub unicode: bool,
 }
 
 impl Default for TablePlanOptions {
     fn default() -> Self {
         Self {
+            nesting_limit: 256,
+            nfa_state_limit: 65_536,
             state_limit: 4096,
             minimize: true,
-            // BBNF terminals and parse-that cursors are byte-oriented.
-            unicode: false,
         }
     }
 }
@@ -45,11 +47,19 @@ impl Default for TablePlanOptions {
 pub enum TablePlanCompileError {
     /// The regex text was not valid for the selected syntax mode.
     Parse(ParseError),
+    /// Raw non-ASCII pattern text is ambiguous at a byte-oriented table
+    /// boundary. Callers must spell intended bytes or codepoints explicitly
+    /// with escapes.
+    NonAsciiPattern { offset: usize },
     /// Position assertions require parser-context semantics and therefore
     /// cannot be silently erased into a byte-only DFA.
     UnsupportedLook(Look),
     /// The HIR could not be represented by the current NFA compiler.
     UnsupportedHir,
+    /// A caller-supplied HIR violated a structural invariant.
+    InvalidHir(HirValidationError),
+    /// Thompson construction exceeded the configured NFA state limit.
+    NfaStateLimitExceeded { limit: usize },
     /// Determinization exceeded the configured state limit.
     StateLimitExceeded { limit: usize },
     /// Internal automata output violated the public table invariant.
@@ -60,10 +70,18 @@ impl fmt::Display for TablePlanCompileError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Parse(error) => error.fmt(f),
+            Self::NonAsciiPattern { offset } => write!(
+                f,
+                "raw non-ASCII regex syntax at byte {offset}; use an explicit escape"
+            ),
             Self::UnsupportedLook(look) => {
                 write!(f, "position assertion {look:?} has no byte-table semantics")
             }
             Self::UnsupportedHir => write!(f, "regex HIR cannot be lowered to a DFA"),
+            Self::InvalidHir(error) => error.fmt(f),
+            Self::NfaStateLimitExceeded { limit } => {
+                write!(f, "regex NFA exceeded the {limit}-state compilation limit")
+            }
             Self::StateLimitExceeded { limit } => {
                 write!(f, "regex DFA exceeded the {limit}-state compilation limit")
             }
@@ -76,11 +94,82 @@ impl std::error::Error for TablePlanCompileError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Parse(error) => Some(error),
+            Self::InvalidHir(error) => Some(error),
             Self::InvalidPlan(error) => Some(error),
             _ => None,
         }
     }
 }
+
+/// Structural error in a caller-supplied public HIR.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum HirValidationError {
+    NestingLimitExceeded {
+        limit: usize,
+    },
+    ReversedByteRange {
+        start: u8,
+        end: u8,
+    },
+    UnsortedOrOverlappingByteRanges {
+        previous_end: u8,
+        next_start: u8,
+    },
+    ReversedCodepointRange {
+        start: char,
+        end: char,
+    },
+    UnsortedOrOverlappingCodepointRanges {
+        previous_end: char,
+        next_start: char,
+    },
+    RepetitionBounds {
+        minimum: u32,
+        maximum: u32,
+    },
+}
+
+impl fmt::Display for HirValidationError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::NestingLimitExceeded { limit } => {
+                write!(f, "regex HIR exceeded the {limit}-level nesting limit")
+            }
+            Self::ReversedByteRange { start, end } => write!(
+                f,
+                "regex HIR contains reversed byte range \\x{start:02x}-\\x{end:02x}"
+            ),
+            Self::UnsortedOrOverlappingByteRanges {
+                previous_end,
+                next_start,
+            } => write!(
+                f,
+                "regex HIR byte ranges are unsorted or overlapping at \
+                 \\x{previous_end:02x}/\\x{next_start:02x}"
+            ),
+            Self::ReversedCodepointRange { start, end } => write!(
+                f,
+                "regex HIR contains reversed codepoint range U+{:04X}-U+{:04X}",
+                *start as u32, *end as u32
+            ),
+            Self::UnsortedOrOverlappingCodepointRanges {
+                previous_end,
+                next_start,
+            } => write!(
+                f,
+                "regex HIR codepoint ranges are unsorted or overlapping at U+{:04X}/U+{:04X}",
+                *previous_end as u32, *next_start as u32
+            ),
+            Self::RepetitionBounds { minimum, maximum } => write!(
+                f,
+                "regex HIR repetition minimum {minimum} exceeds maximum {maximum}"
+            ),
+        }
+    }
+}
+
+impl std::error::Error for HirValidationError {}
 
 /// A violated table or wire-format invariant.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -215,20 +304,39 @@ impl RegexTablePlan {
         pattern: &str,
         options: TablePlanOptions,
     ) -> Result<Self, TablePlanCompileError> {
-        let parse_options = ParseOptions {
-            unicode: options.unicode,
-        };
-        let hir =
-            crate::parse_with(pattern, &parse_options).map_err(TablePlanCompileError::Parse)?;
+        if let Some(offset) = pattern.bytes().position(|byte| !byte.is_ascii()) {
+            return Err(TablePlanCompileError::NonAsciiPattern { offset });
+        }
+        // Runtime cursors consume bytes, so the table boundary has one
+        // unambiguous syntax policy. Unicode analysis remains available
+        // through the HIR APIs, but is not a table-plan option.
+        let hir = crate::hir::parser::parse_with_nesting_limit(
+            pattern,
+            &ParseOptions::byte_mode(),
+            options.nesting_limit,
+        )
+        .map_err(TablePlanCompileError::Parse)?;
         Self::from_hir(&hir, options)
     }
 
     /// Compile a previously parsed HIR.
     pub fn from_hir(hir: &Hir, options: TablePlanOptions) -> Result<Self, TablePlanCompileError> {
-        if let Some(look) = first_look(hir) {
+        if let Some(look) =
+            validate_hir(hir, options.nesting_limit).map_err(TablePlanCompileError::InvalidHir)?
+        {
             return Err(TablePlanCompileError::UnsupportedLook(look));
         }
-        let nfa = Nfa::from_hir(hir).ok_or(TablePlanCompileError::UnsupportedHir)?;
+        let nfa = match Nfa::from_hir_with_limit(hir, options.nfa_state_limit) {
+            Ok(nfa) => nfa,
+            Err(NfaBuildError::UnsupportedHir) => {
+                return Err(TablePlanCompileError::UnsupportedHir);
+            }
+            Err(NfaBuildError::StateLimitExceeded) => {
+                return Err(TablePlanCompileError::NfaStateLimitExceeded {
+                    limit: options.nfa_state_limit,
+                });
+            }
+        };
         let dfa_options = DfaOptions {
             state_limit: options.state_limit,
             minimize: options.minimize,
@@ -436,14 +544,75 @@ impl RegexTablePlan {
     }
 }
 
-fn first_look(hir: &Hir) -> Option<Look> {
-    match hir {
-        Hir::Look(look) => Some(*look),
-        Hir::Repetition(repetition) => first_look(&repetition.sub),
-        Hir::Group(sub) => first_look(sub),
-        Hir::Concat(children) | Hir::Alternation(children) => children.iter().find_map(first_look),
-        Hir::Empty | Hir::Literal(_) | Hir::Class(_) => None,
+fn validate_hir(hir: &Hir, nesting_limit: usize) -> Result<Option<Look>, HirValidationError> {
+    let mut stack = vec![(hir, 0_usize)];
+    let mut first_look = None;
+
+    while let Some((node, depth)) = stack.pop() {
+        if depth > nesting_limit {
+            return Err(HirValidationError::NestingLimitExceeded {
+                limit: nesting_limit,
+            });
+        }
+        match node {
+            Hir::Class(crate::hir::CharClass::Bytes { ranges, .. }) => {
+                for (index, range) in ranges.iter().enumerate() {
+                    if range.start > range.end {
+                        return Err(HirValidationError::ReversedByteRange {
+                            start: range.start,
+                            end: range.end,
+                        });
+                    }
+                    if let Some(previous) = index.checked_sub(1).map(|before| ranges[before])
+                        && range.start <= previous.end
+                    {
+                        return Err(HirValidationError::UnsortedOrOverlappingByteRanges {
+                            previous_end: previous.end,
+                            next_start: range.start,
+                        });
+                    }
+                }
+            }
+            Hir::Class(crate::hir::CharClass::Unicode { ranges, .. }) => {
+                for (index, range) in ranges.iter().enumerate() {
+                    if range.start > range.end {
+                        return Err(HirValidationError::ReversedCodepointRange {
+                            start: range.start,
+                            end: range.end,
+                        });
+                    }
+                    if let Some(previous) = index.checked_sub(1).map(|before| ranges[before])
+                        && range.start <= previous.end
+                    {
+                        return Err(HirValidationError::UnsortedOrOverlappingCodepointRanges {
+                            previous_end: previous.end,
+                            next_start: range.start,
+                        });
+                    }
+                }
+            }
+            Hir::Look(look) => {
+                first_look.get_or_insert(*look);
+            }
+            Hir::Repetition(repetition) => {
+                if let Some(maximum) = repetition.max
+                    && repetition.min > maximum
+                {
+                    return Err(HirValidationError::RepetitionBounds {
+                        minimum: repetition.min,
+                        maximum,
+                    });
+                }
+                stack.push((&repetition.sub, depth + 1));
+            }
+            Hir::Group(sub) => stack.push((sub, depth + 1)),
+            Hir::Concat(children) | Hir::Alternation(children) => {
+                stack.extend(children.iter().rev().map(|child| (child, depth + 1)));
+            }
+            Hir::Empty | Hir::Literal(_) => {}
+        }
     }
+    Ok(first_look)
 }
 
 const _: () = {

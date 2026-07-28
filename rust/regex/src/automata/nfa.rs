@@ -47,6 +47,12 @@ pub(crate) struct Nfa {
     pub accept: StateId,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum NfaBuildError {
+    UnsupportedHir,
+    StateLimitExceeded,
+}
+
 /// A fragment produced during NFA construction — start and accept of a sub-NFA.
 #[derive(Clone, Copy)]
 struct Fragment {
@@ -57,17 +63,26 @@ struct Fragment {
 impl Nfa {
     /// Build an NFA from an already-parsed HIR.
     ///
-    /// Returns `None` for unsupported HIR features.
-    pub(crate) fn from_hir(hir: &Hir) -> Option<Self> {
+    /// Returns a typed failure before allocating more than `state_limit`
+    /// states. This is a separate budget from DFA subset construction.
+    pub(crate) fn from_hir_with_limit(
+        hir: &Hir,
+        state_limit: usize,
+    ) -> Result<Self, NfaBuildError> {
         let mut builder = NfaBuilder {
-            states: Vec::with_capacity(64),
+            states: Vec::with_capacity(state_limit.min(64)),
+            state_limit,
+            state_limit_exceeded: false,
         };
-        let frag = builder.build_hir(hir)?;
-        Some(Nfa {
-            states: builder.states,
-            start: frag.start,
-            accept: frag.accept,
-        })
+        match builder.build_hir(hir) {
+            Some(frag) => Ok(Nfa {
+                states: builder.states,
+                start: frag.start,
+                accept: frag.accept,
+            }),
+            None if builder.state_limit_exceeded => Err(NfaBuildError::StateLimitExceeded),
+            None => Err(NfaBuildError::UnsupportedHir),
+        }
     }
 
     /// Collect all distinct ByteSets used in transitions.
@@ -87,13 +102,22 @@ impl Nfa {
 
 struct NfaBuilder {
     states: Vec<NfaState>,
+    state_limit: usize,
+    state_limit_exceeded: bool,
 }
 
 impl NfaBuilder {
-    fn new_state(&mut self) -> StateId {
-        let id = self.states.len() as StateId;
+    fn new_state(&mut self) -> Option<StateId> {
+        if self.states.len() >= self.state_limit {
+            self.state_limit_exceeded = true;
+            return None;
+        }
+        let Ok(id) = StateId::try_from(self.states.len()) else {
+            self.state_limit_exceeded = true;
+            return None;
+        };
         self.states.push(NfaState::new());
-        id
+        Some(id)
     }
 
     fn add_transition(&mut self, from: StateId, byte_set: ByteSet, to: StateId) {
@@ -109,7 +133,7 @@ impl NfaBuilder {
     fn build_hir(&mut self, hir: &Hir) -> Option<Fragment> {
         match hir {
             Hir::Empty => {
-                let s = self.new_state();
+                let s = self.new_state()?;
                 Some(Fragment {
                     start: s,
                     accept: s,
@@ -139,16 +163,16 @@ impl NfaBuilder {
 
     fn build_literal(&mut self, bytes: &[u8]) -> Option<Fragment> {
         if bytes.is_empty() {
-            let s = self.new_state();
+            let s = self.new_state()?;
             return Some(Fragment {
                 start: s,
                 accept: s,
             });
         }
-        let start = self.new_state();
+        let start = self.new_state()?;
         let mut current = start;
         for &b in bytes {
-            let next = self.new_state();
+            let next = self.new_state()?;
             self.add_transition(current, ByteSet::singleton(b), next);
             current = next;
         }
@@ -174,8 +198,8 @@ impl NfaBuilder {
                         bs.insert(b);
                     }
                 }
-                let start = self.new_state();
-                let accept = self.new_state();
+                let start = self.new_state()?;
+                let accept = self.new_state()?;
                 self.add_transition(start, bs, accept);
                 Some(Fragment { start, accept })
             }
@@ -196,8 +220,8 @@ impl NfaBuilder {
     /// transitions. Each range may expand into multiple UTF-8 byte sequence
     /// paths through the NFA.
     fn build_unicode_class(&mut self, ranges: &[crate::hir::CodepointRange]) -> Option<Fragment> {
-        let start = self.new_state();
-        let accept = self.new_state();
+        let start = self.new_state()?;
+        let accept = self.new_state()?;
 
         for range in ranges {
             let lo = range.start;
@@ -221,7 +245,7 @@ impl NfaBuilder {
                     let target = if i == byte_ranges.len() - 1 {
                         accept
                     } else {
-                        self.new_state()
+                        self.new_state()?
                     };
                     let bs = ByteSet::range(byte_range.start, byte_range.end);
                     self.add_transition(current, bs, target);
@@ -244,7 +268,7 @@ impl NfaBuilder {
             | Look::End
             | Look::EndLF
             | Look::EndCRLF => {
-                let s = self.new_state();
+                let s = self.new_state()?;
                 Some(Fragment {
                     start: s,
                     accept: s,
@@ -257,7 +281,7 @@ impl NfaBuilder {
 
     fn build_concat(&mut self, subs: &[Hir]) -> Option<Fragment> {
         if subs.is_empty() {
-            let s = self.new_state();
+            let s = self.new_state()?;
             return Some(Fragment {
                 start: s,
                 accept: s,
@@ -281,16 +305,16 @@ impl NfaBuilder {
 
     fn build_alternation(&mut self, alts: &[Hir]) -> Option<Fragment> {
         if alts.is_empty() {
-            let start = self.new_state();
-            let accept = self.new_state();
+            let start = self.new_state()?;
+            let accept = self.new_state()?;
             return Some(Fragment { start, accept });
         }
         if alts.len() == 1 {
             return self.build_hir(&alts[0]);
         }
 
-        let start = self.new_state();
-        let accept = self.new_state();
+        let start = self.new_state()?;
+        let accept = self.new_state()?;
 
         for alt in alts {
             let frag = self.build_hir(alt)?;
@@ -320,8 +344,8 @@ impl NfaBuilder {
 
     fn build_optional(&mut self, sub: &Hir, greedy: bool) -> Option<Fragment> {
         let frag = self.build_hir(sub)?;
-        let start = self.new_state();
-        let accept = self.new_state();
+        let start = self.new_state()?;
+        let accept = self.new_state()?;
 
         if greedy {
             self.add_epsilon(start, frag.start);
@@ -337,8 +361,8 @@ impl NfaBuilder {
 
     fn build_star(&mut self, sub: &Hir, greedy: bool) -> Option<Fragment> {
         let frag = self.build_hir(sub)?;
-        let start = self.new_state();
-        let accept = self.new_state();
+        let start = self.new_state()?;
+        let accept = self.new_state()?;
 
         if greedy {
             self.add_epsilon(start, frag.start);
@@ -355,7 +379,7 @@ impl NfaBuilder {
     fn build_plus(&mut self, sub: &Hir, greedy: bool) -> Option<Fragment> {
         let frag = self.build_hir(sub)?;
         let start = frag.start;
-        let accept = self.new_state();
+        let accept = self.new_state()?;
 
         if greedy {
             self.add_epsilon(frag.accept, frag.start);
@@ -370,7 +394,7 @@ impl NfaBuilder {
 
     fn build_exact(&mut self, sub: &Hir, n: u32) -> Option<Fragment> {
         if n == 0 {
-            let s = self.new_state();
+            let s = self.new_state()?;
             return Some(Fragment {
                 start: s,
                 accept: s,
@@ -409,7 +433,7 @@ impl NfaBuilder {
         }
 
         let mut current_accept = required.accept;
-        let final_accept = self.new_state();
+        let final_accept = self.new_state()?;
 
         for _ in 0..(m - n) {
             let opt = self.build_hir(sub)?;

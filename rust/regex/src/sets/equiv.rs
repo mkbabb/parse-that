@@ -46,25 +46,28 @@ fn compute_classes_small(byte_sets: &[ByteSet]) -> ([u8; 256], u16) {
     // Assign class IDs by deduplicating signatures.
     let mut classes = [0u8; 256];
     let mut sig_to_class: Vec<(u64, u8)> = Vec::with_capacity(32);
-    let mut next_class: u8 = 0;
+    // There can be exactly 256 distinct signatures. Class IDs still fit in
+    // `u8` (0..=255), but the count needs one additional value.
+    let mut next_class: u16 = 0;
 
     for (b, &sig) in signatures.iter().enumerate() {
         match sig_to_class.iter().find(|(s, _)| *s == sig) {
             Some(&(_, cls)) => classes[b] = cls,
             None => {
-                classes[b] = next_class;
-                sig_to_class.push((sig, next_class));
-                next_class = next_class.saturating_add(1);
+                let class = next_class as u8;
+                classes[b] = class;
+                sig_to_class.push((sig, class));
+                next_class += 1;
             }
         }
     }
 
-    (classes, next_class as u16)
+    (classes, next_class)
 }
 
 /// General path: > 64 ByteSets → signature is a Vec<u64>.
 fn compute_classes_large(byte_sets: &[ByteSet]) -> ([u8; 256], u16) {
-    let num_words = (byte_sets.len() + 63) / 64;
+    let num_words = byte_sets.len().div_ceil(64);
     let mut signatures: Vec<Vec<u64>> = vec![vec![0u64; num_words]; 256];
 
     for (i, bs) in byte_sets.iter().enumerate() {
@@ -77,18 +80,21 @@ fn compute_classes_large(byte_sets: &[ByteSet]) -> ([u8; 256], u16) {
 
     let mut classes = [0u8; 256];
     let mut sig_to_class: Vec<(Vec<u64>, u8)> = Vec::with_capacity(32);
-    let mut next_class: u8 = 0;
+    // There can be exactly 256 distinct signatures. Class IDs still fit in
+    // `u8` (0..=255), but the count needs one additional value.
+    let mut next_class: u16 = 0;
 
     for (b, sig) in signatures.iter().enumerate() {
         match sig_to_class.iter().find(|(s, _)| s == sig) {
             Some(&(_, cls)) => classes[b] = cls,
             None => {
-                classes[b] = next_class;
-                sig_to_class.push((sig.clone(), next_class));
-                next_class = next_class.saturating_add(1);
+                let class = next_class as u8;
+                classes[b] = class;
+                sig_to_class.push((sig.clone(), class));
+                next_class += 1;
             }
         }
     }
 
-    (classes, next_class as u16)
+    (classes, next_class)
 }

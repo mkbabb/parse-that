@@ -6,7 +6,19 @@ impl<'a> Parser<'a> {
     /// Parse `(...)` or `(?:...)` or `(?flags)` or `(?flags:...)`.
     pub(super) fn parse_group(&mut self) -> Result<Hir, ParseError> {
         self.expect(b'(')?;
+        if self.nesting_depth >= self.nesting_limit {
+            return Err(self.err(format!(
+                "group nesting exceeds the configured {}-level limit",
+                self.nesting_limit
+            )));
+        }
+        self.nesting_depth += 1;
+        let result = self.parse_group_body();
+        self.nesting_depth -= 1;
+        result
+    }
 
+    fn parse_group_body(&mut self) -> Result<Hir, ParseError> {
         if self.peek() == Some(b'?') {
             self.advance();
 

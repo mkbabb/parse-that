@@ -33,5 +33,6 @@ pub use info::{EngineSet, QuantifiedClassInfo, RegexInfo};
 pub use sets::byteset::ByteSet;
 pub use sets::charset::CharSet128;
 pub use table_plan::{
-    DEAD_STATE, RegexTablePlan, TablePlanCompileError, TablePlanError, TablePlanOptions,
+    DEAD_STATE, HirValidationError, RegexTablePlan, TablePlanCompileError, TablePlanError,
+    TablePlanOptions,
 };

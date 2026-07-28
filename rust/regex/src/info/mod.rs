@@ -5,12 +5,12 @@
 //!
 //! The module is split by responsibility:
 //!
-//! - [`classify`] — structural classifiers (anchors, negated classes,
+//! - `classify` — structural classifiers (anchors, negated classes,
 //!   quantified classes, memchr acceleration candidate).
-//! - [`width`] — `is_nullable`, match-width bounds, HIR node counting.
-//! - [`literal_prefix`] — fixed-byte prefix/suffix extraction.
-//! - [`dfa_size`] — DFA/NFA state count estimation heuristics.
-//! - [`one_pass`] — one-pass eligibility and HIR walkability.
+//! - `width` — `is_nullable`, match-width bounds, HIR node counting.
+//! - `literal_prefix` — fixed-byte prefix/suffix extraction.
+//! - `dfa_size` — DFA/NFA state count estimation heuristics.
+//! - `one_pass` — one-pass eligibility and HIR walkability.
 
 use crate::classify::{RegexClass, classify_regex_from_hir};
 use crate::first::regex_first_chars_from_hir;
@@ -207,7 +207,7 @@ impl RegexInfo {
         // Classification is purely structural — every dialect flag is
         // recovered from the HIR walk in `classify_regex_from_hir`.
         let classification = classify_regex_from_hir(hir);
-        let first_chars = regex_first_chars_from_hir(hir).unwrap_or_else(CharSet128::new);
+        let first_chars = regex_first_chars_from_hir(hir).unwrap_or_default();
         let nullable = is_nullable(hir);
         let (min_len, max_len) = compute_match_width(hir);
         let must_consume = !nullable && min_len > 0;

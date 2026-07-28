@@ -91,3 +91,22 @@ fn foreign_failure_evidence_becomes_a_typed_local_fault() {
     }
     assert_eq!(primary.cursor(), primary_input.start());
 }
+
+#[test]
+fn foreign_empty_failure_evidence_becomes_a_typed_local_fault() {
+    let primary_bytes = Vec::new();
+    let foreign_bytes = Vec::new();
+    let primary_input = Input::new(&primary_bytes);
+    let foreign_input = Input::new(&foreign_bytes);
+    let mut primary = Run::new(primary_input);
+    let mut foreign = Run::new(foreign_input);
+
+    let outcome = primary.parse_prefix(|_| literal(&mut foreign, b"x"));
+    match outcome {
+        Step::Fault(Fault::ForeignOutcome { at }) => {
+            assert_eq!(at, primary_input.start());
+        }
+        other => panic!("expected foreign-outcome fault, got {other:?}"),
+    }
+    assert_eq!(primary.cursor(), primary_input.start());
+}

@@ -54,3 +54,55 @@ fn span_equality_is_interval_and_source_identity_not_whole_input_content() {
     assert_ne!(left_span, right_span);
     assert_eq!(left_span, left_span);
 }
+
+#[test]
+fn reborrowed_nonempty_byte_region_retains_the_same_source_identity() {
+    let bytes = Vec::from(&b"abc"[..]);
+    let first = Input::new(&bytes);
+    let second = Input::new(&bytes);
+
+    assert_eq!(first.start(), second.start());
+    assert_eq!(first.end(), second.end());
+    assert!(
+        first.span(second.start(), second.end()).is_ok(),
+        "the same live nonempty byte region is one safe source"
+    );
+}
+
+#[test]
+fn distinct_empty_inputs_retain_distinct_cursor_and_span_provenance() {
+    let left_bytes = Vec::new();
+    let right_bytes = Vec::new();
+    let left = Input::new(&left_bytes);
+    let right = Input::new(&right_bytes);
+
+    assert_ne!(left.start(), right.start());
+    assert!(
+        left.span(right.start(), right.end()).is_err(),
+        "zero-length cursors from another Input must remain foreign"
+    );
+
+    let left_span = left.span(left.start(), left.end()).expect("left span");
+    let right_span = right.span(right.start(), right.end()).expect("right span");
+    assert_ne!(left_span, right_span);
+}
+
+#[test]
+fn source_identity_is_absent_from_deterministic_debug_output() {
+    let first = Input::new(b"abc");
+    let second = Input::new(b"abc");
+
+    assert_eq!(format!("{first:?}"), "Input { len: 3, .. }");
+    assert_eq!(format!("{first:?}"), format!("{second:?}"));
+    assert_eq!(
+        format!("{:?}", first.cursor_at(1).expect("cursor")),
+        "Cursor { source_len: 3, offset: 1 }"
+    );
+    assert_eq!(
+        format!(
+            "{:?}",
+            first.span(first.start(), first.end()).expect("span")
+        ),
+        "Span { start: 0, end: 3 }"
+    );
+}

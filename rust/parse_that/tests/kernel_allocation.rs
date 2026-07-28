@@ -125,6 +125,22 @@ fn assert_no_sink_recognition_borrows_input_and_performs_zero_allocations() {
     assert_eq!(input.bytes().as_ptr(), bytes.as_ptr());
 }
 
+fn assert_source_identity_creation_performs_zero_allocations() {
+    let left_bytes = [];
+    let right_bytes = [];
+
+    ALLOCATIONS.store(0, Ordering::SeqCst);
+    COUNTING.store(true, Ordering::SeqCst);
+
+    let left = Input::new(&left_bytes);
+    let right = Input::new(&right_bytes);
+    std::hint::black_box((left, right));
+
+    COUNTING.store(false, Ordering::SeqCst);
+    assert_eq!(ALLOCATIONS.load(Ordering::SeqCst), 0);
+    assert_ne!(left.start(), right.start());
+}
+
 fn assert_no_sink_erases_event_construction_without_allocating() {
     let terminal = ascii_word_terminal();
     let input = Input::new(b"alpha42");
@@ -172,6 +188,7 @@ fn assert_mismatch_choice_and_fault_paths_allocate_nothing() {
 fn kernel_allocation_laws() {
     // One test owns the process-global counting window. Parallel test workers
     // would otherwise contaminate allocator evidence while waiting to run.
+    assert_source_identity_creation_performs_zero_allocations();
     assert_no_sink_recognition_borrows_input_and_performs_zero_allocations();
     assert_no_sink_erases_event_construction_without_allocating();
     assert_mismatch_choice_and_fault_paths_allocate_nothing();

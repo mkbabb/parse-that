@@ -44,10 +44,19 @@ impl<'a> Parser<'a> {
             for br in &byte_ranges {
                 cp_ranges.push(CodepointRange::new(br.start as char, br.end as char));
             }
-            cp_ranges.sort();
-            cp_ranges.dedup();
+            cp_ranges.sort_by_key(|range| (range.start, range.end));
+            let mut merged: Vec<CodepointRange> = Vec::with_capacity(cp_ranges.len());
+            for range in cp_ranges {
+                if let Some(previous) = merged.last_mut()
+                    && range.start <= previous.end
+                {
+                    previous.end = previous.end.max(range.end);
+                } else {
+                    merged.push(range);
+                }
+            }
             Ok(Hir::Class(CharClass::Unicode {
-                ranges: cp_ranges,
+                ranges: merged,
                 negated,
             }))
         }
@@ -113,6 +122,7 @@ impl<'a> Parser<'a> {
                     if self.peek() == Some(b'-') && self.src.get(self.pos + 1) != Some(&b']') {
                         self.advance(); // consume '-'
                         let range_hi = self.parse_class_atom_single()?;
+                        self.validate_byte_range(val, range_hi)?;
                         byte_ranges.push(ByteRange::new(val, range_hi));
                     } else {
                         byte_ranges.push(ByteRange::new(val, val));
@@ -134,6 +144,7 @@ impl<'a> Parser<'a> {
                         let ch_hi = char::from_u32(cp_hi).ok_or_else(|| {
                             self.err(format!("invalid codepoint U+{:04X}", cp_hi))
                         })?;
+                        self.validate_codepoint_range(ch, ch_hi)?;
                         cp_ranges.push(CodepointRange::new(ch, ch_hi));
                     } else {
                         cp_ranges.push(CodepointRange::new(ch, ch));
@@ -147,6 +158,7 @@ impl<'a> Parser<'a> {
                     if self.peek() == Some(b'-') && self.src.get(self.pos + 1) != Some(&b']') {
                         self.advance();
                         let hi = self.parse_class_atom_single()?;
+                        self.validate_byte_range(lo, hi)?;
                         byte_ranges.push(ByteRange::new(lo, hi));
                     } else {
                         byte_ranges.push(ByteRange::new(lo, lo));
@@ -161,11 +173,33 @@ impl<'a> Parser<'a> {
         if self.peek() == Some(b'-') && self.src.get(self.pos + 1) != Some(&b']') {
             self.advance();
             let hi = self.parse_class_atom_single()?;
+            self.validate_byte_range(lo, hi)?;
             byte_ranges.push(ByteRange::new(lo, hi));
         } else {
             byte_ranges.push(ByteRange::new(lo, lo));
         }
         Ok(())
+    }
+
+    fn validate_byte_range(&self, start: u8, end: u8) -> Result<(), ParseError> {
+        if start <= end {
+            Ok(())
+        } else {
+            Err(self.err(format!(
+                "reversed character-class range \\x{start:02x}-\\x{end:02x}"
+            )))
+        }
+    }
+
+    fn validate_codepoint_range(&self, start: char, end: char) -> Result<(), ParseError> {
+        if start <= end {
+            Ok(())
+        } else {
+            Err(self.err(format!(
+                "reversed character-class range U+{:04X}-U+{:04X}",
+                start as u32, end as u32
+            )))
+        }
     }
 
     /// Parse `{XXXX}` after `\u` inside a character class.

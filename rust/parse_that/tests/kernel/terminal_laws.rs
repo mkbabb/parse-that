@@ -1,4 +1,4 @@
-use parse_that::{Input, RegexPlan, RegexTerminal, Run, Step, eof, literal, regex};
+use parse_that::{Input, RegexPlan, RegexPlanError, RegexTerminal, Run, Step, eof, literal, regex};
 
 fn ascii_word_terminal() -> RegexTerminal<'static> {
     static BYTE_CLASSES: [u8; 256] = {
@@ -120,6 +120,27 @@ fn regex_plan_rejects_malformed_tables_before_recognition() {
     assert!(
         RegexPlan::new(&invalid_classes, 1, 1, 0, &[0], &[true]).is_err(),
         "every byte class must be in range"
+    );
+}
+
+#[test]
+fn regex_plan_accepts_exactly_256_byte_classes_and_rejects_257() {
+    let classes = core::array::from_fn(|byte| byte as u8);
+    let transitions_256 = [RegexPlan::DEAD; 256];
+    let accepting = [true];
+
+    assert!(
+        RegexPlan::new(&classes, 1, 256, 0, &transitions_256, &accepting).is_ok(),
+        "all 256 u8-representable byte classes are valid"
+    );
+
+    let transitions_257 = [RegexPlan::DEAD; 257];
+    assert!(
+        matches!(
+            RegexPlan::new(&classes, 1, 257, 0, &transitions_257, &accepting),
+            Err(RegexPlanError::ClassCount)
+        ),
+        "the runtime ABI must reject a class count the compiler cannot emit"
     );
 }
 

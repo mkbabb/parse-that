@@ -156,9 +156,7 @@ fn subset_construction(
     while let Some(current_set) = worklist.pop() {
         let current_id = set_to_id[&current_set];
 
-        for cls in 0..num_cls {
-            let rep_byte = class_reps[cls];
-
+        for (cls, &rep_byte) in class_reps.iter().enumerate().take(num_cls) {
             // Compute move(current_set, rep_byte) then ε-closure.
             let moved = move_on_byte(nfa, &current_set, rep_byte);
             if moved.is_empty() {
@@ -229,7 +227,10 @@ fn hopcroft_minimize(dfa: &Dfa) -> Dfa {
     while changed {
         changed = false;
 
-        for block_id in 0..num_blocks {
+        // Splits are processed on the next refinement pass; make that
+        // snapshot explicit rather than mutating the bound of this pass.
+        let blocks_at_start = num_blocks;
+        for block_id in 0..blocks_at_start {
             // Collect states in this block.
             let members: Vec<usize> = (0..n).filter(|&s| partition[s] == block_id).collect();
             if members.len() <= 1 {

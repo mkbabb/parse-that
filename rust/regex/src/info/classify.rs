@@ -17,15 +17,15 @@ pub(super) fn detect_accel_candidate(
     literal_prefix: &Option<Vec<u8>>,
     literal_suffix: &Option<Vec<u8>>,
 ) -> Option<u8> {
-    if let Some(prefix) = literal_prefix {
-        if let Some(&b) = prefix.first() {
-            return Some(b);
-        }
+    if let Some(prefix) = literal_prefix
+        && let Some(&b) = prefix.first()
+    {
+        return Some(b);
     }
-    if let Some(suffix) = literal_suffix {
-        if let Some(&b) = suffix.first() {
-            return Some(b);
-        }
+    if let Some(suffix) = literal_suffix
+        && let Some(&b) = suffix.first()
+    {
+        return Some(b);
     }
     None
 }
@@ -133,15 +133,15 @@ pub(super) fn detect_anchored(hir: &Hir) -> bool {
         Hir::Look(crate::hir::Look::Start | crate::hir::Look::End) => true,
 
         Hir::Concat(seq) => {
-            if let Some(first) = seq.first() {
-                if matches!(first, Hir::Look(crate::hir::Look::Start)) {
-                    return true;
-                }
+            if let Some(first) = seq.first()
+                && matches!(first, Hir::Look(crate::hir::Look::Start))
+            {
+                return true;
             }
-            if let Some(last) = seq.last() {
-                if matches!(last, Hir::Look(crate::hir::Look::End)) {
-                    return true;
-                }
+            if let Some(last) = seq.last()
+                && matches!(last, Hir::Look(crate::hir::Look::End))
+            {
+                return true;
             }
             false
         }

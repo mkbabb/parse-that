@@ -1,15 +1,57 @@
 use core::fmt;
+use core::num::NonZeroUsize;
+use core::sync::atomic::{AtomicUsize, Ordering};
+
+static NEXT_EMPTY_SOURCE_ID: AtomicUsize = AtomicUsize::new(1);
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+struct EmptySourceId(NonZeroUsize);
+
+impl EmptySourceId {
+    fn fresh() -> Self {
+        let id = NEXT_EMPTY_SOURCE_ID
+            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |current| {
+                current.checked_add(1)
+            })
+            .unwrap_or_else(|_| panic!("parse_that input source identity space exhausted"));
+        Self(NonZeroUsize::new(id).expect("empty source identities start at one"))
+    }
+}
+
+#[inline]
+fn same_source(
+    left: &[u8],
+    left_empty_id: Option<EmptySourceId>,
+    right: &[u8],
+    right_empty_id: Option<EmptySourceId>,
+) -> bool {
+    match (left_empty_id, right_empty_id) {
+        (Some(left), Some(right)) => left == right,
+        (None, None) => {
+            !left.is_empty() && left.as_ptr() == right.as_ptr() && left.len() == right.len()
+        }
+        _ => false,
+    }
+}
 
 /// A borrowed, immutable recognition source.
+///
+/// Non-empty inputs use their live byte region as identity. Empty byte regions
+/// have no distinguishable address, so only that cold path receives a fresh
+/// process-local token.
 #[derive(Clone, Copy)]
 pub struct Input<'i> {
     bytes: &'i [u8],
+    empty_source_id: Option<EmptySourceId>,
 }
 
 impl<'i> Input<'i> {
     #[inline]
-    pub const fn new(bytes: &'i [u8]) -> Self {
-        Self { bytes }
+    pub fn new(bytes: &'i [u8]) -> Self {
+        Self {
+            bytes,
+            empty_source_id: bytes.is_empty().then(EmptySourceId::fresh),
+        }
     }
 
     #[inline]
@@ -61,6 +103,7 @@ impl<'i> Input<'i> {
         }
         Ok(Span {
             bytes: self.bytes,
+            empty_source_id: self.empty_source_id,
             start: start.offset,
             end: end.offset,
         })
@@ -70,6 +113,7 @@ impl<'i> Input<'i> {
     pub(crate) fn cursor_unchecked(self, offset: usize) -> Cursor<'i> {
         Cursor {
             source: self.bytes,
+            empty_source_id: self.empty_source_id,
             offset,
         }
     }
@@ -78,6 +122,7 @@ impl<'i> Input<'i> {
     pub(crate) fn span_unchecked(self, start: usize, end: usize) -> Span<'i> {
         Span {
             bytes: self.bytes,
+            empty_source_id: self.empty_source_id,
             start,
             end,
         }
@@ -108,6 +153,7 @@ impl fmt::Debug for Input<'_> {
 #[derive(Clone, Copy)]
 pub struct Cursor<'i> {
     source: &'i [u8],
+    empty_source_id: Option<EmptySourceId>,
     offset: usize,
 }
 
@@ -119,9 +165,12 @@ impl Cursor<'_> {
 
     #[inline]
     pub(crate) fn belongs_to(self, input: Input<'_>) -> bool {
-        self.source.as_ptr() == input.bytes.as_ptr()
-            && self.source.len() == input.bytes.len()
-            && self.offset <= self.source.len()
+        same_source(
+            self.source,
+            self.empty_source_id,
+            input.bytes,
+            input.empty_source_id,
+        ) && self.offset <= self.source.len()
     }
 }
 
@@ -137,9 +186,12 @@ impl fmt::Debug for Cursor<'_> {
 
 impl PartialEq for Cursor<'_> {
     fn eq(&self, other: &Self) -> bool {
-        self.source.as_ptr() == other.source.as_ptr()
-            && self.source.len() == other.source.len()
-            && self.offset == other.offset
+        same_source(
+            self.source,
+            self.empty_source_id,
+            other.source,
+            other.empty_source_id,
+        ) && self.offset == other.offset
     }
 }
 
@@ -149,6 +201,7 @@ impl Eq for Cursor<'_> {}
 #[derive(Clone, Copy)]
 pub struct Span<'i> {
     bytes: &'i [u8],
+    empty_source_id: Option<EmptySourceId>,
     start: usize,
     end: usize,
 }
@@ -182,9 +235,12 @@ impl fmt::Debug for Span<'_> {
 
 impl PartialEq for Span<'_> {
     fn eq(&self, other: &Self) -> bool {
-        self.bytes.as_ptr() == other.bytes.as_ptr()
-            && self.bytes.len() == other.bytes.len()
-            && self.start == other.start
+        same_source(
+            self.bytes,
+            self.empty_source_id,
+            other.bytes,
+            other.empty_source_id,
+        ) && self.start == other.start
             && self.end == other.end
     }
 }
