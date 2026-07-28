@@ -9,9 +9,9 @@ use std::collections::{BTreeSet, HashMap};
 use super::nfa::{DEAD, Nfa, StateId};
 use crate::sets::equiv::compute_byte_classes;
 
-/// A single DFA state.
+/// A single compiler-internal DFA state.
 #[derive(Clone, Debug)]
-pub struct DfaState {
+pub(crate) struct DfaState {
     /// Transitions indexed by equivalence class.
     /// `transitions[class]` = target StateId, or `DEAD` for no transition.
     pub transitions: Vec<StateId>,
@@ -21,13 +21,11 @@ pub struct DfaState {
 
 /// Options for DFA construction.
 #[derive(Clone, Debug)]
-pub struct DfaOptions {
+pub(crate) struct DfaOptions {
     /// Maximum DFA states before bailing (guards against exponential blowup).
     pub state_limit: usize,
     /// Whether to minimize the DFA via Hopcroft's algorithm.
     pub minimize: bool,
-    /// Whether to enable Unicode mode in regex parsing.
-    pub unicode: bool,
 }
 
 impl Default for DfaOptions {
@@ -35,14 +33,13 @@ impl Default for DfaOptions {
         Self {
             state_limit: 4096,
             minimize: true,
-            unicode: true,
         }
     }
 }
 
-/// A compiled DFA. Transitions are indexed by byte equivalence classes.
+/// A compiler-internal DFA. Transitions are indexed by byte classes.
 #[derive(Clone, Debug)]
-pub struct Dfa {
+pub(crate) struct Dfa {
     /// DFA states (kept for minimization, accept checks, etc.).
     pub states: Vec<DfaState>,
     /// Flat transition table: `flat_transitions[state * num_classes + class]` = target StateId.
@@ -55,26 +52,8 @@ pub struct Dfa {
 }
 
 impl Dfa {
-    /// Compile a regex pattern to a minimized DFA.
-    ///
-    /// Returns `None` if the pattern is invalid, uses unsupported features,
-    /// or the DFA exceeds the state limit.
-    pub fn compile(pattern: &str) -> Option<Self> {
-        Self::compile_with(pattern, &DfaOptions::default())
-    }
-
-    /// Compile with explicit options.
-    pub fn compile_with(pattern: &str, opts: &DfaOptions) -> Option<Self> {
-        let parse_opts = crate::hir::ParseOptions {
-            unicode: opts.unicode,
-        };
-        let hir = crate::parse_with(pattern, &parse_opts).ok()?;
-        let nfa = Nfa::from_hir(&hir)?;
-        Self::from_nfa(&nfa, opts)
-    }
-
     /// Build DFA from a pre-constructed NFA.
-    pub fn from_nfa(nfa: &Nfa, opts: &DfaOptions) -> Option<Self> {
+    pub(crate) fn from_nfa(nfa: &Nfa, opts: &DfaOptions) -> Option<Self> {
         // Step 1: Compute byte equivalence classes.
         let byte_sets = nfa.transition_byte_sets();
         let (byte_classes, num_classes) = compute_byte_classes(&byte_sets);
@@ -99,74 +78,6 @@ impl Dfa {
         dfa.flat_transitions = flat;
 
         Some(dfa)
-    }
-
-    /// Number of states.
-    pub fn state_count(&self) -> usize {
-        self.states.len()
-    }
-
-    /// Number of equivalence classes.
-    pub fn class_count(&self) -> usize {
-        self.num_classes as usize
-    }
-
-    /// Anchored match at the given byte offset.
-    /// Returns the end position of the longest match, or `None`.
-    pub fn find_at(&self, bytes: &[u8], offset: usize) -> Option<usize> {
-        let num_cls = self.num_classes as usize;
-        let flat = &self.flat_transitions;
-        let states = &self.states;
-        let mut state: u32 = 0; // start state
-        let mut pos = offset;
-        let mut last_accept = if states[0].is_accept { Some(pos) } else { None };
-
-        while pos < bytes.len() {
-            let b = bytes[pos];
-            let class = self.byte_classes[b as usize] as usize;
-            let next = flat[state as usize * num_cls + class];
-            if next == DEAD {
-                break;
-            }
-            state = next;
-            pos += 1;
-            if states[state as usize].is_accept {
-                last_accept = Some(pos);
-            }
-        }
-
-        last_accept
-    }
-
-    /// Anchored shortest (non-greedy) match at the given byte offset.
-    /// Returns the end position of the first (shortest) match, or `None`.
-    pub fn find_at_shortest(&self, bytes: &[u8], offset: usize) -> Option<usize> {
-        let num_cls = self.num_classes as usize;
-        let flat = &self.flat_transitions;
-        let states = &self.states;
-        let mut state: u32 = 0;
-        let mut pos = offset;
-
-        // If the start state is accepting, that's the shortest match (empty).
-        if states[0].is_accept {
-            return Some(pos);
-        }
-
-        while pos < bytes.len() {
-            let b = bytes[pos];
-            let class = self.byte_classes[b as usize] as usize;
-            let next = flat[state as usize * num_cls + class];
-            if next == DEAD {
-                break;
-            }
-            state = next;
-            pos += 1;
-            if states[state as usize].is_accept {
-                return Some(pos); // first accept = shortest match
-            }
-        }
-
-        None
     }
 }
 
@@ -222,6 +133,9 @@ fn subset_construction(
     class_reps: &[u8],
     opts: &DfaOptions,
 ) -> Option<Dfa> {
+    if opts.state_limit == 0 {
+        return None;
+    }
     let num_cls = num_classes as usize;
 
     // Initial DFA state = ε-closure of NFA start.

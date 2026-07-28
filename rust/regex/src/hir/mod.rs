@@ -188,8 +188,7 @@ pub enum Look {
 
 /// Quantified sub-expression.
 ///
-/// Tranche X phase 3: derives `Eq + Hash` so saturated HIRs can key
-/// the per-compile saturation cache in `egraph::SaturationCache`.
+/// Derives `Eq + Hash` so compiler-side consumers can cache analysis by HIR.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Repetition {
     pub sub: Box<Hir>,
@@ -204,9 +203,8 @@ pub struct Repetition {
 ///
 /// Flat enum — match directly, no `.kind()` indirection.
 ///
-/// Tranche X phase 3: derives `Eq + Hash` so input HIRs can key the
-/// per-compile saturation cache in `egraph::SaturationCache`. Every
-/// child type already derives Eq + Hash:
+/// Derives `Eq + Hash` so compiler-side consumers can cache analysis by HIR.
+/// Every child type already derives Eq + Hash:
 /// - `Vec<u8>` (Literal payload) — std impls
 /// - `CharClass` — derived above
 /// - `Look` — derived above

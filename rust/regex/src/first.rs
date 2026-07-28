@@ -55,21 +55,14 @@ fn first_chars_from_hir(hir: &Hir) -> Option<CharSet128> {
         }
 
         Hir::Concat(seq) => {
-            if seq.is_empty() {
-                return Some(CharSet128::new());
-            }
-            let first = first_chars_from_hir(&seq[0])?;
-            if is_nullable(&seq[0]) {
-                let mut cs = first;
-                if seq.len() > 1 {
-                    if let Some(next) = first_chars_from_hir(&seq[1]) {
-                        cs.union(&next);
-                    }
+            let mut first = CharSet128::new();
+            for child in seq {
+                first.union(&first_chars_from_hir(child)?);
+                if !is_nullable(child) {
+                    break;
                 }
-                Some(cs)
-            } else {
-                Some(first)
             }
+            Some(first)
         }
 
         Hir::Repetition(rep) => first_chars_from_hir(&rep.sub),

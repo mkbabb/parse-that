@@ -190,105 +190,20 @@ pub struct RegexInfo {
 impl RegexInfo {
     /// Analyze a regex pattern, computing all properties in a single parse.
     ///
-    /// Uses [`crate::egraph::RegexExtractionCost::default`] for HIR
-    /// canonicalization. Consumers with a non-default cost (e.g. the
-    /// bbnf-lang grammar pipeline reading from `ir.cost_config`) should
-    /// call [`Self::analyze_with_cost`] instead.
-    ///
     /// Returns `None` if the pattern fails to parse.
     pub fn analyze(pattern: &str) -> Option<Self> {
-        Self::analyze_with_cost(pattern, &crate::egraph::RegexExtractionCost::default())
-    }
-
-    /// Analyze a regex pattern with an explicit cost model for HIR
-    /// canonicalization.
-    pub fn analyze_with_cost(
-        pattern: &str,
-        cost: &crate::egraph::RegexExtractionCost,
-    ) -> Option<Self> {
         let hir =
             crate::hir::parser::parse_with(pattern, &crate::hir::ParseOptions::byte_mode()).ok()?;
-        Some(Self::analyze_from_hir_with_cost(pattern, &hir, cost))
+        Some(Self::analyze_from_hir(&hir))
     }
 
-    /// Tranche X phase 3: cached variant of [`Self::analyze_with_cost`]
-    /// for the per-compile pipeline. Threads a per-compile
-    /// [`crate::egraph::SaturationCache`] through the HIR
-    /// canonicalization step so that repeated patterns within a
-    /// single compile pay the saturation cost at most once.
-    pub fn analyze_with_cost_cached(
-        pattern: &str,
-        cost: &crate::egraph::RegexExtractionCost,
-        cache: &mut crate::egraph::SaturationCache,
-    ) -> Option<Self> {
-        let hir =
-            crate::hir::parser::parse_with(pattern, &crate::hir::ParseOptions::byte_mode()).ok()?;
-        Some(Self::analyze_from_hir_with_cost_cached(
-            pattern, &hir, cost, cache,
-        ))
-    }
-
-    /// Analyze a regex from a pre-parsed HIR using the default cost model.
+    /// Analyze a regex from a pre-parsed HIR.
     ///
-    /// See [`Self::analyze_from_hir_with_cost`] for the explicit-cost variant.
-    pub fn analyze_from_hir(pattern: &str, hir: &Hir) -> Self {
-        Self::analyze_from_hir_with_cost(
-            pattern,
-            hir,
-            &crate::egraph::RegexExtractionCost::default(),
-        )
-    }
-
-    /// Analyze a regex from a pre-parsed HIR with an explicit cost model.
-    /// Consumers that already have the HIR should call this directly to
-    /// avoid a redundant parse.
-    ///
-    /// `pattern` is still required for the known-pattern fast path in
-    /// `classify_regex` — if the consumer doesn't have the original string,
-    /// pass `""` (classification falls back to HIR-only structural checks).
-    ///
-    /// Before analysis runs, the HIR is passed through
-    /// `crate::egraph::simplify_hir` — a cost-guided equality saturation
-    /// that canonicalizes alternations (dedup, superset absorption,
-    /// charclass union merge), flattens nested Alt/Concat, and absorbs
-    /// adjacent repetitions. Every downstream analysis (FIRST sets,
-    /// nullable, width, DFA sizing) therefore sees the canonicalized
-    /// HIR with zero caller-side awareness.
-    pub fn analyze_from_hir_with_cost(
-        pattern: &str,
-        hir: &Hir,
-        cost: &crate::egraph::RegexExtractionCost,
-    ) -> Self {
-        // Canonicalize HIR via the cost-guided e-graph first. Every
-        // downstream analysis runs against `canonical`, not the raw
-        // input `hir`.
-        let canonical = crate::egraph::simplify_hir(hir, cost);
-        Self::analyze_canonical(pattern, &canonical)
-    }
-
-    /// Tranche X phase 3: cached variant of
-    /// [`Self::analyze_from_hir_with_cost`] that consults the
-    /// per-compile [`crate::egraph::SaturationCache`] for the HIR
-    /// canonicalization step. The post-canonicalization analysis
-    /// passes (FIRST sets, nullable, width, DFA sizing, classify)
-    /// are unchanged — the cache only short-circuits the e-graph
-    /// `build → saturate → extract → drop` cycle.
-    pub fn analyze_from_hir_with_cost_cached(
-        pattern: &str,
-        hir: &Hir,
-        cost: &crate::egraph::RegexExtractionCost,
-        cache: &mut crate::egraph::SaturationCache,
-    ) -> Self {
-        let canonical = crate::egraph::simplify_hir_cached(hir, cost, cache);
-        Self::analyze_canonical(pattern, &canonical)
-    }
-
-    /// Shared post-canonicalization analysis used by both the cached
-    /// and non-cached entry points.
-    fn analyze_canonical(pattern: &str, canonical: &Hir) -> Self {
-        let _ = pattern;
-        let hir = canonical;
-
+    /// This is deliberately a direct, deterministic HIR walk. Equality
+    /// saturation and cost-policy selection belong to the grammar compiler,
+    /// not this semantic leaf crate: changing a planner must not silently
+    /// change regex language or soundness facts.
+    pub fn analyze_from_hir(hir: &Hir) -> Self {
         // Classification is purely structural — every dialect flag is
         // recovered from the HIR walk in `classify_regex_from_hir`.
         let classification = classify_regex_from_hir(hir);

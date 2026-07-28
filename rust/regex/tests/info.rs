@@ -77,6 +77,15 @@ fn test_width_bounds() {
     assert_eq!(info.max_match_len, Some(5));
 }
 
+#[test]
+fn first_set_walks_every_nullable_concat_prefix() {
+    let info = RegexInfo::analyze(r"-?-?[a-zA-Z_][\w-]*").unwrap();
+    assert!(info.first_chars.has(b'-'));
+    assert!(info.first_chars.has(b'a'));
+    assert!(info.first_chars.has(b'Z'));
+    assert!(info.first_chars.has(b'_'));
+}
+
 // ── Identifier dialect coverage (AQ.7.1) ─────────────────────────────────
 //
 // Verifies that the parameterized `RegexClass::Identifier` correctly

@@ -15,17 +15,15 @@ use crate::utf8::Utf8Sequences;
 pub type StateId = u32;
 pub const DEAD: StateId = u32::MAX;
 
-/// An ε-transition with priority for greedy/lazy disambiguation.
-/// Lower priority values are preferred during DFA construction.
+/// A compiler-internal ε-transition.
 #[derive(Clone, Copy, Debug)]
-pub struct EpsilonEdge {
-    pub target: StateId,
-    pub priority: u8,
+pub(crate) struct EpsilonEdge {
+    pub(crate) target: StateId,
 }
 
 /// A single NFA state.
 #[derive(Clone, Debug)]
-pub struct NfaState {
+pub(crate) struct NfaState {
     /// Byte-class transitions: if input byte ∈ ByteSet, transition to target.
     pub transitions: SmallVec<[(ByteSet, StateId); 2]>,
     /// ε-transitions ordered by priority (lower = preferred).
@@ -43,7 +41,7 @@ impl NfaState {
 
 /// A Thompson NFA: set of states with a single start and single accept state.
 #[derive(Clone, Debug)]
-pub struct Nfa {
+pub(crate) struct Nfa {
     pub states: Vec<NfaState>,
     pub start: StateId,
     pub accept: StateId,
@@ -57,18 +55,10 @@ struct Fragment {
 }
 
 impl Nfa {
-    /// Build an NFA from a regex pattern string.
-    ///
-    /// Returns `None` if the pattern is invalid or uses unsupported features.
-    pub fn from_pattern(pattern: &str) -> Option<Self> {
-        let hir = crate::hir::parser::parse(pattern).ok()?;
-        Self::from_hir(&hir)
-    }
-
     /// Build an NFA from an already-parsed HIR.
     ///
     /// Returns `None` for unsupported HIR features.
-    pub fn from_hir(hir: &Hir) -> Option<Self> {
+    pub(crate) fn from_hir(hir: &Hir) -> Option<Self> {
         let mut builder = NfaBuilder {
             states: Vec::with_capacity(64),
         };
@@ -80,14 +70,9 @@ impl Nfa {
         })
     }
 
-    /// Number of states.
-    pub fn state_count(&self) -> usize {
-        self.states.len()
-    }
-
     /// Collect all distinct ByteSets used in transitions.
     /// Used for computing byte equivalence classes.
-    pub fn transition_byte_sets(&self) -> Vec<ByteSet> {
+    pub(crate) fn transition_byte_sets(&self) -> Vec<ByteSet> {
         let mut sets = Vec::new();
         for state in &self.states {
             for (bs, _) in &state.transitions {
@@ -115,11 +100,10 @@ impl NfaBuilder {
         self.states[from as usize].transitions.push((byte_set, to));
     }
 
-    fn add_epsilon(&mut self, from: StateId, to: StateId, priority: u8) {
-        self.states[from as usize].epsilon.push(EpsilonEdge {
-            target: to,
-            priority,
-        });
+    fn add_epsilon(&mut self, from: StateId, to: StateId) {
+        self.states[from as usize]
+            .epsilon
+            .push(EpsilonEdge { target: to });
     }
 
     fn build_hir(&mut self, hir: &Hir) -> Option<Fragment> {
@@ -284,7 +268,7 @@ impl NfaBuilder {
         for sub in &subs[1..] {
             let next = self.build_hir(sub)?;
             // Chain: result.accept → ε → next.start
-            self.add_epsilon(result.accept, next.start, 0);
+            self.add_epsilon(result.accept, next.start);
             result = Fragment {
                 start: result.start,
                 accept: next.accept,
@@ -308,11 +292,10 @@ impl NfaBuilder {
         let start = self.new_state();
         let accept = self.new_state();
 
-        for (i, alt) in alts.iter().enumerate() {
+        for alt in alts {
             let frag = self.build_hir(alt)?;
-            // Priority = index → leftmost-first semantics.
-            self.add_epsilon(start, frag.start, i as u8);
-            self.add_epsilon(frag.accept, accept, 0);
+            self.add_epsilon(start, frag.start);
+            self.add_epsilon(frag.accept, accept);
         }
 
         Some(Fragment { start, accept })
@@ -341,13 +324,13 @@ impl NfaBuilder {
         let accept = self.new_state();
 
         if greedy {
-            self.add_epsilon(start, frag.start, 0);
-            self.add_epsilon(start, accept, 1);
+            self.add_epsilon(start, frag.start);
+            self.add_epsilon(start, accept);
         } else {
-            self.add_epsilon(start, accept, 0);
-            self.add_epsilon(start, frag.start, 1);
+            self.add_epsilon(start, accept);
+            self.add_epsilon(start, frag.start);
         }
-        self.add_epsilon(frag.accept, accept, 0);
+        self.add_epsilon(frag.accept, accept);
 
         Some(Fragment { start, accept })
     }
@@ -358,13 +341,13 @@ impl NfaBuilder {
         let accept = self.new_state();
 
         if greedy {
-            self.add_epsilon(start, frag.start, 0);
-            self.add_epsilon(start, accept, 1);
+            self.add_epsilon(start, frag.start);
+            self.add_epsilon(start, accept);
         } else {
-            self.add_epsilon(start, accept, 0);
-            self.add_epsilon(start, frag.start, 1);
+            self.add_epsilon(start, accept);
+            self.add_epsilon(start, frag.start);
         }
-        self.add_epsilon(frag.accept, start, 0);
+        self.add_epsilon(frag.accept, start);
 
         Some(Fragment { start, accept })
     }
@@ -375,11 +358,11 @@ impl NfaBuilder {
         let accept = self.new_state();
 
         if greedy {
-            self.add_epsilon(frag.accept, frag.start, 0);
-            self.add_epsilon(frag.accept, accept, 1);
+            self.add_epsilon(frag.accept, frag.start);
+            self.add_epsilon(frag.accept, accept);
         } else {
-            self.add_epsilon(frag.accept, accept, 0);
-            self.add_epsilon(frag.accept, frag.start, 1);
+            self.add_epsilon(frag.accept, accept);
+            self.add_epsilon(frag.accept, frag.start);
         }
 
         Some(Fragment { start, accept })
@@ -396,7 +379,7 @@ impl NfaBuilder {
         let mut result = self.build_hir(sub)?;
         for _ in 1..n {
             let next = self.build_hir(sub)?;
-            self.add_epsilon(result.accept, next.start, 0);
+            self.add_epsilon(result.accept, next.start);
             result = Fragment {
                 start: result.start,
                 accept: next.accept,
@@ -408,7 +391,7 @@ impl NfaBuilder {
     fn build_at_least(&mut self, sub: &Hir, n: u32, greedy: bool) -> Option<Fragment> {
         let required = self.build_exact(sub, n)?;
         let star = self.build_star(sub, greedy)?;
-        self.add_epsilon(required.accept, star.start, 0);
+        self.add_epsilon(required.accept, star.start);
         Some(Fragment {
             start: required.start,
             accept: star.accept,
@@ -431,15 +414,15 @@ impl NfaBuilder {
         for _ in 0..(m - n) {
             let opt = self.build_hir(sub)?;
             if greedy {
-                self.add_epsilon(current_accept, opt.start, 0);
-                self.add_epsilon(current_accept, final_accept, 1);
+                self.add_epsilon(current_accept, opt.start);
+                self.add_epsilon(current_accept, final_accept);
             } else {
-                self.add_epsilon(current_accept, final_accept, 0);
-                self.add_epsilon(current_accept, opt.start, 1);
+                self.add_epsilon(current_accept, final_accept);
+                self.add_epsilon(current_accept, opt.start);
             }
             current_accept = opt.accept;
         }
-        self.add_epsilon(current_accept, final_accept, 0);
+        self.add_epsilon(current_accept, final_accept);
 
         Some(Fragment {
             start: required.start,

@@ -3,7 +3,7 @@ name = "parse_that"
 version = "0.4.0"
 edition = "2024"
 license = "MIT"
-description = "Zero-copy parser combinator library for Rust"
+description = "Zero-copy transactional recognition kernel for generated Rust parsers"
 repository = "https://github.com/mkbabb/parse-that"
 
 [lib]
@@ -11,105 +11,6 @@ name = "parse_that"
 path = "src/lib.rs"
 
 [features]
-default = ["combinators"]
-combinators = []
-diagnostics = ["dep:colored"]
-
-# ── parse_that benches ──────────────────────────────────────
-
-[[bench]]
-name = "parse_that_combinator"
-path = "benches/parse_that/combinator.rs"
-harness = false
-
-[[bench]]
-name = "micro_parse_that"
-path = "benches/parse_that/micro.rs"
-harness = false
-
-[[bench]]
-name = "parse_that_css"
-path = "benches/parse_that/css.rs"
-harness = false
-
-# ── competitor benches ──────────────────────────────────────
-
-[[bench]]
-name = "nom"
-path = "benches/competitors/nom.rs"
-harness = false
-
-[[bench]]
-name = "serde"
-path = "benches/competitors/serde.rs"
-harness = false
-
-[[bench]]
-name = "pest"
-path = "benches/competitors/pest.rs"
-harness = false
-
-[[bench]]
-name = "jiter"
-path = "benches/competitors/jiter.rs"
-harness = false
-
-[[bench]]
-name = "simd_json"
-path = "benches/competitors/simd_json.rs"
-harness = false
-
-[[bench]]
-name = "sonic_rs"
-path = "benches/competitors/sonic_rs.rs"
-harness = false
-
-[[bench]]
-name = "winnow"
-path = "benches/competitors/winnow.rs"
-harness = false
-
-[[bench]]
-name = "serde_json_borrow"
-path = "benches/competitors/serde_json_borrow.rs"
-harness = false
-
-[[bench]]
-name = "lightningcss"
-path = "benches/competitors/lightningcss.rs"
-harness = false
-
-[[bench]]
-name = "cssparser"
-path = "benches/competitors/cssparser.rs"
-harness = false
-
-# ── dependencies ────────────────────────────────────────────
+default = []
 
 [dependencies]
-bbnf-regex = { version = "0.1", path = "../regex" }
-pprint = "0.3"
-colored = { version = "3", optional = true }
-memchr = "2.5.0"
-aho-corasick = "1.1"
-fast-float2 = "0.2"
-smallvec = "1.13"
-smallbox = { version = "0.8", features = ["nightly"] }
-
-[dev-dependencies]
-serde_json = "1.0.94"
-serde = "1.0.156"
-divan = "0.1"
-pest = "2.5.6"
-pest_grammars = "2.5.6"
-nom = "7.1.3"
-jiter = "0.8"
-simd-json = "0.14"
-sonic-rs = "0.5"
-winnow = "0.7"
-serde_json_borrow = "0.9"
-lightningcss = "1.0.0-alpha.70"
-cssparser = "0.34"
-mimalloc = "0.1"
-fast-float2 = "0.2"
-regex = "1"

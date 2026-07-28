@@ -71,20 +71,3 @@ codegen-units   = 1
 [alias]
 iter-check = "check --profile ax-iter"
 iter-test  = "nextest run --cargo-profile ax-iter"
-
-# SK-V26 W0: committed, reproducible sibling resolution. The protected
-# parse-that main carried equivalent patches only in an ignored
-# `rust/.cargo/config.toml`, so a clean checkout could not resolve the
-# unpublished BBNF substrate crates. This branch binds exclusively to the
-# isolated SK-V26 BBNF worktree.
-[patch.crates-io]
-parse_that = { path = "rust/parse_that" }
-bbnf-regex = { path = "rust/regex" }
-pprint = { path = "../pprint-skv26/rust" }
-pprint_derive = { path = "../pprint-skv26/rust/derive" }
-bbnf = { path = "../bbnf-lang-skv26/crates/core" }
-bbnf-ir = { path = "../bbnf-lang-skv26/crates/ir" }
-bbnf-ser = { path = "../bbnf-lang-skv26/crates/ser" }
-csp-solver = { path = "../bbnf-lang-skv26/crates/csp-solver" }
-egraph = { path = "../bbnf-lang-skv26/crates/egraph" }
-egraph-derive = { path = "../bbnf-lang-skv26/crates/egraph-derive" }

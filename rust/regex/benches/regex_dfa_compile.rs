@@ -1,22 +1,11 @@
-//! Tranche P: NFA→DFA compile + match throughput.
-//!
-//! Two scenarios:
-//!
-//! 1. **Compile**: for each pattern in the corpus, compile via
-//!    `Dfa::compile` (parse → HIR → NFA → DFA → minimize). This
-//!    measures the full automata construction pipeline.
-//!
-//! 2. **Match**: pre-compile a subset of representative patterns,
-//!    then run `Dfa::find_at` against a fixed input buffer. This
-//!    measures the runtime hot loop (transition table walk +
-//!    byte equivalence class lookup).
+//! Compile-time HIR→NFA→DFA→checked-table throughput.
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use divan::{Bencher, black_box};
 
-use bbnf_regex::Dfa;
+use bbnf_regex::RegexTablePlan;
 
 const COMPILE_PATTERNS: &[&str] = &[
     r"\d+",
@@ -47,40 +36,25 @@ const COMPILE_PATTERNS: &[&str] = &[
     r"\w+(?:[-_]\w+)*",
 ];
 
-const MATCH_INPUT: &str = "the quick brown fox 12345 jumped over 3.14159 lazy \
-dogs at https://example.com on 2026-04-09 with hex \
-deadBEEF and 192.168.1.100 plus 0x7FFF and #FFAACC";
-
 #[divan::bench]
-fn dfa_compile(b: Bencher) {
+fn table_plan_compile(b: Bencher) {
     b.bench(|| {
         for &pattern in COMPILE_PATTERNS {
-            let _ = black_box(Dfa::compile(pattern));
+            let _ = black_box(RegexTablePlan::compile(pattern));
         }
     });
 }
 
 #[divan::bench]
-fn dfa_find_at(b: Bencher) {
-    // Pre-compile a representative subset.
-    let dfas: Vec<Dfa> = [r"\d+", r"\w+", r"[a-zA-Z_]\w*", r"#[0-9a-fA-F]{3,6}"]
+fn table_plan_serialize(b: Bencher) {
+    let plans: Vec<RegexTablePlan> = [r"\d+", r"\w+", r"[a-zA-Z_]\w*", r"#[0-9a-fA-F]{3,6}"]
         .iter()
-        .filter_map(|&p| Dfa::compile(p))
+        .filter_map(|&pattern| RegexTablePlan::compile(pattern).ok())
         .collect();
-    let bytes = MATCH_INPUT.as_bytes();
 
     b.bench(|| {
-        for dfa in &dfas {
-            let mut offset = 0;
-            while offset < bytes.len() {
-                match dfa.find_at(bytes, offset) {
-                    Some(end) if end > offset => {
-                        black_box(end);
-                        offset = end;
-                    }
-                    _ => offset += 1,
-                }
-            }
+        for plan in &plans {
+            black_box(plan.to_bytes());
         }
     });
 }

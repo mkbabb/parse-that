@@ -3,7 +3,7 @@ name = "bbnf-regex"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
-description = "Bespoke regex engine: HIR, NFA→DFA compilation, structural classification"
+description = "Compile-time regex HIR analysis and checked table-plan emission for BBNF"
 repository = "https://github.com/mkbabb/parse-that"
 
 [lib]
@@ -17,24 +17,6 @@ serde = ["dep:serde"]
 [dependencies]
 smallvec = "1.13"
 serde = { version = "1", optional = true, features = ["derive"] }
-# AZ-IV.W2.3 — `path_lexer` exposes a custom HIR API for path-string
-# literals. Tokens carry `proc_macro2::Span` so the consuming `path!`
-# proc-macro (bbnf-path, AZ-IV.W2.4) can anchor diagnostics at the macro
-# call-site. proc-macro2 is callable from both proc-macro contexts and
-# ordinary library/test contexts under its default features.
-proc-macro2 = "1"
-# Tranche X phase 2: FxHash for the per-iteration scratch state in
-# the HIR e-graph rewrite rules. Same hash strategy as the egraph
-# substrate crate (via rustc-hash 2).
-rustc-hash = "2"
-# Tranche H: HIR e-graph substrate. `egraph` + `egraph-derive` supply the
-# equality-saturation machinery; `csp-solver` schedules HIR rewrite
-# eligibility the same way the grammar tier schedules its CSP passes. All
-# three are resolved locally via parse-that/rust/.cargo/config.toml's
-# [patch.crates-io] table — no published crate coordinates required.
-egraph = "0.1"
-egraph-derive = "0.1"
-csp-solver = "0.1"
 
 [dev-dependencies]
 divan = "0.1"
@@ -48,10 +30,6 @@ harness = false
 
 [[bench]]
 name = "regex_classify"
-harness = false
-
-[[bench]]
-name = "regex_hir_egraph"
 harness = false
 
 [[bench]]

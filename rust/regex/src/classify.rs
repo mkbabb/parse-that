@@ -1,7 +1,7 @@
 //! HIR-based regex classification for during-parse value conversion
 //! (AW-IV.W4.2.b consolidated — single-module HIR predicate surface).
 //!
-//! Uses the bespoke `parse_that::regex` HIR to parse patterns into
+//! Uses this crate's bespoke regex HIR to parse patterns into
 //! HIR (High-level Intermediate Representation) and classify
 //! structurally. More robust than string-level matching: normalizes
 //! `\d` / `[0-9]`, class orderings, group nesting, etc.
