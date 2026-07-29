@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { performance } from "node:perf_hooks";
+import { pathToFileURL } from "node:url";
 import { serialize } from "node:v8";
 import {
     all,
@@ -19,6 +21,16 @@ import {
     type Compiled,
     type Spanned,
 } from "./kernel.js";
+
+const baselineRoot = process.env.P3_BASELINE_ROOT;
+const baselineApi = baselineRoot
+    ? await import(pathToFileURL(resolve(
+        baselineRoot,
+        "src/parse/index.ts",
+    )).href) as typeof import("../../../../src/parse/index.js")
+    : await import("../../../../src/parse/index.js");
+const baselineState = (source: string) =>
+    new baselineApi.ParserState<unknown>(source) as ParserState<unknown>;
 
 // Evenly sampled from the 753 non-custom, non-alias properties in
 // @webref/css 8.7.1 (frozen 2026-07-29 assay input).
@@ -74,7 +86,7 @@ const shape = process.env.P3_PROFILE_SHAPE === "recovery"
 const opaque = Object.freeze({ kind: "opaque", source: "bad;" } as const);
 
 function spanned<T>(parser: Parser<T>): Parser<Spanned<T>> {
-    return new Parser(state => {
+    return new baselineApi.Parser(state => {
         const start = state.offset;
         parser.parser(state);
         if (state.isError) return state;
@@ -86,20 +98,30 @@ function spanned<T>(parser: Parser<T>): Parser<Spanned<T>> {
 }
 
 function makeClosure(): Parser<unknown> {
-    const terminal = any(...properties.map(name => spanned(string(name))));
+    const terminal = baselineApi.any(
+        ...properties.map(name => spanned(baselineApi.string(name))),
+    );
     if (shape === "terminal") return terminal;
-    const declaration: Parser<unknown> = all(terminal, spanned(string(":")));
+    const declaration: Parser<unknown> = baselineApi.all(
+        terminal,
+        spanned(baselineApi.string(":")),
+    );
     return shape === "recovery"
-        ? declaration.recover(string("bad;"), opaque)
+        ? declaration.recover(baselineApi.string("bad;"), opaque)
         : declaration;
 }
 
 function makeOuterSpanClosure(): Parser<unknown> {
-    const terminal = spanned(any(...properties.map(string)));
+    const terminal = spanned(baselineApi.any(
+        ...properties.map(baselineApi.string),
+    ));
     if (shape === "terminal") return terminal;
-    const declaration: Parser<unknown> = all(terminal, spanned(string(":")));
+    const declaration: Parser<unknown> = baselineApi.all(
+        terminal,
+        spanned(baselineApi.string(":")),
+    );
     return shape === "recovery"
-        ? declaration.recover(string("bad;"), opaque)
+        ? declaration.recover(baselineApi.string("bad;"), opaque)
         : declaration;
 }
 
@@ -227,13 +249,25 @@ function snapshot(state: ParserState<unknown>) {
 function parseRaw<T>(
     parser: (state: ParserState<T>) => unknown,
     source: string,
+    createState: (source: string) => ParserState<T> =
+        value => new ParserState<T>(value),
 ) {
-    const state = new ParserState<T>(source);
+    const state = createState(source);
     parser(state);
     return state;
 }
 
-disableDiagnostics();
+function disableAllDiagnostics(): void {
+    disableDiagnostics();
+    baselineApi.disableDiagnostics();
+}
+
+function enableAllDiagnostics(): void {
+    enableDiagnostics();
+    baselineApi.enableDiagnostics();
+}
+
+disableAllDiagnostics();
 for (const source of [...sources, "not-a-property"]) {
     const expected = snapshot(closure.parseState(source));
     const actualState = parseStaged(source);
@@ -273,7 +307,9 @@ const internal = samplePair(
     rotate(sources, source => parseRaw(staged.parser, source)),
 );
 const result = samplePair(
-    rotate(sources, source => resultFromState(closure.parseState(source))),
+    rotate(sources, source => resultFromState(
+        closure.parseState(source) as ParserState<unknown>,
+    )),
     rotate(sources, source => resultFromState(parseStaged(source))),
 );
 const lateResult = samplePair(
@@ -285,25 +321,33 @@ const failure = samplePair(
     () => parseStaged("not-a-property"),
 );
 
-enableDiagnostics();
+enableAllDiagnostics();
 const diagnosticSources = shape === "recovery"
     ? ["bad;"]
     : shape === "sequence"
         ? properties.map(name => `${name}!`)
         : ["not-a-property"];
 for (const source of diagnosticSources) {
-    const expected = snapshot(parseRaw(closure.parser, source));
+    const expected = snapshot(parseRaw(
+        closure.parser,
+        source,
+        baselineState,
+    ));
     const actual = snapshot(parseRaw(staged.parser, source));
     if (JSON.stringify(actual) !== JSON.stringify(expected)) {
         throw new Error(`unequal diagnostic product for ${source}`);
     }
 }
 const diagnosticFailure = samplePair(
-    rotate(diagnosticSources, source => parseRaw(closure.parser, source)),
+    rotate(diagnosticSources, source => parseRaw(
+        closure.parser,
+        source,
+        baselineState,
+    )),
     rotate(diagnosticSources, source => parseRaw(staged.parser, source)),
     fullCorpus ? 100 : 5_000,
 );
-disableDiagnostics();
+disableAllDiagnostics();
 
 const example = parseStaged(sources[sources.length - 1]);
 const retainedClosure = retained(makeClosure);
@@ -325,6 +369,10 @@ const raw = {
         },
         choiceOrder: "longest-first, then lexical",
         timingBoundary: "Parser.parseState for both sides",
+        baseline: {
+            root: baselineRoot ?? "current checkout",
+            sha: process.env.P3_BASELINE_SHA ?? "current checkout",
+        },
     },
     unit: "ns/op",
     plan: staged.plan,
