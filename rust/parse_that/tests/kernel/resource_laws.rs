@@ -32,6 +32,7 @@ impl EventSink for RecordingSink {
 #[test]
 fn each_generic_resource_kind_preserves_its_usize_limit_and_absolute_evidence() {
     let cases = [
+        ResourceKind::InputBytes,
         ResourceKind::Nesting,
         ResourceKind::Work,
         ResourceKind::Events,
@@ -66,6 +67,7 @@ fn each_generic_resource_kind_preserves_its_usize_limit_and_absolute_evidence() 
 #[test]
 fn resource_fault_rolls_back_events_and_never_tries_a_choice_sibling() {
     for kind in [
+        ResourceKind::InputBytes,
         ResourceKind::Nesting,
         ResourceKind::Work,
         ResourceKind::Events,

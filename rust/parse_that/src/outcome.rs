@@ -4,6 +4,7 @@ use crate::Cursor;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum ResourceKind {
+    InputBytes,
     Nesting,
     Work,
     Events,

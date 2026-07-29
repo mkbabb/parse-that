@@ -23,16 +23,24 @@ pub trait EventSink {
     }
 }
 
-/// A zero-sized sink for recognition-only calls.
+/// An allocation-free counting sink for recognition-only calls.
+///
+/// The count is part of the parse transaction: failed alternatives and
+/// iterations restore it through [`EventSink::truncate`]. Event values are
+/// still never constructed because [`EventSink::push_with`] is specialized.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct NoSink<E = Infallible> {
+    len: usize,
     event: PhantomData<fn(E)>,
 }
 
 impl<E> NoSink<E> {
     #[inline]
     pub const fn new() -> Self {
-        Self { event: PhantomData }
+        Self {
+            len: 0,
+            event: PhantomData,
+        }
     }
 }
 
@@ -41,22 +49,32 @@ impl<E> EventSink for NoSink<E> {
 
     #[inline]
     fn len(&self) -> usize {
-        0
+        self.len
     }
 
     #[inline]
     fn truncate(&mut self, len: usize) {
-        debug_assert_eq!(len, 0);
+        debug_assert!(len <= self.len);
+        self.len = len;
     }
 
     #[inline]
-    fn push(&mut self, _event: Self::Event) {}
+    fn push(&mut self, _event: Self::Event) {
+        self.len = self
+            .len
+            .checked_add(1)
+            .expect("logical event count exceeds addressable memory");
+    }
 
     #[inline]
     fn push_with<F>(&mut self, _event: F)
     where
         F: FnOnce() -> Self::Event,
     {
+        self.len = self
+            .len
+            .checked_add(1)
+            .expect("logical event count exceeds addressable memory");
     }
 }
 

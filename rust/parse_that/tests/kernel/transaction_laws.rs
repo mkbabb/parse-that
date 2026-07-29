@@ -139,6 +139,7 @@ fn one_eventful_parser_runs_unchanged_with_discarding_and_retaining_sinks() {
         discarded.parse_full(eventful_scalar),
         Step::Matched(_)
     ));
+    assert_eq!(discarded.sink().len(), 1);
 
     let mut retained = Run::with_sink(Input::new(b"a"), RecordingSink::default());
     assert!(matches!(
@@ -152,6 +153,40 @@ fn one_eventful_parser_runs_unchanged_with_discarding_and_retaining_sinks() {
             at: 1
         }]
     );
+}
+
+#[test]
+fn discarding_sink_counts_only_transactionally_retained_events() {
+    fn speculative<'i>(run: &mut Run<'i, parse_that::NoSink<ProbeEvent>>) -> Step<'i, Span<'i>> {
+        sequence(run, |run| {
+            let at = run.cursor().offset();
+            run.emit_with(|| ProbeEvent {
+                label: "discarded",
+                at,
+            });
+            literal(run, b"x")
+        })
+    }
+
+    fn fallback<'i>(run: &mut Run<'i, parse_that::NoSink<ProbeEvent>>) -> Step<'i, Span<'i>> {
+        let span = match literal(run, b"ab") {
+            Step::Matched(span) => span,
+            Step::Mismatch(failure) => return Step::Mismatch(failure),
+            Step::Fault(fault) => return Step::Fault(fault),
+        };
+        run.emit_with(|| ProbeEvent {
+            label: "retained",
+            at: span.end(),
+        });
+        Step::Matched(span)
+    }
+
+    let mut run = Run::discarding::<ProbeEvent>(Input::new(b"ab"));
+    assert!(matches!(
+        run.parse_full(|run| choice(run, speculative, fallback)),
+        Step::Matched(_)
+    ));
+    assert_eq!(run.sink().len(), 1);
 }
 
 fn faulting_branch<'i>(run: &mut Run<'i, RecordingSink>) -> Step<'i, usize> {
