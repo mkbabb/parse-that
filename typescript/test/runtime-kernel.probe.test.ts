@@ -32,6 +32,28 @@ describe("runtime-kernel candidate obligations", () => {
             undefined,
             "b",
         ]);
+        expect(all(string("x")).parse("x")).toEqual(["x"]);
+        expect(all(string("a").opt(), string("b"), string("c")).parse("bc"))
+            .toEqual([undefined, "b", "c"]);
+        expect(all(
+            string("a").opt(), string("b"), string("c"), string("d"),
+        ).parse("bcd")).toEqual([undefined, "b", "c", "d"]);
+
+        const state = new ParserState("a!", "seed");
+        all(string("a"), string("b")).parser(state);
+        expect({
+            offset: state.offset,
+            value: state.value,
+            furthest: state.furthest,
+            expected: state.expected,
+            isError: state.isError,
+        }).toEqual({
+            offset: 0,
+            value: "seed",
+            furthest: 1,
+            expected: ['"b"'],
+            isError: true,
+        });
     });
 
     it("records a labelled regex failure at EOF", () => {
