@@ -2,8 +2,8 @@ use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use parse_that::{
-    EventSink, Input, RegexPlan, RegexTerminal, Run, Span, Step, choice, literal, regex, repeat,
-    sequence,
+    EventSink, Input, RegexPlan, RegexTerminal, Run, Span, Step, choice, difference, literal,
+    regex, repeat, sequence,
 };
 
 struct CountingAllocator;
@@ -205,6 +205,34 @@ fn assert_mismatch_choice_and_fault_paths_allocate_nothing() {
     assert_eq!(ALLOCATIONS.load(Ordering::SeqCst), 0);
 }
 
+fn assert_difference_paths_allocate_nothing() {
+    let input = Input::new(b"a");
+
+    let mut warm = Run::new(input);
+    assert!(matches!(
+        warm.parse_full(|run| difference(run, |run| literal(run, b"a"), |run| literal(run, b"z"),)),
+        Step::Matched(_)
+    ));
+
+    ALLOCATIONS.store(0, Ordering::SeqCst);
+    COUNTING.store(true, Ordering::SeqCst);
+
+    let mut accepted = Run::new(input);
+    let accepted_outcome = accepted
+        .parse_full(|run| difference(run, |run| literal(run, b"a"), |run| literal(run, b"z")));
+    let mut excluded = Run::new(input);
+    let excluded_outcome = excluded
+        .parse_prefix(|run| difference(run, |run| literal(run, b"a"), |run| literal(run, b"a")));
+    std::hint::black_box((&accepted_outcome, &excluded_outcome));
+
+    COUNTING.store(false, Ordering::SeqCst);
+    assert!(matches!(accepted_outcome, Step::Matched(_)));
+    assert!(matches!(excluded_outcome, Step::Mismatch(_)));
+    assert_eq!(accepted.cursor().offset(), 1);
+    assert_eq!(excluded.cursor().offset(), 0);
+    assert_eq!(ALLOCATIONS.load(Ordering::SeqCst), 0);
+}
+
 #[test]
 fn kernel_allocation_laws() {
     // One test owns the process-global counting window. Parallel test workers
@@ -214,4 +242,5 @@ fn kernel_allocation_laws() {
     assert_no_sink_erases_event_construction_without_allocating();
     assert_parse_module_with_no_sink_performs_zero_allocations();
     assert_mismatch_choice_and_fault_paths_allocate_nothing();
+    assert_difference_paths_allocate_nothing();
 }
