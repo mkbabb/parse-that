@@ -8,10 +8,11 @@ without a tokenizer, scanner facade, compatibility path, or second runtime.
 ## Thesis
 
 Authored combinators remain the grammar. A compact runtime may lower only the
-generic source-direct operations that two live grammars consume. The candidate
-is admitted by equivalent values, UTF-16 spans, diagnostics, recovery and
-failure behavior at every binding scale, then packaged once, consumed before
-publication, and released only after displaced machinery is deleted.
+generic source-direct operations that two live grammars consume. Formation is
+admitted only after three full-subject passes, isolated equivalent-product
+prototype proof at every frozen scale and result plane, and two clean
+formation audits. Execution then freezes and packages one candidate, consumes
+it before publication, and releases only after displaced machinery is deleted.
 
 ## Goal criterion
 
@@ -58,38 +59,55 @@ after migration, and ≥10× faster at CI-low on the frozen equal-work planes.
 |---|---|---:|---|---|
 | [B.W0 - Candidate-to-Release Closure](waves/W0.md) | Form, falsify, consume and release one generic runtime without parallel surfaces. | 1 serial writer; bounded disjoint research, prototype and critic seats | All wave hard gates, immutable pack and consumer receipts, release tag/pack, released-coordinate Value rebind | `in_progress` |
 
-## Ordered release path
+## Ordered formation and release path
 
 The single wave executes these boundaries in order. A later boundary cannot
 borrow credit from an earlier prototype.
 
-1. **Private convergence and formal source freeze.** Reconcile archaeology,
-   M1/M2/M3, S-family evidence and hostile audits; resolve exact transactions,
-   slots, source projection, recovery, diagnostics, bounded recursion, memo
-   policy, unordered composition, allocation, IC/deopt/GC and result
-   materialization through the smallest private executable kernel. Keep every
-   RED plane RED and freeze only a source state whose local correctness and
-   reproducibility gates pass.
-2. **Immutable unpublished candidate.** Produce one `npm pack` tarball from
+### Formation — zero execution or release credit
+
+1. **P1 full-subject pass.** Reconcile archaeology, M1/M2/M3, S-family
+   evidence and hostile audits across transactions, slots, source projection,
+   recovery, diagnostics, recursion, memo policy, unordered composition,
+   allocation, IC/deopt/GC and result materialization.
+2. **P2 full-subject pass.** Challenge the complete P1 subject and implement
+   or retire its surviving incompatible mechanisms without narrowing the
+   denominator.
+3. **P3 full-subject pass.** Re-run the complete subject adversarially and
+   converge only evidence-backed, consumed generic mechanisms.
+4. **Isolated prototype proof.** On a frozen private prototype, establish
+   equivalent values, UTF-16 spans, diagnostics, recovery and failures plus
+   exact-bootstrap ≥10× CI-low at every binding scale and result plane.
+5. **Formation Clean A.** A fresh hostile audit accepts the P1→P2→P3 record,
+   frozen prototype and isolated proof.
+6. **Formation Clean B and admission.** A second independent hostile audit
+   accepts the same evidence. Only this boundary admits formation; it creates
+   no candidate-consumption, execution, publication or release credit.
+
+### Execution and release
+
+7. **Private/formal source freeze.** Translate the admitted prototype into
+   the smallest locally correct and reproducible production-source candidate.
+8. **Immutable unpublished candidate.** Produce one `npm pack` tarball from
    the frozen source with exact commit, file manifest and SHA-256. Later
    evidence names this object; no consumer reads a mutable link or dirty head.
-3. **Exact-SHA consumption.** Value and parse-that's `jsonParser` consume the
+9. **Exact-SHA consumption.** Value and parse-that's `jsonParser` consume the
    same candidate tarball. Value authors the sole scannerless CSS Syntax,
    selectors, at-rules, VDS, Webref and named-extension grammar; JSON uses the
    same generic primitives. BBNF is not substituted.
-4. **Consumer equivalence, deletion and formal proof.** Value and JSON return
+10. **Consumer equivalence, deletion and formal proof.** Value and JSON return
    exact receipts for values, spans, diagnostics, recovery and failures;
    delete displaced machinery; run WPT/browser differentials; and establish
    corrected AB/BA exact-bootstrap ≥10× CI-low at every frozen binding scale
    and equal semantic plane, with allocation, CPU, deopt and GC artefacts.
-5. **Clean audits.** Two fresh adversarial passes accept the frozen source,
-   exact tarball, consumer diffs and formal evidence.
-6. **Release.** Publish the accepted successor only after gates 1–5 are
+11. **Execution clean audits.** Two fresh adversarial passes accept the
+    frozen source, exact tarball, consumer diffs and formal evidence.
+12. **Release.** Publish the accepted successor only after gates 7–11 are
    green.
-7. **Value released-coordinate rebind.** Rebind Value to the released
+13. **Value released-coordinate rebind.** Rebind Value to the released
    coordinate and rerun its tests, build, browser/WPT differentials and pack
    proof.
-8. **Post-W3 ABI receipt.** Send BBNF the frozen generic surface after Value
+14. **Post-W3 ABI receipt.** Send BBNF the frozen generic surface after Value
    W3; no implementation dependency or competing parser is introduced.
 
 ## Critical files and ownership

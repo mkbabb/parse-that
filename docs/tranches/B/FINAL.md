@@ -19,13 +19,17 @@ pair, release or Value released-coordinate rebind exists.
 |---|---|---|
 | Canonical parent/PROGRESS/wave/coordination/FINAL | `IN_PROGRESS` | `B.md`, `PROGRESS.md`, `waves/W0.md`, `coordination/CONSTELLATION.md`, this file |
 | Runtime correctness | `IN_PROGRESS` | M2 banked; M3 rejected; S3 private |
+| Full-subject P1→P2→P3 | `IN_PROGRESS` | P1 research banked; later full-subject passes remain open |
+| Isolated every-scale/result proof | `RED` | 96-name and immutable-result planes remain below ≥10× CI-low |
+| Formation Clean A / Clean B | `BLOCKED` | requires green isolated prototype proof |
+| Formation admission | `BLOCKED` | requires both formation clean audits; creates zero execution credit |
 | Full Value CSS coverage | `OPEN` | Value owns implementation; no execution receipt |
 | JSON same-primitive consumption | `OPEN` | Named consumer only; no candidate receipt |
 | Equivalent deletion/consolidation | `OPEN` | No consumer diffs |
-| ≥10× every-scale CI-low | `RED` | accepted-M2 96-name matched-boundary 8.179×; raw internal 8.698×; immutable result 4.420× |
+| ≥10× every-scale CI-low | `RED` | S4 accepted-M2 96-name matched-boundary 9.063×; raw internal 9.017×; immutable result 4.573× |
 | Allocation/deopt/GC sealed proof | `IN_PROGRESS` | corrected S artefacts incomplete |
 | Immutable unpublished candidate | `OPEN` | none |
-| Two clean adversarial audits | `OPEN` | XR-18/XR-21 currently reject admission |
+| Execution Clean A / Clean B | `BLOCKED` | requires exact-pack consumer evidence |
 | `/utils` two-consumer proof or prune | `OPEN` | unresolved |
 | Parse-that release | `OPEN` | no successor |
 | Value released-coordinate rebind | `BLOCKED` | requires parse-that release |
@@ -34,11 +38,13 @@ pair, release or Value released-coordinate rebind exists.
 
 ## Commits
 
-No close commit exists. Banked formation commits are recorded in
-`PROGRESS.md`; none carries release credit. The latest evidence commit is
-`c480578` (`perf(runtime-prototype): bind corrected S assay to accepted M2
-control`). `2fc18dc` owns the corrected S/recovery kernel and XR-21
-amendment.
+No close commit exists. Banked formation-research commits are recorded in
+`PROGRESS.md`; none admits formation or carries execution/release credit. The
+The accepted-M2 control is `c480578`
+(`perf(runtime-prototype): bind corrected S assay to accepted M2 control`).
+The latest prototype evidence, S4, is banked at `75b76dd`; its authored-span
+sequence and sealed artefacts remain HELD/RED. `2fc18dc` owns the preceding
+corrected S/recovery kernel and XR-21 amendment.
 
 ## Handoff
 
