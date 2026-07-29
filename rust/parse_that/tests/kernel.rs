@@ -7,8 +7,10 @@ mod kernel {
     mod control_laws;
     mod generated_shaped_control;
     mod input_contract;
+    mod module_laws;
     mod outcome_laws;
     mod progress_laws;
+    mod resource_laws;
     mod terminal_laws;
     mod transaction_laws;
 }

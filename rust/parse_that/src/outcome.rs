@@ -1,5 +1,14 @@
 use crate::Cursor;
 
+/// The generic runtime resource whose configured bound was exhausted.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
+pub enum ResourceKind {
+    Nesting,
+    Work,
+    Events,
+}
+
 /// Recoverable recognition evidence.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Failure<'i> {
@@ -34,10 +43,22 @@ impl<'i> Failure<'i> {
 
 /// A non-recoverable control-law violation.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum Fault<'i> {
-    StalledRepeat { at: Cursor<'i> },
-    ForeignOutcome { at: Cursor<'i> },
-    FullParseAfterProgress { at: Cursor<'i> },
+    StalledRepeat {
+        at: Cursor<'i>,
+    },
+    ForeignOutcome {
+        at: Cursor<'i>,
+    },
+    FullParseAfterProgress {
+        at: Cursor<'i>,
+    },
+    ResourceLimit {
+        at: Cursor<'i>,
+        kind: ResourceKind,
+        limit: usize,
+    },
 }
 
 impl<'i> Fault<'i> {
@@ -46,7 +67,8 @@ impl<'i> Fault<'i> {
         match self {
             Self::StalledRepeat { at }
             | Self::ForeignOutcome { at }
-            | Self::FullParseAfterProgress { at } => at,
+            | Self::FullParseAfterProgress { at }
+            | Self::ResourceLimit { at, .. } => at,
         }
     }
 

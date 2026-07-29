@@ -1,5 +1,5 @@
 use crate::transaction::Checkpoint;
-use crate::{Cursor, EventSink, Failure, Fault, Input, NoSink, Step};
+use crate::{Cursor, EventSink, Failure, Fault, Input, ModuleResult, NoSink, Step};
 
 /// Mutable state for one borrowed input and one append-only event sink.
 pub struct Run<'i, S = NoSink> {
@@ -52,6 +52,25 @@ impl<'i, S: EventSink> Run<'i, S> {
     #[inline]
     pub fn into_sink(self) -> S {
         self.sink
+    }
+
+    /// Parse one complete module and return its source, typed outcome, and sink.
+    ///
+    /// This is the consuming full-input boundary used by generated module
+    /// parsers. It adds no transaction participant beyond
+    /// [`Run::parse_full`].
+    #[inline]
+    pub fn parse_module<T, F>(mut self, parser: F) -> ModuleResult<'i, S>
+    where
+        F: FnOnce(&mut Self) -> Step<'i, T>,
+    {
+        let input = self.input;
+        let outcome = match self.parse_full(parser) {
+            Step::Matched(_) => Step::Matched(input.span_unchecked(0, input.len())),
+            Step::Mismatch(failure) => Step::Mismatch(failure),
+            Step::Fault(fault) => Step::Fault(fault),
+        };
+        ModuleResult::new(input, outcome, self.sink)
     }
 
     #[inline]

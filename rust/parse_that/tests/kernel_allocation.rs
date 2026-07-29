@@ -162,6 +162,27 @@ fn assert_no_sink_erases_event_construction_without_allocating() {
     assert_eq!(ALLOCATIONS.load(Ordering::SeqCst), 0);
 }
 
+fn assert_parse_module_with_no_sink_performs_zero_allocations() {
+    let terminal = ascii_word_terminal();
+    let input = Input::new(b"alpha42");
+
+    let warm = Run::new(input).parse_module(|run| word_then_digits(run, &terminal));
+    assert!(matches!(warm.outcome(), Step::Matched(_)));
+
+    ALLOCATIONS.store(0, Ordering::SeqCst);
+    COUNTING.store(true, Ordering::SeqCst);
+
+    let result = Run::new(input).parse_module(|run| word_then_digits(run, &terminal));
+    std::hint::black_box(&result);
+
+    COUNTING.store(false, Ordering::SeqCst);
+    let allocations = ALLOCATIONS.load(Ordering::SeqCst);
+
+    assert!(matches!(result.outcome(), Step::Matched(_)));
+    assert_eq!(result.input().start(), input.start());
+    assert_eq!(allocations, 0, "consuming module parse allocated");
+}
+
 fn assert_mismatch_choice_and_fault_paths_allocate_nothing() {
     let input = Input::new(b"a");
     let mut mismatch = Run::new(input);
@@ -191,5 +212,6 @@ fn kernel_allocation_laws() {
     assert_source_identity_creation_performs_zero_allocations();
     assert_no_sink_recognition_borrows_input_and_performs_zero_allocations();
     assert_no_sink_erases_event_construction_without_allocating();
+    assert_parse_module_with_no_sink_performs_zero_allocations();
     assert_mismatch_choice_and_fault_paths_allocate_nothing();
 }
