@@ -15,6 +15,7 @@ import {
     type Span,
     type Spanned,
 } from "./kernel.js";
+import { resultFromState } from "./result.js";
 
 describe("P3-S source-direct staged terminal", () => {
     it("preserves authored choice priority across prefix collisions", () => {
@@ -228,8 +229,11 @@ describe("P3-S source-direct staged terminal", () => {
             literal("ok").recover(literal("bad"), opaque),
         );
         try {
-            const strict = compile(literal("ok")).result("bad");
-            const result = recovered.result("bad");
+            expect(recovered).not.toHaveProperty("result");
+            const strict = resultFromState(
+                compile(literal("ok")).parseState("bad"),
+            );
+            const result = resultFromState(recovered.parseState("bad"));
             if (result.kind !== "ok") throw new Error("fixture must recover");
             expectTypeOf(result.value).toEqualTypeOf<"ok" | typeof opaque>();
             expect(strict).toMatchObject({
@@ -256,19 +260,19 @@ describe("P3-S source-direct staged terminal", () => {
             expect(Object.isFrozen(result.diagnostics[0])).toBe(true);
             expect(Object.isFrozen(result.diagnostics[0].expected)).toBe(true);
 
-            expect(compile(sequence(
+            expect(resultFromState(compile(sequence(
                 literal("ok").recover(literal("bad"), opaque),
                 literal("z"),
-            )).result("bad!")).toMatchObject({
+            )).parseState("bad!"))).toMatchObject({
                 kind: "mismatch",
                 offset: 0,
                 furthest: 3,
                 expected: ['"z"'],
                 diagnostics: [],
             });
-            expect(compile(
+            expect(resultFromState(compile(
                 literal("ok").recover(literal(""), opaque),
-            ).result("bad")).toMatchObject({
+            ).parseState("bad"))).toMatchObject({
                 kind: "fault",
                 offset: 0,
                 fault: { kind: "RecoveryNonProgress", offset: 0 },

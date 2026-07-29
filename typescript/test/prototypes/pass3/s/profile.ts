@@ -16,11 +16,11 @@ import {
     choice,
     compile,
     literal,
-    resultFromState,
     sequence,
     type Compiled,
     type Spanned,
 } from "./kernel.js";
+import { createResultProjector } from "./result.js";
 
 const baselineRoot = process.env.P3_BASELINE_ROOT;
 const baselineApi = baselineRoot
@@ -138,6 +138,8 @@ function makeStaged(): Compiled<unknown> {
 
 const closure = makeClosure();
 const staged = makeStaged();
+const projectClosureResult = createResultProjector();
+const projectStagedResult = createResultProjector();
 const stagedBoundary = new Parser<unknown>(staged.parser);
 const parseStaged = (source: string) => stagedBoundary.parseState(source);
 const sources = properties.map((name, index) =>
@@ -307,10 +309,10 @@ const internal = samplePair(
     rotate(sources, source => parseRaw(staged.parser, source)),
 );
 const result = samplePair(
-    rotate(sources, source => resultFromState(
+    rotate(sources, source => projectClosureResult(
         closure.parseState(source) as ParserState<unknown>,
     )),
-    rotate(sources, source => resultFromState(parseStaged(source))),
+    rotate(sources, source => projectStagedResult(parseStaged(source))),
 );
 const lateResult = samplePair(
     rotate(late, source => closure.parseState(source)),

@@ -1,5 +1,4 @@
 import { ParserState } from "../../../../src/parse/state.js";
-import type { Diagnostic } from "../../../../src/parse/state.js";
 import {
     collectDiagnostic,
     isDiagnosticsEnabled,
@@ -124,33 +123,11 @@ export function sequence<const P extends readonly Grammar<unknown>[]>(
     }) as Grammar<GrammarValues<P>>;
 }
 
-type ImmutableField<T> = T extends readonly (infer U)[]
-    ? readonly Readonly<U>[]
-    : T;
-export type ResultDiagnostic = {
-    readonly [K in keyof Diagnostic]: ImmutableField<Diagnostic[K]>;
-};
-type ResultEvidence = Readonly<{
-    offset: number;
-    furthest: number;
-    expected: readonly string[];
-    diagnostics: readonly ResultDiagnostic[];
-}>;
-export type ParseResult<T> =
-    | (ResultEvidence & Readonly<{ kind: "ok"; value: T }>)
-    | (ResultEvidence & Readonly<{ kind: "mismatch"; value: unknown }>)
-    | (ResultEvidence & Readonly<{
-        kind: "fault";
-        value: unknown;
-        fault: NonNullable<ParserState["fault"]>;
-    }>);
-
 export type Compiled<T> = Readonly<{
     plan: StagedPlan;
     parser: (state: ParserState<T>) => ParserState<T>;
     parseState: (source: string) => ParserState<T>;
     parse: (source: string) => T;
-    result: (source: string) => ParseResult<T>;
 }>;
 
 type MutablePlan = {
@@ -180,49 +157,7 @@ export function compile<T>(grammar: Grammar<T>): Compiled<T> {
         parser,
         parseState,
         parse: source => parseState(source).value,
-        result: source => resultFromState(parseState(source)),
     };
-}
-
-export function resultFromState<T>(state: ParserState<T>): ParseResult<T> {
-    const diagnostics = Object.freeze(state.diagnostics.map(diagnostic =>
-        Object.freeze({
-            ...diagnostic,
-            expected: Object.freeze([...diagnostic.expected]),
-            suggestions: Object.freeze(diagnostic.suggestions.map(suggestion =>
-                Object.freeze({ ...suggestion })
-            )),
-            secondarySpans: Object.freeze(diagnostic.secondarySpans.map(span =>
-                Object.freeze({ ...span })
-            )),
-        }) as ResultDiagnostic
-    ));
-    const evidence = {
-        offset: state.offset,
-        furthest: state.furthest,
-        expected: Object.freeze([...(state.expected ?? [])]),
-        diagnostics,
-    };
-    if (state.fault) {
-        return Object.freeze({
-            ...evidence,
-            kind: "fault",
-            value: state.value,
-            fault: Object.freeze({ ...state.fault }),
-        });
-    }
-    if (state.isError) {
-        return Object.freeze({
-            ...evidence,
-            kind: "mismatch",
-            value: state.value,
-        });
-    }
-    return Object.freeze({
-        ...evidence,
-        kind: "ok",
-        value: state.value,
-    });
 }
 
 function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
