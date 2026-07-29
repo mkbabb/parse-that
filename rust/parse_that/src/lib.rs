@@ -11,7 +11,7 @@ mod run;
 mod terminal;
 mod transaction;
 
-pub use control::{choice, repeat, sequence};
+pub use control::{choice, difference, repeat, sequence};
 pub use input::{Cursor, Input, InputError, Span};
 pub use module::ModuleResult;
 pub use outcome::{Failure, Fault, ResourceKind, Step};
@@ -23,4 +23,4 @@ pub use transaction::{EventSink, NoSink};
 ///
 /// Consumers may assert this integer in const context so an older path
 /// dependency cannot silently satisfy a newer generated-control boundary.
-pub const KERNEL_ABI: u32 = 2;
+pub const KERNEL_ABI: u32 = 3;

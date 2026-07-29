@@ -61,6 +61,52 @@ where
     }
 }
 
+/// Recognize `primary` only when `excluded` does not match at the same entry.
+///
+/// The exclusion probe is fully speculative: its cursor, events, and ordinary
+/// mismatch diagnostics are discarded. A fault or foreign outcome remains a
+/// fault, and a failed primary restores the complete difference transaction.
+pub fn difference<'i, S, T, U, P, E>(run: &mut Run<'i, S>, primary: P, excluded: E) -> Step<'i, T>
+where
+    S: EventSink,
+    P: FnOnce(&mut Run<'i, S>) -> Step<'i, T>,
+    E: FnOnce(&mut Run<'i, S>) -> Step<'i, U>,
+{
+    let entry = run.checkpoint();
+    match excluded(run) {
+        Step::Matched(_) => {
+            run.rollback(entry);
+            Step::Mismatch(Failure::new(run.cursor()))
+        }
+        Step::Fault(fault) => {
+            run.rollback(entry);
+            Step::Fault(run.validate_fault(fault, entry.cursor))
+        }
+        Step::Mismatch(failure) => {
+            let failure = run.validate_failure(failure, entry.cursor);
+            run.rollback(entry);
+            if let Err(fault) = failure {
+                return Step::Fault(fault);
+            }
+
+            match primary(run) {
+                matched @ Step::Matched(_) => matched,
+                Step::Mismatch(failure) => {
+                    run.rollback(entry);
+                    match run.validate_failure(failure, entry.cursor) {
+                        Ok(failure) => Step::Mismatch(failure),
+                        Err(fault) => Step::Fault(fault),
+                    }
+                }
+                Step::Fault(fault) => {
+                    run.rollback(entry);
+                    Step::Fault(run.validate_fault(fault, entry.cursor))
+                }
+            }
+        }
+    }
+}
+
 /// Repeat one generated operation, enforcing progress on every match.
 pub fn repeat<'i, S, T, F>(
     run: &mut Run<'i, S>,

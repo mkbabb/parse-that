@@ -6,6 +6,6 @@ publish = false
 
 [dependencies]
 bbnf-regex = { version = "0.1", path = "../../regex" }
-parse_that = { version = "=0.4.1", path = "../../parse_that" }
+parse_that = { version = "=0.5.0", path = "../../parse_that" }
 
 [workspace]
