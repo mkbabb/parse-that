@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { performance } from "node:perf_hooks";
 import { pathToFileURL } from "node:url";
@@ -407,4 +407,9 @@ const raw = {
             / (rotating.closure.median - rotating.staged.median),
     },
 };
-console.log(JSON.stringify(raw));
+const serialized = `${JSON.stringify(raw)}\n`;
+if (process.env.P3_PROFILE_OUTPUT) {
+    writeFileSync(process.env.P3_PROFILE_OUTPUT, serialized);
+} else {
+    process.stdout.write(serialized);
+}

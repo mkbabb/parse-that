@@ -38,6 +38,17 @@ type Terminal<T> = Readonly<{
     text: string;
     project: (start: number, end: number) => T;
 }>;
+type TerminalTable = Readonly<{
+    alphabet: Int8Array;
+    ascii: Uint16Array | Uint32Array;
+    cold: ReadonlyMap<number, number>;
+    hasColdEdges: boolean;
+    labelLimits: Uint16Array | Uint32Array;
+    labels: readonly string[];
+    width: number;
+    winning: Uint16Array | Uint32Array;
+    winningDepth: Uint16Array | Uint32Array;
+}>;
 
 export type StagedPlan = Readonly<{
     terminals: number;
@@ -300,6 +311,19 @@ function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
     }
     if (node.kind === "sequence") {
         if (node.children.length === 2) {
+            const firstSpanned = flattenSpannedLiterals(node.children[0]);
+            const secondSpanned = flattenSpannedLiterals(node.children[1]);
+            if (
+                firstSpanned?.length
+                && secondSpanned?.length === 1
+                && secondSpanned[0].length === 1
+            ) {
+                return compileSpannedSequence(
+                    firstSpanned,
+                    secondSpanned[0],
+                    plan,
+                ) as unknown as Runner<T>;
+            }
             const firstTerminals = flatten(node.children[0]);
             const secondTerminals = flatten(node.children[1]);
             if (firstTerminals?.length && secondTerminals?.length === 1) {
@@ -421,93 +445,20 @@ function compileTerminals<T>(
         };
     }
 
-    const edges: Map<number, number>[] = [new Map()];
-    const accept: number[] = [-1];
-    const parent: number[] = [-1];
-    const depth: number[] = [0];
-    for (let index = 0; index < terminals.length; index++) {
-        let state = 0;
-        for (let at = 0; at < terminals[index].text.length; at++) {
-            const code = terminals[index].text.charCodeAt(at);
-            let next = edges[state].get(code);
-            if (next === undefined) {
-                next = edges.length;
-                edges[state].set(code, next);
-                edges.push(new Map());
-                accept.push(-1);
-                parent.push(state);
-                depth.push(depth[state] + 1);
-            }
-            state = next;
-        }
-        if (accept[state] < 0) accept[state] = index;
-    }
-
-    const codes = new Set<number>();
-    for (const state of edges) {
-        for (const code of state.keys()) {
-            if (code < 128) codes.add(code);
-        }
-    }
-    const alphabet = new Int8Array(128);
-    alphabet.fill(-1);
-    const orderedCodes = [...codes].sort((left, right) => left - right);
-    for (let index = 0; index < orderedCodes.length; index++) {
-        alphabet[orderedCodes[index]] = index;
-    }
-    const width = orderedCodes.length;
-    const ascii = edges.length <= 65_536
-        ? new Uint16Array(edges.length * width)
-        : new Uint32Array(edges.length * width);
-    const cold = new Map<number, number>();
-    for (let state = 0; state < edges.length; state++) {
-        for (const [code, next] of edges[state]) {
-            if (code < 128) ascii[state * width + alphabet[code]] = next;
-            else cold.set(state * 65_536 + code, next);
-        }
-    }
-    const winning = terminals.length <= 65_535
-        ? new Uint16Array(accept.length)
-        : new Uint32Array(accept.length);
-    const winningDepth = new Uint32Array(accept.length);
-    for (let state = 0; state < accept.length; state++) {
-        const own = accept[state] + 1;
-        const inherited = state === 0 ? 0 : winning[parent[state]];
-        if (own > 0 && (inherited === 0 || own < inherited)) {
-            winning[state] = own;
-            winningDepth[state] = depth[state];
-        } else if (state > 0) {
-            winning[state] = inherited;
-            winningDepth[state] = winningDepth[parent[state]];
-        }
-    }
-    const labels: string[] = [];
-    const labelLimits = terminals.length <= 65_535
-        ? new Uint16Array(terminals.length + 1)
-        : new Uint32Array(terminals.length + 1);
-    const seenLabels = new Set<string>();
-    for (let index = 0; index < terminals.length; index++) {
-        labelLimits[index] = labels.length;
-        const label = `"${terminals[index].text}"`;
-        if (!seenLabels.has(label)) {
-            seenLabels.add(label);
-            labels.push(label);
-        }
-    }
-    labelLimits[terminals.length] = labels.length;
-
-    plan.terminals += terminals.length;
-    plan.states += edges.length;
-    plan.asciiAlphabet = Math.max(plan.asciiAlphabet, width);
-    plan.asciiCells += ascii.length;
-    plan.coldEdges += cold.size;
-    plan.tableBytes +=
-        alphabet.byteLength
-        + ascii.byteLength
-        + winning.byteLength
-        + winningDepth.byteLength
-        + labelLimits.byteLength;
-    const hasColdEdges = cold.size > 0;
+    const {
+        alphabet,
+        ascii,
+        cold,
+        hasColdEdges,
+        labelLimits,
+        labels,
+        width,
+        winning,
+        winningDepth,
+    } = buildTerminalTable(
+        terminals.map(terminal => terminal.text),
+        plan,
+    );
 
     return (state: ParserState<T>): ParserState<T> => {
         const start = state.offset;
@@ -573,6 +524,248 @@ function compileTerminals<T>(
         state.isError = true;
         return state;
     };
+}
+
+function compileSpannedSequence(
+    texts: readonly string[],
+    suffix: string,
+    plan: MutablePlan,
+): Runner<readonly [Spanned<string>, Spanned<string>]> {
+    const suffixCode = suffix.charCodeAt(0);
+    const suffixLabel = `"${suffix}"`;
+    plan.terminals++;
+    if (texts.length === 1) {
+        const text = texts[0];
+        const label = `"${text}"`;
+        const length = text.length;
+        const code = length === 1 ? text.charCodeAt(0) : -1;
+        plan.terminals++;
+        return state => {
+            const start = state.offset;
+            const matches = length === 1
+                ? state.src.charCodeAt(start) === code
+                : state.src.startsWith(text, start);
+            if (!matches) {
+                mergeLabels(state, start, [label]);
+                state.isError = true;
+                return state;
+            }
+            const end = start + length;
+            if (state.src.charCodeAt(end) !== suffixCode) {
+                mergeLabels(state, end, [suffixLabel]);
+                state.isError = true;
+                return state;
+            }
+            const suffixEnd = end + 1;
+            state.offset = suffixEnd;
+            state.value = [
+                { value: text, span: { start, end } },
+                {
+                    value: suffix,
+                    span: { start: end, end: suffixEnd },
+                },
+            ];
+            return state;
+        };
+    }
+
+    const {
+        alphabet,
+        ascii,
+        cold,
+        hasColdEdges,
+        labelLimits,
+        labels,
+        width,
+        winning,
+        winningDepth,
+    } = buildTerminalTable(texts, plan);
+
+    return state => {
+        const start = state.offset;
+        const source = state.src;
+        let node = 0;
+        let at = start;
+        if (hasColdEdges) {
+            while (at < source.length) {
+                const code = source.charCodeAt(at);
+                const symbol = code < 128 ? alphabet[code] : -1;
+                const next = symbol >= 0
+                    ? ascii[node * width + symbol]
+                    : cold.get(node * 65_536 + code) ?? 0;
+                if (next === 0) break;
+                node = next;
+                at++;
+            }
+        } else {
+            while (at < source.length) {
+                const code = source.charCodeAt(at);
+                const symbol = alphabet[code];
+                const next = symbol >= 0
+                    ? ascii[node * width + symbol]
+                    : 0;
+                if (next === 0) break;
+                node = next;
+                at++;
+            }
+        }
+
+        const selected = winning[node] - 1;
+        if (selected < 0) {
+            mergeLabels(state, start, labels);
+            state.isError = true;
+            return state;
+        }
+        const selectedEnd = start + winningDepth[node];
+        const labelLimit = labelLimits[selected];
+        if (labelLimit > 0) {
+            if (isDiagnosticsEnabled()) {
+                mergeLabels(state, start, labels, labelLimit);
+            } else if (start > state.furthest) {
+                state.furthest = start;
+            }
+        }
+        if (source.charCodeAt(selectedEnd) !== suffixCode) {
+            mergeLabels(state, selectedEnd, [suffixLabel]);
+            state.isError = true;
+            return state;
+        }
+        const suffixEnd = selectedEnd + 1;
+        state.offset = suffixEnd;
+        state.value = [
+            {
+                value: texts[selected],
+                span: { start, end: selectedEnd },
+            },
+            {
+                value: suffix,
+                span: { start: selectedEnd, end: suffixEnd },
+            },
+        ];
+        return state;
+    };
+}
+
+function buildTerminalTable(
+    texts: readonly string[],
+    plan: MutablePlan,
+): TerminalTable {
+    const edges: Map<number, number>[] = [new Map()];
+    const accept: number[] = [-1];
+    const parent: number[] = [-1];
+    const depth: number[] = [0];
+    let maximumDepth = 0;
+    for (let index = 0; index < texts.length; index++) {
+        let state = 0;
+        for (let at = 0; at < texts[index].length; at++) {
+            const code = texts[index].charCodeAt(at);
+            let next = edges[state].get(code);
+            if (next === undefined) {
+                next = edges.length;
+                edges[state].set(code, next);
+                edges.push(new Map());
+                accept.push(-1);
+                parent.push(state);
+                depth.push(depth[state] + 1);
+                maximumDepth = Math.max(maximumDepth, depth[next]);
+            }
+            state = next;
+        }
+        if (accept[state] < 0) accept[state] = index;
+    }
+
+    const codes = new Set<number>();
+    for (const state of edges) {
+        for (const code of state.keys()) {
+            if (code < 128) codes.add(code);
+        }
+    }
+    const alphabet = new Int8Array(128);
+    alphabet.fill(-1);
+    const orderedCodes = [...codes].sort((left, right) => left - right);
+    for (let index = 0; index < orderedCodes.length; index++) {
+        alphabet[orderedCodes[index]] = index;
+    }
+    const width = orderedCodes.length;
+    const ascii = edges.length <= 65_536
+        ? new Uint16Array(edges.length * width)
+        : new Uint32Array(edges.length * width);
+    const cold = new Map<number, number>();
+    for (let state = 0; state < edges.length; state++) {
+        for (const [code, next] of edges[state]) {
+            if (code < 128) ascii[state * width + alphabet[code]] = next;
+            else cold.set(state * 65_536 + code, next);
+        }
+    }
+    const winning = texts.length <= 65_535
+        ? new Uint16Array(accept.length)
+        : new Uint32Array(accept.length);
+    const winningDepth = maximumDepth <= 65_535
+        ? new Uint16Array(accept.length)
+        : new Uint32Array(accept.length);
+    for (let state = 0; state < accept.length; state++) {
+        const own = accept[state] + 1;
+        const inherited = state === 0 ? 0 : winning[parent[state]];
+        if (own > 0 && (inherited === 0 || own < inherited)) {
+            winning[state] = own;
+            winningDepth[state] = depth[state];
+        } else if (state > 0) {
+            winning[state] = inherited;
+            winningDepth[state] = winningDepth[parent[state]];
+        }
+    }
+    const labels: string[] = [];
+    const labelLimits = texts.length <= 65_535
+        ? new Uint16Array(texts.length + 1)
+        : new Uint32Array(texts.length + 1);
+    const seenLabels = new Set<string>();
+    for (let index = 0; index < texts.length; index++) {
+        labelLimits[index] = labels.length;
+        const label = `"${texts[index]}"`;
+        if (!seenLabels.has(label)) {
+            seenLabels.add(label);
+            labels.push(label);
+        }
+    }
+    labelLimits[texts.length] = labels.length;
+
+    plan.terminals += texts.length;
+    plan.states += edges.length;
+    plan.asciiAlphabet = Math.max(plan.asciiAlphabet, width);
+    plan.asciiCells += ascii.length;
+    plan.coldEdges += cold.size;
+    plan.tableBytes +=
+        alphabet.byteLength
+        + ascii.byteLength
+        + winning.byteLength
+        + winningDepth.byteLength
+        + labelLimits.byteLength;
+    return {
+        alphabet,
+        ascii,
+        cold,
+        hasColdEdges: cold.size > 0,
+        labelLimits,
+        labels,
+        width,
+        winning,
+        winningDepth,
+    };
+}
+
+function flattenSpannedLiterals(
+    node: Node<unknown>,
+    output: string[] = [],
+): string[] | undefined {
+    if (node.kind === "span" && node.child.kind === "literal") {
+        output.push(node.child.text);
+        return output;
+    }
+    if (node.kind !== "choice") return undefined;
+    for (const child of node.children) {
+        if (!flattenSpannedLiterals(child, output)) return undefined;
+    }
+    return output;
 }
 
 function flatten<T>(
