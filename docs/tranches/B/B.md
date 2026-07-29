@@ -86,6 +86,12 @@ borrow credit from an earlier prototype.
 
 ### Execution and release
 
+The root receipt reported at SHA prefix `060995` is modeled only as
+`P.exec.PB1-order-ack`: an execution-phase acknowledgment of the future
+execution order and authority. It feeds step 7 only after formation
+admission. It does not feed P1 and carries zero formation, candidate,
+consumption, proof, publication or release credit.
+
 7. **Private/formal source freeze.** Translate the admitted prototype into
    the smallest locally correct and reproducible production-source candidate.
 8. **Immutable unpublished candidate.** Produce one `npm pack` tarball from
@@ -107,8 +113,9 @@ borrow credit from an earlier prototype.
 13. **Value released-coordinate rebind.** Rebind Value to the released
    coordinate and rerun its tests, build, browser/WPT differentials and pack
    proof.
-14. **Post-W3 ABI receipt.** Send BBNF the frozen generic surface after Value
-   W3; no implementation dependency or competing parser is introduced.
+14. **Post-W3 ABI receipt.** Send BBNF the frozen generic surface after
+   Value `V.L6.css-path-abi-freeze`; no implementation dependency or
+   competing parser is introduced.
 
 ## Critical files and ownership
 

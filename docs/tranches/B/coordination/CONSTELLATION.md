@@ -8,10 +8,10 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | S5 source/evidence `926a3ad`; P-B1 authority `302c623` plus later authority reconciliation |
+| parse-that worktree | B / generic runtime producer | S6 source/evidence `062c147`; P-B1 authority `302c623` plus later authority reconciliation |
 | Value | V / sole CSS grammar, consumer and UI owner | repository HEAD `e01d0065fa6c7c80282280566af2b9a4add809bf`; formation packet independently admitted at reported SHA prefix `aa684060` with zero execution credit |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
-| BBNF | post-Value-W3 ABI peer | no implementation or CSS parser before W3 |
+| BBNF | post-Value-W3 ABI peer | no implementation or CSS parser before `V.L6.css-path-abi-freeze` |
 
 Value's working tree is active and dirty. Parse-that does not read dirty heads
 as release proof and does not modify Value files. The immutable candidate and
@@ -45,7 +45,8 @@ Formation precedes and cannot borrow credit from execution:
    tarball and consumer evidence.
 9. Parse-that releases.
 10. Value rebinds to the released coordinate and reruns full gates.
-11. BBNF receives the post-W3 frozen ABI receipt.
+11. BBNF receives the frozen ABI receipt after
+    `V.L6.css-path-abi-freeze`.
 
 No raw-source alias, mutable link, dirty head, package-link evidence or
 competing grammar can close an edge.
@@ -65,15 +66,18 @@ competing grammar can close an edge.
 ## Current receipt
 
 Value formation is independently admitted with zero execution credit.
-Parse-that formation is not admitted: P1→P2→P3, isolated every-scale and
-result-plane proof, and formation Clean A/B remain open. P-B1 acknowledges
-authority order only (`302c623` local authority; root receipt SHA prefix
-`060995`) and supplies no formation admission, consumption, proof or release
-credit.
+Parse-that formation is not admitted: P1→P2→P3, isolated every-subject proof,
+and formation Clean A/B remain open. The root receipt reported at SHA prefix
+`060995` is `P.exec.PB1-order-ack`: an execution-phase acknowledgment of
+future execution order/authority. It feeds private freeze only after
+formation admission, does not feed P1, and supplies no formation, candidate,
+consumption, proof or release credit.
 V.L1/V.L5 remain blocked on the exact release chain above. Parse-that's held
-S5 accepted-M2 96-name matched-boundary CI-low is 8.985×, raw-internal CI-low
-is 9.040× and immutable-result CI-low is 7.254×. The compiled `.result`
-surface is pruned and equivalent timed immutable projection is consumer-owned.
-Every binding plane remains below ≥10× CI-low; therefore the producer edge is
-**RED** and `NO RELEASE`. The unchanged production JSON point guard is
-presently noisy RED and supplies neither formal admission nor S5 credit.
+S6 accepted-M2 96-name terminal/sequence CI-lows are 10.020× matched, 11.022×
+raw-internal and 10.263× consumer-result; the corresponding 753-name lows
+exceed 72×. The compiled `.result` surface remains pruned; the consumer owns
+its success envelope while parse provenance and deep-frozen recovery
+diagnostics are preserved. Recovery, recursion, unordered, CSS-leaf and live
+consumer planes remain open, so the producer edge remains **RED** and
+`NO RELEASE`. The unchanged production JSON point guard is green at +4.6%
+on the final isolated rerun but supplies no formal S or formation credit.
