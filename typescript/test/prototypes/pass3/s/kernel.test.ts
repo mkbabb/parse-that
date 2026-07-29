@@ -1,5 +1,6 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 import {
+    all,
     any,
     disableDiagnostics,
     enableDiagnostics,
@@ -10,6 +11,7 @@ import {
     choice,
     compile,
     literal,
+    sequence,
     type Span,
     type Spanned,
 } from "./kernel.js";
@@ -107,11 +109,11 @@ describe("P3-S source-direct staged terminal", () => {
         expect(second.value).toBeUndefined();
         expect(parser.plan).toEqual({
             terminals: 1,
-            states: 8,
-            asciiAlphabet: 7,
-            asciiCells: 56,
+            states: 0,
+            asciiAlphabet: 0,
+            asciiCells: 0,
             coldEdges: 0,
-            tableBytes: 256,
+            tableBytes: 0,
         });
     });
 
@@ -136,6 +138,52 @@ describe("P3-S source-direct staged terminal", () => {
                 furthest: left.furthest,
                 expected: left.expected,
             });
+        }
+    });
+
+    it("fuses a fast terminal child into one transactional sequence", () => {
+        enableDiagnostics();
+        const names = ["color", "display", "position"];
+        const closure = all(any(...names.map(string)), string(":"));
+        const staged = compile(sequence(
+            choice(...names.map(literal)),
+            literal(":"),
+        ));
+        try {
+            for (const source of ["color:", "display:", "position:", "color!"]) {
+                const left = new ParserState<[string, string]>(source);
+                const right = new ParserState<[string, ":"]>(source);
+                closure.parser(left);
+                staged.parser(right);
+                expect({
+                    value: right.value,
+                    offset: right.offset,
+                    isError: right.isError,
+                    furthest: right.furthest,
+                    expected: right.expected,
+                }).toEqual({
+                    value: left.value,
+                    offset: left.offset,
+                    isError: left.isError,
+                    furthest: left.furthest,
+                    expected: left.expected,
+                });
+            }
+
+            expect(compile(
+                sequence(literal("x"), literal("y"))
+                    .map(value => value.join(""))
+                    .spanned(),
+            ).parse("xy")).toEqual({
+                value: "xy",
+                span: { start: 0, end: 2 },
+            });
+            expect(() => compile(choice(
+                sequence(literal("a"), literal("b")),
+                sequence(literal("a"), literal("c")),
+            ))).toThrow("no compiled path");
+        } finally {
+            disableDiagnostics();
         }
     });
 });

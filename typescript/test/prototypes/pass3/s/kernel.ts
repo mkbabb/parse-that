@@ -12,7 +12,11 @@ type MapNode = Readonly<{
 }>;
 type SpanNode = Readonly<{ kind: "span"; child: Node<unknown> }>;
 type ChoiceNode = Readonly<{ kind: "choice"; children: readonly Node<unknown>[] }>;
-type Node<T> = LiteralNode | MapNode | SpanNode | ChoiceNode;
+type SequenceNode = Readonly<{
+    kind: "sequence";
+    children: readonly Node<unknown>[];
+}>;
+type Node<T> = LiteralNode | MapNode | SpanNode | ChoiceNode | SequenceNode;
 
 type Terminal<T> = Readonly<{
     text: string;
@@ -46,6 +50,10 @@ export class Grammar<T> {
         ) as Grammar<T | U>;
     }
 
+    then<U>(other: Grammar<U>): Grammar<[T, U]> {
+        return sequence(this as Grammar<T>, other);
+    }
+
     spanned(): Grammar<Spanned<T>> {
         return new Grammar<Spanned<T>>({
             kind: "span",
@@ -67,6 +75,19 @@ export function choice<const P extends readonly Grammar<unknown>[]>(
     }) as Grammar<P[number] extends Grammar<infer T> ? T : never>;
 }
 
+type GrammarValues<P extends readonly Grammar<unknown>[]> = {
+    -readonly [K in keyof P]: P[K] extends Grammar<infer T> ? T : never;
+};
+
+export function sequence<const P extends readonly Grammar<unknown>[]>(
+    ...parsers: P
+): Grammar<GrammarValues<P>> {
+    return new Grammar({
+        kind: "sequence",
+        children: parsers.map(parser => parser.node),
+    }) as Grammar<GrammarValues<P>>;
+}
+
 export type Compiled<T> = Readonly<{
     plan: StagedPlan;
     parser: (state: ParserState<T>) => ParserState<T>;
@@ -74,14 +95,151 @@ export type Compiled<T> = Readonly<{
     parse: (source: string) => T;
 }>;
 
+type MutablePlan = {
+    -readonly [K in keyof StagedPlan]: number;
+};
+type Runner<T> = (state: ParserState<T>) => ParserState<T>;
+
 /**
- * Compile a mapped/spanned literal choice into one source-direct terminal.
+ * Compile supported graph nodes into source-direct terminals and transactions.
  * There is no token, scanner result, generated source, or fallback runtime.
  */
 export function compile<T>(grammar: Grammar<T>): Compiled<T> {
-    const terminals = flatten(grammar.node);
-    if (!terminals?.length) {
-        throw new TypeError("S prototype accepts only literal/map/span/choice graphs");
+    const plan: MutablePlan = {
+        terminals: 0,
+        states: 0,
+        asciiAlphabet: 0,
+        asciiCells: 0,
+        coldEdges: 0,
+        tableBytes: 0,
+    };
+    const parser = compileNode(grammar.node, plan);
+    const parseState = (source: string) =>
+        parser(new ParserState<T>(source));
+
+    return {
+        plan,
+        parser,
+        parseState,
+        parse: source => parseState(source).value,
+    };
+}
+
+function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
+    const terminals = flatten(node);
+    if (terminals?.length) return compileTerminals(terminals, plan);
+
+    if (node.kind === "map") {
+        const child = compileNode(node.child, plan);
+        return ((state: ParserState<unknown>) => {
+            const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
+            child(state);
+            if (state.fault) {
+                return state.rollback(
+                    savedOffset,
+                    savedValue,
+                    savedDiagnostics,
+                    true,
+                );
+            }
+            if (!state.isError) return state.ok(node.map(state.value));
+            return state;
+        }) as unknown as Runner<T>;
+    }
+    if (node.kind === "span") {
+        const child = compileNode(node.child, plan);
+        return ((state: ParserState<unknown>) => {
+            const start = state.offset;
+            child(state);
+            if (state.isError) return state;
+            return state.ok({
+                value: state.value,
+                span: { start, end: state.offset },
+            });
+        }) as unknown as Runner<T>;
+    }
+    if (node.kind === "sequence") {
+        const children = node.children.map(child => compileNode(child, plan));
+        if (children.length === 2) {
+            const first = children[0];
+            const second = children[1];
+            return ((state: ParserState<unknown[]>) => {
+                const savedOffset = state.offset;
+                const savedValue = state.value;
+                const savedDiagnostics = state.diagnostics.length;
+                first(state as ParserState<unknown>);
+                if (state.isError) {
+                    return state.rollback(
+                        savedOffset,
+                        savedValue,
+                        savedDiagnostics,
+                        true,
+                    );
+                }
+                const firstValue = state.value;
+                second(state as ParserState<unknown>);
+                if (state.isError) {
+                    return state.rollback(
+                        savedOffset,
+                        savedValue,
+                        savedDiagnostics,
+                        true,
+                    );
+                }
+                return state.ok([firstValue, state.value]);
+            }) as unknown as Runner<T>;
+        }
+        return ((state: ParserState<unknown[]>) => {
+            const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
+            const values: unknown[] = new Array(children.length);
+            for (let index = 0; index < children.length; index++) {
+                children[index](state as ParserState<unknown>);
+                if (state.isError) {
+                    return state.rollback(
+                        savedOffset,
+                        savedValue,
+                        savedDiagnostics,
+                        true,
+                    );
+                }
+                values[index] = state.value;
+            }
+            return state.ok(values);
+        }) as unknown as Runner<T>;
+    }
+    throw new TypeError("S prototype has no compiled path for this graph");
+}
+
+function compileTerminals<T>(
+    terminals: readonly Terminal<T>[],
+    plan: MutablePlan,
+): Runner<T> {
+    if (terminals.length === 1) {
+        const terminal = terminals[0];
+        const { text } = terminal;
+        const label = `"${text}"`;
+        const length = text.length;
+        const code = length === 1 ? text.charCodeAt(0) : -1;
+        plan.terminals++;
+        return (state: ParserState<T>) => {
+            const start = state.offset;
+            const matches = length === 1
+                ? state.src.charCodeAt(start) === code
+                : state.src.startsWith(text, start);
+            if (matches) {
+                return state.ok(
+                    terminal.project(start, start + length),
+                    length,
+                );
+            }
+            mergeLabels(state, start, [label]);
+            state.isError = true;
+            return state;
+        };
     }
 
     const edges: Map<number, number>[] = [new Map()];
@@ -133,7 +291,15 @@ export function compile<T>(grammar: Grammar<T>): Compiled<T> {
     }
     const labels = terminals.map(terminal => `"${terminal.text}"`);
 
-    const parser = (state: ParserState<T>): ParserState<T> => {
+    plan.terminals += terminals.length;
+    plan.states += edges.length;
+    plan.asciiAlphabet = Math.max(plan.asciiAlphabet, width);
+    plan.asciiCells += ascii.length;
+    plan.coldEdges += cold.size;
+    plan.tableBytes +=
+        alphabet.byteLength + ascii.byteLength + accepted.byteLength;
+
+    return (state: ParserState<T>): ParserState<T> => {
         const start = state.offset;
         let node = 0;
         let at = start;
@@ -166,23 +332,6 @@ export function compile<T>(grammar: Grammar<T>): Compiled<T> {
         state.isError = true;
         return state;
     };
-    const parseState = (source: string) =>
-        parser(new ParserState<T>(source));
-
-    return {
-        plan: {
-            terminals: terminals.length,
-            states: edges.length,
-            asciiAlphabet: width,
-            asciiCells: ascii.length,
-            coldEdges: cold.size,
-            tableBytes:
-                alphabet.byteLength + ascii.byteLength + accepted.byteLength,
-        },
-        parser,
-        parseState,
-        parse: source => parseState(source).value,
-    };
 }
 
 function flatten<T>(
@@ -214,6 +363,7 @@ function flatten<T>(
             output,
         ) as Terminal<T>[] | undefined;
     }
+    if (node.kind === "sequence") return undefined;
     for (const child of node.children) {
         if (!flatten(child, transform, output)) return undefined;
     }

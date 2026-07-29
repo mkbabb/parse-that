@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { performance } from "node:perf_hooks";
 import { serialize } from "node:v8";
 import {
+    all,
     Parser,
     ParserState,
     any,
@@ -13,6 +14,8 @@ import {
     choice,
     compile,
     literal,
+    sequence,
+    type Compiled,
     type Spanned,
 } from "./kernel.js";
 
@@ -59,6 +62,9 @@ const properties: readonly string[] = webrefPath
         .map(entry => entry.name)
     : sampleProperties;
 const fullCorpus = webrefPath !== undefined;
+const shape = process.env.P3_PROFILE_SHAPE === "sequence"
+    ? "sequence"
+    : "terminal";
 
 function spanned<T>(parser: Parser<T>): Parser<Spanned<T>> {
     return new Parser(state => {
@@ -72,9 +78,24 @@ function spanned<T>(parser: Parser<T>): Parser<Spanned<T>> {
     });
 }
 
-const closure = any(...properties.map(name => spanned(string(name))));
-const staged = compile(choice(...properties.map(name => literal(name).spanned())));
-const late = properties.slice(-16);
+function makeClosure(): Parser<unknown> {
+    const terminal = any(...properties.map(name => spanned(string(name))));
+    return shape === "sequence"
+        ? all(terminal, spanned(string(":")))
+        : terminal;
+}
+
+function makeStaged(): Compiled<unknown> {
+    const terminal = choice(...properties.map(name => literal(name).spanned()));
+    return (shape === "sequence"
+        ? compile(sequence(terminal, literal(":").spanned()))
+        : compile(terminal)) as unknown as Compiled<unknown>;
+}
+
+const closure = makeClosure();
+const staged = makeStaged();
+const sources = properties.map(name => shape === "sequence" ? `${name}:` : name);
+const late = sources.slice(-16);
 let blackhole: unknown;
 
 type Timing = Readonly<{
@@ -129,7 +150,7 @@ function rotate<T>(values: readonly T[], parse: (value: T) => unknown) {
     return () => parse(values[cursor++ % values.length]);
 }
 
-function snapshot(state: ReturnType<typeof closure.parseState>) {
+function snapshot(state: ParserState<unknown>) {
     return {
         value: state.value,
         offset: state.offset,
@@ -150,7 +171,7 @@ function parseRaw<T>(
 }
 
 disableDiagnostics();
-for (const source of [...properties, "not-a-property"]) {
+for (const source of [...sources, "not-a-property"]) {
     const expected = snapshot(closure.parseState(source));
     const actual = snapshot(staged.parseState(source));
     if (JSON.stringify(actual) !== JSON.stringify(expected)) {
@@ -158,49 +179,56 @@ for (const source of [...properties, "not-a-property"]) {
     }
 }
 
-const constructionClosure = sample(() =>
-    any(...properties.map(name => spanned(string(name)))),
+const constructionClosure = sample(
+    makeClosure,
     fullCorpus ? 25 : 250,
     7,
     fullCorpus ? 10 : 25,
 );
-const constructionStaged = sample(() =>
-    compile(choice(...properties.map(name => literal(name).spanned()))),
+const constructionStaged = sample(
+    makeStaged,
     fullCorpus ? 25 : 250,
     7,
     fullCorpus ? 10 : 25,
 );
-const closureRotating = sample(rotate(properties, source => closure.parseState(source)));
-const stagedRotating = sample(rotate(properties, source => staged.parseState(source)));
+const closureRotating = sample(rotate(sources, source => closure.parseState(source)));
+const stagedRotating = sample(rotate(sources, source => staged.parseState(source)));
 const closureLate = sample(rotate(late, source => closure.parseState(source)));
 const stagedLate = sample(rotate(late, source => staged.parseState(source)));
 const closureFailure = sample(() => closure.parseState("not-a-property"));
 const stagedFailure = sample(() => staged.parseState("not-a-property"));
 
 enableDiagnostics();
+const diagnosticSources = shape === "sequence"
+    ? properties.map(name => `${name}!`)
+    : ["not-a-property"];
+for (const source of diagnosticSources) {
+    const expected = snapshot(parseRaw(closure.parser, source));
+    const actual = snapshot(parseRaw(staged.parser, source));
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+        throw new Error(`unequal diagnostic product for ${source}`);
+    }
+}
 const closureDiagnosticFailure = sample(
-    () => parseRaw(closure.parser, "not-a-property"),
+    rotate(diagnosticSources, source => parseRaw(closure.parser, source)),
     fullCorpus ? 100 : 5_000,
 );
 const stagedDiagnosticFailure = sample(
-    () => parseRaw(staged.parser, "not-a-property"),
+    rotate(diagnosticSources, source => parseRaw(staged.parser, source)),
     fullCorpus ? 100 : 5_000,
 );
 disableDiagnostics();
 
-const example = staged.parseState("zoom");
-const retainedClosure = retained(() =>
-    any(...properties.map(name => spanned(string(name)))),
-);
-const retainedStaged = retained(() =>
-    compile(choice(...properties.map(name => literal(name).spanned()))),
-);
+const example = staged.parseState(sources[sources.length - 1]);
+const retainedClosure = retained(makeClosure);
+const retainedStaged = retained(makeStaged);
 const raw = {
     metadata: {
         node: process.versions.node,
         v8: process.versions.v8,
         platform: process.platform,
         arch: process.arch,
+        shape,
         webref: {
             package: "@webref/css",
             version: "8.7.1",

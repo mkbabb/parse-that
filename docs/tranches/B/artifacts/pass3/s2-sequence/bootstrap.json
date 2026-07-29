@@ -1,0 +1,24 @@
+{
+  "method": "exact n^n bootstrap distribution of the five-process median",
+  "resamples": 3125,
+  "rotating": {
+    "low95": 60.77472080166325,
+    "median": 71.52283347367984,
+    "high95": 85.49860340212157
+  },
+  "late": {
+    "low95": 207.76130474216342,
+    "median": 235.8451948997715,
+    "high95": 274.86026304281376
+  },
+  "failure": {
+    "low95": 560.2744932257823,
+    "median": 570.0213424098777,
+    "high95": 677.8210227067232
+  },
+  "diagnosticFailure": {
+    "low95": 597.4362422395016,
+    "median": 647.5393939645055,
+    "high95": 742.0488243996614
+  }
+}

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { performance } from "node:perf_hooks";
 import {
+    all,
     Parser,
     any,
     disableDiagnostics,
@@ -10,6 +11,8 @@ import {
     choice,
     compile,
     literal,
+    sequence,
+    type Compiled,
     type Spanned,
 } from "./kernel.js";
 
@@ -21,6 +24,9 @@ const names = (JSON.parse(readFileSync(webrefPath, "utf8")) as {
 }).properties
     .filter(entry => !entry.legacyAliasOf && !entry.name.startsWith("--"))
     .map(entry => entry.name);
+const shape = process.env.P3_PROFILE_SHAPE === "sequence"
+    ? "sequence"
+    : "terminal";
 
 function spanned<T>(parser: Parser<T>): Parser<Spanned<T>> {
     return new Parser(state => {
@@ -33,8 +39,15 @@ function spanned<T>(parser: Parser<T>): Parser<Spanned<T>> {
 }
 
 disableDiagnostics();
-const closure = any(...names.map(name => spanned(string(name))));
-const staged = compile(choice(...names.map(name => literal(name).spanned())));
+const closureTerminal = any(...names.map(name => spanned(string(name))));
+const stagedTerminal = choice(...names.map(name => literal(name).spanned()));
+const closure = (shape === "sequence"
+    ? all(closureTerminal, spanned(string(":")))
+    : closureTerminal) as unknown as Parser<unknown>;
+const staged = (shape === "sequence"
+    ? compile(sequence(stagedTerminal, literal(":").spanned()))
+    : compile(stagedTerminal)) as unknown as Compiled<unknown>;
+const sources = names.map(name => shape === "sequence" ? `${name}:` : name);
 const mode = process.env.P3_PROFILE_MODE === "closure" ? "closure" : "staged";
 const parse = mode === "closure"
     ? (source: string) => closure.parseState(source)
@@ -43,15 +56,16 @@ let cursor = 0;
 let sink: unknown;
 
 for (let index = 0; index < 100_000; index++) {
-    sink = parse(names[cursor++ % names.length]);
+    sink = parse(sources[cursor++ % sources.length]);
 }
 const start = performance.now();
 for (let index = 0; index < 3_000_000; index++) {
-    sink = parse(names[cursor++ % names.length]);
+    sink = parse(sources[cursor++ % sources.length]);
 }
 
 console.log(JSON.stringify({
     mode,
+    shape,
     elapsedMs: performance.now() - start,
     final: sink,
     plan: mode === "staged" ? staged.plan : undefined,
