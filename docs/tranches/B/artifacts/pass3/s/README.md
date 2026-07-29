@@ -6,9 +6,14 @@ Base: `90d4ec541ac2b6b66e5616b8a703910401daf261`
 
 Branch: `codex/css-totality-combinators-20260729`
 
-Disposition: **ADVANCE THE TERMINAL SUBFAMILY ONLY**
+Disposition: **HELD — HISTORICAL ASSAY INVALIDATED BY XR-21**
 
 Release: **NO RELEASE**
+
+Binding amendment:
+`../../../audit/PASS-3-S-EVIDENCE-AMENDMENT-2026-07-29.md`.
+The large-graph signal remains evidence; every admission claim below is
+historical and non-binding.
 
 ## Boundary
 
@@ -36,9 +41,10 @@ names are assay inputs only and are neither vendored nor exposed by parse-that.
   `any(...names.map(name => spanned(string(name))))`.
 - Candidate:
   `compile(choice(...names.map(name => literal(name).spanned())))`.
-- Both sides return the same value, exact UTF-16 span, offset, error bit,
-  furthest frontier, expected labels, and diagnostics for all 753 successes
-  and a failure case before timing.
+- Both sides returned equal products for 753 inputs and a failure case, but
+  the harness did not assert the intended full input value/span. Webref order
+  allowed 487 inputs to succeed as an earlier prefix. These were not 753
+  whole-property successes.
 
 ## Result
 
@@ -46,7 +52,8 @@ The compact candidate has 4,838 trie states, a 27-code-unit ASCII alphabet,
 130,626 transition cells, no cold non-ASCII edge for this corpus, and 271,056
 bytes of typed transition/accept/alphabet tables.
 
-Five fresh processes produced these closure/candidate speed ratios:
+Five fresh processes produced these historical unequal-boundary
+closure/candidate speed ratios:
 
 | Plane | Observed minimum | Median | Maximum |
 | --- | ---: | ---: | ---: |
@@ -76,21 +83,25 @@ control and 342.45 ms for the candidate under heap profiling (110.01×). CPU
 profiles recorded 23,205 closure samples and 2,370 candidate samples. The
 candidate graph accounted for 215 candidate-profile hits. V8 optimized the
 candidate `parser`, `parseState`, and `mergeLabels` functions; none of those
-functions deoptimized. The complete processes contained 42 and 38 unrelated
-driver/dependency/startup deoptimizations respectively.
+functions deoptimized. Candidate construction helpers were
+dependency-deoptimized, so the complete process deoptimizations are not all
+unrelated to candidate construction.
 
-Both traced processes performed 48 scavenges. Cumulative recorded pause was
+Both traced processes recorded 48 GC events: 45 scavenges and three
+mark-compacts. Cumulative recorded pause was
 18.924 ms for the closure process and 34.019 ms for the candidate process.
 The equal count is useful; the pause totals are profiler-run observations, not
 a claim that the candidate improves GC latency.
 
-The independent 96-name frozen sample remains above threshold at 12.14×
-rotating, 20.62× late success, 65.58× ordinary failure, and 126.54×
-diagnostics-on failure.
+The old 96-name sample's 12.14× rotating ratio is withdrawn. Under the
+corrected whole-name, matched-boundary, AB/BA, retained-batch harness, the
+sequence successor has a 9.033× exact-bootstrap CI-low and remains RED.
 
 ## Correctness and parsimony changes
 
-- Preserves authored choice priority across prefix collisions and duplicates.
+- Preserves authored choice priority across prefix collisions. Duplicate
+  failure labels diverged in this artifact and were repaired only by the
+  binding amendment.
 - Recognizes the empty literal at the trie root; this was found and repaired
   during independent audit before the final profiles.
 - Preserves exact nonzero-offset and surrogate-pair UTF-16 spans.
@@ -106,7 +117,7 @@ Green:
 
 - focused prototype: 5/5;
 - strict TypeScript;
-- package tests: 134/134;
+- package tests: 132 passed + 2 skipped;
 - production build;
 - manifest, CSS-surface, subpath, packrat cross-input, packrat reentrancy,
   large-offset, armed-allocation, no-span-surface, and dead-combinator proofs.
@@ -116,10 +127,10 @@ rejected prototype. This Pass 3 result does not rehabilitate or release M3.
 
 ## Ruling and remainder
 
-Advance the mapped/spanned literal-choice terminal representation as the
-leading terminal subfamily. Do not yet advance `compile` as a runtime surface.
-The measured minimum is a conservative observed floor, not the required
-bootstrap CI-low admission proof.
+Keep the mapped/spanned literal-choice representation as private research
+evidence only. Do not advance `compile` or any second runtime surface. The
+historical observed minimum was neither a confidence bound nor an
+equal-boundary admission proof.
 
 Still open:
 

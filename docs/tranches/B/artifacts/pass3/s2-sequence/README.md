@@ -4,9 +4,12 @@ Date: 2026-07-29
 
 Base: `0067c31e11919444f97237d57735cc274b1782be`
 
-Disposition: **ADVANCE AS AN ISOLATED COMPOSED-GRAPH PROTOTYPE**
+Disposition: **HELD — CORRECTED 96-NAME CI-LOW IS RED**
 
 Release: **NO RELEASE**
+
+Binding amendment:
+`../../../audit/PASS-3-S-EVIDENCE-AMENDMENT-2026-07-29.md`.
 
 ## Question
 
@@ -32,11 +35,10 @@ all(
 )
 ```
 
-Both sides return the same two-value array, both exact UTF-16 spans, final
-offset, error bit, rollback offset, furthest failure frontier, ordered expected
-labels, and diagnostics. Equality is checked for all 753 successes, the
-unknown-property failure, and all 753 property-success/colon-failure cases
-before timing.
+Both sides returned equal products, but the historical harness did not assert
+that the property value/span consumed the full name. In Webref order, 487 of
+753 inputs were shadowed by an earlier prefix. The historical plane is an
+ordered-prefix choice assay, not 753 successful property classifications.
 
 ## Mechanism
 
@@ -54,7 +56,7 @@ before timing.
 - A choice of composed sequences is deliberately rejected. There is no
   sequential fallback and no cartesian expansion.
 
-## Five-process full-denominator result
+## Historical five-process ordered-prefix result
 
 The 753-name sequence plan contains 754 terminal leaves, 4,838 trie states,
 130,626 transition cells, and 271,056 bytes of typed tables.
@@ -66,16 +68,17 @@ The 753-name sequence plan contains 754 terminal leaves, 4,838 trie states,
 | unknown-head failure | 560.27× | 570.02× | 677.82× | 560.27× |
 | rotating diagnostics-on tail failure | 597.44× | 647.54× | 742.05× | 597.44× |
 
-The bootstrap file enumerates all `5^5 = 3,125` resamples of the five-process
-median. This establishes the ≥10× lower bound for this exact full-denominator
-sequence assay only. It is not the final full-CSS admission result.
+The bootstrap file enumerates all `5^5 = 3,125` resamples of the historical
+five-process median. It does not establish admission because the timing
+boundary and semantic denominator were not equal.
 
 Construction cost was 1.85–2.34× the closure graph and amortized after
 17.05–23.33 rotating parses. Median retained counters per grammar were
 413,337 bytes of closure `heapUsed`, versus 311,323 bytes of candidate
-`heapUsed` plus 271,056 bytes of candidate `arrayBuffers`. The approximate
-candidate construction footprint therefore remains about 1.41× the closure
-control.
+`heapUsed` plus 271,056 bytes of candidate `arrayBuffers`. That approximate
+1.41× ratio applies only to the authored-per-leaf-span control. The corrected
+harness also records an outer-span control; the corrected 753-name observation
+is about 1.36× authored-span and 2.15× outer-span.
 
 ## V8 profile
 
@@ -87,12 +90,13 @@ Under heap profiling, three million full-denominator sequence parses took:
 
 The CPU profiles contain 16,115 closure samples and 448 candidate samples; 201
 candidate samples map to the staged kernel. Source-mapped candidate functions
-optimized and had no attributable deoptimization. The complete processes
-contained 17 and 15 startup/driver/dependency deoptimizations respectively.
+optimized and had no attributable deoptimization. Candidate construction
+helpers were dependency-deoptimized; the complete process deoptimizations
+cannot all be called unrelated.
 
-The closure and candidate traces recorded 195 and 180 scavenges, with 16.354
-ms and 10.117 ms cumulative pause respectively. These are profiler-run
-observations, not a general GC-latency claim.
+Each historical trace's first 48 GC events were 45 scavenges and three
+mark-compacts, not 48 scavenges. Pause observations are not a general
+GC-latency claim.
 
 ## Scale caveat
 
@@ -103,19 +107,20 @@ The frozen 96-name sequence sample measured:
 - unknown-head failure: 62.96×;
 - rotating diagnostics-on tail failure: 17.45×.
 
-The 96-name rotating plane does not clear 10×. S2 advances because the frozen
-standards denominator and its exact bootstrap lower bound clear the bar, but
-the short-corpus overhead must remain visible. It prohibits a claim that every
-grammar size or individual input is ten times faster.
+The corrected five-process whole-name assay runs both sides through
+`Parser.parseState`, alternates AB/BA, retains batches, and asserts full
+values/spans. Its matched-boundary rotating CI-low is **9.033×**, median
+9.655×, and high 9.986×. S2 does not advance. The corrected immutable-result
+CI-low is 4.804×.
 
 ## Gates and remainder
 
-Green:
+Local evidence only:
 
 - focused prototype: 6/6;
 - strict TypeScript;
-- all 753 success and tail-failure semantic products;
-- five independent full-denominator processes;
+- historical equal products, not 753 full-name successes;
+- five independent historical processes with an unequal top-level boundary;
 - CPU, heap, IC, optimization, deoptimization, and GC artifacts.
 
 Still open:

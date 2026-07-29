@@ -93,6 +93,40 @@ describe("P3-S source-direct staged terminal", () => {
         }
     });
 
+    it("deduplicates choice labels at a nonzero failure frontier", () => {
+        enableDiagnostics();
+        const closure = all(
+            string("x"),
+            any(string("a"), string("ab"), string("a")),
+        );
+        const staged = compile(sequence(
+            literal("x"),
+            choice(literal("a"), literal("ab"), literal("a")),
+        ));
+        try {
+            const expected = new ParserState("xb");
+            const actual = new ParserState<["x", "a" | "ab"]>("xb");
+            closure.parser(expected);
+            staged.parser(actual);
+            expect({
+                offset: actual.offset,
+                furthest: actual.furthest,
+                expected: actual.expected,
+                diagnostics: actual.diagnostics,
+                isError: actual.isError,
+            }).toEqual({
+                offset: expected.offset,
+                furthest: expected.furthest,
+                expected: expected.expected,
+                diagnostics: expected.diagnostics,
+                isError: expected.isError,
+            });
+            expect(actual.expected).toEqual(['"a"', '"ab"']);
+        } finally {
+            disableDiagnostics();
+        }
+    });
+
     it("retains run isolation and does not mutate the grammar graph", () => {
         const grammar = literal("display")
             .map(value => value.length)
@@ -182,6 +216,64 @@ describe("P3-S source-direct staged terminal", () => {
                 sequence(literal("a"), literal("b")),
                 sequence(literal("a"), literal("c")),
             ))).toThrow("no compiled path");
+        } finally {
+            disableDiagnostics();
+        }
+    });
+
+    it("returns successful recovery diagnostics through an immutable result", () => {
+        enableDiagnostics();
+        const opaque = Object.freeze({ kind: "opaque", source: "bad" } as const);
+        const recovered = compile(
+            literal("ok").recover(literal("bad"), opaque),
+        );
+        try {
+            const strict = compile(literal("ok")).result("bad");
+            const result = recovered.result("bad");
+            if (result.kind !== "ok") throw new Error("fixture must recover");
+            expectTypeOf(result.value).toEqualTypeOf<"ok" | typeof opaque>();
+            expect(strict).toMatchObject({
+                kind: "mismatch",
+                offset: 0,
+                diagnostics: [],
+            });
+            expect(result).toMatchObject({
+                kind: "ok",
+                value: opaque,
+                offset: 3,
+                furthest: 0,
+                expected: ['"ok"'],
+                diagnostics: [{
+                    offset: 0,
+                    furthestOffset: 0,
+                    expected: ['"ok"'],
+                    found: "bad",
+                }],
+            });
+            expect(Object.isFrozen(result)).toBe(true);
+            expect(Object.isFrozen(result.expected)).toBe(true);
+            expect(Object.isFrozen(result.diagnostics)).toBe(true);
+            expect(Object.isFrozen(result.diagnostics[0])).toBe(true);
+            expect(Object.isFrozen(result.diagnostics[0].expected)).toBe(true);
+
+            expect(compile(sequence(
+                literal("ok").recover(literal("bad"), opaque),
+                literal("z"),
+            )).result("bad!")).toMatchObject({
+                kind: "mismatch",
+                offset: 0,
+                furthest: 3,
+                expected: ['"z"'],
+                diagnostics: [],
+            });
+            expect(compile(
+                literal("ok").recover(literal(""), opaque),
+            ).result("bad")).toMatchObject({
+                kind: "fault",
+                offset: 0,
+                fault: { kind: "RecoveryNonProgress", offset: 0 },
+                diagnostics: [],
+            });
         } finally {
             disableDiagnostics();
         }

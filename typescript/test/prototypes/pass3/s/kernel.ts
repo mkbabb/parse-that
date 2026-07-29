@@ -1,5 +1,9 @@
 import { ParserState } from "../../../../src/parse/state.js";
-import { isDiagnosticsEnabled } from "../../../../src/parse/utils.js";
+import type { Diagnostic } from "../../../../src/parse/state.js";
+import {
+    collectDiagnostic,
+    isDiagnosticsEnabled,
+} from "../../../../src/parse/utils.js";
 
 export type Span = Readonly<{ start: number; end: number }>;
 export type Spanned<T> = Readonly<{ value: T; span: Span }>;
@@ -16,7 +20,19 @@ type SequenceNode = Readonly<{
     kind: "sequence";
     children: readonly Node<unknown>[];
 }>;
-type Node<T> = LiteralNode | MapNode | SpanNode | ChoiceNode | SequenceNode;
+type RecoveryNode = Readonly<{
+    kind: "recovery";
+    child: Node<unknown>;
+    sync: Node<unknown>;
+    sentinel: unknown;
+}>;
+type Node<T> =
+    | LiteralNode
+    | MapNode
+    | SpanNode
+    | ChoiceNode
+    | SequenceNode
+    | RecoveryNode;
 
 type Terminal<T> = Readonly<{
     text: string;
@@ -54,6 +70,15 @@ export class Grammar<T> {
         return sequence(this as Grammar<T>, other);
     }
 
+    recover<U>(sync: Grammar<unknown>, sentinel: U): Grammar<T | U> {
+        return new Grammar<T | U>({
+            kind: "recovery",
+            child: this.node as Node<unknown>,
+            sync: sync.node,
+            sentinel,
+        });
+    }
+
     spanned(): Grammar<Spanned<T>> {
         return new Grammar<Spanned<T>>({
             kind: "span",
@@ -88,11 +113,33 @@ export function sequence<const P extends readonly Grammar<unknown>[]>(
     }) as Grammar<GrammarValues<P>>;
 }
 
+type ImmutableField<T> = T extends readonly (infer U)[]
+    ? readonly Readonly<U>[]
+    : T;
+export type ResultDiagnostic = {
+    readonly [K in keyof Diagnostic]: ImmutableField<Diagnostic[K]>;
+};
+type ResultEvidence = Readonly<{
+    offset: number;
+    furthest: number;
+    expected: readonly string[];
+    diagnostics: readonly ResultDiagnostic[];
+}>;
+export type ParseResult<T> =
+    | (ResultEvidence & Readonly<{ kind: "ok"; value: T }>)
+    | (ResultEvidence & Readonly<{ kind: "mismatch"; value: unknown }>)
+    | (ResultEvidence & Readonly<{
+        kind: "fault";
+        value: unknown;
+        fault: NonNullable<ParserState["fault"]>;
+    }>);
+
 export type Compiled<T> = Readonly<{
     plan: StagedPlan;
     parser: (state: ParserState<T>) => ParserState<T>;
     parseState: (source: string) => ParserState<T>;
     parse: (source: string) => T;
+    result: (source: string) => ParseResult<T>;
 }>;
 
 type MutablePlan = {
@@ -122,7 +169,49 @@ export function compile<T>(grammar: Grammar<T>): Compiled<T> {
         parser,
         parseState,
         parse: source => parseState(source).value,
+        result: source => resultFromState(parseState(source)),
     };
+}
+
+export function resultFromState<T>(state: ParserState<T>): ParseResult<T> {
+    const diagnostics = Object.freeze(state.diagnostics.map(diagnostic =>
+        Object.freeze({
+            ...diagnostic,
+            expected: Object.freeze([...diagnostic.expected]),
+            suggestions: Object.freeze(diagnostic.suggestions.map(suggestion =>
+                Object.freeze({ ...suggestion })
+            )),
+            secondarySpans: Object.freeze(diagnostic.secondarySpans.map(span =>
+                Object.freeze({ ...span })
+            )),
+        }) as ResultDiagnostic
+    ));
+    const evidence = {
+        offset: state.offset,
+        furthest: state.furthest,
+        expected: Object.freeze([...(state.expected ?? [])]),
+        diagnostics,
+    };
+    if (state.fault) {
+        return Object.freeze({
+            ...evidence,
+            kind: "fault",
+            value: state.value,
+            fault: Object.freeze({ ...state.fault }),
+        });
+    }
+    if (state.isError) {
+        return Object.freeze({
+            ...evidence,
+            kind: "mismatch",
+            value: state.value,
+        });
+    }
+    return Object.freeze({
+        ...evidence,
+        kind: "ok",
+        value: state.value,
+    });
 }
 
 function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
@@ -160,7 +249,67 @@ function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
             });
         }) as unknown as Runner<T>;
     }
+    if (node.kind === "recovery") {
+        const child = compileNode(node.child, plan);
+        const sync = compileNode(node.sync, plan);
+        return ((state: ParserState<unknown>) => {
+            const checkpoint = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
+            child(state);
+            if (!state.isError) return state;
+            if (state.fault) {
+                return state.rollback(
+                    checkpoint,
+                    savedValue,
+                    savedDiagnostics,
+                    true,
+                );
+            }
+
+            collectDiagnostic(state, checkpoint);
+            state.rollback(
+                checkpoint,
+                savedValue,
+                state.diagnostics.length,
+                false,
+            );
+            sync(state);
+            if (state.isError) {
+                return state.rollback(
+                    checkpoint,
+                    savedValue,
+                    savedDiagnostics,
+                    true,
+                );
+            }
+            if (state.offset === checkpoint) {
+                state.fault ??= {
+                    kind: "RecoveryNonProgress",
+                    offset: checkpoint,
+                };
+                return state.rollback(
+                    checkpoint,
+                    savedValue,
+                    savedDiagnostics,
+                    true,
+                );
+            }
+            return state.ok(node.sentinel);
+        }) as unknown as Runner<T>;
+    }
     if (node.kind === "sequence") {
+        if (node.children.length === 2) {
+            const firstTerminals = flatten(node.children[0]);
+            const secondTerminals = flatten(node.children[1]);
+            if (firstTerminals?.length && secondTerminals?.length === 1) {
+                return compileTerminals(
+                    firstTerminals,
+                    plan,
+                    secondTerminals[0],
+                ) as unknown as Runner<T>;
+            }
+        }
         const children = node.children.map(child => compileNode(child, plan));
         if (children.length === 2) {
             const first = children[0];
@@ -188,7 +337,9 @@ function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
                         true,
                     );
                 }
-                return state.ok([firstValue, state.value]);
+                state.value = [firstValue, state.value];
+                state.isError = state.fault !== undefined;
+                return state;
             }) as unknown as Runner<T>;
         }
         return ((state: ParserState<unknown[]>) => {
@@ -217,7 +368,15 @@ function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
 function compileTerminals<T>(
     terminals: readonly Terminal<T>[],
     plan: MutablePlan,
+    suffix?: Terminal<unknown>,
 ): Runner<T> {
+    const suffixText = suffix?.text;
+    const suffixLength = suffixText?.length ?? 0;
+    const suffixCode = suffixLength === 1
+        ? suffixText!.charCodeAt(0)
+        : -1;
+    const suffixLabel = suffix ? `"${suffix.text}"` : "";
+    if (suffix) plan.terminals++;
     if (terminals.length === 1) {
         const terminal = terminals[0];
         const { text } = terminal;
@@ -231,10 +390,30 @@ function compileTerminals<T>(
                 ? state.src.charCodeAt(start) === code
                 : state.src.startsWith(text, start);
             if (matches) {
-                return state.ok(
-                    terminal.project(start, start + length),
-                    length,
-                );
+                const end = start + length;
+                const value = terminal.project(start, end);
+                if (suffix) {
+                    const suffixMatches = suffixLength === 1
+                        ? state.src.charCodeAt(end) === suffixCode
+                        : state.src.startsWith(suffixText!, end);
+                    if (!suffixMatches) {
+                        mergeLabels(state, end, [suffixLabel]);
+                        state.isError = true;
+                        return state;
+                    }
+                    const suffixEnd = end + suffixLength;
+                    state.offset = suffixEnd;
+                    state.value = [
+                        value,
+                        suffix.project(end, suffixEnd),
+                    ] as T;
+                    state.isError = state.fault !== undefined;
+                    return state;
+                }
+                state.offset = end;
+                state.value = value;
+                state.isError = state.fault !== undefined;
+                return state;
             }
             mergeLabels(state, start, [label]);
             state.isError = true;
@@ -244,6 +423,8 @@ function compileTerminals<T>(
 
     const edges: Map<number, number>[] = [new Map()];
     const accept: number[] = [-1];
+    const parent: number[] = [-1];
+    const depth: number[] = [0];
     for (let index = 0; index < terminals.length; index++) {
         let state = 0;
         for (let at = 0; at < terminals[index].text.length; at++) {
@@ -254,6 +435,8 @@ function compileTerminals<T>(
                 edges[state].set(code, next);
                 edges.push(new Map());
                 accept.push(-1);
+                parent.push(state);
+                depth.push(depth[state] + 1);
             }
             state = next;
         }
@@ -283,13 +466,35 @@ function compileTerminals<T>(
             else cold.set(state * 65_536 + code, next);
         }
     }
-    const accepted = terminals.length <= 65_535
+    const winning = terminals.length <= 65_535
         ? new Uint16Array(accept.length)
         : new Uint32Array(accept.length);
+    const winningDepth = new Uint32Array(accept.length);
     for (let state = 0; state < accept.length; state++) {
-        accepted[state] = accept[state] + 1;
+        const own = accept[state] + 1;
+        const inherited = state === 0 ? 0 : winning[parent[state]];
+        if (own > 0 && (inherited === 0 || own < inherited)) {
+            winning[state] = own;
+            winningDepth[state] = depth[state];
+        } else if (state > 0) {
+            winning[state] = inherited;
+            winningDepth[state] = winningDepth[parent[state]];
+        }
     }
-    const labels = terminals.map(terminal => `"${terminal.text}"`);
+    const labels: string[] = [];
+    const labelLimits = terminals.length <= 65_535
+        ? new Uint16Array(terminals.length + 1)
+        : new Uint32Array(terminals.length + 1);
+    const seenLabels = new Set<string>();
+    for (let index = 0; index < terminals.length; index++) {
+        labelLimits[index] = labels.length;
+        const label = `"${terminals[index].text}"`;
+        if (!seenLabels.has(label)) {
+            seenLabels.add(label);
+            labels.push(label);
+        }
+    }
+    labelLimits[terminals.length] = labels.length;
 
     plan.terminals += terminals.length;
     plan.states += edges.length;
@@ -297,36 +502,72 @@ function compileTerminals<T>(
     plan.asciiCells += ascii.length;
     plan.coldEdges += cold.size;
     plan.tableBytes +=
-        alphabet.byteLength + ascii.byteLength + accepted.byteLength;
+        alphabet.byteLength
+        + ascii.byteLength
+        + winning.byteLength
+        + winningDepth.byteLength
+        + labelLimits.byteLength;
+    const hasColdEdges = cold.size > 0;
 
     return (state: ParserState<T>): ParserState<T> => {
         const start = state.offset;
+        const source = state.src;
         let node = 0;
         let at = start;
-        let selected = accepted[0] - 1;
-        let selectedEnd = start;
-        while (at < state.src.length) {
-            const code = state.src.charCodeAt(at);
-            const symbol = code < 128 ? alphabet[code] : -1;
-            const next = symbol >= 0
-                ? ascii[node * width + symbol]
-                : cold.get(node * 65_536 + code) ?? 0;
-            if (next === 0) break;
-            node = next;
-            at++;
-            const candidate = accepted[node] - 1;
-            if (candidate >= 0 && (selected < 0 || candidate < selected)) {
-                selected = candidate;
-                selectedEnd = at;
+        if (hasColdEdges) {
+            while (at < source.length) {
+                const code = source.charCodeAt(at);
+                const symbol = code < 128 ? alphabet[code] : -1;
+                const next = symbol >= 0
+                    ? ascii[node * width + symbol]
+                    : cold.get(node * 65_536 + code) ?? 0;
+                if (next === 0) break;
+                node = next;
+                at++;
+            }
+        } else {
+            while (at < source.length) {
+                const code = source.charCodeAt(at);
+                const symbol = alphabet[code];
+                const next = symbol >= 0
+                    ? ascii[node * width + symbol]
+                    : 0;
+                if (next === 0) break;
+                node = next;
+                at++;
             }
         }
 
+        const selected = winning[node] - 1;
         if (selected >= 0) {
-            if (selected > 0) mergeLabels(state, start, labels, selected);
-            return state.ok(
-                terminals[selected].project(start, selectedEnd),
-                selectedEnd - start,
-            );
+            const selectedEnd = start + winningDepth[node];
+            const labelLimit = labelLimits[selected];
+            if (labelLimit > 0) {
+                mergeLabels(state, start, labels, labelLimit);
+            }
+            const value = terminals[selected].project(start, selectedEnd);
+            if (suffix) {
+                const suffixMatches = suffixLength === 1
+                    ? source.charCodeAt(selectedEnd) === suffixCode
+                    : source.startsWith(suffixText!, selectedEnd);
+                if (!suffixMatches) {
+                    mergeLabels(state, selectedEnd, [suffixLabel]);
+                    state.isError = true;
+                    return state;
+                }
+                const suffixEnd = selectedEnd + suffixLength;
+                state.offset = suffixEnd;
+                state.value = [
+                    value,
+                    suffix.project(selectedEnd, suffixEnd),
+                ] as T;
+                state.isError = state.fault !== undefined;
+                return state;
+            }
+            state.offset = selectedEnd;
+            state.value = value;
+            state.isError = state.fault !== undefined;
+            return state;
         }
         mergeLabels(state, start, labels);
         state.isError = true;
@@ -363,7 +604,7 @@ function flatten<T>(
             output,
         ) as Terminal<T>[] | undefined;
     }
-    if (node.kind === "sequence") return undefined;
+    if (node.kind === "sequence" || node.kind === "recovery") return undefined;
     for (const child of node.children) {
         if (!flatten(child, transform, output)) return undefined;
     }

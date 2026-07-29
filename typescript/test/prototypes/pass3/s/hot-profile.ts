@@ -23,10 +23,16 @@ const names = (JSON.parse(readFileSync(webrefPath, "utf8")) as {
     properties: Array<{ name: string; legacyAliasOf?: string }>;
 }).properties
     .filter(entry => !entry.legacyAliasOf && !entry.name.startsWith("--"))
-    .map(entry => entry.name);
-const shape = process.env.P3_PROFILE_SHAPE === "sequence"
-    ? "sequence"
-    : "terminal";
+    .map(entry => entry.name)
+    .sort((left, right) =>
+        right.length - left.length || left.localeCompare(right)
+    );
+const shape = process.env.P3_PROFILE_SHAPE === "recovery"
+    ? "recovery"
+    : process.env.P3_PROFILE_SHAPE === "sequence"
+        ? "sequence"
+        : "terminal";
+const opaque = Object.freeze({ kind: "opaque", source: "bad;" } as const);
 
 function spanned<T>(parser: Parser<T>): Parser<Spanned<T>> {
     return new Parser(state => {
@@ -41,17 +47,33 @@ function spanned<T>(parser: Parser<T>): Parser<Spanned<T>> {
 disableDiagnostics();
 const closureTerminal = any(...names.map(name => spanned(string(name))));
 const stagedTerminal = choice(...names.map(name => literal(name).spanned()));
-const closure = (shape === "sequence"
-    ? all(closureTerminal, spanned(string(":")))
-    : closureTerminal) as unknown as Parser<unknown>;
-const staged = (shape === "sequence"
-    ? compile(sequence(stagedTerminal, literal(":").spanned()))
-    : compile(stagedTerminal)) as unknown as Compiled<unknown>;
-const sources = names.map(name => shape === "sequence" ? `${name}:` : name);
+const closureDeclaration: Parser<unknown> = all(
+    closureTerminal,
+    spanned(string(":")),
+);
+const stagedDeclaration = sequence(stagedTerminal, literal(":").spanned());
+const closure = (shape === "terminal"
+    ? closureTerminal
+    : shape === "recovery"
+        ? closureDeclaration.recover(string("bad;"), opaque)
+        : closureDeclaration) as unknown as Parser<unknown>;
+const staged = (shape === "terminal"
+    ? compile(stagedTerminal)
+    : shape === "recovery"
+        ? compile(stagedDeclaration.recover(literal("bad;"), opaque))
+        : compile(stagedDeclaration)) as unknown as Compiled<unknown>;
+const stagedBoundary = new Parser<unknown>(staged.parser);
+const sources = names.map((name, index) =>
+    shape === "recovery" && index % 10 === 0
+        ? "bad;"
+        : shape === "terminal"
+            ? name
+            : `${name}:`
+);
 const mode = process.env.P3_PROFILE_MODE === "closure" ? "closure" : "staged";
 const parse = mode === "closure"
     ? (source: string) => closure.parseState(source)
-    : (source: string) => staged.parseState(source);
+    : (source: string) => stagedBoundary.parseState(source);
 let cursor = 0;
 let sink: unknown;
 

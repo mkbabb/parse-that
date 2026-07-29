@@ -14,6 +14,7 @@ import {
     choice,
     compile,
     literal,
+    resultFromState,
     sequence,
     type Compiled,
     type Spanned,
@@ -51,7 +52,7 @@ const sampleProperties = [
 ] as const;
 
 const webrefPath = process.env.P3_WEBREF_CSS;
-const properties: readonly string[] = webrefPath
+const authoredProperties: readonly string[] = webrefPath
     ? (JSON.parse(readFileSync(webrefPath, "utf8")) as {
         properties: Array<{
             name: string;
@@ -61,10 +62,16 @@ const properties: readonly string[] = webrefPath
         .filter(entry => !entry.legacyAliasOf && !entry.name.startsWith("--"))
         .map(entry => entry.name)
     : sampleProperties;
+const properties = [...authoredProperties].sort(
+    (left, right) => right.length - left.length || left.localeCompare(right),
+);
 const fullCorpus = webrefPath !== undefined;
-const shape = process.env.P3_PROFILE_SHAPE === "sequence"
-    ? "sequence"
-    : "terminal";
+const shape = process.env.P3_PROFILE_SHAPE === "recovery"
+    ? "recovery"
+    : process.env.P3_PROFILE_SHAPE === "sequence"
+        ? "sequence"
+        : "terminal";
+const opaque = Object.freeze({ kind: "opaque", source: "bad;" } as const);
 
 function spanned<T>(parser: Parser<T>): Parser<Spanned<T>> {
     return new Parser(state => {
@@ -80,21 +87,44 @@ function spanned<T>(parser: Parser<T>): Parser<Spanned<T>> {
 
 function makeClosure(): Parser<unknown> {
     const terminal = any(...properties.map(name => spanned(string(name))));
-    return shape === "sequence"
-        ? all(terminal, spanned(string(":")))
-        : terminal;
+    if (shape === "terminal") return terminal;
+    const declaration: Parser<unknown> = all(terminal, spanned(string(":")));
+    return shape === "recovery"
+        ? declaration.recover(string("bad;"), opaque)
+        : declaration;
+}
+
+function makeOuterSpanClosure(): Parser<unknown> {
+    const terminal = spanned(any(...properties.map(string)));
+    if (shape === "terminal") return terminal;
+    const declaration: Parser<unknown> = all(terminal, spanned(string(":")));
+    return shape === "recovery"
+        ? declaration.recover(string("bad;"), opaque)
+        : declaration;
 }
 
 function makeStaged(): Compiled<unknown> {
     const terminal = choice(...properties.map(name => literal(name).spanned()));
-    return (shape === "sequence"
-        ? compile(sequence(terminal, literal(":").spanned()))
-        : compile(terminal)) as unknown as Compiled<unknown>;
+    if (shape === "terminal") {
+        return compile(terminal) as unknown as Compiled<unknown>;
+    }
+    const declaration = sequence(terminal, literal(":").spanned());
+    return (shape === "recovery"
+        ? compile(declaration.recover(literal("bad;"), opaque))
+        : compile(declaration)) as unknown as Compiled<unknown>;
 }
 
 const closure = makeClosure();
 const staged = makeStaged();
-const sources = properties.map(name => shape === "sequence" ? `${name}:` : name);
+const stagedBoundary = new Parser<unknown>(staged.parser);
+const parseStaged = (source: string) => stagedBoundary.parseState(source);
+const sources = properties.map((name, index) =>
+    shape === "recovery" && index % 10 === 0
+        ? "bad;"
+        : shape === "terminal"
+            ? name
+            : `${name}:`
+);
 const late = sources.slice(-16);
 let blackhole: unknown;
 
@@ -104,28 +134,61 @@ type Timing = Readonly<{
     max: number;
     iterations: number;
     samples: number;
+    batches: readonly number[];
 }>;
 
-function sample(
-    fn: () => unknown,
+function summarize(values: readonly number[], iterations: number): Timing {
+    const sorted = [...values].sort((left, right) => left - right);
+    return {
+        median: sorted[sorted.length >> 1],
+        min: sorted[0],
+        max: sorted[sorted.length - 1],
+        iterations,
+        samples: sorted.length,
+        batches: values,
+    };
+}
+
+function time(fn: () => unknown, iterations: number): number {
+    const start = performance.now();
+    for (let index = 0; index < iterations; index++) blackhole = fn();
+    return (performance.now() - start) * 1e6 / iterations;
+}
+
+function samplePair(
+    closureFn: () => unknown,
+    stagedFn: () => unknown,
     iterations = fullCorpus ? 20_000 : 50_000,
     samples = 11,
     warm = fullCorpus ? 20_000 : 50_000,
-): Timing {
-    for (let index = 0; index < warm; index++) blackhole = fn();
-    const values: number[] = [];
-    for (let batch = 0; batch < samples; batch++) {
-        const start = performance.now();
-        for (let index = 0; index < iterations; index++) blackhole = fn();
-        values.push((performance.now() - start) * 1e6 / iterations);
+): Readonly<{
+    closure: Timing;
+    staged: Timing;
+    order: readonly ("closure/staged" | "staged/closure")[];
+}> {
+    for (let index = 0; index < warm; index++) {
+        blackhole = closureFn();
+        blackhole = stagedFn();
     }
-    values.sort((left, right) => left - right);
+    const closureBatches: number[] = [];
+    const stagedBatches: number[] = [];
+    const order: ("closure/staged" | "staged/closure")[] = [];
+    const stagedFirst = process.env.P3_PROFILE_FIRST === "staged";
+    for (let batch = 0; batch < samples; batch++) {
+        if ((batch % 2 === 0) === stagedFirst) {
+            order.push("staged/closure");
+            stagedBatches.push(time(stagedFn, iterations));
+            closureBatches.push(time(closureFn, iterations));
+        } else {
+            order.push("closure/staged");
+            closureBatches.push(time(closureFn, iterations));
+            stagedBatches.push(time(stagedFn, iterations));
+        }
+    }
     return {
-        median: values[samples >> 1],
-        min: values[0],
-        max: values[samples - 1],
-        iterations,
-        samples,
+        closure: summarize(closureBatches, iterations),
+        staged: summarize(stagedBatches, iterations),
+        order,
     };
 }
 
@@ -173,35 +236,61 @@ function parseRaw<T>(
 disableDiagnostics();
 for (const source of [...sources, "not-a-property"]) {
     const expected = snapshot(closure.parseState(source));
-    const actual = snapshot(staged.parseState(source));
+    const actualState = parseStaged(source);
+    const actual = snapshot(actualState);
     if (JSON.stringify(actual) !== JSON.stringify(expected)) {
         throw new Error(`unequal product for ${source}`);
     }
+    if (source === "not-a-property" || source === "bad;") continue;
+    const name = shape === "terminal" ? source : source.slice(0, -1);
+    const head = shape === "terminal"
+        ? actualState.value as Spanned<string>
+        : (actualState.value as [Spanned<string>, Spanned<string>])[0];
+    if (
+        actualState.isError
+        || actualState.offset !== source.length
+        || head.value !== name
+        || head.span.start !== 0
+        || head.span.end !== name.length
+    ) {
+        throw new Error(`not a whole-name success for ${source}`);
+    }
 }
 
-const constructionClosure = sample(
+const construction = samplePair(
     makeClosure,
-    fullCorpus ? 25 : 250,
-    7,
-    fullCorpus ? 10 : 25,
-);
-const constructionStaged = sample(
     makeStaged,
     fullCorpus ? 25 : 250,
     7,
     fullCorpus ? 10 : 25,
 );
-const closureRotating = sample(rotate(sources, source => closure.parseState(source)));
-const stagedRotating = sample(rotate(sources, source => staged.parseState(source)));
-const closureLate = sample(rotate(late, source => closure.parseState(source)));
-const stagedLate = sample(rotate(late, source => staged.parseState(source)));
-const closureFailure = sample(() => closure.parseState("not-a-property"));
-const stagedFailure = sample(() => staged.parseState("not-a-property"));
+const rotating = samplePair(
+    rotate(sources, source => closure.parseState(source)),
+    rotate(sources, parseStaged),
+);
+const internal = samplePair(
+    rotate(sources, source => parseRaw(closure.parser, source)),
+    rotate(sources, source => parseRaw(staged.parser, source)),
+);
+const result = samplePair(
+    rotate(sources, source => resultFromState(closure.parseState(source))),
+    rotate(sources, source => resultFromState(parseStaged(source))),
+);
+const lateResult = samplePair(
+    rotate(late, source => closure.parseState(source)),
+    rotate(late, parseStaged),
+);
+const failure = samplePair(
+    () => closure.parseState("not-a-property"),
+    () => parseStaged("not-a-property"),
+);
 
 enableDiagnostics();
-const diagnosticSources = shape === "sequence"
-    ? properties.map(name => `${name}!`)
-    : ["not-a-property"];
+const diagnosticSources = shape === "recovery"
+    ? ["bad;"]
+    : shape === "sequence"
+        ? properties.map(name => `${name}!`)
+        : ["not-a-property"];
 for (const source of diagnosticSources) {
     const expected = snapshot(parseRaw(closure.parser, source));
     const actual = snapshot(parseRaw(staged.parser, source));
@@ -209,18 +298,16 @@ for (const source of diagnosticSources) {
         throw new Error(`unequal diagnostic product for ${source}`);
     }
 }
-const closureDiagnosticFailure = sample(
+const diagnosticFailure = samplePair(
     rotate(diagnosticSources, source => parseRaw(closure.parser, source)),
-    fullCorpus ? 100 : 5_000,
-);
-const stagedDiagnosticFailure = sample(
     rotate(diagnosticSources, source => parseRaw(staged.parser, source)),
     fullCorpus ? 100 : 5_000,
 );
 disableDiagnostics();
 
-const example = staged.parseState(sources[sources.length - 1]);
+const example = parseStaged(sources[sources.length - 1]);
 const retainedClosure = retained(makeClosure);
+const retainedOuterSpanClosure = retained(makeOuterSpanClosure);
 const retainedStaged = retained(makeStaged);
 const raw = {
     metadata: {
@@ -236,34 +323,40 @@ const raw = {
             assayedProperties: properties.length,
             source: fullCorpus ? webrefPath : "frozen-even-sample",
         },
+        choiceOrder: "longest-first, then lexical",
+        timingBoundary: "Parser.parseState for both sides",
     },
     unit: "ns/op",
     plan: staged.plan,
     semanticsDigest: serialize(snapshot(example)).toString("hex"),
     planes: {
-        construction: { closure: constructionClosure, staged: constructionStaged },
-        rotating: { closure: closureRotating, staged: stagedRotating },
-        late: { closure: closureLate, staged: stagedLate },
-        failure: { closure: closureFailure, staged: stagedFailure },
-        diagnosticFailure: {
-            closure: closureDiagnosticFailure,
-            staged: stagedDiagnosticFailure,
-        },
+        construction,
+        rotating,
+        internal,
+        result,
+        late: lateResult,
+        failure,
+        diagnosticFailure,
     },
     retained: {
-        closure: retainedClosure,
+        authoredSpanClosure: retainedClosure,
+        outerSpanClosure: retainedOuterSpanClosure,
         staged: retainedStaged,
     },
     ratios: {
-        rotating: closureRotating.median / stagedRotating.median,
-        late: closureLate.median / stagedLate.median,
-        failure: closureFailure.median / stagedFailure.median,
+        rotating: rotating.closure.median / rotating.staged.median,
+        internal: internal.closure.median / internal.staged.median,
+        result: result.closure.median / result.staged.median,
+        late: lateResult.closure.median / lateResult.staged.median,
+        failure: failure.closure.median / failure.staged.median,
         diagnosticFailure:
-            closureDiagnosticFailure.median / stagedDiagnosticFailure.median,
-        construction: constructionStaged.median / constructionClosure.median,
+            diagnosticFailure.closure.median
+            / diagnosticFailure.staged.median,
+        construction:
+            construction.staged.median / construction.closure.median,
         constructionAmortizationParses:
-            (constructionStaged.median - constructionClosure.median)
-            / (closureRotating.median - stagedRotating.median),
+            (construction.staged.median - construction.closure.median)
+            / (rotating.closure.median - rotating.staged.median),
     },
 };
 console.log(JSON.stringify(raw));
