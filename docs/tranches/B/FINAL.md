@@ -22,7 +22,7 @@ pair, release or Value released-coordinate rebind exists.
 | Full Value CSS coverage | `OPEN` | Value owns implementation; no execution receipt |
 | JSON same-primitive consumption | `OPEN` | Named consumer only; no candidate receipt |
 | Equivalent deletion/consolidation | `OPEN` | No consumer diffs |
-| ≥10× every-scale CI-low | `RED` | corrected 96-name matched-boundary 9.033×; immutable result 4.804× |
+| ≥10× every-scale CI-low | `RED` | accepted-M2 96-name matched-boundary 8.179×; raw internal 8.698×; immutable result 4.420× |
 | Allocation/deopt/GC sealed proof | `IN_PROGRESS` | corrected S artefacts incomplete |
 | Immutable unpublished candidate | `OPEN` | none |
 | Two clean adversarial audits | `OPEN` | XR-18/XR-21 currently reject admission |
@@ -36,8 +36,9 @@ pair, release or Value released-coordinate rebind exists.
 
 No close commit exists. Banked formation commits are recorded in
 `PROGRESS.md`; none carries release credit. The latest evidence commit is
-`2fc18dc` (`perf(runtime-prototype): correct S boundary semantics and bank
-held recovery evidence`).
+`c480578` (`perf(runtime-prototype): bind corrected S assay to accepted M2
+control`). `2fc18dc` owns the corrected S/recovery kernel and XR-21
+amendment.
 
 ## Handoff
 

@@ -22,14 +22,23 @@ Release status: **NO RELEASE**
 | S2 | `96ad567` | Exact sequence evidence banked; admission framing withdrawn by XR-18/XR-21. |
 | S amendment | `2fc18dc`, `audit/PASS-3-S-EVIDENCE-AMENDMENT-2026-07-29.md` | Corrected 96-name matched-boundary CI-low 9.033× and immutable-result CI-low 4.804×: **RED**. |
 | S3 recovery | `2fc18dc` private prototype | Eight focused tests and strict TypeScript green; first corrected sample 9.365× parse state / 4.828× immutable result: **HELD, RED**. |
+| Accepted-M2 control | `c480578`, `artifacts/pass3/s-m2-control/` | Five corrected processes against `de36d57`: matched-boundary CI-low 8.179×, internal 8.698×, immutable result 4.420×. **RED**. |
 
 ## Current executable state
 
 - Branch: `codex/css-totality-combinators-20260729`.
-- Head: `2fc18dc1ec3a0541b85e9e440fca85028844673c`.
-- Owned dirty paths: the B canonical parent, PROGRESS, wave, coordination and
-  open FINAL packet only.
-- User-owned input: untracked `data` symlink; untouched.
+- Source/evidence head at this reconciliation:
+  `c480578` (`perf(runtime-prototype): bind corrected S assay to accepted M2
+  control`).
+- S/recovery evidence commit:
+  `2fc18dc1ec3a0541b85e9e440fca85028844673c`.
+- Canonical authority before P-B1:
+  `f3ed3b6` (`docs(parser-tranche): form canonical candidate-to-release
+  authority and exact constellation order`).
+- Current P-B1 authority: this commit; its exact hash is recorded in the
+  boundary receipt rather than self-embedded in its own tree.
+- Tracked state after this authority amendment: clean. The untracked `data`
+  symlink is the only status entry and remains untouched.
 - Corrected focused gates: 8/8 prototype tests and strict TypeScript green.
 - Fresh current package gates: 14/14 files and 134/134 tests passed;
   production build and all package proof scripts passed. `proof:perf` remains
@@ -39,6 +48,9 @@ Release status: **NO RELEASE**
   CI-low 9.033×, median 9.655×, high 9.986×.
 - Corrected five-process immutable-result sequence:
   CI-low 4.804×, median 5.008×, high 5.060×.
+- Corrected five-process sequence against accepted M2:
+  matched-boundary CI-low 8.179×, raw-internal CI-low 8.698×, and
+  immutable-result CI-low 4.420×.
 - Corrected 753-name sequence: one process at 78.839×; not a confidence
   bound and not admission.
 - Corrected 96-name recovery: one process at 9.365× matched-boundary and
@@ -65,21 +77,22 @@ Release status: **NO RELEASE**
 
 ## Release chain
 
-`private convergence → Value CSS + JSON receipts → formal CI-low and deletion
-proof → immutable unpublished pack → two clean audits → parse-that release →
-Value released-coordinate rebind → BBNF post-W3 receipt`
+`private convergence and formal source freeze → immutable unpublished pack →
+Value CSS + jsonParser consume the exact SHA → equivalent output, deletion and
+formal consumer CI-low proof → two clean audits → parse-that release → Value
+released-coordinate rebind → BBNF post-W3 receipt`
 
 No later state may be recorded while an earlier arrow is RED.
 
 ## Next executable boundary
 
-1. Bank the canonical B packet against `2fc18dc`.
-2. Reproduce the accepted M2 control independently; rejected M3 cannot serve
-   as the release baseline.
-3. Resolve the 96-name matched-boundary and immutable-result RED planes by
-   replacement or measured simplification, not threshold waiver.
-4. Continue recovery, bounded recursion, unordered composition and generic
+1. Resolve the accepted-M2 96-name matched-boundary, raw-internal and
+   immutable-result RED planes by replacement or measured simplification,
+   not threshold waiver.
+2. Continue recovery, bounded recursion, unordered composition and generic
    CSS-needed leaf prototypes only after the corrected terminal/sequence
    evidence is stable.
+3. Freeze source only after local correctness and reproducibility gates pass;
+   then pack before either consumer receipt.
 
 `FINAL.md` remains an open gate ledger. Tranche B is not closeable.

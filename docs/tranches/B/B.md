@@ -56,35 +56,39 @@ after migration, and ≥10× faster at CI-low on the frozen equal-work planes.
 
 | Wave | Goal | Agents | Closes on | Status |
 |---|---|---:|---|---|
-| [B.W0 - Candidate-to-Release Closure](waves/W0.md) | Form, falsify, consume and release one generic runtime without parallel surfaces. | 1 serial parser owner; no spawned task | All wave hard gates, immutable pack and consumer receipts, release tag/pack, released-coordinate Value rebind | `in_progress` |
+| [B.W0 - Candidate-to-Release Closure](waves/W0.md) | Form, falsify, consume and release one generic runtime without parallel surfaces. | 1 serial writer; bounded disjoint research, prototype and critic seats | All wave hard gates, immutable pack and consumer receipts, release tag/pack, released-coordinate Value rebind | `in_progress` |
 
 ## Ordered release path
 
 The single wave executes these boundaries in order. A later boundary cannot
 borrow credit from an earlier prototype.
 
-1. **Formation repair.** Reconcile archaeology, M1/M2/M3, S-family evidence
-   and hostile audits; keep every RED plane RED.
-2. **Runtime convergence.** Resolve exact transactions, slots, source
-   projection, recovery, diagnostics, bounded recursion, memo policy,
-   unordered composition, allocation, IC/deopt/GC and result materialization
-   through the smallest private executable kernel.
-3. **Value grammar proof.** Value authors the sole scannerless CSS Syntax,
-   selectors, at-rules, VDS, Webref and named-extension grammar against the
-   candidate runtime, with WPT/browser differentials and canonical inverse
-   behavior.
-4. **JSON consumer proof.** The parse-that JSON grammar consumes the same
-   primitive surface; equivalent output and displaced-path deletion are
-   recorded. BBNF is not substituted.
-5. **Formal admission.** Corrected AB/BA batch profiles, exact bootstrap
-   CI-low, allocation, CPU, deopt and GC artefacts prove ≥10× at every frozen
-   scale and equal semantic plane. Two fresh adversarial passes return clean.
-6. **Immutable candidate.** Produce one unpublished `npm pack` tarball with
-   exact source commit and SHA-256; Value and JSON consume that identical
-   object and return receipts.
-7. **Release.** Publish the successor only after gates 1–6 are green, then
-   rebind Value to the released coordinate and rerun its tests, build,
-   browser/WPT differentials and pack proof.
+1. **Private convergence and formal source freeze.** Reconcile archaeology,
+   M1/M2/M3, S-family evidence and hostile audits; resolve exact transactions,
+   slots, source projection, recovery, diagnostics, bounded recursion, memo
+   policy, unordered composition, allocation, IC/deopt/GC and result
+   materialization through the smallest private executable kernel. Keep every
+   RED plane RED and freeze only a source state whose local correctness and
+   reproducibility gates pass.
+2. **Immutable unpublished candidate.** Produce one `npm pack` tarball from
+   the frozen source with exact commit, file manifest and SHA-256. Later
+   evidence names this object; no consumer reads a mutable link or dirty head.
+3. **Exact-SHA consumption.** Value and parse-that's `jsonParser` consume the
+   same candidate tarball. Value authors the sole scannerless CSS Syntax,
+   selectors, at-rules, VDS, Webref and named-extension grammar; JSON uses the
+   same generic primitives. BBNF is not substituted.
+4. **Consumer equivalence, deletion and formal proof.** Value and JSON return
+   exact receipts for values, spans, diagnostics, recovery and failures;
+   delete displaced machinery; run WPT/browser differentials; and establish
+   corrected AB/BA exact-bootstrap ≥10× CI-low at every frozen binding scale
+   and equal semantic plane, with allocation, CPU, deopt and GC artefacts.
+5. **Clean audits.** Two fresh adversarial passes accept the frozen source,
+   exact tarball, consumer diffs and formal evidence.
+6. **Release.** Publish the accepted successor only after gates 1–5 are
+   green.
+7. **Value released-coordinate rebind.** Rebind Value to the released
+   coordinate and rerun its tests, build, browser/WPT differentials and pack
+   proof.
 8. **Post-W3 ABI receipt.** Send BBNF the frozen generic surface after Value
    W3; no implementation dependency or competing parser is introduced.
 

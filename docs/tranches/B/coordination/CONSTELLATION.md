@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | `2fc18dc1ec3a0541b85e9e440fca85028844673c` plus the owned canonical packet |
+| parse-that worktree | B / generic runtime producer | source/evidence `c480578`; canonical authority `f3ed3b6` plus this P-B1 amendment |
 | Value | V / sole CSS grammar, consumer and UI owner | repository HEAD `e01d0065fa6c7c80282280566af2b9a4add809bf`; formation packet independently admitted at reported SHA prefix `aa684060` with zero execution credit |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | post-Value-W3 ABI peer | no implementation or CSS parser before W3 |
@@ -28,14 +28,17 @@ later released coordinate are the only executable package boundaries.
 
 ## Release-cycle cure
 
-1. Parse-that produces one immutable unpublished candidate tarball.
-2. Value and parse-that's JSON grammar consume the exact tarball SHA.
-3. Both return equivalent-product and deletion receipts.
-4. Corrected formal profiles clear ≥10× at CI-low at every binding scale,
-   and two clean adversarial audits accept the same object.
-5. Parse-that releases.
-6. Value rebinds to the released coordinate and reruns full gates.
-7. BBNF receives the post-W3 frozen ABI receipt.
+1. Parse-that converges privately and freezes a locally correct,
+   reproducible source state.
+2. Parse-that produces one immutable unpublished candidate tarball.
+3. Value and parse-that's JSON grammar consume the exact tarball SHA.
+4. Both return equivalent-product, deletion and formal consumer-proof
+   receipts; corrected profiles clear ≥10× at CI-low at every binding scale.
+5. Two clean adversarial audits accept the same frozen source, tarball and
+   consumer evidence.
+6. Parse-that releases.
+7. Value rebinds to the released coordinate and reruns full gates.
+8. BBNF receives the post-W3 frozen ABI receipt.
 
 No raw-source alias, mutable link, dirty head, package-link evidence or
 competing grammar can close an edge.
@@ -56,6 +59,7 @@ competing grammar can close an edge.
 
 Value formation is independently admitted with zero execution credit.
 V.L1/V.L5 remain blocked on the exact release chain above. Parse-that's
-corrected 96-name matched-boundary CI-low is 9.033× and immutable-result
-CI-low is 4.804×; therefore the producer edge is **RED** and
+corrected accepted-M2 96-name matched-boundary CI-low is 8.179×,
+raw-internal CI-low is 8.698× and immutable-result CI-low is 4.420×;
+therefore the producer edge is **RED** and
 `NO RELEASE`.
