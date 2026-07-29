@@ -15,6 +15,7 @@ import {
     type Compiled,
     type Spanned,
 } from "./kernel.js";
+import { StagedParser } from "./run-state.js";
 
 const webrefPath = process.env.P3_WEBREF_CSS;
 if (!webrefPath) throw new Error("P3_WEBREF_CSS must name Webref css.json");
@@ -62,7 +63,7 @@ const staged = (shape === "terminal"
     : shape === "recovery"
         ? compile(stagedDeclaration.recover(literal("bad;"), opaque))
         : compile(stagedDeclaration)) as unknown as Compiled<unknown>;
-const stagedBoundary = new Parser<unknown>(staged.parser);
+const stagedBoundary = new StagedParser<unknown>(staged.parser);
 const sources = names.map((name, index) =>
     shape === "recovery" && index % 10 === 0
         ? "bad;"

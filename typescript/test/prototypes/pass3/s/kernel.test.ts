@@ -16,8 +16,30 @@ import {
     type Spanned,
 } from "./kernel.js";
 import { resultFromState } from "./result.js";
+import {
+    collectRunDiagnostic,
+    RunState,
+} from "./run-state.js";
 
 describe("P3-S source-direct staged terminal", () => {
+    it("shares frozen empty evidence without sharing mutable run effects", () => {
+        const first = new RunState("bad");
+        const second = new RunState("ok");
+
+        expect(first).not.toBe(second);
+        expect(first.diagnostics).toBe(second.diagnostics);
+        expect(first.suggestions).toBe(second.suggestions);
+        expect(first.secondarySpans).toBe(second.secondarySpans);
+        expect(Object.isFrozen(first.diagnostics)).toBe(true);
+        expect(Object.isFrozen(first.suggestions)).toBe(true);
+        expect(Object.isFrozen(first.secondarySpans)).toBe(true);
+
+        collectRunDiagnostic(first, 0);
+        expect(first.diagnostics).toHaveLength(1);
+        expect(second.diagnostics).toEqual([]);
+        expect(first.diagnostics).not.toBe(second.diagnostics);
+    });
+
     it("preserves authored choice priority across prefix collisions", () => {
         const shortFirst = compile(choice(literal("a"), literal("ab")));
         const longFirst = compile(choice(literal("ab"), literal("a")));
@@ -59,7 +81,7 @@ describe("P3-S source-direct staged terminal", () => {
         expect(second).toEqual({ value: 2, span: { start: 0, end: 2 } });
         expect(parser.plan.coldEdges).toBeGreaterThan(0);
 
-        const nested = new ParserState<Spanned<1> | Spanned<2>>("xé");
+        const nested = new RunState<Spanned<1> | Spanned<2>>("xé");
         nested.offset = 1;
         parser.parser(nested);
         expect(nested.value).toEqual({ value: 1, span: { start: 1, end: 2 } });
@@ -106,7 +128,7 @@ describe("P3-S source-direct staged terminal", () => {
         ));
         try {
             const expected = new ParserState("xb");
-            const actual = new ParserState<["x", "a" | "ab"]>("xb");
+            const actual = new RunState<["x", "a" | "ab"]>("xb");
             closure.parser(expected);
             staged.parser(actual);
             expect({
@@ -187,7 +209,7 @@ describe("P3-S source-direct staged terminal", () => {
         try {
             for (const source of ["color:", "display:", "position:", "color!"]) {
                 const left = new ParserState<[string, string]>(source);
-                const right = new ParserState<[string, ":"]>(source);
+                const right = new RunState<[string, ":"]>(source);
                 closure.parser(left);
                 staged.parser(right);
                 expect({
@@ -244,9 +266,6 @@ describe("P3-S source-direct staged terminal", () => {
             expect(result).toMatchObject({
                 kind: "ok",
                 value: opaque,
-                offset: 3,
-                furthest: 0,
-                expected: ['"ok"'],
                 diagnostics: [{
                     offset: 0,
                     furthestOffset: 0,
@@ -254,8 +273,10 @@ describe("P3-S source-direct staged terminal", () => {
                     found: "bad",
                 }],
             });
-            expect(Object.isFrozen(result)).toBe(true);
-            expect(Object.isFrozen(result.expected)).toBe(true);
+            expect(Object.isFrozen(result)).toBe(false);
+            expect(result).not.toHaveProperty("offset");
+            expect(result).not.toHaveProperty("furthest");
+            expect(result).not.toHaveProperty("expected");
             expect(Object.isFrozen(result.diagnostics)).toBe(true);
             expect(Object.isFrozen(result.diagnostics[0])).toBe(true);
             expect(Object.isFrozen(result.diagnostics[0].expected)).toBe(true);

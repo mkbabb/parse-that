@@ -1,8 +1,9 @@
-import { ParserState } from "../../../../src/parse/state.js";
+import { isDiagnosticsEnabled } from "../../../../src/parse/utils.js";
 import {
-    collectDiagnostic,
-    isDiagnosticsEnabled,
-} from "../../../../src/parse/utils.js";
+    collectRunDiagnostic,
+    RunState,
+    type StagedState,
+} from "./run-state.js";
 
 export type Span = Readonly<{ start: number; end: number }>;
 export type Spanned<T> = Readonly<{ value: T; span: Span }>;
@@ -125,15 +126,15 @@ export function sequence<const P extends readonly Grammar<unknown>[]>(
 
 export type Compiled<T> = Readonly<{
     plan: StagedPlan;
-    parser: (state: ParserState<T>) => ParserState<T>;
-    parseState: (source: string) => ParserState<T>;
+    parser: (state: StagedState<T>) => StagedState<T>;
+    parseState: (source: string) => StagedState<T>;
     parse: (source: string) => T;
 }>;
 
 type MutablePlan = {
     -readonly [K in keyof StagedPlan]: number;
 };
-type Runner<T> = (state: ParserState<T>) => ParserState<T>;
+type Runner<T> = (state: StagedState<T>) => StagedState<T>;
 
 /**
  * Compile supported graph nodes into source-direct terminals and transactions.
@@ -150,7 +151,7 @@ export function compile<T>(grammar: Grammar<T>): Compiled<T> {
     };
     const parser = compileNode(grammar.node, plan);
     const parseState = (source: string) =>
-        parser(new ParserState<T>(source));
+        parser(new RunState<T>(source));
 
     return {
         plan,
@@ -166,7 +167,7 @@ function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
 
     if (node.kind === "map") {
         const child = compileNode(node.child, plan);
-        return ((state: ParserState<unknown>) => {
+        return ((state: StagedState<unknown>) => {
             const savedOffset = state.offset;
             const savedValue = state.value;
             const savedDiagnostics = state.diagnostics.length;
@@ -185,7 +186,7 @@ function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
     }
     if (node.kind === "span") {
         const child = compileNode(node.child, plan);
-        return ((state: ParserState<unknown>) => {
+        return ((state: StagedState<unknown>) => {
             const start = state.offset;
             child(state);
             if (state.isError) return state;
@@ -198,7 +199,7 @@ function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
     if (node.kind === "recovery") {
         const child = compileNode(node.child, plan);
         const sync = compileNode(node.sync, plan);
-        return ((state: ParserState<unknown>) => {
+        return ((state: StagedState<unknown>) => {
             const checkpoint = state.offset;
             const savedValue = state.value;
             const savedDiagnostics = state.diagnostics.length;
@@ -213,7 +214,7 @@ function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
                 );
             }
 
-            collectDiagnostic(state, checkpoint);
+            collectRunDiagnostic(state, checkpoint);
             state.rollback(
                 checkpoint,
                 savedValue,
@@ -273,11 +274,11 @@ function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
         if (children.length === 2) {
             const first = children[0];
             const second = children[1];
-            return ((state: ParserState<unknown[]>) => {
+            return ((state: StagedState<unknown[]>) => {
                 const savedOffset = state.offset;
                 const savedValue = state.value;
                 const savedDiagnostics = state.diagnostics.length;
-                first(state as ParserState<unknown>);
+                first(state as StagedState<unknown>);
                 if (state.isError) {
                     return state.rollback(
                         savedOffset,
@@ -287,7 +288,7 @@ function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
                     );
                 }
                 const firstValue = state.value;
-                second(state as ParserState<unknown>);
+                second(state as StagedState<unknown>);
                 if (state.isError) {
                     return state.rollback(
                         savedOffset,
@@ -301,13 +302,13 @@ function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
                 return state;
             }) as unknown as Runner<T>;
         }
-        return ((state: ParserState<unknown[]>) => {
+        return ((state: StagedState<unknown[]>) => {
             const savedOffset = state.offset;
             const savedValue = state.value;
             const savedDiagnostics = state.diagnostics.length;
             const values: unknown[] = new Array(children.length);
             for (let index = 0; index < children.length; index++) {
-                children[index](state as ParserState<unknown>);
+                children[index](state as StagedState<unknown>);
                 if (state.isError) {
                     return state.rollback(
                         savedOffset,
@@ -343,7 +344,7 @@ function compileTerminals<T>(
         const length = text.length;
         const code = length === 1 ? text.charCodeAt(0) : -1;
         plan.terminals++;
-        return (state: ParserState<T>) => {
+        return (state: StagedState<T>) => {
             const start = state.offset;
             const matches = length === 1
                 ? state.src.charCodeAt(start) === code
@@ -395,32 +396,30 @@ function compileTerminals<T>(
         plan,
     );
 
-    return (state: ParserState<T>): ParserState<T> => {
+    return (state: StagedState<T>): StagedState<T> => {
         const start = state.offset;
         const source = state.src;
         let node = 0;
         let at = start;
         if (hasColdEdges) {
-            while (at < source.length) {
-                const code = source.charCodeAt(at);
+            while (true) {
+                const code = source.charCodeAt(at++);
                 const symbol = code < 128 ? alphabet[code] : -1;
                 const next = symbol >= 0
                     ? ascii[node * width + symbol]
                     : cold.get(node * 65_536 + code) ?? 0;
                 if (next === 0) break;
                 node = next;
-                at++;
             }
         } else {
-            while (at < source.length) {
-                const code = source.charCodeAt(at);
+            while (true) {
+                const code = source.charCodeAt(at++);
                 const symbol = alphabet[code];
                 const next = symbol >= 0
                     ? ascii[node * width + symbol]
                     : 0;
                 if (next === 0) break;
                 node = next;
-                at++;
             }
         }
 
@@ -462,10 +461,11 @@ function compileTerminals<T>(
 }
 
 function compileSpannedSequence(
-    texts: readonly string[],
+    inputTexts: readonly string[],
     suffix: string,
     plan: MutablePlan,
 ): Runner<readonly [Spanned<string>, Spanned<string>]> {
+    const texts = [...new Set(inputTexts)];
     const suffixCode = suffix.charCodeAt(0);
     const suffixLabel = `"${suffix}"`;
     plan.terminals++;
@@ -509,7 +509,6 @@ function compileSpannedSequence(
         ascii,
         cold,
         hasColdEdges,
-        labelLimits,
         labels,
         width,
         winning,
@@ -522,26 +521,24 @@ function compileSpannedSequence(
         let node = 0;
         let at = start;
         if (hasColdEdges) {
-            while (at < source.length) {
-                const code = source.charCodeAt(at);
+            while (true) {
+                const code = source.charCodeAt(at++);
                 const symbol = code < 128 ? alphabet[code] : -1;
                 const next = symbol >= 0
                     ? ascii[node * width + symbol]
                     : cold.get(node * 65_536 + code) ?? 0;
                 if (next === 0) break;
                 node = next;
-                at++;
             }
         } else {
-            while (at < source.length) {
-                const code = source.charCodeAt(at);
+            while (true) {
+                const code = source.charCodeAt(at++);
                 const symbol = alphabet[code];
                 const next = symbol >= 0
                     ? ascii[node * width + symbol]
                     : 0;
                 if (next === 0) break;
                 node = next;
-                at++;
             }
         }
 
@@ -552,10 +549,9 @@ function compileSpannedSequence(
             return state;
         }
         const selectedEnd = start + winningDepth[node];
-        const labelLimit = labelLimits[selected];
-        if (labelLimit > 0) {
+        if (selected > 0) {
             if (isDiagnosticsEnabled()) {
-                mergeLabels(state, start, labels, labelLimit);
+                mergeLabels(state, start, labels, selected);
             } else if (start > state.furthest) {
                 state.furthest = start;
             }
@@ -740,7 +736,7 @@ function flatten<T>(
 }
 
 function mergeLabels<T>(
-    state: ParserState<T>,
+    state: StagedState<T>,
     offset: number,
     labels: readonly string[],
     limit: number = labels.length,
@@ -750,8 +746,7 @@ function mergeLabels<T>(
     if (offset > state.furthest) {
         state.furthest = offset;
         state.expected = enabled ? labels.slice(0, limit) : undefined;
-        state.suggestions = [];
-        state.secondarySpans = [];
+        state.clearFrontierExtras();
         return;
     }
     if (!enabled) return;

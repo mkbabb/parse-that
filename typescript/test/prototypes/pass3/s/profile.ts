@@ -21,6 +21,11 @@ import {
     type Spanned,
 } from "./kernel.js";
 import { createResultProjector } from "./result.js";
+import {
+    RunState,
+    StagedParser,
+    type StagedState,
+} from "./run-state.js";
 
 const baselineRoot = process.env.P3_BASELINE_ROOT;
 const baselineApi = baselineRoot
@@ -31,6 +36,7 @@ const baselineApi = baselineRoot
     : await import("../../../../src/parse/index.js");
 const baselineState = (source: string) =>
     new baselineApi.ParserState<unknown>(source) as ParserState<unknown>;
+const currentState = (source: string) => new ParserState<unknown>(source);
 
 // Evenly sampled from the 753 non-custom, non-alias properties in
 // @webref/css 8.7.1 (frozen 2026-07-29 assay input).
@@ -140,7 +146,7 @@ const closure = makeClosure();
 const staged = makeStaged();
 const projectClosureResult = createResultProjector();
 const projectStagedResult = createResultProjector();
-const stagedBoundary = new Parser<unknown>(staged.parser);
+const stagedBoundary = new StagedParser<unknown>(staged.parser);
 const parseStaged = (source: string) => stagedBoundary.parseState(source);
 const sources = properties.map((name, index) =>
     shape === "recovery" && index % 10 === 0
@@ -237,7 +243,15 @@ function rotate<T>(values: readonly T[], parse: (value: T) => unknown) {
     return () => parse(values[cursor++ % values.length]);
 }
 
-function snapshot(state: ParserState<unknown>) {
+function snapshot(state: Pick<
+    StagedState<unknown>,
+    | "value"
+    | "offset"
+    | "isError"
+    | "furthest"
+    | "expected"
+    | "diagnostics"
+>) {
     return {
         value: state.value,
         offset: state.offset,
@@ -248,11 +262,10 @@ function snapshot(state: ParserState<unknown>) {
     };
 }
 
-function parseRaw<T>(
-    parser: (state: ParserState<T>) => unknown,
+function parseRaw<S>(
+    parser: (state: S) => unknown,
     source: string,
-    createState: (source: string) => ParserState<T> =
-        value => new ParserState<T>(value),
+    createState: (source: string) => S,
 ) {
     const state = createState(source);
     parser(state);
@@ -305,8 +318,16 @@ const rotating = samplePair(
     rotate(sources, parseStaged),
 );
 const internal = samplePair(
-    rotate(sources, source => parseRaw(closure.parser, source)),
-    rotate(sources, source => parseRaw(staged.parser, source)),
+    rotate(sources, source => parseRaw(
+        closure.parser,
+        source,
+        currentState,
+    )),
+    rotate(sources, source => parseRaw(
+        staged.parser,
+        source,
+        value => new RunState(value),
+    )),
 );
 const result = samplePair(
     rotate(sources, source => projectClosureResult(
@@ -335,7 +356,11 @@ for (const source of diagnosticSources) {
         source,
         baselineState,
     ));
-    const actual = snapshot(parseRaw(staged.parser, source));
+    const actual = snapshot(parseRaw(
+        staged.parser,
+        source,
+        value => new RunState(value),
+    ));
     if (JSON.stringify(actual) !== JSON.stringify(expected)) {
         throw new Error(`unequal diagnostic product for ${source}`);
     }
@@ -346,7 +371,11 @@ const diagnosticFailure = samplePair(
         source,
         baselineState,
     )),
-    rotate(diagnosticSources, source => parseRaw(staged.parser, source)),
+    rotate(diagnosticSources, source => parseRaw(
+        staged.parser,
+        source,
+        value => new RunState(value),
+    )),
     fullCorpus ? 100 : 5_000,
 );
 disableAllDiagnostics();
@@ -370,7 +399,10 @@ const raw = {
             source: fullCorpus ? webrefPath : "frozen-even-sample",
         },
         choiceOrder: "longest-first, then lexical",
-        timingBoundary: "Parser.parseState for both sides",
+        timingBoundary:
+            "public parseState: accepted-M2 Parser vs candidate StagedParser",
+        resultBoundary:
+            "consumer-owned readonly envelope; deep-frozen evidence only",
         baseline: {
             root: baselineRoot ?? "current checkout",
             sha: process.env.P3_BASELINE_SHA ?? "current checkout",

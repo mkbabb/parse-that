@@ -3,6 +3,16 @@ import type {
     ParserState,
 } from "../../../../src/parse/state.js";
 
+type ResultState<T> = Readonly<{
+    value: T;
+    offset: number;
+    isError: boolean;
+    furthest: number;
+    expected?: readonly string[];
+    diagnostics: readonly Diagnostic[];
+    fault: ParserState["fault"];
+}>;
+
 type ImmutableField<T> = T extends readonly (infer U)[]
     ? readonly Readonly<U>[]
     : T;
@@ -16,7 +26,11 @@ type ResultEvidence = Readonly<{
     diagnostics: readonly ResultDiagnostic[];
 }>;
 export type ParseResult<T> =
-    | (ResultEvidence & Readonly<{ kind: "ok"; value: T }>)
+    | Readonly<{
+        kind: "ok";
+        value: T;
+        diagnostics: readonly ResultDiagnostic[];
+    }>
     | (ResultEvidence & Readonly<{ kind: "mismatch"; value: unknown }>)
     | (ResultEvidence & Readonly<{
         kind: "fault";
@@ -31,7 +45,7 @@ const EMPTY = Object.freeze([]) as readonly never[];
  * This is deliberately not part of the staged runtime or Compiled surface.
  */
 export function createResultProjector<T>() {
-    return (state: ParserState<T>): ParseResult<T> => {
+    return (state: ResultState<T>): ParseResult<T> => {
         const diagnostics = state.diagnostics.length === 0
             ? EMPTY
             : Object.freeze(state.diagnostics.map(diagnostic =>
@@ -74,21 +88,18 @@ export function createResultProjector<T>() {
                 value: state.value,
             });
         }
-        return Object.freeze({
-            offset: state.offset,
-            furthest: state.furthest,
-            expected,
+        return {
             diagnostics,
             kind: "ok",
             value: state.value,
-        });
+        };
     };
 }
 
 const defaultProjector = createResultProjector<unknown>();
 
-export function resultFromState<T>(state: ParserState<T>): ParseResult<T> {
+export function resultFromState<T>(state: ResultState<T>): ParseResult<T> {
     return defaultProjector(
-        state as ParserState<unknown>,
+        state as ResultState<unknown>,
     ) as ParseResult<T>;
 }
