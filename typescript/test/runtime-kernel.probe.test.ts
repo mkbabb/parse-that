@@ -3,11 +3,9 @@ import {
     Parser,
     ParserState,
     all,
-    clearCollectedDiagnostics,
     disableDiagnostics,
     dispatch,
     enableDiagnostics,
-    getCollectedDiagnostics,
     memoize,
     regex,
     resetPackrat,
@@ -16,12 +14,10 @@ import {
 
 beforeEach(() => {
     enableDiagnostics();
-    clearCollectedDiagnostics();
     resetPackrat();
 });
 
 afterEach(() => {
-    clearCollectedDiagnostics();
     resetPackrat();
     disableDiagnostics();
 });
@@ -92,10 +88,11 @@ describe("runtime-kernel candidate obligations", () => {
     it("scopes recovered diagnostics to the parse that produced them", () => {
         const recovering = string("ok").recover(regex(/.+/), "recovered");
 
-        expect(recovering.parse("bad")).toBe("recovered");
-        expect(getCollectedDiagnostics()).toHaveLength(1);
-        expect(string("ok").parse("ok")).toBe("ok");
-        expect(getCollectedDiagnostics()).toEqual([]);
+        const recovered = recovering.parseState("bad");
+        expect(recovered.value).toBe("recovered");
+        expect(recovered.diagnostics).toHaveLength(1);
+        const valid = string("ok").parseState("ok");
+        expect(valid.diagnostics).toEqual([]);
     });
 
     it("rolls back the complete checkpoint when a speculative arm is rejected", () => {
@@ -114,13 +111,13 @@ describe("runtime-kernel candidate obligations", () => {
             isError: state.isError,
             furthest: state.furthest,
             expected: state.expected,
-            diagnostics: getCollectedDiagnostics().length,
+            diagnostics: state.diagnostics.length,
         }).toEqual({
             offset: 0,
             value: "seed",
             isError: true,
-            furthest: 1,
-            expected: ['"!"'],
+            furthest: 2,
+            expected: ['"z"'],
             diagnostics: 0,
         });
     });

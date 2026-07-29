@@ -23,7 +23,6 @@ const FLAG_EOF = 2;
 
 export class Parser<T = string> {
     id: number = PARSER_ID++;
-    state: ParserState<T> | undefined;
     flags: number = FLAG_NONE;
 
     constructor(
@@ -63,12 +62,9 @@ export class Parser<T = string> {
             errorState.suggestions = state.suggestions;
             errorState.secondarySpans = state.secondarySpans;
             errorState.furthest = furthest;
-            this.state = errorState as ParserState<T>;
             if (isDiagnosticsEnabled()) {
-                console.error(this.state.toString());
+                console.error(errorState.toString());
             }
-        } else {
-            this.state = state;
         }
 
         return state;
@@ -671,7 +667,7 @@ export class Parser<T = string> {
 
             if (state.isError) {
                 // Sync also failed — remove the collected diagnostic
-                popLastDiagnostic();
+                popLastDiagnostic(state as ParserState<unknown>);
                 state.offset = checkpoint;
                 state.isError = true;
                 return state;

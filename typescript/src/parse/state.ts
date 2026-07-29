@@ -33,6 +33,17 @@ export interface SecondarySpan {
     label: string;
 }
 
+export interface Diagnostic {
+    offset: number;
+    furthestOffset: number;
+    line: number;
+    column: number;
+    expected: string[];
+    suggestions: Suggestion[];
+    secondarySpans: SecondarySpan[];
+    found: string;
+}
+
 export class ParserState<T = unknown> {
     /**
      * Furthest-offset error tracking, threaded per-parse (the Rust port's
@@ -43,6 +54,7 @@ export class ParserState<T = unknown> {
     expected?: string[];
     suggestions: Suggestion[] = [];
     secondarySpans: SecondarySpan[] = [];
+    diagnostics: Diagnostic[] = [];
 
     constructor(
         public src: string,
@@ -99,13 +111,18 @@ export class ParserState<T = unknown> {
     }
 
     clone(): ParserState<T> {
-        return new ParserState<T>(
+        const clone = new ParserState<T>(
             this.src,
             this.value,
             this.offset,
             this.isError,
             this.furthest,
         );
+        clone.expected = this.expected ? [...this.expected] : undefined;
+        clone.suggestions = [...this.suggestions];
+        clone.secondarySpans = [...this.secondarySpans];
+        clone.diagnostics = [...this.diagnostics];
+        return clone;
     }
 
     getColumnNumber(): number {

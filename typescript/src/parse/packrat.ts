@@ -7,7 +7,8 @@ import type { ParserState } from "./state.js";
 //
 // This is the Warth-Douglass-Millstein packrat-with-left-recursion algorithm
 // ("Packrat Parsers Can Support Left Recursion", PEPM '08), keyed on
-// (id, offset). It is OFF the default parse path: non-backtracking LL(1)-ish
+// (id, offset) with a source identity on each cell. It is OFF the default parse
+// path: non-backtracking LL(1)-ish
 // grammars (CSS values, JSON, CSV) do not need it, and the Rust port — the
 // project's SOTA-performance artifact — omits left-recursion / packrat entirely.
 // The default parse() pays no per-parse MEMO.clear() tax; a left-recursive
@@ -123,6 +124,7 @@ interface Head {
 
 /** A memo cell holds either a finished Answer or an in-progress LR marker. */
 interface MemoCell {
+    src: string;
     ans: Answer | LR;
 }
 
@@ -157,12 +159,13 @@ let PACKRAT_ARMED = false;
 
 // CROSS-INPUT + RE-ENTRANCY SOUNDNESS — the parseState-entry epoch (PT-Q1).
 //
-// MEMO/HEADS/GROWING/LR_STACK are module-global and keyed on (id, offset) with NO
-// source component. Two soundness hazards arise:
+// MEMO/HEADS/GROWING/LR_STACK are module-global. MEMO's numeric key remains
+// (id, offset), while each cell carries its source identity so raw parser calls
+// cannot reuse a result from another input. Two soundness hazards arise:
 //
-//   1. CROSS-INPUT (PT-B1, fixed at 0.12.0): a memoized parser re-run against a
-//      DIFFERENT source would mis-restore the previous input's cells —
-//      `memoize(p).parse('hello')` then `.parse('world')` returning 'hello'.
+//   1. CROSS-INPUT (PT-B1): a raw memoized parser invocation against a DIFFERENT
+//      source must reject the previous input's cells — `memoize(p).parser(state)`
+//      on "hello" followed by "world" must not return "hello".
 //
 //   2. RE-ENTRANCY (PT-Q1, the 0.12.0 regression this fixes): the 0.12.0 cure put
 //      the reset INSIDE `memoizeFn`, firing per-node whenever `state.src !==
@@ -191,6 +194,10 @@ let CURRENT_SRC: string | undefined;
 // mSL's `mSL.then(mSL)`): such an occurrence restores the seed non-advancingly
 // rather than spawning an independent, over-consuming head.
 let GROWING = new Map<number, number>();
+
+function storeMemo(key: number, src: string, ans: Answer | LR): void {
+    MEMO.set(key, { src, ans });
+}
 
 /** A frozen snapshot of the full module-global packrat state. */
 interface PackratEpoch {
@@ -304,7 +311,8 @@ function makeMemoized<T>(
     // re-evaluation within a grow pass.
     const recall = (pos: number, live: ParserState<T>): MemoCell | undefined => {
         const key = getCijKey(p, pos);
-        const cell = MEMO.get(key);
+        const stored = MEMO.get(key);
+        const cell = stored?.src === live.src ? stored : undefined;
         const head = HEADS.get(pos);
 
         // A SECOND occurrence of this head inside its own body, at a later
@@ -315,7 +323,8 @@ function makeMemoized<T>(
         if (cell === undefined) {
             const growKey = GROWING.get(p.id);
             if (growKey !== undefined) {
-                const growSeed = MEMO.get(growKey)?.ans;
+                const growCell = MEMO.get(growKey);
+                const growSeed = growCell?.src === live.src ? growCell.ans : undefined;
                 if (
                     growSeed !== undefined &&
                     !isLR(growSeed) &&
@@ -326,7 +335,7 @@ function makeMemoized<T>(
                     // at `pos` and yields no value, so the rest of the body
                     // consumes the remaining input rather than re-counting the
                     // head's already-accumulated value.
-                    return { ans: { offset: pos, value: undefined, isError: false } };
+                    return { src: live.src, ans: { offset: pos, value: undefined, isError: false } };
                 }
             }
         }
@@ -341,7 +350,7 @@ function makeMemoized<T>(
             head.parser.id !== p.id &&
             !head.involvedSet.has(p.id)
         ) {
-            return { ans: { offset: pos, value: undefined, isError: true } };
+            return { src: live.src, ans: { offset: pos, value: undefined, isError: true } };
         }
 
         // This parser is in the head's eval set → remove it and re-evaluate so
@@ -355,7 +364,7 @@ function makeMemoized<T>(
             parser.parser(scratch);
             const ans = snapshot(scratch as ParserState<unknown>);
             if (cell !== undefined) cell.ans = ans;
-            else MEMO.set(key, { ans });
+            else storeMemo(key, live.src, ans);
             return MEMO.get(key);
         }
         return cell;
@@ -396,7 +405,7 @@ function makeMemoized<T>(
                 const seed = (MEMO.get(key)!.ans as Answer);
                 // Stop when the pass errors or fails to advance past the seed.
                 if (ans.isError || ans.offset <= seed.offset) break;
-                MEMO.set(key, { ans });
+                storeMemo(key, state.src, ans);
             }
             applyAnswer(state, MEMO.get(key)!.ans as Answer);
         } finally {
@@ -415,7 +424,7 @@ function makeMemoized<T>(
             return;
         }
         // This parser IS the head — install the seed and grow it.
-        MEMO.set(key, { ans: lr.seed });
+        storeMemo(key, state.src, lr.seed);
         if (lr.seed.isError) {
             applyAnswer(state, lr.seed);
             return;
@@ -447,7 +456,7 @@ function makeMemoized<T>(
                 next: LR_STACK,
             };
             LR_STACK = lr;
-            MEMO.set(key, { ans: lr });
+            storeMemo(key, state.src, lr);
 
             evalParser(state, pos);
 

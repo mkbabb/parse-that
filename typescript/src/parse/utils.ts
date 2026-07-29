@@ -1,6 +1,6 @@
-import type { ParserState, Suggestion, SecondarySpan } from "./state.js";
+import type { Diagnostic, ParserState, Suggestion, SecondarySpan } from "./state.js";
 
-export type { Suggestion, SecondarySpan } from "./state.js";
+export type { Diagnostic, Suggestion, SecondarySpan } from "./state.js";
 
 // ── Diagnostics Flag ─────────────────────────────────────────
 let diagnosticsEnabled = false;
@@ -79,25 +79,10 @@ export function reportUnclosedDelimiter(
     addSecondarySpan(state, openOffset, `unclosed \`${openText}\` opened here`);
 }
 
-// ── Collected Diagnostics (for error recovery) ──────────────
-
-export interface Diagnostic {
-    offset: number;
-    furthestOffset: number;
-    line: number;
-    column: number;
-    expected: string[];
-    suggestions: Suggestion[];
-    secondarySpans: SecondarySpan[];
-    found: string;
-}
-
-let collectedDiagnostics: Diagnostic[] = [];
-
 /**
  * Snapshot the parse state's current error tracking into a Diagnostic object,
- * push it to the collection, then reset the state's error tracking so the next
- * error starts fresh.
+ * append it to that parse's recovery list, then reset the state's error
+ * tracking so the next error starts fresh.
  */
 export function collectDiagnostic(state: ParserState<unknown>, errorOffset: number): void {
     const src = state.src;
@@ -112,7 +97,7 @@ export function collectDiagnostic(state: ParserState<unknown>, errorOffset: numb
     // Extract a "found" snippet (up to 20 chars from the furthest offset)
     const found = src.slice(furthest, furthest + 20).replace(/\n/g, "\\n");
 
-    collectedDiagnostics.push({
+    state.diagnostics.push({
         offset: errorOffset,
         furthestOffset: furthest,
         line,
@@ -135,16 +120,8 @@ export function resetErrorState(state: ParserState<unknown>): void {
     state.secondarySpans = [];
 }
 
-export function getCollectedDiagnostics(): readonly Diagnostic[] {
-    return collectedDiagnostics;
-}
-
-export function clearCollectedDiagnostics(): void {
-    collectedDiagnostics = [];
-}
-
-export function popLastDiagnostic(): Diagnostic | undefined {
-    return collectedDiagnostics.pop();
+export function popLastDiagnostic(state: ParserState<unknown>): Diagnostic | undefined {
+    return state.diagnostics.pop();
 }
 
 // ── Imperative byte-scanners (harvested from the removed CSS parser, A.W1) ──
