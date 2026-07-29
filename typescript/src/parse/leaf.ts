@@ -32,43 +32,42 @@ export function any<T extends Array<Parser<any>>>(...parsers: T) {
     // PT-B3 fusion (semantics-preserving): indexed `for` (no `for…of` iterator
     // object), monomorphic over the static parser list. Each arm restores
     // `savedOffset` + clears the error before the next trial — the EXACT
-    // sequential-trial backtracking of the original. The arity-2 arm is fully
-    // unrolled (the dominant `or`-style 2-way alternation) so V8 sees two
-    // constant-bound positional trials with no array load in the hot path.
     let anyParser: ParserFunction<Result>;
     if (n === 2) {
         const p0 = parsers[0];
         const p1 = parsers[1];
         anyParser = ((state: ParserState<Result>) => {
             const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
             p0.parser(state as ParserState<unknown>);
             if (!state.isError) return state;
-            state.offset = savedOffset;
-            state.isError = false;
+            state.rollback(savedOffset, savedValue, savedDiagnostics, false);
+            if (state.isError) return state;
 
             p1.parser(state as ParserState<unknown>);
             if (!state.isError) return state;
-            state.offset = savedOffset;
-            state.isError = false;
+            state.rollback(savedOffset, savedValue, savedDiagnostics, false);
+            if (state.isError) return state;
 
             mergeErrorState(state as ParserState<unknown>);
-            state.isError = true;
-            return state;
+            return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
         }) as ParserFunction<Result>;
     } else {
         anyParser = ((state: ParserState<Result>) => {
             const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
             for (let i = 0; i < n; i++) {
                 parsers[i].parser(state as ParserState<unknown>);
                 if (!state.isError) {
                     return state;
                 }
-                state.offset = savedOffset;
-                state.isError = false;
+                state.rollback(savedOffset, savedValue, savedDiagnostics, false);
+                if (state.isError) return state;
             }
             mergeErrorState(state as ParserState<unknown>);
-            state.isError = true;
-            return state;
+            return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
         }) as ParserFunction<Result>;
     }
 
@@ -169,125 +168,21 @@ export function all<T extends Array<Parser<any>>>(...parsers: T) {
     ) as Parser<Result>;
 }
 
-/**
- * PT-B3 fusion: build the monomorphic sequencing closure for a static parser
- * list. ONE result array per call, with one positional slot per member,
- * including explicit `undefined`. Arity-2 / arity-3 are fully unrolled into
- * positional
- * closures (the value.js hot shapes — 59 `all()` sites) so V8 sees a monomorphic
- * call site with constant-folded parser bindings; the general arm threads by
- * index. A rejected sequence restores the incoming value and offset while
- * leaving monotone failure evidence intact. The fused closure threads state by
- * position and never allocates an intermediate tuple (the unfused
- * `a.then(b).then(c)` builds N−1 nested 2-tuples; the fused list builds exactly
- * one flat array).
- */
+/** One exact fixed-length sequence: one result array and one transaction. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function fuseAll<Result = unknown[]>(parsers: Array<Parser<any>>): ParserFunction<Result> {
     const n = parsers.length;
 
-    if (n === 1) {
-        const p0 = parsers[0];
-        return ((state: ParserState<Result>): ParserState<Result> => {
-            const savedOffset = state.offset;
-            const savedValue = state.value;
-            p0.parser(state as ParserState<unknown>);
-            if (state.isError) {
-                state.offset = savedOffset;
-                state.unsafeSetValue(savedValue);
-                state.isError = true;
-                return state;
-            }
-            return state.ok([state.value]) as ParserState<Result>;
-        }) as ParserFunction<Result>;
-    }
-
-    // Arity-2: fully unrolled, two positional bindings, no array indexing.
-    if (n === 2) {
-        const p0 = parsers[0];
-        const p1 = parsers[1];
-        return ((state: ParserState<Result>): ParserState<Result> => {
-            const savedOffset = state.offset;
-            const savedValue = state.value;
-            const out: unknown[] = [undefined, undefined];
-
-            p0.parser(state as ParserState<unknown>);
-            if (state.isError) {
-                state.offset = savedOffset;
-                state.unsafeSetValue(savedValue);
-                state.isError = true;
-                return state;
-            }
-            out[0] = state.value;
-
-            p1.parser(state as ParserState<unknown>);
-            if (state.isError) {
-                state.offset = savedOffset;
-                state.unsafeSetValue(savedValue);
-                state.isError = true;
-                return state;
-            }
-            out[1] = state.value;
-
-            return state.ok(out) as ParserState<Result>;
-        }) as ParserFunction<Result>;
-    }
-
-    // Arity-3: the hottest value.js shape (calc/rgb/hsl triples), fully unrolled.
-    if (n === 3) {
-        const p0 = parsers[0];
-        const p1 = parsers[1];
-        const p2 = parsers[2];
-        return ((state: ParserState<Result>): ParserState<Result> => {
-            const savedOffset = state.offset;
-            const savedValue = state.value;
-            const out: unknown[] = [undefined, undefined, undefined];
-
-            p0.parser(state as ParserState<unknown>);
-            if (state.isError) {
-                state.offset = savedOffset;
-                state.unsafeSetValue(savedValue);
-                state.isError = true;
-                return state;
-            }
-            out[0] = state.value;
-
-            p1.parser(state as ParserState<unknown>);
-            if (state.isError) {
-                state.offset = savedOffset;
-                state.unsafeSetValue(savedValue);
-                state.isError = true;
-                return state;
-            }
-            out[1] = state.value;
-
-            p2.parser(state as ParserState<unknown>);
-            if (state.isError) {
-                state.offset = savedOffset;
-                state.unsafeSetValue(savedValue);
-                state.isError = true;
-                return state;
-            }
-            out[2] = state.value;
-
-            return state.ok(out) as ParserState<Result>;
-        }) as ParserFunction<Result>;
-    }
-
-    // General arity: one pre-sized array, indexed by member, classic `for`
-    // (no `for…of` iterator).
     return ((state: ParserState<Result>): ParserState<Result> => {
         const savedOffset = state.offset;
         const savedValue = state.value;
+        const savedDiagnostics = state.diagnostics.length;
         const out: unknown[] = new Array(n);
 
         for (let i = 0; i < n; i++) {
             parsers[i].parser(state as ParserState<unknown>);
             if (state.isError) {
-                state.offset = savedOffset;
-                state.unsafeSetValue(savedValue);
-                state.isError = true;
-                return state;
+                return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
             }
             out[i] = state.value;
         }

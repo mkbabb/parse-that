@@ -1,7 +1,7 @@
 import { createParserContext, ParserState } from "./state.js";
-import type { ParserContext, Span } from "./state.js";
+import type { ParserContext } from "./state.js";
 import { parserDebug, parserPrint } from "./debug.js";
-import { mergeErrorState, addSuggestion, isDiagnosticsEnabled, collectDiagnostic, popLastDiagnostic, reportUnclosedDelimiter } from "./utils.js";
+import { mergeErrorState, addSuggestion, isDiagnosticsEnabled, collectDiagnostic, reportUnclosedDelimiter } from "./utils.js";
 import { createLazyCached } from "./lazy.js";
 import { trimStateWhitespace, eof, all, _initWhitespace, whitespace } from "./leaf.js";
 import { packratEnter, packratExit } from "./packrat.js";
@@ -50,6 +50,7 @@ export class Parser<T = string> {
     private parseStateInner(val: string) {
         const state = new ParserState(val) as ParserState<T>;
         this.parser(state);
+        if (state.fault) state.isError = true;
 
         if (state.isError) {
             // Build the error display at the furthest offset the parse reached.
@@ -77,6 +78,8 @@ export class Parser<T = string> {
     then<S>(next: Parser<S | T>) {
         const then = (state: ParserState<T>) => {
             const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
             this.parser(state);
 
             if (!state.isError) {
@@ -87,9 +90,7 @@ export class Parser<T = string> {
                 }
             }
             mergeErrorState(state as ParserState<unknown>);
-            state.offset = savedOffset;
-            state.isError = true;
-            return state;
+            return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
         };
 
         return new Parser(
@@ -101,14 +102,20 @@ export class Parser<T = string> {
     or<S>(other: Parser<S | T>) {
         const or = (state: ParserState<T>) => {
             const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
             this.parser(state);
 
             if (!state.isError) {
                 return state;
             }
-            state.offset = savedOffset;
-            state.isError = false;
-            return other.parser(state as ParserState<S | T>);
+            state.rollback(savedOffset, savedValue, savedDiagnostics, false);
+            if (state.isError) return state;
+            other.parser(state as ParserState<S | T>);
+            if (state.isError) {
+                return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
+            }
+            return state;
         };
 
         return new Parser(
@@ -125,12 +132,19 @@ export class Parser<T = string> {
         // dead-on-error (the isError branch already returns first) and had zero
         // callers across value.js + parse-that — removed in the 1.0.0 breaking cut.
         const chain = (state: ParserState<T>) => {
+            const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
             this.parser(state);
 
             if (state.isError) {
-                return state;
+                return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
             }
-            return fn(state.value).parser(state as ParserState<S | T>);
+            fn(state.value).parser(state as ParserState<S | T>);
+            if (state.isError) {
+                return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
+            }
+            return state;
         };
 
         return new Parser(
@@ -141,8 +155,14 @@ export class Parser<T = string> {
 
     map<S>(fn: (value: T) => S, mapError: boolean = false) {
         const map = (state: ParserState<T | S>) => {
+            const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
             this.parser(state as ParserState<T>);
 
+            if (state.fault) {
+                return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
+            }
             if (!state.isError || mapError) {
                 return state.ok(fn(state.value as T));
             }
@@ -185,6 +205,8 @@ export class Parser<T = string> {
     skip<S>(parser: Parser<T | S>) {
         const skip = (state: ParserState<T>) => {
             const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
             this.parser(state);
 
             if (!state.isError) {
@@ -195,9 +217,7 @@ export class Parser<T = string> {
                 }
             }
             mergeErrorState(state as ParserState<unknown>);
-            state.offset = savedOffset;
-            state.isError = true;
-            return state;
+            return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
         };
         return new Parser(
             skip as ParserFunction<T>,
@@ -208,6 +228,8 @@ export class Parser<T = string> {
     next<S>(parser: Parser<S>) {
         const next = (state: ParserState<T>) => {
             const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
             this.parser(state);
 
             if (!state.isError) {
@@ -217,9 +239,7 @@ export class Parser<T = string> {
                 }
             }
             mergeErrorState(state as ParserState<unknown>);
-            state.offset = savedOffset;
-            state.isError = true;
-            return state;
+            return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
         };
         return new Parser(
             next as ParserFunction<S>,
@@ -230,10 +250,13 @@ export class Parser<T = string> {
     opt() {
         const opt = (state: ParserState<T>) => {
             const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
             this.parser(state);
             if (state.isError) {
                 mergeErrorState(state as ParserState<unknown>);
-                state.offset = savedOffset;
+                state.rollback(savedOffset, savedValue, savedDiagnostics, !!state.fault);
+                if (state.isError) return state;
                 return state.ok(undefined);
             }
             return state;
@@ -248,48 +271,47 @@ export class Parser<T = string> {
         const negate = (state: ParserState<T>) => {
             const savedOffset = state.offset;
             const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
             this.parser(state);
 
             if (state.isError) {
                 mergeErrorState(state as ParserState<unknown>);
-                state.offset = savedOffset;
+                state.rollback(savedOffset, savedValue, savedDiagnostics, false);
+                if (state.isError) return state;
                 return state.ok(savedValue);
-            } else {
-                state.offset = savedOffset;
-                state.isError = true;
-                return state;
             }
+            return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
         };
 
         const not = (state: ParserState<T>) => {
             const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
             this.parser(state);
 
             if (state.isError) {
                 mergeErrorState(state as ParserState<unknown>);
-                state.offset = savedOffset;
-                state.isError = true;
-                return state;
-            } else {
-                // self succeeded — check that excluded does NOT match
-                // at the post-self position (consuming negative lookahead).
-                const value1 = state.value;
-                const offset1 = state.offset;
-                parser!.parser(state as ParserState<S | T>);
-                if (state.isError) {
-                    // excluded failed at post-self position — success
-                    state.offset = offset1;
-                    state.unsafeSetValue(value1);
-                    state.isError = false;
-                    return state;
-                } else {
-                    // excluded matched — overall parse fails
-                    mergeErrorState(state as ParserState<unknown>);
-                    state.offset = savedOffset;
-                    state.isError = true;
-                    return state;
-                }
+                return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
             }
+
+            // self succeeded — check that excluded does NOT match at the
+            // post-self position (consuming negative lookahead).
+            const value1 = state.value;
+            const offset1 = state.offset;
+            const diagnostics1 = state.diagnostics.length;
+            parser!.parser(state as ParserState<S | T>);
+            if (state.isError) {
+                if (state.fault) {
+                    return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
+                }
+                // excluded failed at post-self position — success
+                state.rollback(offset1, value1, diagnostics1, false);
+                return state;
+            }
+
+            // excluded matched — overall parse fails
+            mergeErrorState(state as ParserState<unknown>);
+            return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
         };
 
         return new Parser(
@@ -306,17 +328,20 @@ export class Parser<T = string> {
         const inner = this;
         const minus = (state: ParserState<T>) => {
             const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
             state.unsafeCallRaw(excluded as Parser<unknown>);
             if (!state.isError) {
                 // excluded matched — fail
-                state.offset = savedOffset;
-                state.isError = true;
-                return state;
+                return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
             }
             // excluded failed — try self
-            state.offset = savedOffset;
-            state.isError = false;
+            state.rollback(savedOffset, savedValue, savedDiagnostics, false);
+            if (state.isError) return state;
             inner.parser(state);
+            if (state.isError) {
+                return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
+            }
             return state;
         };
 
@@ -336,15 +361,14 @@ export class Parser<T = string> {
         const inner = this;
         const peek = (state: ParserState<T>) => {
             const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
             inner.parser(state);
             if (state.isError) {
-                state.offset = savedOffset;
-                return state;
+                return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
             }
             const value = state.value;
-            state.offset = savedOffset;
-            state.value = value;
-            return state;
+            return state.rollback(savedOffset, value, savedDiagnostics, false);
         };
         return new Parser(
             peek as ParserFunction<T>,
@@ -362,22 +386,20 @@ export class Parser<T = string> {
         const inner = this;
         const la = (state: ParserState<T>) => {
             const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
             inner.parser(state);
             if (state.isError) {
-                state.offset = savedOffset;
-                return state;
+                return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
             }
             const value = state.value;
             const offsetAfterSelf = state.offset;
+            const diagnosticsAfterSelf = state.diagnostics.length;
             state.unsafeCallRaw(lookahead as Parser<unknown>);
             if (state.isError) {
-                state.offset = savedOffset;
-                state.isError = true;
-                return state;
+                return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
             }
-            state.offset = offsetAfterSelf;
-            state.unsafeSetValue(value);
-            return state;
+            return state.rollback(offsetAfterSelf, value, diagnosticsAfterSelf, false);
         };
         return new Parser(
             la as ParserFunction<T>,
@@ -395,27 +417,24 @@ export class Parser<T = string> {
         const inner = this;
         const wrapParser = (state: ParserState<T>) => {
             const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
             state.unsafeCallRaw(start as Parser<unknown>);
             if (state.isError) {
-                state.offset = savedOffset;
-                return state;
+                return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
             }
             const openEnd = state.offset;
             inner.parser(state);
             if (state.isError) {
                 mergeErrorState(state as ParserState<unknown>);
-                state.offset = savedOffset;
-                state.isError = true;
-                return state;
+                return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
             }
             const value = state.value;
             state.unsafeCallRaw(end as Parser<unknown>);
             if (state.isError) {
                 mergeErrorState(state as ParserState<unknown>);
                 reportUnclosedDelimiter(state as ParserState<unknown>, state.src.slice(savedOffset, openEnd), savedOffset);
-                state.offset = savedOffset;
-                state.isError = true;
-                return state;
+                return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
             }
             state.unsafeSetValue(value);
             return state;
@@ -436,27 +455,27 @@ export class Parser<T = string> {
         }
         // Fast path: trim_ws only (most common flag combination)
         if (this.flags === FLAG_TRIM_WS) {
-            trimStateWhitespace(state);
             const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
+            trimStateWhitespace(state);
             this.parser(state);
             if (state.isError) {
                 mergeErrorState(state as ParserState<unknown>);
-                state.offset = savedOffset;
-                state.isError = true;
-                return state as ParserState<T>;
+                return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
             }
             trimStateWhitespace(state);
             return state as ParserState<T>;
         }
         // General cold path for multiple flags
-        if (this.flags & FLAG_TRIM_WS) trimStateWhitespace(state);
         const savedOffset = state.offset;
+        const savedValue = state.value;
+        const savedDiagnostics = state.diagnostics.length;
+        if (this.flags & FLAG_TRIM_WS) trimStateWhitespace(state);
         this.parser(state);
         if (state.isError) {
             mergeErrorState(state as ParserState<unknown>);
-            state.offset = savedOffset;
-            state.isError = true;
-            return state as ParserState<T>;
+            return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
         }
         if (this.flags & FLAG_TRIM_WS) trimStateWhitespace(state);
         if (this.flags & FLAG_EOF) {
@@ -466,8 +485,7 @@ export class Parser<T = string> {
                     kind: "trailing-content",
                     message: "unexpected trailing content after parsed value",
                 });
-                state.offset = savedOffset;
-                state.isError = true;
+                state.rollback(savedOffset, savedValue, savedDiagnostics, true);
             }
         }
         return state as ParserState<T>;
@@ -482,29 +500,20 @@ export class Parser<T = string> {
         }
 
         if (parser.context?.name === "whitespace") {
-            // Flag-based: clone the parser and set FLAG_TRIM_WS.
-            // The call() method handles the trim pre/post logic.
             const inner = this;
-            const flaggedParser = new Parser(
-                ((state: ParserState<T>) => inner.call(state)) as ParserFunction<T>,
-                createParserContext("trimWhitespace", this as Parser<unknown>),
-            ) as Parser<T>;
-            flaggedParser.flags = this.flags | FLAG_TRIM_WS;
-            // Also provide the inline version for direct .parser() callers
             const whitespaceTrim = (state: ParserState<T>) => {
-                trimStateWhitespace(state);
                 const savedOffset = state.offset;
+                const savedValue = state.value;
+                const savedDiagnostics = state.diagnostics.length;
+                trimStateWhitespace(state);
                 inner.parser(state);
 
                 if (state.isError) {
                     mergeErrorState(state as ParserState<unknown>);
-                    state.offset = savedOffset;
-                    state.isError = true;
-                    return state;
-                } else {
-                    trimStateWhitespace(state);
-                    return state;
+                    return state.rollback(savedOffset, savedValue, savedDiagnostics, true);
                 }
+                trimStateWhitespace(state);
+                return state;
             };
 
             return new Parser(
@@ -518,20 +527,30 @@ export class Parser<T = string> {
 
     many(min: number = 0, max: number = Infinity) {
         const many = (state: ParserState<T>) => {
+            const initialOffset = state.offset;
+            const initialValue = state.value;
+            const initialDiagnostics = state.diagnostics.length;
             const est = min > 0 ? min : 0;
             const matches: T[] = est > 0 ? new Array<T>(est) : [];
             let len = 0;
 
             for (let i = 0; i < max; i += 1) {
                 const savedOffset = state.offset;
+                const savedValue = state.value;
+                const savedDiagnostics = state.diagnostics.length;
                 this.parser(state);
 
                 if (state.isError) {
-                    state.offset = savedOffset;
-                    state.isError = false;
+                    state.rollback(savedOffset, savedValue, savedDiagnostics, false);
+                    if (state.isError) {
+                        return state.rollback(initialOffset, initialValue, initialDiagnostics, true);
+                    }
                     break;
                 }
-                if (state.offset === savedOffset) break;
+                if (state.offset === savedOffset) {
+                    state.rollback(savedOffset, savedValue, savedDiagnostics, false);
+                    break;
+                }
                 if (len < est) {
                     matches[len] = state.value;
                 } else {
@@ -547,9 +566,7 @@ export class Parser<T = string> {
                 return state.ok(matches) as ParserState<T[]>;
             }
             mergeErrorState(state as ParserState<unknown>);
-            state.isError = true;
-            state.unsafeSetValue([]);
-            return state as unknown as ParserState<T[]>;
+            return state.rollback(initialOffset, initialValue, initialDiagnostics, true) as unknown as ParserState<T[]>;
         };
 
         return new Parser(
@@ -564,6 +581,9 @@ export class Parser<T = string> {
      */
     sepBy<S>(sep: Parser<S | T>, min: number = 0, max: number = Infinity) {
         const sepBy = (state: ParserState<T>) => {
+            const initialOffset = state.offset;
+            const initialValue = state.value;
+            const initialDiagnostics = state.diagnostics.length;
             const est = min > 0 ? min : 0;
             const matches: T[] = est > 0 ? new Array<T>(est) : [];
             let len = 0;
@@ -571,11 +591,17 @@ export class Parser<T = string> {
             // Parse first element
             {
                 const savedOffset = state.offset;
+                const savedValue = state.value;
+                const savedDiagnostics = state.diagnostics.length;
                 this.parser(state);
                 if (state.isError) {
-                    state.offset = savedOffset;
-                    state.isError = false;
-                } else if (state.offset !== savedOffset) {
+                    state.rollback(savedOffset, savedValue, savedDiagnostics, false);
+                    if (state.isError) {
+                        return state.rollback(initialOffset, initialValue, initialDiagnostics, true);
+                    }
+                } else if (state.offset === savedOffset) {
+                    state.rollback(savedOffset, savedValue, savedDiagnostics, false);
+                } else {
                     if (len < est) {
                         matches[len] = state.value;
                     } else {
@@ -589,10 +615,14 @@ export class Parser<T = string> {
             // trailing separators.
             while (len > 0 && len < max) {
                 const cpBeforeSep = state.offset;
+                const valueBeforeSep = state.value;
+                const diagnosticsBeforeSep = state.diagnostics.length;
                 sep.parser(state as ParserState<S | T>);
                 if (state.isError) {
-                    state.offset = cpBeforeSep;
-                    state.isError = false;
+                    state.rollback(cpBeforeSep, valueBeforeSep, diagnosticsBeforeSep, false);
+                    if (state.isError) {
+                        return state.rollback(initialOffset, initialValue, initialDiagnostics, true);
+                    }
                     break;
                 }
 
@@ -601,8 +631,10 @@ export class Parser<T = string> {
                 if (state.isError || state.offset === savedOffset) {
                     // Element after separator failed — backtrack past the
                     // separator to reject trailing separator.
-                    state.offset = cpBeforeSep;
-                    state.isError = false;
+                    state.rollback(cpBeforeSep, valueBeforeSep, diagnosticsBeforeSep, false);
+                    if (state.isError) {
+                        return state.rollback(initialOffset, initialValue, initialDiagnostics, true);
+                    }
                     break;
                 }
                 if (len < est) {
@@ -620,9 +652,7 @@ export class Parser<T = string> {
                 return state.ok(matches) as ParserState<T[]>;
             }
             mergeErrorState(state as ParserState<unknown>);
-            state.isError = true;
-            state.unsafeSetValue([]);
-            return state as unknown as ParserState<T[]>;
+            return state.rollback(initialOffset, initialValue, initialDiagnostics, true) as unknown as ParserState<T[]>;
         };
 
         return new Parser(
@@ -650,10 +680,15 @@ export class Parser<T = string> {
         const inner = this;
         const recover = (state: ParserState<T>) => {
             const checkpoint = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
             inner.parser(state);
 
             if (!state.isError) {
                 return state;
+            }
+            if (state.fault) {
+                return state.rollback(checkpoint, savedValue, savedDiagnostics, true);
             }
 
             // Snapshot current error state into a diagnostic, then try
@@ -661,16 +696,20 @@ export class Parser<T = string> {
             // off — the error propagates normally (e.g. at EOF).
             collectDiagnostic(state as ParserState<unknown>, checkpoint);
 
-            state.isError = false;
-            state.offset = checkpoint;
+            state.rollback(checkpoint, savedValue, state.diagnostics.length, false);
             sync.parser(state as ParserState<unknown>);
 
             if (state.isError) {
-                // Sync also failed — remove the collected diagnostic
-                popLastDiagnostic(state as ParserState<unknown>);
-                state.offset = checkpoint;
-                state.isError = true;
-                return state;
+                // Sync also failed — discard every diagnostic committed by
+                // the failed recovery transaction.
+                return state.rollback(checkpoint, savedValue, savedDiagnostics, true);
+            }
+            if (state.offset === checkpoint) {
+                state.fault ??= {
+                    kind: "RecoveryNonProgress",
+                    offset: checkpoint,
+                };
+                return state.rollback(checkpoint, savedValue, savedDiagnostics, true);
             }
 
             // Sync succeeded — return sentinel

@@ -3,7 +3,6 @@ import process from "node:process";
 import {
     all,
     any,
-    clearCollectedDiagnostics,
     dispatch,
     regex,
     string,
@@ -39,9 +38,7 @@ function parseDispatchFailure() {
 }
 function parseRecoveryMixed() {
     const input = cursor++ % 10 === 0 ? "123;" : "alpha";
-    const value = recovered.parse(input);
-    clearCollectedDiagnostics();
-    return value;
+    return recovered.parseState(input).value;
 }
 
 function medianNsPerOp(fn, iterations = 250_000) {
