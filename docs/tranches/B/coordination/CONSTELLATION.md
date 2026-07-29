@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | source/evidence `c480578`; canonical authority `f3ed3b6` plus this P-B1 amendment |
+| parse-that worktree | B / generic runtime producer | S5 source/evidence `926a3ad`; P-B1 authority `302c623` plus later authority reconciliation |
 | Value | V / sole CSS grammar, consumer and UI owner | repository HEAD `e01d0065fa6c7c80282280566af2b9a4add809bf`; formation packet independently admitted at reported SHA prefix `aa684060` with zero execution credit |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | post-Value-W3 ABI peer | no implementation or CSS parser before W3 |
@@ -71,6 +71,9 @@ authority order only (`302c623` local authority; root receipt SHA prefix
 `060995`) and supplies no formation admission, consumption, proof or release
 credit.
 V.L1/V.L5 remain blocked on the exact release chain above. Parse-that's held
-S4 accepted-M2 96-name matched-boundary CI-low is 9.063×, raw-internal CI-low
-is 9.017× and immutable-result CI-low is 4.573×; therefore the producer edge
-is **RED** and `NO RELEASE`.
+S5 accepted-M2 96-name matched-boundary CI-low is 8.985×, raw-internal CI-low
+is 9.040× and immutable-result CI-low is 7.254×. The compiled `.result`
+surface is pruned and equivalent timed immutable projection is consumer-owned.
+Every binding plane remains below ≥10× CI-low; therefore the producer edge is
+**RED** and `NO RELEASE`. The unchanged production JSON point guard is
+presently noisy RED and supplies neither formal admission nor S5 credit.

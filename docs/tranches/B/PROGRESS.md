@@ -26,14 +26,15 @@ Release status: **NO RELEASE**
 | S3 recovery | `2fc18dc` private prototype | Eight focused tests and strict TypeScript green; first corrected sample 9.365× parse state / 4.828× immutable result: **HELD, RED**. |
 | Accepted-M2 control | `c480578`, `artifacts/pass3/s-m2-control/` | Five corrected processes against `de36d57`: matched-boundary CI-low 8.179×, internal 8.698×, immutable result 4.420×. **RED**. |
 | S4 authored-span sequence | `75b76dd`, `artifacts/pass3/s4-spanned-sequence/` | Direct authored-span projection and adaptive winner-depth table improve accepted-M2 CI-low to 9.063× matched, 9.017× internal and 4.573× result. **HELD, RED**. |
+| S5 consumer-owned result | `926a3ad`, `artifacts/pass3/s5-consumer-result/` | The unconsumed compiled `.result` surface is pruned; a colocated consumer projector preserves equal immutable work and raises result CI-low to 7.254×. Matched 8.985× and internal 9.040× receive no advancement credit. **HELD, RED**. |
 
 ## Current executable state
 
 - Branch: `codex/css-totality-combinators-20260729`.
 - P-B1 authority head: `302c623b4ffddf76bc4ee042cad1d3c5e739ef9d`.
-- Source/evidence coordinates remain `c480578`
-  (`perf(runtime-prototype): bind corrected S assay to accepted M2 control`)
-  and `2fc18dc`; S4 is banked at `75b76dd`. None confers formation or
+- Source/evidence coordinates include `c480578`
+  (`perf(runtime-prototype): bind corrected S assay to accepted M2 control`),
+  `2fc18dc`, S4 at `75b76dd`, and S5 at `926a3ad`. None confers formation or
   execution credit.
 - S/recovery evidence commit:
   `2fc18dc1ec3a0541b85e9e440fca85028844673c`.
@@ -44,14 +45,15 @@ Release status: **NO RELEASE**
   receipt is reported at SHA prefix `060995`. That receipt satisfies authority
   ordering only. It is not formation admission, candidate consumption,
   formal proof or release evidence.
-- The exact hash of this post-S4 authority reconciliation is recorded in its
-  boundary receipt rather than self-embedded. After that bank, the untracked
-  `data` symlink is the only expected status entry and remains untouched.
+- The post-S4 authority reconciliation is banked at `6f893be`. After each
+  source or authority bank, the untracked `data` symlink is the only expected
+  status entry and remains untouched.
 - Corrected focused gates: 8/8 prototype tests and strict TypeScript green.
-- Fresh current package gates: 14/14 files and 134/134 tests passed;
-  production build and all package proof scripts passed. `proof:perf` remains
-  a package regression/dispatch guard and carries no formal ≥10× admission
-  credit.
+- Fresh S5 package gates: 14/14 files and 134/134 tests passed; strict
+  TypeScript, production build and non-performance proof scripts passed. The
+  unchanged production JSON `proof:perf` point guard is presently noisy RED
+  at +23.6% to +24.4% against 15%; it carries no S5 advancement or formal
+  ≥10× admission credit.
 - Corrected five-process 96-name matched-boundary sequence:
   CI-low 9.033×, median 9.655×, high 9.986×.
 - Corrected five-process immutable-result sequence:
@@ -62,6 +64,10 @@ Release status: **NO RELEASE**
 - S4 five-process sequence against accepted M2:
   matched-boundary CI-low 9.063×, raw-internal CI-low 9.017×, and
   immutable-result CI-low 4.573×. All remain RED.
+- S5 five-process sequence against accepted M2:
+  matched-boundary CI-low 8.985×, raw-internal CI-low 9.040×, and
+  immutable-result CI-low 7.254×. The result improvement is held; unchanged
+  parser-source planes receive no advancement credit. All remain RED.
 - Corrected 753-name sequence: one process at 78.839×; not a confidence
   bound and not admission.
 - Corrected 96-name recovery: one process at 9.365× matched-boundary and
@@ -83,8 +89,9 @@ Release status: **NO RELEASE**
    conditional frontier clearing, projection branches and row-displaced
    tables were measured and killed.
 7. Deep immutable result copying/freezing is a measured Amdahl bottleneck.
-   It cannot be hidden by a faster recognizer or excluded from equal-work
-   admission.
+   The compiler's unconsumed `.result` method and result types are pruned;
+   equivalent timed immutable projection is colocated with the consumer and
+   remains mandatory in admission.
 8. Value needs no generic public API widening. Successful immutable
    recovery diagnostics and opaque unknown syntax remain Value-owned result
    shapes supported by generic parse provenance.
