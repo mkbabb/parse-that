@@ -8,6 +8,8 @@ use std::fmt::Write as _;
 use bbnf_regex::{DEAD_STATE, RegexTablePlan};
 use parse_that::{Input, RegexPlan, RegexTerminal, Run, Step, regex};
 
+const _: () = assert!(parse_that::KERNEL_ABI == 2);
+
 fn recognized_prefix(plan: &RegexTablePlan, input: &[u8]) -> Option<usize> {
     let runtime_plan = RegexPlan::new(
         plan.byte_classes(),
