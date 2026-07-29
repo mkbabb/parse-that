@@ -1,6 +1,6 @@
 [workspace]
 members = ["parse_that", "regex"]
-resolver = "2"
+resolver = "3"
 
 
 [profile.release-lto]

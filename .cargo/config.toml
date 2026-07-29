@@ -1,73 +1,27 @@
-# .cargo/config.toml — parse-that sibling repo
-#
-# Mirrors bbnf-lang's toolchain posture so cross-repo path-patched
-# builds (bbnf-regex + parse_that pulled into bbnf-lang's Cargo.toml
-# via [patch.crates-io]) observe the same rustflags + ax-iter profile.
-# Source of truth for pin is bbnf-lang's rust-toolchain.toml (mirrored
-# into this repo as a same-date twin per B1.W2.c propagation).
-
-[build]
-rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
-
-# macOS arm64: default system ld64 via clang. lld is opt-in; developers
-# who want it must `brew install lld` (separate formula from llvm) and
-# uncomment the block below, adjusting the path from `brew --prefix lld`.
-[target.aarch64-apple-darwin]
-rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
-
-# Opt-in lld (requires `brew install lld`):
-# [target.aarch64-apple-darwin]
-# linker    = "clang"
-# rustflags = [
-#     "-C", "link-arg=-fuse-ld=/opt/homebrew/opt/lld/bin/ld.lld",
-#     "-Zthreads=8",
-#     "-Zshare-generics=y",
-# ]
-
-# Linux x86_64: bundled rust-lld, no extra install.
 [target.x86_64-unknown-linux-gnu]
-rustflags = [
-    "-C", "link-arg=-fuse-ld=lld",
-    "-Zthreads=8",
-    "-Zshare-generics=y",
-]
-
-# ── Profiles ────────────────────────────────────────────────────────────────
-# Three-tier surface mirrored from bbnf-lang's .cargo/config.toml so cross-
-# repo path-patched builds observe identical profile semantics:
-#   * ax-iter  — dev-loop iteration (fast compile, minimal debuginfo).
-#   * ay-final — release tier for correctness benches + publishable binaries.
-#   * bench-ci — iai-callgrind under valgrind on Linux CI; full debuginfo,
-#                no LTO (valgrind instruments un-LTO'd IR).
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
 
 [profile.ax-iter]
-inherits      = "dev"
-opt-level     = 0
-debug         = "line-tables-only"
-incremental   = true
+inherits = "dev"
+opt-level = 0
+debug = "line-tables-only"
+incremental = true
 codegen-units = 256
 
-# ay-final: release profile tuned for correctness benchmarks and publishable
-# binaries (parse-that bench parity, regex DFA codegen). Fat LTO + single
-# codegen unit. Mirrors bbnf-lang's [profile.ay-final].
 [profile.ay-final]
-inherits        = "release"
-lto             = "fat"
-codegen-units   = 1
-debug           = 1                   # keep samply-resolvable symbols
-strip           = false
+inherits = "release"
+lto = "fat"
+codegen-units = 1
+debug = 1
+strip = false
 split-debuginfo = "packed"
 
-# bench-ci: for iai-callgrind runs under valgrind on Linux CI. Full
-# debuginfo (callgrind needs it for source attribution) and no LTO
-# (valgrind instruments the un-LTO'd IR). Mirrors bbnf-lang's
-# [profile.bench-ci].
 [profile.bench-ci]
-inherits        = "release"
-debug           = "full"
-lto             = "off"
-codegen-units   = 1
+inherits = "release"
+debug = "full"
+lto = "off"
+codegen-units = 1
 
 [alias]
 iter-check = "check --profile ax-iter"
-iter-test  = "nextest run --cargo-profile ax-iter"
+iter-test = "nextest run --cargo-profile ax-iter"

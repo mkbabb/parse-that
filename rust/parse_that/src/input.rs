@@ -10,7 +10,7 @@ struct EmptySourceId(NonZeroUsize);
 impl EmptySourceId {
     fn fresh() -> Self {
         let id = NEXT_EMPTY_SOURCE_ID
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |current| {
+            .try_update(Ordering::Relaxed, Ordering::Relaxed, |current| {
                 current.checked_add(1)
             })
             .unwrap_or_else(|_| panic!("parse_that input source identity space exhausted"));

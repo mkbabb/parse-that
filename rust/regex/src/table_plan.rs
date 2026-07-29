@@ -530,8 +530,8 @@ impl RegexTablePlan {
             }
         }
         let mut transitions = Vec::with_capacity(transition_count);
-        for bytes in encoded[accepting_end..].chunks_exact(4) {
-            transitions.push(u32::from_le_bytes(bytes.try_into().unwrap()));
+        for &bytes in encoded[accepting_end..].as_chunks::<4>().0 {
+            transitions.push(u32::from_le_bytes(bytes));
         }
         Self::from_parts(
             byte_classes,
