@@ -47,8 +47,8 @@ Release status: **NO RELEASE**
   `d323f56` (`perf(parser-prototype): falsify compiled dispatch across cold
   and hot planes`).
 - Latest canonical authority reconciliation:
-  `d76b543` (`docs(parser-tranche): bind the P2-UO authority coordinate`);
-  the P2-complete authority reconciliation is being banked after `c3d42d4`.
+  `e448b24` (`docs(parser-tranche): close P2 with zero surviving
+  candidates`).
 - Corrected P1 root intake:
   `abc9479d7ea5fa4c76deca752428faf8b332f280e6e637de12b12b25e8e2ad6c`;
   it binds committed `c9c2108` bytes, P1 only, and grants no later credit.

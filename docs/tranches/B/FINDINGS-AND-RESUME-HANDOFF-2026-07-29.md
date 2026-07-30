@@ -16,8 +16,8 @@ Status: **ACTIVE FORMATION — RED — NO RELEASE**
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
 - Canonical owner authority:
-  `d76b543` (`docs(parser-tranche): bind the P2-UO authority coordinate`);
-  the P2-complete authority reconciliation follows `c3d42d4`.
+  `e448b24` (`docs(parser-tranche): close P2 with zero surviving
+  candidates`).
 - P2 registry coordinate:
   `c3d42d4` (`docs(parser-research): complete the P2 full-subject
   disposition`).
