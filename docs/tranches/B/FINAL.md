@@ -51,8 +51,10 @@ preceding corrected S/recovery kernel and XR-21 amendment.
 
 ## Handoff
 
-Resume at `PROGRESS.md §Next executable boundary`. Preserve the active branch,
-private prototype changes, amended raw artefacts and user-owned untracked
-`data` symlink. Resume with unordered composition and generic CSS-needed leaf
-proof; revisit recursion only with a real Value/JSON-shaped AST product. Do
-not publish, widen the API or begin Value-owned CSS work from this repository.
+Resume from
+`FINDINGS-AND-RESUME-HANDOFF-2026-07-29.md` and
+`PROGRESS.md §Next executable boundary`. Preserve the active branch, banked
+private prototype evidence and user-owned untracked `data` symlink. Resume
+with unordered composition and generic CSS-needed leaf proof; revisit
+recursion only with a real Value/JSON-shaped AST product. Do not publish,
+widen the API or begin Value-owned CSS work from this repository.
