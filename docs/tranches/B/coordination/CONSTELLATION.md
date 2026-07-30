@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | P1 `69f72f7`; P2 `c3d42d4` (row-complete, zero candidates); P3 same-FIRST `f4b9abb` (D divergence, no P3 completion), authority `730c244`; cold/hot `d323f56` (compiled table killed); mixed-overlap U `68055bd` (D killed); shaped `d62b73a`; P2-L `5822ae2`; S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
+| parse-that worktree | B / generic runtime producer | P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a` (row-complete, zero candidates); direct closure `19c1e12` (killed); same-FIRST `f4b9abb` (D killed), authority `bd09bde`; cold/hot `d323f56`; mixed-overlap U `68055bd`; shaped `d62b73a`; P2-L `5822ae2`; S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
@@ -21,10 +21,10 @@ later released coordinate are the only executable package boundaries.
 
 | Surface | Writer | Other party |
 |---|---|---|
-| generic parse runtime, result provenance, spans, recovery, diagnostics, recursion, performance | parse-that | Value and JSON consume |
+| generic parse runtime, result provenance, spans, recovery, diagnostics, recursion, performance | parse-that | Value and logical `parse-that#jsonParser` consume |
 | CSS Syntax/VDS/selectors/at-rules/Webref grammar, CSS results/inverses, transform/path, UI | Value | parse-that reads receipts |
 | local CSS/path/serializer deletion and animation runtime | Keyframes | Value supplies surface; parse-that does not write |
-| grammar IR/ABI after `V.L6.css-path-abi-freeze` | BBNF | parse-that sends frozen receipt only |
+| frozen generic ABI after `V.L6.css-path-abi-freeze` | parse-that | BBNF receives one outbound handoff packet |
 
 ## Release-cycle cure
 
@@ -38,14 +38,14 @@ Formation precedes and cannot borrow credit from execution:
 4. Parse-that freezes a locally correct, reproducible production-source
    candidate.
 5. Parse-that produces one immutable unpublished candidate tarball.
-6. Value and parse-that's JSON grammar consume the exact tarball SHA.
+6. Value and logical `parse-that#jsonParser` consume the exact tarball SHA.
 7. Both return equivalent-product, deletion and formal consumer-proof
    receipts; corrected profiles clear ≥10× at CI-low at every binding scale.
 8. Execution Clean A and execution Clean B accept the same frozen source,
    tarball and consumer evidence.
 9. Parse-that releases.
 10. Value rebinds to the released coordinate and reruns full gates.
-11. BBNF receives the frozen ABI receipt after
+11. Parse-that sends BBNF the frozen ABI handoff after
     `V.L6.css-path-abi-freeze`.
 
 No raw-source alias, mutable link, dirty head, package-link evidence or
@@ -54,8 +54,9 @@ competing grammar can close an edge.
 ## Conflict resolution
 
 - A CSS/domain request is routed to Value; parse-that exposes no domain type.
-- A generic runtime request needs Value plus JSON consumption before it can
-  alter the release surface.
+- A generic runtime request needs Value plus logical
+  `parse-that#jsonParser` consumption before it can alter the release
+  surface.
 - A write overlap stops at the immutable package boundary; repositories do
   not edit each other's active worktrees.
 - A changed candidate invalidates both consumer receipts and restarts at the
@@ -67,9 +68,9 @@ competing grammar can close an edge.
 
 Value formation is independently admitted with zero execution credit.
 Parse-that P1 reconciliation is complete at `69f72f7` and P2 is row-complete
-at `c3d42d4` with zero admitted candidates. P3, isolated every-subject proof,
-and formation Clean A/B remain open or blocked. P3's same-FIRST hostile case
-is banked at `f4b9abb`; it grants no P3 completion or later credit. The
+at `c3d42d4`. P3 is row-complete at `43d7d4a`; no candidate survives.
+The isolated every-subject proof remains RED and formation Clean A/B remain
+blocked. The
 root receipt reported at SHA prefix
 `060995` is `P.exec.PB1-order-ack`: an execution-phase acknowledgment of
 future execution order/authority. It feeds private freeze only after
@@ -86,9 +87,9 @@ correctness are banked, but their performance is RED. Mixed-overlap U retires
 D. P2-C retires the staged graph/table after construction and cold
 end-to-end lose by more than an order of magnitude; no replacement family
 survives P2.
-Value-owned stylesheet
-recovery and live Value/JSON receipts are later execution work. The producer
-edge remains **RED** and `NO RELEASE`. U's reported +21.3% to +45.4%
+Value-owned stylesheet recovery and live Value plus logical
+`parse-that#jsonParser` receipts are later execution work. The producer edge
+remains **RED** and `NO RELEASE`. U's reported +21.3% to +45.4%
 production JSON range has no raw log in its manifest and is unsealed. P2-L
 seals a later unchanged-production RED run at +82.7% against the 15% guard.
 Private prototype changes cause neither production result; no failure is
@@ -120,6 +121,15 @@ immutable recovery frontiers when diagnostics are disabled and converges only
 when they are enabled. Accepted-M2 traversal order is binding; no D repair,
 checkpoint widening or recovery layer is admitted.
 
+P3 direct closure at `19c1e12` adds no consumer or API edge. Its private
+scannerless kernel returns 36 equal warmed success projections and two equal
+failure-state subsets at 4/8/16/33/96/753, but only reaches
+1.0656–1.5238× and increases retained parse-state heap 12.4%. Complete state,
+failure-result, invalid-M2, cold/first, alternating-shape, bootstrap and
+scaled diagnostics-on recovery planes remain RED. P3's registry at
+`43d7d4a` kills the candidate and completes the full-subject pass with zero
+survivors.
+
 P2-L at `5822ae2` adds no consumer or API edge. Its 51 equal products place
 success at 0.0718–1.3079×; callback-loop, ASCII-table and public
 sticky-wrapper widenings are killed.
@@ -135,7 +145,6 @@ P2-C at `d323f56` adds no consumer or API edge. At 4/8/16/33/96/753 names,
 construction is 0.0597–0.0785× and build-plus-first-parse is
 0.0696–0.0846×. Stabilized exact-product success misses 10× below 753 and
 Unicode cold routing is 1.4996× hot. The compiled graph/table surface is
-retired. P2's registry at `c3d42d4`, constrained by same-FIRST evidence at
-`f4b9abb`, routes P3 to direct closure consolidation and successor-surface
-pruning only. Ownership, release
-order and Value's blocks are unchanged.
+retired. P1/P2/P3 are complete, but no isolated candidate exists and the
+producer edge remains RED. Ownership, release order and Value's blocks are
+unchanged.

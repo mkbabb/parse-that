@@ -6,9 +6,9 @@ Tranche status: `in_progress`
 
 Active wave: `B.W0 - Candidate-to-Release Closure`
 
-Formation status: **RED — P1 and P2 are row-complete; every implemented
-replacement family is retired; P3, an every-subject ≥10× prototype and both
-formation clean audits remain open or RED**
+Formation status: **RED — P1, P2 and P3 are row-complete with zero surviving
+candidates; the isolated every-subject ≥10× prototype is RED and both
+formation clean audits remain blocked**
 
 Release status: **NO RELEASE**
 
@@ -39,13 +39,16 @@ Release status: **NO RELEASE**
 | P2-UO mixed-overlap unordered | `68055bd`, `artifacts/pass3/p2-unordered-overlap/` | Every 4/8/16/33-member success uses D's live residual route while returning equal slots, UTF-16 spans, immutable recovery diagnostics and failures. Twenty AB/BA points are 0.7362–2.2994×; several binding planes lose and stable 8/16/33-member grammar heap is ~2.06–2.40× control. **CORRECTNESS GREEN; PERFORMANCE RED; D KILL; NO BOOTSTRAP; TERMINAL P2 EVIDENCE**. |
 | P2-C cold/hot dispatch | `d323f56`, `artifacts/pass3/p2-cold-hot/` | Equal EOF/span products at 4/8/16/33/96/753 measure construction, build+first parse, stabilized hot, alternating shapes, failure and Unicode cold edges. Construction is 0.0597–0.0785×, cold end-to-end 0.0696–0.0846×, small/middle hot below 3.758× and Unicode hot 1.500×. **CORRECTNESS GREEN; COMPILED TABLE KILL; NO BOOTSTRAP**. |
 | P2 full-subject disposition | `c3d42d4`, `research/P2-FULL-SUBJECT-DISPOSITION-2026-07-29.md` | All twenty P1 rows have exact KEEP/KILL/RED/ROUTED outcomes. Every implemented replacement family is retired; surviving mechanisms are laws/fixtures, not a candidate. **P2 COMPLETE; FORMATION RED; P3 NEXT**. |
-| P3 same-FIRST recovery | `f4b9abb`, `artifacts/pass3/p3-same-first/` | Six scannerless permutations compare accepted-M2 exhaustive traversal with retired D, diagnostics off and on. Values, authored slots, UTF-16 spans, final offset and success are equal, but four diagnostics-off recovery frontiers differ and D changes provenance when diagnostics are enabled. **HOSTILE CASE COMPLETE; D KILL RECONFIRMED; P3 IN PROGRESS; NO PUBLIC/RELEASE CREDIT**. |
+| P3 same-FIRST recovery | `f4b9abb`, `artifacts/pass3/p3-same-first/` | Six scannerless permutations compare accepted-M2 exhaustive traversal with retired D, diagnostics off and on. Values, authored slots, UTF-16 spans, final offset and success are equal, but four diagnostics-off recovery frontiers differ and D changes provenance when diagnostics are enabled. **HOSTILE CASE COMPLETE; D KILL RECONFIRMED; NO PUBLIC/RELEASE CREDIT**. |
+| P3 direct closure | `19c1e12`, `artifacts/pass3/p3-direct-closure/` | A 510-line scannerless closure kernel with native sticky leaves, scalar rollback, spans, immutable recovery and typed recursion returns 36 equal warmed success projections plus two equal failure-state subsets. Complete state, failure-result, invalid-M2, cold/first, alternating-shape, bootstrap and scaled diagnostics-on recovery planes are absent. Measured success is only 1.0656–1.5238×; retained parse-state heap grows 12.4%. **BOUNDED CORRECTNESS; PERFORMANCE/OMITTED PLANES RED; CANDIDATE KILL; NO BOOTSTRAP**. |
+| P3 full-subject disposition | `43d7d4a`, `research/P3-FULL-SUBJECT-DISPOSITION-2026-07-29.md` | All twenty subjects have terminal P3 findings. No implemented family survives as a candidate. **P3 COMPLETE; ISOLATED PROOF RED; FORMATION CLEAN A/B BLOCKED**. |
 
 ## Current executable state
 
 - Branch: `codex/css-totality-combinators-20260729`.
 - Latest source/evidence coordinate:
-  `f4b9abb` (`test(parser-prototype): bind same-FIRST recovery divergence`).
+  `19c1e12` (`perf(parser-prototype): falsify the direct closure surface on
+  complete products`).
 - Latest canonical authority reconciliation:
   `730c244` (`docs(parser-tranche): bind same-FIRST recovery law into P3`).
 - Corrected P1 root intake:
@@ -69,14 +72,18 @@ Release status: **NO RELEASE**
 - P3 same-FIRST objects at `f4b9abb`: manifest-file SHA-256
   `90115ccd7b567591c56e68870605331f99078be4baf246a10e246649829ae49e`;
   it binds the hostile source, exact twelve-product result and ruling.
+- P3 direct-closure objects at `19c1e12`: manifest-file SHA-256
+  `b14b2d0d138c9d6900a7dcd956c9d2b71a8b3ff3384d6fd6d2e619486bad5fe6`;
+  it binds source, corpora, tests, exact AB/BA data, CPU and V8 evidence.
 - P-B1 authority head: `302c623b4ffddf76bc4ee042cad1d3c5e739ef9d`.
 - Source/evidence coordinates include `c480578`
   (`perf(runtime-prototype): bind corrected S assay to accepted M2 control`),
   `2fc18dc`, S4 at `75b76dd`, S5 at `926a3ad`, S6 at `062c147`, S7 at
   `20b5f52`, S8 at `27bf872`, U at `19ad1ac`, P2-L at `5822ae2`, shaped
   products at `d62b73a`, mixed-overlap U at `68055bd`, cold/hot dispatch at
-  `d323f56`, the P2 registry at `c3d42d4`, and P3 same-FIRST recovery at
-  `f4b9abb`. None confers formation admission or execution credit.
+  `d323f56`, the P2 registry at `c3d42d4`, P3 same-FIRST recovery at
+  `f4b9abb`, direct closure at `19c1e12`, and the P3 registry at `43d7d4a`.
+  None confers formation admission or execution credit.
 - S/recovery evidence commit:
   `2fc18dc1ec3a0541b85e9e440fca85028844673c`.
 - Canonical authority before P-B1:
@@ -124,6 +131,16 @@ Release status: **NO RELEASE**
   14/14 files and 134/134 tests; strict TypeScript; production build and
   `proof:all` green. The unchanged production guard records +1.3% JSON and
   74.8% faster dispatch; it is not formation proof.
+- Banked P3 direct-closure gates at `19c1e12`: focused 6/6; candidate-only
+  frozen JSON 33 valid/7 invalid; package 14/14 files and 134/134 tests;
+  strict TypeScript; production build, artifact manifest and `proof:all`
+  green. The sealed unchanged-production guard is +8.2% JSON with 73.8%
+  faster dispatch; it is guard-only.
+- Fresh canonical-document replay: manifest, no-CSS-surface, subpath,
+  packrat, no-span and no-dead-combinator proofs are green; `proof:perf` is
+  RED at +16.0% JSON against the 15% guard (2,022 ns versus 1,742 ns). The
+  document-only diff is not causal, the result is not waived, and current
+  formation remains RED.
 - U gates: 24/24 unordered cases plus 13/13 S-kernel regressions; package
   suite 14/14
   files and 134/134 tests; strict TypeScript; production build; manifest,
@@ -210,6 +227,16 @@ Release status: **NO RELEASE**
   `10/6/1/1/10/5`, then converges to M2 when diagnostics are enabled. The
   difference is traversal provenance, not rollback leakage. D remains killed;
   no new checkpoint or recovery layer is admitted.
+- P3 direct closure expresses the survivor laws without compiler, table,
+  unordered engine, source-leaf seam, packrat, `/utils` or parser-owned
+  result. All 36 warmed success projections and two failure-state subsets are
+  equal, but the 4/8/16/33/96/753 state/value/result range is only
+  1.0656–1.5238×. Construction calls are prewarmed and measure
+  1.7118–1.9534×; failures measure 1.3459–1.7557×; grammar heap is 40.5%
+  smaller and retained parse-state heap 12.4% larger. The harness omits
+  complete state, failure-result, invalid-M2, build-plus-first/cold,
+  alternating-shape, bootstrap and scaled diagnostics-on recovery proof. It
+  is killed without promoting the bounded correctness subset.
 - P2-C closes cold/hot dispatch. Candidate/control construction ratios are
   0.0597–0.0785× and build-plus-first-parse ratios 0.0696–0.0846× across
   4/8/16/33/96/753. Stabilized exact-product success is
@@ -249,7 +276,8 @@ Release status: **NO RELEASE**
 8. Value needs no generic public API widening. Successful immutable
    recovery diagnostics and opaque unknown syntax remain Value-owned result
    shapes supported by generic parse provenance.
-9. The named second non-CSS consumer is parse-that's `jsonParser`.
+9. The named second non-CSS consumer is logical `parse-that#jsonParser`; it
+   is not a separate repository.
 10. `/utils` currently fails the two-consumer law and is pruned from a
     successor unless exact later receipts reverse the census.
 11. Generic cached recursion is correctness-green but performance-RED.
@@ -271,9 +299,13 @@ Release status: **NO RELEASE**
     general candidate. S7's scalar transaction, run-owned recovery and
     consumer projection survive only as laws; its warmed high-arity result is
     not a runtime admission.
-15. `/utils` has no live consumer and only one Value prototype use. Packrat has
-    no live Value/JSON consumer. Both are excluded from a successor unless P3
-    binds two exact consumers; no alias or compatibility tier is allowed.
+15. `/utils` has no live consumer and only one Value prototype use. Packrat
+    has no live Value plus logical `parse-that#jsonParser` consumption. Both
+    are excluded from a successor unless future exact receipts bind two
+    consumers; no alias or compatibility tier is allowed.
+16. The direct-closure candidate is the terminal P3 challenge. Its net source
+    and grammar-heap cuts do not overcome the every-product floor; no private
+    closure runtime survives or may coexist with production.
 
 ## Formation and release chains
 
@@ -286,12 +318,12 @@ and result-plane equivalent-product ≥10× prototype proof → formation Clean 
 Execution:
 
 `private/formal source freeze → immutable unpublished pack → Value CSS +
-jsonParser consume the exact SHA → equivalent output, deletion and formal
-consumer CI-low proof → execution Clean A → execution Clean B → parse-that
-release → Value released-coordinate rebind → BBNF receipt after
-V.L6.css-path-abi-freeze`
+logical parse-that#jsonParser consume the exact SHA → equivalent output,
+deletion and formal consumer CI-low proof → execution Clean A → execution
+Clean B → parse-that release → Value released-coordinate rebind →
+V.L6.css-path-abi-freeze → parse-that→BBNF ABI handoff`
 
-The final receipt is specifically gated by Value
+The outbound parse-that handoff is specifically gated by Value
 `V.L6.css-path-abi-freeze`.
 
 Formation admission creates zero execution credit. No later state in either
@@ -299,19 +331,19 @@ chain may be recorded while an earlier arrow is RED.
 
 ## Next executable boundary
 
-1. The exact same-FIRST speculative-recovery overlap case is banked at
-   `f4b9abb`. Preserve its diagnostics-toggle invariance and accepted-M2
-   closure traversal law; do not repair D or widen the scalar checkpoint.
-2. Form the smallest direct closure-kernel surface cut from the P2 survivor
-   laws. Delete or exclude the compiled graph/table, unordered engine, generic
-   source leaf, compiler-owned result, `/utils`, and unconsumed packrat
-   helpers. Do not implement production execution in this formation pass.
-3. Re-run the unchanged shaped stylesheet and JSON corpora plus
-   4/8/16/33/96/753 cold/hot/result planes. Any new mechanism must clear the
-   every-scale point floor before exact bootstrap.
-4. Preserve P2's terminal retirements; a killed family may reopen only from a
-   new exact two-consumer need, not a renamed prototype. Run
-   formation Clean A/B only after the isolated prototype proof is green.
-   Production-source freeze and packing remain later execution boundaries.
+1. P1/P2/P3 are complete at `69f72f7`/`c3d42d4`/`43d7d4a`. Do not rerun,
+   rename or recombine their killed families.
+2. Formation may continue only from a genuinely new generic mechanism with
+   one exact Value-shaped and one logical `parse-that#jsonParser`-shaped
+   consumed need. State the mechanism and why it escapes the
+   1.0656–1.5238× measured-success ceiling before implementing it in an
+   isolated prototype.
+3. Preserve scalar rollback, diagnostics-toggle-invariant recovery, exact
+   UTF-16 slots/spans, typed nesting, run isolation and consumer projection.
+   Admit no compiler/table, tokenizer/scanner, VM, event tape, compatibility
+   layer, default memo, `/utils` alias or second runtime.
+4. Reuse the frozen corpora and 4/8/16/33/96/753 planes. If any point estimate
+   is below 10×, retire the mechanism without bootstrap. Formation Clean A/B
+   remain blocked until one isolated candidate clears every point.
 
 `FINAL.md` remains an open gate ledger. Tranche B is not closeable.

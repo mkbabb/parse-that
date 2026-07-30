@@ -17,7 +17,7 @@ it before publication, and releases only after displaced machinery is deleted.
 ## Goal criterion
 
 One released parse-that coordinate supplies the minimum generic runtime used
-by Value's sole full-CSS grammar and parse-that's non-CSS JSON grammar. Both
+by Value's sole full-CSS grammar and logical `parse-that#jsonParser`. Both
 consumers are source-direct, scannerless, semantically equivalent, simpler
 after migration, and ≥10× faster at CI-low on the frozen equal-work planes.
 
@@ -97,12 +97,14 @@ consumption, proof, publication or release credit.
 8. **Immutable unpublished candidate.** Produce one `npm pack` tarball from
    the frozen source with exact commit, file manifest and SHA-256. Later
    evidence names this object; no consumer reads a mutable link or dirty head.
-9. **Exact-SHA consumption.** Value and parse-that's `jsonParser` consume the
-   same candidate tarball. Value authors the sole scannerless CSS Syntax,
-   selectors, at-rules, VDS, Webref and named-extension grammar; JSON uses the
-   same generic primitives. BBNF is not substituted.
-10. **Consumer equivalence, deletion and formal proof.** Value and JSON return
-   exact receipts for values, spans, diagnostics, recovery and failures;
+9. **Exact-SHA consumption.** Value and logical `parse-that#jsonParser`
+   consume the same candidate tarball. Value authors the sole scannerless CSS
+   Syntax, selectors, at-rules, VDS, Webref and named-extension grammar; the
+   logical JSON consumer uses the same generic primitives. BBNF is not
+   substituted.
+10. **Consumer equivalence, deletion and formal proof.** Value and logical
+   `parse-that#jsonParser` return exact receipts for values, spans,
+   diagnostics, recovery and failures;
    delete displaced machinery; run WPT/browser differentials; and establish
    corrected AB/BA exact-bootstrap ≥10× CI-low at every frozen binding scale
    and equal semantic plane, with allocation, CPU, deopt and GC artefacts.
@@ -113,9 +115,9 @@ consumption, proof, publication or release credit.
 13. **Value released-coordinate rebind.** Rebind Value to the released
    coordinate and rerun its tests, build, browser/WPT differentials and pack
    proof.
-14. **Post-W3 ABI receipt.** Send BBNF the frozen generic surface after
-   Value `V.L6.css-path-abi-freeze`; no implementation dependency or
-   competing parser is introduced.
+14. **Post-freeze ABI handoff.** Parse-that sends BBNF the frozen generic
+   surface after Value `V.L6.css-path-abi-freeze`; no implementation
+   dependency or competing parser is introduced.
 
 ## Critical files and ownership
 
@@ -127,7 +129,7 @@ consumption, proof, publication or release credit.
 | `typescript/test/**`, `docs/tranches/B/**` | parse-that | Correctness, performance, audit and durable handoff evidence. |
 | Value CSS grammar, AST, inverses, transform/path and UI | Value | Parse-that reads receipts only and does not write this surface. |
 | Keyframes CSS/path/serializer migration | Keyframes through Value | Consumer receipt only. |
-| BBNF | BBNF after `V.L6.css-path-abi-freeze` | ABI receipt only. |
+| frozen generic ABI packet | parse-that → BBNF after `V.L6.css-path-abi-freeze` | outbound handoff receipt only |
 
 ## Completion criterion — hard gates
 
@@ -146,8 +148,8 @@ Tranche B closes only when:
 5. executable Value-owned CSS coverage spans the frozen CSS Syntax,
    selectors, at-rules, VDS and Webref denominator plus separately named
    Value additions, with WPT and browser differentials;
-6. the JSON consumer uses the same generic primitives and returns the
-   frozen equivalent products;
+6. logical `parse-that#jsonParser` uses the same generic primitives and
+   returns the frozen equivalent products;
 7. consumer diffs prove deletion or consolidation of displaced parser,
    scanner, serializer and compatibility machinery;
 8. ≥10× holds at exact-bootstrap CI-low for every frozen binding scale and
@@ -157,11 +159,12 @@ Tranche B closes only when:
    artefacts are sealed to source, environment, input and candidate pack;
 10. `/utils` has two exact consumers or is pruned before release;
 11. one immutable unpublished candidate tarball is consumed by Value and
-    JSON, and two clean adversarial passes accept the same object;
+    logical `parse-that#jsonParser`, and two clean adversarial passes accept
+    the same object;
 12. the successor is released, Value rebinds to the released coordinate,
     and its full gates remain green;
-13. the BBNF receipt after `V.L6.css-path-abi-freeze` names only the frozen
-    generic surface;
+13. the parse-that → BBNF handoff after `V.L6.css-path-abi-freeze` names only
+    the frozen generic surface;
 14. no raw alias, scanner/token plane, fallback runtime, public CSS surface
     or unconsumed export exists;
 15. the integrity close checks find no unauthorized stash/reset, dirty
@@ -176,8 +179,8 @@ matched, 11.285× internal, 10.257× result, 20.569× late, 12.894× failure and
 This evidence grants no P3, formation, candidate, consumption, execution or
 release credit. P1 reconciliation is complete at `69f72f7`; the formation
 remainder includes complete P2/P3, every-subject proof and both clean pairs.
-Value-owned stylesheet recovery and live Value/JSON receipts are later
-execution work and grant no
+Value-owned stylesheet recovery and live Value plus logical
+`parse-that#jsonParser` receipts are later execution work and grant no
 isolated-formation credit.
 
 S8 is banked at `27bf872`. Cached recursion, mutual recursion and typed
@@ -239,8 +242,17 @@ run-state, slot/span, recovery and consumer-result mechanisms are behavioral
 laws, not an admitted candidate. P3's same-FIRST hostile case is banked at
 `f4b9abb`: retired D preserves final values/spans but changes immutable
 recovery provenance when diagnostics are toggled, so accepted-M2 closure
-order is the control law. P3 continues with a direct closure-kernel surface
-cut. The live
+order is the control law. P3 then continued with a direct closure-kernel surface
+cut.
+
+That cut is banked at `19c1e12`. Its 510-line private scannerless kernel
+returns 36 equal warmed JSON/stylesheet-shaped success projections plus two
+equal failure-state subsets, but only reaches 1.0656–1.5238× and grows
+retained parse-state heap 12.4%. It does not prove complete state,
+failure-result, invalid-M2, cold/first, alternating-shape, bootstrap or scaled
+diagnostics-on recovery planes. It is killed. P3 is row-complete at
+`43d7d4a` with zero surviving candidates. The isolated every-subject ≥10×
+prototype remains RED, so formation Clean A/B cannot start. The live
 production parser source remains rejected M3 at `90d4ec5`; M2 at `de36d57`
 remains the performance control. No bootstrap, formation, execution or
 release credit follows.
