@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | S6 source/evidence `062c147`; P-B1 authority `302c623` plus later authority reconciliation |
+| parse-that worktree | B / generic runtime producer | S7 source/evidence `20b5f52`; P-B1 authority `302c623` plus later authority reconciliation |
 | Value | V / sole CSS grammar, consumer and UI owner | repository HEAD `e01d0065fa6c7c80282280566af2b9a4add809bf`; formation packet independently admitted at reported SHA prefix `aa684060` with zero execution credit |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | post-Value-W3 ABI peer | no implementation or CSS parser before `V.L6.css-path-abi-freeze` |
@@ -73,11 +73,13 @@ future execution order/authority. It feeds private freeze only after
 formation admission, does not feed P1, and supplies no formation, candidate,
 consumption, proof or release credit.
 V.L1/V.L5 remain blocked on the exact release chain above. Parse-that's held
-S6 accepted-M2 96-name terminal/sequence CI-lows are 10.020× matched, 11.022×
-raw-internal and 10.263× consumer-result; the corresponding 753-name lows
-exceed 72×. The compiled `.result` surface remains pruned; the consumer owns
-its success envelope while parse provenance and deep-frozen recovery
-diagnostics are preserved. Recovery, recursion, unordered, CSS-leaf and live
-consumer planes remain open, so the producer edge remains **RED** and
-`NO RELEASE`. The unchanged production JSON point guard is green at +4.6%
-on the final isolated rerun but supplies no formal S or formation credit.
+S7 accepted-M2 96-name terminal/sequence/recovery CI-lows are 10.405× matched,
+11.285× raw-internal, 10.257× consumer-result, 20.569× late, 12.894× failure
+and 39.532× diagnostic failure; every corresponding 753-name low exceeds
+75×. The compiled `.result` surface remains pruned; immutable recovery
+entries and nested evidence are collected once into an O(1) run builder and
+the consumer seals only the outer list. Recursion, unordered, CSS-leaf,
+Value-owned stylesheet recovery and live-consumer planes remain open, so the
+producer edge remains **RED** and `NO RELEASE`. The unchanged production JSON
+point guard is green at +11.2% against its 15% guard on the final isolated
+rerun but supplies no formal S or formation credit.

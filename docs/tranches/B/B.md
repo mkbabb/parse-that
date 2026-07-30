@@ -166,6 +166,17 @@ Tranche B closes only when:
 15. the integrity close checks find no unauthorized stash/reset, dirty
     evidence input or unsealed artefact.
 
+## Current formation evidence
+
+S7 is banked at `20b5f52`. It locally clears the declared 96-name
+terminal/sequence/recovery CI-low planes against accepted M2: 10.405×
+matched, 11.285× internal, 10.257× result, 20.569× late, 12.894× failure and
+39.532× diagnostic failure; every corresponding 753-name low exceeds 75×.
+This evidence grants no P3, formation, candidate, consumption, execution or
+release credit. Bounded recursion, unordered composition, generic
+CSS-needed leaves, Value-owned stylesheet recovery, live consumers, the
+full-subject pass chain and both clean pairs remain open.
+
 ## Debt and terminal dispositions
 
 There is no silent deferral. Open work is owned by B.W0 and keeps the tranche

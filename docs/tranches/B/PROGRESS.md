@@ -6,8 +6,8 @@ Tranche status: `in_progress`
 
 Active wave: `B.W0 - Candidate-to-Release Closure`
 
-Formation status: **RED — S6 locally clears terminal/sequence; full-subject
-P1→P2→P3 and every-subject proof remain open**
+Formation status: **RED — S7 locally clears terminal/sequence and generic
+recovery; full-subject P1→P2→P3 and every-subject proof remain open**
 
 Release status: **NO RELEASE**
 
@@ -29,17 +29,19 @@ Release status: **NO RELEASE**
 | S4 authored-span sequence | `75b76dd`, `artifacts/pass3/s4-spanned-sequence/` | Direct authored-span projection and adaptive winner-depth table improve accepted-M2 CI-low to 9.063× matched, 9.017× internal and 4.573× result. **HELD, RED**. |
 | S5 consumer-owned result | `926a3ad`, `artifacts/pass3/s5-consumer-result/` | The unconsumed compiled `.result` surface is pruned; a colocated consumer projector preserves equal immutable work and raises result CI-low to 7.254×. Matched 8.985× and internal 9.040× receive no advancement credit. **HELD, RED**. |
 | S6 run-owned successor state | `062c147`, `artifacts/pass3/s6-run-state/` | A scalar run-owned state, matched prospective `parseState` boundary, shared frozen empty evidence and consumer-owned success envelope clear the seven-process 96-name terminal/sequence CI-low at 10.020× matched, 11.022× internal and 10.263× result. The 753-name corresponding lows are 72.853×, 75.768× and 76.902×. **HELD — LOCAL TERMINAL/SEQUENCE GREEN; FORMATION OPEN**. |
+| S7 immutable recovery | `20b5f52`, `artifacts/pass3/s7-immutable-recovery/` | Diagnostic collection now resets the frontier, freezes each entry and nested evidence once, retains an O(1) run builder, and seals only the outer collection at consumer projection. Seven-process 96-name CI-lows are 10.405× matched, 11.285× internal, 10.257× result, 20.569× late, 12.894× failure and 39.532× diagnostic failure; every 753-name low exceeds 75×. **HELD — LOCAL GENERIC RECOVERY GREEN; FORMATION OPEN**. |
 
 ## Current executable state
 
 - Branch: `codex/css-totality-combinators-20260729`.
 - Latest source/evidence coordinate:
-  `062c147` (`perf(pass3-s): bank run-owned state and 10x terminal evidence`).
+  `20b5f52` (`perf(pass3-s): bank immutable recovery above the 10x
+  confidence floor`).
 - P-B1 authority head: `302c623b4ffddf76bc4ee042cad1d3c5e739ef9d`.
 - Source/evidence coordinates include `c480578`
   (`perf(runtime-prototype): bind corrected S assay to accepted M2 control`),
-  `2fc18dc`, S4 at `75b76dd`, S5 at `926a3ad`, and S6 at `062c147`. None
-  confers formation or execution credit.
+  `2fc18dc`, S4 at `75b76dd`, S5 at `926a3ad`, S6 at `062c147`, and S7 at
+  `20b5f52`. None confers formation or execution credit.
 - S/recovery evidence commit:
   `2fc18dc1ec3a0541b85e9e440fca85028844673c`.
 - Canonical authority before P-B1:
@@ -53,11 +55,11 @@ Release status: **NO RELEASE**
 - The post-S4 authority reconciliation is banked at `6f893be`. After each
   source or authority bank, the untracked `data` symlink is the only expected
   status entry and remains untouched.
-- Fresh S6 gates: focused hostile suite 9/9; package suite 14/14 files and
+- Fresh S7 gates: focused hostile suite 9/9; package suite 14/14 files and
   134/134 tests; strict TypeScript; production build; manifest,
   no-CSS-surface, subpath, packrat, no-span and no-dead-combinator proofs all
   green. The unchanged production JSON `proof:perf` point guard is green on
-  the final isolated rerun at +4.6% against 15%; it remains a regression
+  the final isolated rerun at +11.2% against 15%; it remains a regression
   guard, not formal ≥10× admission credit.
 - Corrected five-process 96-name matched-boundary sequence:
   CI-low 9.033×, median 9.655×, high 9.986×.
@@ -85,6 +87,19 @@ Release status: **NO RELEASE**
   original five-process seal contained 9.586× matched and 9.780× result
   observations; source and thresholds were unchanged before the predeclared
   seven-process exact bootstrap cleared the bound.
+- S7 seven-process 96-name recovery against accepted M2:
+  matched-boundary CI-low 10.405×, raw-internal 11.285×, consumer-result
+  10.257×, late-match 20.569×, failure 12.894× and diagnostic-failure
+  39.532×. One raw consumer-result process measured 9.792×; it remains
+  disclosed, while the predeclared exact-bootstrap median CI-low is green.
+- S7 seven-process 753-name recovery against accepted M2:
+  matched-boundary CI-low 79.634×, raw-internal 88.585×, consumer-result
+  75.499×, late-match 215.153×, failure 99.144× and diagnostic-failure
+  657.352×.
+- S7 seals CPU, hot-loop, GC/deopt and IC evidence to the final source
+  hashes. The staged boundary has no named bailout; its parse-state ICs are
+  monomorphic. This is generic local recovery proof only, not Value CSS
+  recovery, a live-consumer receipt or full-subject admission.
 - Corrected 753-name sequence: one process at 78.839×; not a confidence
   bound and not admission.
 - Corrected 96-name recovery: one process at 9.365× matched-boundary and
@@ -105,12 +120,13 @@ Release status: **NO RELEASE**
 6. Arithmetic/sentinel alphabets, packed winner/depth, two-code-unit buckets,
    conditional frontier clearing, projection branches and row-displaced
    tables were measured and killed.
-7. Deep immutable diagnostic copying/freezing is a measured Amdahl
-   bottleneck. The compiler's unconsumed `.result` method and result types
-   are pruned. The consumer owns its readonly success envelope; recovery
-   diagnostics and all nested evidence remain deep-frozen, while
-   failure/fault results retain immutable provenance. Equal timed consumer
-   projection remains mandatory in admission.
+7. Deep immutable diagnostic copying/freezing was a measured Amdahl
+   bottleneck. S7 freezes each diagnostic and nested evidence once at
+   collection, uses one mutable O(1) outer builder during the run, and seals
+   that outer list at consumer projection. The compiler's unconsumed
+   `.result` method and result types remain pruned; failure/fault results
+   retain immutable provenance. Equal timed consumer projection remains
+   mandatory in admission.
 8. Value needs no generic public API widening. Successful immutable
    recovery diagnostics and opaque unknown syntax remain Value-owned result
    shapes supported by generic parse provenance.
@@ -144,11 +160,12 @@ chain may be recorded while an earlier arrow is RED.
 1. Complete the current full-subject formation pass without narrowing its
    transaction, span, recovery, recursion, unordered, allocation or result
    obligations.
-2. Carry the S6 run-owned state through equivalent recovery, bounded
-   recursion, unordered composition and generic CSS-needed leaf prototypes;
-   the historical recovery result plane remains RED.
-3. Preserve the locally green terminal/sequence evidence without treating it
-   as P3, every-subject proof, formation admission or execution credit.
+2. Carry the S7 run-owned state through bounded recursion, unordered
+   composition and generic CSS-needed leaf prototypes. Value-owned
+   stylesheet recovery and live-consumer evidence remain open.
+3. Preserve the locally green terminal/sequence and generic-recovery evidence
+   without treating it as P3, every-subject proof, formation admission or
+   execution credit.
 4. Run formation Clean A/B only after the isolated prototype proof is green.
    Production-source freeze and packing remain later execution boundaries.
 
