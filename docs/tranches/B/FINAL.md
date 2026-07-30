@@ -24,7 +24,7 @@ rebind exists.
 | Isolated every-scale/result proof | `RED` | S7's warmed terminal/recovery subset is local only. S8 recursion, P2-UO, P2-L and shaped products are RED. P2-C kills the compiled surface; P3 direct closure is only 1.0656–1.5238× on warmed success projections and omits binding equivalence/cold/shape/bootstrap planes. The native JSON yardstick reaches only 5.0050×/6.0826× on scale-4/8 immutable results and is not a candidate. No candidate exists. Live Value receipts belong to later execution. |
 | Formation Clean A / Clean B | `BLOCKED` | requires green isolated prototype proof |
 | Formation admission | `BLOCKED` | requires both formation clean audits; creates zero execution credit |
-| Full Value CSS coverage | `OPEN` | Value owns implementation; no execution receipt |
+| Full Value CSS coverage | `OPEN` | Root denominator `2bc4abb2…` binds 1,717 raw/1,653 active Webref rows, 25 decisions, ten entry points, eleven algorithms, full recovery/fidelity, WPT manifests and 53 Keyframes references/51 files; Value owns implementation and no execution receipt exists |
 | JSON same-primitive consumption | `OPEN` | Named consumer only; no candidate receipt |
 | Equivalent deletion/consolidation | `OPEN` | No consumer diffs |
 | ≥10× every-scale CI-low | `RED` | S7 96-name recovery lows are 10.405× matched, 11.285× internal, 10.257× result, 20.569× late, 12.894× failure and 39.532× diagnostic failure; 753-name lows exceed 75×; remaining subject and consumer planes are not green |
@@ -60,6 +60,9 @@ omitted semantics. With every legal P1/P2/P3 family retired, formation is
 RED. Root reopen `d1df0f01…` binds the user's P4 override: challenge that
 bound without changing the scannerless, equal-product or 10× laws. No P4
 receipt has formation credit.
+Root denominator `2bc4abb2…` makes 1,439 the active
+property/function/type scale and 1,653 the active unqualified full-Webref
+scale. A 753-property or shaped-mechanism result cannot claim full coverage.
 Same-FIRST recovery remains banked at `f4b9abb`, binding accepted-M2 closure
 order and keeping D killed. Cold/hot dispatch is banked at `d323f56`.
 The compiled table is 12.7–16.8× slower to construct, 11.9–14.4× slower

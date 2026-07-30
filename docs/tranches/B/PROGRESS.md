@@ -45,6 +45,7 @@ Release status: **NO RELEASE**
 | P3 full-subject disposition | `43d7d4a`, `research/P3-FULL-SUBJECT-DISPOSITION-2026-07-29.md` | All twenty subjects have terminal P3 findings. No implemented family survives as a candidate. **P3 COMPLETE; ISOLATED PROOF RED; FORMATION CLEAN A/B BLOCKED**. |
 | Native JSON feasibility yardstick and P3 cost bound | `605a1ae`, `artifacts/formation/native-json-yardstick/`; root ruling `d03d0422…` | Seven processes compare accepted-M2 logical `jsonParser` with native `JSON.parse` on equal values and identically frozen success envelopes. Scale-4 immutable result is 5.0050× (bootstrap 95% 4.9513–5.0985×); scale 8 is 6.0826× (6.0293–6.1943×). Independent call-tree attribution of sealed P3 CPU evidence reproduces 1,157,659 µs candidate runtime, 144,501 µs candidate-native RegExp, 167,382 µs required candidate products and 1,870,633 µs comparable M2 work. Matching plus products alone consumes 311,883 µs against a 187,063 µs 10× budget. **IMMUTABLE P3 NEGATIVE EVIDENCE; P4 MUST EXECUTABLY FALSIFY THE BOUND; NO CANDIDATE/CREDIT**. |
 | P4 novelty loop | root reopen `d1df0f01…`; isolated Sol architecture and Luna prototype receipts pending | Challenge inclusive/exclusive CPU attribution and removable common work with at least three genuinely new mechanisms; use live M2 `jsonParser` and a Value-owned full-CSS-shaped product; keep all work isolated from product source. **ACTIVE RESEARCH; ZERO FORMATION/EXECUTION/RELEASE CREDIT**. |
+| P4 full-CSS denominator | root addendum `2bc4abb2…` | `@webref/css@8.7.1`: 1,503 raw/1,439 active property-function-type rows; 1,717 raw/1,653 active full-Webref rows; 64 explicit alias refusals; 109 prose/manual rows; 60-row Values 5 intersection; 25 token-equivalent decisions, ten entry points, eleven tree algorithms, full recovery/source fidelity, WPT manifests, and 53 Keyframes references across 51 files. Value extensions are exactly `hsv`/`kelvin`; `ictcp`/`jzazbz`/`jzczhz` are standard. **BINDING DENOMINATOR; ZERO COVERAGE/FORMATION CREDIT**. |
 
 ## Current executable state
 
@@ -64,6 +65,11 @@ Release status: **NO RELEASE**
   `d1df0f01c139ce8d51038815826de859f20b1557ee50911e2c1e9712579aae34`
   makes it immutable P1–P3 negative evidence rather than stop authority. It
   grants zero implementation, formation, execution or release credit.
+- Root P4 full-CSS denominator addendum:
+  SHA-256
+  `2bc4abb218d3e9c8aba4164ca1c48df7cb714222b024290b60dc7e239e26433b`;
+  it binds exact standards, recovery, consumer and 1,439/1,653 performance
+  rows and grants zero coverage or later credit.
 - Corrected P1 root intake:
   `abc9479d7ea5fa4c76deca752428faf8b332f280e6e637de12b12b25e8e2ad6c`;
   it binds committed `c9c2108` bytes, P1 only, and grants no later credit.

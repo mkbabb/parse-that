@@ -274,6 +274,13 @@ laws: isolated research must executably falsify the bound through genuinely
 new generic mechanisms before an owner prototype can advance. Product source
 and every downstream edge remain blocked.
 
+Root denominator addendum `2bc4abb2…` binds “full CSS” to 1,717 raw and 1,653
+active Webref rows, including explicit dispositions for 64 aliases and 109
+prose/manual rows; 25 token-equivalent decisions; ten entry points; eleven
+tree algorithms; exact recovery/source fidelity; the non-additive 60-row
+Values 5 overlay; WPT manifests; and 53 Keyframes references across 51 files.
+The 753-property corpus and P4 shaped assays are subsets, never coverage.
+
 ## Debt and terminal dispositions
 
 There is no silent deferral. Open work is owned by B.W0 and keeps the tranche

@@ -25,6 +25,10 @@ Status: **ACTIVE P4 FORMATION RESEARCH — RED — NO RELEASE**
   `d1df0f01c139ce8d51038815826de859f20b1557ee50911e2c1e9712579aae34`;
   it binds the user override and makes the P3 feasibility ruling immutable
   negative evidence rather than stop authority.
+- Root P4 full-CSS denominator SHA-256:
+  `2bc4abb218d3e9c8aba4164ca1c48df7cb714222b024290b60dc7e239e26433b`;
+  it binds 1,717 raw/1,653 active Webref rows and every behavioral,
+  consumer, WPT and performance obligation.
 - P2 registry coordinate:
   `c3d42d4` (`docs(parser-research): complete the P2 full-subject
   disposition`).
@@ -152,6 +156,12 @@ consumer, publication or release credit.
     Matching plus products consumes 311,883 µs against the complete
     187,063 µs 10× budget before omitted semantics. P4 must executably
     falsify this negative evidence without changing the product or laws.
+19. Root denominator `2bc4abb2…` rejects 753 as a full-CSS count. Admission
+    needs 1,717 raw/1,653 active Webref rows, explicit 64-alias and 109-manual
+    dispositions, the 60-row Values 5 intersection, 25 token-equivalent
+    decisions, ten entry points, eleven tree algorithms, full
+    recovery/source fidelity, WPT manifests and all 53 Keyframes references
+    across 51 files. Only `hsv` and `kelvin` are Value extensions.
 
 Value R2 formation is independently admitted with zero parser execution,
 product, release, or constellation-close credit: root receipt `0c151de9…`,
