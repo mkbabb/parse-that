@@ -10,6 +10,14 @@ export type Span = Readonly<{ start: number; end: number }>;
 export type Spanned<T> = Readonly<{ value: T; span: Span }>;
 
 type LiteralNode = Readonly<{ kind: "literal"; text: string }>;
+type SourceNode<T> = Readonly<{
+    kind: "source";
+    label: string;
+    firstCodes: readonly number[];
+    nullable: boolean;
+    matchEnd: (source: string, start: number) => number;
+    project: (source: string, start: number, end: number) => T;
+}>;
 type MapNode = Readonly<{
     kind: "map";
     child: Node<unknown>;
@@ -39,6 +47,7 @@ type LazyNode = Readonly<{
 }>;
 type Node<T> =
     | LiteralNode
+    | SourceNode<T>
     | MapNode
     | SpanNode
     | ChoiceNode
@@ -134,6 +143,36 @@ export function literal<const T extends string>(text: T): Grammar<T> {
     return new Grammar<T>({ kind: "literal", text });
 }
 
+export function sourceLeaf<T = string>(
+    label: string,
+    matchEnd: (source: string, start: number) => number,
+    project: (source: string, start: number, end: number) => T =
+        ((source, start, end) => source.substring(start, end)) as (
+            source: string,
+            start: number,
+            end: number,
+        ) => T,
+    firstCodes: readonly number[] = [],
+    nullable = false,
+): Grammar<T> {
+    const codes = [...new Set(firstCodes)].sort(
+        (left, right) => left - right,
+    );
+    if (codes.some(code =>
+        !Number.isInteger(code) || code < 0 || code > 65_535
+    )) {
+        throw new RangeError("firstCodes must be UTF-16 code units");
+    }
+    return new Grammar<T>({
+        kind: "source",
+        label,
+        firstCodes: codes,
+        nullable,
+        matchEnd,
+        project,
+    });
+}
+
 export function choice<const P extends readonly Grammar<unknown>[]>(
     ...parsers: P
 ): Grammar<P[number] extends Grammar<infer T> ? T : never> {
@@ -205,6 +244,9 @@ export function analyze<T>(grammar: Grammar<T>): GrammarAnalysis {
         if (node.kind === "literal") {
             nullable = node.text.length === 0;
             if (!nullable) codes.add(node.text.charCodeAt(0));
+        } else if (node.kind === "source") {
+            nullable = node.nullable;
+            for (const code of node.firstCodes) codes.add(code);
         } else if (node.kind === "map" || node.kind === "span") {
             nullable = merge(visit(node.child));
         } else if (node.kind === "choice") {
@@ -428,6 +470,29 @@ function compileNode<T>(
     const terminals = flatten(node);
     if (terminals?.length) return compileTerminals(terminals, plan);
 
+    if (node.kind === "source") {
+        const labels = [node.label];
+        plan.terminals++;
+        return ((state: StagedState<T>) => {
+            const start = state.offset;
+            const source = state.src;
+            const end = node.matchEnd(source, start);
+            if (
+                end >= start
+                && end <= source.length
+                && (node.nullable || end > start)
+            ) {
+                const value = node.project(source, start, end);
+                state.offset = end;
+                state.value = value;
+                state.isError = state.fault !== undefined;
+                return state;
+            }
+            mergeLabels(state, start, labels);
+            state.isError = true;
+            return state;
+        }) as Runner<T>;
+    }
     if (node.kind === "map") {
         const child = compileGraph(node.child);
         return ((state: StagedState<unknown>) => {
@@ -1063,7 +1128,8 @@ function flatten<T>(
         ) as Terminal<T>[] | undefined;
     }
     if (
-        node.kind === "sequence"
+        node.kind === "source"
+        || node.kind === "sequence"
         || node.kind === "pair"
         || node.kind === "recovery"
         || node.kind === "lazy"
