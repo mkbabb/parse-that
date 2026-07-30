@@ -9,8 +9,8 @@ Active wave: `B.W0 - Candidate-to-Release Closure`
 Formation status: **RED — P1, P2 and P3 are row-complete with zero surviving
 candidates; P4 is independently adjudicated REJECT/FOLD; P5-EUW is
 executable-performance KILL/PRUNE; the first P6-SIR packet is pre-timing
-REJECT; P6-A1 is AMEND and P6-A2 is the next isolated fatal assay; both
-formation clean audits remain blocked**
+REJECT; P6-A1 and P6-A2 are AMEND, and one-scalar P6-A3 is the next isolated
+fatal assay; both formation clean audits remain blocked**
 
 Release status: **NO RELEASE**
 
@@ -48,23 +48,23 @@ Release status: **NO RELEASE**
 | P4 novelty loop | owner adjudication `270feca`; corrected jury A1 manifest `3297c808…`; root source audit `5614a7d8…` | Sol RSR/CISF/CTPT were not implemented. Luna substituted F1/F2/F3: all 432 genuine JSON mechanism rows are below `1x`; all 432 CSS rows time one handwritten same-body reader that exercises none of the mechanisms. P4 is negative archaeology, not a completed Sol/Luna/Sol pass. **REJECT/FOLD; ZERO FORMATION/EXECUTION/RELEASE CREDIT**. |
 | P4 full-CSS denominator | root addendum `2bc4abb2…` | `@webref/css@8.7.1`: 1,503 raw/1,439 active property-function-type rows; 1,717 raw/1,653 active full-Webref rows; 64 explicit alias refusals; 109 prose/manual rows; 60-row Values 5 intersection; 25 token-equivalent decisions, ten entry points, eleven tree algorithms, full recovery/source fidelity, WPT manifests, and 53 Keyframes references across 51 files. Value extensions are exactly `hsv`/`kelvin`; `ictcp`/`jzazbz`/`jzczhz` are standard. **BINDING DENOMINATOR; ZERO COVERAGE/FORMATION CREDIT**. |
 | P5-EUW fatal preflight | Luna manifest `e2d8fb3e…`; owner evidence `0bc0d37`; `artifacts/pass6/euw-clean-break/` | Luna's sealed packet stops at a static accepted-M2/raw-consumer census with no executable runtime. Owner Sol corrects the legacy-signature premise and tests two legal clean-break, one-executor variants against exact accepted-M2 `jsonParser` in 14 unique PIDs. Cursor EUW is 0.6076–0.7527× and same-state EUW is 0.6149–0.7001×; all bounded immutable-success equality checks pass, every raw row is below `1x`, and bootstrap/CSS/profiles are withheld. **KILL/PRUNE; ZERO CREDIT**. |
-| P6-SIR signed-integer return | design `b2c7447`; first owner audit `75d36ab`; A1 manifest `43944afe…`; A1 fresh-Sol seal `55a44e09…`; A1 owner evidence `4f772fd` | The first packet masks `-2`. A1 repairs the visible masks but omits suggestion/secondary checkpoint counts, recovery-sync shadow/frontier restoration, direct/nested exact assertions and `JSON.parse`; its seven 0.8716–1.0327× rows are inadmissible. A2 alone may complete the scalar checkpoint/oracle gate and produce new raw rows. No distinct P7 exists under current laws absent a newly reached cost-removal edge. **P6/A1 AMEND; P6-A2 ACTIVE; ZERO CREDIT**. |
+| P6-SIR signed-integer return | design `b2c7447`; first owner audit `75d36ab`; A1 owner evidence `4f772fd`; A2 Luna/Sol seals `67ddf602…`/`97e72af8…`; A2 owner evidence `c9d8be1` | The first packet masks `-2`; A1 leaves checkpoint/oracle gaps. A2 closes 21/21 typed-fault positions and the real native oracle, but six of 23 routine-mismatch rows lose accepted-M2 public failure offsets. Its seven 0.8991–1.1562× rows are inadmissible. Root `trim` and `trim.or(failing-right)` prove the signed return plus existing state cannot encode both required offsets. A3 alone may add one non-control `failureOffset` provenance scalar and retest. No distinct P7 exists absent a newly reached cost-removal edge. **P6/A1/A2 AMEND; P6-A3 ACTIVE; ZERO CREDIT**. |
 
 ## Current executable state
 
 - Branch: `codex/css-totality-combinators-20260729`.
 - Latest source/evidence coordinate:
-  `4f772fd` (`docs(parser-research): reject the incomplete P6 A1 checkpoint
-  and route scalar A2`).
+  `c9d8be1` (`docs(parser-research): bind P6 A2 failure-offset impossibility
+  and route one-scalar A3`).
 - Canonical authority predecessor:
-  `3dca333` (`docs(parser-tranche): bind the P5 EUW kill and route the scalar
-  signed-return seam`); this amended document set reconciles the later P6
-  design and owner ruling.
+  `9870f4f` (`docs(parser-tranche): reconcile P6 A1 amend and full-checkpoint
+  A2 order`); this amended document set reconciles the later A2 ruling.
 - Latest owner audit:
-  `4f772fd`, `audit/P6-SIR-A1-OWNER-SOL-ADJUDICATION-2026-07-30.md`. It binds
-  the A1 seal, fresh-Sol seal, incomplete-checkpoint/oracle ruling,
-  inadmissible raw disposition, no-contrived-P7 boundary and immutable
-  same-seat P6-A2 transaction.
+  `c9d8be1`, `audit/P6-SIR-A2-OWNER-SOL-ADJUDICATION-2026-07-30.md`. It binds
+  the A2 Luna/fresh-Sol seals, 21-position typed-fault close, six routine
+  offset mismatches, carrier impossibility witness, inadmissible raw
+  disposition, no-contrived-P7 boundary and immutable same-seat P6-A3
+  transaction.
 - P5-EUW owner adjudication:
   `0bc0d37bfadf62ddde432686947309cc1741325e`; Luna's manifest is
   `e2d8fb3e344088dfa4af963b542ce22296f6485f16120f397791d271962765fc`.
@@ -80,8 +80,11 @@ Release status: **NO RELEASE**
   Its sealed 0.9564–1.1820× raw range is arithmetic evidence about that
   defective packet only and cannot dispose of the conforming atom. P6-A1 is
   superseded by A1 owner evidence `4f772fd`: its visible fault repair still
-  leaves complete checkpoint/oracle proof RED. P6-A2 is routed on the same
-  Luna seat with zero later credit.
+  leaves complete checkpoint/oracle proof RED. A2 owner evidence `c9d8be1`
+  closes those defects but proves its signed return and existing run state
+  cannot reproduce accepted-M2 terminal failure offsets. P6-A3 is routed on
+  the same Luna seat with one non-control failure-offset scalar and zero later
+  credit.
 - Root P3 feasibility ruling:
   SHA-256
   `d03d042286d0bad27e3666f3c08e83a393aaa86928e6273c05ac85ac51bfed67`;
@@ -402,25 +405,31 @@ chain may be recorded while an earlier arrow is RED.
 ## Next executable boundary
 
 1. Preserve P4 at owner audit `270feca`/A1 manifest `3297c808…`, P5 at owner
-   evidence `0bc0d37`, and the original P6 plus A1 packet/raw bytes at
-   manifests `d16787b3…`/`43944afe…`. Do not reinterpret unimplemented
-   designs, losing families, the handwritten CSS reader, killed EUW or
-   inadmissible P6/A1 raw rows as a candidate.
-2. Resume only the existing Luna seat for immutable P6-A2. Complete one
-   scalar checkpoint schema across all typed-fault boundaries and
-   recovery-sync, assert every direct/nested/boundary fault row, and compare
-   `JSON.parse`, exact M2, rebuilt M2 and A2 independently. Do not add regions,
-   slabs, journals, finalizers, scanners, compilers, VMs, generated grammars,
-   wrappers, fallbacks, compatibility aliases or alternate executors.
-3. Only after every corrected pre-timing probe is green, run a new scale-4
+   evidence `0bc0d37`, and all original P6/A1/A2 packet and raw bytes at
+   manifests `d16787b3…`/`43944afe…`/`67ddf602…`. Do not reinterpret
+   unimplemented designs, losing families, the handwritten CSS reader,
+   killed EUW or inadmissible P6/A1/A2 raw rows as a candidate.
+2. Resume only the existing Luna seat for immutable P6-A3. Add exactly one
+   parse-local `failureOffset` provenance scalar. Atomic owners save/restore
+   it; pass-through combinators propagate it; public ordinary-failure
+   projection reads it. It may never influence parse control, dispatch, or
+   the signed return kind. Add no second scalar, regions, slabs, journals,
+   finalizers, scanners, compilers, VMs, generated grammars, wrappers,
+   fallbacks, compatibility aliases or alternate executors.
+3. Before timing, close all 21 typed-fault positions and all 23
+   ordinary-mismatch offset/frontier rows, including root/nonzero `trim` and
+   the indistinguishable root-trim versus failing-choice witness. Recheck
+   atomic ownership, pass-through propagation, alias/return/allocation laws,
+   and independent `JSON.parse`/exact-M2/rebuilt-M2/A3 frozen products.
+4. Only after every corrected pre-timing probe is green, run a new scale-4
    exact accepted-M2 `jsonParser` alternating immutable-success cell across
    seven fresh paired processes. Every raw point must be `>=10x`; stop on the
    first miss. Bootstrap is forbidden unless every raw point clears the floor.
-4. Only a green fatal cell may open scale 4/33 complete state, value, result,
+5. Only a green fatal cell may open scale 4/33 complete state, value, result,
    failures, diagnostics-on recovery, UTF-16, allocation, IC, deopt and GC,
-   plus one real Value-owned combinator CSS vertical with proved nonzero SIR
+   plus one real Value-owned combinator CSS vertical with proved nonzero P6
    activity. A handwritten body or scanner-shaped plane is fatal.
-5. Full CSS, formation Clean A/B, production freeze, candidate packing,
+6. Full CSS, formation Clean A/B, production freeze, candidate packing,
    API changes, Value/JSON consumption, release and BBNF remain blocked.
    Preserve scalar rollback, diagnostics-toggle-invariant recovery, exact
    UTF-16 slots/spans, typed nesting, run isolation and consumer projection.

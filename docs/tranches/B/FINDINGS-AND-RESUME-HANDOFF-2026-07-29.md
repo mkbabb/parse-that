@@ -2,8 +2,8 @@
 
 Date: 2026-07-30
 
-Status: **P6/P6-A1 PRE-TIMING AMEND — P6-A2 ACTIVE ISOLATED FATAL ASSAY —
-RED — NO RELEASE**
+Status: **P6/P6-A1/P6-A2 PRE-TIMING AMEND — P6-A3 ACTIVE ONE-SCALAR FATAL
+ASSAY — RED — NO RELEASE**
 
 ## Exact resume coordinate
 
@@ -11,8 +11,8 @@ RED — NO RELEASE**
   `/Users/mkbabb/Programming/parse-that-css-totality`
 - Branch: `codex/css-totality-combinators-20260729`
 - Source/evidence HEAD:
-  `4f772fd` (`docs(parser-research): reject the incomplete P6 A1 checkpoint
-  and route scalar A2`)
+  `c9d8be1` (`docs(parser-research): bind P6 A2 failure-offset impossibility
+  and route one-scalar A3`)
 - P1 registry coordinate:
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
@@ -57,6 +57,14 @@ RED — NO RELEASE**
 - P6-A1 owner adjudication:
   `4f772fd`,
   `audit/P6-SIR-A1-OWNER-SOL-ADJUDICATION-2026-07-30.md`.
+- P6-A2 Luna manifest/raw:
+  `67ddf60281af3a0493aeb9b0b4101895e6147d585be70332c7b959e3102f90e9` /
+  `5ff0c4faad24585cb97378576839aef9cf5038e66b222820dc543f851701b598`.
+- P6-A2 fresh-Sol checksum manifest:
+  `97e72af8de2b54a0dc020b9ab150292a0442524ae0d43480509bc1385ec22d51`.
+- P6-A2 owner adjudication:
+  `c9d8be1`,
+  `audit/P6-SIR-A2-OWNER-SOL-ADJUDICATION-2026-07-30.md`.
 - Root P3 feasibility ruling SHA-256:
   `d03d042286d0bad27e3666f3c08e83a393aaa86928e6273c05ac85ac51bfed67`;
   it supersedes `8fe9a26b…` as document identity.
@@ -340,36 +348,49 @@ candidate pack, consumer receipt or release.
     rows and self-compares accepted M2 as the native oracle.
 33. Fresh-Sol seal `55a44e09…` and owner audit `4f772fd` classify A1
     `AMEND`. Its 0.8716–1.0327× rows are arithmetically sound but
-    inadmissible. A2 alone may complete the scalar checkpoint/oracle gate.
-34. No distinct P7 is admissible under current laws absent a genuinely new,
+    inadmissible. At that boundary, only A2 could attempt the scalar
+    checkpoint/oracle correction.
+34. A2 Luna manifest `67ddf602…` and fresh-Sol seal `97e72af8…` close all
+    21 typed-fault positions and the real `JSON.parse` oracle, but six of 23
+    routine-mismatch rows lose accepted-M2 public failure offsets. Its seven
+    0.8991–1.1562× rows are arithmetically sound but inadmissible.
+35. Owner audit `c9d8be1` binds the carrier impossibility witness: root
+    `trim` and `trim.or(failing-right)` have the same `-1`, frontier/label,
+    and existing run state while M2 requires offsets `1` and `0`. A3 alone
+    may add one non-control `failureOffset` provenance scalar.
+36. No distinct P7 is admissible under current laws absent a genuinely new,
     reached cost-removal edge. A domain-neutral fixture cannot substitute for
     the binding Value-owned full-CSS consumer.
 
-## Next executable transaction — P6-A2 fatal assay
+## Next executable transaction — P6-A3 failure-offset fatal assay
 
-Resume B.W0 from A1 owner evidence `4f772fd`. Preserve the original Luna P6
-and A1 packets/raw SHAs `7655b467…`/`e9479e7e…` byte-for-byte. Product source
-remains held.
+Resume B.W0 from A2 owner evidence `c9d8be1`. Preserve the original Luna
+P6/A1/A2 packets and raw SHAs `7655b467…`/`e9479e7e…`/`5ff0c4fa…`
+byte-for-byte. Product source remains held.
 
 ### Subject
 
 Resume the existing Luna seat
 `019fb16a-09d7-7d80-ae5f-3d894e25855d`; create no task. Write only a new
 immutable packet under
-`/Users/mkbabb/Documents/Codex/2026-07-30/parser-p6-sir-luna-a2/outputs/**`.
-Copy A1 and complete one scalar checkpoint schema across every typed-fault
-boundary and recovery-sync; assert every fault row; and use `JSON.parse` as
-the actual native oracle. Keep one integer return, nonnegative cursor success,
+`/Users/mkbabb/Documents/Codex/2026-07-30/parser-p6-sir-luna-a3/outputs/**`.
+Copy A2 and add exactly one parse-local scalar named `failureOffset`. Atomic
+owners save/restore it, pass-through combinators propagate it, and public
+ordinary-failure projection reads it. It must never control dispatch, branch
+selection, success/mismatch/fault discrimination, table indexing, or the
+signed return alphabet. Keep one integer return, nonnegative cursor success,
 `-1` mismatch, `-2` typed fault, ordinary value in run state and one raw
-executor. Do not add a checkpoint object, region, slab, journal, tape,
-compiler, VM, generated grammar, scanner, fallback, wrapper, second executor
-or public surface.
+executor. Do not add a second carrier, status/cursor alias, checkpoint object,
+region, slab, journal, tape, compiler, VM, generated grammar, scanner,
+fallback, wrapper, second executor or public surface.
 
 ### Required laws
 
 - preserve exact UTF-16 slots/spans, immutable recovery evidence, typed
   faults, failure frontiers and scalar rollback;
 - preserve accepted-M2 traversal provenance and same-FIRST frontier bytes;
+- preserve exact accepted-M2 ordinary-failure offsets independently from
+  sticky frontier evidence;
 - keep the compiled graph/table, unordered engine, generic source leaf,
   compiler-owned result, `/utils`, unconsumed packrat, private direct closure
   runtime, region-slot RSR, CISF/CTPT, F1/F2/F3, SRA, TOL and EUW retired;
@@ -382,29 +403,33 @@ or public surface.
 
 ### Admission order
 
-1. Save/restore value, suggestion/secondary counts, diagnostic count and all
-   diagnostic shadow fields at every `sepBy`/recovery typed-fault boundary,
-   while retaining the required sticky fault/frontier.
-2. Assert exact return, complete run snapshot and immutable public result for
-   direct, nested, first-element, separator, later-element and recovery-sync
-   typed faults with no exemption.
-3. Compare `JSON.parse`, exact M2, rebuilt M2 and A2 independently; re-run
-   routine rollback, alias, safe-integer, dispatch and forbidden-mechanism
-   probes. Timing is forbidden unless every pre-timing row is green.
-4. Run a new scale-4 live accepted-M2 `jsonParser`, alternating immutable
+1. Assert all 21 typed-fault positions with exact return, complete run
+   snapshot, sticky fault/frontier, frozen singleton, owner-versus-pass-
+   through policy and immutable public result.
+2. Assert all 23 accepted-M2 ordinary-mismatch offset/frontier rows, including
+   root/nonzero `trim`, all atomic owners, all pass-through paths, and the
+   root-trim versus failing-choice indistinguishability witness.
+3. Prove `failureOffset` is saved/restored by `or`, `then`, `skip`, `next`,
+   `wrap`, `sepBy` and `recover`; propagated by direct, `map`, `trim`, `lazy`
+   and `dispatch`; and never read on the control path.
+4. Compare `JSON.parse`, exact M2, rebuilt M2 and A3 independently; re-run
+   checkpoint, rollback, alias, safe-integer, zero-width, dispatch, recursion,
+   allocation and forbidden-mechanism probes. Timing is forbidden unless
+   every pre-timing row is green.
+5. Run a new scale-4 live accepted-M2 `jsonParser`, alternating immutable
    success products, across seven fresh paired processes. Every raw ratio must
    be `>=10x`; any miss kills the conforming atom before bootstrap or broader
    work.
-5. Only when every raw point clears the floor, compute the exact-bootstrap
+6. Only when every raw point clears the floor, compute the exact-bootstrap
    95% lower bound; it too must be `>=10x`.
-6. Only a green fatal cell opens scale 4/33 complete state/value/result,
+7. Only a green fatal cell opens scale 4/33 complete state/value/result,
    failures, diagnostics-on recovery, exact UTF-16, allocation, IC, deopt,
    GC and heap assays.
-7. The first CSS evidence is one real Value-owned combinator vertical authored
-   once against control/candidate generic primitives, with proved nonzero SIR
+8. The first CSS evidence is one real Value-owned combinator vertical authored
+   once against control/candidate generic primitives, with proved nonzero P6
    activity. A handwritten body, scanner-shaped representation, or “full
    CSS” label without the 1,439/1,653 denominator is fatal.
-8. Formation Clean A/B remain blocked until a surviving isolated candidate
+9. Formation Clean A/B remain blocked until a surviving isolated candidate
    clears the complete proof. Production freeze, packing, consumer migration,
    release, Value rebind and BBNF remain later.
 

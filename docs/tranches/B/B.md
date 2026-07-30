@@ -309,15 +309,25 @@ inadmissible because timing followed a false-green taxonomy gate. They do not
 kill the conforming atom. A1 owner evidence `4f772fd` rejects the first repair
 because it omits suggestion/secondary checkpoint counts, recovery-sync shadow
 state, exact direct/nested fault assertions and the actual `JSON.parse`
-oracle. Its 0.8716–1.0327× raw rows are likewise inadmissible. `P6-A2` is the
-only next same-seat correction: one complete scalar checkpoint schema,
-complete fault assertions and real native oracle, followed by a new exact-M2
-scale-4 raw floor only after preflight is green. Any admissible raw row below
-10× kills the atom before bootstrap, CSS or broader planes. Genealogy remains
-`SPLIT`, surrounding topology remains folded into P3, novelty/family credit
-remains zero, and full CSS plus all downstream formation/execution edges
-remain blocked. No distinct P7 may be dispatched absent a genuinely new,
-reached cost-removal edge.
+oracle. Its 0.8716–1.0327× raw rows are likewise inadmissible. A2 owner
+evidence `c9d8be1`,
+`audit/P6-SIR-A2-OWNER-SOL-ADJUDICATION-2026-07-30.md`, confirms 21/21 typed
+fault positions and the real native oracle, then finds six accepted-M2
+ordinary-failure offset mismatches. Root `trim` and `trim.or(failing-right)`
+have the same signed return and existing A2 state while M2 requires offsets
+`1` and `0`; frontier cannot supply the distinction. A2's
+0.8991–1.1562× rows are arithmetically sound but inadmissible.
+
+`P6-A3` is the only next same-seat correction. It may add one parse-local
+`failureOffset` provenance scalar, never consulted for control or return-kind
+discrimination, with exact atomic save/restore and pass-through propagation.
+It must close all 21 typed-fault and 23 routine-mismatch rows before a new
+exact-M2 scale-4 raw floor. Any admissible raw row below 10× kills the atom
+before bootstrap, CSS or broader planes. Genealogy remains `SPLIT`,
+surrounding topology remains folded into P3, novelty/family credit remains
+zero, and full CSS plus all downstream formation/execution edges remain
+blocked. No distinct P7 may be dispatched absent a genuinely new, reached
+cost-removal edge.
 
 ## Debt and terminal dispositions
 
