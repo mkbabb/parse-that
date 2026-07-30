@@ -1,0 +1,1286 @@
+{
+  "schema": "parse-that.p6-euw-clean-break-preflight.v1",
+  "control": {
+    "commit": "de36d57dccdd20068b8c11a78f6e83d42e7d681f",
+    "bundle": "/tmp/parse-that-p6-m2-control.mjs"
+  },
+  "rows": [
+    {
+      "variant": "cursor",
+      "seed": 1592590336,
+      "iterations": 2000,
+      "equality": [
+        {
+          "source": "{\"a\":[1,true,null,\"x\"]}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[{\"b\":2},false,\"y\",null]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "{\"nested\":{\"arr\":[1,2,3]},\"s\":\"hello\"}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[0,{\"x\":[true,false]},-12.5e2,\"\\u0041\"]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        }
+      ],
+      "rawAbi": {
+        "success": true,
+        "mismatchSingleton": true,
+        "legacySignaturePreserved": false,
+        "legacyFailureReturnPreserved": false
+      },
+      "order": [
+        3,
+        0,
+        1,
+        2
+      ],
+      "batchOrder": [
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA"
+      ],
+      "controlNs": [
+        2105625.0000000033,
+        2130583.0000000014,
+        1952167.0000000028,
+        1492834.000000002,
+        1335334.000000003,
+        1881833.0000000002,
+        1565874.9999999912,
+        1751417.0000000035,
+        2106791.9999999986,
+        1462583.9999999925
+      ],
+      "candidateNs": [
+        3213250.0000000023,
+        3540959.000000001,
+        2808582.9999999986,
+        3104374.9999999977,
+        2217542.000000009,
+        2142709.0000000107,
+        2454791,
+        2622333.999999995,
+        2216250.0000000023,
+        2404083
+      ],
+      "ratio": 0.665486492809171,
+      "pid": 25072,
+      "execPath": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "node": "v26.0.0",
+      "v8": "14.6.202.33-node.19",
+      "blackhole": 38
+    },
+    {
+      "variant": "cursor",
+      "seed": 1592630839,
+      "iterations": 2000,
+      "equality": [
+        {
+          "source": "{\"a\":[1,true,null,\"x\"]}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[{\"b\":2},false,\"y\",null]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "{\"nested\":{\"arr\":[1,2,3]},\"s\":\"hello\"}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[0,{\"x\":[true,false]},-12.5e2,\"\\u0041\"]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        }
+      ],
+      "rawAbi": {
+        "success": true,
+        "mismatchSingleton": true,
+        "legacySignaturePreserved": false,
+        "legacyFailureReturnPreserved": false
+      },
+      "order": [
+        3,
+        1,
+        0,
+        2
+      ],
+      "batchOrder": [
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB"
+      ],
+      "controlNs": [
+        1811500.0000000023,
+        1757500.0000000002,
+        1469666.0000000037,
+        1930582.9999999986,
+        1865999.9999999998,
+        1356833.0000000088,
+        1926124.999999999,
+        1935124.9999999993,
+        1283417,
+        1283874.9999999949
+      ],
+      "candidateNs": [
+        3862458.0000000037,
+        2982750.00000001,
+        2992792.0000000084,
+        2161041.999999995,
+        2804458.000000011,
+        2279874.9999999898,
+        2145958.0000000075,
+        2096541.9999999995,
+        1897667.0000000126,
+        2355292.0000000056
+      ],
+      "ratio": 0.6497803613722182,
+      "pid": 25089,
+      "execPath": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "node": "v26.0.0",
+      "v8": "14.6.202.33-node.19",
+      "blackhole": 38
+    },
+    {
+      "variant": "cursor",
+      "seed": 1592671342,
+      "iterations": 2000,
+      "equality": [
+        {
+          "source": "{\"a\":[1,true,null,\"x\"]}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[{\"b\":2},false,\"y\",null]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "{\"nested\":{\"arr\":[1,2,3]},\"s\":\"hello\"}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[0,{\"x\":[true,false]},-12.5e2,\"\\u0041\"]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        }
+      ],
+      "rawAbi": {
+        "success": true,
+        "mismatchSingleton": true,
+        "legacySignaturePreserved": false,
+        "legacyFailureReturnPreserved": false
+      },
+      "order": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "batchOrder": [
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA"
+      ],
+      "controlNs": [
+        2090583.0000000023,
+        3047291.9999999986,
+        1687666.9999999977,
+        1972083.000000005,
+        2347457.999999989,
+        2108292.000000006,
+        1989874.999999998,
+        1334749.9999999998,
+        1974290.9999999937,
+        1375124.999999997
+      ],
+      "candidateNs": [
+        3245333.9999999995,
+        3065959.0000000065,
+        2413417.000000003,
+        2197958.999999997,
+        3480542,
+        2871583.000000001,
+        2898791.000000003,
+        2045792.0000000058,
+        2199166.000000005,
+        2055708.999999993
+      ],
+      "ratio": 0.7527093116738474,
+      "pid": 25096,
+      "execPath": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "node": "v26.0.0",
+      "v8": "14.6.202.33-node.19",
+      "blackhole": 39
+    },
+    {
+      "variant": "cursor",
+      "seed": 1592711845,
+      "iterations": 2000,
+      "equality": [
+        {
+          "source": "{\"a\":[1,true,null,\"x\"]}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[{\"b\":2},false,\"y\",null]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "{\"nested\":{\"arr\":[1,2,3]},\"s\":\"hello\"}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[0,{\"x\":[true,false]},-12.5e2,\"\\u0041\"]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        }
+      ],
+      "rawAbi": {
+        "success": true,
+        "mismatchSingleton": true,
+        "legacySignaturePreserved": false,
+        "legacyFailureReturnPreserved": false
+      },
+      "order": [
+        1,
+        3,
+        2,
+        0
+      ],
+      "batchOrder": [
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB"
+      ],
+      "controlNs": [
+        2098416.0000000005,
+        1912166.9999999965,
+        2231749.999999998,
+        1585791.0000000005,
+        1704707.9999999965,
+        1924959.0000000012,
+        1992457.999999999,
+        1798333.999999997,
+        1385165.9999999981,
+        1280292.0000000028
+      ],
+      "candidateNs": [
+        3345542.000000002,
+        2718707.9999999995,
+        2376041.999999998,
+        2134791.999999997,
+        2058208.999999998,
+        2553165.99999999,
+        2670208.0000000023,
+        2915207.9999999925,
+        2356916.999999996,
+        2009124.9999999974
+      ],
+      "ratio": 0.712630286749694,
+      "pid": 25097,
+      "execPath": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "node": "v26.0.0",
+      "v8": "14.6.202.33-node.19",
+      "blackhole": 23
+    },
+    {
+      "variant": "cursor",
+      "seed": 1592752348,
+      "iterations": 2000,
+      "equality": [
+        {
+          "source": "{\"a\":[1,true,null,\"x\"]}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[{\"b\":2},false,\"y\",null]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "{\"nested\":{\"arr\":[1,2,3]},\"s\":\"hello\"}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[0,{\"x\":[true,false]},-12.5e2,\"\\u0041\"]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        }
+      ],
+      "rawAbi": {
+        "success": true,
+        "mismatchSingleton": true,
+        "legacySignaturePreserved": false,
+        "legacyFailureReturnPreserved": false
+      },
+      "order": [
+        0,
+        1,
+        3,
+        2
+      ],
+      "batchOrder": [
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA"
+      ],
+      "controlNs": [
+        2862625.0000000014,
+        1648291.999999998,
+        1669834.0000000016,
+        1378791.9999999972,
+        1307209.0000000002,
+        1425375.0000000026,
+        1334333.000000001,
+        1775499.999999994,
+        1294250.0000000051,
+        1312833.999999995
+      ],
+      "candidateNs": [
+        3093750,
+        2663291.9999999986,
+        2651667.0000000033,
+        2229500.0000000014,
+        2079416.9999999923,
+        2785165.9999999898,
+        2069082.999999992,
+        2320707.9999999963,
+        2013041.0000000012,
+        2008457.9999999902
+      ],
+      "ratio": 0.6694400395549375,
+      "pid": 25098,
+      "execPath": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "node": "v26.0.0",
+      "v8": "14.6.202.33-node.19",
+      "blackhole": 23
+    },
+    {
+      "variant": "cursor",
+      "seed": 1592792851,
+      "iterations": 2000,
+      "equality": [
+        {
+          "source": "{\"a\":[1,true,null,\"x\"]}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[{\"b\":2},false,\"y\",null]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "{\"nested\":{\"arr\":[1,2,3]},\"s\":\"hello\"}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[0,{\"x\":[true,false]},-12.5e2,\"\\u0041\"]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        }
+      ],
+      "rawAbi": {
+        "success": true,
+        "mismatchSingleton": true,
+        "legacySignaturePreserved": false,
+        "legacyFailureReturnPreserved": false
+      },
+      "order": [
+        3,
+        1,
+        0,
+        2
+      ],
+      "batchOrder": [
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB"
+      ],
+      "controlNs": [
+        2511040.9999999986,
+        1900417.0000000044,
+        1547417.000000003,
+        1633417.0000000014,
+        1307833.0000000023,
+        1941999.999999993,
+        1674583.0000000126,
+        1310208.000000003,
+        1278416.0000000072,
+        1294167.0000000016
+      ],
+      "candidateNs": [
+        3331125,
+        2779208.000000004,
+        3069291,
+        2199792.0000000023,
+        2011875.0000000035,
+        2248625.000000004,
+        2112042.0000000023,
+        2427500.0000000093,
+        2339541.000000011,
+        1949291.9999999998
+      ],
+      "ratio": 0.6702347540332917,
+      "pid": 25099,
+      "execPath": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "node": "v26.0.0",
+      "v8": "14.6.202.33-node.19",
+      "blackhole": 39
+    },
+    {
+      "variant": "cursor",
+      "seed": 1592833354,
+      "iterations": 2000,
+      "equality": [
+        {
+          "source": "{\"a\":[1,true,null,\"x\"]}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[{\"b\":2},false,\"y\",null]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "{\"nested\":{\"arr\":[1,2,3]},\"s\":\"hello\"}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[0,{\"x\":[true,false]},-12.5e2,\"\\u0041\"]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        }
+      ],
+      "rawAbi": {
+        "success": true,
+        "mismatchSingleton": true,
+        "legacySignaturePreserved": false,
+        "legacyFailureReturnPreserved": false
+      },
+      "order": [
+        1,
+        0,
+        3,
+        2
+      ],
+      "batchOrder": [
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA"
+      ],
+      "controlNs": [
+        1737290.999999999,
+        1613334.0000000019,
+        1462834.000000001,
+        1341082.9999999977,
+        1259374.9999999986,
+        1802000.0000000068,
+        1821540.9999999963,
+        1245374.9999999956,
+        1232124.9999999963,
+        1278125.0000000028
+      ],
+      "candidateNs": [
+        3462249.999999997,
+        2833292,
+        2214625.000000005,
+        3054625.0000000014,
+        2197250.0000000037,
+        2098999.9999999898,
+        1996709.0000000098,
+        1937750.0000000084,
+        2528375.000000011,
+        2021291.9999999884
+      ],
+      "ratio": 0.6076393886458284,
+      "pid": 25100,
+      "execPath": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "node": "v26.0.0",
+      "v8": "14.6.202.33-node.19",
+      "blackhole": 39
+    },
+    {
+      "variant": "state",
+      "seed": 1592590336,
+      "iterations": 2000,
+      "equality": [
+        {
+          "source": "{\"a\":[1,true,null,\"x\"]}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[{\"b\":2},false,\"y\",null]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "{\"nested\":{\"arr\":[1,2,3]},\"s\":\"hello\"}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[0,{\"x\":[true,false]},-12.5e2,\"\\u0041\"]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        }
+      ],
+      "rawAbi": {
+        "success": true,
+        "mismatchSingleton": true,
+        "legacySignaturePreserved": true,
+        "legacyFailureReturnPreserved": false
+      },
+      "order": [
+        3,
+        0,
+        1,
+        2
+      ],
+      "batchOrder": [
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA"
+      ],
+      "controlNs": [
+        1879124.9999999949,
+        1949166.9999999956,
+        1802333.0000000044,
+        1346665.999999999,
+        1286541.9999999972,
+        1384000.0000000002,
+        1366624.999999999,
+        1910832.9999999967,
+        1258124.9999999925,
+        1289332.999999999
+      ],
+      "candidateNs": [
+        3096249.9999999977,
+        2469624.9999999935,
+        2034333.0000000037,
+        2159250,
+        2590917.0000000047,
+        2012124.9999999974,
+        1900833.999999989,
+        1890000.0000000005,
+        1984915.9999999984,
+        1977041.9999999972
+      ],
+      "ratio": 0.6996402760587557,
+      "pid": 25108,
+      "execPath": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "node": "v26.0.0",
+      "v8": "14.6.202.33-node.19",
+      "blackhole": 38
+    },
+    {
+      "variant": "state",
+      "seed": 1592630839,
+      "iterations": 2000,
+      "equality": [
+        {
+          "source": "{\"a\":[1,true,null,\"x\"]}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[{\"b\":2},false,\"y\",null]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "{\"nested\":{\"arr\":[1,2,3]},\"s\":\"hello\"}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[0,{\"x\":[true,false]},-12.5e2,\"\\u0041\"]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        }
+      ],
+      "rawAbi": {
+        "success": true,
+        "mismatchSingleton": true,
+        "legacySignaturePreserved": true,
+        "legacyFailureReturnPreserved": false
+      },
+      "order": [
+        3,
+        1,
+        0,
+        2
+      ],
+      "batchOrder": [
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB"
+      ],
+      "controlNs": [
+        2147790.999999998,
+        2114666.999999997,
+        1448124.9999999974,
+        1794541.9999999998,
+        1335875.0000000014,
+        1277791.0000000077,
+        1713415.999999995,
+        1373333.9999999998,
+        1849125.0000000007,
+        1415166.9999999967
+      ],
+      "candidateNs": [
+        3036709.000000002,
+        2617708.9999999977,
+        2412165.999999999,
+        2302749.9999999963,
+        2289666.000000004,
+        2622041.0000000102,
+        2301874.9999999953,
+        2070582.999999999,
+        2028750.0000000023,
+        2066457.9999999972
+      ],
+      "ratio": 0.6935044084715849,
+      "pid": 25119,
+      "execPath": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "node": "v26.0.0",
+      "v8": "14.6.202.33-node.19",
+      "blackhole": 38
+    },
+    {
+      "variant": "state",
+      "seed": 1592671342,
+      "iterations": 2000,
+      "equality": [
+        {
+          "source": "{\"a\":[1,true,null,\"x\"]}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[{\"b\":2},false,\"y\",null]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "{\"nested\":{\"arr\":[1,2,3]},\"s\":\"hello\"}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[0,{\"x\":[true,false]},-12.5e2,\"\\u0041\"]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        }
+      ],
+      "rawAbi": {
+        "success": true,
+        "mismatchSingleton": true,
+        "legacySignaturePreserved": true,
+        "legacyFailureReturnPreserved": false
+      },
+      "order": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "batchOrder": [
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA"
+      ],
+      "controlNs": [
+        1824458,
+        1825665.9999999981,
+        1743624.9999999944,
+        1581082.9999999995,
+        1356374.9999999928,
+        1356542.0000000047,
+        2165750.000000003,
+        1320625.0000000068,
+        1281458.0000000007,
+        1310584.0000000058
+      ],
+      "candidateNs": [
+        2895082.9999999995,
+        3234957.999999999,
+        2349584,
+        3380875.0000000033,
+        2223166.000000006,
+        2094750.000000005,
+        2341959.000000003,
+        1923417.0000000007,
+        2706583.9999999925,
+        2076166.0000000007
+      ],
+      "ratio": 0.6249832418569299,
+      "pid": 25151,
+      "execPath": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "node": "v26.0.0",
+      "v8": "14.6.202.33-node.19",
+      "blackhole": 39
+    },
+    {
+      "variant": "state",
+      "seed": 1592711845,
+      "iterations": 2000,
+      "equality": [
+        {
+          "source": "{\"a\":[1,true,null,\"x\"]}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[{\"b\":2},false,\"y\",null]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "{\"nested\":{\"arr\":[1,2,3]},\"s\":\"hello\"}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[0,{\"x\":[true,false]},-12.5e2,\"\\u0041\"]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        }
+      ],
+      "rawAbi": {
+        "success": true,
+        "mismatchSingleton": true,
+        "legacySignaturePreserved": true,
+        "legacyFailureReturnPreserved": false
+      },
+      "order": [
+        1,
+        3,
+        2,
+        0
+      ],
+      "batchOrder": [
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB"
+      ],
+      "controlNs": [
+        1637625,
+        1726917.0000000002,
+        1482750.0000000028,
+        1446624.9999999974,
+        1315374.999999996,
+        1316791.9999999923,
+        1412166.9999999965,
+        1896917.0000000019,
+        1276375.0000000016,
+        1256875.000000008
+      ],
+      "candidateNs": [
+        2973874.9999999995,
+        3301667.000000002,
+        2395000.0000000033,
+        2012375.0000000058,
+        2581125,
+        2030540.9999999995,
+        1983375.0000000095,
+        2063709.0000000028,
+        1972291.999999996,
+        2161665.9999999967
+      ],
+      "ratio": 0.6290958387689352,
+      "pid": 25171,
+      "execPath": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "node": "v26.0.0",
+      "v8": "14.6.202.33-node.19",
+      "blackhole": 23
+    },
+    {
+      "variant": "state",
+      "seed": 1592752348,
+      "iterations": 2000,
+      "equality": [
+        {
+          "source": "{\"a\":[1,true,null,\"x\"]}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[{\"b\":2},false,\"y\",null]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "{\"nested\":{\"arr\":[1,2,3]},\"s\":\"hello\"}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[0,{\"x\":[true,false]},-12.5e2,\"\\u0041\"]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        }
+      ],
+      "rawAbi": {
+        "success": true,
+        "mismatchSingleton": true,
+        "legacySignaturePreserved": true,
+        "legacyFailureReturnPreserved": false
+      },
+      "order": [
+        0,
+        1,
+        3,
+        2
+      ],
+      "batchOrder": [
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA"
+      ],
+      "controlNs": [
+        2545583.999999998,
+        1602833.000000004,
+        1773416.9999999949,
+        1394500.0000000007,
+        1295124.9999999988,
+        1378500.0000000026,
+        1347417.0000000072,
+        1283375.0000000065,
+        1784250,
+        1328792.000000007
+      ],
+      "candidateNs": [
+        3229083.000000003,
+        2669375.0000000023,
+        2416666.9999999967,
+        2128374.999999998,
+        1973582.999999998,
+        2667249.999999996,
+        2002457.99999999,
+        1930916.0000000105,
+        2073958.0000000047,
+        1920249.9999999958
+      ],
+      "ratio": 0.6837237578880342,
+      "pid": 25180,
+      "execPath": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "node": "v26.0.0",
+      "v8": "14.6.202.33-node.19",
+      "blackhole": 23
+    },
+    {
+      "variant": "state",
+      "seed": 1592792851,
+      "iterations": 2000,
+      "equality": [
+        {
+          "source": "{\"a\":[1,true,null,\"x\"]}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[{\"b\":2},false,\"y\",null]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "{\"nested\":{\"arr\":[1,2,3]},\"s\":\"hello\"}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[0,{\"x\":[true,false]},-12.5e2,\"\\u0041\"]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        }
+      ],
+      "rawAbi": {
+        "success": true,
+        "mismatchSingleton": true,
+        "legacySignaturePreserved": true,
+        "legacyFailureReturnPreserved": false
+      },
+      "order": [
+        3,
+        1,
+        0,
+        2
+      ],
+      "batchOrder": [
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB"
+      ],
+      "controlNs": [
+        1611791.0000000037,
+        1658459.0000000005,
+        1521749.9999999972,
+        1444791.9999999995,
+        1301833.000000002,
+        1278708.0000000016,
+        1511666.9999999886,
+        1867458.9999999967,
+        1304333.9999999972,
+        1233333.9999999993
+      ],
+      "candidateNs": [
+        3049915.9999999963,
+        3224417.0000000023,
+        2388624.9999999977,
+        2360332.999999997,
+        2262250.000000002,
+        2107541.9999999953,
+        2036332.999999999,
+        2150250,
+        2014959.0000000047,
+        2368041.000000005
+      ],
+      "ratio": 0.6148784530068562,
+      "pid": 25207,
+      "execPath": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "node": "v26.0.0",
+      "v8": "14.6.202.33-node.19",
+      "blackhole": 39
+    },
+    {
+      "variant": "state",
+      "seed": 1592833354,
+      "iterations": 2000,
+      "equality": [
+        {
+          "source": "{\"a\":[1,true,null,\"x\"]}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[{\"b\":2},false,\"y\",null]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "{\"nested\":{\"arr\":[1,2,3]},\"s\":\"hello\"}",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        },
+        {
+          "source": "[0,{\"x\":[true,false]},-12.5e2,\"\\u0041\"]",
+          "exactValue": true,
+          "rebuiltControl": true,
+          "candidateValue": true,
+          "candidatePublic": true
+        }
+      ],
+      "rawAbi": {
+        "success": true,
+        "mismatchSingleton": true,
+        "legacySignaturePreserved": true,
+        "legacyFailureReturnPreserved": false
+      },
+      "order": [
+        1,
+        0,
+        3,
+        2
+      ],
+      "batchOrder": [
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA"
+      ],
+      "controlNs": [
+        2838459.0000000005,
+        1510750.0000000016,
+        1808084.000000001,
+        1318124.9999999949,
+        1303666.9999999972,
+        1377375.0000000007,
+        1398042.0000000037,
+        1283709.0000000019,
+        1698042.000000001,
+        1291459.0000000033
+      ],
+      "candidateNs": [
+        2823874.999999994,
+        2553958.999999999,
+        2626457.9999999995,
+        2082957.999999998,
+        2076582.9999999993,
+        2582708.999999994,
+        1994332.9999999974,
+        1947583.0000000086,
+        2001125.0000000019,
+        1917249.9999999956
+      ],
+      "ratio": 0.7001295581738501,
+      "pid": 25208,
+      "execPath": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "node": "v26.0.0",
+      "v8": "14.6.202.33-node.19",
+      "blackhole": 39
+    }
+  ],
+  "byVariant": {
+    "cursor": {
+      "ratios": [
+        0.665486492809171,
+        0.6497803613722182,
+        0.7527093116738474,
+        0.712630286749694,
+        0.6694400395549375,
+        0.6702347540332917,
+        0.6076393886458284
+      ],
+      "rawGreen": false,
+      "min": 0.6076393886458284,
+      "max": 0.7527093116738474
+    },
+    "state": {
+      "ratios": [
+        0.6996402760587557,
+        0.6935044084715849,
+        0.6249832418569299,
+        0.6290958387689352,
+        0.6837237578880342,
+        0.6148784530068562,
+        0.7001295581738501
+      ],
+      "rawGreen": false,
+      "min": 0.6148784530068562,
+      "max": 0.7001295581738501
+    }
+  },
+  "bootstrap": "WITHHELD_UNLESS_EVERY_RAW_RATIO_CLEARS_10X"
+}
