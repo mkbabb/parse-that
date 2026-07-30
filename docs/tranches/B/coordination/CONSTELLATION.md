@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | P6-A2 owner evidence `c9d8be1` (A2 AMEND; one-scalar A3 active; no distinct P7); A2 Luna/fresh-Sol seals `67ddf602…`/`97e72af8…`; A1 owner evidence `4f772fd`; P6 owner evidence `75d36ab`; P5 owner evidence `0bc0d37`; P4 owner audit `270feca`; full-CSS denominator `2bc4abb2…`; native yardstick `605a1ae`; P3 feasibility ruling `d03d0422…`; P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`; direct closure `19c1e12`; P-B1 `302c623` |
+| parse-that worktree | B / generic runtime producer | P6-A3 owner evidence `3ed4c43` (correctness CLEAN; admissible raw KILL/PRUNE; no distinct P7); A3 Luna/fresh-Sol seals `222b09eb…`/`ff193de0…`; A2 owner evidence `c9d8be1`; A1 owner evidence `4f772fd`; P6 owner evidence `75d36ab`; P5 owner evidence `0bc0d37`; P4 owner audit `270feca`; full-CSS denominator `2bc4abb2…`; native yardstick `605a1ae`; P3 feasibility ruling `d03d0422…`; P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`; direct closure `19c1e12`; P-B1 `302c623` |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
@@ -168,11 +168,12 @@ checkpoint/oracle proof; its 0.8716–1.0327× rows are also inadmissible.
 A2 owner evidence `c9d8be1` closes the 21-position typed-fault/oracle defects
 but finds six routine-failure offset mismatches. The signed return plus
 existing A2 state cannot distinguish the root-trim and failing-choice offsets,
-so its 0.8991–1.1562× rows are also inadmissible. P6-A3 alone may add one
-non-control failure-offset provenance scalar and retest the atom. No renamed
-P7 or domain-neutral second-consumer substitute is admissible. Full CSS,
-formation Clean A/B, candidate packing, release, Value rebind, ABI freeze and
-BBNF remain blocked.
+so its 0.8991–1.1562× rows are also inadmissible. A3 owner evidence `3ed4c43`
+binds one non-control failure-offset key, full semantic equality, and seven
+admissible 0.9208–1.0390× rows. P6 is terminal `KILL/PRUNE`. No same-atom
+continuation, renamed P7, or domain-neutral second-consumer substitute is
+admissible. Full CSS, formation Clean A/B, candidate packing, release, Value
+rebind, ABI freeze and BBNF remain blocked.
 
 P2-L at `5822ae2` adds no consumer or API edge. Its 51 equal products place
 success at 0.0718–1.3079×; callback-loop, ASCII-table and public

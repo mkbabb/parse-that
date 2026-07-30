@@ -318,16 +318,21 @@ have the same signed return and existing A2 state while M2 requires offsets
 `1` and `0`; frontier cannot supply the distinction. A2's
 0.8991–1.1562× rows are arithmetically sound but inadmissible.
 
-`P6-A3` is the only next same-seat correction. It may add one parse-local
-`failureOffset` provenance scalar, never consulted for control or return-kind
-discrimination, with exact atomic save/restore and pass-through propagation.
-It must close all 21 typed-fault and 23 routine-mismatch rows before a new
-exact-M2 scale-4 raw floor. Any admissible raw row below 10× kills the atom
-before bootstrap, CSS or broader planes. Genealogy remains `SPLIT`,
-surrounding topology remains folded into P3, novelty/family credit remains
-zero, and full CSS plus all downstream formation/execution edges remain
-blocked. No distinct P7 may be dispatched absent a genuinely new, reached
-cost-removal edge.
+A3 owner evidence `3ed4c43`,
+`audit/P6-SIR-A3-OWNER-SOL-ADJUDICATION-2026-07-30.md`, closes all 21
+typed-fault and 23 routine-mismatch rows with one non-control
+`failureOffset` provenance scalar. Fresh Sol finds exactly one added run key,
+zero control-path uses or forbidden mechanisms, 4/4 independent native
+products, and seven admissible exact-M2 ratios at
+0.9208–1.0390×. Every row is below 10×. P6 is therefore terminal
+`KILL/PRUNE`.
+
+Genealogy remains `SPLIT`, surrounding topology remains folded into P3,
+novelty/family credit remains zero, and full CSS plus all downstream
+formation/execution edges remain blocked. There is no same-atom continuation
+and no distinct P7 under the current feasibility law. Any future research
+continuation must first quantify a genuinely new reached cost-removal edge
+outside P1–P6; no implementation is authorized from a renamed mechanism.
 
 ## Debt and terminal dispositions
 

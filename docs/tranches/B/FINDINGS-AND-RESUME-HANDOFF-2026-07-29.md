@@ -2,8 +2,8 @@
 
 Date: 2026-07-30
 
-Status: **P6/P6-A1/P6-A2 PRE-TIMING AMEND — P6-A3 ACTIVE ONE-SCALAR FATAL
-ASSAY — RED — NO RELEASE**
+Status: **P6-A3 CORRECTNESS CLEAN / RAW KILL-PRUNE — NO DISTINCT P7 —
+FORMATION RED — NO RELEASE**
 
 ## Exact resume coordinate
 
@@ -11,8 +11,7 @@ ASSAY — RED — NO RELEASE**
   `/Users/mkbabb/Programming/parse-that-css-totality`
 - Branch: `codex/css-totality-combinators-20260729`
 - Source/evidence HEAD:
-  `c9d8be1` (`docs(parser-research): bind P6 A2 failure-offset impossibility
-  and route one-scalar A3`)
+  `3ed4c43` (`docs(parser-research): bind the conforming P6 A3 raw kill`)
 - P1 registry coordinate:
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
@@ -65,6 +64,14 @@ ASSAY — RED — NO RELEASE**
 - P6-A2 owner adjudication:
   `c9d8be1`,
   `audit/P6-SIR-A2-OWNER-SOL-ADJUDICATION-2026-07-30.md`.
+- P6-A3 Luna manifest/raw:
+  `222b09ebd4113c99e5ff7e1638a6465f883fa2023308bb21ca4c56ede6248e33` /
+  `2c0a9f096f8e7f5b2077359b5839e9d153f7b15edb6dabb95b38caf377c37b2e`.
+- P6-A3 fresh-Sol checksum manifest:
+  `ff193de0c4d80a468256962e9c82dadb69c953a14a0c3fe44494a11df2846185`.
+- P6-A3 owner adjudication:
+  `3ed4c43`,
+  `audit/P6-SIR-A3-OWNER-SOL-ADJUDICATION-2026-07-30.md`.
 - Root P3 feasibility ruling SHA-256:
   `d03d042286d0bad27e3666f3c08e83a393aaa86928e6273c05ac85ac51bfed67`;
   it supersedes `8fe9a26b…` as document identity.
@@ -356,33 +363,46 @@ candidate pack, consumer receipt or release.
     0.8991–1.1562× rows are arithmetically sound but inadmissible.
 35. Owner audit `c9d8be1` binds the carrier impossibility witness: root
     `trim` and `trim.or(failing-right)` have the same `-1`, frontier/label,
-    and existing run state while M2 requires offsets `1` and `0`. A3 alone
-    may add one non-control `failureOffset` provenance scalar.
+    and existing run state while M2 requires offsets `1` and `0`. At that
+    boundary, only A3 could add one non-control `failureOffset` provenance
+    scalar.
 36. No distinct P7 is admissible under current laws absent a genuinely new,
     reached cost-removal edge. A domain-neutral fixture cannot substitute for
     the binding Value-owned full-CSS consumer.
+37. A3 Luna manifest `222b09eb…` adds exactly one non-control
+    `failureOffset` run key. Fresh-Sol seal `ff193de0…` independently closes
+    all 21 typed positions, 23 ordinary-failure rows, seven rollback/recovery
+    rows, eight edge rows, two recursive-lazy rows, and 4/4 native products.
+38. A3 raw `2c0a9f09…` is admissible: seven unique PIDs/seeds, seventy AB/BA
+    batches, 2,000 selections per arm/batch, equal sinks and exact ratios
+    0.9208–1.0390×. Every row is below 10×.
+39. Owner audit `3ed4c43` terminally `KILL/PRUNE`s the conforming P6
+    signed-step atom. There is no same-atom continuation or distinct P7.
+    Formation, source, CSS, consumer, API, candidate, release and BBNF credit
+    remain zero.
 
-## Next executable transaction — P6-A3 failure-offset fatal assay
+## Resume boundary — new cost-removal edge required
 
-Resume B.W0 from A2 owner evidence `c9d8be1`. Preserve the original Luna
-P6/A1/A2 packets and raw SHAs `7655b467…`/`e9479e7e…`/`5ff0c4fa…`
-byte-for-byte. Product source remains held.
+Resume B.W0 from terminal P6 owner evidence `3ed4c43`. Preserve every P6,
+A1, A2, and A3 Luna/Sol packet and raw byte. Product source remains held.
 
 ### Subject
 
-Resume the existing Luna seat
-`019fb16a-09d7-7d80-ae5f-3d894e25855d`; create no task. Write only a new
-immutable packet under
-`/Users/mkbabb/Documents/Codex/2026-07-30/parser-p6-sir-luna-a3/outputs/**`.
-Copy A2 and add exactly one parse-local scalar named `failureOffset`. Atomic
-owners save/restore it, pass-through combinators propagate it, and public
-ordinary-failure projection reads it. It must never control dispatch, branch
-selection, success/mismatch/fault discrimination, table indexing, or the
-signed return alphabet. Keep one integer return, nonnegative cursor success,
-`-1` mismatch, `-2` typed fault, ordinary value in run state and one raw
-executor. Do not add a second carrier, status/cursor alias, checkpoint object,
-region, slab, journal, tape, compiler, VM, generated grammar, scanner,
-fallback, wrapper, second executor or public surface.
+There is no authorized implementation transaction. Do not resume an existing
+seat to rename P6 or dispatch P7. A future research proposal must first
+identify a genuinely new reached cost-removal edge outside the complete P1–P6
+genealogy and quantitatively defend how it can clear the binding budget:
+
+```text
+10x budget                       187,063 us
+native matching                  144,501 us
+required products                167,382 us
+matching + products              311,883 us
+budget overrun                   124,820 us
+```
+
+Architecture prose, a relabeled carrier, a domain-neutral fixture, or a
+different measurement boundary creates no prototype authority.
 
 ### Required laws
 
@@ -390,7 +410,7 @@ fallback, wrapper, second executor or public surface.
   faults, failure frontiers and scalar rollback;
 - preserve accepted-M2 traversal provenance and same-FIRST frontier bytes;
 - preserve exact accepted-M2 ordinary-failure offsets independently from
-  sticky frontier evidence;
+  sticky frontier evidence if a future architecture is admitted;
 - keep the compiled graph/table, unordered engine, generic source leaf,
   compiler-owned result, `/utils`, unconsumed packrat, private direct closure
   runtime, region-slot RSR, CISF/CTPT, F1/F2/F3, SRA, TOL and EUW retired;
@@ -403,33 +423,19 @@ fallback, wrapper, second executor or public surface.
 
 ### Admission order
 
-1. Assert all 21 typed-fault positions with exact return, complete run
-   snapshot, sticky fault/frontier, frozen singleton, owner-versus-pass-
-   through policy and immutable public result.
-2. Assert all 23 accepted-M2 ordinary-mismatch offset/frontier rows, including
-   root/nonzero `trim`, all atomic owners, all pass-through paths, and the
-   root-trim versus failing-choice indistinguishability witness.
-3. Prove `failureOffset` is saved/restored by `or`, `then`, `skip`, `next`,
-   `wrap`, `sepBy` and `recover`; propagated by direct, `map`, `trim`, `lazy`
-   and `dispatch`; and never read on the control path.
-4. Compare `JSON.parse`, exact M2, rebuilt M2 and A3 independently; re-run
-   checkpoint, rollback, alias, safe-integer, zero-width, dispatch, recursion,
-   allocation and forbidden-mechanism probes. Timing is forbidden unless
-   every pre-timing row is green.
-5. Run a new scale-4 live accepted-M2 `jsonParser`, alternating immutable
-   success products, across seven fresh paired processes. Every raw ratio must
-   be `>=10x`; any miss kills the conforming atom before bootstrap or broader
-   work.
-6. Only when every raw point clears the floor, compute the exact-bootstrap
-   95% lower bound; it too must be `>=10x`.
-7. Only a green fatal cell opens scale 4/33 complete state/value/result,
-   failures, diagnostics-on recovery, exact UTF-16, allocation, IC, deopt,
-   GC and heap assays.
-8. The first CSS evidence is one real Value-owned combinator vertical authored
-   once against control/candidate generic primitives, with proved nonzero P6
-   activity. A handwritten body, scanner-shaped representation, or “full
-   CSS” label without the 1,439/1,653 denominator is fatal.
-9. Formation Clean A/B remain blocked until a surviving isolated candidate
+1. Preserve the P1–P6 evidence and exact cost law; do not grant credit across
+   a new family boundary.
+2. Require an independently adjudicated, quantitatively explicit cost-removal
+   edge before code. It must name the reached work removed, not only a new
+   carrier or execution spelling.
+3. If separately authorized, begin with one isolated exact-M2 scale-4
+   equal-product fatal cell. Restore the complete state/value/result,
+   success/failure/recovery/fault, UTF-16, allocation, IC, deopt and GC planes
+   only after every small-scale raw row and bootstrap low clear 10×.
+4. Only a surviving generic mechanism may open the real Value-owned CSS
+   vertical. A handwritten body, scanner-shaped representation, or “full CSS”
+   label without the 1,439/1,653 denominator is fatal.
+5. Formation Clean A/B remain blocked until a surviving isolated candidate
    clears the complete proof. Production freeze, packing, consumer migration,
    release, Value rebind and BBNF remain later.
 

@@ -18,10 +18,10 @@ rebind exists.
 
 | Gate | Status | Evidence |
 |---|---|---|
-| Canonical parent/PROGRESS/wave/coordination/FINAL | `IN_PROGRESS` | P4 is `REJECT/FOLD`; P5-EUW is `KILL/PRUNE`; P6/A1/A2 are pre-timing AMEND, one-scalar P6-A3 is active, and no distinct P7 is admissible without a new reached cost-removal edge |
-| Runtime correctness | `IN_PROGRESS` | M2 is the accepted control; live production remains rejected M3. P6 masks `-2`; A1 leaves checkpoint/oracle gaps; A2 cannot project exact ordinary-failure offsets; no candidate exists |
+| Canonical parent/PROGRESS/wave/coordination/FINAL | `IN_PROGRESS` | P4 is `REJECT/FOLD`; P5-EUW and conforming P6-A3 are `KILL/PRUNE`; no distinct P7 is admissible without a new reached cost-removal edge |
+| Runtime correctness | `RED` | M2 is the accepted control; live production remains rejected M3. A3 is locally correctness-clean but performance-killed; no candidate exists |
 | Full-subject P1→P2→P3 | `COMPLETE` | P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`. All implemented candidates are killed; this supplies no isolated-proof or formation credit. |
-| Isolated every-scale/result proof | `RED` | S7's subset is local. S8, P2-UO/L/shaped and P2-C are RED/killed; P3 reaches 1.0656–1.5238×; P4 mechanism rows are below `1x`; P5 reaches 0.6076–0.7527× / 0.6149–0.7001×. P6 0.9564–1.1820×, A1 0.8716–1.0327×, and A2 0.8991–1.1562× rows are inadmissible after false-green gates. No candidate exists. |
+| Isolated every-scale/result proof | `RED` | S7's subset is local. S8, P2-UO/L/shaped and P2-C are RED/killed; P3 reaches 1.0656–1.5238×; P4 mechanism rows are below `1x`; P5 reaches 0.6076–0.7527× / 0.6149–0.7001×. P6/A1/A2 rows are inadmissible; conforming A3 rows are admissible but only 0.9208–1.0390×. No candidate exists. |
 | Formation Clean A / Clean B | `BLOCKED` | requires green isolated prototype proof |
 | Formation admission | `BLOCKED` | requires both formation clean audits; creates zero execution credit |
 | Full Value CSS coverage | `OPEN` | Root denominator `2bc4abb2…` binds 1,717 raw/1,653 active Webref rows, 25 decisions, ten entry points, eleven algorithms, full recovery/fidelity, WPT manifests and 53 Keyframes references/51 files; Value owns implementation and no execution receipt exists |
@@ -77,8 +77,10 @@ native. A1's 0.8716–1.0327× raw rows are also inadmissible. A2 owner evidence
 `c9d8be1` confirms 21/21 typed-fault positions and the real native oracle,
 then proves that root `trim` and `trim.or(failing-right)` have identical
 signed return/existing run state while M2 requires different public offsets.
-A2's 0.8991–1.1562× rows are therefore inadmissible. P6-A3 is the active
-same-seat one-`failureOffset` correction. No P4/P5/P6 evidence grants
+A2's 0.8991–1.1562× rows are therefore inadmissible. A3 owner evidence
+`3ed4c43` binds exactly one non-control `failureOffset` key, 21/21 typed
+rows, 23/23 ordinary rows, 4/4 native products, and seven admissible ratios
+at 0.9208–1.0390×. P6 is terminal `KILL/PRUNE`. No P4/P5/P6 evidence grants
 formation credit, and no renamed P7 may run without a new reached
 cost-removal edge.
 Root denominator `2bc4abb2…` makes 1,439 the active
@@ -108,10 +110,8 @@ Read `FINDINGS-AND-RESUME-HANDOFF-2026-07-29.md` and
 prototype evidence and user-owned untracked `data` symlink. P4 is complete
 negative evidence; do not rerun or relabel its Sol/Luna families. P5-EUW is
 terminal executable negative evidence; do not reopen it on legacy-signature
-grounds. Preserve the original P6, A1, and A2 packet/raw bytes unchanged. Run
-only P6-A3's one non-control `failureOffset` provenance correction; repeat all
-21 typed-fault and 23 ordinary-mismatch rows and, only after the full preflight
-is green, a new exact-M2 scale-4 raw fatal cell. Do not run
-formation clean audits, pack a candidate,
-publish, widen the API or begin Value-owned CSS product work until a genuinely
-distinct isolated candidate clears the full proof.
+grounds. Preserve every P6/A1/A2/A3 packet, raw, and Sol seal unchanged. P6
+has no continuation. Do not dispatch a renamed P7, run formation clean
+audits, pack a candidate, publish, widen the API, or begin Value-owned CSS
+product work. A future architecture must first quantify a genuinely new
+reached cost-removal edge outside P1–P6 and receive separate authority.
