@@ -2,8 +2,8 @@
 
 Date: 2026-07-30
 
-Status: **P5-EUW KILLED — P6-SIR NEXT ISOLATED FATAL ASSAY — RED — NO
-RELEASE**
+Status: **P6-SIR PRE-TIMING REJECT — P6-A1 ACTIVE ISOLATED FATAL ASSAY —
+RED — NO RELEASE**
 
 ## Exact resume coordinate
 
@@ -11,9 +11,8 @@ RELEASE**
   `/Users/mkbabb/Programming/parse-that-css-totality`
 - Branch: `codex/css-totality-combinators-20260729`
 - Source/evidence HEAD:
-  `0bc0d37bfadf62ddde432686947309cc1741325e`
-  (`perf(parser-research): falsify exceptional-unwind mismatch after the
-  clean-break ABI challenge`)
+  `75d36ab` (`docs(parser-research): reject the false-green P6 signed-step
+  packet and route immutable A1`)
 - P1 registry coordinate:
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
@@ -36,6 +35,20 @@ RELEASE**
 - P5-EUW owner Sol adjudication:
   `0bc0d37bfadf62ddde432686947309cc1741325e`, with executable manifest
   `docs/tranches/B/artifacts/pass6/euw-clean-break/MANIFEST.sha256`.
+- P6-SIR Sol design:
+  `b2c7447bac97f948b5b5fefe8d3f0885ab4b3e32`, file SHA-256
+  `4f1a3bf0546796a398804c5afc4f1fa1f9ced682fdd86745144fe9d99bcadbbd`.
+- Sealed Luna P6-SIR packet:
+  `/Users/mkbabb/Documents/Codex/2026-07-30/parser-p6-sir-luna/outputs`,
+  manifest SHA-256
+  `d16787b3761e2d8f2eefe7a01ffc8c49da73627123dc1eecf5b0fa1f72e2edb9`.
+- Fresh-Sol P6 adjudication:
+  `/Users/mkbabb/Documents/Codex/2026-07-30/parser-p6-sir-fresh-sol-adjudication/outputs`,
+  checksum-manifest SHA-256
+  `78cb1aa0897412ed83f43d9d93fccd28b2eccea20d9fe805c571b6a019f0aa27`.
+- P6-SIR owner adjudication:
+  `75d36ab`,
+  `audit/P6-SIR-OWNER-SOL-ADJUDICATION-2026-07-30.md`.
 - Root P3 feasibility ruling SHA-256:
   `d03d042286d0bad27e3666f3c08e83a393aaa86928e6273c05ac85ac51bfed67`;
   it supersedes `8fe9a26b…` as document identity.
@@ -301,20 +314,36 @@ candidate pack, consumer receipt or release.
     `019fb175-70a5-7c31-a4c9-29f7faa9dbc9` read only the drive seed and wrote
     zero regular files/content. Its empty output root is breach evidence, not
     authority.
+29. P6 design `b2c7447` correctly classifies the signed-step atom as a split
+    from P4 RSR and the surrounding executor as folded P3 topology. It earns
+    no novelty or family credit.
+30. Luna P6 manifest `d16787b3…` seals seven exact-M2 raw ratios at
+    0.9564–1.1820×, but its pre-timing taxonomy is false-green. `sepBy`
+    converts sticky `-2` into successful returns `0`, `1` and `1` in the
+    first-element, separator and later-element positions while retaining
+    `run.fault` and projecting public `fault: null`.
+31. Fresh-Sol seal `78cb1aa0…` and owner audit `75d36ab` reject that packet
+    before timing. Its raw bytes remain immutable arithmetic evidence about
+    the defective prototype but are inadmissible for atom-level KILL/PRUNE.
+    P6-A1 alone may repair those three boundaries in a new immutable packet.
 
-## Next executable transaction — P6-SIR fatal assay
+## Next executable transaction — P6-A1 fatal assay
 
-Resume B.W0 from P5 owner evidence `0bc0d37`. Every P1–P5 implementation
-family is retired, killed or unimplemented. Product source remains held.
+Resume B.W0 from P6 owner evidence `75d36ab`. Preserve the original Luna P6
+packet and raw SHA `7655b467…` byte-for-byte. Product source remains held.
 
 ### Subject
 
-Implement only the signed-scalar observation from P4 RSR that no prior packet
-executed: one integer return, nonnegative cursor on success, negative
-mismatch/fault tag, ordinary value in run state, and one raw executor. Do not
-carry forward RSR's region, slab, journal, signed-step object or finalizer.
-Do not add a tape, compiler, VM, generated grammar, scanner, fallback,
-wrapper, second executor or public surface.
+Resume the existing Luna seat
+`019fb16a-09d7-7d80-ae5f-3d894e25855d`; create no task. Write only a new
+immutable packet under
+`/Users/mkbabb/Documents/Codex/2026-07-30/parser-p6-sir-luna-a1/outputs/**`.
+Copy the P6 executor and change only `sepBy`'s handling of sticky `-2` at the
+first element, separator and later element. Keep one integer return,
+nonnegative cursor success, `-1` mismatch, `-2` typed fault, ordinary value in
+run state and one raw executor. Do not add a region, slab, journal, tape,
+compiler, VM, generated grammar, scanner, fallback, wrapper, second executor
+or public surface.
 
 ### Required laws
 
@@ -333,22 +362,28 @@ wrapper, second executor or public surface.
 
 ### Admission order
 
-1. Implement the smallest private SIR runtime and the same idiomatic
-   dispatch-based JSON factory used by the exact accepted-M2 control. The
-   candidate must have exactly one executor and no compatibility path.
-2. Run scale-4 live accepted-M2 `jsonParser`, alternating immutable success
-   products, across seven fresh paired processes. Every raw ratio must be
-   `>=10x`; any miss kills SIR before bootstrap or broader work.
-3. Only when every raw point clears the floor, compute the exact-bootstrap
+1. Add exact direct probes for typed `-2` in the first `sepBy` element,
+   separator and later element. Every path must propagate `-2`, restore its
+   local atomic cursor/value/diagnostic checkpoint, retain sticky
+   fault/frontier evidence and project an immutable typed-fault error. No
+   typed-fault row may be skipped.
+2. Re-run the existing routine rollback, full-grammar alias, safe-integer,
+   four-fixture equality, dispatch and forbidden-mechanism probes. Timing is
+   forbidden unless every pre-timing row is green.
+3. Run a new scale-4 live accepted-M2 `jsonParser`, alternating immutable
+   success products, across seven fresh paired processes. Every raw ratio must
+   be `>=10x`; any miss kills the conforming atom before bootstrap or broader
+   work.
+4. Only when every raw point clears the floor, compute the exact-bootstrap
    95% lower bound; it too must be `>=10x`.
-4. Only a green fatal cell opens scale 4/33 complete state/value/result,
+5. Only a green fatal cell opens scale 4/33 complete state/value/result,
    failures, diagnostics-on recovery, exact UTF-16, allocation, IC, deopt,
    GC and heap assays.
-5. The first CSS evidence is one real Value-owned combinator vertical authored
+6. The first CSS evidence is one real Value-owned combinator vertical authored
    once against control/candidate generic primitives, with proved nonzero SIR
    activity. A handwritten body, scanner-shaped representation, or “full
    CSS” label without the 1,439/1,653 denominator is fatal.
-6. Formation Clean A/B remain blocked until a surviving isolated candidate
+7. Formation Clean A/B remain blocked until a surviving isolated candidate
    clears the complete proof. Production freeze, packing, consumer migration,
    release, Value rebind and BBNF remain later.
 

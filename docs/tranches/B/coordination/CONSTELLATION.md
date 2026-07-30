@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | P5 owner evidence `0bc0d37` (EUW killed); Luna seal `e2d8fb3e…`; owner P4 audit `270feca`; corrected jury A1 `3297c808…`; authority `75cf36e`; P4 reopen `d1df0f01…`; full-CSS denominator `2bc4abb2…`; native yardstick `605a1ae`; P3 feasibility ruling `d03d0422…` (negative evidence, not stop authority); P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a` (row-complete, zero candidates); direct closure `19c1e12` (killed); same-FIRST `f4b9abb` (D killed); cold/hot `d323f56`; mixed-overlap U `68055bd`; shaped `d62b73a`; P2-L `5822ae2`; S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
+| parse-that worktree | B / generic runtime producer | P6 owner evidence `75d36ab` (first packet pre-timing REJECT; A1 active); Luna P6 seal `d16787b3…`; fresh-Sol P6 seal `78cb1aa0…`; P5 owner evidence `0bc0d37` (EUW killed); owner P4 audit `270feca`; corrected jury A1 `3297c808…`; authority `75cf36e`; P4 reopen `d1df0f01…`; full-CSS denominator `2bc4abb2…`; native yardstick `605a1ae`; P3 feasibility ruling `d03d0422…` (negative evidence, not stop authority); P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a` (row-complete, zero candidates); direct closure `19c1e12` (killed); same-FIRST `f4b9abb` (D killed); cold/hot `d323f56`; mixed-overlap U `68055bd`; shaped `d62b73a`; P2-L `5822ae2`; S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
@@ -159,7 +159,11 @@ only a phase-zero ABI census. Owner evidence `0bc0d37` then tests the legal
 clean-break forms against exact accepted-M2 `jsonParser`: cursor EUW is
 0.6076–0.7527× and same-state EUW is 0.6149–0.7001× across 14 unique PIDs.
 P5 is `KILL/PRUNE`, zero edge credit. P6-SIR may assay only the pure
-signed-integer return seam; full CSS, formation Clean A/B, candidate packing,
+signed-integer return seam. Owner evidence `75d36ab` rejects its first packet
+before timing because `sepBy` masks sticky `-2` in all three child positions.
+The exact 0.9564–1.1820× raw rows remain immutable but inadmissible for
+atom-level disposition. P6-A1 alone may repair and retest those positions in
+a new immutable packet. Full CSS, formation Clean A/B, candidate packing,
 release, Value rebind, ABI freeze and BBNF remain blocked.
 
 P2-L at `5822ae2` adds no consumer or API edge. Its 51 equal products place

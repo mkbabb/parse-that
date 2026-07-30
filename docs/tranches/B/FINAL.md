@@ -18,10 +18,10 @@ rebind exists.
 
 | Gate | Status | Evidence |
 |---|---|---|
-| Canonical parent/PROGRESS/wave/coordination/FINAL | `IN_PROGRESS` | P4 is owner-adjudicated `REJECT/FOLD`; P5-EUW is `KILL/PRUNE`; P6-SIR is the next isolated fatal assay; this ledger remains open |
-| Runtime correctness | `IN_PROGRESS` | M2 is the accepted control; live production remains rejected M3. Transaction/run-state/slot/span/recovery/result laws and shaped fixtures are correctness-green; every P1–P5 implementation family is retired and no candidate exists |
+| Canonical parent/PROGRESS/wave/coordination/FINAL | `IN_PROGRESS` | P4 is owner-adjudicated `REJECT/FOLD`; P5-EUW is `KILL/PRUNE`; the first P6-SIR packet is pre-timing REJECT and immutable P6-A1 is active; this ledger remains open |
+| Runtime correctness | `IN_PROGRESS` | M2 is the accepted control; live production remains rejected M3. Transaction/run-state/slot/span/recovery/result laws and shaped fixtures are correctness-green; P6's first `sepBy` masks sticky `-2`, so no candidate exists |
 | Full-subject P1→P2→P3 | `COMPLETE` | P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`. All implemented candidates are killed; this supplies no isolated-proof or formation credit. |
-| Isolated every-scale/result proof | `RED` | S7's warmed terminal/recovery subset is local only. S8 recursion, P2-UO, P2-L and shaped products are RED. P2-C kills the compiled surface; P3 direct closure is only 1.0656–1.5238×. P4's 432 genuine Luna mechanism rows are all below `1x`; its 432 CSS rows reach no mechanism. P5-EUW clean-break variants are only 0.6076–0.7527× and 0.6149–0.7001×. P6-SIR is unmeasured. No candidate exists. |
+| Isolated every-scale/result proof | `RED` | S7's warmed terminal/recovery subset is local only. S8 recursion, P2-UO, P2-L and shaped products are RED. P2-C kills the compiled surface; P3 direct closure is only 1.0656–1.5238×. P4's 432 genuine Luna mechanism rows are all below `1x`; its 432 CSS rows reach no mechanism. P5-EUW clean-break variants are only 0.6076–0.7527× and 0.6149–0.7001×. P6's seven 0.9564–1.1820× rows are inadmissible after a false-green taxonomy gate; P6-A1 is unmeasured. No candidate exists. |
 | Formation Clean A / Clean B | `BLOCKED` | requires green isolated prototype proof |
 | Formation admission | `BLOCKED` | requires both formation clean audits; creates zero execution credit |
 | Full Value CSS coverage | `OPEN` | Root denominator `2bc4abb2…` binds 1,717 raw/1,653 active Webref rows, 25 decisions, ten entry points, eleven algorithms, full recovery/fidelity, WPT manifests and 53 Keyframes references/51 files; Value owns implementation and no execution receipt exists |
@@ -66,10 +66,12 @@ unimplemented, Luna's different F1/F2/F3 mechanisms lost on all 432 genuine
 JSON rows, and its 432 CSS rows exercised none of them. P5 owner evidence
 `0bc0d37` verifies Luna manifest `e2d8fb3e…`, corrects the legacy-signature
 premise, and executably kills both one-executor EUW clean breaks: cursor
-0.6076–0.7527×, same-state 0.6149–0.7001× across 14 unique processes. P6-SIR
-isolates the only unimplemented scalar signed-return observation without
-RSR's region/finalizer machinery. No P4/P5/P6 evidence grants formation
-credit.
+0.6076–0.7527×, same-state 0.6149–0.7001× across 14 unique processes. P6
+owner evidence `75d36ab` rejects the first signed-return packet before
+timing: `sepBy` masks sticky `-2` in all three child positions. Its exact
+0.9564–1.1820× raw rows remain immutable but inadmissible, so they do not kill
+the conforming atom. Immutable P6-A1 is the active same-seat correction. No
+P4/P5/P6 evidence grants formation credit.
 Root denominator `2bc4abb2…` makes 1,439 the active
 property/function/type scale and 1,653 the active unqualified full-Webref
 scale. A 753-property or shaped-mechanism result cannot claim full coverage.
@@ -97,7 +99,9 @@ Read `FINDINGS-AND-RESUME-HANDOFF-2026-07-29.md` and
 prototype evidence and user-owned untracked `data` symlink. P4 is complete
 negative evidence; do not rerun or relabel its Sol/Luna families. P5-EUW is
 terminal executable negative evidence; do not reopen it on legacy-signature
-grounds. Run only P6-SIR's exact-M2 scale-4 raw fatal cell before broader
-work. Do not run formation clean audits, pack a candidate,
+grounds. Preserve the first P6 packet and raw bytes unchanged. Run only
+P6-A1's exact `sepBy` sticky-fault correction/probes and, after they are
+green, a new exact-M2 scale-4 raw fatal cell before broader work. Do not run
+formation clean audits, pack a candidate,
 publish, widen the API or begin Value-owned CSS product work until a genuinely
 distinct isolated candidate clears the full proof.

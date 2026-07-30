@@ -300,14 +300,19 @@ only 0.6149–0.7001×. All 14 fresh-process rows preserve the bounded immutable
 success product, and all are below `1x`; bootstrap, CSS and profiling are
 correctly not reached. P5 is `KILL/PRUNE` with zero credit.
 
-The next isolated seam is `P6-SIR`: the pure signed-integer return observation
-that P4 RSR never implemented, without RSR's regions, slabs or finalizer. It
-gets one executor, nonnegative cursor success, negative mismatch/fault tags,
-ordinary value in run state, and no wrapper, fallback, scanner, compiler, VM,
-generated grammar or alternate path. Its first cell is the same exact-M2
-scale-4 immutable-success raw floor in seven fresh processes; any row below
-10× kills it before bootstrap, CSS or broader planes. Full CSS and all
-downstream formation/execution edges remain blocked.
+The first `P6-SIR` packet is rejected at owner evidence `75d36ab`,
+`audit/P6-SIR-OWNER-SOL-ADJUDICATION-2026-07-30.md`. The packet correctly
+isolates P4's already-designed signed-step atom, but `sepBy` converts sticky
+`-2` faults into success at the first element, separator and later element.
+Its seven exact-M2 raw ratios, 0.9564–1.1820×, are arithmetically sound but
+inadmissible because timing followed a false-green taxonomy gate. They do not
+kill the conforming atom. `P6-A1` is the smallest same-seat repair: preserve
+the original packet, propagate `-2` at all three boundaries with exact local
+rollback/result probes, then rerun only the exact-M2 scale-4 raw floor in a
+new immutable packet. Any corrected raw row below 10× kills the atom before
+bootstrap, CSS or broader planes. Genealogy remains `SPLIT`, surrounding
+topology remains folded into P3, novelty/family credit remains zero, and full
+CSS plus all downstream formation/execution edges remain blocked.
 
 ## Debt and terminal dispositions
 
