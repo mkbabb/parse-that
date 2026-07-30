@@ -10,8 +10,7 @@ Status: **ACTIVE FORMATION — RED — NO RELEASE**
   `/Users/mkbabb/Programming/parse-that-css-totality`
 - Branch: `codex/css-totality-combinators-20260729`
 - Source/evidence HEAD:
-  `d323f56` (`perf(parser-prototype): falsify compiled dispatch across cold
-  and hot planes`)
+  `f4b9abb` (`test(parser-prototype): bind same-FIRST recovery divergence`)
 - P1 registry coordinate:
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
@@ -30,6 +29,8 @@ Status: **ACTIVE FORMATION — RED — NO RELEASE**
   `d9253a49c7fcbe970712cc4245711cfdb1a5891bdafb7507720cb1d033a87bfd`.
 - P2-C manifest-file SHA-256:
   `850af1b66956e2b66637e1f0d49fd1a5d229397a9fd7ad4d2daf4bdd02ef879e`.
+- P3 same-FIRST manifest-file SHA-256:
+  `90115ccd7b567591c56e68870605331f99078be4baf246a10e246649829ae49e`.
 - Accepted M2 control worktree:
   `/tmp/parse-that-m2-baseline-20260729`
 - Accepted M2 coordinate:
@@ -111,6 +112,10 @@ consumer, publication or release credit.
     hash-bound.
 13. P2 is row-complete at `c3d42d4`: all twenty P1 rows have an exact
     KEEP/KILL/RED/ROUTED disposition.
+14. P3 same-FIRST recovery at `f4b9abb` seals all six permutations with
+    diagnostics off and on. Successful values, authored slots, UTF-16 spans,
+    final offsets and status are equal; diagnostics-on complete views are
+    equal.
 
 Value R2 formation is independently admitted with zero parser execution,
 product, release, or constellation-close credit: root receipt `0c151de9…`,
@@ -170,7 +175,7 @@ candidate pack, consumer receipt or release.
     candidate survives.
 14. P2-UO recovery has a unique FIRST code. It proves successful immutable
     recovery in a mixed-overlap product, but not same-FIRST speculative
-    recovery-frontier equality. Keep that distinction explicit in P2/P3.
+    recovery-frontier equality.
 15. P2-C puts compiled construction at 0.0597–0.0785×, build-plus-first-parse
     at 0.0696–0.0846×, stabilized success below 10× at every scale under 753,
     and Unicode cold routing at 1.4996× hot. The staged graph, prefix table and
@@ -181,6 +186,11 @@ candidate pack, consumer receipt or release.
 17. `/utils` has no live source consumer and only one Value prototype use;
     packrat has no live Value/JSON consumer. Both are excluded from a
     successor unless two exact consumer receipts prove otherwise.
+18. P3 same-FIRST closes the outstanding hostile gap by falsifying D, not by
+    repairing it. With diagnostics disabled, four recovery frontiers differ:
+    M2 is `10/6/1/1/10/5`, D is `10/10/2/2/10/6`; diagnostics enabled makes
+    D converge to M2. The cause is reordered speculative provenance, not
+    rollback leakage. Accepted-M2 closure traversal is the smallest law.
 
 ## Next executable transaction
 
@@ -189,9 +199,10 @@ implemented replacement family.
 
 ### Subject
 
-Execute the same-FIRST speculative-recovery hostile case, then form the
-smallest direct closure-kernel surface cut that preserves only the P2 survivor
-laws. Keep CSS grammar/domain types in Value.
+The same-FIRST speculative-recovery hostile case is complete at `f4b9abb`.
+Form the smallest direct closure-kernel surface cut that preserves only the
+P2 survivor laws and this diagnostics-toggle invariant. Keep CSS
+grammar/domain types in Value.
 
 ### Required laws
 
@@ -211,9 +222,9 @@ laws. Keep CSS grammar/domain types in Value.
 
 ### Admission order
 
-1. Add the smallest accepted-M2-versus-private closure hostile fixture for
-   same-FIRST recovery under overlap. Do not repair a retired unordered
-   engine; use the divergence to constrain the surviving scalar semantics.
+1. Preserve the banked `f4b9abb` same-FIRST ruling. Do not repair the retired
+   unordered engine; use its divergence to constrain the surviving scalar
+   semantics.
 2. Specify the candidate surface as direct closure consolidation with net
    deletion. No compiler, table builder, tokenizer, scanner, VM, event tape or
    compatibility layer.

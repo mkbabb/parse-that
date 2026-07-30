@@ -236,8 +236,11 @@ KEEP, KILL, RED or ROUTED disposition. No replacement family survives:
 compiled graph/table/source leaves, balanced discard, unordered S/D and the
 callback/ASCII/sticky leaf widenings are retired. The remaining transaction,
 run-state, slot/span, recovery and consumer-result mechanisms are behavioral
-laws, not an admitted candidate. P3 is next, beginning with same-FIRST
-speculative recovery and a direct closure-kernel surface cut. The live
+laws, not an admitted candidate. P3's same-FIRST hostile case is banked at
+`f4b9abb`: retired D preserves final values/spans but changes immutable
+recovery provenance when diagnostics are toggled, so accepted-M2 closure
+order is the control law. P3 continues with a direct closure-kernel surface
+cut. The live
 production parser source remains rejected M3 at `90d4ec5`; M2 at `de36d57`
 remains the performance control. No bootstrap, formation, execution or
 release credit follows.

@@ -39,13 +39,13 @@ Release status: **NO RELEASE**
 | P2-UO mixed-overlap unordered | `68055bd`, `artifacts/pass3/p2-unordered-overlap/` | Every 4/8/16/33-member success uses D's live residual route while returning equal slots, UTF-16 spans, immutable recovery diagnostics and failures. Twenty AB/BA points are 0.7362–2.2994×; several binding planes lose and stable 8/16/33-member grammar heap is ~2.06–2.40× control. **CORRECTNESS GREEN; PERFORMANCE RED; D KILL; NO BOOTSTRAP; TERMINAL P2 EVIDENCE**. |
 | P2-C cold/hot dispatch | `d323f56`, `artifacts/pass3/p2-cold-hot/` | Equal EOF/span products at 4/8/16/33/96/753 measure construction, build+first parse, stabilized hot, alternating shapes, failure and Unicode cold edges. Construction is 0.0597–0.0785×, cold end-to-end 0.0696–0.0846×, small/middle hot below 3.758× and Unicode hot 1.500×. **CORRECTNESS GREEN; COMPILED TABLE KILL; NO BOOTSTRAP**. |
 | P2 full-subject disposition | `c3d42d4`, `research/P2-FULL-SUBJECT-DISPOSITION-2026-07-29.md` | All twenty P1 rows have exact KEEP/KILL/RED/ROUTED outcomes. Every implemented replacement family is retired; surviving mechanisms are laws/fixtures, not a candidate. **P2 COMPLETE; FORMATION RED; P3 NEXT**. |
+| P3 same-FIRST recovery | `f4b9abb`, `artifacts/pass3/p3-same-first/` | Six scannerless permutations compare accepted-M2 exhaustive traversal with retired D, diagnostics off and on. Values, authored slots, UTF-16 spans, final offset and success are equal, but four diagnostics-off recovery frontiers differ and D changes provenance when diagnostics are enabled. **HOSTILE CASE COMPLETE; D KILL RECONFIRMED; P3 IN PROGRESS; NO PUBLIC/RELEASE CREDIT**. |
 
 ## Current executable state
 
 - Branch: `codex/css-totality-combinators-20260729`.
 - Latest source/evidence coordinate:
-  `d323f56` (`perf(parser-prototype): falsify compiled dispatch across cold
-  and hot planes`).
+  `f4b9abb` (`test(parser-prototype): bind same-FIRST recovery divergence`).
 - Latest canonical authority reconciliation:
   `e448b24` (`docs(parser-tranche): close P2 with zero surviving
   candidates`).
@@ -67,14 +67,17 @@ Release status: **NO RELEASE**
   `850af1b66956e2b66637e1f0d49fd1a5d229397a9fd7ad4d2daf4bdd02ef879e`;
   it binds the profile, frozen 753-name corpus, allocation rows, CPU profile,
   normalized V8 log and production guard.
+- P3 same-FIRST objects at `f4b9abb`: manifest-file SHA-256
+  `90115ccd7b567591c56e68870605331f99078be4baf246a10e246649829ae49e`;
+  it binds the hostile source, exact twelve-product result and ruling.
 - P-B1 authority head: `302c623b4ffddf76bc4ee042cad1d3c5e739ef9d`.
 - Source/evidence coordinates include `c480578`
   (`perf(runtime-prototype): bind corrected S assay to accepted M2 control`),
   `2fc18dc`, S4 at `75b76dd`, S5 at `926a3ad`, S6 at `062c147`, S7 at
   `20b5f52`, S8 at `27bf872`, U at `19ad1ac`, P2-L at `5822ae2`, shaped
   products at `d62b73a`, mixed-overlap U at `68055bd`, cold/hot dispatch at
-  `d323f56`, and the P2 registry at `c3d42d4`. None confers formation
-  admission or execution credit.
+  `d323f56`, the P2 registry at `c3d42d4`, and P3 same-FIRST recovery at
+  `f4b9abb`. None confers formation admission or execution credit.
 - S/recovery evidence commit:
   `2fc18dc1ec3a0541b85e9e440fca85028844673c`.
 - Canonical authority before P-B1:
@@ -118,6 +121,10 @@ Release status: **NO RELEASE**
 - Fresh P2-C gates: package 14/14 files and 134/134 tests; strict TypeScript;
   production build; artifact manifest and `proof:all` green. Its sealed
   production guard records +6.3% JSON and is a regression guard only.
+- Fresh P3 same-FIRST gates: exact hostile harness and manifest; package
+  14/14 files and 134/134 tests; strict TypeScript; production build and
+  `proof:all` green. The unchanged production guard records +1.3% JSON and
+  74.8% faster dispatch; it is not formation proof.
 - U gates: 24/24 unordered cases plus 13/13 S-kernel regressions; package
   suite 14/14
   files and 134/134 tests; strict TypeScript; production build; manifest,
@@ -197,8 +204,13 @@ Release status: **NO RELEASE**
   state/value/internal/result/failure products. The twenty AB/BA ratios are
   0.7362–2.2994×, with multiple binding points below 1×. D is terminally
   retired; no bootstrap follows. Successful recovery is present but has a
-  unique FIRST code, so same-FIRST speculative recovery under overlap remains
-  an explicit hostile-audit item rather than a claimed result.
+  unique FIRST code, so it does not answer same-FIRST speculative recovery.
+- P3 same-FIRST closes that hostile gap. Across all six permutations,
+  accepted-M2 recovery offsets are invariant across diagnostics toggles.
+  Retired D returns `10/10/2/2/10/6` with diagnostics off instead of M2's
+  `10/6/1/1/10/5`, then converges to M2 when diagnostics are enabled. The
+  difference is traversal provenance, not rollback leakage. D remains killed;
+  no new checkpoint or recovery layer is admitted.
 - P2-C closes cold/hot dispatch. Candidate/control construction ratios are
   0.0597–0.0785× and build-plus-first-parse ratios 0.0696–0.0846× across
   4/8/16/33/96/753. Stabilized exact-product success is
@@ -288,9 +300,9 @@ chain may be recorded while an earlier arrow is RED.
 
 ## Next executable boundary
 
-1. Begin P3 with the exact same-FIRST speculative-recovery overlap case. It
-   must compare successful frontier, labels, spans and immutable diagnostic
-   bytes against accepted M2; it may not widen the scalar checkpoint.
+1. The exact same-FIRST speculative-recovery overlap case is banked at
+   `f4b9abb`. Preserve its diagnostics-toggle invariance and accepted-M2
+   closure traversal law; do not repair D or widen the scalar checkpoint.
 2. Form the smallest direct closure-kernel surface cut from the P2 survivor
    laws. Delete or exclude the compiled graph/table, unordered engine, generic
    source leaf, compiler-owned result, `/utils`, and unconsumed packrat

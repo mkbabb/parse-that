@@ -19,7 +19,7 @@ pair, release or Value released-coordinate rebind exists.
 |---|---|---|
 | Canonical parent/PROGRESS/wave/coordination/FINAL | `IN_PROGRESS` | `B.md`, `PROGRESS.md`, `waves/W0.md`, `coordination/CONSTELLATION.md`, this file |
 | Runtime correctness | `IN_PROGRESS` | M2 is the accepted control; live production remains rejected M3. Transaction/run-state/slot/span/recovery/result laws and shaped fixtures are correctness-green; every replacement family is retired and no candidate exists |
-| Full-subject P1→P2→P3 | `IN_PROGRESS` | P1 is complete at `69f72f7`; P2 is row-complete at `c3d42d4`; P3 is next and has no credit yet |
+| Full-subject P1→P2→P3 | `IN_PROGRESS` | P1 is complete at `69f72f7`; P2 is row-complete at `c3d42d4`; P3's same-FIRST hostile case is banked at `f4b9abb`, but the direct closure cut and complete P3 disposition remain open |
 | Isolated every-scale/result proof | `RED` | S7's warmed terminal/recovery subset is local only. S8 recursion, P2-UO, P2-L and shaped products are RED. P2-C puts construction at 0.0597–0.0785×, cold at 0.0696–0.0846×, and stabilized success below 10× at every scale under 753. Live Value receipts belong to later execution. |
 | Formation Clean A / Clean B | `BLOCKED` | requires green isolated prototype proof |
 | Formation admission | `BLOCKED` | requires both formation clean audits; creates zero execution credit |
@@ -42,7 +42,11 @@ No close commit exists. Banked formation-research commits are recorded in
 `PROGRESS.md`; none admits formation or carries execution/release credit. The
 accepted-M2 control is `c480578`
 (`perf(runtime-prototype): bind corrected S assay to accepted M2 control`).
-The latest prototype evidence, cold/hot dispatch, is banked at `d323f56`.
+The latest prototype evidence, same-FIRST recovery, is banked at `f4b9abb`.
+It proves that retired D changes immutable recovery provenance when
+diagnostics are toggled despite equal successful values/spans, so accepted-M2
+closure order remains the control law and D remains killed. Cold/hot dispatch
+is banked at `d323f56`.
 The compiled table is 12.7–16.8× slower to construct, 11.9–14.4× slower
 through its first parse, below 10× on stabilized success under 753 names and
 only 1.4996× on Unicode cold edges. It is terminally retired. Mixed-overlap U
@@ -64,7 +68,8 @@ Resume from
 `FINDINGS-AND-RESUME-HANDOFF-2026-07-29.md` and
 `PROGRESS.md §Next executable boundary`. Preserve the active branch, banked
 private prototype evidence and user-owned untracked `data` symlink. Resume
-P3 with the same-FIRST recovery hostile case and smallest direct
-closure-kernel surface cut. Do not reopen a retired family without a new exact
+P3 with the smallest direct closure-kernel surface cut; the same-FIRST
+recovery hostile case is already sealed at `f4b9abb`. Do not reopen a retired
+family without a new exact
 two-consumer need. Do not publish, widen the API or begin Value-owned CSS work
 from this repository.

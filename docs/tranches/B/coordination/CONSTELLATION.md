@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | P1 `69f72f7`; P2 `c3d42d4` (row-complete, zero candidates), authority `e448b24`; cold/hot `d323f56` (compiled table killed); mixed-overlap U `68055bd` (D killed); shaped `d62b73a`; P2-L `5822ae2`; S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
+| parse-that worktree | B / generic runtime producer | P1 `69f72f7`; P2 `c3d42d4` (row-complete, zero candidates), authority `e448b24`; P3 same-FIRST `f4b9abb` (D divergence, no P3 completion); cold/hot `d323f56` (compiled table killed); mixed-overlap U `68055bd` (D killed); shaped `d62b73a`; P2-L `5822ae2`; S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
@@ -68,7 +68,8 @@ competing grammar can close an edge.
 Value formation is independently admitted with zero execution credit.
 Parse-that P1 reconciliation is complete at `69f72f7` and P2 is row-complete
 at `c3d42d4` with zero admitted candidates. P3, isolated every-subject proof,
-and formation Clean A/B remain open or blocked. The
+and formation Clean A/B remain open or blocked. P3's same-FIRST hostile case
+is banked at `f4b9abb`; it grants no P3 completion or later credit. The
 root receipt reported at SHA prefix
 `060995` is `P.exec.PB1-order-ack`: an execution-phase acknowledgment of
 future execution order/authority. It feeds private freeze only after
@@ -110,9 +111,14 @@ P2-UO at `68055bd` closes the live residual-route assay without adding a
 consumer or API edge. Every timed 4/8/16/33-member success has
 `residuals > 0` and returns equal slots, UTF-16 spans, immutable recovery
 diagnostics and failures. The twenty AB/BA ratios are only 0.7362–2.2994×,
-with binding losses and larger stable grammar heap. D is terminally retired;
-same-FIRST speculative recovery under overlap remains a hostile-audit item,
-not a claimed result.
+with binding losses and larger stable grammar heap. D is terminally retired.
+
+P3 same-FIRST at `f4b9abb` closes the remaining hostile recovery assay
+without adding a consumer or API edge. Successful values, slots, spans and
+terminal state remain equal across six permutations, but D changes four
+immutable recovery frontiers when diagnostics are disabled and converges only
+when they are enabled. Accepted-M2 traversal order is binding; no D repair,
+checkpoint widening or recovery layer is admitted.
 
 P2-L at `5822ae2` adds no consumer or API edge. Its 51 equal products place
 success at 0.0718–1.3079×; callback-loop, ASCII-table and public
@@ -129,6 +135,7 @@ P2-C at `d323f56` adds no consumer or API edge. At 4/8/16/33/96/753 names,
 construction is 0.0597–0.0785× and build-plus-first-parse is
 0.0696–0.0846×. Stabilized exact-product success misses 10× below 753 and
 Unicode cold routing is 1.4996× hot. The compiled graph/table surface is
-retired. P2's registry at `c3d42d4` routes P3 to direct closure consolidation,
-same-FIRST recovery and successor-surface pruning only. Ownership, release
+retired. P2's registry at `c3d42d4`, constrained by same-FIRST evidence at
+`f4b9abb`, routes P3 to direct closure consolidation and successor-surface
+pruning only. Ownership, release
 order and Value's blocks are unchanged.
