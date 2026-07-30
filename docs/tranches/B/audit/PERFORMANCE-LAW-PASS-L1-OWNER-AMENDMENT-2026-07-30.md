@@ -166,7 +166,8 @@ The corrected roster is exact:
 
 - 35 hot rows: the prior 31 row identities plus fixed/alternating nested
   zero-width-at-nonzero-cursor and recovery-nonprogress-fault rows;
-- 21 fixed cold rows;
+- 21 cold assay rows: nineteen fixed rows plus the two new alternating
+  zero-width and recovery-nonprogress rows;
 - seven hot processes, ten 2,000-selection paired batches per row, and one
   64-selection warmup per arm;
 - one sealed hot-process proof per `(row, process)` containing the warmup and
@@ -182,6 +183,25 @@ warmup is 31,360; cold is 588; instrumentation parser work is 5,376;
 identity/mutants are 768; total parser arm invocations are 9,838,092, plus
 2,688 no-parse instrumentation operations across 608 fresh processes. Any
 count drift is terminal before the manifest.
+
+Pre-seal owner inspection adds six binding implementation corrections without
+changing that topology:
+
+1. cold timing begins before the arm-specific import and separately records
+   import/evaluation and grammar-construction intervals;
+2. every cold receipt preserves its row's actual `shapeMode`;
+3. hot process summaries retain `processOrdinal` before ordering/bootstrap;
+4. bundle export count is not mislabeled module count; module count is exact
+   or `null/BLOCKED`;
+5. rebuild provenance binds the entry and every transitive esbuild input, or
+   remains explicitly `BLOCKED`;
+6. recovery state and diagnostics change only when exported `recover`
+   actually selects its recovery value. Nominal success proves no recovery,
+   fault, rollback, or diagnostic leakage.
+
+Any raw produced before these corrections is unsealed and inadmissible. The
+same A1 root may be rebuilt and rerun before `MANIFEST.sha256`; no sealed input
+or earlier packet may be overwritten.
 
 The A1 packet may accept corrected L1 neutral mechanics while leaving cost
 completeness RED. It may not select PL-3X, PL-2X, PL-BE, a parser mechanism,
