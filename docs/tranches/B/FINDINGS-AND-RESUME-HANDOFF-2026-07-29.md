@@ -16,8 +16,8 @@ Status: **ACTIVE P4 FORMATION RESEARCH — RED — NO RELEASE**
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
 - Canonical owner authority:
-  `c88d8c7` (`docs(parser-tranche): reconcile P3 as bounded evidence with
-  zero surviving candidates`).
+  `a7dd378` (`docs(parser-tranche): reopen P4 against the sealed P3
+  feasibility bound`).
 - Root P3 feasibility ruling SHA-256:
   `d03d042286d0bad27e3666f3c08e83a393aaa86928e6273c05ac85ac51bfed67`;
   it supersedes `8fe9a26b…` as document identity.

@@ -53,8 +53,8 @@ Release status: **NO RELEASE**
   `605a1ae` (`perf(parser-research): bind the native JSON feasibility
   yardstick`).
 - Latest canonical authority reconciliation:
-  `c88d8c7` (`docs(parser-tranche): reconcile P3 as bounded evidence with
-  zero surviving candidates`).
+  `a7dd378` (`docs(parser-tranche): reopen P4 against the sealed P3
+  feasibility bound`).
 - Root P3 feasibility ruling:
   SHA-256
   `d03d042286d0bad27e3666f3c08e83a393aaa86928e6273c05ac85ac51bfed67`;
