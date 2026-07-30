@@ -289,15 +289,25 @@ Luna's different F1/F2/F3 families lose on all 432 genuine JSON mechanism
 rows, and its 432 CSS rows time one handwritten reader that reaches none of
 the mechanisms. P4 is `REJECT/FOLD` and grants no formation credit.
 
-`P5-EUW` exceptional-unwind mismatch is the only bounded next family. Root
-A1 intake `709dcac8…` authorizes one isolated Luna preflight at task
-`019fb16a-09d7-7d80-ae5f-3d894e25855d`; owner source remains held until its
-sealed result and a fresh-Sol adjudication exist. Its first gate is not
-performance: it must preserve the public raw-parser mismatch ABI without a
-wrapper, fallback, dual executor, second runtime, or public widening. Only a
-green phase zero may open a seven-process scale-4 live-JSON fatal cell where
-every raw ratio and the exact-bootstrap CI-low must clear 10×. Full CSS and
-all downstream formation/execution edges remain blocked.
+`P5-EUW` is terminal at owner evidence `0bc0d37`. Luna task
+`019fb16a-09d7-7d80-ae5f-3d894e25855d` stopped at a sealed phase-zero ABI
+census (`checksums.sha256` `e2d8fb3e…`) without an executable runtime or raw
+row. The owner adjudication accepts that old raw-signature preservation is
+not independently mandatory under the clean-break/no-compatibility law, then
+tests both legal one-executor forms against exact accepted-M2 `jsonParser`.
+Cursor-return EUW reaches only 0.6076–0.7527×; same-state-success EUW reaches
+only 0.6149–0.7001×. All 14 fresh-process rows preserve the bounded immutable
+success product, and all are below `1x`; bootstrap, CSS and profiling are
+correctly not reached. P5 is `KILL/PRUNE` with zero credit.
+
+The next isolated seam is `P6-SIR`: the pure signed-integer return observation
+that P4 RSR never implemented, without RSR's regions, slabs or finalizer. It
+gets one executor, nonnegative cursor success, negative mismatch/fault tags,
+ordinary value in run state, and no wrapper, fallback, scanner, compiler, VM,
+generated grammar or alternate path. Its first cell is the same exact-M2
+scale-4 immutable-success raw floor in seven fresh processes; any row below
+10× kills it before bootstrap, CSS or broader planes. Full CSS and all
+downstream formation/execution edges remain blocked.
 
 ## Debt and terminal dispositions
 

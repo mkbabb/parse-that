@@ -2,7 +2,7 @@
 
 Date: 2026-07-30
 
-Status: **ACTIVE ISOLATED P5-EUW PREFLIGHT — OWNER SOURCE HELD — RED — NO
+Status: **P5-EUW KILLED — P6-SIR NEXT ISOLATED FATAL ASSAY — RED — NO
 RELEASE**
 
 ## Exact resume coordinate
@@ -11,8 +11,9 @@ RELEASE**
   `/Users/mkbabb/Programming/parse-that-css-totality`
 - Branch: `codex/css-totality-combinators-20260729`
 - Source/evidence HEAD:
-  `605a1ae` (`perf(parser-research): bind the native JSON feasibility
-  yardstick`)
+  `0bc0d37bfadf62ddde432686947309cc1741325e`
+  (`perf(parser-research): falsify exceptional-unwind mismatch after the
+  clean-break ABI challenge`)
 - P1 registry coordinate:
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
@@ -27,9 +28,14 @@ RELEASE**
   `3297c808d66ed3c528134a2567a4f85ba7602769270868abfd701fa80ce0b311`.
 - Root A1 intake SHA-256:
   `709dcac882dcbbc95101b58f72b0e34ed2284c6c1dcd2c02aee8567521bb6c63`.
-- Sole isolated Luna P5-EUW preflight:
+- Sealed Luna P5-EUW preflight:
   task `019fb16a-09d7-7d80-ae5f-3d894e25855d`, writer root
-  `/Users/mkbabb/Documents/Codex/2026-07-29/parser-p5-euw-luna/outputs`.
+  `/Users/mkbabb/Documents/Codex/2026-07-29/parser-p5-euw-luna/outputs`;
+  manifest SHA-256
+  `e2d8fb3e344088dfa4af963b542ce22296f6485f16120f397791d271962765fc`.
+- P5-EUW owner Sol adjudication:
+  `0bc0d37bfadf62ddde432686947309cc1741325e`, with executable manifest
+  `docs/tranches/B/artifacts/pass6/euw-clean-break/MANIFEST.sha256`.
 - Root P3 feasibility ruling SHA-256:
   `d03d042286d0bad27e3666f3c08e83a393aaa86928e6273c05ac85ac51bfed67`;
   it supersedes `8fe9a26b…` as document identity.
@@ -268,8 +274,9 @@ candidate pack, consumer receipt or release.
 22. Root's reopening condition is not met. Even at the optimistic native
     yardstick bootstrap highs, a qualifying candidate must be
     1.9614×/1.6144× faster than native on scale-4/8 immutable results while
-    adding the omitted generic parser semantics. The offset-return idea names
-    no source for that gain and was not implemented.
+    adding the omitted generic parser semantics. P4's region-slot signed
+    return design names no proved source for that gain and was not
+    implemented.
 23. P4 did not implement its dispatched Sol designs. RSR, CISF and CTPT remain
     unimplemented design evidence. Luna substituted F1/F2/F3 in one runtime;
     all 432 genuine JSON mechanism rows are below `1x`.
@@ -279,23 +286,35 @@ candidate pack, consumer receipt or release.
     zero mechanism, consumer, coverage or formation credit.
 25. Corrected jury A1 `3297c808…` changes only the RSR expansion and Sol
     denominator hash plus mechanical receipt/seal bindings. It preserves P4
-    `REJECT/FOLD`. P5-EUW is the sole bounded next falsifier, not a candidate.
+    `REJECT/FOLD`.
+26. Luna P5 seal `e2d8fb3e…` correctly inventories accepted M2's raw
+    `ParserFunction`/`Parser.parser` surface and direct `latex-paper`
+    consumers, but stops before an executable runtime. Its claim that the old
+    signature is independently mandatory is too broad under the tranche's
+    clean-break/no-compatibility law.
+27. Owner evidence `0bc0d37` tests both legal one-executor clean breaks
+    against the exact accepted-M2 `jsonParser`. Cursor-return EUW is
+    0.6076–0.7527×; same-state-success EUW is 0.6149–0.7001×. All 14 unique
+    process rows preserve the bounded immutable success product and all lose
+    to M2. P5 is `KILL/PRUNE`; bootstrap, CSS and profiles are not reached.
+28. The accidental archived task
+    `019fb175-70a5-7c31-a4c9-29f7faa9dbc9` read only the drive seed and wrote
+    zero regular files/content. Its empty output root is breach evidence, not
+    authority.
 
-## Next executable transaction — P5-EUW fatal preflight
+## Next executable transaction — P6-SIR fatal assay
 
-Resume B.W0 from owner audit `270feca` and root A1 intake `709dcac8…`. Every
-P1–P4 implementation family is retired or unimplemented. Exactly one isolated
-Luna preflight is active; owner source and owner prototype paths remain held.
+Resume B.W0 from P5 owner evidence `0bc0d37`. Every P1–P5 implementation
+family is retired, killed or unimplemented. Product source remains held.
 
 ### Subject
 
-Await the sealed output of Luna task
-`019fb16a-09d7-7d80-ae5f-3d894e25855d`, then require one fresh-Sol
-adjudication before any owner action. EUW makes routine mismatch use one
-frozen singleton exception caught only at root/choice/repeat/recover
-ownership boundaries while success returns a cursor and writes the ordinary
-final value. It may not add a region, journal, tape, compiler, VM, scanner,
-fallback, wrapper, second executor or public surface.
+Implement only the signed-scalar observation from P4 RSR that no prior packet
+executed: one integer return, nonnegative cursor on success, negative
+mismatch/fault tag, ordinary value in run state, and one raw executor. Do not
+carry forward RSR's region, slab, journal, signed-step object or finalizer.
+Do not add a tape, compiler, VM, generated grammar, scanner, fallback,
+wrapper, second executor or public surface.
 
 ### Required laws
 
@@ -304,7 +323,7 @@ fallback, wrapper, second executor or public surface.
 - preserve accepted-M2 traversal provenance and same-FIRST frontier bytes;
 - keep the compiled graph/table, unordered engine, generic source leaf,
   compiler-owned result, `/utils`, unconsumed packrat, private direct closure
-  runtime, RSR/CISF/CTPT, F1/F2/F3, SRA and TOL retired;
+  runtime, region-slot RSR, CISF/CTPT, F1/F2/F3, SRA, TOL and EUW retired;
 - preserve S7's generic laws without elevating its local subset to
   every-subject proof;
 - no decoded-token object, token list, scanner result, global trivia layer or
@@ -314,21 +333,19 @@ fallback, wrapper, second executor or public surface.
 
 ### Admission order
 
-1. Independently verify the completed Luna seal; then consume one fresh-Sol
-   falsification/adjudication. Do not act on an in-progress packet.
-2. Phase zero proves public raw-parser compatibility. Accepted M2 exports
-   `ParserFunction`, exposes `Parser.parser`, and permits direct raw calls
-   whose mismatch returns `ParserState`. Any changed behavior, wrapper,
-   internal/external executor split, fallback or API widening kills EUW.
-3. Only if phase zero is green, run scale-4 live M2 `jsonParser`, alternating
-   hot immutable results, across seven fresh paired processes. Every raw
-   ratio and exact-bootstrap 95% lower bound must be `>=10x`; any miss kills
-   EUW before broader work.
+1. Implement the smallest private SIR runtime and the same idiomatic
+   dispatch-based JSON factory used by the exact accepted-M2 control. The
+   candidate must have exactly one executor and no compatibility path.
+2. Run scale-4 live accepted-M2 `jsonParser`, alternating immutable success
+   products, across seven fresh paired processes. Every raw ratio must be
+   `>=10x`; any miss kills SIR before bootstrap or broader work.
+3. Only when every raw point clears the floor, compute the exact-bootstrap
+   95% lower bound; it too must be `>=10x`.
 4. Only a green fatal cell opens scale 4/33 complete state/value/result,
    failures, diagnostics-on recovery, exact UTF-16, allocation, IC, deopt,
    GC and heap assays.
 5. The first CSS evidence is one real Value-owned combinator vertical authored
-   once against control/candidate generic primitives, with proved nonzero EUW
+   once against control/candidate generic primitives, with proved nonzero SIR
    activity. A handwritten body, scanner-shaped representation, or “full
    CSS” label without the 1,439/1,653 denominator is fatal.
 6. Formation Clean A/B remain blocked until a surviving isolated candidate

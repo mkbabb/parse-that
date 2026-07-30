@@ -7,9 +7,9 @@ Tranche status: `in_progress`
 Active wave: `B.W0 - Candidate-to-Release Closure`
 
 Formation status: **RED — P1, P2 and P3 are row-complete with zero surviving
-candidates; P4 is independently adjudicated REJECT/FOLD; one isolated Luna
-P5-EUW fatal preflight is active while owner source remains held; both
-formation clean audits remain blocked**
+candidates; P4 is independently adjudicated REJECT/FOLD; P5-EUW is
+executable-performance KILL/PRUNE; P6-SIR is the next isolated fatal assay;
+both formation clean audits remain blocked**
 
 Release status: **NO RELEASE**
 
@@ -46,14 +46,16 @@ Release status: **NO RELEASE**
 | Native JSON feasibility yardstick and P3 cost bound | `605a1ae`, `artifacts/formation/native-json-yardstick/`; root ruling `d03d0422…` | Seven processes compare accepted-M2 logical `jsonParser` with native `JSON.parse` on equal values and identically frozen success envelopes. Scale-4 immutable result is 5.0050× (bootstrap 95% 4.9513–5.0985×); scale 8 is 6.0826× (6.0293–6.1943×). Independent call-tree attribution of sealed P3 CPU evidence reproduces 1,157,659 µs candidate runtime, 144,501 µs candidate-native RegExp, 167,382 µs required candidate products and 1,870,633 µs comparable M2 work. Matching plus products alone consumes 311,883 µs against a 187,063 µs 10× budget. **IMMUTABLE P3 NEGATIVE EVIDENCE; P4 MUST EXECUTABLY FALSIFY THE BOUND; NO CANDIDATE/CREDIT**. |
 | P4 novelty loop | owner adjudication `270feca`; corrected jury A1 manifest `3297c808…`; root source audit `5614a7d8…` | Sol RSR/CISF/CTPT were not implemented. Luna substituted F1/F2/F3: all 432 genuine JSON mechanism rows are below `1x`; all 432 CSS rows time one handwritten same-body reader that exercises none of the mechanisms. P4 is negative archaeology, not a completed Sol/Luna/Sol pass. **REJECT/FOLD; ZERO FORMATION/EXECUTION/RELEASE CREDIT**. |
 | P4 full-CSS denominator | root addendum `2bc4abb2…` | `@webref/css@8.7.1`: 1,503 raw/1,439 active property-function-type rows; 1,717 raw/1,653 active full-Webref rows; 64 explicit alias refusals; 109 prose/manual rows; 60-row Values 5 intersection; 25 token-equivalent decisions, ten entry points, eleven tree algorithms, full recovery/source fidelity, WPT manifests, and 53 Keyframes references across 51 files. Value extensions are exactly `hsv`/`kelvin`; `ictcp`/`jzazbz`/`jzczhz` are standard. **BINDING DENOMINATOR; ZERO COVERAGE/FORMATION CREDIT**. |
-| P5-EUW fatal preflight | root A1 intake `709dcac8…`; Luna task `019fb16a-09d7-7d80-ae5f-3d894e25855d`; corrected jury dispatch `d74e0898…`; owner ruling `270feca` | Exceptional-unwind mismatch is the sole distinct bounded continuation. Phase zero must first prove that ordinary mismatch can preserve public `ParserFunction`, `Parser.parser`, and raw-call failure behavior without a wrapper, dual executor, fallback, or API change. If that passes, the first scale-4 live-JSON cell requires every raw ratio and exact-bootstrap CI-low `>=10x`; any miss kills the family. **ISOLATED LUNA PREFLIGHT ACTIVE; OWNER SOURCE HELD; ZERO CREDIT**. |
+| P5-EUW fatal preflight | Luna manifest `e2d8fb3e…`; owner evidence `0bc0d37`; `artifacts/pass6/euw-clean-break/` | Luna's sealed packet stops at a static accepted-M2/raw-consumer census with no executable runtime. Owner Sol corrects the legacy-signature premise and tests two legal clean-break, one-executor variants against exact accepted-M2 `jsonParser` in 14 unique PIDs. Cursor EUW is 0.6076–0.7527× and same-state EUW is 0.6149–0.7001×; all bounded immutable-success equality checks pass, every raw row is below `1x`, and bootstrap/CSS/profiles are withheld. **KILL/PRUNE; ZERO CREDIT**. |
+| P6-SIR signed-integer return | P4 unimplemented-debt split; P5 owner ruling `0bc0d37` | Isolate only signed scalar return: nonnegative cursor success, negative mismatch/fault tag and ordinary value in run state. Regions, slabs, finalizers, journals, scanners, compilers, VMs, generated grammars, wrappers, fallbacks and alternate paths remain forbidden. First gate is exact-M2 scale-4 immutable-success raw performance across seven fresh processes; any row below `10x` kills the family. **NEXT ISOLATED FATAL ASSAY; ZERO CREDIT**. |
 
 ## Current executable state
 
 - Branch: `codex/css-totality-combinators-20260729`.
 - Latest source/evidence coordinate:
-  `605a1ae` (`perf(parser-research): bind the native JSON feasibility
-  yardstick`).
+  `0bc0d37bfadf62ddde432686947309cc1741325e`
+  (`perf(parser-research): falsify exceptional-unwind mismatch after the
+  clean-break ABI challenge`).
 - Latest canonical authority reconciliation:
   `75cf36e` (`docs(parser-tranche): bind the full-CSS P4 denominator`).
 - Latest owner audit:
@@ -61,7 +63,13 @@ Release status: **NO RELEASE**
   (`docs(parser-research): bind the P4 owner adjudication and fatal EUW
   continuation`). It binds P4 `REJECT/FOLD`, the corrected fresh-Sol A1
   manifest `3297c808…`, the all-432-below-1× JSON result, the zero-credit CSS
-  rows, and the held P5-EUW fatal preflight.
+  rows, and the P5-EUW dispatch.
+- P5-EUW owner adjudication:
+  `0bc0d37bfadf62ddde432686947309cc1741325e`; Luna's manifest is
+  `e2d8fb3e344088dfa4af963b542ce22296f6485f16120f397791d271962765fc`.
+  The owner clean-break retest binds 14 unique process rows, complete bounded
+  success equality and terminal raw ranges 0.6076–0.7527× / 0.6149–0.7001×.
+  P5 is killed with zero later credit.
 - Root P3 feasibility ruling:
   SHA-256
   `d03d042286d0bad27e3666f3c08e83a393aaa86928e6273c05ac85ac51bfed67`;
@@ -381,22 +389,22 @@ chain may be recorded while an earlier arrow is RED.
 
 ## Next executable boundary
 
-1. Preserve P4 at owner audit `270feca` and corrected jury A1 manifest
-   `3297c808…`. Do not reinterpret Sol's unimplemented designs, Luna's losing
-   F1/F2/F3 rows, or the handwritten CSS reader as a candidate.
-2. The sole isolated Luna P5-EUW preflight is task
-   `019fb16a-09d7-7d80-ae5f-3d894e25855d`. Do not edit owner source or
-   prototypes while it runs. Consume only its completed sealed packet plus a
-   fresh-Sol adjudication. Phase zero is the public raw-parser ABI/taxonomy
-   assay; a wrapper, dual executor, fallback, changed mismatch return, or new
-   public surface kills EUW before timing.
-3. If phase zero passes, run only the scale-4 live-M2-JSON alternating
-   immutable-result cell across seven fresh paired processes. Every raw point
-   and the exact-bootstrap 95% lower bound must be `>=10x`; stop on the first
-   miss.
+1. Preserve P4 at owner audit `270feca`/A1 manifest `3297c808…` and P5 at
+   owner evidence `0bc0d37`. Do not reinterpret unimplemented Sol designs,
+   losing Luna families, the handwritten CSS reader or killed EUW as a
+   candidate.
+2. Implement only the isolated `P6-SIR` scalar seam: one signed integer raw
+   return, nonnegative cursor success, negative mismatch/fault tags and
+   ordinary value in run state. Do not add regions, slabs, journals,
+   finalizers, scanners, compilers, VMs, generated grammars, wrappers,
+   fallbacks, compatibility aliases or alternate executors.
+3. Run only the scale-4 exact accepted-M2 `jsonParser` alternating immutable
+   success-result cell across seven fresh paired processes. Every raw point
+   must be `>=10x`; stop on the first miss. Bootstrap is forbidden unless
+   every raw point clears the floor.
 4. Only a green fatal cell may open scale 4/33 complete state, value, result,
    failures, diagnostics-on recovery, UTF-16, allocation, IC, deopt and GC,
-   plus one real Value-owned combinator CSS vertical with proved nonzero EUW
+   plus one real Value-owned combinator CSS vertical with proved nonzero SIR
    activity. A handwritten body or scanner-shaped plane is fatal.
 5. Full CSS, formation Clean A/B, production freeze, candidate packing,
    API changes, Value/JSON consumption, release and BBNF remain blocked.
