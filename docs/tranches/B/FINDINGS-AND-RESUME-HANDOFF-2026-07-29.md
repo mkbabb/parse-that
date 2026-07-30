@@ -10,9 +10,10 @@ Status: **ACTIVE FORMATION — RED — NO RELEASE**
   `/Users/mkbabb/Programming/parse-that-css-totality`
 - Branch: `codex/css-totality-combinators-20260729`
 - Source/evidence HEAD:
-  `27bf87208070a59991276632eb4ba09417d9a490`
-- Canonical authority HEAD:
-  `b4293199368bbea31e386accb6c6e10a4ff77bc1`
+  `19ad1ac` (`perf(parser-prototype): bank scannerless unordered S/D
+  tournament`)
+- Canonical authority predecessor:
+  `1c9d92a5abacac84ca246710948bf1e23888d669`
 - Accepted M2 control worktree:
   `/tmp/parse-that-m2-baseline-20260729`
 - Accepted M2 coordinate:
@@ -60,7 +61,12 @@ consumer, publication or release credit.
    mutual recursion, parse-owned live/max depth, sticky typed nesting before
    host exhaustion, exact rollback, missing-close frontier, and depth restore
    after a thrown projection.
-5. Current package gates are green: focused S suite 13/13; package 14/14
+5. U at `19ad1ac` proves scannerless unordered correctness at 4/8/16/33:
+   authored slots and UTF-16 spans, `&&`/`||`, optional/repeat, projected
+   locally greedy backtracking, exact recovery rollback/selection,
+   diagnostics-on labels and typed state-cap termination.
+6. Current correctness and structural gates are green: focused U plus S
+   suite 37/37; package 14/14
    files and 134/134 tests; strict TypeScript; production build; manifest,
    surface, subpath, packrat, no-span and no-dead-combinator proofs.
 
@@ -85,55 +91,58 @@ candidate pack, consumer receipt or release.
    and `mergeLabels` deoptimizations. It is not a clean hot-only seal.
 6. No multiprocess bootstrap is warranted for S8 because the 96-leaf point
    estimate is already RED.
-7. Unordered composition, generic CSS-needed leaves, Value stylesheet
-   recovery, live Value/JSON receipts, P1→P2→P3 and both formation clean
-   audits remain open.
+7. S unordered is retired: it enumerates all available arms, has no
+   disjoint-FIRST route, and is slower than the accepted-M2 idiomatic control
+   on every success/internal/result point.
+8. D unordered is correctness-green but performance-RED. Formal
+   success/internal/result ranges are 1.427–1.525× at 4, 2.708–3.406× at 8,
+   4.607–5.403× at 16 and 9.559–12.212× at 33; the 9.559× AB point prevents
+   bootstrap or admission. Candidate grammar heap is about 1.9–2.6× control.
+9. The unchanged production JSON guard is RED across four fresh runs at
+   +21.3% to +45.4% against 15%. U modifies no production source, but the
+   gate is not waived.
+10. P1 remains RED/in progress because no row-complete hash-bound registry
+    exists. P2/P3 and formation Clean A/B remain blocked. Generic CSS-needed
+    leaves remain open. Value stylesheet recovery and live Value/JSON
+    receipts are later execution work, not isolated formation proof.
 
 ## Next executable transaction
 
-Resume B.W0 with the unordered-composition tournament. Do not reopen
-recursion first.
+Resume B.W0 with the generic CSS-needed leaf tournament. Do not reopen
+unordered or recursion first.
 
 ### Subject
 
-Prototype two private incompatible families against the same authored
-combinator fixtures:
-
-1. **S transaction/bitmask** — remaining-member mask, deterministic authored
-   slots, FIRST routing for disjoint members, transaction-backed search for
-   overlaps.
-2. **D residual derivative** — cached source-direct residual states with
-   state-count instrumentation and no capture/event/token plane.
+Prototype the minimum generic, source-direct leaves required by the frozen
+Value/JSON-shaped isolated fixtures. Keep CSS grammar and domain projection
+in Value; parse-that owns only reusable leaf mechanics.
 
 ### Required laws
 
-- `&&`: every required member exactly once in any order;
-- `||`: one or more distinct members in any order;
-- optional and repeated members;
-- disjoint FIRST fast path;
-- overlapping FIRST with globally valid backtracking;
-- duplicate input;
-- nullable-member rejection before parsing;
-- 4, 8, 16 and 33 members;
-- a locally longest branch that prevents the globally valid parse;
-- deterministic output in authored member slots;
-- exact UTF-16 spans, diagnostics and speculative-effect rollback;
-- successful recovery survives only on the chosen path;
-- declared explored-state cap; exceeding it returns one typed fault before
-  allocation or search explosion.
-
-Do not claim generic `&&`/`||` support from a greedy parser. Do not materialize
-permutations, tokens, events or a scanner-shaped intermediate product.
+- exact UTF-16 code-unit positions across CRLF, astral characters, lone
+  surrogates, NUL and CSS-style escapes;
+- identifier/name, escape, number, dimension, percentage, string, URL and
+  balanced-delimiter source leaves only where the isolated consumers use
+  them;
+- one generic capture/span representation, not a family of CSS-specialized
+  span builders;
+- failure frontier, authored labels, immutable recovery evidence and scalar
+  rollback identical to accepted M2;
+- no decoded-token object, token list, scanner result, global trivia layer or
+  raw-source alias;
+- cold/hot, allocation, CPU, IC/deopt/GC and equal-result measurements at
+  frozen small and denominator scales.
 
 ### Admission order
 
-1. Implement hostile correctness fixtures in the private S/D paths.
-2. Record source, state-count, checkpoint and allocation point evidence at
-   4/8/16/33 members.
-3. Retire any family that exceeds 10,000 residual/explored states, loses an
-   exact product, or needs a public/CSS-specialized surface.
-4. Compare equal values, authored slots, spans, diagnostics, recovery and
-   failures against the accepted-M2 closure control.
+1. Form the row-complete hash-bound P1 registry, including terminal,
+   transaction, recovery, recursion, unordered, memo/allocation and result
+   rows; do not label this P2 or P3.
+2. Implement hostile generic leaf fixtures in private prototype paths.
+3. Compare equal values, spans, diagnostics, recovery and failures against
+   accepted M2 at the exact same boundary.
+4. Retire any leaf family that needs CSS/domain types, a second parser path or
+   a scanner-shaped product.
 5. Run single-process AB/BA points first. Run the seven-process exact
    bootstrap only if every binding point estimate is at least 10×.
 6. Bank the source/evidence transaction, then reconcile
@@ -141,7 +150,6 @@ permutations, tokens, events or a scanner-shaped intermediate product.
    `FINAL.md`.
 7. Send the existing Value audit task one compact safe-boundary receipt.
 
-After unordered adjudication, proceed to generic CSS-needed leaf prototypes.
 Do not begin Value-owned CSS grammar work, production-source execution,
 candidate packing or consumer migration from this repository.
 
@@ -163,7 +171,7 @@ From the repository root:
 git diff --check
 git status --short
 shasum -a 256 -c \
-  docs/tranches/B/artifacts/pass3/s8-bounded-recursion/MANIFEST.sha256
+  docs/tranches/B/artifacts/pass3/u-unordered/MANIFEST.sha256
 ```
 
 ## Canonical reading order
@@ -176,5 +184,6 @@ shasum -a 256 -c \
 6. this handoff
 7. `artifacts/pass3/s7-immutable-recovery/README.md`
 8. `artifacts/pass3/s8-bounded-recursion/README.md`
+9. `artifacts/pass3/u-unordered/README.md`
 
 Formation remains RED. Execution has not begun. `NO RELEASE`.

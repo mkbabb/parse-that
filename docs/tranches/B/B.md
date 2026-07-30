@@ -30,8 +30,8 @@ after migration, and ≥10× faster at CI-low on the frozen equal-work planes.
 3. The named non-CSS consumer is
    `typescript/src/parse/parsers/json.ts`; it must consume the same admitted
    runtime primitives, not a CSS-specialized route or benchmark-only adapter.
-4. BBNF is receipt-only after Value W3 freeze. It creates no CSS parser,
-   registry or release prerequisite.
+4. BBNF is receipt-only after `V.L6.css-path-abi-freeze`. It creates no CSS
+   parser, registry or release prerequisite.
 5. Keyframes consumes CSS, transform, path and canonical inverse behavior
    through Value. Parse-that exports no Keyframes or domain type.
 6. No tokenizer, token array, token-event tape, scanner facade, separate
@@ -127,7 +127,7 @@ consumption, proof, publication or release credit.
 | `typescript/test/**`, `docs/tranches/B/**` | parse-that | Correctness, performance, audit and durable handoff evidence. |
 | Value CSS grammar, AST, inverses, transform/path and UI | Value | Parse-that reads receipts only and does not write this surface. |
 | Keyframes CSS/path/serializer migration | Keyframes through Value | Consumer receipt only. |
-| BBNF | BBNF after Value W3 | ABI receipt only. |
+| BBNF | BBNF after `V.L6.css-path-abi-freeze` | ABI receipt only. |
 
 ## Completion criterion — hard gates
 
@@ -160,7 +160,8 @@ Tranche B closes only when:
     JSON, and two clean adversarial passes accept the same object;
 12. the successor is released, Value rebinds to the released coordinate,
     and its full gates remain green;
-13. the BBNF post-W3 receipt names only the frozen generic surface;
+13. the BBNF receipt after `V.L6.css-path-abi-freeze` names only the frozen
+    generic surface;
 14. no raw alias, scanner/token plane, fallback runtime, public CSS surface
     or unconsumed export exists;
 15. the integrity close checks find no unauthorized stash/reset, dirty
@@ -173,9 +174,11 @@ terminal/sequence/recovery CI-low planes against accepted M2: 10.405×
 matched, 11.285× internal, 10.257× result, 20.569× late, 12.894× failure and
 39.532× diagnostic failure; every corresponding 753-name low exceeds 75×.
 This evidence grants no P3, formation, candidate, consumption, execution or
-release credit. Bounded recursion, unordered composition, generic
-CSS-needed leaves, Value-owned stylesheet recovery, live consumers, the
-full-subject pass chain and both clean pairs remain open.
+release credit. The formation remainder includes bounded recursion,
+unordered composition, generic CSS-needed leaves, the full-subject pass
+chain and both clean pairs. Value-owned stylesheet recovery and live
+Value/JSON receipts are later execution work and grant no isolated-formation
+credit.
 
 S8 is banked at `27bf872`. Cached recursion, mutual recursion and typed
 parse-owned nesting are correctness-green, but generic recursive
@@ -184,13 +187,23 @@ success/result is only 1.212–1.331× and balanced-discard fusion is only
 not waive that RED row. S8 grants no formation, candidate, consumer,
 execution or release credit.
 
+U is banked at `19ad1ac`. Its 37 focused tests prove bounded scannerless
+`&&`/`||` semantics, authored slots, spans, recovery rollback, diagnostic
+labels and 4/8/16/33-member termination. S is retired as an unordered family:
+it enumerates available arms and has no disjoint-FIRST route. D keeps a
+private compiled-FIRST fast path plus bounded residual search for overlap,
+but its formal point estimates remain RED: 1.427–2.371× at four members,
+2.708–3.406× at eight, 4.607–6.156× at sixteen, and a 9.559× success-AB
+point at thirty-three. No bootstrap, P1/P2/P3, formation or execution credit
+follows.
+
 ## Debt and terminal dispositions
 
 There is no silent deferral. Open work is owned by B.W0 and keeps the tranche
 open. A mechanism that cannot meet a gate is `RETIRED` with evidence; an
 out-of-scope domain surface is `ARCHIVED` under its owning repository. BBNF
-work before Value W3 and any parse-that-owned CSS grammar are permanently
-out of scope.
+work before `V.L6.css-path-abi-freeze` and any parse-that-owned CSS grammar
+are permanently out of scope.
 
 ## Brittleness window
 

@@ -8,10 +8,10 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | S8 source/evidence `27bf872` (recursion performance RED); S7 local green source/evidence `20b5f52`; P-B1 authority `302c623` plus later authority reconciliation |
-| Value | V / sole CSS grammar, consumer and UI owner | repository HEAD `e01d0065fa6c7c80282280566af2b9a4add809bf`; formation packet independently admitted at reported SHA prefix `aa684060` with zero execution credit |
+| parse-that worktree | B / generic runtime producer | U source/evidence `19ad1ac` (unordered correctness green, performance RED); S8 `27bf872` (recursion performance RED); S7 local green `20b5f52`; P-B1 authority `302c623` plus later authority reconciliation |
+| Value | V / sole CSS grammar, consumer and UI owner | formation independently admitted with zero execution/release/product/visual credit at root DAG `88578047…`, Markdown `69116c27…`, validator `ba5789b3…`, receipt `a60eabe5…`, and rebind receipt `e5ccabd0…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
-| BBNF | post-Value-W3 ABI peer | no implementation or CSS parser before `V.L6.css-path-abi-freeze` |
+| BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
 
 Value's working tree is active and dirty. Parse-that does not read dirty heads
 as release proof and does not modify Value files. The immutable candidate and
@@ -24,7 +24,7 @@ later released coordinate are the only executable package boundaries.
 | generic parse runtime, result provenance, spans, recovery, diagnostics, recursion, performance | parse-that | Value and JSON consume |
 | CSS Syntax/VDS/selectors/at-rules/Webref grammar, CSS results/inverses, transform/path, UI | Value | parse-that reads receipts |
 | local CSS/path/serializer deletion and animation runtime | Keyframes | Value supplies surface; parse-that does not write |
-| grammar IR/ABI after Value W3 | BBNF | parse-that sends frozen receipt only |
+| grammar IR/ABI after `V.L6.css-path-abi-freeze` | BBNF | parse-that sends frozen receipt only |
 
 ## Release-cycle cure
 
@@ -78,14 +78,23 @@ S7 accepted-M2 96-name terminal/sequence/recovery CI-lows are 10.405× matched,
 and 39.532× diagnostic failure; every corresponding 753-name low exceeds
 75×. The compiled `.result` surface remains pruned; immutable recovery
 entries and nested evidence are collected once into an O(1) run builder and
-the consumer seals only the outer list. Recursion, unordered, CSS-leaf,
-Value-owned stylesheet recovery and live-consumer planes remain open, so the
-producer edge remains **RED** and `NO RELEASE`. The unchanged production JSON
-point guard is green at +9.0% against its 15% guard on the final isolated
-rerun but supplies no formal S or formation credit.
+the consumer seals only the outer list. Recursion, unordered performance and
+generic CSS-leaf formation planes remain open. Value-owned stylesheet
+recovery and live Value/JSON receipts are later execution work. The producer
+edge remains **RED** and `NO RELEASE`. The unchanged production JSON point
+guard is now RED across four fresh U-boundary runs at +21.3% to +45.4%
+against its 15% guard. U changes no production source, but the failure is
+not waived and supplies no formal credit.
 
 S8 adds no consumer or API edge. Generic recursion is correctness-green but
 only 1.212–1.331× on the 96-leaf success/result planes; the narrow
 balanced-discard fusion is 8.400–8.842× there despite exceeding 44× on every
 753-leaf plane. Both remain private research, recursion remains RED, and the
 exact release cycle is unchanged.
+
+U at `19ad1ac` adds no consumer or API edge. Its 37 focused tests prove
+bounded scannerless unordered slots, spans, recovery, diagnostics and state
+caps. S has no disjoint-FIRST route and is retired. D reduces disjoint
+attempts from 10/36/136/561 to 4/8/16/33, but formal points remain RED at
+4/8/16 and include a 9.559× 33-member success-AB point. No bootstrap,
+formation or execution credit follows.
