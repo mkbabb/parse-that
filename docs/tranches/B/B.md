@@ -174,11 +174,11 @@ terminal/sequence/recovery CI-low planes against accepted M2: 10.405×
 matched, 11.285× internal, 10.257× result, 20.569× late, 12.894× failure and
 39.532× diagnostic failure; every corresponding 753-name low exceeds 75×.
 This evidence grants no P3, formation, candidate, consumption, execution or
-release credit. The formation remainder includes bounded recursion,
-unordered composition, generic CSS-needed leaves, the full-subject pass
-chain and both clean pairs. Value-owned stylesheet recovery and live
-Value/JSON receipts are later execution work and grant no isolated-formation
-credit.
+release credit. P1 reconciliation is complete at `69f72f7`; the formation
+remainder includes complete P2/P3, bounded recursion, unordered
+residual-overlap/performance, shaped products, every-subject proof and both
+clean pairs. Value-owned stylesheet recovery and live Value/JSON receipts are
+later execution work and grant no isolated-formation credit.
 
 S8 is banked at `27bf872`. Cached recursion, mutual recursion and typed
 parse-owned nesting are correctness-green, but generic recursive
@@ -187,15 +187,24 @@ success/result is only 1.212–1.331× and balanced-discard fusion is only
 not waive that RED row. S8 grants no formation, candidate, consumer,
 execution or release credit.
 
-U is banked at `19ad1ac`. Its 37 focused tests prove bounded scannerless
-`&&`/`||` semantics, authored slots, spans, recovery rollback, diagnostic
-labels and 4/8/16/33-member termination. S is retired as an unordered family:
-it enumerates available arms and has no disjoint-FIRST route. D keeps a
-private compiled-FIRST fast path plus bounded residual search for overlap,
-but its formal point estimates remain RED: 1.427–2.371× at four members,
-2.708–3.406× at eight, 4.607–6.156× at sixteen, and a 9.559× success-AB
-point at thirty-three. No bootstrap, P1/P2/P3, formation or execution credit
-follows.
+U is banked at `19ad1ac`. Its 24 unordered tests (12 per S/D family) plus 13
+S-kernel regressions prove bounded scannerless `&&`/`||` semantics, authored
+slots, spans, recovery rollback, diagnostic labels, overlap correctness and
+4/8/16/33-member termination. S is retired as an unordered family: it
+enumerates available arms and has no disjoint-FIRST route. D keeps a private
+compiled-FIRST fast path plus bounded residual search for overlap, but every
+formal timed fixture is disjoint (`residuals: 0`). Its disjoint point
+estimates remain RED: 1.427–2.371× at four members, 2.708–3.406× at eight,
+4.607–6.156× at sixteen, and a 9.559× success-AB point at thirty-three.
+Residual-overlap performance is unmeasured and RED.
+
+P2-L is banked at `5822ae2`. All 51 CSS/JSON-shaped leaf capture, value and
+failure products are equal at 8/64/4096 UTF-16 units, but success is only
+0.0718–1.3079×. Callback loops, declarative ASCII tables and a public sticky
+wrapper are killed; only a private generic fixture seam is held. P2 remains
+active. The live production parser source remains rejected M3 at `90d4ec5`;
+M2 at `de36d57` remains the performance control. No bootstrap, P3,
+formation, execution or release credit follows.
 
 ## Debt and terminal dispositions
 

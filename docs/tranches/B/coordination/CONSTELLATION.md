@@ -8,8 +8,8 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | U source/evidence `19ad1ac` and authority `8373167` (unordered correctness green, performance RED); S8 `27bf872` (recursion performance RED); S7 local green `20b5f52`; P-B1 authority `302c623` |
-| Value | V / sole CSS grammar, consumer and UI owner | formation independently admitted with zero execution/release/product/visual credit at root DAG `88578047…`, Markdown `69116c27…`, validator `ba5789b3…`, receipt `a60eabe5…`, and rebind receipt `e5ccabd0…` |
+| parse-that worktree | B / generic runtime producer | P1 registry `69f72f7`; P2-L source/evidence `5822ae2` (leaf correctness green, performance RED); U `19ad1ac` (unordered correctness green, disjoint/overlap performance RED); S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
+| Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
 
@@ -66,25 +66,28 @@ competing grammar can close an edge.
 ## Current receipt
 
 Value formation is independently admitted with zero execution credit.
-Parse-that formation is not admitted: P1→P2→P3, isolated every-subject proof,
-and formation Clean A/B remain open. The root receipt reported at SHA prefix
+Parse-that P1 reconciliation is complete at `69f72f7`; P2 is active and P3,
+isolated every-subject proof, and formation Clean A/B remain blocked. The
+root receipt reported at SHA prefix
 `060995` is `P.exec.PB1-order-ack`: an execution-phase acknowledgment of
 future execution order/authority. It feeds private freeze only after
-formation admission, does not feed P1, and supplies no formation, candidate,
-consumption, proof or release credit.
+formation admission and supplies no formation, candidate, consumption, proof
+or release credit.
 V.L1/V.L5 remain blocked on the exact release chain above. Parse-that's held
 S7 accepted-M2 96-name terminal/sequence/recovery CI-lows are 10.405× matched,
 11.285× raw-internal, 10.257× consumer-result, 20.569× late, 12.894× failure
 and 39.532× diagnostic failure; every corresponding 753-name low exceeds
 75×. The compiled `.result` surface remains pruned; immutable recovery
 entries and nested evidence are collected once into an O(1) run builder and
-the consumer seals only the outer list. Recursion, unordered performance and
-generic CSS-leaf formation planes remain open. Value-owned stylesheet
+the consumer seals only the outer list. Recursion, unordered residual-overlap
+and performance, complete shaped products, and remaining P2 planes are open.
+Value-owned stylesheet
 recovery and live Value/JSON receipts are later execution work. The producer
-edge remains **RED** and `NO RELEASE`. The unchanged production JSON point
-guard is now RED across four fresh U-boundary runs at +21.3% to +45.4%
-against its 15% guard. U changes no production source, but the failure is
-not waived and supplies no formal credit.
+edge remains **RED** and `NO RELEASE`. U's reported +21.3% to +45.4%
+production JSON range has no raw log in its manifest and is unsealed. P2-L
+seals a later unchanged-production RED run at +82.7% against the 15% guard.
+Private prototype changes cause neither production result; no failure is
+waived or supplies formal credit.
 
 S8 adds no consumer or API edge. Generic recursion is correctness-green but
 only 1.212–1.331× on the 96-leaf success/result planes; the narrow
@@ -92,9 +95,15 @@ balanced-discard fusion is 8.400–8.842× there despite exceeding 44× on every
 753-leaf plane. Both remain private research, recursion remains RED, and the
 exact release cycle is unchanged.
 
-U at `19ad1ac` adds no consumer or API edge. Its 37 focused tests prove
-bounded scannerless unordered slots, spans, recovery, diagnostics and state
-caps. S has no disjoint-FIRST route and is retired. D reduces disjoint
-attempts from 10/36/136/561 to 4/8/16/33, but formal points remain RED at
-4/8/16 and include a 9.559× 33-member success-AB point. No bootstrap,
-formation or execution credit follows.
+U at `19ad1ac` adds no consumer or API edge. Twenty-four unordered cases plus
+13 S regressions prove bounded scannerless unordered slots, spans, recovery,
+diagnostics, overlap correctness and state caps. S has no disjoint-FIRST
+route and is retired. D reduces disjoint attempts from 10/36/136/561 to
+4/8/16/33, but formal disjoint points remain RED and include a 9.559×
+33-member success-AB point. Every timed fixture has `residuals: 0`, so
+residual-overlap performance remains unmeasured and RED.
+
+P2-L at `5822ae2` adds no consumer or API edge. Its 51 equal products place
+success at 0.0718–1.3079×; callback-loop, ASCII-table and public
+sticky-wrapper widenings are killed. A private generic source leaf remains
+only to compose the next isolated Value/JSON-shaped products.

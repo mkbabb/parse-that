@@ -10,14 +10,17 @@ Status: **ACTIVE FORMATION — RED — NO RELEASE**
   `/Users/mkbabb/Programming/parse-that-css-totality`
 - Branch: `codex/css-totality-combinators-20260729`
 - Source/evidence HEAD:
-  `19ad1ac` (`perf(parser-prototype): bank scannerless unordered S/D
-  tournament`)
-- Canonical U authority:
-  `8373167f1088f337af6096a9c9d2a5463ebd5d54`
+  `5822ae2` (`perf(parser-prototype): falsify generic source-leaf widening`)
+- P1 registry coordinate:
+  `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
+  registry`)
 - Accepted M2 control worktree:
   `/tmp/parse-that-m2-baseline-20260729`
 - Accepted M2 coordinate:
   `de36d57dccdd20068b8c11a78f6e83d42e7d681f`
+- Live production-source coordinate: rejected M3 `90d4ec5` across
+  `lazy.ts`, `leaf.ts`, `parser.ts`, `state.ts`, and `utils.ts`; 221
+  additions / 264 deletions versus M2. M2 is the control, not live source.
 - Tracked tree: clean at handoff.
 - Expected untracked entry: `data`, a user-owned symlink. Do not stage,
   modify or remove it.
@@ -65,10 +68,21 @@ consumer, publication or release credit.
    authored slots and UTF-16 spans, `&&`/`||`, optional/repeat, projected
    locally greedy backtracking, exact recovery rollback/selection,
    diagnostics-on labels and typed state-cap termination.
-6. Current correctness and structural gates are green: focused U plus S
-   suite 37/37; package 14/14
+6. P1 is row-complete and hash-bound at `69f72f7`: 8 GREEN, 7 OPEN, 4 RED,
+   and 1 OPEN/ROUTED. This completes reconciliation only.
+7. P2-L at `5822ae2` proves 51/51 equal CSS/JSON-shaped leaf capture, value,
+   and failure products across 8/64/4096 UTF-16 units. Its private generic
+   leaf preserves exact nonzero spans, labels, rollback, projection throws
+   and immutable recovery.
+8. Current correctness and structural gates are green: focused P2-L 8/8,
+   S regressions 13/13, package 14/14
    files and 134/134 tests; strict TypeScript; production build; manifest,
    surface, subpath, packrat, no-span and no-dead-combinator proofs.
+
+Value R2 formation is independently admitted with zero parser execution,
+product, release, or constellation-close credit: root receipt `0c151de9…`,
+binding `a27d72a4…`, root quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/
+`f2cc76f1…`, and owner verification `7865862a…`.
 
 These are private formation-research results. None is an admitted runtime,
 candidate pack, consumer receipt or release.
@@ -97,33 +111,43 @@ candidate pack, consumer receipt or release.
 8. D unordered is correctness-green but performance-RED. Formal
    success/internal/result ranges are 1.427–1.525× at 4, 2.708–3.406× at 8,
    4.607–5.403× at 16 and 9.559–12.212× at 33; the 9.559× AB point prevents
-   bootstrap or admission. Candidate grammar heap is about 1.9–2.6× control.
-9. The unchanged production JSON guard is RED across four fresh runs at
-   +21.3% to +45.4% against 15%. U modifies no production source, but the
-   gate is not waived.
-10. P1 remains RED/in progress because no row-complete hash-bound registry
-    exists. P2/P3 and formation Clean A/B remain blocked. Generic CSS-needed
-    leaves remain open. Value stylesheet recovery and live Value/JSON
-    receipts are later execution work, not isolated formation proof.
+   bootstrap or admission. Every formal fixture is disjoint
+   (`residuals: 0`); overlap correctness exists, but residual-overlap
+   performance is unmeasured. Candidate grammar heap is about 1.9–2.6×
+   control.
+9. U's reported four-run production JSON range of +21.3% to +45.4% has no
+   raw log in its manifest and is unsealed. The guard remains RED, but that
+   range carries no evidence credit. P2-L seals a later unchanged-production
+   RED run at +82.7%; private prototypes do not cause it and receive no
+   waiver.
+10. P2-L success ranges from 0.0718× to 1.3079×. Callback loops,
+    declarative ASCII tables, and a public sticky wrapper are killed. The
+    generic node is held only as a private shaped-product fixture; native
+    sticky RegExp remains the KISS incumbent.
+11. P1 is complete, P2 is active, and P3 plus formation Clean A/B remain
+    blocked. Value stylesheet recovery and live Value/JSON receipts are later
+    execution work, not isolated formation proof.
 
 ## Next executable transaction
 
-Resume B.W0 with the generic CSS-needed leaf tournament. Do not reopen
-unordered or recursion first.
+Resume B.W0 by composing the smallest complete isolated Value- and
+JSON-shaped products. Do not reopen unordered or recursion unless a shaped
+product consumes the exact mechanism.
 
 ### Subject
 
-Prototype the minimum generic, source-direct leaves required by the frozen
-Value/JSON-shaped isolated fixtures. Keep CSS grammar and domain projection
-in Value; parse-that owns only reusable leaf mechanics.
+Use the held private source leaf, S7 recovery, exact spans, recursion only
+where structurally necessary, and consumer projection to form equal
+stylesheet- and JSON-shaped products. Keep CSS grammar/domain types in Value;
+the parse-that fixture expresses only generic mechanics.
 
 ### Required laws
 
 - exact UTF-16 code-unit positions across CRLF, astral characters, lone
   surrogates, NUL and CSS-style escapes;
-- identifier/name, escape, number, dimension, percentage, string, URL and
-  balanced-delimiter source leaves only where the isolated consumers use
-  them;
+- identifier/name, escape, number, dimension, percentage, string, URL,
+  balanced-delimiter and JSON recursive shapes only where the isolated
+  products use them;
 - one generic capture/span representation, not a family of CSS-specialized
   span builders;
 - failure frontier, authored labels, immutable recovery evidence and scalar
@@ -135,14 +159,14 @@ in Value; parse-that owns only reusable leaf mechanics.
 
 ### Admission order
 
-1. Form the row-complete hash-bound P1 registry, including terminal,
-   transaction, recovery, recursion, unordered, memo/allocation and result
-   rows; do not label this P2 or P3.
-2. Implement hostile generic leaf fixtures in private prototype paths.
-3. Compare equal values, spans, diagnostics, recovery and failures against
-   accepted M2 at the exact same boundary.
-4. Retire any leaf family that needs CSS/domain types, a second parser path or
-   a scanner-shaped product.
+1. Freeze the smallest isolated Value-shaped and JSON-shaped product corpus,
+   products, spans, diagnostics, recovery and failure forms.
+2. Compose them only from the held private runtime mechanisms; add no public
+   or CSS/domain surface.
+3. Compare equal products against accepted M2/consumer controls at the exact
+   same boundary.
+4. Retire any mechanism that requires a second parser path, scanner-shaped
+   product, or unconsumed generality.
 5. Run single-process AB/BA points first. Run the seven-process exact
    bootstrap only if every binding point estimate is at least 10×.
 6. Bank the source/evidence transaction, then reconcile
@@ -159,10 +183,13 @@ From `/Users/mkbabb/Programming/parse-that-css-totality/typescript`:
 
 ```sh
 npx tsc --noEmit --project tsconfig.json
-npx vitest run --config vite.config.ts test/prototypes/pass3/s/kernel.test.ts
+npx vitest run --config test/prototypes/pass3/l/vitest.config.ts
+npx vitest run --config test/prototypes/pass3/s/vitest.config.ts
 npx vitest run
 npm run build
-npm run proof:all
+npm run proof:manifest
+npm run proof:no-css-surface
+# Run proof:perf and preserve its raw RED/GREEN output; do not waive it.
 ```
 
 From the repository root:
@@ -171,7 +198,7 @@ From the repository root:
 git diff --check
 git status --short
 shasum -a 256 -c \
-  docs/tranches/B/artifacts/pass3/u-unordered/MANIFEST.sha256
+  docs/tranches/B/artifacts/pass3/l-source-leaves/MANIFEST.sha256
 ```
 
 ## Canonical reading order
@@ -182,8 +209,10 @@ shasum -a 256 -c \
 4. `coordination/CONSTELLATION.md`
 5. `FINAL.md`
 6. this handoff
-7. `artifacts/pass3/s7-immutable-recovery/README.md`
-8. `artifacts/pass3/s8-bounded-recursion/README.md`
-9. `artifacts/pass3/u-unordered/README.md`
+7. `research/P1-HASH-BOUND-REGISTRY-2026-07-29.md`
+8. `artifacts/pass3/s7-immutable-recovery/README.md`
+9. `artifacts/pass3/s8-bounded-recursion/README.md`
+10. `artifacts/pass3/u-unordered/README.md`
+11. `artifacts/pass3/l-source-leaves/README.md`
 
 Formation remains RED. Execution has not begun. `NO RELEASE`.

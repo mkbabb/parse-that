@@ -6,10 +6,10 @@ Tranche status: `in_progress`
 
 Active wave: `B.W0 - Candidate-to-Release Closure`
 
-Formation status: **RED — S7 locally clears terminal/sequence and generic
-recovery; U correctness is green but performance is RED; P1 lacks a
-row-complete hash-bound registry, P2/P3 are blocked, and every-subject proof
-remains open**
+Formation status: **RED — P1 is complete as hash-bound reconciliation; P2 is
+active with locally green S7 recovery and P2-L correctness, but recursion,
+unordered residual-overlap/performance, generic-leaf performance, shaped
+products, every-subject proof, P3 and both clean audits remain RED or open**
 
 Release status: **NO RELEASE**
 
@@ -19,7 +19,8 @@ Release status: **NO RELEASE**
 |---|---|---|
 | Archaeology | `research/PARSE-THAT-SESSION-ARCHAEOLOGY-2026-07-29.md` | Banked; prior scanner-shaped CSS attempts and stale completion claims rejected. |
 | Round zero | `research/ROUND-ZERO-PARSE-THAT-PORTFOLIO-2026-07-29.md` | Banked portfolio; incompatible families preserved for evidence. |
-| Pass 1 research adjudication/agglomeration | `research/PASS-1-SOL-ADJUDICATION-2026-07-29.md`, `research/PASS-1-SOL-AGGLOMERATION-2026-07-29.md` | Preliminary research only: R/E/V/K retired and S/D remained candidates; no row-complete hash-bound P1 credit. |
+| Pass 1 research adjudication/agglomeration | `research/PASS-1-SOL-ADJUDICATION-2026-07-29.md`, `research/PASS-1-SOL-AGGLOMERATION-2026-07-29.md` | Preliminary research only: R/E/V/K retired and S/D remained candidates; later reconciled by P1. |
+| P1 full-subject reconciliation | `69f72f7`, `research/P1-HASH-BOUND-REGISTRY-2026-07-29.md` | Twenty hash-bound rows: 8 GREEN, 7 OPEN, 4 RED, 1 OPEN/ROUTED. **P1 COMPLETE; FORMATION RED; ZERO LATER CREDIT**. |
 | M1 | `de36d57` predecessor formation | Parse-owned recovery and raw-memo isolation proceeded to M2. |
 | M2 | `de36d57` | Banked run-local recovery diagnostics and source-owned raw memo cells. |
 | M3 | `90d4ec5` | Correctness evidence banked; performance gate RED; rejected, no release. |
@@ -33,23 +34,23 @@ Release status: **NO RELEASE**
 | S6 run-owned successor state | `062c147`, `artifacts/pass3/s6-run-state/` | A scalar run-owned state, matched prospective `parseState` boundary, shared frozen empty evidence and consumer-owned success envelope clear the seven-process 96-name terminal/sequence CI-low at 10.020× matched, 11.022× internal and 10.263× result. The 753-name corresponding lows are 72.853×, 75.768× and 76.902×. **HELD — LOCAL TERMINAL/SEQUENCE GREEN; FORMATION OPEN**. |
 | S7 immutable recovery | `20b5f52`, `artifacts/pass3/s7-immutable-recovery/` | Diagnostic collection now resets the frontier, freezes each entry and nested evidence once, retains an O(1) run builder, and seals only the outer collection at consumer projection. Seven-process 96-name CI-lows are 10.405× matched, 11.285× internal, 10.257× result, 20.569× late, 12.894× failure and 39.532× diagnostic failure; every 753-name low exceeds 75×. **HELD — LOCAL GENERIC RECOVERY GREEN; FORMATION OPEN**. |
 | S8 bounded recursion | `27bf872`, `artifacts/pass3/s8-bounded-recursion/` | Cached generic recursion, parse-owned live/max depth and sticky typed nesting faults are correctness-green. Generic 96-leaf recursive span success/internal/result is only 1.270×/1.212×/1.331×; balanced-discard fusion is only 8.400×/8.842×/8.561× at 96 despite 57.819×/61.403×/61.507× at 753. **HELD — CORRECTNESS GREEN, PERFORMANCE RED; FORMATION OPEN**. |
-| U unordered composition | `19ad1ac`, `artifacts/pass3/u-unordered/` | Scannerless S/D hostile correctness is 37/37. S has no disjoint-FIRST route and is retired as a family. D keeps compiled-FIRST disjoint dispatch plus bounded residual overlap search, but formal success/internal/result points are only 1.427–1.525× at 4, 2.708–3.406× at 8, 4.607–5.403× at 16 and 9.559–12.212× at 33; one 33-member order is below 10×. **HELD — CORRECTNESS GREEN, PERFORMANCE RED; NO BOOTSTRAP**. |
+| U unordered composition | `19ad1ac`, `artifacts/pass3/u-unordered/` | U contributes 24 correctness cases (12 per S/D family) plus 13 S-kernel regressions. S has no disjoint-FIRST route and is retired. D proves overlap correctness, but every formal performance fixture is disjoint (`residuals: 0`); disjoint points are only 1.427–1.525× at 4, 2.708–3.406× at 8, 4.607–5.403× at 16 and 9.559–12.212× at 33. **HELD — CORRECTNESS GREEN, PERFORMANCE/OVERLAP ASSAY RED; NO BOOTSTRAP**. |
+| P2-L generic source leaves | `5822ae2`, `artifacts/pass3/l-source-leaves/` | Callback, sticky, and declarative ASCII families preserve 51/51 exact capture/value/failure products at 8/64/4096 UTF-16 units. Success is 0.0718–1.3079× and failure 1.1075–1.5381×; no bootstrap. All three production/public widenings are killed; the generic node is held only as a private shaped-product fixture. **CORRECTNESS GREEN; PERFORMANCE RED; P2 ACTIVE**. |
 
 ## Current executable state
 
 - Branch: `codex/css-totality-combinators-20260729`.
 - Latest source/evidence coordinate:
-  `19ad1ac` (`perf(parser-prototype): bank scannerless unordered S/D
-  tournament`).
+  `5822ae2` (`perf(parser-prototype): falsify generic source-leaf widening`).
 - Latest canonical authority reconciliation:
-  `8373167f1088f337af6096a9c9d2a5463ebd5d54`
-  (`docs(parser-tranche): reconcile U falsification and formation boundary`).
+  `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
+  registry`), pending this owner correction bank.
 - P-B1 authority head: `302c623b4ffddf76bc4ee042cad1d3c5e739ef9d`.
 - Source/evidence coordinates include `c480578`
   (`perf(runtime-prototype): bind corrected S assay to accepted M2 control`),
   `2fc18dc`, S4 at `75b76dd`, S5 at `926a3ad`, S6 at `062c147`, S7 at
-  `20b5f52`, S8 at `27bf872`, and U at `19ad1ac`. None confers formation or
-  execution credit.
+  `20b5f52`, S8 at `27bf872`, U at `19ad1ac`, and P2-L at `5822ae2`. None
+  confers formation admission or execution credit.
 - S/recovery evidence commit:
   `2fc18dc1ec3a0541b85e9e440fca85028844673c`.
 - Canonical authority before P-B1:
@@ -63,13 +64,27 @@ Release status: **NO RELEASE**
 - The post-S4 authority reconciliation is banked at `6f893be`. After each
   source or authority bank, the untracked `data` symlink is the only expected
   status entry and remains untouched.
-- Fresh U gates: focused U plus S-kernel suite 37/37; package suite 14/14
+- Live production parser source is the rejected M3 coordinate `90d4ec5`
+  across `lazy.ts`, `leaf.ts`, `parser.ts`, `state.ts`, and `utils.ts`
+  (221 additions / 264 deletions versus M2). M2 at `de36d57` is the accepted
+  performance control, not the live production source.
+- Value R2 formation remains admitted with zero parser execution/product/
+  release credit: root receipt `0c151de9…`, binding `a27d72a4…`, root quartet
+  `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification
+  `7865862a…`.
+- Fresh P2-L gates: focused leaves 8/8 and S regressions 13/13; package suite
+  14/14 files and 134/134 tests; strict TypeScript; production build;
+  manifest, no-CSS-surface, subpath, packrat, no-span and no-dead-combinator
+  proofs green. Its sealed unchanged-production `proof:perf` run is RED at
+  +82.7% against 15%; private prototype changes cannot cause the production
+  regression, but it is not waived.
+- U gates: 24/24 unordered cases plus 13/13 S-kernel regressions; package
+  suite 14/14
   files and 134/134 tests; strict TypeScript; production build; manifest,
   no-CSS-surface, subpath, packrat, no-span and no-dead-combinator proofs
-  green. The unchanged production JSON `proof:perf` guard is currently RED
-  across four fresh runs at +21.3% to +45.4% against its 15% checked-in
-  threshold. U changes only private prototype/test files, so this movement is
-  not attributed to a production diff and receives no waiver.
+  green. The reported four-run production JSON range of +21.3% to +45.4%
+  has no raw entry in U's 18-entry manifest and is therefore **UNSEALED**.
+  The guard remains RED, but that numeric range carries no evidence credit.
 - Earlier S8 gates: focused hostile suite 13/13; package suite 14/14 files and
   134/134 tests; strict TypeScript; production build; manifest,
   no-CSS-surface, subpath, packrat, no-span and no-dead-combinator proofs all
@@ -134,7 +149,9 @@ Release status: **NO RELEASE**
   retired as a family. D's disjoint path reduces attempts from
   10/36/136/561 to 4/8/16/33, but the binding accepted-M2 point assay remains
   RED. Its single 33-member AB/BA set ranges from 9.559× to 12.212×; smaller
-  scales range from 1.427× to 6.156×. No exact bootstrap follows.
+  scales range from 1.427× to 6.156×. Every timed fixture has
+  `residuals: 0`; residual-overlap performance is unmeasured and RED. No
+  exact bootstrap follows.
 - U retains equal-plane raw data, state/allocation points, two CPU profiles
   and a V8 deopt log at `artifacts/pass3/u-unordered/`. Candidate grammar
   retained heap is approximately 1.9–2.6× the idiomatic control. The deopt
@@ -177,7 +194,11 @@ Release status: **NO RELEASE**
     survive only if a real Value/JSON-shaped product proves the same semantic
     need at both binding scales. It is not recursive CSS AST proof.
 12. S unordered is retired. D unordered remains private and partial; its
-    correctness bank does not satisfy the every-scale ≥10× proof.
+    correctness bank does not satisfy the every-scale ≥10× proof, and no
+    residual-overlap performance plane exists.
+13. P2-L kills callback-loop, declarative ASCII-table, and public sticky
+    wrapper widenings. Native sticky RegExp remains the KISS incumbent. The
+    generic source node survives only as a private shaped-product fixture.
 
 ## Formation and release chains
 
@@ -203,14 +224,15 @@ chain may be recorded while an earlier arrow is RED.
 
 ## Next executable boundary
 
-1. Build the row-complete hash-bound P1 registry without narrowing its
-   transaction, span, recovery, recursion, unordered, allocation or result
-   obligations. P2/P3 remain blocked until that registry is complete.
-2. Carry the S7 run-owned state and U findings into generic CSS-needed leaf
-   prototypes. Re-adjudicate recursion only against an isolated
-   Value/JSON-shaped recursive AST and nested-span product; generic recursion
-   and the narrow balanced-discard fusion are presently RED.
-3. Preserve the locally green terminal/sequence and generic-recovery evidence
+1. Continue P2 by composing the smallest complete isolated Value- and
+   JSON-shaped products from the held source-leaf fixture, S7 recovery, exact
+   spans, and consumer projection. No CSS/domain type enters parse-that.
+2. Re-adjudicate recursion and unordered overlap only where those shaped
+   products actually consume them. Generic recursion, balanced-discard
+   fusion, disjoint-only D performance, and residual-overlap performance are
+   presently RED.
+3. Preserve the locally green terminal/sequence/generic-recovery and P2-L
+   correctness evidence
    without treating it as P3, every-subject proof, formation admission or
    execution credit.
 4. Run formation Clean A/B only after the isolated prototype proof is green.
