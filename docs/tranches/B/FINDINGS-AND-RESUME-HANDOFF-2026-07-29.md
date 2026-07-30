@@ -16,7 +16,8 @@ Status: **ACTIVE FORMATION — RED — NO RELEASE**
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
 - Canonical owner authority:
-  `730c244` (`docs(parser-tranche): bind same-FIRST recovery law into P3`).
+  `c88d8c7` (`docs(parser-tranche): reconcile P3 as bounded evidence with
+  zero surviving candidates`).
 - P2 registry coordinate:
   `c3d42d4` (`docs(parser-research): complete the P2 full-subject
   disposition`).

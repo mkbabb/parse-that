@@ -50,7 +50,8 @@ Release status: **NO RELEASE**
   `19c1e12` (`perf(parser-prototype): falsify the direct closure surface on
   complete products`).
 - Latest canonical authority reconciliation:
-  `730c244` (`docs(parser-tranche): bind same-FIRST recovery law into P3`).
+  `c88d8c7` (`docs(parser-tranche): reconcile P3 as bounded evidence with
+  zero surviving candidates`).
 - Corrected P1 root intake:
   `abc9479d7ea5fa4c76deca752428faf8b332f280e6e637de12b12b25e8e2ad6c`;
   it binds committed `c9c2108` bytes, P1 only, and grants no later credit.
