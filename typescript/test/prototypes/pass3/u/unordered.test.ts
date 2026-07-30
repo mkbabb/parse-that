@@ -15,6 +15,11 @@ import {
     required,
     type UnorderedFamily,
 } from "./unordered.js";
+import {
+    makeOverlapCandidate,
+    OPAQUE,
+    overlapSources,
+} from "./overlap-fixture.js";
 
 const families: readonly UnorderedFamily[] = ["S", "D"];
 
@@ -230,4 +235,30 @@ describe.each(families)("U %s unordered composition", family => {
         });
         expect(parser.metrics().explored).toBe(1_000);
     });
+});
+
+describe("P2-UO mixed-overlap product", () => {
+    it.each([4, 8, 16, 33])(
+        "uses live residual search for %i authored members",
+        count => {
+            const parser = makeOverlapCandidate(count);
+            for (const source of overlapSources(count)) {
+                const state = parser.parseState(source);
+                expect(state.offset).toBe(source.length);
+                expect(state.isError).toBe(false);
+                expect(state.value).toHaveLength(count);
+                expect(state.value[0]).toMatchObject({ value: "a" });
+                expect(state.value[1]).toMatchObject({ value: "b" });
+                expect(state.value[2]).toMatchObject({ value: OPAQUE });
+                expect(state.diagnostics).toHaveLength(1);
+                expect(Object.isFrozen(state.diagnostics[0])).toBe(true);
+                for (const slot of state.value) {
+                    expect(slot.span.end).toBeGreaterThan(slot.span.start);
+                }
+                expect(parser.metrics().residuals).toBeGreaterThan(0);
+                expect(parser.metrics().attempts).toBeGreaterThan(count);
+                expect(parser.metrics().explored).toBeLessThan(10_000);
+            }
+        },
+    );
 });

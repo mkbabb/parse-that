@@ -169,9 +169,9 @@ export function compileUnordered<
         let usedMask = 0n;
         let distinct = 0;
         let explored = 0;
+        let residuals = 0;
         let checkpoints = 0;
         let attempts = 0;
-        let residualsBefore = residualCache.size;
 
         const countsKey = () => {
             let repeatedKey = "";
@@ -245,6 +245,7 @@ export function compileUnordered<
                 }
                 return indices;
             }
+            residuals++;
             const residual = makeResidual(countsKey());
             if (!residual) return undefined;
             const routed = residual.routes.get(
@@ -336,7 +337,7 @@ export function compileUnordered<
         lastMetrics = {
             family,
             explored,
-            residuals: residualCache.size - residualsBefore,
+            residuals,
             checkpoints,
             attempts,
         };
