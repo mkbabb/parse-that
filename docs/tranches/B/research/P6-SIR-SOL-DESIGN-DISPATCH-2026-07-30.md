@@ -17,6 +17,10 @@ result == -1 routine mismatch; frontier evidence remains in runState
 result == -2 typed fault; the sticky typed fault remains in runState
 ```
 
+Every return must be a safe integer in exactly
+`{-2, -1} ∪ [0, source.length]`. The integer is the sole internal
+success/mismatch/fault discriminator.
+
 The ordinary semantic value remains in run state. No object, tuple, region
 handle or state object is the hot control return.
 
@@ -26,6 +30,13 @@ remains the native closure/call-stack/value-in-run topology already exercised
 by P3 direct closure. It is not the P4 RSR family: regions,
 numeric/reference slabs, journals, output slots, accepted-root reachability,
 deferred allocation and root finalization remain pruned.
+The terminal genealogy classification is therefore:
+
+```text
+RSR.signed-step atom: SPLIT and assay
+surrounding topology: FOLD into P3 direct closure
+novelty/family credit: zero
+```
 
 ## Immutable coordinates
 
@@ -51,6 +62,18 @@ The Luna continuation must use an immutable archive of accepted M2 and bundle
 its exported live `jsonParser`. It may not rebuild the timed control from
 candidate-shaped primitives.
 
+Expected local toolchain coordinates, to be independently reproduced:
+
+```text
+3751609e01dc46f5ad50f31d4d5f9ecc05e2aad5ccdb61e1508ae780715a8770  exact-M2 ESM control bundle
+79fffbb53be7306c1505f97281b63a01902f53ac56682c61f673c78011c5dd14  esbuild executable
+08dad0581f00a0cabf4d49ec92ca1f25fdfd01c2c18fa8e92b35f04d4c24c164  Node executable
+```
+
+Toolchain identity is esbuild `0.27.3`, Node `v26.0.0`, V8
+`14.6.202.33-node.19`, Darwin arm64. Luna records independently reproduced
+bundle/tool hashes; a mismatch stops before timing.
+
 ## Genealogy and non-alias falsification
 
 P6 is a `SPLIT` assay of the signed-step atom, never `KEEP` as a new family.
@@ -59,12 +82,13 @@ before timing.
 
 | Predecessor | Its control ABI | P6 inverse |
 |---|---|---|
-| P1-R | run-owned mutable cursor/status, checkpoint objects and journal lengths | cursor is an argument/return, mismatch/fault is the return tag, and each atomic combinator owns direct scalar locals; no run cursor/status discriminator, checkpoint object or journal |
+| P1-R | run-owned mutable cursor/`run.status`, checkpoint objects and journal lengths | cursor is an argument/return, mismatch/fault is the return tag, and each atomic combinator owns direct scalar locals; no run cursor/status discriminator, checkpoint object or journal |
 | P3 direct closure `19c1e12` | `(state) => state`; every leaf/combinator mutates `state.offset` and branches on mutable `state.isError` | `(state, cursor) => integer`; internal success returns cursor, internal mismatch returns `-1`; `state.offset`/`state.isError` are projected once at the root and are not hot control flow |
 | P4 RSR design | the same signed-step atom plus region indices, checkpoints, numeric/reference slabs, output slots and finalizer | assay only the already-split scalar atom; no region/slab/output-slot/finalizer structure or deferred product walk |
 | Luna F2 | region objects/arrays and region-switched runtime | no region object, region array, family switch or runtime route |
 | P5 cursor-EUW `0bc0d37` | cursor success plus frozen singleton thrown on routine mismatch | identical closure/call-stack/value topology except routine mismatch is `-1`; no throw/catch occurs on the routine path |
-| P1-V / P1-K | explicit instruction/call/choice stacks or trampoline continuations/bounces | native closure calls only; no op array, instruction loop, explicit execution stack, continuation object or bounce |
+| P1-V | program counter, opcode/operand tape and explicit instruction/call/choice stacks | native closure calls only; no PC, op array, instruction loop, tape or explicit execution stack |
+| P1-K | continuation objects, success/mismatch bounce stacks and trampoline loop | native closure calls only; no continuation, bounce, trampoline or explicit success/mismatch stack |
 | P5-TOL | leases checkpoint ownership away from deterministic composition and needs annotations/analysis or dual executors | `then`, `skip`, `next`, choice and repetition each retain their own local atomic rollback; no lease or ownership transfer |
 | accepted M2 | `(state) => state` and mutable error status | exact control only; no candidate compatibility executor, wrapper or fallback |
 
@@ -73,6 +97,10 @@ The taxonomy is RED if any candidate step:
 - returns `runState`, an object, tuple, array or region handle;
 - mutates or reads `runState.offset` or `runState.isError` between combinators
   as its internal success/failure discriminator;
+- stores or reads cursor/status/kind/code aliases in run state as a hidden
+  discriminator;
+- returns a non-safe integer, a negative value other than `-1`/`-2`, or a
+  successful cursor beyond `source.length`;
 - throws/catches routine mismatch;
 - materializes a region, slab, journal, token, instruction, scanner result or
   generated parser;
@@ -88,11 +116,14 @@ Before timing, raw probes compare candidate effects with accepted-M2 public
 effects for:
 
 - literal success;
+- zero-width success at a nonzero input cursor;
 - literal mismatch and furthest frontier;
-- typed fault and sticky fault value;
+- direct `-1` reachability;
+- direct and nested sticky `-2` typed-fault reachability;
 - `then` right-child mismatch restoring the sequence entry value and
   diagnostics;
 - `skip` and `next` right-child mismatch restoring their own atomic entry;
+- `wrap` close-parser mismatch restoring its composed atomic entry;
 - left-choice partial mismatch restoring before the right arm;
 - `sepBy` separator-plus-element mismatch restoring to before the separator;
   and
@@ -104,10 +135,10 @@ depth evidence follows the accepted law and is not erased as ordinary
 rollback data.
 
 The raw step also runs against an alias-trap state whose `cursor`, `offset`,
-`status` and `isError` accessors count and reject internal reads/writes.
-Candidate internal execution must record zero accesses. The public root
-projection is assayed separately after the raw step returns. Static source
-inspection corroborates the trap; it does not replace it.
+`status`, `isError`, `kind` and `code` accessors count and reject internal
+reads/writes. Candidate internal execution must record zero accesses. The
+public root projection is assayed separately after the raw step returns.
+Static source inspection corroborates the trap; it does not replace it.
 
 ## Minimal combinator surface
 
@@ -127,13 +158,13 @@ first-code-unit dispatch
 public parseState/result projection
 ```
 
-Every combinator has one raw executor. `or`, `then`, `skip`, `next` and
-`sepBy` own their exact atomic rollback locally. Each saves only direct scalar
-locals such as entry value and diagnostic length and restores them on the
-child mismatch/fault paths required by accepted M2. Checkpoints may not move
-to a parent/owner, because that would recur as TOL. They may not become a
-transaction object, lease, region or journal. `map`, `trim`, `wrap` and
-`lazy` add no speculative owner beyond the atomic combinators they invoke.
+Every combinator has one raw executor. `or`, `then`, `skip`, `next`, `wrap`
+and `sepBy` own their exact atomic rollback locally. Each saves only direct
+scalar locals such as entry value and diagnostic length and restores them on
+the child mismatch/fault paths required by accepted M2. Checkpoints may not
+move to a parent/owner, because that would recur as TOL. They may not become a
+transaction object, lease, region or journal. `map`, `trim` and `lazy` add no
+speculative owner beyond the atomic combinators they invoke.
 Ordinary value arrays/objects required by the JSON product are allowed;
 per-run control-plane arrays/objects are not.
 
@@ -206,11 +237,17 @@ rows for a stable negative range, then stop. Do not compute bootstrap, run
 CSS, profile, or add mechanism variants.
 
 Only if all seven raw rows clear `10x` may Luna compute the exact-bootstrap
-95% lower bound. Enumerate all `7^7 = 823543` ordered resamples with
-replacement from the seven process ratios, take the median of each
-seven-value resample, sort the distribution ascending, and select
-`floor(0.025 * 823543)` / `floor(0.975 * 823543)` as the 95% low/high. The
-low must also be `>=10x`.
+95% lower bound. Let `logRatio[i] = ln(ratio[i])`. Enumerate all
+`7^7 = 823543` ordered seven-draw resamples with replacement. Each resample
+statistic is `exp(sum(selected logRatio) / 7)`. Sort the distribution
+ascending. Use the nearest-rank convention, converted to zero-based indices:
+
+```text
+lowIndex  = ceil(0.025 * 823543) - 1 = 20588
+highIndex = ceil(0.975 * 823543) - 1 = 802954
+```
+
+The statistic at `lowIndex` must be `>=10x`.
 
 Seven hot-success rows are a one-way performance kill gate only. Passing them
 would not establish novelty, complete correctness, formation or survival;
@@ -263,7 +300,8 @@ equality/taxonomy disposition, bootstrap reached or withheld, and exact
 remainder. No sentinel profile/CSS files are created when raw is RED.
 `TAXONOMY.json` records every genealogy row, atomic rollback probe,
 cursor/status alias count, grammar-time dispatch-map census and forbidden
-per-parse container count. Timing is unreachable unless all are green.
+per-parse container count, signed return-domain/reachability probe and exact
+control-bundle/toolchain hashes. Timing is unreachable unless all are green.
 
 After Luna seals, a fresh Sol adjudication must independently verify the
 manifest, taxonomy, accepted-M2 binding, equality arithmetic and all raw
