@@ -175,10 +175,10 @@ matched, 11.285× internal, 10.257× result, 20.569× late, 12.894× failure and
 39.532× diagnostic failure; every corresponding 753-name low exceeds 75×.
 This evidence grants no P3, formation, candidate, consumption, execution or
 release credit. P1 reconciliation is complete at `69f72f7`; the formation
-remainder includes complete P2/P3, bounded recursion, unordered
-residual-overlap/performance, shaped products, every-subject proof and both
-clean pairs. Value-owned stylesheet recovery and live Value/JSON receipts are
-later execution work and grant no isolated-formation credit.
+remainder includes complete P2/P3, unordered residual-overlap/performance,
+every-subject proof and both clean pairs. Value-owned stylesheet recovery and
+live Value/JSON receipts are later execution work and grant no
+isolated-formation credit.
 
 S8 is banked at `27bf872`. Cached recursion, mutual recursion and typed
 parse-owned nesting are correctness-green, but generic recursive
@@ -201,10 +201,23 @@ Residual-overlap performance is unmeasured and RED.
 P2-L is banked at `5822ae2`. All 51 CSS/JSON-shaped leaf capture, value and
 failure products are equal at 8/64/4096 UTF-16 units, but success is only
 0.0718–1.3079×. Callback loops, declarative ASCII tables and a public sticky
-wrapper are killed; only a private generic fixture seam is held. P2 remains
-active. The live production parser source remains rejected M3 at `90d4ec5`;
-M2 at `de36d57` remains the performance control. No bootstrap, P3,
-formation, execution or release credit follows.
+wrapper are killed.
+
+P2 shaped products are banked at `d62b73a`. The recursive JSON product passes
+the frozen 33-valid/7-invalid corpus, while the domain-neutral
+stylesheet-shaped product exercises exact spans, names/escapes, scalar
+values, URL, balanced calls, immutable successful recovery and opaque
+syntax. Across 20 matched AB/BA state/value/result/failure points, JSON is
+0.8728–1.0021×, the fixture is 1.0937–1.2920×, and failures are
+1.1658–1.2041×. Candidate retained heap is about 1.166× control. The staged
+full-product family and its private source-leaf seam are therefore killed,
+not advanced. The corpus remains reproducible falsification evidence only.
+
+P2 remains active for the full-subject disposition, including the
+Value-shaped residual-overlap unordered plane and cold/hot/allocation/optimizer
+evidence reconciliation. The live production parser source remains rejected
+M3 at `90d4ec5`; M2 at `de36d57` remains the performance control. No
+bootstrap, P3, formation, execution or release credit follows.
 
 ## Debt and terminal dispositions
 

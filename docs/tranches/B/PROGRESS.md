@@ -7,9 +7,9 @@ Tranche status: `in_progress`
 Active wave: `B.W0 - Candidate-to-Release Closure`
 
 Formation status: **RED — P1 is complete as hash-bound reconciliation; P2 is
-active with locally green S7 recovery and P2-L correctness, but recursion,
-unordered residual-overlap/performance, generic-leaf performance, shaped
-products, every-subject proof, P3 and both clean audits remain RED or open**
+active with locally green S7 recovery and shaped-product correctness, but
+recursion, unordered residual-overlap/performance, full-product performance,
+every-subject proof, P3 and both clean audits remain RED or open**
 
 Release status: **NO RELEASE**
 
@@ -36,21 +36,33 @@ Release status: **NO RELEASE**
 | S8 bounded recursion | `27bf872`, `artifacts/pass3/s8-bounded-recursion/` | Cached generic recursion, parse-owned live/max depth and sticky typed nesting faults are correctness-green. Generic 96-leaf recursive span success/internal/result is only 1.270×/1.212×/1.331×; balanced-discard fusion is only 8.400×/8.842×/8.561× at 96 despite 57.819×/61.403×/61.507× at 753. **HELD — CORRECTNESS GREEN, PERFORMANCE RED; FORMATION OPEN**. |
 | U unordered composition | `19ad1ac`, `artifacts/pass3/u-unordered/` | U contributes 24 correctness cases (12 per S/D family) plus 13 S-kernel regressions. S has no disjoint-FIRST route and is retired. D proves overlap correctness, but every formal performance fixture is disjoint (`residuals: 0`); disjoint points are only 1.427–1.525× at 4, 2.708–3.406× at 8, 4.607–5.403× at 16 and 9.559–12.212× at 33. **HELD — CORRECTNESS GREEN, PERFORMANCE/OVERLAP ASSAY RED; NO BOOTSTRAP**. |
 | P2-L generic source leaves | `5822ae2`, `artifacts/pass3/l-source-leaves/` | Callback, sticky, and declarative ASCII families preserve 51/51 exact capture/value/failure products at 8/64/4096 UTF-16 units. Success is 0.0718–1.3079× and failure 1.1075–1.5381×; no bootstrap. All three production/public widenings are killed; the generic node is held only as a private shaped-product fixture. **CORRECTNESS GREEN; PERFORMANCE RED; P2 ACTIVE**. |
+| P2 shaped products | `d62b73a`, `artifacts/pass3/p2-shaped-products/` | Recursive JSON passes the frozen 33-valid/7-invalid corpus; the domain-neutral stylesheet-shaped product carries exact spans, nested calls, URL, scalar leaves and successful opaque recovery. Twenty equal AB/BA points put JSON at 0.8728–1.0021×, the fixture at 1.0937–1.2920× and failures at 1.1658–1.2041×; heap is ~1.166× control. **CORRECTNESS GREEN; PERFORMANCE RED; STAGED FAMILY KILL; P2 ACTIVE**. |
 
 ## Current executable state
 
 - Branch: `codex/css-totality-combinators-20260729`.
 - Latest source/evidence coordinate:
-  `5822ae2` (`perf(parser-prototype): falsify generic source-leaf widening`).
+  `d62b73a` (`perf(parser-prototype): falsify staged shaped-product fusion`).
 - Latest canonical authority reconciliation:
   `c9c2108` (`docs(parser-tranche): canonicalize P1 and bind the P2 leaf
   falsification`).
+- Corrected P1 root intake:
+  `abc9479d7ea5fa4c76deca752428faf8b332f280e6e637de12b12b25e8e2ad6c`;
+  it binds committed `c9c2108` bytes, P1 only, and grants no later credit.
+- P2 shaped-product objects at `d62b73a`: staged kernel
+  `387ea2d848185e9681b40366470f1a3c1ac9e88b`, fixtures
+  `772ab78f87f080473f78f2f3963677df5fa89e79`, product grammar
+  `537be68f2a1e1f8742a12e397dd28c2ec4878576`, hostile tests
+  `6610049d0e722f9083b115edea657f341b65bd87`, profile
+  `4804897509b687d726907e0b9e5bbc0f20ed5ef6`; manifest-file SHA-256
+  `ec8ebeeb1077862621be126a17f12480680f60593784ad748af25eca7969a159`.
 - P-B1 authority head: `302c623b4ffddf76bc4ee042cad1d3c5e739ef9d`.
 - Source/evidence coordinates include `c480578`
   (`perf(runtime-prototype): bind corrected S assay to accepted M2 control`),
   `2fc18dc`, S4 at `75b76dd`, S5 at `926a3ad`, S6 at `062c147`, S7 at
-  `20b5f52`, S8 at `27bf872`, U at `19ad1ac`, and P2-L at `5822ae2`. None
-  confers formation admission or execution credit.
+  `20b5f52`, S8 at `27bf872`, U at `19ad1ac`, P2-L at `5822ae2`, and shaped
+  products at `d62b73a`. None confers formation admission or execution
+  credit.
 - S/recovery evidence commit:
   `2fc18dc1ec3a0541b85e9e440fca85028844673c`.
 - Canonical authority before P-B1:
@@ -78,6 +90,14 @@ Release status: **NO RELEASE**
   proofs green. Its sealed unchanged-production `proof:perf` run is RED at
   +82.7% against 15%; private prototype changes cannot cause the production
   regression, but it is not waived.
+- Fresh shaped-product gates: focused products 8/8, P2-L 8/8 and S
+  regressions 13/13; frozen JSON 33 valid/7 invalid; package suite 14/14 files
+  and 134/134 tests; strict TypeScript; production build; manifest,
+  no-CSS-surface, subpath, packrat, no-span and no-dead-combinator proofs
+  green. One ordinary production `proof:perf` run passed at +13.2%; the
+  sealed rerun is RED at +25.6% against 15%. The private transaction changes
+  no production source, so neither run is causal or formal admission; the
+  sealed RED result is not waived.
 - U gates: 24/24 unordered cases plus 13/13 S-kernel regressions; package
   suite 14/14
   files and 134/134 tests; strict TypeScript; production build; manifest,
@@ -190,15 +210,19 @@ Release status: **NO RELEASE**
 10. `/utils` remains unresolved until two consumer receipts exist; otherwise
    it is pruned.
 11. Generic cached recursion is correctness-green but performance-RED.
-    Balanced-discard fusion remains private incompatible research: it may
-    survive only if a real Value/JSON-shaped product proves the same semantic
-    need at both binding scales. It is not recursive CSS AST proof.
+    Recursive JSON and nested stylesheet-shaped calls now exercise the real
+    product need; neither lifts the staged family above 1.0021× on JSON or
+    1.2920× on the fixture. Balanced-discard fusion and the staged
+    full-product family are killed as overfit/private alternatives. They are
+    not recursive CSS AST proof.
 12. S unordered is retired. D unordered remains private and partial; its
     correctness bank does not satisfy the every-scale ≥10× proof, and no
     residual-overlap performance plane exists.
 13. P2-L kills callback-loop, declarative ASCII-table, and public sticky
-    wrapper widenings. Native sticky RegExp remains the KISS incumbent. The
-    generic source node survives only as a private shaped-product fixture.
+    wrapper widenings. P2 shaped products then kill the remaining private
+    staged/source-leaf candidate path. Native sticky RegExp and the incumbent
+    closure runtime remain the KISS control; the private corpus survives only
+    to reproduce falsification.
 
 ## Formation and release chains
 
@@ -224,17 +248,17 @@ chain may be recorded while an earlier arrow is RED.
 
 ## Next executable boundary
 
-1. Continue P2 by composing the smallest complete isolated Value- and
-   JSON-shaped products from the held source-leaf fixture, S7 recovery, exact
-   spans, and consumer projection. No CSS/domain type enters parse-that.
-2. Re-adjudicate recursion and unordered overlap only where those shaped
-   products actually consume them. Generic recursion, balanced-discard
-   fusion, disjoint-only D performance, and residual-overlap performance are
-   presently RED.
-3. Preserve the locally green terminal/sequence/generic-recovery and P2-L
-   correctness evidence
-   without treating it as P3, every-subject proof, formation admission or
-   execution credit.
+1. Continue P2 with one domain-neutral stylesheet-shaped mixed-overlap
+   unordered product. It must exercise the exact D residual route, spans,
+   slots, recovery and consumer result against an idiomatic accepted-M2
+   control; no CSS/domain type enters parse-that.
+2. Retire D if any binding residual-overlap state/value/result point is below
+   10× or the state cap/heap exceeds the declared bound. Do not retime the
+   disjoint-only corpus as overlap evidence.
+3. Reconcile the remaining full-subject P2 cold/hot, memo, allocation and
+   optimizer rows by consumed evidence or terminal retirement. Preserve S7
+   local correctness without treating it as P3, every-subject proof,
+   formation admission or execution credit.
 4. Run formation Clean A/B only after the isolated prototype proof is green.
    Production-source freeze and packing remain later execution boundaries.
 

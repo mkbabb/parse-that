@@ -10,13 +10,18 @@ Status: **ACTIVE FORMATION — RED — NO RELEASE**
   `/Users/mkbabb/Programming/parse-that-css-totality`
 - Branch: `codex/css-totality-combinators-20260729`
 - Source/evidence HEAD:
-  `5822ae2` (`perf(parser-prototype): falsify generic source-leaf widening`)
+  `d62b73a` (`perf(parser-prototype): falsify staged shaped-product fusion`)
 - P1 registry coordinate:
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
 - Canonical owner authority:
   `c9c2108` (`docs(parser-tranche): canonicalize P1 and bind the P2 leaf
   falsification`)
+- Corrected P1 root intake:
+  `abc9479d7ea5fa4c76deca752428faf8b332f280e6e637de12b12b25e8e2ad6c`;
+  P1-only, zero later credit.
+- P2 shaped-product manifest-file SHA-256:
+  `ec8ebeeb1077862621be126a17f12480680f60593784ad748af25eca7969a159`.
 - Accepted M2 control worktree:
   `/tmp/parse-that-m2-baseline-20260729`
 - Accepted M2 coordinate:
@@ -81,6 +86,10 @@ consumer, publication or release credit.
    S regressions 13/13, package 14/14
    files and 134/134 tests; strict TypeScript; production build; manifest,
    surface, subpath, packrat, no-span and no-dead-combinator proofs.
+9. P2 shaped products at `d62b73a` pass the frozen 33-valid/7-invalid JSON
+   corpus and a domain-neutral stylesheet-shaped corpus with exact spans,
+   scalar leaves, URL, nested balanced calls, opaque recovery, immutable
+   diagnostics and hostile UTF-16.
 
 Value R2 formation is independently admitted with zero parser execution,
 product, release, or constellation-close credit: root receipt `0c151de9…`,
@@ -125,36 +134,40 @@ candidate pack, consumer receipt or release.
    waiver.
 10. P2-L success ranges from 0.0718× to 1.3079×. Callback loops,
     declarative ASCII tables, and a public sticky wrapper are killed. The
-    generic node is held only as a private shaped-product fixture; native
-    sticky RegExp remains the KISS incumbent.
-11. P1 is complete, P2 is active, and P3 plus formation Clean A/B remain
+    native sticky RegExp remains the KISS incumbent.
+11. Shaped JSON is 0.8728–1.0021×, the stylesheet-shaped fixture
+    1.0937–1.2920×, failures 1.1658–1.2041×, and retained heap about 1.166×
+    control. Complete products do not rescue the leaf loss. The staged
+    full-product family, balanced-discard alternative and private source-leaf
+    candidate are killed; their evidence remains reproducible.
+12. P1 is complete, P2 is active, and P3 plus formation Clean A/B remain
     blocked. Value stylesheet recovery and live Value/JSON receipts are later
     execution work, not isolated formation proof.
 
 ## Next executable transaction
 
-Resume B.W0 by composing the smallest complete isolated Value- and
-JSON-shaped products. Do not reopen unordered or recursion unless a shaped
-product consumes the exact mechanism.
+Resume B.W0 with the smallest domain-neutral stylesheet-shaped
+mixed-overlap unordered product. The shaped corpus established that the
+staged family cannot meet the bar; do not reopen it.
 
 ### Subject
 
-Use the held private source leaf, S7 recovery, exact spans, recursion only
-where structurally necessary, and consumer projection to form equal
-stylesheet- and JSON-shaped products. Keep CSS grammar/domain types in Value;
-the parse-that fixture expresses only generic mechanics.
+Use the existing D residual route, exact authored slots/spans, S7 recovery,
+and consumer projection to form one equal mixed-overlap unordered product.
+Keep CSS grammar/domain types in Value; the fixture expresses only generic
+mechanics. Retire D if any binding point is below 10×.
 
 ### Required laws
 
-- exact UTF-16 code-unit positions across CRLF, astral characters, lone
-  surrogates, NUL and CSS-style escapes;
-- identifier/name, escape, number, dimension, percentage, string, URL,
-  balanced-delimiter and JSON recursive shapes only where the isolated
-  products use them;
-- one generic capture/span representation, not a family of CSS-specialized
-  span builders;
-- failure frontier, authored labels, immutable recovery evidence and scalar
-  rollback identical to accepted M2;
+- exact UTF-16 code-unit slots/spans across nonzero astral prefixes and
+  overlapping authored names;
+- every required member appears once, optional/repeated members retain exact
+  slots, and locally greedy choices reopen only through bounded residual
+  search;
+- every timed overlap fixture records `residuals > 0`; disjoint routing alone
+  earns no overlap credit;
+- failure frontier, authored labels, immutable recovery evidence, state-cap
+  faults and scalar rollback remain exact;
 - no decoded-token object, token list, scanner result, global trivia layer or
   raw-source alias;
 - cold/hot, allocation, CPU, IC/deopt/GC and equal-result measurements at
@@ -162,14 +175,13 @@ the parse-that fixture expresses only generic mechanics.
 
 ### Admission order
 
-1. Freeze the smallest isolated Value-shaped and JSON-shaped product corpus,
-   products, spans, diagnostics, recovery and failure forms.
-2. Compose them only from the held private runtime mechanisms; add no public
-   or CSS/domain surface.
-3. Compare equal products against accepted M2/consumer controls at the exact
-   same boundary.
-4. Retire any mechanism that requires a second parser path, scanner-shaped
-   product, or unconsumed generality.
+1. Freeze the smallest mixed-overlap unordered corpus and exact residual
+   counts at 4/8/16/33 members.
+2. Exercise the existing D route without adding a public or domain surface.
+3. Compare equal state/value/result/recovery products against accepted M2 at
+   the same boundary and include overlap rather than `residuals: 0`.
+4. Retire D on any sub-10× point, state-cap breach, excess heap, second parser
+   path, or unconsumed generality.
 5. Run single-process AB/BA points first. Run the seven-process exact
    bootstrap only if every binding point estimate is at least 10×.
 6. Bank the source/evidence transaction, then reconcile
@@ -187,6 +199,7 @@ From `/Users/mkbabb/Programming/parse-that-css-totality/typescript`:
 ```sh
 npx tsc --noEmit --project tsconfig.json
 npx vitest run --config test/prototypes/pass3/l/vitest.config.ts
+npx vitest run --config test/prototypes/pass3/products/vitest.config.ts
 npx vitest run --config test/prototypes/pass3/s/vitest.config.ts
 npx vitest run
 npm run build
@@ -202,6 +215,8 @@ git diff --check
 git status --short
 shasum -a 256 -c \
   docs/tranches/B/artifacts/pass3/l-source-leaves/MANIFEST.sha256
+shasum -a 256 -c \
+  docs/tranches/B/artifacts/pass3/p2-shaped-products/MANIFEST.sha256
 ```
 
 ## Canonical reading order
@@ -217,5 +232,6 @@ shasum -a 256 -c \
 9. `artifacts/pass3/s8-bounded-recursion/README.md`
 10. `artifacts/pass3/u-unordered/README.md`
 11. `artifacts/pass3/l-source-leaves/README.md`
+12. `artifacts/pass3/p2-shaped-products/README.md`
 
 Formation remains RED. Execution has not begun. `NO RELEASE`.
