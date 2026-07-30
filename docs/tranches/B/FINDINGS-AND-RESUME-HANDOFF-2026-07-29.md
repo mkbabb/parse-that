@@ -12,8 +12,8 @@ Status: **ACTIVE FORMATION — RED — NO RELEASE**
 - Source/evidence HEAD:
   `19ad1ac` (`perf(parser-prototype): bank scannerless unordered S/D
   tournament`)
-- Canonical authority predecessor:
-  `1c9d92a5abacac84ca246710948bf1e23888d669`
+- Canonical U authority:
+  `8373167f1088f337af6096a9c9d2a5463ebd5d54`
 - Accepted M2 control worktree:
   `/tmp/parse-that-m2-baseline-20260729`
 - Accepted M2 coordinate:

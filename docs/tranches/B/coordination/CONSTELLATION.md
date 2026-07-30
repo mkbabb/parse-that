@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | U source/evidence `19ad1ac` (unordered correctness green, performance RED); S8 `27bf872` (recursion performance RED); S7 local green `20b5f52`; P-B1 authority `302c623` plus later authority reconciliation |
+| parse-that worktree | B / generic runtime producer | U source/evidence `19ad1ac` and authority `8373167` (unordered correctness green, performance RED); S8 `27bf872` (recursion performance RED); S7 local green `20b5f52`; P-B1 authority `302c623` |
 | Value | V / sole CSS grammar, consumer and UI owner | formation independently admitted with zero execution/release/product/visual credit at root DAG `88578047…`, Markdown `69116c27…`, validator `ba5789b3…`, receipt `a60eabe5…`, and rebind receipt `e5ccabd0…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |

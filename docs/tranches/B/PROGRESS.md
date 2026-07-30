@@ -41,6 +41,9 @@ Release status: **NO RELEASE**
 - Latest source/evidence coordinate:
   `19ad1ac` (`perf(parser-prototype): bank scannerless unordered S/D
   tournament`).
+- Latest canonical authority reconciliation:
+  `8373167f1088f337af6096a9c9d2a5463ebd5d54`
+  (`docs(parser-tranche): reconcile U falsification and formation boundary`).
 - P-B1 authority head: `302c623b4ffddf76bc4ee042cad1d3c5e739ef9d`.
 - Source/evidence coordinates include `c480578`
   (`perf(runtime-prototype): bind corrected S assay to accepted M2 control`),
