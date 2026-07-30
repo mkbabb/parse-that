@@ -44,8 +44,8 @@ Release status: **NO RELEASE**
 - Latest source/evidence coordinate:
   `d62b73a` (`perf(parser-prototype): falsify staged shaped-product fusion`).
 - Latest canonical authority reconciliation:
-  `c9c2108` (`docs(parser-tranche): canonicalize P1 and bind the P2 leaf
-  falsification`).
+  `885b0dd` (`docs(parser-tranche): bind shaped-product falsification and
+  next P2 boundary`).
 - Corrected P1 root intake:
   `abc9479d7ea5fa4c76deca752428faf8b332f280e6e637de12b12b25e8e2ad6c`;
   it binds committed `c9c2108` bytes, P1 only, and grants no later credit.

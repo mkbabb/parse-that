@@ -15,8 +15,8 @@ Status: **ACTIVE FORMATION — RED — NO RELEASE**
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
 - Canonical owner authority:
-  `c9c2108` (`docs(parser-tranche): canonicalize P1 and bind the P2 leaf
-  falsification`)
+  `885b0dd` (`docs(parser-tranche): bind shaped-product falsification and
+  next P2 boundary`)
 - Corrected P1 root intake:
   `abc9479d7ea5fa4c76deca752428faf8b332f280e6e637de12b12b25e8e2ad6c`;
   P1-only, zero later credit.
