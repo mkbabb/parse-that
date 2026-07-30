@@ -1,7 +1,7 @@
 import type {
     Diagnostic,
-    ParserState,
 } from "../../../../src/parse/state.js";
+import type { StagedFault } from "./run-state.js";
 
 type ResultState<T> = Readonly<{
     value: T;
@@ -10,7 +10,7 @@ type ResultState<T> = Readonly<{
     furthest: number;
     expected?: readonly string[];
     diagnostics: readonly Diagnostic[];
-    fault: ParserState["fault"];
+    fault: StagedFault | undefined;
 }>;
 
 type ImmutableField<T> = T extends readonly (infer U)[]
@@ -35,7 +35,7 @@ export type ParseResult<T> =
     | (ResultEvidence & Readonly<{
         kind: "fault";
         value: unknown;
-        fault: NonNullable<ParserState["fault"]>;
+        fault: StagedFault;
     }>);
 
 const EMPTY = Object.freeze([]) as readonly never[];

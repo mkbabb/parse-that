@@ -143,6 +143,25 @@ export function choice<const P extends readonly Grammar<unknown>[]>(
     }) as Grammar<P[number] extends Grammar<infer T> ? T : never>;
 }
 
+export function choiceArms<T>(grammar: Grammar<T>): readonly Grammar<T>[] {
+    const expand = (node: Node<unknown>): readonly Node<unknown>[] => {
+        if (node.kind === "choice") {
+            return node.children.flatMap(expand);
+        }
+        if (node.kind === "map") {
+            return expand(node.child).map(child => ({ ...node, child }));
+        }
+        if (node.kind === "span") {
+            return expand(node.child).map(child => ({ ...node, child }));
+        }
+        return [node];
+    };
+    const arms = expand(grammar.node as Node<unknown>);
+    return arms.length === 1 && arms[0] === grammar.node
+        ? [grammar]
+        : arms.map(node => new Grammar(node as Node<T>));
+}
+
 type GrammarValues<P extends readonly Grammar<unknown>[]> = {
     -readonly [K in keyof P]: P[K] extends Grammar<infer T> ? T : never;
 };
@@ -161,6 +180,67 @@ export function lazy<T>(get: () => Grammar<T>): Grammar<T> {
         kind: "lazy",
         get: () => get().node as Node<unknown>,
     });
+}
+
+export type GrammarAnalysis = Readonly<{
+    nullable: boolean;
+    firstCodes: readonly number[];
+}>;
+
+export function analyze<T>(grammar: Grammar<T>): GrammarAnalysis {
+    const cache = new Map<Node<unknown>, GrammarAnalysis>();
+    const visiting = new Set<Node<unknown>>();
+    const visit = (node: Node<unknown>): GrammarAnalysis => {
+        const cached = cache.get(node);
+        if (cached) return cached;
+        if (visiting.has(node)) return { nullable: false, firstCodes: [] };
+        visiting.add(node);
+
+        let nullable = false;
+        const codes = new Set<number>();
+        const merge = (analysis: GrammarAnalysis) => {
+            for (const code of analysis.firstCodes) codes.add(code);
+            return analysis.nullable;
+        };
+        if (node.kind === "literal") {
+            nullable = node.text.length === 0;
+            if (!nullable) codes.add(node.text.charCodeAt(0));
+        } else if (node.kind === "map" || node.kind === "span") {
+            nullable = merge(visit(node.child));
+        } else if (node.kind === "choice") {
+            for (const child of node.children) {
+                nullable = merge(visit(child)) || nullable;
+            }
+        } else if (node.kind === "sequence") {
+            nullable = true;
+            for (const child of node.children) {
+                if (!merge(visit(child))) {
+                    nullable = false;
+                    break;
+                }
+            }
+        } else if (node.kind === "pair") {
+            nullable = merge(visit(node.first));
+            if (nullable) nullable = merge(visit(node.second));
+        } else if (node.kind === "recovery") {
+            const child = visit(node.child);
+            const sync = visit(node.sync);
+            merge(child);
+            merge(sync);
+            nullable = child.nullable;
+        } else {
+            nullable = merge(visit(node.get()));
+        }
+
+        visiting.delete(node);
+        const result = {
+            nullable,
+            firstCodes: [...codes].sort((left, right) => left - right),
+        };
+        cache.set(node, result);
+        return result;
+    };
+    return visit(grammar.node as Node<unknown>);
 }
 
 export type Compiled<T> = Readonly<{

@@ -12,7 +12,12 @@ import { isDiagnosticsEnabled } from "../../../../src/parse/utils.js";
 
 export type StagedFault =
     | Readonly<{ kind: "Nesting"; offset: number; limit: number }>
-    | Readonly<{ kind: "RecoveryNonProgress"; offset: number }>;
+    | Readonly<{ kind: "RecoveryNonProgress"; offset: number }>
+    | Readonly<{
+        kind: "UnorderedStateLimit";
+        offset: number;
+        limit: number;
+    }>;
 
 export interface StagedState<T = unknown> {
     src: string;

@@ -1,0 +1,80 @@
+{
+  "schema": "parse-that-unordered-tournament/1",
+  "date": "2026-07-29",
+  "sourceParent": "1c9d92a5abacac84ca246710948bf1e23888d669",
+  "control": "de36d57dccdd20068b8c11a78f6e83d42e7d681f",
+  "status": "CORRECTNESS_GREEN_PERFORMANCE_RED_NO_BOOTSTRAP_NO_RELEASE",
+  "formalControl": "accepted-M2 any(...members).many(count,count).eof() with authored-slot projection and failure-value normalization",
+  "formalRatios": {
+    "4": {
+      "S": { "successAB": 0.288, "successBA": 0.295, "internal": 0.315, "result": 0.315, "failure": 0.394 },
+      "D": { "successAB": 1.478, "successBA": 1.525, "internal": 1.466, "result": 1.427, "failure": 2.371 }
+    },
+    "8": {
+      "S": { "successAB": 0.383, "successBA": 0.375, "internal": 0.368, "result": 0.400, "failure": 0.333 },
+      "D": { "successAB": 2.708, "successBA": 2.926, "internal": 2.990, "result": 3.406, "failure": 3.404 }
+    },
+    "16": {
+      "S": { "successAB": 0.516, "successBA": 0.449, "internal": 0.491, "result": 0.491, "failure": 0.316 },
+      "D": { "successAB": 4.607, "successBA": 5.378, "internal": 5.403, "result": 5.273, "failure": 6.156 }
+    },
+    "33": {
+      "S": { "successAB": 0.564, "successBA": 0.549, "internal": 0.559, "result": 0.467, "failure": 0.330 },
+      "D": { "successAB": 9.559, "successBA": 11.352, "internal": 12.212, "result": 10.450, "failure": 11.217 }
+    }
+  },
+  "stateAudit": {
+    "4": { "SAttempts": 10, "DAttempts": 4 },
+    "8": { "SAttempts": 36, "DAttempts": 8 },
+    "16": { "SAttempts": 136, "DAttempts": 16 },
+    "33": { "SAttempts": 561, "DAttempts": 33 }
+  },
+  "retainedHeapBytes": {
+    "4": { "control": 2157.44, "directControl": 2566.64, "S": 5449.36, "D": 5579.76 },
+    "8": { "control": 5249.40, "directControl": 4751.44, "S": 10186.08, "D": 10239.76 },
+    "16": { "control": 9992.24, "directControl": 9209.52, "S": 19324.72, "D": 19363.56 },
+    "33": { "control": 21187.56, "directControl": 18710.04, "S": 39795.56, "D": 39762.24 }
+  },
+  "hot33": {
+    "DMillisecondsFor2000000": 1045.843,
+    "controlMillisecondsFor2000000": 12286.408,
+    "cpuProfileCandidateTopHits": {
+      "disjointRoot": 474,
+      "anonymous": 137,
+      "terminalAlphabet": 116,
+      "project": 49,
+      "garbageCollector": 37,
+      "parseState": 15
+    },
+    "cpuProfileControlTopHits": {
+      "stringParser": 3966,
+      "anonymous": 1840,
+      "anyParser": 1212,
+      "mergeErrorState": 578,
+      "many": 447,
+      "garbageCollector": 46,
+      "parseState": 75
+    }
+  },
+  "deopts": {
+    "wholeLogLines": 79,
+    "candidateSourceLines": 1,
+    "profileHarnessLines": 4,
+    "interpretation": "The sole candidate-source wrong-map line is outside the hot disjoint runner in source mapping; loader and harness lines dominate. This is profile evidence, not a clean deopt seal."
+  },
+  "gates": {
+    "focused": "37/37",
+    "package": "14 files, 134/134",
+    "typescript": "GREEN",
+    "build": "GREEN",
+    "structuralProofs": "GREEN",
+    "productionPerfGuard": "RED in four fresh private-only runs: +21.3% to +45.4% JSON versus checked-in baseline",
+    "bootstrap": "NOT_RUN_BECAUSE_POINT_ESTIMATES_RED"
+  },
+  "disposition": {
+    "S": "RETIRE_AS_FAMILY",
+    "D": "KEEP_PRIVATE_PARTIAL_MECHANISM",
+    "formationProof": "RED",
+    "release": "NO_RELEASE"
+  }
+}
