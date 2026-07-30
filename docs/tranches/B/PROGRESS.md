@@ -47,8 +47,7 @@ Release status: **NO RELEASE**
 - Latest source/evidence coordinate:
   `f4b9abb` (`test(parser-prototype): bind same-FIRST recovery divergence`).
 - Latest canonical authority reconciliation:
-  `e448b24` (`docs(parser-tranche): close P2 with zero surviving
-  candidates`).
+  `730c244` (`docs(parser-tranche): bind same-FIRST recovery law into P3`).
 - Corrected P1 root intake:
   `abc9479d7ea5fa4c76deca752428faf8b332f280e6e637de12b12b25e8e2ad6c`;
   it binds committed `c9c2108` bytes, P1 only, and grants no later credit.

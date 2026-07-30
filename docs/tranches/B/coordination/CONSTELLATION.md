@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | P1 `69f72f7`; P2 `c3d42d4` (row-complete, zero candidates), authority `e448b24`; P3 same-FIRST `f4b9abb` (D divergence, no P3 completion); cold/hot `d323f56` (compiled table killed); mixed-overlap U `68055bd` (D killed); shaped `d62b73a`; P2-L `5822ae2`; S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
+| parse-that worktree | B / generic runtime producer | P1 `69f72f7`; P2 `c3d42d4` (row-complete, zero candidates); P3 same-FIRST `f4b9abb` (D divergence, no P3 completion), authority `730c244`; cold/hot `d323f56` (compiled table killed); mixed-overlap U `68055bd` (D killed); shaped `d62b73a`; P2-L `5822ae2`; S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
