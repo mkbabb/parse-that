@@ -281,6 +281,24 @@ tree algorithms; exact recovery/source fidelity; the non-additive 60-row
 Values 5 overlay; WPT manifests; and 53 Keyframes references across 51 files.
 The 753-property corpus and P4 shaped assays are subsets, never coverage.
 
+P4 is owner-adjudicated at `270feca`. The corrected fresh-Sol A1 seal is
+`3297c808…`; it repairs the predecessor's RSR expansion to **Region-Slot
+Return ABI** and binds the actual Sol denominator `0388a49c…` without
+changing the ruling. Sol's RSR/CISF/CTPT designs remain unimplemented.
+Luna's different F1/F2/F3 families lose on all 432 genuine JSON mechanism
+rows, and its 432 CSS rows time one handwritten reader that reaches none of
+the mechanisms. P4 is `REJECT/FOLD` and grants no formation credit.
+
+`P5-EUW` exceptional-unwind mismatch is the only bounded next family. Root
+A1 intake `709dcac8…` authorizes one isolated Luna preflight at task
+`019fb16a-09d7-7d80-ae5f-3d894e25855d`; owner source remains held until its
+sealed result and a fresh-Sol adjudication exist. Its first gate is not
+performance: it must preserve the public raw-parser mismatch ABI without a
+wrapper, fallback, dual executor, second runtime, or public widening. Only a
+green phase zero may open a seven-process scale-4 live-JSON fatal cell where
+every raw ratio and the exact-bootstrap CI-low must clear 10×. Full CSS and
+all downstream formation/execution edges remain blocked.
+
 ## Debt and terminal dispositions
 
 There is no silent deferral. Open work is owned by B.W0 and keeps the tranche

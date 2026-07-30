@@ -1,15 +1,15 @@
 # Tranche B — PROGRESS
 
-Updated: 2026-07-29
+Updated: 2026-07-30
 
 Tranche status: `in_progress`
 
 Active wave: `B.W0 - Candidate-to-Release Closure`
 
 Formation status: **RED — P1, P2 and P3 are row-complete with zero surviving
-candidates; the user reopened P4 to challenge their cost assumptions without
-changing the scannerless or ≥10× laws; both formation clean audits remain
-blocked**
+candidates; P4 is independently adjudicated REJECT/FOLD; one isolated Luna
+P5-EUW fatal preflight is active while owner source remains held; both
+formation clean audits remain blocked**
 
 Release status: **NO RELEASE**
 
@@ -44,8 +44,9 @@ Release status: **NO RELEASE**
 | P3 direct closure | `19c1e12`, `artifacts/pass3/p3-direct-closure/` | A 510-line scannerless closure kernel with native sticky leaves, scalar rollback, spans, immutable recovery and typed recursion returns 36 equal warmed success projections plus two equal failure-state subsets. Complete state, failure-result, invalid-M2, cold/first, alternating-shape, bootstrap and scaled diagnostics-on recovery planes are absent. Measured success is only 1.0656–1.5238×; retained parse-state heap grows 12.4%. **BOUNDED CORRECTNESS; PERFORMANCE/OMITTED PLANES RED; CANDIDATE KILL; NO BOOTSTRAP**. |
 | P3 full-subject disposition | `43d7d4a`, `research/P3-FULL-SUBJECT-DISPOSITION-2026-07-29.md` | All twenty subjects have terminal P3 findings. No implemented family survives as a candidate. **P3 COMPLETE; ISOLATED PROOF RED; FORMATION CLEAN A/B BLOCKED**. |
 | Native JSON feasibility yardstick and P3 cost bound | `605a1ae`, `artifacts/formation/native-json-yardstick/`; root ruling `d03d0422…` | Seven processes compare accepted-M2 logical `jsonParser` with native `JSON.parse` on equal values and identically frozen success envelopes. Scale-4 immutable result is 5.0050× (bootstrap 95% 4.9513–5.0985×); scale 8 is 6.0826× (6.0293–6.1943×). Independent call-tree attribution of sealed P3 CPU evidence reproduces 1,157,659 µs candidate runtime, 144,501 µs candidate-native RegExp, 167,382 µs required candidate products and 1,870,633 µs comparable M2 work. Matching plus products alone consumes 311,883 µs against a 187,063 µs 10× budget. **IMMUTABLE P3 NEGATIVE EVIDENCE; P4 MUST EXECUTABLY FALSIFY THE BOUND; NO CANDIDATE/CREDIT**. |
-| P4 novelty loop | root reopen `d1df0f01…`; isolated Sol architecture and Luna prototype receipts pending | Challenge inclusive/exclusive CPU attribution and removable common work with at least three genuinely new mechanisms; use live M2 `jsonParser` and a Value-owned full-CSS-shaped product; keep all work isolated from product source. **ACTIVE RESEARCH; ZERO FORMATION/EXECUTION/RELEASE CREDIT**. |
+| P4 novelty loop | owner adjudication `270feca`; corrected jury A1 manifest `3297c808…`; root source audit `5614a7d8…` | Sol RSR/CISF/CTPT were not implemented. Luna substituted F1/F2/F3: all 432 genuine JSON mechanism rows are below `1x`; all 432 CSS rows time one handwritten same-body reader that exercises none of the mechanisms. P4 is negative archaeology, not a completed Sol/Luna/Sol pass. **REJECT/FOLD; ZERO FORMATION/EXECUTION/RELEASE CREDIT**. |
 | P4 full-CSS denominator | root addendum `2bc4abb2…` | `@webref/css@8.7.1`: 1,503 raw/1,439 active property-function-type rows; 1,717 raw/1,653 active full-Webref rows; 64 explicit alias refusals; 109 prose/manual rows; 60-row Values 5 intersection; 25 token-equivalent decisions, ten entry points, eleven tree algorithms, full recovery/source fidelity, WPT manifests, and 53 Keyframes references across 51 files. Value extensions are exactly `hsv`/`kelvin`; `ictcp`/`jzazbz`/`jzczhz` are standard. **BINDING DENOMINATOR; ZERO COVERAGE/FORMATION CREDIT**. |
+| P5-EUW fatal preflight | root A1 intake `709dcac8…`; Luna task `019fb16a-09d7-7d80-ae5f-3d894e25855d`; corrected jury dispatch `d74e0898…`; owner ruling `270feca` | Exceptional-unwind mismatch is the sole distinct bounded continuation. Phase zero must first prove that ordinary mismatch can preserve public `ParserFunction`, `Parser.parser`, and raw-call failure behavior without a wrapper, dual executor, fallback, or API change. If that passes, the first scale-4 live-JSON cell requires every raw ratio and exact-bootstrap CI-low `>=10x`; any miss kills the family. **ISOLATED LUNA PREFLIGHT ACTIVE; OWNER SOURCE HELD; ZERO CREDIT**. |
 
 ## Current executable state
 
@@ -55,6 +56,12 @@ Release status: **NO RELEASE**
   yardstick`).
 - Latest canonical authority reconciliation:
   `75cf36e` (`docs(parser-tranche): bind the full-CSS P4 denominator`).
+- Latest owner audit:
+  `270feca0d48ef7caab3d44ad9bcc62d9a6687870`
+  (`docs(parser-research): bind the P4 owner adjudication and fatal EUW
+  continuation`). It binds P4 `REJECT/FOLD`, the corrected fresh-Sol A1
+  manifest `3297c808…`, the all-432-below-1× JSON result, the zero-credit CSS
+  rows, and the held P5-EUW fatal preflight.
 - Root P3 feasibility ruling:
   SHA-256
   `d03d042286d0bad27e3666f3c08e83a393aaa86928e6273c05ac85ac51bfed67`;
@@ -165,6 +172,14 @@ Release status: **NO RELEASE**
   RED at +16.0% JSON against the 15% guard (2,022 ns versus 1,742 ns). The
   document-only diff is not causal, the result is not waived, and current
   formation remains RED.
+- P4 owner-authority replay on 2026-07-30: strict TypeScript, package 14/14
+  files and 134/134 tests, production build, manifest, no-CSS-surface,
+  subpath, all four packrat checks, no-span and no-dead-combinator proofs are
+  green. Focused U/S, leaves, products, P3 and S suites are 41/41, 8/8, 8/8,
+  6/6 and 13/13. `proof:perf` is green at +7.3% JSON (1,870 ns versus
+  1,742 ns) with 72.8% faster first-character dispatch. This supersedes only
+  the live package-gate status, not the historical +16.0% observation and not
+  the formal ≥10× admission requirement.
 - U gates: 24/24 unordered cases plus 13/13 S-kernel regressions; package
   suite 14/14
   files and 134/134 tests; strict TypeScript; production build; manifest,
@@ -366,21 +381,26 @@ chain may be recorded while an earlier arrow is RED.
 
 ## Next executable boundary
 
-1. P1/P2/P3 are complete at `69f72f7`/`c3d42d4`/`43d7d4a`. Do not rerun,
-   rename or recombine their killed families.
-2. P4 begins with independent, isolated architecture and executable
-   prototype receipts. Each must challenge the exact P3 call-tree bound and
-   name at least three mechanisms that are not renamed killed families.
-3. Compare complete state, value, immutable result, failures,
-   diagnostics-on recovery, UTF-16 spans, cold/build-first and alternating
-   shapes against live M2 `jsonParser` and a Value-owned full-CSS-shaped
-   grammar. Do not bootstrap unless every raw point already clears 10×.
-4. A fresh Sol adjudication must agglomerate the independent receipts before
-   any owner prototype is adopted. Product source, formation cleans,
-   candidate packing, API changes and release remain blocked.
-5. Preserve scalar rollback, diagnostics-toggle-invariant recovery, exact
+1. Preserve P4 at owner audit `270feca` and corrected jury A1 manifest
+   `3297c808…`. Do not reinterpret Sol's unimplemented designs, Luna's losing
+   F1/F2/F3 rows, or the handwritten CSS reader as a candidate.
+2. The sole isolated Luna P5-EUW preflight is task
+   `019fb16a-09d7-7d80-ae5f-3d894e25855d`. Do not edit owner source or
+   prototypes while it runs. Consume only its completed sealed packet plus a
+   fresh-Sol adjudication. Phase zero is the public raw-parser ABI/taxonomy
+   assay; a wrapper, dual executor, fallback, changed mismatch return, or new
+   public surface kills EUW before timing.
+3. If phase zero passes, run only the scale-4 live-M2-JSON alternating
+   immutable-result cell across seven fresh paired processes. Every raw point
+   and the exact-bootstrap 95% lower bound must be `>=10x`; stop on the first
+   miss.
+4. Only a green fatal cell may open scale 4/33 complete state, value, result,
+   failures, diagnostics-on recovery, UTF-16, allocation, IC, deopt and GC,
+   plus one real Value-owned combinator CSS vertical with proved nonzero EUW
+   activity. A handwritten body or scanner-shaped plane is fatal.
+5. Full CSS, formation Clean A/B, production freeze, candidate packing,
+   API changes, Value/JSON consumption, release and BBNF remain blocked.
+   Preserve scalar rollback, diagnostics-toggle-invariant recovery, exact
    UTF-16 slots/spans, typed nesting, run isolation and consumer projection.
-   Admit no compiler/table, tokenizer/scanner, VM, event tape, compatibility
-   layer, default memo, `/utils` alias or second runtime.
 
 `FINAL.md` remains an open gate ledger. Tranche B is not closeable.

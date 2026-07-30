@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | authority `75cf36e`; P4 reopen `d1df0f01…`; full-CSS denominator `2bc4abb2…`; native yardstick `605a1ae`; P3 feasibility ruling `d03d0422…` (negative evidence, not stop authority); P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a` (row-complete, zero candidates); direct closure `19c1e12` (killed); same-FIRST `f4b9abb` (D killed); cold/hot `d323f56`; mixed-overlap U `68055bd`; shaped `d62b73a`; P2-L `5822ae2`; S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
+| parse-that worktree | B / generic runtime producer | owner P4 audit `270feca`; corrected jury A1 `3297c808…`; authority `75cf36e`; P4 reopen `d1df0f01…`; full-CSS denominator `2bc4abb2…`; native yardstick `605a1ae`; P3 feasibility ruling `d03d0422…` (negative evidence, not stop authority); P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a` (row-complete, zero candidates); direct closure `19c1e12` (killed); same-FIRST `f4b9abb` (D killed); cold/hot `d323f56`; mixed-overlap U `68055bd`; shaped `d62b73a`; P2-L `5822ae2`; S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
@@ -147,6 +147,18 @@ alias refusals, 109 prose/manual contracts, the non-additive 60-row Values 5
 overlay, full CSS Syntax recovery/fidelity and all 53 Keyframes references
 across 51 files. A 753-property or shaped-mechanism assay cannot satisfy the
 consumer or coverage edge.
+
+P4 owner adjudication `270feca` and corrected fresh-Sol A1 manifest
+`3297c808…` add no consumer or API edge. Sol's RSR/CISF/CTPT designs were
+never implemented. Luna's substituted F1/F2/F3 families lose on all 432
+genuine JSON mechanism rows; its 432 CSS rows time a handwritten same-body
+reader that reaches none of those mechanisms. P4 is `REJECT/FOLD`.
+Root A1 intake `709dcac8…` dispatches exactly one isolated Luna `P5-EUW`
+preflight at task `019fb16a-09d7-7d80-ae5f-3d894e25855d`. It is the only
+bounded continuation and begins with a fatal public raw-parser ABI/taxonomy
+assay. Owner source is held until the packet is sealed and freshly
+Sol-adjudicated. Full CSS, formation Clean A/B, candidate packing, release,
+Value rebind, ABI freeze and BBNF remain blocked.
 
 P2-L at `5822ae2` adds no consumer or API edge. Its 51 equal products place
 success at 0.0718–1.3079×; callback-loop, ASCII-table and public

@@ -1,8 +1,9 @@
 # Parse-that findings and resume handoff
 
-Date: 2026-07-29
+Date: 2026-07-30
 
-Status: **ACTIVE P4 FORMATION RESEARCH — RED — NO RELEASE**
+Status: **ACTIVE ISOLATED P5-EUW PREFLIGHT — OWNER SOURCE HELD — RED — NO
+RELEASE**
 
 ## Exact resume coordinate
 
@@ -15,8 +16,20 @@ Status: **ACTIVE P4 FORMATION RESEARCH — RED — NO RELEASE**
 - P1 registry coordinate:
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
-- Canonical owner authority:
-  `75cf36e` (`docs(parser-tranche): bind the full-CSS P4 denominator`).
+- Canonical owner authority predecessor:
+  `75cf36e` (`docs(parser-tranche): bind the full-CSS P4 denominator`);
+  this amended document set binds the later P4 result.
+- P4 owner adjudication:
+  `270feca0d48ef7caab3d44ad9bcc62d9a6687870`
+  (`docs(parser-research): bind the P4 owner adjudication and fatal EUW
+  continuation`).
+- Corrected fresh-Sol jury A1 manifest:
+  `3297c808d66ed3c528134a2567a4f85ba7602769270868abfd701fa80ce0b311`.
+- Root A1 intake SHA-256:
+  `709dcac882dcbbc95101b58f72b0e34ed2284c6c1dcd2c02aee8567521bb6c63`.
+- Sole isolated Luna P5-EUW preflight:
+  task `019fb16a-09d7-7d80-ae5f-3d894e25855d`, writer root
+  `/Users/mkbabb/Documents/Codex/2026-07-29/parser-p5-euw-luna/outputs`.
 - Root P3 feasibility ruling SHA-256:
   `d03d042286d0bad27e3666f3c08e83a393aaa86928e6273c05ac85ac51bfed67`;
   it supersedes `8fe9a26b…` as document identity.
@@ -245,29 +258,44 @@ candidate pack, consumer receipt or release.
 20. P1/P2/P3 are complete; isolated every-subject proof remains RED because
     no candidate exists. Formation Clean A/B, packing and execution cannot
     begin.
-21. A fresh canonical-document replay leaves every structural proof green
-    but `proof:perf` RED at +16.0% JSON against the 15% guard (2,022 ns
-    versus 1,742 ns). The document-only diff is not causal and the RED result
-    is not waived.
+21. A prior canonical-document replay left every structural proof green but
+    sampled `proof:perf` RED at +16.0% JSON. The 2026-07-30 P4 owner-authority
+    replay is green at +7.3% (1,870 ns versus 1,742 ns), with strict
+    TypeScript, focused 41/41 + 8/8 + 8/8 + 6/6 + 13/13, package 14/14
+    files and 134/134 tests, build and every structural proof green. This
+    updates the live package guard only; neither noisy point is formal ≥10×
+    admission evidence.
 22. Root's reopening condition is not met. Even at the optimistic native
     yardstick bootstrap highs, a qualifying candidate must be
     1.9614×/1.6144× faster than native on scale-4/8 immutable results while
     adding the omitted generic parser semantics. The offset-return idea names
     no source for that gain and was not implemented.
+23. P4 did not implement its dispatched Sol designs. RSR, CISF and CTPT remain
+    unimplemented design evidence. Luna substituted F1/F2/F3 in one runtime;
+    all 432 genuine JSON mechanism rows are below `1x`.
+24. Luna's 432 CSS rows time a handwritten recursive-descent body shared by
+    control and candidate. That body reaches none of F1/F2/F3 and is neither
+    idiomatic parse-that nor the 1,653-row full-CSS denominator. It grants
+    zero mechanism, consumer, coverage or formation credit.
+25. Corrected jury A1 `3297c808…` changes only the RSR expansion and Sol
+    denominator hash plus mechanical receipt/seal bindings. It preserves P4
+    `REJECT/FOLD`. P5-EUW is the sole bounded next falsifier, not a candidate.
 
-## Next executable transaction — P4
+## Next executable transaction — P5-EUW fatal preflight
 
-Resume B.W0 after complete P3. Every P1–P3 replacement family is terminally
-retired; root P4 reopen `d1df0f01…` authorizes isolated novelty research only.
+Resume B.W0 from owner audit `270feca` and root A1 intake `709dcac8…`. Every
+P1–P4 implementation family is retired or unimplemented. Exactly one isolated
+Luna preflight is active; owner source and owner prototype paths remain held.
 
 ### Subject
 
-The direct closure-kernel cut is complete and killed at `19c1e12`; the
-post-P3 feasibility yardstick is sealed at `605a1ae`. Consume the independent
-Sol architecture and Luna executable-prototype receipts, then run one fresh
-Sol adjudication across both. P4 must retain at least three genuinely new
-mechanisms long enough to falsify them on live M2 `jsonParser` and a
-Value-owned full-CSS-shaped product. Keep CSS grammar/domain types in Value.
+Await the sealed output of Luna task
+`019fb16a-09d7-7d80-ae5f-3d894e25855d`, then require one fresh-Sol
+adjudication before any owner action. EUW makes routine mismatch use one
+frozen singleton exception caught only at root/choice/repeat/recover
+ownership boundaries while success returns a cursor and writes the ordinary
+final value. It may not add a region, journal, tape, compiler, VM, scanner,
+fallback, wrapper, second executor or public surface.
 
 ### Required laws
 
@@ -275,8 +303,8 @@ Value-owned full-CSS-shaped product. Keep CSS grammar/domain types in Value.
   faults, failure frontiers and scalar rollback;
 - preserve accepted-M2 traversal provenance and same-FIRST frontier bytes;
 - keep the compiled graph/table, unordered engine, generic source leaf,
-  compiler-owned result, `/utils`, unconsumed packrat and private direct
-  closure runtime retired;
+  compiler-owned result, `/utils`, unconsumed packrat, private direct closure
+  runtime, RSR/CISF/CTPT, F1/F2/F3, SRA and TOL retired;
 - preserve S7's generic laws without elevating its local subset to
   every-subject proof;
 - no decoded-token object, token list, scanner result, global trivia layer or
@@ -286,20 +314,26 @@ Value-owned full-CSS-shaped product. Keep CSS grammar/domain types in Value.
 
 ### Admission order
 
-1. Audit each P4 receipt independently and reject double-counted CPU claims,
-   synthetic controls, incomplete result planes and disguised P1–P3 families.
-2. Agglomerate the smallest genuinely new generic mechanism or minimal pair;
-   bind its exact Value full-CSS and logical `parse-that#jsonParser` needs.
-3. Implement only an isolated private prototype with no compiler, table
-   builder, tokenizer, scanner, VM, event tape, compatibility layer or second
-   runtime.
-4. Re-run complete state, value, immutable result, failure,
-   diagnostics-on recovery, UTF-16, cold/build-first and alternating-shape
-   planes at 4/8/16/33/96/753.
-5. Run exact bootstrap only if every raw point clears 10×. A failed mechanism
-   returns to the novelty loop; it does not waive the gate or end the goal.
-6. Formation Clean A/B remain blocked until an isolated candidate clears the
-   complete proof. Production freeze, packing and consumers remain later.
+1. Independently verify the completed Luna seal; then consume one fresh-Sol
+   falsification/adjudication. Do not act on an in-progress packet.
+2. Phase zero proves public raw-parser compatibility. Accepted M2 exports
+   `ParserFunction`, exposes `Parser.parser`, and permits direct raw calls
+   whose mismatch returns `ParserState`. Any changed behavior, wrapper,
+   internal/external executor split, fallback or API widening kills EUW.
+3. Only if phase zero is green, run scale-4 live M2 `jsonParser`, alternating
+   hot immutable results, across seven fresh paired processes. Every raw
+   ratio and exact-bootstrap 95% lower bound must be `>=10x`; any miss kills
+   EUW before broader work.
+4. Only a green fatal cell opens scale 4/33 complete state/value/result,
+   failures, diagnostics-on recovery, exact UTF-16, allocation, IC, deopt,
+   GC and heap assays.
+5. The first CSS evidence is one real Value-owned combinator vertical authored
+   once against control/candidate generic primitives, with proved nonzero EUW
+   activity. A handwritten body, scanner-shaped representation, or “full
+   CSS” label without the 1,439/1,653 denominator is fatal.
+6. Formation Clean A/B remain blocked until a surviving isolated candidate
+   clears the complete proof. Production freeze, packing, consumer migration,
+   release, Value rebind and BBNF remain later.
 
 Do not begin Value-owned CSS grammar work, production-source execution,
 candidate packing or consumer migration from this repository.
