@@ -1,0 +1,12 @@
+37a791a2f5e99742677f68b70190972d69131e581339dffde25e402529303f62  docs/tranches/B/artifacts/formation/native-json-yardstick/README.md
+e6b40765a5bf834080ab84cb7a122d7bd31901740bbf3bb07ebfd62bd8f3e780  docs/tranches/B/artifacts/formation/native-json-yardstick/aggregate.json
+061c3ffde7848f201bd6dd08d87861deef9e13a9411dba18e11302f69fbe63b4  docs/tranches/B/artifacts/formation/native-json-yardstick/run-1.json
+eaabec989f69c0434fb0eabc0ee0269bceb4a7f5f1099f6bd44188810543c7da  docs/tranches/B/artifacts/formation/native-json-yardstick/run-2.json
+a930ffc415a34e960bd3082de41e51352a8626ee83dfd4dcbfb5b4f8e70c2bb4  docs/tranches/B/artifacts/formation/native-json-yardstick/run-3.json
+7cf2025e209dad36503e22af93ad2a7d222cd2c8d2b4b9b65646babffe7faadd  docs/tranches/B/artifacts/formation/native-json-yardstick/run-4.json
+9a26f3d2796d68c256d3048b115f9e6755f7e66478c1dad8a41bdc733d1928a5  docs/tranches/B/artifacts/formation/native-json-yardstick/run-5.json
+400ac66373bfea2ddaba2ebe80dce75eb80cea00ae0e425b6a67739269af2aeb  docs/tranches/B/artifacts/formation/native-json-yardstick/run-6.json
+fbfc75342c8076b0bffa95b90c9fa85277a95cc822c05ada3237c6e274ea1008  docs/tranches/B/artifacts/formation/native-json-yardstick/run-7.json
+37879cddac7788e5f8961df68b0b1e3be0358208a78cd999d8a2d5594e75bde2  typescript/test/prototypes/formation/native-json-yardstick/aggregate.ts
+f26a14746841970b11445f1675ded803ec6938dd7e470a280c2020fc5ca06a85  typescript/test/prototypes/formation/native-json-yardstick/profile.ts
+d108cebee66767256c8b5c733e5392d8f05f8b8d3abac634dfc3bbafcab88d3a  typescript/test/prototypes/pass3/p3/products.ts
