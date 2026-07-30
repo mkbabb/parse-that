@@ -8,8 +8,9 @@ Active wave: `B.W0 - Candidate-to-Release Closure`
 
 Formation status: **RED — P1 is complete as hash-bound reconciliation; P2 is
 active with locally green S7 recovery and shaped-product correctness, but
-recursion, unordered residual-overlap/performance, full-product performance,
-every-subject proof, P3 and both clean audits remain RED or open**
+recursion, full-product performance, row-complete P2 disposition,
+every-subject proof, P3 and both clean audits remain RED or open; both
+unordered candidate families are retired**
 
 Release status: **NO RELEASE**
 
@@ -37,15 +38,18 @@ Release status: **NO RELEASE**
 | U unordered composition | `19ad1ac`, `artifacts/pass3/u-unordered/` | U contributes 24 correctness cases (12 per S/D family) plus 13 S-kernel regressions. S has no disjoint-FIRST route and is retired. D proves overlap correctness, but every formal performance fixture is disjoint (`residuals: 0`); disjoint points are only 1.427–1.525× at 4, 2.708–3.406× at 8, 4.607–5.403× at 16 and 9.559–12.212× at 33. **HELD — CORRECTNESS GREEN, PERFORMANCE/OVERLAP ASSAY RED; NO BOOTSTRAP**. |
 | P2-L generic source leaves | `5822ae2`, `artifacts/pass3/l-source-leaves/` | Callback, sticky, and declarative ASCII families preserve 51/51 exact capture/value/failure products at 8/64/4096 UTF-16 units. Success is 0.0718–1.3079× and failure 1.1075–1.5381×; no bootstrap. All three production/public widenings are killed; the generic node is held only as a private shaped-product fixture. **CORRECTNESS GREEN; PERFORMANCE RED; P2 ACTIVE**. |
 | P2 shaped products | `d62b73a`, `artifacts/pass3/p2-shaped-products/` | Recursive JSON passes the frozen 33-valid/7-invalid corpus; the domain-neutral stylesheet-shaped product carries exact spans, nested calls, URL, scalar leaves and successful opaque recovery. Twenty equal AB/BA points put JSON at 0.8728–1.0021×, the fixture at 1.0937–1.2920× and failures at 1.1658–1.2041×; heap is ~1.166× control. **CORRECTNESS GREEN; PERFORMANCE RED; STAGED FAMILY KILL; P2 ACTIVE**. |
+| P2-UO mixed-overlap unordered | `68055bd`, `artifacts/pass3/p2-unordered-overlap/` | Every 4/8/16/33-member success uses D's live residual route while returning equal slots, UTF-16 spans, immutable recovery diagnostics and failures. Twenty AB/BA points are 0.7362–2.2994×; several binding planes lose and stable 8/16/33-member grammar heap is ~2.06–2.40× control. **CORRECTNESS GREEN; PERFORMANCE RED; D KILL; NO BOOTSTRAP; P2 ACTIVE**. |
 
 ## Current executable state
 
 - Branch: `codex/css-totality-combinators-20260729`.
 - Latest source/evidence coordinate:
-  `d62b73a` (`perf(parser-prototype): falsify staged shaped-product fusion`).
+  `68055bd` (`perf(parser-prototype): retire residual unordered
+  composition`).
 - Latest canonical authority reconciliation:
-  `885b0dd` (`docs(parser-tranche): bind shaped-product falsification and
-  next P2 boundary`).
+  `2f1f936` (`docs(parser-tranche): bind the shaped-product authority
+  coordinate`); the current authority reconciliation is being banked after
+  `68055bd`.
 - Corrected P1 root intake:
   `abc9479d7ea5fa4c76deca752428faf8b332f280e6e637de12b12b25e8e2ad6c`;
   it binds committed `c9c2108` bytes, P1 only, and grants no later credit.
@@ -56,13 +60,17 @@ Release status: **NO RELEASE**
   `6610049d0e722f9083b115edea657f341b65bd87`, profile
   `4804897509b687d726907e0b9e5bbc0f20ed5ef6`; manifest-file SHA-256
   `ec8ebeeb1077862621be126a17f12480680f60593784ad748af25eca7969a159`.
+- P2-UO objects at `68055bd`: manifest-file SHA-256
+  `d9253a49c7fcbe970712cc4245711cfdb1a5891bdafb7507720cb1d033a87bfd`;
+  it binds the source, exact profile, allocation rows, CPU profile, normalized
+  V8 log and production guard.
 - P-B1 authority head: `302c623b4ffddf76bc4ee042cad1d3c5e739ef9d`.
 - Source/evidence coordinates include `c480578`
   (`perf(runtime-prototype): bind corrected S assay to accepted M2 control`),
   `2fc18dc`, S4 at `75b76dd`, S5 at `926a3ad`, S6 at `062c147`, S7 at
-  `20b5f52`, S8 at `27bf872`, U at `19ad1ac`, P2-L at `5822ae2`, and shaped
-  products at `d62b73a`. None confers formation admission or execution
-  credit.
+  `20b5f52`, S8 at `27bf872`, U at `19ad1ac`, P2-L at `5822ae2`, shaped
+  products at `d62b73a`, and mixed-overlap U at `68055bd`. None confers
+  formation admission or execution credit.
 - S/recovery evidence commit:
   `2fc18dc1ec3a0541b85e9e440fca85028844673c`.
 - Canonical authority before P-B1:
@@ -98,6 +106,11 @@ Release status: **NO RELEASE**
   sealed rerun is RED at +25.6% against 15%. The private transaction changes
   no production source, so neither run is causal or formal admission; the
   sealed RED result is not waived.
+- Fresh P2-UO gates: focused U/S kernel 41/41 (28 unordered plus 13 shared
+  regressions); package 14/14 files and 134/134 tests; strict TypeScript;
+  production build; manifest and `proof:all` green. Its sealed production
+  guard records +8.4% JSON and is a regression guard only, not formal
+  admission or causal prototype evidence.
 - U gates: 24/24 unordered cases plus 13/13 S-kernel regressions; package
   suite 14/14
   files and 134/134 tests; strict TypeScript; production build; manifest,
@@ -169,9 +182,15 @@ Release status: **NO RELEASE**
   retired as a family. D's disjoint path reduces attempts from
   10/36/136/561 to 4/8/16/33, but the binding accepted-M2 point assay remains
   RED. Its single 33-member AB/BA set ranges from 9.559× to 12.212×; smaller
-  scales range from 1.427× to 6.156×. Every timed fixture has
-  `residuals: 0`; residual-overlap performance is unmeasured and RED. No
-  exact bootstrap follows.
+  scales range from 1.427× to 6.156×. Every timed fixture at that coordinate
+  has `residuals: 0`.
+- P2-UO closes the missing performance assay. Its 4/8/16/33-member products
+  consult the live residual route 7/15/31/65 times and preserve equal
+  state/value/internal/result/failure products. The twenty AB/BA ratios are
+  0.7362–2.2994×, with multiple binding points below 1×. D is terminally
+  retired; no bootstrap follows. Successful recovery is present but has a
+  unique FIRST code, so same-FIRST speculative recovery under overlap remains
+  an explicit hostile-audit item rather than a claimed result.
 - U retains equal-plane raw data, state/allocation points, two CPU profiles
   and a V8 deopt log at `artifacts/pass3/u-unordered/`. Candidate grammar
   retained heap is approximately 1.9–2.6× the idiomatic control. The deopt
@@ -215,9 +234,10 @@ Release status: **NO RELEASE**
     1.2920× on the fixture. Balanced-discard fusion and the staged
     full-product family are killed as overfit/private alternatives. They are
     not recursive CSS AST proof.
-12. S unordered is retired. D unordered remains private and partial; its
-    correctness bank does not satisfy the every-scale ≥10× proof, and no
-    residual-overlap performance plane exists.
+12. Both unordered families are retired. S has no unique routing mechanism;
+    D's live residual route is correct but only 0.7362–2.2994× and carries
+    larger grammar heap. The correctness fixtures remain private research;
+    no unordered runtime surface advances.
 13. P2-L kills callback-loop, declarative ASCII-table, and public sticky
     wrapper widenings. P2 shaped products then kill the remaining private
     staged/source-leaf candidate path. Native sticky RegExp and the incumbent
@@ -248,18 +268,19 @@ chain may be recorded while an earlier arrow is RED.
 
 ## Next executable boundary
 
-1. Continue P2 with one domain-neutral stylesheet-shaped mixed-overlap
-   unordered product. It must exercise the exact D residual route, spans,
-   slots, recovery and consumer result against an idiomatic accepted-M2
-   control; no CSS/domain type enters parse-that.
-2. Retire D if any binding residual-overlap state/value/result point is below
-   10× or the state cap/heap exceeds the declared bound. Do not retime the
-   disjoint-only corpus as overlap evidence.
-3. Reconcile the remaining full-subject P2 cold/hot, memo, allocation and
-   optimizer rows by consumed evidence or terminal retirement. Preserve S7
-   local correctness without treating it as P3, every-subject proof,
-   formation admission or execution credit.
-4. Run formation Clean A/B only after the isolated prototype proof is green.
+1. Form one row-complete P2 full-subject disposition from the P1 registry and
+   the banked S7/S8/U/P2-L/shaped/P2-UO evidence. Each row must name a kept
+   mechanism, terminal retirement or exact routed hostile assay.
+2. Reconcile cold/hot dispatch, memo policy, allocation/hidden-class/
+   optimizer evidence, public-surface pruning and same-FIRST speculative
+   recovery under overlap. Add no validator or registry machinery beyond the
+   smallest hash-bound evidence table.
+3. Preserve S7 local correctness without treating it as P3, every-subject
+   proof, formation admission or execution credit. Do not reopen retired
+   staged, leaf, balanced-discard or unordered families without new consumed
+   evidence.
+4. Begin P3 only after every P2 row has an executable disposition. Run
+   formation Clean A/B only after the isolated prototype proof is green.
    Production-source freeze and packing remain later execution boundaries.
 
 `FINAL.md` remains an open gate ledger. Tranche B is not closeable.
