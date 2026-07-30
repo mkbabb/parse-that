@@ -9,7 +9,8 @@ Active wave: `B.W0 - Candidate-to-Release Closure`
 Formation status: **ACTIVE — P1–P6 and the post-P6 reached/current-host
 NO-EDGE ruling remain immutable negative evidence under the historical 10x
 law; the user has reopened the admission floor as strict 3x, strict 2x, and
-measured constellation break-even; Round Zero is banked, Pass L1 is ready,
+measured constellation break-even; Round Zero and L1 research/synthesis are
+banked, the first Luna/fresh-Sol mechanics loop is `AMEND`,
 and both formation clean audits remain blocked**
 
 Release status: **NO RELEASE**
@@ -52,7 +53,8 @@ Release status: **NO RELEASE**
 | Post-P6 reached-edge search | Sol/Luna/final-Sol manifests `2f626edb…`/`2b35d783…`/`62e6d344…`; owner evidence `40d8b4c` | Independent Sol finds no current Node 26/V8 14.6 host edge outside P1–P6. Luna's per-fixture outputs and 57 ratio/bootstrap summaries reproduce, but its timed arms use unequal fixture streams: 35/35 aggregate hot-sink and 350/350 batch-sink cells diverge. Final Sol borrows no Luna timing credit and seals a narrowed reached/current-host result from primary genealogy, profile arithmetic, and equal-boundary native yardstick. **NO-EDGE; FORMATION RED; GOAL ACTIVE; ZERO CREDIT**. |
 | Active-goal and precepts completion audit | `audit/ACTIVE-GOAL-COMPLETION-AND-PRECEPTS-MATRIX-2026-07-30.md` | Derives 22 objective rows and 14 precepts rows from the full user goal and current canon. Preservation, ownership, packet shape, dispositions, handoff and no-premature-release guards are proven. The admitted runtime, 10× proof, three complete design passes, two clean audits, full CSS/WPT/browser coverage, consumers, candidate, deletion proof and release chain are not complete. **AUDIT COMPLETE; GOAL ACTIVE; FORMATION RED; NO RELEASE**. |
 | Performance-law amendment Round Zero | constellation amendment `1317ab01…`; parser authority SHA-256 `f58442ed…`, `research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md` | Preserves every historical P1–P6 result and reopens only the admission law. Strict 3x, strict 2x, and measured end-to-end break-even are live; equal streams/products, exact bootstrap, JSON/nested/CSS-representative boundaries, allocation/package costs, consumer economics, three complete passes, and Clean A/B are born RED. **ROUND ZERO COMPLETE; PASS L1 READY; ZERO PRODUCT CREDIT**. |
-| Value law-matrix receipt | Superseding Value matrix SHA `53e44e1b…`; formation status SHA `d611e3a0…`; prior `0e5fd05f…`/`9beef6d7…` historical | Value formation stays admitted, execution/product/API/visual/release remain zero, and V.L1/V.L5 stay blocked on selected law + admitted runtime + release/rebind. Parser owns P01–P09/C01–C08/Q01–Q03 inputs and imports no sibling product credit. **BOUNDARY RECEIPT ONLY**. |
+| Performance-law Pass L1 amendment | `audit/PERFORMANCE-LAW-PASS-L1-OWNER-AMENDMENT-2026-07-30.md`; original Luna manifest `980d7781…`; fresh-Sol manifest `3cd94fee…` | Three family researches and common Sol synthesis are sealed. Fresh Sol reproduces all raw arithmetic and 158,120,256 bootstrap tuple statistics, then rejects the Luna terminal: hardcoded product mutants, a shared handwritten generic executor, unreachable JSON composition, label-only semantic/alternating rows, missing fixtures, schema drift, and mislabeled/incomplete costs. **AMEND; ORIGINAL PACKET IMMUTABLE; L1 OPEN; ZERO DOWNSTREAM CREDIT**. |
+| Value/Keyframes law receipt | Independently reproduced Value matrix `5167f163…` and status `90e895dd…`; supplied external Keyframes FINAL `86456597…`, replacement Clean A `acf0edf3…`, Clean B `76d14724…` | Value remains 14/34 and each law family remains 0/5. No matching Keyframes object was found in the visible `9167` checkout/local evidence roots, so the Keyframes tuple is unverified dependency chronology only. **NO PARSER-LAW OR PRODUCT CREDIT**. |
 
 ## Current executable state
 
@@ -423,14 +425,14 @@ chain may be recorded while an earlier arrow is RED.
 1. Preserve P1–P6, every raw packet, P6-A3 correctness and
    `0.9207681564x–1.0389571550x`, and post-P6 owner ruling `40d8b4c` as
    immutable historical-10x evidence.
-2. Execute Pass L1 exactly from
-   `research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`: three
-   independent Sol researchers receive only the shared measurement law and
-   one of strict 3x, strict 2x, or measured break-even.
-3. After all three research manifests seal, run Sol synthesis, Luna isolated
-   prototype/replay, fresh Sol critique, and Sol agglomeration sequentially.
-   Do not select a favorite or cross-pollinate before the independent
-   research boundary.
+2. Preserve the three L1 research packets, common Sol synthesis, original
+   Luna manifest `980d7781…`, raw `565148af…`, and fresh-Sol amendment
+   manifest `3cd94fee…` exactly.
+3. Resume the existing Luna xhigh seat for the correction-only A1 transaction
+   specified in
+   `audit/PERFORMANCE-LAW-PASS-L1-OWNER-AMENDMENT-2026-07-30.md`, then replay
+   it with the same fresh non-author Sol scope. Do not create a duplicate
+   task or reuse the original raw as corrected evidence.
 4. Preserve one fixture-index vector across every timed arm, complete
    immutable products, per-batch and aggregate sink equality, exact
    bootstrap, live JSON, generic nested, CSS-representative, allocation,
@@ -438,7 +440,7 @@ chain may be recorded while an earlier arrow is RED.
 5. Stop and mark a packet inadmissible on the first unequal stream, sink,
    product, arithmetic, or unmeasured break-even conversion. Do not overwrite
    failed evidence.
-6. Full CSS implementation, formation Clean A/B, production freeze,
+6. L2, L3, full CSS implementation, formation Clean A/B, production freeze,
    candidate packing, API changes, Value/JSON consumption, release and BBNF
    remain blocked. This amendment grants formation-research credit only.
 

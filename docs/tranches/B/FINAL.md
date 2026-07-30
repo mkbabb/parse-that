@@ -20,12 +20,12 @@ active admission law by axiom.
 | Gate | Status | Evidence |
 |---|---|---|
 | Canonical parent/PROGRESS/wave/coordination/FINAL | `IN_PROGRESS` | P4 is `REJECT/FOLD`; P5-EUW and conforming P6-A3 are `KILL/PRUNE`; post-P6 owner evidence `40d8b4c` remains historical-10x NO-EDGE evidence; the law amendment reopens formation research only |
-| Performance-law Round Zero | `COMPLETE` as authority, not selection | Authority SHA-256 `f58442ed…`, `research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`, binds strict 3x, strict 2x, measured break-even, equal streams/products, three full passes, and Clean A/B. Pass L1 has not begun. |
+| Performance-law Round Zero | `COMPLETE` as authority, not selection | Authority SHA-256 `f58442ed…`, `research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`, binds strict 3x, strict 2x, measured break-even, equal streams/products, three full passes, and Clean A/B. |
 | Full active-goal completion audit | `COMPLETE` as audit, not outcome | `audit/ACTIVE-GOAL-COMPLETION-AND-PRECEPTS-MATRIX-2026-07-30.md` derives 22 objective rows and 14 precepts rows. It proves the goal remains incomplete and grants no runtime, CSS, consumer, candidate, clean-audit, execution or release credit. |
 | Runtime correctness | `RED` | M2 is the accepted control; live production remains rejected M3. A3 is locally correctness-clean but performance-killed; no candidate exists |
 | Full-subject P1→P2→P3 | `COMPLETE` | P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`. All implemented candidates are killed; this supplies no isolated-proof or formation credit. |
 | Isolated every-scale/result proof | `RED` | S7's subset is local. S8, P2-UO/L/shaped and P2-C are RED/killed; P3 reaches 1.0656–1.5238×; P4 mechanism rows are below `1x`; P5 reaches 0.6076–0.7527× / 0.6149–0.7001×. P6/A1/A2 rows are inadmissible; conforming A3 rows are admissible but only 0.9208–1.0390×. Post-P6 Luna timings are unequal-selection evidence only; final Sol finds no current host edge. No candidate exists. |
-| Performance-law L1 / L2 / L3 | `OPEN` | Round Zero is banked; no research, prototype, critique, or agglomeration pass is complete |
+| Performance-law L1 / L2 / L3 | `OPEN` | L1 family research and common synthesis are sealed. Original Luna manifest `980d7781…` has exact neutral arithmetic, but fresh-Sol manifest `3cd94fee…` proves its semantic/sentinel/generic-executor terminal false-green. Correction-only A1 is next; L2/L3 are blocked. |
 | Formation Clean A / Clean B | `BLOCKED` | requires one immutable L3 law packet |
 | Formation admission | `BLOCKED` | requires both formation clean audits; creates zero execution credit |
 | Full Value CSS coverage | `OPEN` | Root denominator `2bc4abb2…` binds 1,717 raw/1,653 active Webref rows, 25 decisions, ten entry points, eleven algorithms, full recovery/fidelity, WPT manifests and 53 Keyframes references/51 files; Value owns implementation and no execution receipt exists |

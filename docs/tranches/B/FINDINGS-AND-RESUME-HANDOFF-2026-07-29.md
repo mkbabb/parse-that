@@ -469,6 +469,23 @@ The amendment changes no scannerless, equal-product, ownership, or
 source-direct law. It grants zero product, CSS, consumer, candidate, package,
 execution, release, or BBNF credit.
 
+### Pass L1 amendment boundary
+
+Three family Sol researches and common Sol synthesis are sealed. Original
+Luna manifest `980d7781…` produced exact neutral coordinate/equality/bootstrap
+arithmetic, but fresh-Sol manifest `3cd94fee…` proves its claimed mechanics
+terminal false-green: four hardcoded product mutants, one handwritten generic
+self/self executor, unreachable JSON composition, label-only
+fault/rollback/alternating rows, absent fixtures, schema drift, and
+mislabeled/incomplete cost evidence.
+
+Preserve original raw SHA `565148af…` exactly. Resume the existing Luna task,
+not a new task, at the correction-only root and transaction specified by
+`audit/PERFORMANCE-LAW-PASS-L1-OWNER-AMENDMENT-2026-07-30.md`. Then reuse the
+same fresh non-author Sol scope for replay. L1 remains open; L2/L3, law
+selection, product source, full CSS, consumers, candidate, execution, release,
+and BBNF remain blocked.
+
 ### Required laws
 
 - preserve exact UTF-16 slots/spans, immutable recovery evidence, typed

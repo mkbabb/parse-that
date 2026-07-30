@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | Active performance-law portfolio `research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`, SHA `f58442ed…`, consuming amendment `1317ab01…`; post-P6 current-host no-edge owner evidence `40d8b4c` and P6-A3 `3ed4c43` remain immutable historical-10x evidence; full-CSS denominator `2bc4abb2…`; P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`; P-B1 `302c623` |
+| parse-that worktree | B / generic runtime producer | Active performance-law portfolio `research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`, SHA `f58442ed…`; L1 owner amendment `audit/PERFORMANCE-LAW-PASS-L1-OWNER-AMENDMENT-2026-07-30.md`; original Luna `980d7781…` and fresh-Sol `3cd94fee…` bind `AMEND`; post-P6 `40d8b4c` and P6-A3 `3ed4c43` remain immutable historical-10x evidence |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
@@ -19,14 +19,12 @@ later released coordinate are the only executable package boundaries.
 
 ## Value parser-law receipt
 
-The read-only Value matrix at
-`/Users/mkbabb/.codex/worktrees/7e28/value.js/docs/tranches/V/megatranche/formation/VALUE-PARSER-LAW-CONVERGENCE-MATRIX-2026-07-30.md`,
-SHA-256
-`53e44e1bfa5043660d7002fa8a35c12fff2ffa55a96b753f259fac7d00345073`,
-is a sibling receipt, not parser authority. Its formation authority SHA-256 is
-`d611e3a07e1c1288567b87850355088ac1684fe0cb7e016648f8d2dfe3be74c1`.
-Prior matrix/status identities `0e5fd05f…`/`9beef6d7…` are superseded as
-receipt bytes only.
+The current read-only Value receipt is matrix SHA-256
+`5167f163c19cc7eaf054e6c98df15f3c1a0de4510c5ba283946acff6bbb3f8fa`
+and status SHA-256
+`90e895dd246ebf454f5dc257f6fe3e53cbfeebb3fdeff3dcf4ea342fe06c2076`.
+It supersedes earlier receipt identities as chronology only and is not parser
+authority.
 
 Parser-relevant dependencies only:
 
