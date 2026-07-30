@@ -1,0 +1,11 @@
+
+> @mkbabb/parse-that@1.0.0 proof:perf
+> NODE_OPTIONS='--expose-gc' node scripts/proof-perf.mjs
+
+  (A-heap) retained/op — fused 30.54MB · unfused 51.89MB · ratio 1.70×
+  (B') real CSS function-name bucket — sequential any 526ns · first-char dispatch 135ns · 74.4% faster
+  (C) json-comprehensive — 2189ns/parse
+  (C) regression vs baseline — baseline 1742ns · current 2189ns · +25.6%
+
+FAIL: proof:perf — the perf frontier regressed:
+  • (C) json-comprehensive regressed 25.6% vs baseline (threshold 15%) — current 2189ns/parse vs baseline 1742ns/parse

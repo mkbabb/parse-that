@@ -35,6 +35,12 @@ type PairNode = Readonly<{
     second: Node<unknown>;
     takeFirst: boolean;
 }>;
+type RepeatNode = Readonly<{
+    kind: "repeat";
+    child: Node<unknown>;
+    min: number;
+}>;
+type EofNode = Readonly<{ kind: "eof" }>;
 type RecoveryNode = Readonly<{
     kind: "recovery";
     child: Node<unknown>;
@@ -53,6 +59,8 @@ type Node<T> =
     | ChoiceNode
     | SequenceNode
     | PairNode
+    | RepeatNode
+    | EofNode
     | RecoveryNode
     | LazyNode;
 
@@ -120,6 +128,27 @@ export class Grammar<T> {
             second: other.node as Node<unknown>,
             takeFirst: true,
         });
+    }
+
+    many(min = 0): Grammar<T[]> {
+        assertMinimum(min);
+        return new Grammar<T[]>({
+            kind: "repeat",
+            child: this.node as Node<unknown>,
+            min,
+        });
+    }
+
+    sepBy<U>(separator: Grammar<U>): Grammar<T[]> {
+        return choice(
+            this.then(separator.next(this).many())
+                .map(([first, rest]) => [first, ...rest]),
+            literal("").map(() => [] as T[]),
+        );
+    }
+
+    eof(): Grammar<T> {
+        return this.skip(eof());
     }
 
     recover<U>(sync: Grammar<unknown>, sentinel: U): Grammar<T | U> {
@@ -221,6 +250,16 @@ export function lazy<T>(get: () => Grammar<T>): Grammar<T> {
     });
 }
 
+export function eof(): Grammar<undefined> {
+    return new Grammar<undefined>({ kind: "eof" });
+}
+
+function assertMinimum(min: number): void {
+    if (!Number.isSafeInteger(min) || min < 0) {
+        throw new RangeError("repeat minimum must be a nonnegative safe integer");
+    }
+}
+
 export type GrammarAnalysis = Readonly<{
     nullable: boolean;
     firstCodes: readonly number[];
@@ -264,6 +303,12 @@ export function analyze<T>(grammar: Grammar<T>): GrammarAnalysis {
         } else if (node.kind === "pair") {
             nullable = merge(visit(node.first));
             if (nullable) nullable = merge(visit(node.second));
+        } else if (node.kind === "repeat") {
+            const child = visit(node.child);
+            merge(child);
+            nullable = node.min === 0 || child.nullable;
+        } else if (node.kind === "eof") {
+            nullable = true;
         } else if (node.kind === "recovery") {
             const child = visit(node.child);
             const sync = visit(node.sync);
@@ -583,6 +628,59 @@ function compileNode<T>(
             } finally {
                 state.leaveLazy();
             }
+        }) as unknown as Runner<T>;
+    }
+    if (node.kind === "eof") {
+        const labels = ["<end of input>"];
+        return ((state: StagedState<undefined>) => {
+            if (state.offset >= state.src.length) return state.ok(undefined);
+            mergeLabels(state, state.offset, labels);
+            state.isError = true;
+            return state;
+        }) as unknown as Runner<T>;
+    }
+    if (node.kind === "repeat") {
+        const child = compileGraph(node.child);
+        return ((state: StagedState<unknown[]>) => {
+            const initialOffset = state.offset;
+            const initialValue = state.value;
+            const initialDiagnostics = state.diagnostics.length;
+            const values: unknown[] = [];
+            while (true) {
+                const offset = state.offset;
+                const value = state.value;
+                const diagnostics = state.diagnostics.length;
+                child(state as StagedState<unknown>);
+                if (state.isError) {
+                    state.rollback(
+                        offset,
+                        value,
+                        diagnostics,
+                        state.fault !== undefined,
+                    );
+                    if (state.isError) {
+                        return state.rollback(
+                            initialOffset,
+                            initialValue,
+                            initialDiagnostics,
+                            true,
+                        );
+                    }
+                    break;
+                }
+                if (state.offset === offset) {
+                    state.rollback(offset, value, diagnostics, false);
+                    break;
+                }
+                values.push(state.value);
+            }
+            if (values.length >= node.min) return state.ok(values);
+            return state.rollback(
+                initialOffset,
+                initialValue,
+                initialDiagnostics,
+                true,
+            );
         }) as unknown as Runner<T>;
     }
     if (node.kind === "sequence") {
@@ -1131,6 +1229,8 @@ function flatten<T>(
         node.kind === "source"
         || node.kind === "sequence"
         || node.kind === "pair"
+        || node.kind === "repeat"
+        || node.kind === "eof"
         || node.kind === "recovery"
         || node.kind === "lazy"
     ) return undefined;
