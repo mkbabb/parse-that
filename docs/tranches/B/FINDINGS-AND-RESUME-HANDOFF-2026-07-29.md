@@ -2,17 +2,24 @@
 
 Date: 2026-07-30
 
-Status: **P6 KILL-PRUNE / POST-P6 CURRENT-HOST NO-EDGE — FORMATION RED —
-GOAL ACTIVE — NO RELEASE**
+Status: **PERFORMANCE-LAW ROUND ZERO BANKED — PASS L1 READY — P1–P6
+IMMUTABLE — FORMATION ACTIVE — NO RELEASE**
 
 ## Exact resume coordinate
 
 - Repository:
   `/Users/mkbabb/Programming/parse-that-css-totality`
 - Branch: `codex/css-totality-combinators-20260729`
-- Latest source/evidence coordinate:
-  `40d8b4c` (`docs(parser-research): bind the post-P6 current-host no-edge
-  adjudication`)
+- Latest committed authority coordinate before this amendment packet:
+  `a52fba6b16ad48c7cc6fdce248474d2065aede57`
+  (`docs(parser-tranche): bind the active-goal and precepts completion
+  matrix`)
+- Active performance-law authority:
+  `research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`, consuming
+  constellation amendment SHA-256
+  `1317ab01af574bc0d310fdef3435b7239c255b9f18e4ea3f658d432aa1595a61`;
+  parser authority SHA-256
+  `f58442ede34e190d7260385001abd2e958c1aaea39bc20a4ed1939939a8bf9c2`.
 - P1 registry coordinate:
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
@@ -130,9 +137,10 @@ GOAL ACTIVE — NO RELEASE**
 - Expected untracked entry: `data`, a user-owned symlink. Do not stage,
   modify or remove it.
 
-The operator instruction for this resume is **do not spawn new tasks or chat
-sessions**. Continue with one serial writer. This transient instruction is
-not release law and must not be hardcoded into the wave DAG.
+Use existing parser tasks where they remain legitimate. Create only a missing
+bounded isolated tranche-development task, never duplicate authority, and
+keep one serial integration writer. No task may write the parser repository or
+product source; research outputs are confined to declared projectless roots.
 
 ## Goal and ownership
 
@@ -420,7 +428,13 @@ candidate pack, consumer receipt or release.
     deletion proof, release, rebind, and ABI handoff remain
     RED/PARTIAL/BLOCKED/ROUTED.
 
-## Resume boundary — current-host no-edge
+## Resume boundary — amended performance law
+
+The explicit law amendment supersedes the post-P6 stop condition without
+superseding its evidence. P1–P6, P6-A3 correctness, exact
+`0.9207681564x–1.0389571550x` ratios, and post-P6 current-host `NO-EDGE`
+remain immutable under the historical `10x` law. Do not reinterpret them as
+results under strict `3x`, strict `2x`, or measured break-even.
 
 Resume B.W0 from post-P6 owner evidence `40d8b4c`. Preserve every P6, A1, A2,
 and A3 Luna/Sol packet, all post-P6 research/agglomeration packets, and every
@@ -428,31 +442,32 @@ raw byte. Product source remains held.
 
 ### Subject
 
-There is no authorized implementation transaction. Do not resume a seat to
-rename P6 or dispatch P7. The required search for a current host edge is
-closed. A future proposal must identify a concrete newly reachable host
-primitive outside the complete P1–P6 genealogy and quantitatively defend a
-complete-product route at or below the binding budget:
+There is no authorized product implementation transaction. The active work is
+the formation-only law portfolio in
+`research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`:
 
 ```text
-10x budget                       187,063 us
+historical 10x budget            187,063 us
+candidate 3x budget              623,544 us
+candidate 2x budget              935,317 us
 native matching                  144,501 us
 required products                167,382 us
 matching + products              311,883 us
-budget overrun                   124,820 us
 ```
 
-Architecture prose, a relabeled carrier, a domain-neutral fixture, or a
-different measurement boundary creates no prototype authority.
+Strict `3x`, strict `2x`, and measured constellation break-even remain
+incompatible through L1 and L2. Architecture prose, a relabeled carrier, a
+domain-neutral fixture without live generic counters, or a different
+measurement boundary creates no prototype authority.
 
 The post-P6 Luna ratios cannot be cited as equal-work proof. Any future reuse
 must regenerate one identical fixture-index vector per process/suite/batch,
 apply it to every arm, and require per-batch plus aggregate sink equality
 before computing ratios or bootstrap.
 
-Absent a newly reachable host primitive with that complete cost route,
-progress requires an explicit user amendment to the scannerless,
-equal-product, ownership, or `>=10x` law. No amendment is inferred here.
+The amendment changes no scannerless, equal-product, ownership, or
+source-direct law. It grants zero product, CSS, consumer, candidate, package,
+execution, release, or BBNF credit.
 
 ### Required laws
 
@@ -473,24 +488,19 @@ equal-product, ownership, or `>=10x` law. No amendment is inferred here.
 
 ### Admission order
 
-1. Preserve the P1–P6 evidence and exact cost law; do not grant credit across
-   a new family boundary.
-2. Require a concrete newly reachable host primitive and an independently
-   adjudicated complete-product cost model at or below 187,063 µs before
-   code. It must name the reached grammar-path and product work removed, not
-   only a new carrier, execution spelling, or primitive micro-speed.
-3. If separately authorized, begin with one isolated exact-M2 scale-4
-   equal-selection/equal-product fatal cell. Stop on the first unequal
-   batch/aggregate sink, unequal product, or sub-10× CI-low. Restore the
-   complete state/value/result, success/failure/recovery/fault, UTF-16,
-   allocation, IC, deopt and GC planes only after every small-scale raw row
-   and bootstrap low clear 10×.
-4. Only a surviving generic mechanism may open the real Value-owned CSS
-   vertical. A handwritten body, scanner-shaped representation, or “full CSS”
-   label without the 1,439/1,653 denominator is fatal.
-5. Formation Clean A/B remain blocked until a surviving isolated candidate
-   clears the complete proof. Production freeze, packing, consumer migration,
-   release, Value rebind and BBNF remain later.
+1. Preserve the P1–P6 evidence and historical 10x cost law; do not grant
+   credit across the amended law-family boundary.
+2. Run L1 as three independent Sol family researches, then Sol synthesis,
+   Luna isolated prototype/replay, fresh Sol critique, and Sol
+   agglomeration. Repeat the full workflow for L2 and L3.
+3. Use one identical fixture-index vector for all timed arms and stop on the
+   first unequal batch/aggregate sink, product, freeze, or arithmetic result.
+4. Require complete state/value/result, success/failure/recovery/fault,
+   UTF-16, allocation, IC, deopt, GC, cold/hot, package, and read-only
+   consumer-economics planes before law selection.
+5. Formation Clean A/B remain blocked until L3 freezes one immutable law
+   packet. Production freeze, CSS, packing, consumer migration, release,
+   Value rebind and BBNF remain later.
 
 Do not begin Value-owned CSS grammar work, production-source execution,
 candidate packing or consumer migration from this repository.
@@ -540,18 +550,19 @@ shasum -a 256 -c \
 4. `coordination/CONSTELLATION.md`
 5. `FINAL.md`
 6. this handoff
-7. `research/P1-HASH-BOUND-REGISTRY-2026-07-29.md`
-8. `research/P2-FULL-SUBJECT-DISPOSITION-2026-07-29.md`
-9. `research/P3-FULL-SUBJECT-DISPOSITION-2026-07-29.md`
-10. `artifacts/pass3/p3-direct-closure/README.md`
-11. `artifacts/pass3/p3-same-first/README.md`
-12. `artifacts/pass3/s7-immutable-recovery/README.md`
-13. `artifacts/pass3/s8-bounded-recursion/README.md`
-14. `artifacts/pass3/u-unordered/README.md`
-15. `artifacts/pass3/l-source-leaves/README.md`
-16. `artifacts/pass3/p2-shaped-products/README.md`
-17. `artifacts/pass3/p2-unordered-overlap/README.md`
-18. `artifacts/pass3/p2-cold-hot/README.md`
-19. `artifacts/formation/native-json-yardstick/README.md`
+7. `research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`
+8. `research/P1-HASH-BOUND-REGISTRY-2026-07-29.md`
+9. `research/P2-FULL-SUBJECT-DISPOSITION-2026-07-29.md`
+10. `research/P3-FULL-SUBJECT-DISPOSITION-2026-07-29.md`
+11. `artifacts/pass3/p3-direct-closure/README.md`
+12. `artifacts/pass3/p3-same-first/README.md`
+13. `artifacts/pass3/s7-immutable-recovery/README.md`
+14. `artifacts/pass3/s8-bounded-recursion/README.md`
+15. `artifacts/pass3/u-unordered/README.md`
+16. `artifacts/pass3/l-source-leaves/README.md`
+17. `artifacts/pass3/p2-shaped-products/README.md`
+18. `artifacts/pass3/p2-unordered-overlap/README.md`
+19. `artifacts/pass3/p2-cold-hot/README.md`
+20. `artifacts/formation/native-json-yardstick/README.md`
 
-Formation remains RED. Execution has not begun. `NO RELEASE`.
+Formation-law research is active. Execution has not begun. `NO RELEASE`.

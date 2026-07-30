@@ -6,13 +6,11 @@ Tranche status: `in_progress`
 
 Active wave: `B.W0 - Candidate-to-Release Closure`
 
-Formation status: **RED — P1, P2 and P3 are row-complete with zero surviving
-candidates; P4 is independently adjudicated REJECT/FOLD; P5-EUW is
-executable-performance KILL/PRUNE; the first P6-SIR packet is pre-timing
-REJECT; P6-A1/P6-A2 are AMEND and correctness-clean P6-A3 is raw
-KILL/PRUNE; the post-P6 Sol/Luna/Sol search seals a narrowed current-host
-NO-EDGE ruling with Luna's unequal-selection rows quarantined; no distinct P7
-is admissible and both formation clean audits remain blocked**
+Formation status: **ACTIVE — P1–P6 and the post-P6 reached/current-host
+NO-EDGE ruling remain immutable negative evidence under the historical 10x
+law; the user has reopened the admission floor as strict 3x, strict 2x, and
+measured constellation break-even; Round Zero is banked, Pass L1 is ready,
+and both formation clean audits remain blocked**
 
 Release status: **NO RELEASE**
 
@@ -53,22 +51,25 @@ Release status: **NO RELEASE**
 | P6-SIR signed-integer return | design `b2c7447`; P6/A1/A2 owner evidence `75d36ab`/`4f772fd`/`c9d8be1`; A3 Luna/Sol seals `222b09eb…`/`ff193de0…`; A3 owner evidence `3ed4c43` | P6 masks `-2`; A1 leaves checkpoint/oracle gaps; A2 cannot encode exact M2 failure offsets. A3 adds one non-control `failureOffset` scalar and closes 21/21 typed rows, 23/23 ordinary rows, and 4/4 native products. Its seven admissible ratios are only 0.9208–1.0390×. **P6 KILL/PRUNE; NO DISTINCT P7; ZERO CREDIT**. |
 | Post-P6 reached-edge search | Sol/Luna/final-Sol manifests `2f626edb…`/`2b35d783…`/`62e6d344…`; owner evidence `40d8b4c` | Independent Sol finds no current Node 26/V8 14.6 host edge outside P1–P6. Luna's per-fixture outputs and 57 ratio/bootstrap summaries reproduce, but its timed arms use unequal fixture streams: 35/35 aggregate hot-sink and 350/350 batch-sink cells diverge. Final Sol borrows no Luna timing credit and seals a narrowed reached/current-host result from primary genealogy, profile arithmetic, and equal-boundary native yardstick. **NO-EDGE; FORMATION RED; GOAL ACTIVE; ZERO CREDIT**. |
 | Active-goal and precepts completion audit | `audit/ACTIVE-GOAL-COMPLETION-AND-PRECEPTS-MATRIX-2026-07-30.md` | Derives 22 objective rows and 14 precepts rows from the full user goal and current canon. Preservation, ownership, packet shape, dispositions, handoff and no-premature-release guards are proven. The admitted runtime, 10× proof, three complete design passes, two clean audits, full CSS/WPT/browser coverage, consumers, candidate, deletion proof and release chain are not complete. **AUDIT COMPLETE; GOAL ACTIVE; FORMATION RED; NO RELEASE**. |
+| Performance-law amendment Round Zero | constellation amendment `1317ab01…`; parser authority SHA-256 `f58442ed…`, `research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md` | Preserves every historical P1–P6 result and reopens only the admission law. Strict 3x, strict 2x, and measured end-to-end break-even are live; equal streams/products, exact bootstrap, JSON/nested/CSS-representative boundaries, allocation/package costs, consumer economics, three complete passes, and Clean A/B are born RED. **ROUND ZERO COMPLETE; PASS L1 READY; ZERO PRODUCT CREDIT**. |
+| Value law-matrix receipt | Value matrix SHA `0e5fd05f…`; formation status SHA `9beef6d7…` | Value formation stays admitted, execution/product/API/visual/release remain zero, and V.L1/V.L5 stay blocked on selected law + admitted runtime + release/rebind. Parser owns P01–P09/C01–C08/Q01–Q03 inputs and imports no sibling product credit. **BOUNDARY RECEIPT ONLY**. |
 
 ## Current executable state
 
 - Branch: `codex/css-totality-combinators-20260729`.
-- Latest source/evidence coordinate:
-  `40d8b4c` (`docs(parser-research): bind the post-P6 current-host no-edge
-  adjudication`).
-- Canonical authority predecessor:
-  `fe4e3a5` (`docs(parser-tranche): reconcile the terminal P6 kill and no-P7
-  boundary`); this amended document set reconciles the later post-P6 search.
-- Latest owner audit:
+- Latest committed authority before this amendment:
+  `a52fba6b16ad48c7cc6fdce248474d2065aede57`
+  (`docs(parser-tranche): bind the active-goal and precepts completion
+  matrix`).
+- Active law authority:
+  `research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`, SHA-256
+  `f58442ede34e190d7260385001abd2e958c1aaea39bc20a4ed1939939a8bf9c2`.
+- Historical post-P6 owner audit:
   `40d8b4c`,
   `audit/POST-P6-NEXT-EDGE-OWNER-AGGLOMERATION-2026-07-30.md`. It binds the
   independent Sol research, Luna unequal-selection defect, final Sol
-  agglomeration, narrowed current-host no-edge scope, zero credit, and exact
-  resume boundary.
+  agglomeration, narrowed historical-10x current-host no-edge scope, and zero
+  credit.
 - Active-goal/precepts matrix:
   `audit/ACTIVE-GOAL-COMPLETION-AND-PRECEPTS-MATRIX-2026-07-30.md`. It proves
   packet-shape conformance, corrects W0's current artefact roster, records the
@@ -388,20 +389,26 @@ Release status: **NO RELEASE**
     fusing measured work without weakening products or laws. Until it does,
     the ruling remains binding negative evidence, not a general theorem that
     no parser could ever be faster.
+18. The user has explicitly amended the former frozen `>=10x` premise.
+    Historical 10x evidence and P6 dispositions remain exact, but 10x is no
+    longer the active floor by axiom. Strict 3x, strict 2x, and measured
+    constellation break-even remain incompatible until three complete
+    Sol→Luna→Sol passes and two clean non-author audits select one immutable
+    law packet. This opens formation research only.
 
 ## Formation and release chains
 
 Formation:
 
-`full-subject P1 → full-subject P2 → full-subject P3 → isolated every-scale
-and result-plane equivalent-product ≥10× prototype proof → formation Clean A
-→ formation Clean B → formation admission`
+`immutable P1–P6 archaeology → performance-law L1 → performance-law L2 →
+performance-law L3 → immutable law packet → formation Clean A → formation
+Clean B → selected law and formation admission`
 
 Execution:
 
 `private/formal source freeze → immutable unpublished pack → Value CSS +
 logical parse-that#jsonParser consume the exact SHA → equivalent output,
-deletion and formal consumer CI-low proof → execution Clean A → execution
+deletion and selected-law consumer proof → execution Clean A → execution
 Clean B → parse-that release → Value released-coordinate rebind →
 V.L6.css-path-abi-freeze → parse-that→BBNF ABI handoff`
 
@@ -413,29 +420,26 @@ chain may be recorded while an earlier arrow is RED.
 
 ## Next executable boundary
 
-1. Preserve P4 at owner audit `270feca`, P5 at `0bc0d37`, P6/A1/A2 at
-   `75d36ab`/`4f772fd`/`c9d8be1`, terminal A3 at `3ed4c43`, and the
-   post-P6 owner ruling at `40d8b4c`. Do not
-   reinterpret unimplemented designs, losing families, the handwritten CSS
-   reader, killed EUW, inadmissible P6/A1/A2 rows, or the killed conforming
-   P6 atom as a candidate.
-2. Do not dispatch another implementation by renaming a carrier, return ABI,
-   checkpoint topology, builder, regular-expression fusion, or fixture. No
-   same-atom continuation or distinct P7 is authorized.
-3. The required post-P6 search is closed as a reached/current-host no-edge
-   result, not a universal theorem. Luna is descriptive unequal-selection
-   evidence only; do not cite its ratios as equal-work closure.
-4. Resume research or implementation only for a concrete newly reachable
-   host primitive with primary evidence that it removes grammar-path plus
-   required-product work and a conservative complete-product model at or
-   below 187,063 us, or after an explicit user amendment to a frozen law.
-5. If such an edge is independently admitted, restart with an isolated,
-   equal-selection fatal cell before any source, CSS, bootstrap, or broader
-   plane. Stop on the first unequal sink/product or sub-10× CI-low. The
-   scannerless, exact-product, and `>=10x` laws remain unchanged.
-6. Full CSS, formation Clean A/B, production freeze, candidate packing, API
-   changes, Value/JSON consumption, release and BBNF remain blocked. Preserve
-   scalar rollback, diagnostics-toggle-invariant recovery, exact UTF-16
-   slots/spans, typed nesting, run isolation and consumer projection.
+1. Preserve P1–P6, every raw packet, P6-A3 correctness and
+   `0.9207681564x–1.0389571550x`, and post-P6 owner ruling `40d8b4c` as
+   immutable historical-10x evidence.
+2. Execute Pass L1 exactly from
+   `research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`: three
+   independent Sol researchers receive only the shared measurement law and
+   one of strict 3x, strict 2x, or measured break-even.
+3. After all three research manifests seal, run Sol synthesis, Luna isolated
+   prototype/replay, fresh Sol critique, and Sol agglomeration sequentially.
+   Do not select a favorite or cross-pollinate before the independent
+   research boundary.
+4. Preserve one fixture-index vector across every timed arm, complete
+   immutable products, per-batch and aggregate sink equality, exact
+   bootstrap, live JSON, generic nested, CSS-representative, allocation,
+   package, and read-only Value/Keyframes/Fourier accounting.
+5. Stop and mark a packet inadmissible on the first unequal stream, sink,
+   product, arithmetic, or unmeasured break-even conversion. Do not overwrite
+   failed evidence.
+6. Full CSS implementation, formation Clean A/B, production freeze,
+   candidate packing, API changes, Value/JSON consumption, release and BBNF
+   remain blocked. This amendment grants formation-research credit only.
 
 `FINAL.md` remains an open gate ledger. Tranche B is not closeable.

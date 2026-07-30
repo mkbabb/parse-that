@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | Post-P6 current-host no-edge owner evidence `40d8b4c` (Luna unequal-selection; zero credit); P6-A3 owner evidence `3ed4c43` (correctness CLEAN; admissible raw KILL/PRUNE; no distinct P7); A3 Luna/fresh-Sol seals `222b09eb…`/`ff193de0…`; A2 owner evidence `c9d8be1`; A1 owner evidence `4f772fd`; P6 owner evidence `75d36ab`; P5 owner evidence `0bc0d37`; P4 owner audit `270feca`; full-CSS denominator `2bc4abb2…`; native yardstick `605a1ae`; P3 feasibility ruling `d03d0422…`; P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`; direct closure `19c1e12`; P-B1 `302c623` |
+| parse-that worktree | B / generic runtime producer | Active performance-law portfolio `research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`, SHA `f58442ed…`, consuming amendment `1317ab01…`; post-P6 current-host no-edge owner evidence `40d8b4c` and P6-A3 `3ed4c43` remain immutable historical-10x evidence; full-CSS denominator `2bc4abb2…`; P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`; P-B1 `302c623` |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
@@ -16,6 +16,30 @@ Status: `in_progress`
 Value's working tree is active and dirty. Parse-that does not read dirty heads
 as release proof and does not modify Value files. The immutable candidate and
 later released coordinate are the only executable package boundaries.
+
+## Value parser-law receipt
+
+The read-only Value matrix at
+`/Users/mkbabb/.codex/worktrees/7e28/value.js/docs/tranches/V/megatranche/formation/VALUE-PARSER-LAW-CONVERGENCE-MATRIX-2026-07-30.md`,
+SHA-256
+`0e5fd05f8eec743eebda5b8fde19503ec8f565565a8c0d274c1d4d50d91d38ee`,
+is a sibling receipt, not parser authority. Its formation authority SHA-256 is
+`9beef6d743170b6312e7b1cf9a3610df90d677e0b75c2fce1b20b23e1a05b851`.
+
+Parser-relevant dependencies only:
+
+- Value R2 formation remains admitted at 100%, while product, execution, API,
+  visual, and release credit remain zero;
+- Value-facing parser-law convergence is `14/34 = 41.18%`; P01–P09,
+  C01–C08, and Q01–Q03 remain open or blocked;
+- strict 3x, strict 2x, and measured break-even each remain `0/5` and live
+  through Pass 2;
+- V.L1 and V.L5 remain blocked on the selected law, admitted generic runtime,
+  release, and released-coordinate rebind; and
+- the full Value denominator and ownership obligations remain unchanged.
+
+The parser packet does not import Value's 18-wave authority, component state,
+or unrelated Fourier blocker as parser credit.
 
 ## Writer / reader boundary
 
@@ -31,16 +55,20 @@ later released coordinate are the only executable package boundaries.
 Formation precedes and cannot borrow credit from execution:
 
 1. Parse-that completes full-subject P1, P2 and P3 in order.
-2. An isolated frozen prototype clears equivalent products and ≥10× CI-low at
-   every binding scale and result plane.
-3. Formation Clean A and formation Clean B accept the same evidence; only
-   then is formation admitted, with zero execution credit.
+2. Strict 3x, strict 2x, and measured constellation break-even traverse three
+   complete Sol→Luna→Sol passes over equal streams/products, exact bootstrap,
+   JSON/nested/CSS-representative boundaries, allocation/package costs, and
+   read-only consumer economics.
+3. Formation Clean A and formation Clean B accept the same immutable law
+   packet; only then is the performance law selected and formation admitted,
+   with zero execution credit.
 4. Parse-that freezes a locally correct, reproducible production-source
    candidate.
 5. Parse-that produces one immutable unpublished candidate tarball.
 6. Value and logical `parse-that#jsonParser` consume the exact tarball SHA.
 7. Both return equivalent-product, deletion and formal consumer-proof
-   receipts; corrected profiles clear ≥10× at CI-low at every binding scale.
+   receipts; corrected profiles satisfy the selected law at every binding
+   scale.
 8. Execution Clean A and execution Clean B accept the same frozen source,
    tarball and consumer evidence.
 9. Parse-that releases.
@@ -184,10 +212,10 @@ arithmetic reproduce, but all 35 process/suite aggregate hot sinks and all
 streams. Luna carries no equal-work credit. No parser, CSS, Value, Keyframes,
 BBNF, candidate, execution, or release edge opens.
 
-The parser goal remains active but formation is RED. Resume implementation
-only for a concrete newly reachable host primitive with a complete-product
-model at or below 187,063 µs and a smallest equal-selection fatal assay, or
-after an explicit user amendment to a frozen law.
+The explicit user amendment has arrived. Parse-that resumes formation only
+through the three-family law portfolio. P1–P6 and the post-P6 NO-EDGE ruling
+remain immutable under the historical 10x law. No parser implementation,
+CSS, Value, Keyframes, BBNF, candidate, execution, or release edge opens.
 
 P2-L at `5822ae2` adds no consumer or API edge. Its 51 equal products place
 success at 0.0718–1.3079×; callback-loop, ASCII-table and public

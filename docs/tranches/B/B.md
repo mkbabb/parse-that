@@ -2,15 +2,31 @@
 
 Tranche B closes the parser-development question: whether one small,
 source-direct parse-that runtime can execute the Value-owned full CSS grammar
-and the parse-that JSON grammar with exact products and a formal ≥10× CI-low,
-without a tokenizer, scanner facade, compatibility path, or second runtime.
+and the parse-that JSON grammar with exact products under a rigorously selected
+performance law, without a tokenizer, scanner facade, compatibility path, or
+second runtime.
+
+## Active performance-law amendment
+
+The user reopened the former `>=10x` axiom on 2026-07-30. The active formation
+authority is
+`research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`, consuming the
+constellation amendment at SHA-256
+`1317ab01af574bc0d310fdef3435b7239c255b9f18e4ea3f658d432aa1595a61`.
+The parser authority file SHA-256 is
+`f58442ede34e190d7260385001abd2e958c1aaea39bc20a4ed1939939a8bf9c2`.
+Strict `3x`, strict `2x`, and measured constellation break-even remain
+incompatible live families through the early passes. Historical `10x`
+arithmetic and P1–P6 dispositions remain immutable evidence; they are no
+longer the active admission floor by axiom.
 
 ## Thesis
 
 Authored combinators remain the grammar. A compact runtime may lower only the
 generic source-direct operations that two live grammars consume. Formation is
-admitted only after three full-subject passes, isolated equivalent-product
-prototype proof at every frozen scale and result plane, and two clean
+admitted only after the banked P1–P6 archaeology, three complete
+research/synthesis/prototype/critique/agglomeration law passes, isolated
+equivalent-product proof at every frozen scale and result plane, and two clean
 formation audits. Execution then freezes and packages one candidate, consumes
 it before publication, and releases only after displaced machinery is deleted.
 
@@ -19,7 +35,8 @@ it before publication, and releases only after displaced machinery is deleted.
 One released parse-that coordinate supplies the minimum generic runtime used
 by Value's sole full-CSS grammar and logical `parse-that#jsonParser`. Both
 consumers are source-direct, scannerless, semantically equivalent, simpler
-after migration, and ≥10× faster at CI-low on the frozen equal-work planes.
+after migration, and satisfy the law selected by the three-pass portfolio and
+two consecutive clean non-author audits on frozen equal-work planes.
 
 ## Invariants
 
@@ -42,9 +59,11 @@ after migration, and ≥10× faster at CI-low on the frozen equal-work planes.
    scanner-shaped intermediate representation.
 8. An unpublished immutable candidate tarball precedes both consumer
    receipts. Publication follows both receipts and clean audits.
-9. The ≥10× threshold binds the exact-bootstrap confidence interval's lower
-   bound at every declared grammar scale. A point estimate, observed minimum
-   or large-graph result cannot waive a smaller RED scale.
+9. The active performance law is selected only after strict `3x`, strict
+   `2x`, and measured constellation break-even survive three full passes and
+   two clean audits over equal streams and products. Historical `10x` remains
+   a comparator. A point estimate, observed minimum, large-graph result, or
+   downstream prose cannot waive a smaller RED scale.
 10. Generic exports need two proven consumers or are pruned. `/utils` is
     retained only if two exact external consumers are proven.
 11. This is tranche development. Research kernels remain under
@@ -75,47 +94,55 @@ borrow credit from an earlier prototype.
    denominator.
 3. **P3 full-subject pass.** Re-run the complete subject adversarially and
    converge only evidence-backed, consumed generic mechanisms.
-4. **Isolated prototype proof.** On a frozen private prototype, establish
-   equivalent values, UTF-16 spans, diagnostics, recovery and failures plus
-   exact-bootstrap ≥10× CI-low at every binding scale and result plane.
-5. **Formation Clean A.** A fresh hostile audit accepts the P1→P2→P3 record,
-   frozen prototype and isolated proof.
-6. **Formation Clean B and admission.** A second independent hostile audit
-   accepts the same evidence. Only this boundary admits formation; it creates
-   no candidate-consumption, execution, publication or release credit.
+4. **Performance-law Pass L1.** Research, synthesize, prototype, critique,
+   and agglomerate strict `3x`, strict `2x`, and measured break-even without
+   selecting a favorite.
+5. **Performance-law Pass L2.** Correct the equal-stream/equal-product
+   measurement plane and run fresh JSON, nested, CSS-representative,
+   allocation, package, and consumer-economics evidence.
+6. **Performance-law Pass L3.** Freeze the complete surviving evidence union
+   and either select one law or explicitly decide that no runtime is
+   justified.
+7. **Formation Clean A.** A fresh non-author hostile audit accepts the P1–P6
+   record and immutable L3 packet.
+8. **Formation Clean B and admission.** A second consecutive non-author audit
+   accepts the unchanged packet. Only this boundary selects the performance
+   law and admits formation; it creates no candidate-consumption, execution,
+   publication or release credit.
 
 ### Execution and release
 
 The root receipt reported at SHA prefix `060995` is modeled only as
 `P.exec.PB1-order-ack`: an execution-phase acknowledgment of the future
-execution order and authority. It feeds step 7 only after formation
+execution order and authority. It feeds step 9 only after formation
 admission. It does not feed P1 and carries zero formation, candidate,
 consumption, proof, publication or release credit.
 
-7. **Private/formal source freeze.** Translate the admitted prototype into
+9. **Private/formal source freeze.** Translate the admitted prototype into
    the smallest locally correct and reproducible production-source candidate.
-8. **Immutable unpublished candidate.** Produce one `npm pack` tarball from
+10. **Immutable unpublished candidate.** Produce one `npm pack` tarball from
    the frozen source with exact commit, file manifest and SHA-256. Later
    evidence names this object; no consumer reads a mutable link or dirty head.
-9. **Exact-SHA consumption.** Value and logical `parse-that#jsonParser`
+11. **Exact-SHA consumption.** Value and logical `parse-that#jsonParser`
    consume the same candidate tarball. Value authors the sole scannerless CSS
    Syntax, selectors, at-rules, VDS, Webref and named-extension grammar; the
    logical JSON consumer uses the same generic primitives. BBNF is not
    substituted.
-10. **Consumer equivalence, deletion and formal proof.** Value and logical
+12. **Consumer equivalence, deletion and formal proof.** Value and logical
    `parse-that#jsonParser` return exact receipts for values, spans,
    diagnostics, recovery and failures;
    delete displaced machinery; run WPT/browser differentials; and establish
-   corrected AB/BA exact-bootstrap ≥10× CI-low at every frozen binding scale
-   and equal semantic plane, with allocation, CPU, deopt and GC artefacts.
-11. **Execution clean audits.** Two fresh adversarial passes accept the
-    frozen source, exact tarball, consumer diffs and formal evidence.
-12. **Release.** Publish the accepted successor only after gates 7–11 are
+   corrected AB/BA exact-bootstrap compliance with the selected law at every
+   frozen binding scale and equal semantic plane, with allocation, CPU, deopt,
+   GC, package, and end-to-end consumer-economic artefacts.
+13. **Execution clean audits.** Two fresh adversarial passes accept the
+   frozen source, exact tarball, consumer diffs and formal evidence.
+14. **Release.** Publish the accepted successor only after gates 9–13 are
    green.
-13. **Value released-coordinate rebind.** Rebind Value to the released
+15. **Value released-coordinate rebind.** Rebind Value to the released
    coordinate and rerun its tests, build, browser/WPT differentials and pack
    proof.
-14. **Post-freeze ABI handoff.** Parse-that sends BBNF the frozen generic
+16. **Post-freeze ABI handoff.** Parse-that sends BBNF the frozen generic
    surface after Value `V.L6.css-path-abi-freeze`; no implementation
    dependency or competing parser is introduced.
 
@@ -152,9 +179,10 @@ Tranche B closes only when:
    returns the frozen equivalent products;
 7. consumer diffs prove deletion or consolidation of displaced parser,
    scanner, serializer and compatibility machinery;
-8. ≥10× holds at exact-bootstrap CI-low for every frozen binding scale and
-   equal semantic plane, including successful recovery and result
-   materialization;
+8. the selected strict `3x`, strict `2x`, or measured end-to-end break-even
+   law holds at exact-bootstrap CI-low for every frozen binding scale and
+   equal semantic plane, including successful recovery, result
+   materialization, allocation, package, and consumer economics;
 9. CPU, heap/allocation, IC/hidden-class, optimization/deoptimization and GC
    artefacts are sealed to source, environment, input and candidate pack;
 10. `/utils` has two exact consumers or is pruned before release;
@@ -345,13 +373,13 @@ streams: aggregate hot sinks diverge in 35/35 process/suite cells and batch
 sinks diverge in 350/350 cross-arm cells. Luna is descriptive
 unequal-selection evidence only and receives no binding credit.
 
-No P7 or other implementation is authorized. Resume requires either a
-concrete newly reachable host primitive with a conservative complete-product
-route at or below 187,063 µs, followed by an equal-selection fatal assay, or
-an explicit user amendment to a frozen law. This is not a universal
-impossibility theorem. The long-horizon goal remains active; formation, full
-CSS, consumers, packing, release, Value rebind, ABI freeze, and BBNF remain
-blocked.
+No renamed P7 or product implementation is authorized. The user has supplied
+the exact amendment required by the post-P6 boundary. Work resumes only as the
+formation-only law portfolio in
+`research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`; P1–P6 remain
+immutable historical evidence. The long-horizon goal remains active;
+formation, full CSS, consumers, packing, release, Value rebind, ABI freeze,
+and BBNF remain blocked.
 
 The requirement-by-requirement truth is banked in
 `audit/ACTIVE-GOAL-COMPLETION-AND-PRECEPTS-MATRIX-2026-07-30.md`. It proves

@@ -15,6 +15,17 @@ only when evidence covers the requirement's whole scope. Narrow tests,
 research claims, document existence, or a locally green mechanism cannot
 stand in for a full runtime, consumer, CSS, browser, or release requirement.
 
+## 2026-07-30 performance-law supersession
+
+The user has explicitly reopened only the former `>=10x` admission premise.
+The active authority is
+`../research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`, consuming
+constellation amendment SHA-256
+`1317ab01af574bc0d310fdef3435b7239c255b9f18e4ea3f658d432aa1595a61`.
+P1–P6 and the post-P6 NO-EDGE ruling remain immutable historical-10x evidence.
+Rows below retain their original audit facts except G-04/G-05 and the exact
+remainder, which are amended in place.
+
 ## Status vocabulary
 
 - `PROVEN`: current artefacts establish the whole stated row.
@@ -95,8 +106,8 @@ their exact bytes; it does not claim the parser worktree pins the canon.
 | G-01 | Preserve the existing archaeology, branch, M1/M2/M3 history, prototype registry, and evidence. | Branch history through `f326e5a`; `research/PARSE-THAT-SESSION-ARCHAEOLOGY-2026-07-29.md`; P1/P2/P3 registries; M/S/P4/P5/P6 artefacts and owner audits. | `PROVEN` | Protected `data` remains untouched; no restart or evidence rewrite occurred. |
 | G-02 | Keep grammar execution scannerless, source-direct, combinator-authored, with no tokenizer, token array/tape, scanner facade, separate lexer, compiler, VM, generated grammar, raw alias, or alternate parser. | `B.md` invariants 1–12; `proof:no-css-surface`; P1–P6 dispositions; post-P6 owner audit. | `PROVEN` as a guardrail | No admitted successor exists; this proves exclusion, not implementation success. |
 | G-03 | Form one reusable generic runtime covering run state, exact sequencing, source projection, recovery, diagnostics, bounded recursion, memo policy, unordered composition, materialization, allocation, IC/deopt/GC, and cold/hot dispatch. | S7/S8/U/P2/P3/P4/P5/P6 artefacts. | `PARTIAL` | Individual laws and losing mechanisms are banked; no single surviving runtime satisfies the union. Parse-that owns the eventual implementation. |
-| G-04 | Achieve `>=10x` at exact-bootstrap CI-low on equal values, spans, diagnostics, recovery, and failure behavior at every binding scale. | Native yardstick `605a1ae`; P3 cost profile; P6-A3 owner evidence; post-P6 Sol ruling. | `RED` | Conforming P6 is only `0.9208x–1.0390x`; native immutable-result CI-low is `4.9513x–7.5550x`; no candidate exists. |
-| G-05 | Run at least three complete Sol/Luna/Sol research → synthesis → prototype → critique → agglomeration passes. | Pass-1 portfolio/agglomeration; P4 owner audit; P5/P6 audits; post-P6 search. | `RED` | P4's Luna lane did not implement Sol's dispatched families and is explicitly incomplete. P5/P6 do not prove three complete independent full passes. |
+| G-04 | Select and prove one admission law from strict 3x, strict 2x, or measured constellation break-even at exact-bootstrap CI-low on equal complete products and costs. | Historical native yardstick `605a1ae`; P3 cost profile; P6-A3; amendment portfolio. | `RED` | Round Zero only is banked. L1–L3 and Clean A/B have not selected or proven a law. Historical 10x remains a comparator. |
+| G-05 | Run at least three complete Sol/Luna/Sol research → synthesis → prototype → critique → agglomeration passes. | Amendment portfolio; historical P4/P5/P6/post-P6 evidence. | `RED` | New law Pass L1 has not begun; historical P4 remains explicitly incomplete and cannot be relabeled as a new-law pass. |
 | G-06 | Preserve incompatible families until evidence retires them. | P1/P2/P3 registries; P4/P5/P6 owner dispositions; post-P6 genealogy. | `PROVEN` | Every named family is kept, folded, split, pruned, killed, or routed with evidence. |
 | G-07 | Pass two fresh clean adversarial audits over one surviving frozen candidate. | `FINAL.md` gate ledger. | `BLOCKED` | No isolated surviving candidate exists; Formation Clean A/B are unopened. |
 | G-08 | Implement the sole Value-owned full CSS Syntax, selectors, at-rules, VDS, Webref, recovery, and source-fidelity grammar with source-direct parse-that combinators. | Full-CSS denominator; `proof:no-css-surface`; Value ownership boundary. | `RED` | Zero executable CSS coverage exists. Value owns implementation after parse-that formation admission. |
@@ -152,19 +163,19 @@ parser wave's file bounds.
 
 ## Exact executable remainder
 
-No parser or CSS implementation is authorized by this matrix. The next
-runtime action remains the post-P6 owner boundary:
+No parser or CSS implementation is authorized by this matrix. The explicit
+law amendment reopens formation research only:
 
-- identify a concrete primitive newly reachable from the supported
-  JavaScript runtime;
-- prove from primary implementation/API evidence that it removes reached
-  grammar-path and required-product work rather than renaming P1–P6;
-- produce a conservative complete-product model at or below `187,063 us`;
-- begin with one equal-selection, balanced AB/BA fatal assay; and
-- stop on the first unequal sink/product or sub-`10x` CI-low.
+- run three independent L1 family researches for strict 3x, strict 2x, and
+  measured break-even;
+- proceed sequentially through Sol synthesis, Luna isolated prototype/replay,
+  fresh Sol critique, and Sol agglomeration;
+- repeat the full workflow for L2 and L3;
+- require equal fixture streams, complete immutable products, exact
+  bootstrap, JSON/nested/CSS-representative boundaries, allocation/package
+  costs, and read-only Value/Keyframes/Fourier economics; and
+- select no threshold before two consecutive clean non-author audits accept
+  one immutable L3 packet.
 
-Absent that external-state change, only an explicit user amendment to the
-scannerless, equal-product, ownership, or `>=10x` law reopens implementation.
 Full CSS, browser/WPT work, candidate packing, consumer migration, release,
-Value rebind, clean audits, ABI freeze, and BBNF remain downstream and
-uncredited.
+Value rebind, ABI freeze, and BBNF remain downstream and uncredited.

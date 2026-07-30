@@ -9,26 +9,29 @@ packet. It must not be read as a close claim while any row is open or RED.
 
 ## Goal reconciliation
 
-The goal is not met. No admitted runtime, immutable consumed candidate,
-Value CSS receipt, logical `parse-that#jsonParser` receipt, formal ≥10×
-all-scale CI-low, clean audit pair, release or Value released-coordinate
-rebind exists.
+The goal is not met. No selected performance law, admitted runtime, immutable
+consumed candidate, Value CSS receipt, logical `parse-that#jsonParser`
+receipt, clean audit pair, release or Value released-coordinate rebind exists.
+The former `>=10x` floor is immutable historical evidence but no longer the
+active admission law by axiom.
 
 ## Completion ledger
 
 | Gate | Status | Evidence |
 |---|---|---|
-| Canonical parent/PROGRESS/wave/coordination/FINAL | `IN_PROGRESS` | P4 is `REJECT/FOLD`; P5-EUW and conforming P6-A3 are `KILL/PRUNE`; post-P6 owner evidence `40d8b4c` seals a narrowed reached/current-host NO-EDGE ruling; no implementation is authorized |
+| Canonical parent/PROGRESS/wave/coordination/FINAL | `IN_PROGRESS` | P4 is `REJECT/FOLD`; P5-EUW and conforming P6-A3 are `KILL/PRUNE`; post-P6 owner evidence `40d8b4c` remains historical-10x NO-EDGE evidence; the law amendment reopens formation research only |
+| Performance-law Round Zero | `COMPLETE` as authority, not selection | Authority SHA-256 `f58442ed…`, `research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`, binds strict 3x, strict 2x, measured break-even, equal streams/products, three full passes, and Clean A/B. Pass L1 has not begun. |
 | Full active-goal completion audit | `COMPLETE` as audit, not outcome | `audit/ACTIVE-GOAL-COMPLETION-AND-PRECEPTS-MATRIX-2026-07-30.md` derives 22 objective rows and 14 precepts rows. It proves the goal remains incomplete and grants no runtime, CSS, consumer, candidate, clean-audit, execution or release credit. |
 | Runtime correctness | `RED` | M2 is the accepted control; live production remains rejected M3. A3 is locally correctness-clean but performance-killed; no candidate exists |
 | Full-subject P1→P2→P3 | `COMPLETE` | P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`. All implemented candidates are killed; this supplies no isolated-proof or formation credit. |
 | Isolated every-scale/result proof | `RED` | S7's subset is local. S8, P2-UO/L/shaped and P2-C are RED/killed; P3 reaches 1.0656–1.5238×; P4 mechanism rows are below `1x`; P5 reaches 0.6076–0.7527× / 0.6149–0.7001×. P6/A1/A2 rows are inadmissible; conforming A3 rows are admissible but only 0.9208–1.0390×. Post-P6 Luna timings are unequal-selection evidence only; final Sol finds no current host edge. No candidate exists. |
-| Formation Clean A / Clean B | `BLOCKED` | requires green isolated prototype proof |
+| Performance-law L1 / L2 / L3 | `OPEN` | Round Zero is banked; no research, prototype, critique, or agglomeration pass is complete |
+| Formation Clean A / Clean B | `BLOCKED` | requires one immutable L3 law packet |
 | Formation admission | `BLOCKED` | requires both formation clean audits; creates zero execution credit |
 | Full Value CSS coverage | `OPEN` | Root denominator `2bc4abb2…` binds 1,717 raw/1,653 active Webref rows, 25 decisions, ten entry points, eleven algorithms, full recovery/fidelity, WPT manifests and 53 Keyframes references/51 files; Value owns implementation and no execution receipt exists |
 | JSON same-primitive consumption | `OPEN` | Named consumer only; no candidate receipt |
 | Equivalent deletion/consolidation | `OPEN` | No consumer diffs |
-| ≥10× every-scale CI-low | `RED` | S7 96-name recovery lows are 10.405× matched, 11.285× internal, 10.257× result, 20.569× late, 12.894× failure and 39.532× diagnostic failure; 753-name lows exceed 75×; remaining subject and consumer planes are not green |
+| Performance-law selection | `RED` | Strict 3x, strict 2x, and measured constellation break-even remain live hypotheses. Historical 10x results are preserved; no family has completed L1–L3 or Clean A/B. |
 | Allocation/deopt/GC sealed proof | `RED` | S7's local hot evidence is sealed; S8, U, P2-L, shaped products, P2-UO, P2-C and P3 direct closure bank CPU/deopt/allocation evidence but every candidate is retired and mixed traces are not a final seal |
 | Immutable unpublished candidate | `OPEN` | none |
 | Execution Clean A / Clean B | `BLOCKED` | requires exact-pack consumer evidence |
@@ -114,7 +117,8 @@ preceding corrected S/recovery kernel and XR-21 amendment.
 
 ## Handoff
 
-Read `FINDINGS-AND-RESUME-HANDOFF-2026-07-29.md` and
+Read `research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`,
+`FINDINGS-AND-RESUME-HANDOFF-2026-07-29.md`, and
 `PROGRESS.md §Next executable boundary`, then
 `audit/ACTIVE-GOAL-COMPLETION-AND-PRECEPTS-MATRIX-2026-07-30.md`. Preserve
 the branch, banked negative
@@ -125,7 +129,7 @@ grounds. Preserve every P6/A1/A2/A3 packet, raw, and Sol seal unchanged. P6
 has no continuation. Do not dispatch a renamed P7, run formation clean
 audits, pack a candidate, publish, widen the API, or begin Value-owned CSS
 product work. Preserve post-P6 owner evidence `40d8b4c` and do not cite
-Luna's unequal-selection ratios as equal-work proof. Resume only for a
-concrete newly reachable host primitive with a conservative complete-product
-model at or below 187,063 µs and a smallest equal-selection fatal assay, or
-after an explicit user amendment to a frozen law.
+Luna's unequal-selection ratios as equal-work proof. The explicit user
+amendment has arrived: resume only through law Pass L1, preserving P1–P6 and
+all historical raw bytes. Do not begin product source, CSS implementation,
+candidate packing, API work, release, or consumer execution.
