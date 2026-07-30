@@ -10,8 +10,10 @@ import {
 import {
     choice,
     compile,
+    lazy,
     literal,
     sequence,
+    type Grammar,
     type Span,
     type Spanned,
 } from "./kernel.js";
@@ -238,13 +240,133 @@ describe("P3-S source-direct staged terminal", () => {
                 value: "xy",
                 span: { start: 0, end: 2 },
             });
-            expect(() => compile(choice(
+            expect(compile(choice(
                 sequence(literal("a"), literal("b")),
                 sequence(literal("a"), literal("c")),
-            ))).toThrow("no compiled path");
+            )).parseState("ac")).toMatchObject({
+                value: ["a", "c"],
+                offset: 2,
+                isError: false,
+            });
         } finally {
             disableDiagnostics();
         }
+    });
+
+    it("bounds cached recursive edges with a sticky typed fault", () => {
+        let nested!: Grammar<number>;
+        nested = choice(
+            sequence(
+                literal("("),
+                lazy(() => nested),
+                literal(")"),
+            ).map(parts => parts[1] + 2),
+            literal("x").map(() => 1),
+        );
+
+        const parser = compile(lazy(() => nested), 32);
+        const shallow = parser.parseState("(".repeat(10) + "x" + ")".repeat(10));
+        expect(shallow).toMatchObject({
+            value: 21,
+            offset: 21,
+            isError: false,
+            fault: undefined,
+            liveDepth: 0,
+            maxDepth: 11,
+        });
+
+        const hostile = parser.parseState("(".repeat(100) + "x" + ")".repeat(100));
+        expect(hostile).toMatchObject({
+            value: undefined,
+            offset: 0,
+            isError: true,
+            fault: { kind: "Nesting", offset: 32, limit: 32 },
+            liveDepth: 0,
+            maxDepth: 32,
+        });
+        expect(() => parser.parseState("(".repeat(10_000))).not.toThrow(
+            RangeError,
+        );
+        expect(() => compile(nested, 0)).toThrow(
+            "nestingLimit must be a positive safe integer",
+        );
+    });
+
+    it("supports consuming mutual recursion without leaking live depth", () => {
+        let a!: Grammar<number>;
+        let b!: Grammar<number>;
+        a = choice(
+            sequence(literal("a"), lazy(() => b))
+                .map(parts => parts[1] + 1),
+            literal("x").map(() => 1),
+        );
+        b = choice(
+            sequence(literal("b"), lazy(() => a))
+                .map(parts => parts[1] + 1),
+            literal("y").map(() => 1),
+        );
+
+        expect(compile(lazy(() => a)).parseState("ababx")).toMatchObject({
+            value: 5,
+            offset: 5,
+            isError: false,
+            liveDepth: 0,
+            maxDepth: 5,
+        });
+    });
+
+    it("fuses balanced discard recursion without losing spans or faults", () => {
+        let grouped!: Grammar<Spanned<"x"> | Spanned<"y">>;
+        grouped = choice(
+            literal("(").next(lazy(() => grouped)).skip(literal(")")),
+            choice(literal("x").spanned(), literal("y").spanned()),
+        );
+        const parser = compile(lazy(() => grouped), 32);
+
+        expect(parser.parseState("(((y)))")).toMatchObject({
+            value: { value: "y", span: { start: 3, end: 4 } },
+            offset: 7,
+            isError: false,
+            liveDepth: 0,
+            maxDepth: 4,
+        });
+        expect(parser.parseState("(".repeat(100))).toMatchObject({
+            offset: 0,
+            isError: true,
+            fault: { kind: "Nesting", offset: 32, limit: 32 },
+            liveDepth: 0,
+            maxDepth: 32,
+        });
+
+        enableDiagnostics();
+        try {
+            expect(parser.parseState("(((x))")).toMatchObject({
+                value: undefined,
+                offset: 0,
+                isError: true,
+                furthest: 6,
+                expected: ['")"'],
+                diagnostics: [],
+            });
+        } finally {
+            disableDiagnostics();
+        }
+    });
+
+    it("restores fused recursive depth when a user projection throws", () => {
+        let grouped!: Grammar<string>;
+        grouped = choice(
+            literal("(").next(lazy(() => grouped)).skip(literal(")")),
+            literal("x").map(() => {
+                throw new Error("hostile projection");
+            }),
+        );
+        const state = new RunState<string>("((x))");
+        expect(() => compile(lazy(() => grouped)).parser(state)).toThrow(
+            "hostile projection",
+        );
+        expect(state.liveDepth).toBe(0);
+        expect(state.maxDepth).toBe(3);
     });
 
     it("returns successful recovery diagnostics through an immutable result", () => {

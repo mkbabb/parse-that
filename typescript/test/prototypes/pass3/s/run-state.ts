@@ -27,6 +27,9 @@ export interface StagedState<T = unknown> {
     fault: StagedFault | undefined;
     liveDepth: number;
     maxDepth: number;
+    readonly nestingLimit: number;
+    enterLazy(): boolean;
+    leaveLazy(): void;
     ok<S>(value: S, offset?: number): StagedState<S>;
     rollback(
         offset: number,
@@ -59,6 +62,7 @@ export class RunState<T = unknown> implements StagedState<T> {
         public offset = 0,
         public isError = false,
         public furthest = -1,
+        readonly nestingLimit = 256,
     ) {}
 
     ok<S>(value: S, offset = 0): RunState<S> {
@@ -90,6 +94,25 @@ export class RunState<T = unknown> implements StagedState<T> {
         (this.diagnostics as Diagnostic[]).push(diagnostic);
     }
 
+    enterLazy(): boolean {
+        if (this.liveDepth >= this.nestingLimit) {
+            this.fault ??= {
+                kind: "Nesting",
+                offset: this.offset,
+                limit: this.nestingLimit,
+            };
+            this.isError = true;
+            return false;
+        }
+        this.liveDepth++;
+        this.maxDepth = Math.max(this.maxDepth, this.liveDepth);
+        return true;
+    }
+
+    leaveLazy(): void {
+        this.liveDepth--;
+    }
+
     clearFrontierExtras(): void {
         this.suggestions = EMPTY_SUGGESTIONS;
         this.secondarySpans = EMPTY_SECONDARY_SPANS;
@@ -99,12 +122,22 @@ export class RunState<T = unknown> implements StagedState<T> {
 export class StagedParser<T> {
     constructor(
         readonly parser: (state: StagedState<T>) => StagedState<T>,
+        readonly nestingLimit = 256,
     ) {}
 
     parseState(source: string): RunState<T> {
         const epoch = packratEnter();
         try {
-            const state = this.parser(new RunState<T>(source)) as RunState<T>;
+            const state = this.parser(
+                new RunState<T>(
+                    source,
+                    undefined as T,
+                    0,
+                    false,
+                    -1,
+                    this.nestingLimit,
+                ),
+            ) as RunState<T>;
             if (state.fault) state.isError = true;
             if (state.isError && isDiagnosticsEnabled()) {
                 const furthest = state.furthest >= 0

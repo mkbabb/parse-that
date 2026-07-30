@@ -21,11 +21,21 @@ type SequenceNode = Readonly<{
     kind: "sequence";
     children: readonly Node<unknown>[];
 }>;
+type PairNode = Readonly<{
+    kind: "pair";
+    first: Node<unknown>;
+    second: Node<unknown>;
+    takeFirst: boolean;
+}>;
 type RecoveryNode = Readonly<{
     kind: "recovery";
     child: Node<unknown>;
     sync: Node<unknown>;
     sentinel: unknown;
+}>;
+type LazyNode = Readonly<{
+    kind: "lazy";
+    get: () => Node<unknown>;
 }>;
 type Node<T> =
     | LiteralNode
@@ -33,11 +43,14 @@ type Node<T> =
     | SpanNode
     | ChoiceNode
     | SequenceNode
-    | RecoveryNode;
+    | PairNode
+    | RecoveryNode
+    | LazyNode;
 
 type Terminal<T> = Readonly<{
     text: string;
     project: (start: number, end: number) => T;
+    mayThrow: boolean;
 }>;
 type TerminalTable = Readonly<{
     alphabet: Int8Array;
@@ -80,6 +93,24 @@ export class Grammar<T> {
 
     then<U>(other: Grammar<U>): Grammar<[T, U]> {
         return sequence(this as Grammar<T>, other);
+    }
+
+    next<U>(other: Grammar<U>): Grammar<U> {
+        return new Grammar<U>({
+            kind: "pair",
+            first: this.node as Node<unknown>,
+            second: other.node as Node<unknown>,
+            takeFirst: false,
+        });
+    }
+
+    skip<U>(other: Grammar<U>): Grammar<T> {
+        return new Grammar<T>({
+            kind: "pair",
+            first: this.node as Node<unknown>,
+            second: other.node as Node<unknown>,
+            takeFirst: true,
+        });
     }
 
     recover<U>(sync: Grammar<unknown>, sentinel: U): Grammar<T | U> {
@@ -125,6 +156,13 @@ export function sequence<const P extends readonly Grammar<unknown>[]>(
     }) as Grammar<GrammarValues<P>>;
 }
 
+export function lazy<T>(get: () => Grammar<T>): Grammar<T> {
+    return new Grammar<T>({
+        kind: "lazy",
+        get: () => get().node as Node<unknown>,
+    });
+}
+
 export type Compiled<T> = Readonly<{
     plan: StagedPlan;
     parser: (state: StagedState<T>) => StagedState<T>;
@@ -136,12 +174,19 @@ type MutablePlan = {
     -readonly [K in keyof StagedPlan]: number;
 };
 type Runner<T> = (state: StagedState<T>) => StagedState<T>;
+type CompileGraph = <T>(node: Node<T>) => Runner<T>;
 
 /**
  * Compile supported graph nodes into source-direct terminals and transactions.
  * There is no token, scanner result, generated source, or fallback runtime.
  */
-export function compile<T>(grammar: Grammar<T>): Compiled<T> {
+export function compile<T>(
+    grammar: Grammar<T>,
+    nestingLimit = 256,
+): Compiled<T> {
+    if (!Number.isSafeInteger(nestingLimit) || nestingLimit < 1) {
+        throw new RangeError("nestingLimit must be a positive safe integer");
+    }
     const plan: MutablePlan = {
         terminals: 0,
         states: 0,
@@ -150,8 +195,20 @@ export function compile<T>(grammar: Grammar<T>): Compiled<T> {
         coldEdges: 0,
         tableBytes: 0,
     };
-    const parser = compileNode(grammar.node, plan);
-    const boundary = new StagedParser(parser);
+    const compiled = new Map<Node<unknown>, Runner<unknown>>();
+    const compileGraph: CompileGraph = <U>(node: Node<U>) => {
+        const key = node as Node<unknown>;
+        const cached = compiled.get(key);
+        if (cached) return cached as Runner<U>;
+        const parser = compileNode(node, plan, compileGraph);
+        compiled.set(key, parser as Runner<unknown>);
+        return parser;
+    };
+    const parser = compileNested(
+        grammar.node,
+        plan,
+    ) ?? compileGraph(grammar.node);
+    const boundary = new StagedParser(parser, nestingLimit);
     const parseState = (source: string) => boundary.parseState(source);
 
     return {
@@ -162,12 +219,137 @@ export function compile<T>(grammar: Grammar<T>): Compiled<T> {
     };
 }
 
-function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
+function compileNested<T>(
+    node: Node<T>,
+    plan: MutablePlan,
+): Runner<T> | undefined {
+    if (node.kind !== "lazy") return undefined;
+    const body = node.get();
+    if (body.kind !== "choice" || body.children.length !== 2) return undefined;
+    const recursive = body.children[0];
+    if (
+        recursive.kind !== "pair"
+        || !recursive.takeFirst
+        || recursive.second.kind !== "literal"
+    ) return undefined;
+    const enter = recursive.first;
+    if (
+        enter.kind !== "pair"
+        || enter.takeFirst
+        || enter.first.kind !== "literal"
+        || enter.second.kind !== "lazy"
+        || enter.second.get() !== body
+        || enter.first.text.length === 0
+        || recursive.second.text.length === 0
+    ) return undefined;
+    const terminals = flatten(body.children[1]);
+    if (!terminals?.length) return undefined;
+
+    const open = enter.first.text;
+    const close = recursive.second.text;
+    const openLabel = `"${open}"`;
+    const closeLabel = `"${close}"`;
+    const openLabels = [openLabel];
+    const closeLabels = [closeLabel];
+    const openCode = open.length === 1 ? open.charCodeAt(0) : -1;
+    const closeCode = close.length === 1 ? close.charCodeAt(0) : -1;
+    const leafMayThrow = terminals.some(terminal => terminal.mayThrow);
+    const leaf = compileTerminals(terminals, plan);
+    plan.terminals += 2;
+
+    return ((state: StagedState<unknown>) => {
+        const start = state.offset;
+        const savedValue = state.value;
+        const savedDiagnostics = state.diagnostics.length;
+        const baseDepth = state.liveDepth;
+        if (baseDepth >= state.nestingLimit) {
+            state.fault ??= {
+                kind: "Nesting",
+                offset: start,
+                limit: state.nestingLimit,
+            };
+            state.isError = true;
+            return state;
+        }
+
+        let at = start;
+        let depth = baseDepth + 1;
+        const source = state.src;
+        while (
+            openCode >= 0
+                ? source.charCodeAt(at) === openCode
+                : source.startsWith(open, at)
+        ) {
+            at += open.length;
+            if (depth >= state.nestingLimit) {
+                state.maxDepth = Math.max(state.maxDepth, depth);
+                state.fault ??= {
+                    kind: "Nesting",
+                    offset: at,
+                    limit: state.nestingLimit,
+                };
+                return state.rollback(
+                    start,
+                    savedValue,
+                    savedDiagnostics,
+                    true,
+                );
+            }
+            depth++;
+        }
+        state.liveDepth = depth;
+        state.maxDepth = Math.max(state.maxDepth, depth);
+        state.offset = at;
+        mergeLabels(state, at, openLabels);
+        if (leafMayThrow) try {
+            leaf(state);
+        } finally {
+            state.liveDepth = baseDepth;
+        } else {
+            leaf(state);
+            state.liveDepth = baseDepth;
+        }
+        if (state.isError) {
+            return state.rollback(
+                start,
+                savedValue,
+                savedDiagnostics,
+                true,
+            );
+        }
+        const opens = depth - baseDepth - 1;
+        let closeAt = state.offset;
+        for (let index = 0; index < opens; index++) {
+            const matches = closeCode >= 0
+                ? source.charCodeAt(closeAt) === closeCode
+                : source.startsWith(close, closeAt);
+            if (!matches) {
+                state.offset = closeAt;
+                mergeLabels(state, closeAt, closeLabels);
+                return state.rollback(
+                    start,
+                    savedValue,
+                    savedDiagnostics,
+                    true,
+                );
+            }
+            closeAt += close.length;
+        }
+        state.offset = closeAt;
+        return state;
+    }) as unknown as Runner<T>;
+}
+
+function compileNode<T>(
+    node: Node<T>,
+    plan: MutablePlan,
+    compileGraph: CompileGraph,
+): Runner<T> {
     const terminals = flatten(node);
     if (terminals?.length) return compileTerminals(terminals, plan);
 
     if (node.kind === "map") {
-        const child = compileNode(node.child, plan);
+        const child = compileGraph(node.child);
         return ((state: StagedState<unknown>) => {
             const savedOffset = state.offset;
             const savedValue = state.value;
@@ -186,7 +368,7 @@ function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
         }) as unknown as Runner<T>;
     }
     if (node.kind === "span") {
-        const child = compileNode(node.child, plan);
+        const child = compileGraph(node.child);
         return ((state: StagedState<unknown>) => {
             const start = state.offset;
             child(state);
@@ -198,8 +380,8 @@ function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
         }) as unknown as Runner<T>;
     }
     if (node.kind === "recovery") {
-        const child = compileNode(node.child, plan);
-        const sync = compileNode(node.sync, plan);
+        const child = compileGraph(node.child);
+        const sync = compileGraph(node.sync);
         return ((state: StagedState<unknown>) => {
             const checkpoint = state.offset;
             const savedValue = state.value;
@@ -246,6 +428,18 @@ function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
             return state.ok(node.sentinel);
         }) as unknown as Runner<T>;
     }
+    if (node.kind === "lazy") {
+        let child: Runner<unknown> | undefined;
+        return ((state: StagedState<unknown>) => {
+            if (!state.enterLazy()) return state;
+            try {
+                child ??= compileGraph(node.get());
+                return child(state);
+            } finally {
+                state.leaveLazy();
+            }
+        }) as unknown as Runner<T>;
+    }
     if (node.kind === "sequence") {
         if (node.children.length === 2) {
             const firstSpanned = flattenSpannedLiterals(node.children[0]);
@@ -271,7 +465,7 @@ function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
                 ) as unknown as Runner<T>;
             }
         }
-        const children = node.children.map(child => compileNode(child, plan));
+        const children = node.children.map(child => compileGraph(child));
         if (children.length === 2) {
             const first = children[0];
             const second = children[1];
@@ -321,6 +515,61 @@ function compileNode<T>(node: Node<T>, plan: MutablePlan): Runner<T> {
                 values[index] = state.value;
             }
             return state.ok(values);
+        }) as unknown as Runner<T>;
+    }
+    if (node.kind === "pair") {
+        const first = compileGraph(node.first);
+        const second = compileGraph(node.second);
+        return ((state: StagedState<unknown>) => {
+            const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
+            first(state);
+            if (state.isError) {
+                return state.rollback(
+                    savedOffset,
+                    savedValue,
+                    savedDiagnostics,
+                    true,
+                );
+            }
+            const firstValue = state.value;
+            second(state);
+            if (state.isError) {
+                return state.rollback(
+                    savedOffset,
+                    savedValue,
+                    savedDiagnostics,
+                    true,
+                );
+            }
+            if (node.takeFirst) state.value = firstValue;
+            return state;
+        }) as unknown as Runner<T>;
+    }
+    if (node.kind === "choice") {
+        const children = node.children.map(child => compileGraph(child));
+        return ((state: StagedState<unknown>) => {
+            const savedOffset = state.offset;
+            const savedValue = state.value;
+            const savedDiagnostics = state.diagnostics.length;
+            for (const child of children) {
+                child(state);
+                if (!state.isError) return state;
+                state.rollback(
+                    savedOffset,
+                    savedValue,
+                    savedDiagnostics,
+                    state.fault !== undefined,
+                );
+                if (state.isError) return state;
+            }
+            return state.rollback(
+                savedOffset,
+                savedValue,
+                savedDiagnostics,
+                true,
+            );
         }) as unknown as Runner<T>;
     }
     throw new TypeError("S prototype has no compiled path for this graph");
@@ -705,11 +954,13 @@ function flatten<T>(
     transform: (value: unknown, start: number, end: number) => unknown =
         value => value,
     output: Terminal<unknown>[] = [],
+    mayThrow = false,
 ): Terminal<T>[] | undefined {
     if (node.kind === "literal") {
         output.push({
             text: node.text,
             project: (start, end) => transform(node.text, start, end),
+            mayThrow,
         });
         return output as Terminal<T>[];
     }
@@ -719,6 +970,7 @@ function flatten<T>(
             (value, start, end) =>
                 transform(node.map(value), start, end),
             output,
+            true,
         ) as Terminal<T>[] | undefined;
     }
     if (node.kind === "span") {
@@ -727,11 +979,17 @@ function flatten<T>(
             (value, start, end) =>
                 transform({ value, span: { start, end } }, start, end),
             output,
+            mayThrow,
         ) as Terminal<T>[] | undefined;
     }
-    if (node.kind === "sequence" || node.kind === "recovery") return undefined;
+    if (
+        node.kind === "sequence"
+        || node.kind === "pair"
+        || node.kind === "recovery"
+        || node.kind === "lazy"
+    ) return undefined;
     for (const child of node.children) {
-        if (!flatten(child, transform, output)) return undefined;
+        if (!flatten(child, transform, output, mayThrow)) return undefined;
     }
     return output as Terminal<T>[];
 }
@@ -753,7 +1011,11 @@ function mergeLabels<T>(
     if (!enabled) return;
     const incoming = labels.slice(0, limit);
     const expected = state.expected ??= [];
+    const seen = new Set(expected);
     for (const label of incoming) {
-        if (!expected.includes(label)) expected.push(label);
+        if (!seen.has(label)) {
+            seen.add(label);
+            expected.push(label);
+        }
     }
 }

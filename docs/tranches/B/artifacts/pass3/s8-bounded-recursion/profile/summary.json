@@ -1,0 +1,45 @@
+{
+  "source": {
+    "kernel": "21f253080b49fb4834dbaaa96e2a440f08f257476af1e80eb2813e160ed9863d",
+    "recursionProfile": "279808548cd0c5d61510f0c359c43ebfca6fae27fa9dc73dd5f6725e73f83fab"
+  },
+  "cpu": {
+    "generic96": {
+      "candidateHits": {
+        "anonymousRunners": 182,
+        "terminalAlphabet": 23,
+        "mergeLabels": 19,
+        "rollback": 10,
+        "parseState": 4,
+        "project": 3
+      },
+      "interpretation": "Generic recursive sequence/map remains dominated by per-depth staged runners, rollback, and projection; its success/result point estimates are RED."
+    },
+    "fused753": {
+      "candidateHits": {
+        "anonymousRunners": 3191,
+        "mergeLabels": 101,
+        "samplePair": 2,
+        "compileNested": 0,
+        "buildTerminalTable": 0
+      },
+      "interpretation": "Construction is absent from the hot profile. The full-denominator fused runner is dominated by the closed source-direct runner; baseline leaf/frontier work dominates the comparison."
+    }
+  },
+  "traceFused96": {
+    "scavenges": 30,
+    "markCompacts": 3,
+    "bailoutLines": 99,
+    "namedCandidateBailouts": [
+      {
+        "function": "parseState",
+        "reason": "Insufficient type feedback for generic named access"
+      },
+      {
+        "function": "mergeLabels",
+        "reason": "Insufficient type feedback for generic named access"
+      }
+    ],
+    "interpretation": "The trace spans construction, diagnostics-off timing, diagnostics-on timing, baseline, loaders, and source maps. The candidate named bailouts occur across the diagnostics mode transition, so this is not a clean hot-only deopt seal."
+  }
+}
