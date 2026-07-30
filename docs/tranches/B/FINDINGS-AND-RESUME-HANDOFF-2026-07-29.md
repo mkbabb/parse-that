@@ -84,6 +84,9 @@ GOAL ACTIVE — NO RELEASE**
 - Post-P6 owner agglomeration:
   `40d8b4c`,
   `audit/POST-P6-NEXT-EDGE-OWNER-AGGLOMERATION-2026-07-30.md`.
+- Active-goal and precepts completion audit:
+  `audit/ACTIVE-GOAL-COMPLETION-AND-PRECEPTS-MATRIX-2026-07-30.md`; 22
+  objective rows, 14 precepts rows, zero narrowed-success substitutions.
 - Root P3 feasibility ruling SHA-256:
   `d03d042286d0bad27e3666f3c08e83a393aaa86928e6273c05ac85ac51bfed67`;
   it supersedes `8fe9a26b…` as document identity.
@@ -411,6 +414,11 @@ candidate pack, consumer receipt or release.
     loop with zero downstream credit. The long-horizon scannerless full-CSS
     goal remains active, but no implementation is authorized under the
     current laws.
+45. The active-goal/precepts matrix proves the packet shape is complete but
+    the outcome is not: runtime, performance, three complete design passes,
+    two clean audits, full CSS/WPT/browser coverage, consumers, candidate,
+    deletion proof, release, rebind, and ABI handoff remain
+    RED/PARTIAL/BLOCKED/ROUTED.
 
 ## Resume boundary — current-host no-edge
 

@@ -52,6 +52,7 @@ Release status: **NO RELEASE**
 | P5-EUW fatal preflight | Luna manifest `e2d8fb3e…`; owner evidence `0bc0d37`; `artifacts/pass6/euw-clean-break/` | Luna's sealed packet stops at a static accepted-M2/raw-consumer census with no executable runtime. Owner Sol corrects the legacy-signature premise and tests two legal clean-break, one-executor variants against exact accepted-M2 `jsonParser` in 14 unique PIDs. Cursor EUW is 0.6076–0.7527× and same-state EUW is 0.6149–0.7001×; all bounded immutable-success equality checks pass, every raw row is below `1x`, and bootstrap/CSS/profiles are withheld. **KILL/PRUNE; ZERO CREDIT**. |
 | P6-SIR signed-integer return | design `b2c7447`; P6/A1/A2 owner evidence `75d36ab`/`4f772fd`/`c9d8be1`; A3 Luna/Sol seals `222b09eb…`/`ff193de0…`; A3 owner evidence `3ed4c43` | P6 masks `-2`; A1 leaves checkpoint/oracle gaps; A2 cannot encode exact M2 failure offsets. A3 adds one non-control `failureOffset` scalar and closes 21/21 typed rows, 23/23 ordinary rows, and 4/4 native products. Its seven admissible ratios are only 0.9208–1.0390×. **P6 KILL/PRUNE; NO DISTINCT P7; ZERO CREDIT**. |
 | Post-P6 reached-edge search | Sol/Luna/final-Sol manifests `2f626edb…`/`2b35d783…`/`62e6d344…`; owner evidence `40d8b4c` | Independent Sol finds no current Node 26/V8 14.6 host edge outside P1–P6. Luna's per-fixture outputs and 57 ratio/bootstrap summaries reproduce, but its timed arms use unequal fixture streams: 35/35 aggregate hot-sink and 350/350 batch-sink cells diverge. Final Sol borrows no Luna timing credit and seals a narrowed reached/current-host result from primary genealogy, profile arithmetic, and equal-boundary native yardstick. **NO-EDGE; FORMATION RED; GOAL ACTIVE; ZERO CREDIT**. |
+| Active-goal and precepts completion audit | `audit/ACTIVE-GOAL-COMPLETION-AND-PRECEPTS-MATRIX-2026-07-30.md` | Derives 22 objective rows and 14 precepts rows from the full user goal and current canon. Preservation, ownership, packet shape, dispositions, handoff and no-premature-release guards are proven. The admitted runtime, 10× proof, three complete design passes, two clean audits, full CSS/WPT/browser coverage, consumers, candidate, deletion proof and release chain are not complete. **AUDIT COMPLETE; GOAL ACTIVE; FORMATION RED; NO RELEASE**. |
 
 ## Current executable state
 
@@ -68,6 +69,11 @@ Release status: **NO RELEASE**
   independent Sol research, Luna unequal-selection defect, final Sol
   agglomeration, narrowed current-host no-edge scope, zero credit, and exact
   resume boundary.
+- Active-goal/precepts matrix:
+  `audit/ACTIVE-GOAL-COMPLETION-AND-PRECEPTS-MATRIX-2026-07-30.md`. It proves
+  packet-shape conformance, corrects W0's current artefact roster, records the
+  unpinned external precepts authority, and keeps every incomplete objective
+  row RED/PARTIAL/BLOCKED/ROUTED without shrinking the goal.
 - P5-EUW owner adjudication:
   `0bc0d37bfadf62ddde432686947309cc1741325e`; Luna's manifest is
   `e2d8fb3e344088dfa4af963b542ce22296f6485f16120f397791d271962765fc`.

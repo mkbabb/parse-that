@@ -353,6 +353,12 @@ impossibility theorem. The long-horizon goal remains active; formation, full
 CSS, consumers, packing, release, Value rebind, ABI freeze, and BBNF remain
 blocked.
 
+The requirement-by-requirement truth is banked in
+`audit/ACTIVE-GOAL-COMPLETION-AND-PRECEPTS-MATRIX-2026-07-30.md`. It proves
+this document set satisfies the tranche and wave shape while refusing to
+convert packet conformance into runtime, CSS, consumer, clean-audit, or
+release completion.
+
 ## Debt and terminal dispositions
 
 There is no silent deferral. Open work is owned by B.W0 and keeps the tranche

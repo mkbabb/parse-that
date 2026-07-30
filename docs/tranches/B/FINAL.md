@@ -19,6 +19,7 @@ rebind exists.
 | Gate | Status | Evidence |
 |---|---|---|
 | Canonical parent/PROGRESS/wave/coordination/FINAL | `IN_PROGRESS` | P4 is `REJECT/FOLD`; P5-EUW and conforming P6-A3 are `KILL/PRUNE`; post-P6 owner evidence `40d8b4c` seals a narrowed reached/current-host NO-EDGE ruling; no implementation is authorized |
+| Full active-goal completion audit | `COMPLETE` as audit, not outcome | `audit/ACTIVE-GOAL-COMPLETION-AND-PRECEPTS-MATRIX-2026-07-30.md` derives 22 objective rows and 14 precepts rows. It proves the goal remains incomplete and grants no runtime, CSS, consumer, candidate, clean-audit, execution or release credit. |
 | Runtime correctness | `RED` | M2 is the accepted control; live production remains rejected M3. A3 is locally correctness-clean but performance-killed; no candidate exists |
 | Full-subject P1→P2→P3 | `COMPLETE` | P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`. All implemented candidates are killed; this supplies no isolated-proof or formation credit. |
 | Isolated every-scale/result proof | `RED` | S7's subset is local. S8, P2-UO/L/shaped and P2-C are RED/killed; P3 reaches 1.0656–1.5238×; P4 mechanism rows are below `1x`; P5 reaches 0.6076–0.7527× / 0.6149–0.7001×. P6/A1/A2 rows are inadmissible; conforming A3 rows are admissible but only 0.9208–1.0390×. Post-P6 Luna timings are unequal-selection evidence only; final Sol finds no current host edge. No candidate exists. |
@@ -114,7 +115,9 @@ preceding corrected S/recovery kernel and XR-21 amendment.
 ## Handoff
 
 Read `FINDINGS-AND-RESUME-HANDOFF-2026-07-29.md` and
-`PROGRESS.md §Next executable boundary`. Preserve the branch, banked negative
+`PROGRESS.md §Next executable boundary`, then
+`audit/ACTIVE-GOAL-COMPLETION-AND-PRECEPTS-MATRIX-2026-07-30.md`. Preserve
+the branch, banked negative
 prototype evidence and user-owned untracked `data` symlink. P4 is complete
 negative evidence; do not rerun or relabel its Sol/Luna families. P5-EUW is
 terminal executable negative evidence; do not reopen it on legacy-signature
