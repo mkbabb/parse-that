@@ -2,7 +2,7 @@
 
 Date: 2026-07-30
 
-Status: **P6-SIR PRE-TIMING REJECT — P6-A1 ACTIVE ISOLATED FATAL ASSAY —
+Status: **P6/P6-A1 PRE-TIMING AMEND — P6-A2 ACTIVE ISOLATED FATAL ASSAY —
 RED — NO RELEASE**
 
 ## Exact resume coordinate
@@ -11,8 +11,8 @@ RED — NO RELEASE**
   `/Users/mkbabb/Programming/parse-that-css-totality`
 - Branch: `codex/css-totality-combinators-20260729`
 - Source/evidence HEAD:
-  `75d36ab` (`docs(parser-research): reject the false-green P6 signed-step
-  packet and route immutable A1`)
+  `4f772fd` (`docs(parser-research): reject the incomplete P6 A1 checkpoint
+  and route scalar A2`)
 - P1 registry coordinate:
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
@@ -49,6 +49,14 @@ RED — NO RELEASE**
 - P6-SIR owner adjudication:
   `75d36ab`,
   `audit/P6-SIR-OWNER-SOL-ADJUDICATION-2026-07-30.md`.
+- P6-A1 Luna manifest/raw:
+  `43944afe23d45fcc340eb0237b892a6ee03b32757cc5e40398b4f00ebe491103` /
+  `e9479e7ee7e2114f9c17f53369f4f4311dee1ed940cb26897b92b70e841dd9db`.
+- P6-A1 fresh-Sol checksum manifest:
+  `55a44e09a8f7b2c7c3943b60110f36eb9becea5cd67bef931eb9da596c49b03d`.
+- P6-A1 owner adjudication:
+  `4f772fd`,
+  `audit/P6-SIR-A1-OWNER-SOL-ADJUDICATION-2026-07-30.md`.
 - Root P3 feasibility ruling SHA-256:
   `d03d042286d0bad27e3666f3c08e83a393aaa86928e6273c05ac85ac51bfed67`;
   it supersedes `8fe9a26b…` as document identity.
@@ -326,22 +334,34 @@ candidate pack, consumer receipt or release.
     before timing. Its raw bytes remain immutable arithmetic evidence about
     the defective prototype but are inadmissible for atom-level KILL/PRUNE.
     P6-A1 alone may repair those three boundaries in a new immutable packet.
+32. P6-A1 manifest `43944afe…` repairs visible `-2` propagation but omits
+    `suggestionCount`/`secondaryCount` from every `sepBy` fault checkpoint,
+    leaves recovery-sync shadow/frontier drift, exempts direct/nested typed
+    rows and self-compares accepted M2 as the native oracle.
+33. Fresh-Sol seal `55a44e09…` and owner audit `4f772fd` classify A1
+    `AMEND`. Its 0.8716–1.0327× rows are arithmetically sound but
+    inadmissible. A2 alone may complete the scalar checkpoint/oracle gate.
+34. No distinct P7 is admissible under current laws absent a genuinely new,
+    reached cost-removal edge. A domain-neutral fixture cannot substitute for
+    the binding Value-owned full-CSS consumer.
 
-## Next executable transaction — P6-A1 fatal assay
+## Next executable transaction — P6-A2 fatal assay
 
-Resume B.W0 from P6 owner evidence `75d36ab`. Preserve the original Luna P6
-packet and raw SHA `7655b467…` byte-for-byte. Product source remains held.
+Resume B.W0 from A1 owner evidence `4f772fd`. Preserve the original Luna P6
+and A1 packets/raw SHAs `7655b467…`/`e9479e7e…` byte-for-byte. Product source
+remains held.
 
 ### Subject
 
 Resume the existing Luna seat
 `019fb16a-09d7-7d80-ae5f-3d894e25855d`; create no task. Write only a new
 immutable packet under
-`/Users/mkbabb/Documents/Codex/2026-07-30/parser-p6-sir-luna-a1/outputs/**`.
-Copy the P6 executor and change only `sepBy`'s handling of sticky `-2` at the
-first element, separator and later element. Keep one integer return,
-nonnegative cursor success, `-1` mismatch, `-2` typed fault, ordinary value in
-run state and one raw executor. Do not add a region, slab, journal, tape,
+`/Users/mkbabb/Documents/Codex/2026-07-30/parser-p6-sir-luna-a2/outputs/**`.
+Copy A1 and complete one scalar checkpoint schema across every typed-fault
+boundary and recovery-sync; assert every fault row; and use `JSON.parse` as
+the actual native oracle. Keep one integer return, nonnegative cursor success,
+`-1` mismatch, `-2` typed fault, ordinary value in run state and one raw
+executor. Do not add a checkpoint object, region, slab, journal, tape,
 compiler, VM, generated grammar, scanner, fallback, wrapper, second executor
 or public surface.
 
@@ -362,28 +382,29 @@ or public surface.
 
 ### Admission order
 
-1. Add exact direct probes for typed `-2` in the first `sepBy` element,
-   separator and later element. Every path must propagate `-2`, restore its
-   local atomic cursor/value/diagnostic checkpoint, retain sticky
-   fault/frontier evidence and project an immutable typed-fault error. No
-   typed-fault row may be skipped.
-2. Re-run the existing routine rollback, full-grammar alias, safe-integer,
-   four-fixture equality, dispatch and forbidden-mechanism probes. Timing is
-   forbidden unless every pre-timing row is green.
-3. Run a new scale-4 live accepted-M2 `jsonParser`, alternating immutable
+1. Save/restore value, suggestion/secondary counts, diagnostic count and all
+   diagnostic shadow fields at every `sepBy`/recovery typed-fault boundary,
+   while retaining the required sticky fault/frontier.
+2. Assert exact return, complete run snapshot and immutable public result for
+   direct, nested, first-element, separator, later-element and recovery-sync
+   typed faults with no exemption.
+3. Compare `JSON.parse`, exact M2, rebuilt M2 and A2 independently; re-run
+   routine rollback, alias, safe-integer, dispatch and forbidden-mechanism
+   probes. Timing is forbidden unless every pre-timing row is green.
+4. Run a new scale-4 live accepted-M2 `jsonParser`, alternating immutable
    success products, across seven fresh paired processes. Every raw ratio must
    be `>=10x`; any miss kills the conforming atom before bootstrap or broader
    work.
-4. Only when every raw point clears the floor, compute the exact-bootstrap
+5. Only when every raw point clears the floor, compute the exact-bootstrap
    95% lower bound; it too must be `>=10x`.
-5. Only a green fatal cell opens scale 4/33 complete state/value/result,
+6. Only a green fatal cell opens scale 4/33 complete state/value/result,
    failures, diagnostics-on recovery, exact UTF-16, allocation, IC, deopt,
    GC and heap assays.
-6. The first CSS evidence is one real Value-owned combinator vertical authored
+7. The first CSS evidence is one real Value-owned combinator vertical authored
    once against control/candidate generic primitives, with proved nonzero SIR
    activity. A handwritten body, scanner-shaped representation, or “full
    CSS” label without the 1,439/1,653 denominator is fatal.
-7. Formation Clean A/B remain blocked until a surviving isolated candidate
+8. Formation Clean A/B remain blocked until a surviving isolated candidate
    clears the complete proof. Production freeze, packing, consumer migration,
    release, Value rebind and BBNF remain later.
 

@@ -306,13 +306,18 @@ isolates P4's already-designed signed-step atom, but `sepBy` converts sticky
 `-2` faults into success at the first element, separator and later element.
 Its seven exact-M2 raw ratios, 0.9564–1.1820×, are arithmetically sound but
 inadmissible because timing followed a false-green taxonomy gate. They do not
-kill the conforming atom. `P6-A1` is the smallest same-seat repair: preserve
-the original packet, propagate `-2` at all three boundaries with exact local
-rollback/result probes, then rerun only the exact-M2 scale-4 raw floor in a
-new immutable packet. Any corrected raw row below 10× kills the atom before
-bootstrap, CSS or broader planes. Genealogy remains `SPLIT`, surrounding
-topology remains folded into P3, novelty/family credit remains zero, and full
-CSS plus all downstream formation/execution edges remain blocked.
+kill the conforming atom. A1 owner evidence `4f772fd` rejects the first repair
+because it omits suggestion/secondary checkpoint counts, recovery-sync shadow
+state, exact direct/nested fault assertions and the actual `JSON.parse`
+oracle. Its 0.8716–1.0327× raw rows are likewise inadmissible. `P6-A2` is the
+only next same-seat correction: one complete scalar checkpoint schema,
+complete fault assertions and real native oracle, followed by a new exact-M2
+scale-4 raw floor only after preflight is green. Any admissible raw row below
+10× kills the atom before bootstrap, CSS or broader planes. Genealogy remains
+`SPLIT`, surrounding topology remains folded into P3, novelty/family credit
+remains zero, and full CSS plus all downstream formation/execution edges
+remain blocked. No distinct P7 may be dispatched absent a genuinely new,
+reached cost-removal edge.
 
 ## Debt and terminal dispositions
 
