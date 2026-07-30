@@ -1,0 +1,11 @@
+c06f8059beb231243aa7a56c1fae120d621d5bc6fd8bde8ace7f6c10c922eeec  typescript/test/prototypes/pass3/p3/closure.ts
+d108cebee66767256c8b5c733e5392d8f05f8b8d3abac634dfc3bbafcab88d3a  typescript/test/prototypes/pass3/p3/products.ts
+81263ce7b3a8477503f3f32f367a291416c056a211c405b94fc0cee31bfc7a0e  typescript/test/prototypes/pass3/p3/closure.test.ts
+ff178165d5c55b7eeaefd5c15446c626c6c991d716d0ae2d51069a678927a251  typescript/test/prototypes/pass3/p3/profile.ts
+7333af7acd78fa8cc573d51bf58aa3426aa270dc36fd00df48c20d8b737f85cb  typescript/test/prototypes/pass3/p3/vitest.config.ts
+f8a31ca727a56da1155a225ca05a32da394288b68251b91ab7c8cf3ea882664c  grammar/tests/json/valid.jsonl
+d35ea455ddb7f9659763c2458e11f3420460921333d7b521bd19c106a1747f07  grammar/tests/json/invalid.jsonl
+6b61c6e26f48f1030a6ad964d08b8d41a0b7cfb0bcee62d2712f72f42f3c75d6  docs/tranches/B/artifacts/pass3/p3-direct-closure/README.md
+ef0e859ef9dca5fff142392dc048ab83872f354d75c4fe4c17802de6c8b3f53a  docs/tranches/B/artifacts/pass3/p3-direct-closure/profile-abba.json
+1e41e37d533d798e079125f6ae11689f758359759a5767d20fed507f0a187fc2  docs/tranches/B/artifacts/pass3/p3-direct-closure/p3-direct-closure.cpuprofile
+30b368fa92fee14ce61dd4b40677272e11190f1e20b71cb20ce1c09a452c21f5  docs/tranches/B/artifacts/pass3/p3-direct-closure/v8-deopt-gc.log
