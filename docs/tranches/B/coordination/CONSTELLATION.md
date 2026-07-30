@@ -22,9 +22,11 @@ later released coordinate are the only executable package boundaries.
 The read-only Value matrix at
 `/Users/mkbabb/.codex/worktrees/7e28/value.js/docs/tranches/V/megatranche/formation/VALUE-PARSER-LAW-CONVERGENCE-MATRIX-2026-07-30.md`,
 SHA-256
-`0e5fd05f8eec743eebda5b8fde19503ec8f565565a8c0d274c1d4d50d91d38ee`,
+`53e44e1bfa5043660d7002fa8a35c12fff2ffa55a96b753f259fac7d00345073`,
 is a sibling receipt, not parser authority. Its formation authority SHA-256 is
-`9beef6d743170b6312e7b1cf9a3610df90d677e0b75c2fce1b20b23e1a05b851`.
+`d611e3a07e1c1288567b87850355088ac1684fe0cb7e016648f8d2dfe3be74c1`.
+Prior matrix/status identities `0e5fd05f…`/`9beef6d7…` are superseded as
+receipt bytes only.
 
 Parser-relevant dependencies only:
 
