@@ -23,7 +23,6 @@ import {
 import { createResultProjector } from "./result.js";
 import {
     RunState,
-    StagedParser,
     type StagedState,
 } from "./run-state.js";
 
@@ -145,9 +144,8 @@ function makeStaged(): Compiled<unknown> {
 const closure = makeClosure();
 const staged = makeStaged();
 const projectClosureResult = createResultProjector();
-const projectStagedResult = createResultProjector();
-const stagedBoundary = new StagedParser<unknown>(staged.parser);
-const parseStaged = (source: string) => stagedBoundary.parseState(source);
+const projectStagedResult = createResultProjector(true);
+const parseStaged = staged.parseState;
 const sources = properties.map((name, index) =>
     shape === "recovery" && index % 10 === 0
         ? "bad;"
@@ -288,7 +286,10 @@ for (const source of [...sources, "not-a-property"]) {
     const actualState = parseStaged(source);
     const actual = snapshot(actualState);
     if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-        throw new Error(`unequal product for ${source}`);
+        throw new Error(
+            `unequal product for ${source}: `
+            + JSON.stringify({ expected, actual }),
+        );
     }
     if (source === "not-a-property" || source === "bad;") continue;
     const name = shape === "terminal" ? source : source.slice(0, -1);
@@ -335,6 +336,40 @@ const result = samplePair(
     )),
     rotate(sources, source => projectStagedResult(parseStaged(source))),
 );
+const recoveryProjectionStates = shape === "recovery"
+    ? {
+        closure: closure.parseState("bad;") as ParserState<unknown>,
+        staged: parseStaged("bad;"),
+    }
+    : undefined;
+const recoveryPlanes = shape === "recovery"
+    ? {
+        valid: samplePair(
+            () => closure.parseState(sources[1]),
+            () => parseStaged(sources[1]),
+        ),
+        recovered: samplePair(
+            () => closure.parseState("bad;"),
+            () => parseStaged("bad;"),
+        ),
+        validResult: samplePair(
+            () => projectClosureResult(
+                closure.parseState(sources[1]) as ParserState<unknown>,
+            ),
+            () => projectStagedResult(parseStaged(sources[1])),
+        ),
+        recoveredResult: samplePair(
+            () => projectClosureResult(
+                closure.parseState("bad;") as ParserState<unknown>,
+            ),
+            () => projectStagedResult(parseStaged("bad;")),
+        ),
+        recoveredProjection: samplePair(
+            () => projectClosureResult(recoveryProjectionStates!.closure),
+            () => projectStagedResult(recoveryProjectionStates!.staged),
+        ),
+    }
+    : {};
 const lateResult = samplePair(
     rotate(late, source => closure.parseState(source)),
     rotate(late, parseStaged),
@@ -416,6 +451,7 @@ const raw = {
         rotating,
         internal,
         result,
+        ...recoveryPlanes,
         late: lateResult,
         failure,
         diagnosticFailure,

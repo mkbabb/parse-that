@@ -15,7 +15,10 @@ import {
     type Span,
     type Spanned,
 } from "./kernel.js";
-import { resultFromState } from "./result.js";
+import {
+    createResultProjector,
+    resultFromState,
+} from "./result.js";
 import {
     collectRunDiagnostic,
     RunState,
@@ -255,9 +258,20 @@ describe("P3-S source-direct staged terminal", () => {
             const strict = resultFromState(
                 compile(literal("ok")).parseState("bad"),
             );
-            const result = resultFromState(recovered.parseState("bad"));
+            const recoveredState = recovered.parseState("bad");
+            expect(recoveredState.furthest).toBe(-1);
+            expect(recoveredState.expected).toBeUndefined();
+            expect(Object.isFrozen(recoveredState.diagnostics)).toBe(false);
+            const result = createResultProjector<
+                "ok" | typeof opaque
+            >(true)(recoveredState);
             if (result.kind !== "ok") throw new Error("fixture must recover");
             expectTypeOf(result.value).toEqualTypeOf<"ok" | typeof opaque>();
+            expect(Object.isFrozen(recoveredState.diagnostics)).toBe(true);
+            expect(Object.isFrozen(recoveredState.diagnostics[0])).toBe(true);
+            expect(Object.isFrozen(
+                recoveredState.diagnostics[0].expected,
+            )).toBe(true);
             expect(strict).toMatchObject({
                 kind: "mismatch",
                 offset: 0,
@@ -280,6 +294,19 @@ describe("P3-S source-direct staged terminal", () => {
             expect(Object.isFrozen(result.diagnostics)).toBe(true);
             expect(Object.isFrozen(result.diagnostics[0])).toBe(true);
             expect(Object.isFrozen(result.diagnostics[0].expected)).toBe(true);
+
+            const twice = compile(sequence(
+                literal("ok").recover(literal("bad"), opaque),
+                literal("ok").recover(literal("bad"), opaque),
+            )).parseState("badbad");
+            expect(twice).toMatchObject({
+                offset: 6,
+                isError: false,
+                value: [opaque, opaque],
+            });
+            expect(twice.diagnostics).toHaveLength(2);
+            expect(Object.isFrozen(twice.diagnostics)).toBe(false);
+            expect(twice.diagnostics.every(Object.isFrozen)).toBe(true);
 
             expect(resultFromState(compile(sequence(
                 literal("ok").recover(literal("bad"), opaque),

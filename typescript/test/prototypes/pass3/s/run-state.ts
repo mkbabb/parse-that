@@ -42,6 +42,7 @@ const EMPTY_SUGGESTIONS = Object.freeze([]) as unknown as Suggestion[];
 const EMPTY_SECONDARY_SPANS =
     Object.freeze([]) as unknown as SecondarySpan[];
 const EMPTY_DIAGNOSTICS = Object.freeze([]) as unknown as Diagnostic[];
+const EMPTY_EXPECTED = Object.freeze([]) as unknown as string[];
 
 export class RunState<T = unknown> implements StagedState<T> {
     expected?: string[];
@@ -138,14 +139,30 @@ export function collectRunDiagnostic(
         ? 1
         : before.slice(0, lastNl + 1).split("\n").length;
     const column = lastNl === -1 ? furthest : furthest - lastNl - 1;
-    state.pushDiagnostic({
+    const expected = state.expected === undefined
+        ? EMPTY_EXPECTED
+        : Object.freeze([...state.expected]);
+    const suggestions = state.suggestions.length === 0
+        ? EMPTY_SUGGESTIONS
+        : Object.freeze(state.suggestions.map(suggestion =>
+            Object.freeze({ ...suggestion })
+        ));
+    const secondarySpans = state.secondarySpans.length === 0
+        ? EMPTY_SECONDARY_SPANS
+        : Object.freeze(state.secondarySpans.map(span =>
+            Object.freeze({ ...span })
+        ));
+    state.pushDiagnostic(Object.freeze({
         offset: errorOffset,
         furthestOffset: furthest,
         line,
         column,
-        expected: state.expected ? [...state.expected] : [],
-        suggestions: [...state.suggestions],
-        secondarySpans: [...state.secondarySpans],
+        expected,
+        suggestions,
+        secondarySpans,
         found: state.src.slice(furthest, furthest + 20).replace(/\n/g, "\\n"),
-    });
+    }) as Diagnostic);
+    state.furthest = -1;
+    state.expected = undefined;
+    state.clearFrontierExtras();
 }

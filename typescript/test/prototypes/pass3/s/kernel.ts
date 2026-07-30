@@ -2,6 +2,7 @@ import { isDiagnosticsEnabled } from "../../../../src/parse/utils.js";
 import {
     collectRunDiagnostic,
     RunState,
+    StagedParser,
     type StagedState,
 } from "./run-state.js";
 
@@ -150,8 +151,8 @@ export function compile<T>(grammar: Grammar<T>): Compiled<T> {
         tableBytes: 0,
     };
     const parser = compileNode(grammar.node, plan);
-    const parseState = (source: string) =>
-        parser(new RunState<T>(source));
+    const boundary = new StagedParser(parser);
+    const parseState = (source: string) => boundary.parseState(source);
 
     return {
         plan,

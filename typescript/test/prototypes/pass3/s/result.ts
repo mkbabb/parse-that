@@ -44,30 +44,49 @@ const EMPTY = Object.freeze([]) as readonly never[];
  * Consumer-side immutable projection of parse-owned provenance.
  * This is deliberately not part of the staged runtime or Compiled surface.
  */
-export function createResultProjector<T>() {
+export function createResultProjector<T>(
+    diagnosticsAreImmutable = false,
+) {
     return (state: ResultState<T>): ParseResult<T> => {
-        const diagnostics = state.diagnostics.length === 0
+        const diagnostics = diagnosticsAreImmutable
+            ? state.diagnostics.length === 0
+                ? state.diagnostics as readonly ResultDiagnostic[]
+                : Object.freeze(
+                    state.diagnostics,
+                ) as readonly ResultDiagnostic[]
+            : state.diagnostics.length === 0
             ? EMPTY
-            : Object.freeze(state.diagnostics.map(diagnostic =>
-                Object.freeze({
-                    ...diagnostic,
-                    expected: Object.freeze([...diagnostic.expected]),
-                    suggestions: Object.freeze(
-                        diagnostic.suggestions.map(suggestion =>
-                            Object.freeze({ ...suggestion })
+            : Object.isFrozen(state.diagnostics)
+                && Object.isFrozen(state.diagnostics[0])
+                ? state.diagnostics as readonly ResultDiagnostic[]
+                : Object.freeze(state.diagnostics.map(diagnostic =>
+                    Object.freeze({
+                        ...diagnostic,
+                        expected: Object.freeze([...diagnostic.expected]),
+                        suggestions: Object.freeze(
+                            diagnostic.suggestions.map(suggestion =>
+                                Object.freeze({ ...suggestion })
+                            ),
                         ),
-                    ),
-                    secondarySpans: Object.freeze(
-                        diagnostic.secondarySpans.map(span =>
-                            Object.freeze({ ...span })
+                        secondarySpans: Object.freeze(
+                            diagnostic.secondarySpans.map(span =>
+                                Object.freeze({ ...span })
+                            ),
                         ),
-                    ),
-                }) as ResultDiagnostic
-            ));
+                    }) as ResultDiagnostic
+                ));
+        const fault = state.fault;
+        if (!fault && !state.isError) {
+            return {
+                diagnostics,
+                kind: "ok",
+                value: state.value,
+            };
+        }
         const expected = state.expected === undefined
             ? EMPTY
             : Object.freeze([...state.expected]);
-        if (state.fault) {
+        if (fault) {
             return Object.freeze({
                 offset: state.offset,
                 furthest: state.furthest,
@@ -75,24 +94,17 @@ export function createResultProjector<T>() {
                 diagnostics,
                 kind: "fault",
                 value: state.value,
-                fault: Object.freeze({ ...state.fault }),
+                fault: Object.freeze({ ...fault }),
             });
         }
-        if (state.isError) {
-            return Object.freeze({
-                offset: state.offset,
-                furthest: state.furthest,
-                expected,
-                diagnostics,
-                kind: "mismatch",
-                value: state.value,
-            });
-        }
-        return {
+        return Object.freeze({
+            offset: state.offset,
+            furthest: state.furthest,
+            expected,
             diagnostics,
-            kind: "ok",
+            kind: "mismatch",
             value: state.value,
-        };
+        });
     };
 }
 
