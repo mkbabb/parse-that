@@ -47,9 +47,8 @@ Release status: **NO RELEASE**
   `68055bd` (`perf(parser-prototype): retire residual unordered
   composition`).
 - Latest canonical authority reconciliation:
-  `2f1f936` (`docs(parser-tranche): bind the shaped-product authority
-  coordinate`); the current authority reconciliation is being banked after
-  `68055bd`.
+  `3439bf0` (`docs(parser-tranche): bind mixed-overlap retirement and P2
+  reconciliation`).
 - Corrected P1 root intake:
   `abc9479d7ea5fa4c76deca752428faf8b332f280e6e637de12b12b25e8e2ad6c`;
   it binds committed `c9c2108` bytes, P1 only, and grants no later credit.

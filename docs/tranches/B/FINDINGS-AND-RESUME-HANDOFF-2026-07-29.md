@@ -16,8 +16,8 @@ Status: **ACTIVE FORMATION — RED — NO RELEASE**
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
 - Canonical owner authority:
-  `2f1f936` (`docs(parser-tranche): bind the shaped-product authority
-  coordinate`); the P2-UO authority reconciliation follows the source bank.
+  `3439bf0` (`docs(parser-tranche): bind mixed-overlap retirement and P2
+  reconciliation`).
 - Corrected P1 root intake:
   `abc9479d7ea5fa4c76deca752428faf8b332f280e6e637de12b12b25e8e2ad6c`;
   P1-only, zero later credit.

@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | P1 registry `69f72f7`; mixed-overlap U `68055bd` (correctness green, D killed); shaped products `d62b73a` (correctness green, staged family killed); P2-L `5822ae2`; U `19ad1ac`; S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
+| parse-that worktree | B / generic runtime producer | P1 registry `69f72f7`, canonical authority `3439bf0`; mixed-overlap U `68055bd` (correctness green, D killed); shaped products `d62b73a` (correctness green, staged family killed); P2-L `5822ae2`; U `19ad1ac`; S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
