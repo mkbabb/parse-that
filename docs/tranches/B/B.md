@@ -177,6 +177,13 @@ release credit. Bounded recursion, unordered composition, generic
 CSS-needed leaves, Value-owned stylesheet recovery, live consumers, the
 full-subject pass chain and both clean pairs remain open.
 
+S8 is banked at `27bf872`. Cached recursion, mutual recursion and typed
+parse-owned nesting are correctness-green, but generic recursive
+success/result is only 1.212–1.331× and balanced-discard fusion is only
+8.400–8.842× at the binding 96-leaf scale. Its full-denominator signal does
+not waive that RED row. S8 grants no formation, candidate, consumer,
+execution or release credit.
+
 ## Debt and terminal dispositions
 
 There is no silent deferral. Open work is owned by B.W0 and keeps the tranche

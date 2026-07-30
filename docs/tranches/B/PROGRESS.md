@@ -30,18 +30,19 @@ Release status: **NO RELEASE**
 | S5 consumer-owned result | `926a3ad`, `artifacts/pass3/s5-consumer-result/` | The unconsumed compiled `.result` surface is pruned; a colocated consumer projector preserves equal immutable work and raises result CI-low to 7.254×. Matched 8.985× and internal 9.040× receive no advancement credit. **HELD, RED**. |
 | S6 run-owned successor state | `062c147`, `artifacts/pass3/s6-run-state/` | A scalar run-owned state, matched prospective `parseState` boundary, shared frozen empty evidence and consumer-owned success envelope clear the seven-process 96-name terminal/sequence CI-low at 10.020× matched, 11.022× internal and 10.263× result. The 753-name corresponding lows are 72.853×, 75.768× and 76.902×. **HELD — LOCAL TERMINAL/SEQUENCE GREEN; FORMATION OPEN**. |
 | S7 immutable recovery | `20b5f52`, `artifacts/pass3/s7-immutable-recovery/` | Diagnostic collection now resets the frontier, freezes each entry and nested evidence once, retains an O(1) run builder, and seals only the outer collection at consumer projection. Seven-process 96-name CI-lows are 10.405× matched, 11.285× internal, 10.257× result, 20.569× late, 12.894× failure and 39.532× diagnostic failure; every 753-name low exceeds 75×. **HELD — LOCAL GENERIC RECOVERY GREEN; FORMATION OPEN**. |
+| S8 bounded recursion | `27bf872`, `artifacts/pass3/s8-bounded-recursion/` | Cached generic recursion, parse-owned live/max depth and sticky typed nesting faults are correctness-green. Generic 96-leaf recursive span success/internal/result is only 1.270×/1.212×/1.331×; balanced-discard fusion is only 8.400×/8.842×/8.561× at 96 despite 57.819×/61.403×/61.507× at 753. **HELD — CORRECTNESS GREEN, PERFORMANCE RED; FORMATION OPEN**. |
 
 ## Current executable state
 
 - Branch: `codex/css-totality-combinators-20260729`.
 - Latest source/evidence coordinate:
-  `20b5f52` (`perf(pass3-s): bank immutable recovery above the 10x
-  confidence floor`).
+  `27bf872` (`perf(pass3-s): bank bounded recursion falsification at the
+  96-leaf floor`).
 - P-B1 authority head: `302c623b4ffddf76bc4ee042cad1d3c5e739ef9d`.
 - Source/evidence coordinates include `c480578`
   (`perf(runtime-prototype): bind corrected S assay to accepted M2 control`),
-  `2fc18dc`, S4 at `75b76dd`, S5 at `926a3ad`, S6 at `062c147`, and S7 at
-  `20b5f52`. None confers formation or execution credit.
+  `2fc18dc`, S4 at `75b76dd`, S5 at `926a3ad`, S6 at `062c147`, S7 at
+  `20b5f52`, and S8 at `27bf872`. None confers formation or execution credit.
 - S/recovery evidence commit:
   `2fc18dc1ec3a0541b85e9e440fca85028844673c`.
 - Canonical authority before P-B1:
@@ -55,11 +56,11 @@ Release status: **NO RELEASE**
 - The post-S4 authority reconciliation is banked at `6f893be`. After each
   source or authority bank, the untracked `data` symlink is the only expected
   status entry and remains untouched.
-- Fresh S7 gates: focused hostile suite 9/9; package suite 14/14 files and
+- Fresh S8 gates: focused hostile suite 13/13; package suite 14/14 files and
   134/134 tests; strict TypeScript; production build; manifest,
   no-CSS-surface, subpath, packrat, no-span and no-dead-combinator proofs all
   green. The unchanged production JSON `proof:perf` point guard is green on
-  the final isolated rerun at +11.2% against 15%; it remains a regression
+  the final isolated rerun at +9.0% against 15%; it remains a regression
   guard, not formal ≥10× admission credit.
 - Corrected five-process 96-name matched-boundary sequence:
   CI-low 9.033×, median 9.655×, high 9.986×.
@@ -100,6 +101,17 @@ Release status: **NO RELEASE**
   hashes. The staged boundary has no named bailout; its parse-state ICs are
   monomorphic. This is generic local recovery proof only, not Value CSS
   recovery, a live-consumer receipt or full-subject admission.
+- S8 single-process 96-leaf recursive authored-span points:
+  generic cached recursion 1.270× success, 1.212× internal and 1.331×
+  consumer result; balanced-discard fusion 8.400×, 8.842× and 8.561×.
+  Both are binding RED, so no multiprocess bootstrap or advancement follows.
+- S8 single-process 753-leaf balanced-discard points are 57.819× success,
+  61.403× internal, 61.507× result, 3479.009× failure and 44.857×
+  diagnostic failure. This large signal keeps the incompatible family alive
+  for consumer adjudication but cannot waive the 96-leaf RED scale.
+- S8 CPU and mixed diagnostics-off/on GC/deopt evidence is banked. The mixed
+  trace records candidate `parseState` and `mergeLabels` deoptimizations and
+  is not a clean hot-only seal.
 - Corrected 753-name sequence: one process at 78.839×; not a confidence
   bound and not admission.
 - Corrected 96-name recovery: one process at 9.365× matched-boundary and
@@ -133,6 +145,10 @@ Release status: **NO RELEASE**
 9. The named second non-CSS consumer is parse-that's `jsonParser`.
 10. `/utils` remains unresolved until two consumer receipts exist; otherwise
    it is pruned.
+11. Generic cached recursion is correctness-green but performance-RED.
+    Balanced-discard fusion remains private incompatible research: it may
+    survive only if a real Value/JSON-shaped product proves the same semantic
+    need at both binding scales. It is not recursive CSS AST proof.
 
 ## Formation and release chains
 
@@ -160,9 +176,10 @@ chain may be recorded while an earlier arrow is RED.
 1. Complete the current full-subject formation pass without narrowing its
    transaction, span, recovery, recursion, unordered, allocation or result
    obligations.
-2. Carry the S7 run-owned state through bounded recursion, unordered
-   composition and generic CSS-needed leaf prototypes. Value-owned
-   stylesheet recovery and live-consumer evidence remain open.
+2. Carry the S7 run-owned state through unordered composition and generic
+   CSS-needed leaf prototypes. Re-adjudicate recursion only against a real
+   Value/JSON-shaped recursive AST and nested-span product; generic recursion
+   and the narrow balanced-discard fusion are presently RED.
 3. Preserve the locally green terminal/sequence and generic-recovery evidence
    without treating it as P3, every-subject proof, formation admission or
    execution credit.

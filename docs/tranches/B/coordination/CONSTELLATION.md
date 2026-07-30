@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | S7 source/evidence `20b5f52`; P-B1 authority `302c623` plus later authority reconciliation |
+| parse-that worktree | B / generic runtime producer | S8 source/evidence `27bf872` (recursion performance RED); S7 local green source/evidence `20b5f52`; P-B1 authority `302c623` plus later authority reconciliation |
 | Value | V / sole CSS grammar, consumer and UI owner | repository HEAD `e01d0065fa6c7c80282280566af2b9a4add809bf`; formation packet independently admitted at reported SHA prefix `aa684060` with zero execution credit |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | post-Value-W3 ABI peer | no implementation or CSS parser before `V.L6.css-path-abi-freeze` |
@@ -81,5 +81,11 @@ entries and nested evidence are collected once into an O(1) run builder and
 the consumer seals only the outer list. Recursion, unordered, CSS-leaf,
 Value-owned stylesheet recovery and live-consumer planes remain open, so the
 producer edge remains **RED** and `NO RELEASE`. The unchanged production JSON
-point guard is green at +11.2% against its 15% guard on the final isolated
+point guard is green at +9.0% against its 15% guard on the final isolated
 rerun but supplies no formal S or formation credit.
+
+S8 adds no consumer or API edge. Generic recursion is correctness-green but
+only 1.212–1.331× on the 96-leaf success/result planes; the narrow
+balanced-discard fusion is 8.400–8.842× there despite exceeding 44× on every
+753-leaf plane. Both remain private research, recursion remains RED, and the
+exact release cycle is unchanged.
