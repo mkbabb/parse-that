@@ -43,8 +43,8 @@ Release status: **NO RELEASE**
 - Latest source/evidence coordinate:
   `5822ae2` (`perf(parser-prototype): falsify generic source-leaf widening`).
 - Latest canonical authority reconciliation:
-  `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
-  registry`), pending this owner correction bank.
+  `c9c2108` (`docs(parser-tranche): canonicalize P1 and bind the P2 leaf
+  falsification`).
 - P-B1 authority head: `302c623b4ffddf76bc4ee042cad1d3c5e739ef9d`.
 - Source/evidence coordinates include `c480578`
   (`perf(runtime-prototype): bind corrected S assay to accepted M2 control`),

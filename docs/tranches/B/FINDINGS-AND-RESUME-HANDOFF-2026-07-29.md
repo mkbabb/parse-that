@@ -14,6 +14,9 @@ Status: **ACTIVE FORMATION — RED — NO RELEASE**
 - P1 registry coordinate:
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
+- Canonical owner authority:
+  `c9c2108` (`docs(parser-tranche): canonicalize P1 and bind the P2 leaf
+  falsification`)
 - Accepted M2 control worktree:
   `/tmp/parse-that-m2-baseline-20260729`
 - Accepted M2 coordinate:
