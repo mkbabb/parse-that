@@ -2,22 +2,23 @@
 
 Date: 2026-07-30
 
-Status: **P6-A3 CORRECTNESS CLEAN / RAW KILL-PRUNE — NO DISTINCT P7 —
-FORMATION RED — NO RELEASE**
+Status: **P6 KILL-PRUNE / POST-P6 CURRENT-HOST NO-EDGE — FORMATION RED —
+GOAL ACTIVE — NO RELEASE**
 
 ## Exact resume coordinate
 
 - Repository:
   `/Users/mkbabb/Programming/parse-that-css-totality`
 - Branch: `codex/css-totality-combinators-20260729`
-- Source/evidence HEAD:
-  `3ed4c43` (`docs(parser-research): bind the conforming P6 A3 raw kill`)
+- Latest source/evidence coordinate:
+  `40d8b4c` (`docs(parser-research): bind the post-P6 current-host no-edge
+  adjudication`)
 - P1 registry coordinate:
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
 - Canonical owner authority predecessor:
-  `75cf36e` (`docs(parser-tranche): bind the full-CSS P4 denominator`);
-  this amended document set binds the later P4 result.
+  `fe4e3a5` (`docs(parser-tranche): reconcile the terminal P6 kill and no-P7
+  boundary`); this amended document set reconciles the post-P6 search.
 - P4 owner adjudication:
   `270feca0d48ef7caab3d44ad9bcc62d9a6687870`
   (`docs(parser-research): bind the P4 owner adjudication and fatal EUW
@@ -72,6 +73,17 @@ FORMATION RED — NO RELEASE**
 - P6-A3 owner adjudication:
   `3ed4c43`,
   `audit/P6-SIR-A3-OWNER-SOL-ADJUDICATION-2026-07-30.md`.
+- Post-P6 Sol research manifest:
+  `2f626edb7e0d5e323eb82db1a933e917f907713dcd7ab942dc38cedad1ed0ce3`.
+- Post-P6 Luna measurement manifest:
+  `2b35d78348254ac66c9fcbb3c0d398a54bba9d37cb4f4e89dbda049c984a7f6d`;
+  its timed fixture-selection streams are unequal and it carries no binding
+  credit.
+- Post-P6 final Sol agglomeration manifest:
+  `62e6d344b5f23e340e58a9cbed524f5ab50f2200c4040793450c5d6cfb32b09e`.
+- Post-P6 owner agglomeration:
+  `40d8b4c`,
+  `audit/POST-P6-NEXT-EDGE-OWNER-AGGLOMERATION-2026-07-30.md`.
 - Root P3 feasibility ruling SHA-256:
   `d03d042286d0bad27e3666f3c08e83a393aaa86928e6273c05ac85ac51bfed67`;
   it supersedes `8fe9a26b…` as document identity.
@@ -380,18 +392,39 @@ candidate pack, consumer receipt or release.
     signed-step atom. There is no same-atom continuation or distinct P7.
     Formation, source, CSS, consumer, API, candidate, release and BBNF credit
     remain zero.
+40. Independent post-P6 Sol manifest `2f626edb…` maps every currently
+    reachable Node 26/V8 14.6 route to incumbent work, a killed P1–P6 family,
+    or an unchanged forbidden boundary. Its primary cost and native-yardstick
+    identities and arithmetic reproduce.
+41. Luna manifest `2b35d783…` preserves equal and frozen per-fixture products
+    and reproducible ratio/bootstrap arithmetic, but it is not equal-selection
+    evidence: aggregate hot sinks diverge in 35/35 process/suite cells and
+    batch sinks diverge in 350/350 cross-arm cells.
+42. Luna's 5.9453× host-only CI-low, 2.0982× complete-product CI-low, and
+    191,686.9 µs optimistic extrapolation are descriptive only. They receive
+    no performance, formation, or no-edge credit.
+43. Final Sol manifest `62e6d344…` borrows no Luna timing claim and seals a
+    narrowed reached/current-host `NO-EDGE` ruling from P1–P6 genealogy,
+    primary P3 profile arithmetic, and the equal-boundary native JSON
+    yardstick. It is not a universal impossibility theorem.
+44. Owner audit `40d8b4c` closes the required post-P6 architecture-research
+    loop with zero downstream credit. The long-horizon scannerless full-CSS
+    goal remains active, but no implementation is authorized under the
+    current laws.
 
-## Resume boundary — new cost-removal edge required
+## Resume boundary — current-host no-edge
 
-Resume B.W0 from terminal P6 owner evidence `3ed4c43`. Preserve every P6,
-A1, A2, and A3 Luna/Sol packet and raw byte. Product source remains held.
+Resume B.W0 from post-P6 owner evidence `40d8b4c`. Preserve every P6, A1, A2,
+and A3 Luna/Sol packet, all post-P6 research/agglomeration packets, and every
+raw byte. Product source remains held.
 
 ### Subject
 
-There is no authorized implementation transaction. Do not resume an existing
-seat to rename P6 or dispatch P7. A future research proposal must first
-identify a genuinely new reached cost-removal edge outside the complete P1–P6
-genealogy and quantitatively defend how it can clear the binding budget:
+There is no authorized implementation transaction. Do not resume a seat to
+rename P6 or dispatch P7. The required search for a current host edge is
+closed. A future proposal must identify a concrete newly reachable host
+primitive outside the complete P1–P6 genealogy and quantitatively defend a
+complete-product route at or below the binding budget:
 
 ```text
 10x budget                       187,063 us
@@ -403,6 +436,15 @@ budget overrun                   124,820 us
 
 Architecture prose, a relabeled carrier, a domain-neutral fixture, or a
 different measurement boundary creates no prototype authority.
+
+The post-P6 Luna ratios cannot be cited as equal-work proof. Any future reuse
+must regenerate one identical fixture-index vector per process/suite/batch,
+apply it to every arm, and require per-batch plus aggregate sink equality
+before computing ratios or bootstrap.
+
+Absent a newly reachable host primitive with that complete cost route,
+progress requires an explicit user amendment to the scannerless,
+equal-product, ownership, or `>=10x` law. No amendment is inferred here.
 
 ### Required laws
 
@@ -425,13 +467,16 @@ different measurement boundary creates no prototype authority.
 
 1. Preserve the P1–P6 evidence and exact cost law; do not grant credit across
    a new family boundary.
-2. Require an independently adjudicated, quantitatively explicit cost-removal
-   edge before code. It must name the reached work removed, not only a new
-   carrier or execution spelling.
+2. Require a concrete newly reachable host primitive and an independently
+   adjudicated complete-product cost model at or below 187,063 µs before
+   code. It must name the reached grammar-path and product work removed, not
+   only a new carrier, execution spelling, or primitive micro-speed.
 3. If separately authorized, begin with one isolated exact-M2 scale-4
-   equal-product fatal cell. Restore the complete state/value/result,
-   success/failure/recovery/fault, UTF-16, allocation, IC, deopt and GC planes
-   only after every small-scale raw row and bootstrap low clear 10×.
+   equal-selection/equal-product fatal cell. Stop on the first unequal
+   batch/aggregate sink, unequal product, or sub-10× CI-low. Restore the
+   complete state/value/result, success/failure/recovery/fault, UTF-16,
+   allocation, IC, deopt and GC planes only after every small-scale raw row
+   and bootstrap low clear 10×.
 4. Only a surviving generic mechanism may open the real Value-owned CSS
    vertical. A handwritten body, scanner-shaped representation, or “full CSS”
    label without the 1,439/1,653 denominator is fatal.

@@ -18,10 +18,10 @@ rebind exists.
 
 | Gate | Status | Evidence |
 |---|---|---|
-| Canonical parent/PROGRESS/wave/coordination/FINAL | `IN_PROGRESS` | P4 is `REJECT/FOLD`; P5-EUW and conforming P6-A3 are `KILL/PRUNE`; no distinct P7 is admissible without a new reached cost-removal edge |
+| Canonical parent/PROGRESS/wave/coordination/FINAL | `IN_PROGRESS` | P4 is `REJECT/FOLD`; P5-EUW and conforming P6-A3 are `KILL/PRUNE`; post-P6 owner evidence `40d8b4c` seals a narrowed reached/current-host NO-EDGE ruling; no implementation is authorized |
 | Runtime correctness | `RED` | M2 is the accepted control; live production remains rejected M3. A3 is locally correctness-clean but performance-killed; no candidate exists |
 | Full-subject P1→P2→P3 | `COMPLETE` | P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`. All implemented candidates are killed; this supplies no isolated-proof or formation credit. |
-| Isolated every-scale/result proof | `RED` | S7's subset is local. S8, P2-UO/L/shaped and P2-C are RED/killed; P3 reaches 1.0656–1.5238×; P4 mechanism rows are below `1x`; P5 reaches 0.6076–0.7527× / 0.6149–0.7001×. P6/A1/A2 rows are inadmissible; conforming A3 rows are admissible but only 0.9208–1.0390×. No candidate exists. |
+| Isolated every-scale/result proof | `RED` | S7's subset is local. S8, P2-UO/L/shaped and P2-C are RED/killed; P3 reaches 1.0656–1.5238×; P4 mechanism rows are below `1x`; P5 reaches 0.6076–0.7527× / 0.6149–0.7001×. P6/A1/A2 rows are inadmissible; conforming A3 rows are admissible but only 0.9208–1.0390×. Post-P6 Luna timings are unequal-selection evidence only; final Sol finds no current host edge. No candidate exists. |
 | Formation Clean A / Clean B | `BLOCKED` | requires green isolated prototype proof |
 | Formation admission | `BLOCKED` | requires both formation clean audits; creates zero execution credit |
 | Full Value CSS coverage | `OPEN` | Root denominator `2bc4abb2…` binds 1,717 raw/1,653 active Webref rows, 25 decisions, ten entry points, eleven algorithms, full recovery/fidelity, WPT manifests and 53 Keyframes references/51 files; Value owns implementation and no execution receipt exists |
@@ -83,6 +83,14 @@ rows, 23/23 ordinary rows, 4/4 native products, and seven admissible ratios
 at 0.9208–1.0390×. P6 is terminal `KILL/PRUNE`. No P4/P5/P6 evidence grants
 formation credit, and no renamed P7 may run without a new reached
 cost-removal edge.
+Post-P6 owner evidence `40d8b4c` binds independent Sol research, Luna's
+unequal-selection defect, and final Sol agglomeration. Luna's per-fixture
+products, freezes, ratios, bootstrap, and arithmetic reproduce, but all 35
+process/suite aggregate hot sinks and all 350 cross-arm batch sinks diverge.
+Its timing is descriptive only. Final Sol borrows no Luna timing credit and
+seals a reached P1–P6/current Node 26/V8 14.6 `NO-EDGE` result from primary
+genealogy, profile arithmetic, and the equal-boundary native yardstick. This
+is not a universal theorem and grants zero downstream credit.
 Root denominator `2bc4abb2…` makes 1,439 the active
 property/function/type scale and 1,653 the active unqualified full-Webref
 scale. A 753-property or shaped-mechanism result cannot claim full coverage.
@@ -113,5 +121,8 @@ terminal executable negative evidence; do not reopen it on legacy-signature
 grounds. Preserve every P6/A1/A2/A3 packet, raw, and Sol seal unchanged. P6
 has no continuation. Do not dispatch a renamed P7, run formation clean
 audits, pack a candidate, publish, widen the API, or begin Value-owned CSS
-product work. A future architecture must first quantify a genuinely new
-reached cost-removal edge outside P1–P6 and receive separate authority.
+product work. Preserve post-P6 owner evidence `40d8b4c` and do not cite
+Luna's unequal-selection ratios as equal-work proof. Resume only for a
+concrete newly reachable host primitive with a conservative complete-product
+model at or below 187,063 µs and a smallest equal-selection fatal assay, or
+after an explicit user amendment to a frozen law.

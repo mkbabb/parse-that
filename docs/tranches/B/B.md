@@ -334,6 +334,25 @@ and no distinct P7 under the current feasibility law. Any future research
 continuation must first quantify a genuinely new reached cost-removal edge
 outside P1–P6; no implementation is authorized from a renamed mechanism.
 
+Post-P6 owner evidence `40d8b4c`,
+`audit/POST-P6-NEXT-EDGE-OWNER-AGGLOMERATION-2026-07-30.md`, closes that
+required Sol/Luna/Sol research search as a narrowed reached/current-host
+`NO-EDGE` ruling. Independent Sol exhausts current Node 26/V8 14.6 host
+routes against the P1–P6 genealogy, primary P3 cost attribution, and
+equal-boundary native JSON yardstick. Luna's per-fixture products and
+arithmetic reproduce, but its timed arms use different fixture-selection
+streams: aggregate hot sinks diverge in 35/35 process/suite cells and batch
+sinks diverge in 350/350 cross-arm cells. Luna is descriptive
+unequal-selection evidence only and receives no binding credit.
+
+No P7 or other implementation is authorized. Resume requires either a
+concrete newly reachable host primitive with a conservative complete-product
+route at or below 187,063 µs, followed by an equal-selection fatal assay, or
+an explicit user amendment to a frozen law. This is not a universal
+impossibility theorem. The long-horizon goal remains active; formation, full
+CSS, consumers, packing, release, Value rebind, ABI freeze, and BBNF remain
+blocked.
+
 ## Debt and terminal dispositions
 
 There is no silent deferral. Open work is owned by B.W0 and keeps the tranche

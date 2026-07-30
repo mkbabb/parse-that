@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | P6-A3 owner evidence `3ed4c43` (correctness CLEAN; admissible raw KILL/PRUNE; no distinct P7); A3 Luna/fresh-Sol seals `222b09eb…`/`ff193de0…`; A2 owner evidence `c9d8be1`; A1 owner evidence `4f772fd`; P6 owner evidence `75d36ab`; P5 owner evidence `0bc0d37`; P4 owner audit `270feca`; full-CSS denominator `2bc4abb2…`; native yardstick `605a1ae`; P3 feasibility ruling `d03d0422…`; P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`; direct closure `19c1e12`; P-B1 `302c623` |
+| parse-that worktree | B / generic runtime producer | Post-P6 current-host no-edge owner evidence `40d8b4c` (Luna unequal-selection; zero credit); P6-A3 owner evidence `3ed4c43` (correctness CLEAN; admissible raw KILL/PRUNE; no distinct P7); A3 Luna/fresh-Sol seals `222b09eb…`/`ff193de0…`; A2 owner evidence `c9d8be1`; A1 owner evidence `4f772fd`; P6 owner evidence `75d36ab`; P5 owner evidence `0bc0d37`; P4 owner audit `270feca`; full-CSS denominator `2bc4abb2…`; native yardstick `605a1ae`; P3 feasibility ruling `d03d0422…`; P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`; direct closure `19c1e12`; P-B1 `302c623` |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
@@ -174,6 +174,20 @@ admissible 0.9208–1.0390× rows. P6 is terminal `KILL/PRUNE`. No same-atom
 continuation, renamed P7, or domain-neutral second-consumer substitute is
 admissible. Full CSS, formation Clean A/B, candidate packing, release, Value
 rebind, ABI freeze and BBNF remain blocked.
+
+Post-P6 owner evidence `40d8b4c` binds the required Sol/Luna/Sol search.
+Final Sol seals only a reached/current Node 26/V8 14.6 `NO-EDGE` result from
+the P1–P6 genealogy, primary profile arithmetic, and equal-boundary native
+yardstick. Luna's per-fixture products, freezes, ratios, bootstrap, and
+arithmetic reproduce, but all 35 process/suite aggregate hot sinks and all
+350 cross-arm batch sinks diverge because timed arms used different fixture
+streams. Luna carries no equal-work credit. No parser, CSS, Value, Keyframes,
+BBNF, candidate, execution, or release edge opens.
+
+The parser goal remains active but formation is RED. Resume implementation
+only for a concrete newly reachable host primitive with a complete-product
+model at or below 187,063 µs and a smallest equal-selection fatal assay, or
+after an explicit user amendment to a frozen law.
 
 P2-L at `5822ae2` adds no consumer or API edge. Its 51 equal products place
 success at 0.0718–1.3079×; callback-loop, ASCII-table and public

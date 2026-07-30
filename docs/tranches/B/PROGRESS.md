@@ -10,8 +10,9 @@ Formation status: **RED — P1, P2 and P3 are row-complete with zero surviving
 candidates; P4 is independently adjudicated REJECT/FOLD; P5-EUW is
 executable-performance KILL/PRUNE; the first P6-SIR packet is pre-timing
 REJECT; P6-A1/P6-A2 are AMEND and correctness-clean P6-A3 is raw
-KILL/PRUNE; no distinct P7 is admissible and both formation clean audits
-remain blocked**
+KILL/PRUNE; the post-P6 Sol/Luna/Sol search seals a narrowed current-host
+NO-EDGE ruling with Luna's unequal-selection rows quarantined; no distinct P7
+is admissible and both formation clean audits remain blocked**
 
 Release status: **NO RELEASE**
 
@@ -50,19 +51,23 @@ Release status: **NO RELEASE**
 | P4 full-CSS denominator | root addendum `2bc4abb2…` | `@webref/css@8.7.1`: 1,503 raw/1,439 active property-function-type rows; 1,717 raw/1,653 active full-Webref rows; 64 explicit alias refusals; 109 prose/manual rows; 60-row Values 5 intersection; 25 token-equivalent decisions, ten entry points, eleven tree algorithms, full recovery/source fidelity, WPT manifests, and 53 Keyframes references across 51 files. Value extensions are exactly `hsv`/`kelvin`; `ictcp`/`jzazbz`/`jzczhz` are standard. **BINDING DENOMINATOR; ZERO COVERAGE/FORMATION CREDIT**. |
 | P5-EUW fatal preflight | Luna manifest `e2d8fb3e…`; owner evidence `0bc0d37`; `artifacts/pass6/euw-clean-break/` | Luna's sealed packet stops at a static accepted-M2/raw-consumer census with no executable runtime. Owner Sol corrects the legacy-signature premise and tests two legal clean-break, one-executor variants against exact accepted-M2 `jsonParser` in 14 unique PIDs. Cursor EUW is 0.6076–0.7527× and same-state EUW is 0.6149–0.7001×; all bounded immutable-success equality checks pass, every raw row is below `1x`, and bootstrap/CSS/profiles are withheld. **KILL/PRUNE; ZERO CREDIT**. |
 | P6-SIR signed-integer return | design `b2c7447`; P6/A1/A2 owner evidence `75d36ab`/`4f772fd`/`c9d8be1`; A3 Luna/Sol seals `222b09eb…`/`ff193de0…`; A3 owner evidence `3ed4c43` | P6 masks `-2`; A1 leaves checkpoint/oracle gaps; A2 cannot encode exact M2 failure offsets. A3 adds one non-control `failureOffset` scalar and closes 21/21 typed rows, 23/23 ordinary rows, and 4/4 native products. Its seven admissible ratios are only 0.9208–1.0390×. **P6 KILL/PRUNE; NO DISTINCT P7; ZERO CREDIT**. |
+| Post-P6 reached-edge search | Sol/Luna/final-Sol manifests `2f626edb…`/`2b35d783…`/`62e6d344…`; owner evidence `40d8b4c` | Independent Sol finds no current Node 26/V8 14.6 host edge outside P1–P6. Luna's per-fixture outputs and 57 ratio/bootstrap summaries reproduce, but its timed arms use unequal fixture streams: 35/35 aggregate hot-sink and 350/350 batch-sink cells diverge. Final Sol borrows no Luna timing credit and seals a narrowed reached/current-host result from primary genealogy, profile arithmetic, and equal-boundary native yardstick. **NO-EDGE; FORMATION RED; GOAL ACTIVE; ZERO CREDIT**. |
 
 ## Current executable state
 
 - Branch: `codex/css-totality-combinators-20260729`.
 - Latest source/evidence coordinate:
-  `3ed4c43` (`docs(parser-research): bind the conforming P6 A3 raw kill`).
+  `40d8b4c` (`docs(parser-research): bind the post-P6 current-host no-edge
+  adjudication`).
 - Canonical authority predecessor:
-  `ad2efa0` (`docs(parser-tranche): reconcile P6 A2 amend and one-scalar A3
-  order`); this amended document set reconciles the later A3 terminal.
+  `fe4e3a5` (`docs(parser-tranche): reconcile the terminal P6 kill and no-P7
+  boundary`); this amended document set reconciles the later post-P6 search.
 - Latest owner audit:
-  `3ed4c43`, `audit/P6-SIR-A3-OWNER-SOL-ADJUDICATION-2026-07-30.md`. It binds
-  the A3 Luna/fresh-Sol seals, one-scalar mechanism boundary, full semantic
-  close, admissible raw, terminal P6 kill, and no-distinct-P7 boundary.
+  `40d8b4c`,
+  `audit/POST-P6-NEXT-EDGE-OWNER-AGGLOMERATION-2026-07-30.md`. It binds the
+  independent Sol research, Luna unequal-selection defect, final Sol
+  agglomeration, narrowed current-host no-edge scope, zero credit, and exact
+  resume boundary.
 - P5-EUW owner adjudication:
   `0bc0d37bfadf62ddde432686947309cc1741325e`; Luna's manifest is
   `e2d8fb3e344088dfa4af963b542ce22296f6485f16120f397791d271962765fc`.
@@ -403,21 +408,26 @@ chain may be recorded while an earlier arrow is RED.
 ## Next executable boundary
 
 1. Preserve P4 at owner audit `270feca`, P5 at `0bc0d37`, P6/A1/A2 at
-   `75d36ab`/`4f772fd`/`c9d8be1`, and terminal A3 at `3ed4c43`. Do not
+   `75d36ab`/`4f772fd`/`c9d8be1`, terminal A3 at `3ed4c43`, and the
+   post-P6 owner ruling at `40d8b4c`. Do not
    reinterpret unimplemented designs, losing families, the handwritten CSS
    reader, killed EUW, inadmissible P6/A1/A2 rows, or the killed conforming
    P6 atom as a candidate.
 2. Do not dispatch another implementation by renaming a carrier, return ABI,
    checkpoint topology, builder, regular-expression fusion, or fixture. No
    same-atom continuation or distinct P7 is authorized.
-3. A future research continuation must first quantify a reached cost-removal
-   edge outside the P1–P6 genealogy and show how it can clear the 187,063 us
-   budget despite 311,883 us of measured matching plus required products.
-   Architecture prose without that edge creates no prototype authority.
-4. If such an edge is independently admitted, restart with an isolated
-   equal-product fatal cell before any source, CSS, bootstrap, or broader
-   plane. The scannerless, exact-product, and `>=10x` laws remain unchanged.
-5. Full CSS, formation Clean A/B, production freeze, candidate packing, API
+3. The required post-P6 search is closed as a reached/current-host no-edge
+   result, not a universal theorem. Luna is descriptive unequal-selection
+   evidence only; do not cite its ratios as equal-work closure.
+4. Resume research or implementation only for a concrete newly reachable
+   host primitive with primary evidence that it removes grammar-path plus
+   required-product work and a conservative complete-product model at or
+   below 187,063 us, or after an explicit user amendment to a frozen law.
+5. If such an edge is independently admitted, restart with an isolated,
+   equal-selection fatal cell before any source, CSS, bootstrap, or broader
+   plane. Stop on the first unequal sink/product or sub-10× CI-low. The
+   scannerless, exact-product, and `>=10x` laws remain unchanged.
+6. Full CSS, formation Clean A/B, production freeze, candidate packing, API
    changes, Value/JSON consumption, release and BBNF remain blocked. Preserve
    scalar rollback, diagnostics-toggle-invariant recovery, exact UTF-16
    slots/spans, typed nesting, run isolation and consumer projection.
