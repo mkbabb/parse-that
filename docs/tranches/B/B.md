@@ -257,6 +257,23 @@ production parser source remains rejected M3 at `90d4ec5`; M2 at `de36d57`
 remains the performance control. No bootstrap, formation, execution or
 release credit follows.
 
+The post-P3 native JSON feasibility yardstick is banked at `605a1ae`. Across
+seven processes, accepted-M2 logical `jsonParser` is only 5.0050× native at
+scale 4 and 6.0826× at scale 8 on equal immutable success envelopes. Even at
+the optimistic bootstrap highs, an admissible generic candidate would need
+to beat the native yardstick by 1.9614× and 1.6144× respectively while adding
+the omitted parser semantics. `JSON.parse` is not a candidate, lower-bound
+proof or admission control. The yardstick authorizes no new family; it makes
+the reopening burden executable. Independent call-tree replay of the sealed
+P3 CPU profile also reproduces 144,501 µs candidate-native matching and
+167,382 µs required products: 311,883 µs against the complete 187,063 µs 10×
+budget before candidate runtime and omitted semantics. With all legal
+P1/P2/P3 families retired, this is binding negative evidence. Root P4 reopen
+`d1df0f01…` records the user's instruction to continue without changing the
+laws: isolated research must executably falsify the bound through genuinely
+new generic mechanisms before an owner prototype can advance. Product source
+and every downstream edge remain blocked.
+
 ## Debt and terminal dispositions
 
 There is no silent deferral. Open work is owned by B.W0 and keeps the tranche

@@ -7,8 +7,9 @@ Tranche status: `in_progress`
 Active wave: `B.W0 - Candidate-to-Release Closure`
 
 Formation status: **RED — P1, P2 and P3 are row-complete with zero surviving
-candidates; the isolated every-subject ≥10× prototype is RED and both
-formation clean audits remain blocked**
+candidates; the user reopened P4 to challenge their cost assumptions without
+changing the scannerless or ≥10× laws; both formation clean audits remain
+blocked**
 
 Release status: **NO RELEASE**
 
@@ -42,16 +43,27 @@ Release status: **NO RELEASE**
 | P3 same-FIRST recovery | `f4b9abb`, `artifacts/pass3/p3-same-first/` | Six scannerless permutations compare accepted-M2 exhaustive traversal with retired D, diagnostics off and on. Values, authored slots, UTF-16 spans, final offset and success are equal, but four diagnostics-off recovery frontiers differ and D changes provenance when diagnostics are enabled. **HOSTILE CASE COMPLETE; D KILL RECONFIRMED; NO PUBLIC/RELEASE CREDIT**. |
 | P3 direct closure | `19c1e12`, `artifacts/pass3/p3-direct-closure/` | A 510-line scannerless closure kernel with native sticky leaves, scalar rollback, spans, immutable recovery and typed recursion returns 36 equal warmed success projections plus two equal failure-state subsets. Complete state, failure-result, invalid-M2, cold/first, alternating-shape, bootstrap and scaled diagnostics-on recovery planes are absent. Measured success is only 1.0656–1.5238×; retained parse-state heap grows 12.4%. **BOUNDED CORRECTNESS; PERFORMANCE/OMITTED PLANES RED; CANDIDATE KILL; NO BOOTSTRAP**. |
 | P3 full-subject disposition | `43d7d4a`, `research/P3-FULL-SUBJECT-DISPOSITION-2026-07-29.md` | All twenty subjects have terminal P3 findings. No implemented family survives as a candidate. **P3 COMPLETE; ISOLATED PROOF RED; FORMATION CLEAN A/B BLOCKED**. |
+| Native JSON feasibility yardstick and P3 cost bound | `605a1ae`, `artifacts/formation/native-json-yardstick/`; root ruling `d03d0422…` | Seven processes compare accepted-M2 logical `jsonParser` with native `JSON.parse` on equal values and identically frozen success envelopes. Scale-4 immutable result is 5.0050× (bootstrap 95% 4.9513–5.0985×); scale 8 is 6.0826× (6.0293–6.1943×). Independent call-tree attribution of sealed P3 CPU evidence reproduces 1,157,659 µs candidate runtime, 144,501 µs candidate-native RegExp, 167,382 µs required candidate products and 1,870,633 µs comparable M2 work. Matching plus products alone consumes 311,883 µs against a 187,063 µs 10× budget. **IMMUTABLE P3 NEGATIVE EVIDENCE; P4 MUST EXECUTABLY FALSIFY THE BOUND; NO CANDIDATE/CREDIT**. |
+| P4 novelty loop | root reopen `d1df0f01…`; isolated Sol architecture and Luna prototype receipts pending | Challenge inclusive/exclusive CPU attribution and removable common work with at least three genuinely new mechanisms; use live M2 `jsonParser` and a Value-owned full-CSS-shaped product; keep all work isolated from product source. **ACTIVE RESEARCH; ZERO FORMATION/EXECUTION/RELEASE CREDIT**. |
 
 ## Current executable state
 
 - Branch: `codex/css-totality-combinators-20260729`.
 - Latest source/evidence coordinate:
-  `19c1e12` (`perf(parser-prototype): falsify the direct closure surface on
-  complete products`).
+  `605a1ae` (`perf(parser-research): bind the native JSON feasibility
+  yardstick`).
 - Latest canonical authority reconciliation:
   `c88d8c7` (`docs(parser-tranche): reconcile P3 as bounded evidence with
   zero surviving candidates`).
+- Root P3 feasibility ruling:
+  SHA-256
+  `d03d042286d0bad27e3666f3c08e83a393aaa86928e6273c05ac85ac51bfed67`;
+  it supersedes `8fe9a26b…` as document identity. Independent owner
+  call-tree replay reproduces its four cost totals and 10× budget;
+  root reopen SHA
+  `d1df0f01c139ce8d51038815826de859f20b1557ee50911e2c1e9712579aae34`
+  makes it immutable P1–P3 negative evidence rather than stop authority. It
+  grants zero implementation, formation, execution or release credit.
 - Corrected P1 root intake:
   `abc9479d7ea5fa4c76deca752428faf8b332f280e6e637de12b12b25e8e2ad6c`;
   it binds committed `c9c2108` bytes, P1 only, and grants no later credit.
@@ -76,6 +88,11 @@ Release status: **NO RELEASE**
 - P3 direct-closure objects at `19c1e12`: manifest-file SHA-256
   `b14b2d0d138c9d6900a7dcd956c9d2b71a8b3ff3384d6fd6d2e619486bad5fe6`;
   it binds source, corpora, tests, exact AB/BA data, CPU and V8 evidence.
+- Native JSON yardstick objects at `605a1ae`: manifest-file SHA-256
+  `05c0d8d11d2ebcca426501ea4fead82090e2e817fc0f38f375e12c73b3a87396`;
+  it binds two source files, seven raw processes, the deterministic
+  20,000-sample aggregate, exact control/fixture blobs and its no-credit
+  ruling.
 - P-B1 authority head: `302c623b4ffddf76bc4ee042cad1d3c5e739ef9d`.
 - Source/evidence coordinates include `c480578`
   (`perf(runtime-prototype): bind corrected S assay to accepted M2 control`),
@@ -83,8 +100,9 @@ Release status: **NO RELEASE**
   `20b5f52`, S8 at `27bf872`, U at `19ad1ac`, P2-L at `5822ae2`, shaped
   products at `d62b73a`, mixed-overlap U at `68055bd`, cold/hot dispatch at
   `d323f56`, the P2 registry at `c3d42d4`, P3 same-FIRST recovery at
-  `f4b9abb`, direct closure at `19c1e12`, and the P3 registry at `43d7d4a`.
-  None confers formation admission or execution credit.
+  `f4b9abb`, direct closure at `19c1e12`, the P3 registry at `43d7d4a`, and
+  the native JSON yardstick at `605a1ae`. None confers formation admission or
+  execution credit.
 - S/recovery evidence commit:
   `2fc18dc1ec3a0541b85e9e440fca85028844673c`.
 - Canonical authority before P-B1:
@@ -307,6 +325,17 @@ Release status: **NO RELEASE**
 16. The direct-closure candidate is the terminal P3 challenge. Its net source
     and grammar-heap cuts do not overcome the every-product floor; no private
     closure runtime survives or may coexist with production.
+17. The native JSON yardstick makes the feasibility burden concrete:
+    accepted M2 is only 5.0050× native at scale 4 and 6.0826× at scale 8 on
+    equal immutable success envelopes. `JSON.parse` is not a candidate or
+    admission control. Separately, call-tree attribution of the sealed P3 CPU
+    profile reproduces 144,501 µs candidate-native matching plus 167,382 µs
+    required products. Their 311,883 µs total is already 1.67× the complete
+    187,063 µs 10× budget before candidate runtime, rollback, recovery,
+    envelopes or unowned GC. P4 must falsify this bound by eliminating or
+    fusing measured work without weakening products or laws. Until it does,
+    the ruling remains binding negative evidence, not a general theorem that
+    no parser could ever be faster.
 
 ## Formation and release chains
 
@@ -334,17 +363,19 @@ chain may be recorded while an earlier arrow is RED.
 
 1. P1/P2/P3 are complete at `69f72f7`/`c3d42d4`/`43d7d4a`. Do not rerun,
    rename or recombine their killed families.
-2. Formation may continue only from a genuinely new generic mechanism with
-   one exact Value-shaped and one logical `parse-that#jsonParser`-shaped
-   consumed need. State the mechanism and why it escapes the
-   1.0656–1.5238× measured-success ceiling before implementing it in an
-   isolated prototype.
-3. Preserve scalar rollback, diagnostics-toggle-invariant recovery, exact
+2. P4 begins with independent, isolated architecture and executable
+   prototype receipts. Each must challenge the exact P3 call-tree bound and
+   name at least three mechanisms that are not renamed killed families.
+3. Compare complete state, value, immutable result, failures,
+   diagnostics-on recovery, UTF-16 spans, cold/build-first and alternating
+   shapes against live M2 `jsonParser` and a Value-owned full-CSS-shaped
+   grammar. Do not bootstrap unless every raw point already clears 10×.
+4. A fresh Sol adjudication must agglomerate the independent receipts before
+   any owner prototype is adopted. Product source, formation cleans,
+   candidate packing, API changes and release remain blocked.
+5. Preserve scalar rollback, diagnostics-toggle-invariant recovery, exact
    UTF-16 slots/spans, typed nesting, run isolation and consumer projection.
    Admit no compiler/table, tokenizer/scanner, VM, event tape, compatibility
    layer, default memo, `/utils` alias or second runtime.
-4. Reuse the frozen corpora and 4/8/16/33/96/753 planes. If any point estimate
-   is below 10×, retire the mechanism without bootstrap. Formation Clean A/B
-   remain blocked until one isolated candidate clears every point.
 
 `FINAL.md` remains an open gate ledger. Tranche B is not closeable.

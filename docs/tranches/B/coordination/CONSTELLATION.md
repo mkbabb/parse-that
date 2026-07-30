@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | authority `c88d8c7`; P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a` (row-complete, zero candidates); direct closure `19c1e12` (killed); same-FIRST `f4b9abb` (D killed); cold/hot `d323f56`; mixed-overlap U `68055bd`; shaped `d62b73a`; P2-L `5822ae2`; S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
+| parse-that worktree | B / generic runtime producer | authority `c88d8c7`; P4 reopen `d1df0f01…`; native yardstick `605a1ae`; P3 feasibility ruling `d03d0422…` (negative evidence, not stop authority); P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a` (row-complete, zero candidates); direct closure `19c1e12` (killed); same-FIRST `f4b9abb` (D killed); cold/hot `d323f56`; mixed-overlap U `68055bd`; shaped `d62b73a`; P2-L `5822ae2`; S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
@@ -129,6 +129,18 @@ failure-result, invalid-M2, cold/first, alternating-shape, bootstrap and
 scaled diagnostics-on recovery planes remain RED. P3's registry at
 `43d7d4a` kills the candidate and completes the full-subject pass with zero
 survivors.
+
+The native JSON feasibility yardstick at `605a1ae` also adds no consumer or
+API edge. Accepted-M2 logical `jsonParser` is only 5.0050×/6.0826× native on
+scale-4/8 equal immutable success envelopes across seven processes. It is not
+a parser candidate or admission control. Independent call-tree replay
+reproduces 311,883 µs candidate-native matching plus required products
+against a 187,063 µs complete 10× budget, before candidate runtime or omitted
+semantics. All P1/P2/P3 families are retired. Root P4 reopen `d1df0f01…`
+binds the user's instruction to executably challenge this bound through
+isolated, genuinely new mechanisms; the scannerless, equal-product and 10×
+laws are unchanged. No product-source, clean, candidate, release or handoff
+edge may run from research receipts.
 
 P2-L at `5822ae2` adds no consumer or API edge. Its 51 equal products place
 success at 0.0718–1.3079×; callback-loop, ASCII-table and public

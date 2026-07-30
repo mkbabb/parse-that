@@ -18,10 +18,10 @@ rebind exists.
 
 | Gate | Status | Evidence |
 |---|---|---|
-| Canonical parent/PROGRESS/wave/coordination/FINAL | `IN_PROGRESS` | `B.md`, `PROGRESS.md`, `waves/W0.md`, `coordination/CONSTELLATION.md`, this file |
-| Runtime correctness | `IN_PROGRESS` | M2 is the accepted control; live production remains rejected M3. Transaction/run-state/slot/span/recovery/result laws and shaped fixtures are correctness-green; every replacement family is retired and no candidate exists |
+| Canonical parent/PROGRESS/wave/coordination/FINAL | `IN_PROGRESS` | P4 is reopened as isolated research; this ledger remains open |
+| Runtime correctness | `IN_PROGRESS` | M2 is the accepted control; live production remains rejected M3. Transaction/run-state/slot/span/recovery/result laws and shaped fixtures are correctness-green; every P1–P3 replacement family is retired and no P4 candidate exists yet |
 | Full-subject P1→P2→P3 | `COMPLETE` | P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`. All implemented candidates are killed; this supplies no isolated-proof or formation credit. |
-| Isolated every-scale/result proof | `RED` | S7's warmed terminal/recovery subset is local only. S8 recursion, P2-UO, P2-L and shaped products are RED. P2-C kills the compiled surface; P3 direct closure is only 1.0656–1.5238× on warmed success projections and omits binding equivalence/cold/shape/bootstrap planes. No candidate exists. Live Value receipts belong to later execution. |
+| Isolated every-scale/result proof | `RED` | S7's warmed terminal/recovery subset is local only. S8 recursion, P2-UO, P2-L and shaped products are RED. P2-C kills the compiled surface; P3 direct closure is only 1.0656–1.5238× on warmed success projections and omits binding equivalence/cold/shape/bootstrap planes. The native JSON yardstick reaches only 5.0050×/6.0826× on scale-4/8 immutable results and is not a candidate. No candidate exists. Live Value receipts belong to later execution. |
 | Formation Clean A / Clean B | `BLOCKED` | requires green isolated prototype proof |
 | Formation admission | `BLOCKED` | requires both formation clean audits; creates zero execution credit |
 | Full Value CSS coverage | `OPEN` | Value owns implementation; no execution receipt |
@@ -49,6 +49,17 @@ warmed success projections and two failure-state subsets, but success reaches
 only 1.0656–1.5238× and retained parse-state heap grows 12.4%. Complete state,
 failure-result, invalid-M2, cold/first, alternating-shape, bootstrap and
 scaled diagnostics-on recovery planes remain RED; it is killed.
+The latest feasibility evidence is `605a1ae`. It compares accepted-M2 logical
+`jsonParser` with native `JSON.parse` across seven processes and finds only
+5.0050× at scale 4 and 6.0826× at scale 8 on equal frozen success envelopes.
+It grants no parser correctness or admission credit; it rejects dispatching
+another family. Independent call-tree replay of the sealed P3 CPU profile
+reproduces 144,501 µs candidate-native matching plus 167,382 µs required
+products, already 1.67× the complete 10× budget before candidate runtime and
+omitted semantics. With every legal P1/P2/P3 family retired, formation is
+RED. Root reopen `d1df0f01…` binds the user's P4 override: challenge that
+bound without changing the scannerless, equal-product or 10× laws. No P4
+receipt has formation credit.
 Same-FIRST recovery remains banked at `f4b9abb`, binding accepted-M2 closure
 order and keeping D killed. Cold/hot dispatch is banked at `d323f56`.
 The compiled table is 12.7–16.8× slower to construct, 11.9–14.4× slower
@@ -68,12 +79,10 @@ preceding corrected S/recovery kernel and XR-21 amendment.
 
 ## Handoff
 
-Resume from
-`FINDINGS-AND-RESUME-HANDOFF-2026-07-29.md` and
-`PROGRESS.md §Next executable boundary`. Preserve the active branch, banked
-private prototype evidence and user-owned untracked `data` symlink. Resume
-after complete P3 `43d7d4a`: the direct closure is already falsified at
-`19c1e12`. Continue only from a genuinely new generic Value-shaped plus
-logical `parse-that#jsonParser`-shaped mechanism that can escape the measured
-success-product ceiling. Do not reopen a retired family, publish, widen the
-API or begin Value-owned CSS work from this repository.
+Read `FINDINGS-AND-RESUME-HANDOFF-2026-07-29.md` and
+`PROGRESS.md §Next executable boundary`. Preserve the branch, banked negative
+prototype evidence and user-owned untracked `data` symlink. Consume the
+isolated P4 Sol/Luna receipts, then require a fresh Sol agglomeration before
+adopting any owner prototype. Do not reopen a P1–P3 family, run formation
+clean audits, pack a candidate, publish, widen the API or begin Value-owned
+CSS product work until P4 produces a surviving isolated candidate.

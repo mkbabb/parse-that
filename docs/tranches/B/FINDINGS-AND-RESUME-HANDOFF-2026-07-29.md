@@ -2,7 +2,7 @@
 
 Date: 2026-07-29
 
-Status: **ACTIVE FORMATION — RED — NO RELEASE**
+Status: **ACTIVE P4 FORMATION RESEARCH — RED — NO RELEASE**
 
 ## Exact resume coordinate
 
@@ -10,14 +10,21 @@ Status: **ACTIVE FORMATION — RED — NO RELEASE**
   `/Users/mkbabb/Programming/parse-that-css-totality`
 - Branch: `codex/css-totality-combinators-20260729`
 - Source/evidence HEAD:
-  `19c1e12` (`perf(parser-prototype): falsify the direct closure surface on
-  complete products`)
+  `605a1ae` (`perf(parser-research): bind the native JSON feasibility
+  yardstick`)
 - P1 registry coordinate:
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
 - Canonical owner authority:
   `c88d8c7` (`docs(parser-tranche): reconcile P3 as bounded evidence with
   zero surviving candidates`).
+- Root P3 feasibility ruling SHA-256:
+  `d03d042286d0bad27e3666f3c08e83a393aaa86928e6273c05ac85ac51bfed67`;
+  it supersedes `8fe9a26b…` as document identity.
+- Root P4 novelty reopen SHA-256:
+  `d1df0f01c139ce8d51038815826de859f20b1557ee50911e2c1e9712579aae34`;
+  it binds the user override and makes the P3 feasibility ruling immutable
+  negative evidence rather than stop authority.
 - P2 registry coordinate:
   `c3d42d4` (`docs(parser-research): complete the P2 full-subject
   disposition`).
@@ -37,6 +44,8 @@ Status: **ACTIVE FORMATION — RED — NO RELEASE**
   `90115ccd7b567591c56e68870605331f99078be4baf246a10e246649829ae49e`.
 - P3 direct-closure manifest-file SHA-256:
   `b14b2d0d138c9d6900a7dcd956c9d2b71a8b3ff3384d6fd6d2e619486bad5fe6`.
+- Native JSON yardstick manifest-file SHA-256:
+  `05c0d8d11d2ebcca426501ea4fead82090e2e817fc0f38f375e12c73b3a87396`.
 - Accepted M2 control worktree:
   `/tmp/parse-that-m2-baseline-20260729`
 - Accepted M2 coordinate:
@@ -131,6 +140,18 @@ consumer, publication or release credit.
     remain RED.
 16. P3 is row-complete at `43d7d4a`; all twenty subjects have terminal
     findings and no candidate survives.
+17. The native JSON feasibility yardstick at `605a1ae` binds seven
+    independent processes and deterministic 20,000-sample bootstrap
+    intervals. Accepted-M2 logical `jsonParser` is only 5.0050× native at
+    scale 4 and 6.0826× at scale 8 on equal immutable success envelopes.
+    This is a no-credit yardstick, not a parser candidate or lower-bound
+    proof.
+18. Independent owner call-tree replay of the sealed P3 CPU profile
+    reproduces 1,157,659 µs candidate runtime, 144,501 µs candidate-native
+    RegExp, 167,382 µs required products and 1,870,633 µs comparable M2 work.
+    Matching plus products consumes 311,883 µs against the complete
+    187,063 µs 10× budget before omitted semantics. P4 must executably
+    falsify this negative evidence without changing the product or laws.
 
 Value R2 formation is independently admitted with zero parser execution,
 product, release, or constellation-close credit: root receipt `0c151de9…`,
@@ -219,19 +240,25 @@ candidate pack, consumer receipt or release.
     but `proof:perf` RED at +16.0% JSON against the 15% guard (2,022 ns
     versus 1,742 ns). The document-only diff is not causal and the RED result
     is not waived.
+22. Root's reopening condition is not met. Even at the optimistic native
+    yardstick bootstrap highs, a qualifying candidate must be
+    1.9614×/1.6144× faster than native on scale-4/8 immutable results while
+    adding the omitted generic parser semantics. The offset-return idea names
+    no source for that gain and was not implemented.
 
-## Next executable transaction
+## Next executable transaction — P4
 
-Resume B.W0 after complete P3. Every implemented replacement family is
-terminally retired.
+Resume B.W0 after complete P3. Every P1–P3 replacement family is terminally
+retired; root P4 reopen `d1df0f01…` authorizes isolated novelty research only.
 
 ### Subject
 
-The direct closure-kernel cut is complete and killed at `19c1e12`. Continue
-only if a genuinely new generic mechanism has one exact Value-shaped need,
-one logical `parse-that#jsonParser`-shaped need and an executable reason it
-can escape the measured success-product ceiling. Keep CSS grammar/domain
-types in Value.
+The direct closure-kernel cut is complete and killed at `19c1e12`; the
+post-P3 feasibility yardstick is sealed at `605a1ae`. Consume the independent
+Sol architecture and Luna executable-prototype receipts, then run one fresh
+Sol adjudication across both. P4 must retain at least three genuinely new
+mechanisms long enough to falsify them on live M2 `jsonParser` and a
+Value-owned full-CSS-shaped product. Keep CSS grammar/domain types in Value.
 
 ### Required laws
 
@@ -250,16 +277,19 @@ types in Value.
 
 ### Admission order
 
-1. State the novel generic mechanism and exact two-consumer need before
-   source work. A renamed or recombined killed family is inadmissible.
-2. Implement only an isolated private prototype with no compiler, table
+1. Audit each P4 receipt independently and reject double-counted CPU claims,
+   synthetic controls, incomplete result planes and disguised P1–P3 families.
+2. Agglomerate the smallest genuinely new generic mechanism or minimal pair;
+   bind its exact Value full-CSS and logical `parse-that#jsonParser` needs.
+3. Implement only an isolated private prototype with no compiler, table
    builder, tokenizer, scanner, VM, event tape, compatibility layer or second
    runtime.
-3. Re-run the unchanged shaped stylesheet and JSON corpora plus
-   4/8/16/33/96/753 cold/hot/result planes.
-4. Run exact bootstrap only if every point estimate clears 10×. Otherwise
-   retire the mechanism and keep formation RED.
-5. Formation Clean A/B remain blocked until an isolated candidate clears the
+4. Re-run complete state, value, immutable result, failure,
+   diagnostics-on recovery, UTF-16, cold/build-first and alternating-shape
+   planes at 4/8/16/33/96/753.
+5. Run exact bootstrap only if every raw point clears 10×. A failed mechanism
+   returns to the novelty loop; it does not waive the gate or end the goal.
+6. Formation Clean A/B remain blocked until an isolated candidate clears the
    complete proof. Production freeze, packing and consumers remain later.
 
 Do not begin Value-owned CSS grammar work, production-source execution,
@@ -322,5 +352,6 @@ shasum -a 256 -c \
 16. `artifacts/pass3/p2-shaped-products/README.md`
 17. `artifacts/pass3/p2-unordered-overlap/README.md`
 18. `artifacts/pass3/p2-cold-hot/README.md`
+19. `artifacts/formation/native-json-yardstick/README.md`
 
 Formation remains RED. Execution has not begun. `NO RELEASE`.
