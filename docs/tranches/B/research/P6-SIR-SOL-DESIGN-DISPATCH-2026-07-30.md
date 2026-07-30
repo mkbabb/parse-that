@@ -2,11 +2,12 @@
 
 Date: 2026-07-30
 
-Status: **DESIGN/DISPATCH ONLY — ZERO CREDIT — NO RELEASE**
+Status: **SPLIT-ATOM DESIGN/DISPATCH ONLY — ZERO CREDIT — NO RELEASE**
 
 ## Decision
 
-P6 tests one mechanism only: a parser step returns one signed integer.
+P6 assays one previously split control atom only: a parser step returns one
+signed integer.
 
 ```text
 Step = (runState, cursor) => signed integer
@@ -19,10 +20,12 @@ result == -2 typed fault; the sticky typed fault remains in runState
 The ordinary semantic value remains in run state. No object, tuple, region
 handle or state object is the hot control return.
 
-This is the scalar observation split from P4 Region-Slot Return ABI. It is not
-the P4 RSR family: regions, numeric/reference slabs, journals, output slots,
-accepted-root reachability, deferred allocation and root finalization remain
-pruned.
+This is the scalar observation split/moved from P4 Region-Slot Return ABI. It
+is not a new family and receives no novelty credit. Its surrounding topology
+remains the native closure/call-stack/value-in-run topology already exercised
+by P3 direct closure. It is not the P4 RSR family: regions,
+numeric/reference slabs, journals, output slots, accepted-root reachability,
+deferred allocation and root finalization remain pruned.
 
 ## Immutable coordinates
 
@@ -48,17 +51,21 @@ The Luna continuation must use an immutable archive of accepted M2 and bundle
 its exported live `jsonParser`. It may not rebuild the timed control from
 candidate-shaped primitives.
 
-## Novelty falsification
+## Genealogy and non-alias falsification
 
-An encoding rename is not P6. The packet must prove all rows below before
-timing.
+P6 is a `SPLIT` assay of the signed-step atom, never `KEEP` as a new family.
+An encoding rename is not evidence. The packet must prove all rows below
+before timing.
 
 | Predecessor | Its control ABI | P6 inverse |
 |---|---|---|
+| P1-R | run-owned mutable cursor/status, checkpoint objects and journal lengths | cursor is an argument/return, mismatch/fault is the return tag, and each atomic combinator owns direct scalar locals; no run cursor/status discriminator, checkpoint object or journal |
 | P3 direct closure `19c1e12` | `(state) => state`; every leaf/combinator mutates `state.offset` and branches on mutable `state.isError` | `(state, cursor) => integer`; internal success returns cursor, internal mismatch returns `-1`; `state.offset`/`state.isError` are projected once at the root and are not hot control flow |
-| P4 RSR design | signed step plus region indices, checkpoints, numeric/reference slabs, output slots and finalizer | signed scalar only; no region/slab/output-slot/finalizer structure or deferred product walk |
+| P4 RSR design | the same signed-step atom plus region indices, checkpoints, numeric/reference slabs, output slots and finalizer | assay only the already-split scalar atom; no region/slab/output-slot/finalizer structure or deferred product walk |
 | Luna F2 | region objects/arrays and region-switched runtime | no region object, region array, family switch or runtime route |
-| P5 EUW `0bc0d37` | cursor or state success plus frozen singleton thrown on routine mismatch | routine mismatch is an ordinary negative integer; no throw/catch occurs on the routine path |
+| P5 cursor-EUW `0bc0d37` | cursor success plus frozen singleton thrown on routine mismatch | identical closure/call-stack/value topology except routine mismatch is `-1`; no throw/catch occurs on the routine path |
+| P1-V / P1-K | explicit instruction/call/choice stacks or trampoline continuations/bounces | native closure calls only; no op array, instruction loop, explicit execution stack, continuation object or bounce |
+| P5-TOL | leases checkpoint ownership away from deterministic composition and needs annotations/analysis or dual executors | `then`, `skip`, `next`, choice and repetition each retain their own local atomic rollback; no lease or ownership transfer |
 | accepted M2 | `(state) => state` and mutable error status | exact control only; no candidate compatibility executor, wrapper or fallback |
 
 The taxonomy is RED if any candidate step:
@@ -76,6 +83,31 @@ The taxonomy is RED if any candidate step:
 The root may set the public final offset/error once after the signed step
 returns. Typed faults remain separate from routine mismatch through the `-2`
 tag and the run-state fault value.
+
+Before timing, raw probes compare candidate effects with accepted-M2 public
+effects for:
+
+- literal success;
+- literal mismatch and furthest frontier;
+- typed fault and sticky fault value;
+- `then` right-child mismatch restoring the sequence entry value and
+  diagnostics;
+- `skip` and `next` right-child mismatch restoring their own atomic entry;
+- left-choice partial mismatch restoring before the right arm;
+- `sepBy` separator-plus-element mismatch restoring to before the separator;
+  and
+- nested recovered diagnostics followed by enclosing rollback.
+
+Each probe compares value, UTF-16 offset, error, furthest, ordered expected,
+suggestions, secondary spans, diagnostics and fault. Fault/frontier/work/max
+depth evidence follows the accepted law and is not erased as ordinary
+rollback data.
+
+The raw step also runs against an alias-trap state whose `cursor`, `offset`,
+`status` and `isError` accessors count and reject internal reads/writes.
+Candidate internal execution must record zero accesses. The public root
+projection is assayed separately after the raw step returns. Static source
+inspection corroborates the trap; it does not replace it.
 
 ## Minimal combinator surface
 
@@ -95,14 +127,21 @@ first-code-unit dispatch
 public parseState/result projection
 ```
 
-Every combinator has one raw executor. `or` and `sepBy` may restore only the
-scalar run-state fields they directly own. They may not introduce a
-transaction object, lease, region or journal. Ordinary value arrays/objects
-required by the JSON product are allowed; control-plane arrays/objects are
-not.
+Every combinator has one raw executor. `or`, `then`, `skip`, `next` and
+`sepBy` own their exact atomic rollback locally. Each saves only direct scalar
+locals such as entry value and diagnostic length and restores them on the
+child mismatch/fault paths required by accepted M2. Checkpoints may not move
+to a parent/owner, because that would recur as TOL. They may not become a
+transaction object, lease, region or journal. `map`, `trim`, `wrap` and
+`lazy` add no speculative owner beyond the atomic combinators they invoke.
+Ordinary value arrays/objects required by the JSON product are allowed;
+per-run control-plane arrays/objects are not.
 
 `dispatch` is the accepted live first-code-unit shape. An ordered-choice JSON
-root is an invalid substitute.
+root is an invalid substitute. A fixed grammar-time route map and parser
+array, constructed once by `dispatch(table)` and closed over immutably, are
+allowed. Rebuilding, copying or allocating a dispatch map/list per parse,
+step or run is forbidden.
 
 ## Grammar and product
 
@@ -149,6 +188,13 @@ Run exactly seven fresh paired OS processes. In each process:
 - record PID, executable, Node, V8, seed, batch order, per-batch nanoseconds
   and `control/candidate` ratio.
 
+For process `i`, arithmetic is exact:
+
+```text
+ratio[i] = sum(controlBatchNs[i][0..9])
+         / sum(candidateBatchNs[i][0..9])
+```
+
 Admission for this cell is conjunctive:
 
 ```text
@@ -160,7 +206,15 @@ rows for a stable negative range, then stop. Do not compute bootstrap, run
 CSS, profile, or add mechanism variants.
 
 Only if all seven raw rows clear `10x` may Luna compute the exact-bootstrap
-95% lower bound; that lower bound must also be `>=10x`.
+95% lower bound. Enumerate all `7^7 = 823543` ordered resamples with
+replacement from the seven process ratios, take the median of each
+seven-value resample, sort the distribution ascending, and select
+`floor(0.025 * 823543)` / `floor(0.975 * 823543)` as the 95% low/high. The
+low must also be `>=10x`.
+
+Seven hot-success rows are a one-way performance kill gate only. Passing them
+would not establish novelty, complete correctness, formation or survival;
+it would only permit the conditional planes below.
 
 ## Conditional continuation
 
@@ -207,6 +261,9 @@ MANIFEST.sha256
 write. `RECEIPT.md` reports exact row count, unique PIDs, ratio range,
 equality/taxonomy disposition, bootstrap reached or withheld, and exact
 remainder. No sentinel profile/CSS files are created when raw is RED.
+`TAXONOMY.json` records every genealogy row, atomic rollback probe,
+cursor/status alias count, grammar-time dispatch-map census and forbidden
+per-parse container count. Timing is unreachable unless all are green.
 
 After Luna seals, a fresh Sol adjudication must independently verify the
 manifest, taxonomy, accepted-M2 binding, equality arithmetic and all raw
