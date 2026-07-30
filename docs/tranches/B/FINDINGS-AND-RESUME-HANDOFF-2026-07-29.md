@@ -10,14 +10,17 @@ Status: **ACTIVE FORMATION — RED — NO RELEASE**
   `/Users/mkbabb/Programming/parse-that-css-totality`
 - Branch: `codex/css-totality-combinators-20260729`
 - Source/evidence HEAD:
-  `68055bd` (`perf(parser-prototype): retire residual unordered
-  composition`)
+  `d323f56` (`perf(parser-prototype): falsify compiled dispatch across cold
+  and hot planes`)
 - P1 registry coordinate:
   `69f72f7` (`docs(parser-tranche): bind the row-complete P1 subject
   registry`)
 - Canonical owner authority:
-  `3439bf0` (`docs(parser-tranche): bind mixed-overlap retirement and P2
-  reconciliation`).
+  `d76b543` (`docs(parser-tranche): bind the P2-UO authority coordinate`);
+  the P2-complete authority reconciliation follows `c3d42d4`.
+- P2 registry coordinate:
+  `c3d42d4` (`docs(parser-research): complete the P2 full-subject
+  disposition`).
 - Corrected P1 root intake:
   `abc9479d7ea5fa4c76deca752428faf8b332f280e6e637de12b12b25e8e2ad6c`;
   P1-only, zero later credit.
@@ -25,6 +28,8 @@ Status: **ACTIVE FORMATION — RED — NO RELEASE**
   `ec8ebeeb1077862621be126a17f12480680f60593784ad748af25eca7969a159`.
 - P2-UO manifest-file SHA-256:
   `d9253a49c7fcbe970712cc4245711cfdb1a5891bdafb7507720cb1d033a87bfd`.
+- P2-C manifest-file SHA-256:
+  `850af1b66956e2b66637e1f0d49fd1a5d229397a9fd7ad4d2daf4bdd02ef879e`.
 - Accepted M2 control worktree:
   `/tmp/parse-that-m2-baseline-20260729`
 - Accepted M2 coordinate:
@@ -100,6 +105,12 @@ consumer, publication or release credit.
     41/41 (28 unordered plus 13 shared regressions), package 14/14 files and
     134/134 tests, strict TypeScript, production build, manifest and
     `proof:all`.
+12. P2-C at `d323f56` compares exact EOF/span products across
+    4/8/16/33/96/753-name construction, cold, hot, alternating, failure and
+    Unicode FIRST planes. The frozen Webref corpus and generated evidence are
+    hash-bound.
+13. P2 is row-complete at `c3d42d4`: all twenty P1 rows have an exact
+    KEEP/KILL/RED/ROUTED disposition.
 
 Value R2 formation is independently admitted with zero parser execution,
 product, release, or constellation-close credit: root receipt `0c151de9…`,
@@ -148,9 +159,10 @@ candidate pack, consumer receipt or release.
     control. Complete products do not rescue the leaf loss. The staged
     full-product family, balanced-discard alternative and private source-leaf
     candidate are killed; their evidence remains reproducible.
-12. P1 is complete, P2 is active, and P3 plus formation Clean A/B remain
-    blocked. Value stylesheet recovery and live Value/JSON receipts are later
-    execution work, not isolated formation proof.
+12. P1 and P2 are complete as row-bound adjudication; P3 and formation
+    Clean A/B remain open or blocked. Value stylesheet recovery and live
+    Value/JSON receipts are later execution work, not isolated formation
+    proof.
 13. P2-UO closes the missing D assay at only 0.7362–2.2994× across twenty
     equal AB/BA state/value/internal/result/failure points. Several binding
     planes are slower than control; stable 8/16/33-member grammar heap is
@@ -159,28 +171,39 @@ candidate pack, consumer receipt or release.
 14. P2-UO recovery has a unique FIRST code. It proves successful immutable
     recovery in a mixed-overlap product, but not same-FIRST speculative
     recovery-frontier equality. Keep that distinction explicit in P2/P3.
+15. P2-C puts compiled construction at 0.0597–0.0785×, build-plus-first-parse
+    at 0.0696–0.0846×, stabilized success below 10× at every scale under 753,
+    and Unicode cold routing at 1.4996× hot. The staged graph, prefix table and
+    compiled parser surface are terminally retired.
+16. No replacement candidate survives P2. The surviving transaction,
+    run-state, slot/span, recovery and consumer-result mechanisms are
+    behavioral laws around the incumbent closure control, not a candidate.
+17. `/utils` has no live source consumer and only one Value prototype use;
+    packrat has no live Value/JSON consumer. Both are excluded from a
+    successor unless two exact consumer receipts prove otherwise.
 
 ## Next executable transaction
 
-Resume B.W0 by reconciling the complete P2 subject. The mixed-overlap assay
-has terminally retired D; do not reopen D, S or the staged family.
+Resume B.W0 with P3. P2 is complete and has terminally retired every
+implemented replacement family.
 
 ### Subject
 
-Form the smallest hash-bound P2 disposition table from the P1 registry and
-the banked S7/S8/U/P2-L/shaped/P2-UO evidence. Each row must name an exact
-kept mechanism, terminal retirement or routed executable hostile assay.
-Keep CSS grammar/domain types in Value.
+Execute the same-FIRST speculative-recovery hostile case, then form the
+smallest direct closure-kernel surface cut that preserves only the P2 survivor
+laws. Keep CSS grammar/domain types in Value.
 
 ### Required laws
 
 - preserve exact UTF-16 slots/spans, immutable recovery evidence, typed
   faults, failure frontiers and scalar rollback;
-- reconcile cold/hot dispatch, memo policy, allocation, hidden classes,
-  optimizer/deoptimizer/GC evidence and public-surface pruning;
-- route same-FIRST speculative recovery under unordered overlap explicitly;
+- compare same-FIRST successful frontier, labels, spans and immutable
+  diagnostic bytes exactly;
+- delete or exclude the compiled graph/table, unordered engine, generic
+  source leaf, compiler-owned result, `/utils`, and unconsumed packrat
+  helpers from the candidate surface;
 - preserve S7's consumed generic kernel without elevating it to a complete
-  P2/P3 or every-subject proof;
+  P3 or every-subject proof;
 - no decoded-token object, token list, scanner result, global trivia layer or
   raw-source alias;
 - no new registry/validator apparatus beyond the smallest exact evidence
@@ -188,21 +211,20 @@ Keep CSS grammar/domain types in Value.
 
 ### Admission order
 
-1. Rebase every P1 row onto its latest immutable source/report/corpus
-   coordinate.
-2. Record the banked KILL decisions for balanced discard, staged
-   full-product/source-leaf, callback/ASCII/sticky leaf widening and both
-   unordered families.
-3. Identify only the genuinely open cold/hot, memo, allocation/optimizer,
-   result-plane and hostile-recovery rows.
-4. Implement or terminally retire each open P2 row with executable evidence;
-   do not use narrative or large-denominator signals to waive a binding RED
-   scale.
-5. Begin P3 only when the P2 table is row-complete.
-6. Bank the evidence transaction, then reconcile
+1. Add the smallest accepted-M2-versus-private closure hostile fixture for
+   same-FIRST recovery under overlap. Do not repair a retired unordered
+   engine; use the divergence to constrain the surviving scalar semantics.
+2. Specify the candidate surface as direct closure consolidation with net
+   deletion. No compiler, table builder, tokenizer, scanner, VM, event tape or
+   compatibility layer.
+3. Re-run the unchanged shaped stylesheet and JSON corpora plus
+   4/8/16/33/96/753 cold/hot/result planes.
+4. Run exact bootstrap only if every point estimate clears 10×. Otherwise
+   terminally retire the P3 candidate and keep formation RED.
+5. Bank the evidence transaction, then reconcile
    `B.md`, `PROGRESS.md`, `waves/W0.md`, `coordination/CONSTELLATION.md` and
    `FINAL.md`.
-7. Send the existing Value audit task one compact safe-boundary receipt.
+6. Send the existing Value audit task one compact safe-boundary receipt.
 
 Do not begin Value-owned CSS grammar work, production-source execution,
 candidate packing or consumer migration from this repository.
@@ -235,6 +257,8 @@ shasum -a 256 -c \
   docs/tranches/B/artifacts/pass3/p2-shaped-products/MANIFEST.sha256
 shasum -a 256 -c \
   docs/tranches/B/artifacts/pass3/p2-unordered-overlap/MANIFEST.sha256
+shasum -a 256 -c \
+  docs/tranches/B/artifacts/pass3/p2-cold-hot/MANIFEST.sha256
 ```
 
 ## Canonical reading order
@@ -246,11 +270,13 @@ shasum -a 256 -c \
 5. `FINAL.md`
 6. this handoff
 7. `research/P1-HASH-BOUND-REGISTRY-2026-07-29.md`
-8. `artifacts/pass3/s7-immutable-recovery/README.md`
-9. `artifacts/pass3/s8-bounded-recursion/README.md`
-10. `artifacts/pass3/u-unordered/README.md`
-11. `artifacts/pass3/l-source-leaves/README.md`
-12. `artifacts/pass3/p2-shaped-products/README.md`
-13. `artifacts/pass3/p2-unordered-overlap/README.md`
+8. `research/P2-FULL-SUBJECT-DISPOSITION-2026-07-29.md`
+9. `artifacts/pass3/s7-immutable-recovery/README.md`
+10. `artifacts/pass3/s8-bounded-recursion/README.md`
+11. `artifacts/pass3/u-unordered/README.md`
+12. `artifacts/pass3/l-source-leaves/README.md`
+13. `artifacts/pass3/p2-shaped-products/README.md`
+14. `artifacts/pass3/p2-unordered-overlap/README.md`
+15. `artifacts/pass3/p2-cold-hot/README.md`
 
 Formation remains RED. Execution has not begun. `NO RELEASE`.

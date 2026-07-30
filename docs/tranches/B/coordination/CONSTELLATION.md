@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | P1 registry `69f72f7`, canonical authority `3439bf0`; mixed-overlap U `68055bd` (correctness green, D killed); shaped products `d62b73a` (correctness green, staged family killed); P2-L `5822ae2`; U `19ad1ac`; S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
+| parse-that worktree | B / generic runtime producer | P1 `69f72f7`; P2 `c3d42d4` (row-complete, zero candidates); cold/hot `d323f56` (compiled table killed); mixed-overlap U `68055bd` (D killed); shaped `d62b73a`; P2-L `5822ae2`; S8 `27bf872`; S7 `20b5f52`; P-B1 `302c623` |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
@@ -66,8 +66,9 @@ competing grammar can close an edge.
 ## Current receipt
 
 Value formation is independently admitted with zero execution credit.
-Parse-that P1 reconciliation is complete at `69f72f7`; P2 is active and P3,
-isolated every-subject proof, and formation Clean A/B remain blocked. The
+Parse-that P1 reconciliation is complete at `69f72f7` and P2 is row-complete
+at `c3d42d4` with zero admitted candidates. P3, isolated every-subject proof,
+and formation Clean A/B remain open or blocked. The
 root receipt reported at SHA prefix
 `060995` is `P.exec.PB1-order-ack`: an execution-phase acknowledgment of
 future execution order/authority. It feeds private freeze only after
@@ -80,9 +81,10 @@ and 39.532× diagnostic failure; every corresponding 753-name low exceeds
 75×. The compiled `.result` surface remains pruned; immutable recovery
 entries and nested evidence are collected once into an O(1) run builder and
 the consumer seals only the outer list. Recursion and shaped-product
-correctness are banked, but their performance is RED. Mixed-overlap U closes
-the missing D assay and retires the family; row-complete P2 disposition
-remains open.
+correctness are banked, but their performance is RED. Mixed-overlap U retires
+D. P2-C retires the staged graph/table after construction and cold
+end-to-end lose by more than an order of magnitude; no replacement family
+survives P2.
 Value-owned stylesheet
 recovery and live Value/JSON receipts are later execution work. The producer
 edge remains **RED** and `NO RELEASE`. U's reported +21.3% to +45.4%
@@ -122,3 +124,11 @@ spans, balanced calls and immutable recovery, but successful planes are
 0.8728–1.2920× and retained heap is worse. The staged full-product family and
 private source-leaf seam are killed. The producer edge remains RED and
 `NO RELEASE`.
+
+P2-C at `d323f56` adds no consumer or API edge. At 4/8/16/33/96/753 names,
+construction is 0.0597–0.0785× and build-plus-first-parse is
+0.0696–0.0846×. Stabilized exact-product success misses 10× below 753 and
+Unicode cold routing is 1.4996× hot. The compiled graph/table surface is
+retired. P2's registry at `c3d42d4` routes P3 to direct closure consolidation,
+same-FIRST recovery and successor-surface pruning only. Ownership, release
+order and Value's blocks are unchanged.

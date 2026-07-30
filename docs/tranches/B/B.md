@@ -208,6 +208,14 @@ terminally retired with S. The fixture does not prove same-FIRST speculative
 recovery: recovery has a unique FIRST code and that hostile case remains
 explicitly routed.
 
+P2-C is banked at `d323f56`. Its exact EOF/span product measures construction,
+build-plus-first-parse, stabilized hot, alternating grammar shapes, failure
+and non-ASCII FIRST routing at 4/8/16/33/96/753 names. The compiled graph is
+0.0597–0.0785× on construction, 0.0696–0.0846× through the first parse, below
+10× on every stabilized success scale under 753 and only 1.4996× on Unicode
+cold edges. The staged graph, prefix table and compiled parser surface are
+therefore terminally retired as a general candidate.
+
 P2-L is banked at `5822ae2`. All 51 CSS/JSON-shaped leaf capture, value and
 failure products are equal at 8/64/4096 UTF-16 units, but success is only
 0.0718–1.3079×. Callback loops, declarative ASCII tables and a public sticky
@@ -223,11 +231,16 @@ syntax. Across 20 matched AB/BA state/value/result/failure points, JSON is
 full-product family and its private source-leaf seam are therefore killed,
 not advanced. The corpus remains reproducible falsification evidence only.
 
-P2 remains active for row-complete full-subject disposition and
-cold/hot/memo/allocation/optimizer evidence reconciliation. No unordered
-candidate survives. The live production parser source remains rejected M3
-at `90d4ec5`; M2 at `de36d57` remains the performance control. No bootstrap,
-P3, formation, execution or release credit follows.
+P2 is row-complete at `c3d42d4`. All twenty P1 subjects now have an exact P2
+KEEP, KILL, RED or ROUTED disposition. No replacement family survives:
+compiled graph/table/source leaves, balanced discard, unordered S/D and the
+callback/ASCII/sticky leaf widenings are retired. The remaining transaction,
+run-state, slot/span, recovery and consumer-result mechanisms are behavioral
+laws, not an admitted candidate. P3 is next, beginning with same-FIRST
+speculative recovery and a direct closure-kernel surface cut. The live
+production parser source remains rejected M3 at `90d4ec5`; M2 at `de36d57`
+remains the performance control. No bootstrap, formation, execution or
+release credit follows.
 
 ## Debt and terminal dispositions
 
