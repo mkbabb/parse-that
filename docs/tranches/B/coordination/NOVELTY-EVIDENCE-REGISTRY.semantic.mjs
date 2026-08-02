@@ -9,6 +9,7 @@ const Ajv2020 = Ajv2020Module.default ?? Ajv2020Module;
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(HERE, "../../../..");
 const SCHEMA_PATH = resolve(HERE, "NOVELTY-EVIDENCE-REGISTRY.schema.json");
+export const DEFAULT_RAW_SCHEMA_PATH = resolve(HERE, "NOVELTY-RAW-ROW.schema.json");
 
 export const DEFAULT_EXPECTED_ROOT =
     "/Users/mkbabb/Documents/Codex/2026-08-01/parser-novelty-n2-ietm-f0";
@@ -44,8 +45,11 @@ export const DEFAULT_TRUSTED_POLICY = Object.freeze({
     }),
     registryArtifacts: Object.freeze([
         "docs/tranches/B/coordination/NOVELTY-EVIDENCE-REGISTRY.schema.json",
+        "docs/tranches/B/coordination/NOVELTY-RAW-ROW.schema.json",
         "docs/tranches/B/coordination/NOVELTY-EVIDENCE-REGISTRY.semantic.mjs",
     ]),
+    schemaArtifactPath: "docs/tranches/B/coordination/NOVELTY-EVIDENCE-REGISTRY.schema.json",
+    rawSchemaArtifactPath: "docs/tranches/B/coordination/NOVELTY-RAW-ROW.schema.json",
     rawArtifacts: Object.freeze([
         "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/raw.ndjson",
     ]),
@@ -99,6 +103,10 @@ function sameSet(left, right) {
     return a.length === b.length && a.every((value, index) => value === b[index]);
 }
 
+function sameArray(left, right) {
+    return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
 function rootContains(root, target) {
     const rel = relative(root, target);
     return rel === "" || (!rel.startsWith(`..${sep}`) && rel !== ".." && !isAbsolute(rel));
@@ -145,6 +153,7 @@ function collectArtifacts(value, path = "$", output = []) {
 function validateArtifacts(records, repoRoot, artifactReader) {
     const descriptors = collectArtifacts(records);
     const firstByPath = new Map();
+    const bytesByPath = new Map();
     for (const item of descriptors) {
         const previous = firstByPath.get(item.descriptor.path);
         if (
@@ -160,6 +169,14 @@ function validateArtifacts(records, repoRoot, artifactReader) {
     for (const { descriptor, path } of firstByPath.values()) {
         if (isAbsolute(descriptor.path) || descriptor.path.split(/[\\/]/u).includes("..")) {
             fail("E_ARTIFACT_OUTSIDE", `${descriptor.path} is not a canonical repository-relative path`, `${path}.path`);
+        }
+        const segments = descriptor.path.split("/");
+        if (
+            descriptor.path.includes("\\") ||
+            segments.some((segment) => segment === "" || segment === ".") ||
+            segments.join("/") !== descriptor.path
+        ) {
+            fail("E_ARTIFACT_PATH_CANONICAL", `${descriptor.path} is not forward-slash lexical normal form`, `${path}.path`);
         }
         const absolutePath = resolve(repoRoot, descriptor.path);
         if (!rootContains(repoRoot, absolutePath)) {
@@ -184,16 +201,16 @@ function validateArtifacts(records, repoRoot, artifactReader) {
         if (actualSha !== descriptor.sha256) {
             fail("E_ARTIFACT_HASH", `${descriptor.path} has SHA ${actualSha}, declared ${descriptor.sha256}`, path);
         }
+        bytesByPath.set(descriptor.path, artifact.bytes);
     }
+    return bytesByPath;
 }
 
-function validateFixtureVectors(fixtures, repoRoot, artifactReader) {
+function validateFixtureVectors(fixtures, bytesByPath) {
     for (const fixture of fixtures) {
-        const absolutePath = resolve(repoRoot, fixture.vector.path);
         let vector;
         try {
-            const artifact = artifactReader({ absolutePath, relativePath: fixture.vector.path, repoRoot });
-            vector = JSON.parse(artifact.bytes);
+            vector = JSON.parse(bytesByPath.get(fixture.vector.path));
         } catch {
             fail("E_FIXTURE_VECTOR", `${fixture.id} vector is not readable JSON`, `$.${fixture.id}.vector`);
         }
@@ -207,11 +224,140 @@ function validateFixtureVectors(fixtures, repoRoot, artifactReader) {
     }
 }
 
+function bindSchemaBytes(receipt, policy, schemaBytes, rawSchemaBytes, bytesByPath) {
+    const bindings = [
+        [policy.schemaArtifactPath, schemaBytes, "E_SCHEMA_BINDING"],
+        [policy.rawSchemaArtifactPath, rawSchemaBytes, "E_RAW_SCHEMA_BINDING"],
+    ];
+    for (const [path, supplied, code] of bindings) {
+        const descriptor = receipt.registryArtifacts.find((artifact) => artifact.path === path);
+        const authenticated = bytesByPath.get(path);
+        if (!descriptor || !authenticated || !Buffer.from(supplied).equals(authenticated)) {
+            fail(code, `${path} supplied bytes differ from the authenticated registry artifact`, `$.${receipt.id}.registryArtifacts`);
+        }
+    }
+}
+
+function parseRawFiles(receipt, bytesByPath, validateRawShape, rawAjv) {
+    const entries = [];
+    const decoder = new TextDecoder("utf-8", { fatal: true });
+    for (const artifact of receipt.rawArtifacts) {
+        const bytes = bytesByPath.get(artifact.path);
+        let text;
+        try {
+            text = decoder.decode(bytes);
+        } catch {
+            fail("E_RAW_ENCODING", `${artifact.path} is not valid UTF-8`, `$.${receipt.id}.rawArtifacts`);
+        }
+        if (text === "") {
+            fail("E_RAW_FILE_UNUSED", `${artifact.path} contains no raw rows`, `$.${receipt.id}.rawArtifacts`);
+        }
+        if (!text.endsWith("\n") || text.includes("\r")) {
+            fail("E_RAW_FORMAT", `${artifact.path} must be LF-delimited with one trailing LF`, `$.${receipt.id}.rawArtifacts`);
+        }
+        const lines = text.slice(0, -1).split("\n");
+        if (lines.length === 1 && lines[0] === "") {
+            fail("E_RAW_FILE_UNUSED", `${artifact.path} contains no raw rows`, `$.${receipt.id}.rawArtifacts`);
+        }
+        for (let index = 0; index < lines.length; index += 1) {
+            if (lines[index] === "") {
+                fail("E_RAW_FORMAT", `${artifact.path}:${index + 1} is an empty NDJSON line`, `$.${receipt.id}.rawArtifacts`);
+            }
+            let entry;
+            try {
+                entry = JSON.parse(lines[index]);
+            } catch {
+                fail("E_RAW_JSON", `${artifact.path}:${index + 1} is malformed JSON`, `$.${receipt.id}.rawArtifacts`);
+            }
+            if (!validateRawShape(entry)) {
+                fail(
+                    "E_RAW_SCHEMA",
+                    `${artifact.path}:${index + 1} violates raw schema: ${rawAjv.errorsText(validateRawShape.errors, { separator: "; " })}`,
+                    `$.${receipt.id}.rawArtifacts`,
+                );
+            }
+            entries.push({ ...entry, sourcePath: artifact.path, sourceLine: index + 1 });
+        }
+    }
+    return entries;
+}
+
+function countersFromRaw(entry) {
+    const counters = {};
+    for (const counter of entry.mechanismCounters) {
+        if (Object.hasOwn(counters, counter.name)) {
+            fail("E_RAW_COUNTER_SCHEMA", `${entry.rowId} repeats counter ${counter.name}`, `$.raw.${entry.rowId}.mechanismCounters`);
+        }
+        counters[counter.name] = counter.value;
+    }
+    return counters;
+}
+
+function validateRawRows(rows, byId, receipt, bytesByPath, validateRawShape, rawAjv) {
+    const entries = parseRawFiles(receipt, bytesByPath, validateRawShape, rawAjv);
+    const rawById = new Map();
+    for (const entry of entries) {
+        if (rawById.has(entry.rowId)) {
+            fail("E_RAW_ROW_DUPLICATE", `${entry.rowId} appears more than once`, `$.raw.${entry.rowId}`);
+        }
+        rawById.set(entry.rowId, entry);
+    }
+
+    const registryIds = rows.map((row) => row.id);
+    const missing = registryIds.filter((id) => !rawById.has(id));
+    const extra = [...rawById.keys()].filter((id) => !registryIds.includes(id));
+    if (missing.length === 1 && extra.length === 1 && entries.length === rows.length) {
+        fail("E_RAW_ROW_ID", `raw row ${extra[0]} replaces registry row ${missing[0]}`, `$.raw.${extra[0]}.rowId`);
+    }
+    if (missing.length) fail("E_RAW_ROW_MISSING", `raw rows omit ${missing.join(", ")}`, "$.raw");
+    if (extra.length) fail("E_RAW_ROW_EXTRA", `raw rows add ${extra.join(", ")}`, "$.raw");
+
+    for (const row of rows) {
+        const raw = rawById.get(row.id);
+        const fixture = byId.get(row.fixtureId);
+        const identityChecks = [
+            ["runId", "E_RAW_RUN_ID"],
+            ["armId", "E_RAW_ARM_ID"],
+            ["fixtureId", "E_RAW_FIXTURE_ID"],
+            ["productId", "E_RAW_PRODUCT_ID"],
+        ];
+        for (const [key, code] of identityChecks) {
+            if (raw[key] !== row[key]) fail(code, `${row.id} raw ${key} is ${raw[key]}, expected ${row[key]}`, `$.raw.${row.id}.${key}`);
+        }
+        if (raw.fixtureBytesPath !== fixture.bytes.path) {
+            fail("E_RAW_FIXTURE_BYTES", `${row.id} raw fixture bytes path differs`, `$.raw.${row.id}.fixtureBytesPath`);
+        }
+        if (raw.fixtureVectorPath !== fixture.vector.path) {
+            fail("E_RAW_FIXTURE_VECTOR", `${row.id} raw fixture vector path differs`, `$.raw.${row.id}.fixtureVectorPath`);
+        }
+        if (!sameArray(raw.selectedIndices, fixture.selectedIndices)) {
+            fail("E_RAW_SELECTED_INDICES", `${row.id} raw selection differs`, `$.raw.${row.id}.selectedIndices`);
+        }
+        if (raw.rawNanoseconds.length !== raw.aggregateIterations) {
+            fail("E_RAW_SAMPLE_COUNT", `${row.id} raw vector length differs from raw aggregate`, `$.raw.${row.id}.rawNanoseconds`);
+        }
+        if (raw.aggregateIterations !== row.aggregateIterations) {
+            fail("E_RAW_AGGREGATE", `${row.id} registry aggregate differs from raw`, `$.${row.id}.aggregateIterations`);
+        }
+        if (!sameArray(raw.rawNanoseconds, row.rawNanoseconds)) {
+            fail("E_RAW_TIMING", `${row.id} registry timings are not derived from raw`, `$.${row.id}.rawNanoseconds`);
+        }
+        const rawCounters = countersFromRaw(raw);
+        if (
+            !sameSet(Object.keys(rawCounters), Object.keys(row.mechanismCounters)) ||
+            Object.keys(rawCounters).some((name) => rawCounters[name] !== row.mechanismCounters[name])
+        ) {
+            fail("E_RAW_COUNTER", `${row.id} registry counters are not derived from raw`, `$.${row.id}.mechanismCounters`);
+        }
+    }
+    return entries.length;
+}
+
 function validateTrustedPolicy(policy, expectedRoot, artifactReader) {
     if (!policy || typeof policy !== "object") fail("E_TRUST_POLICY", "trustedPolicy is required");
     if (!expectedRoot || !isAbsolute(expectedRoot)) fail("E_TRUST_ROOT", "expectedRoot must be an absolute trusted input");
     if (typeof artifactReader !== "function") fail("E_TRUST_ARTIFACT_READER", "artifactReader is required");
-    for (const key of ["repoRoot", "phase", "authority", "executableFamilies", "familyLaws", "requiredCounts", "registryArtifacts", "rawArtifacts"]) {
+    for (const key of ["repoRoot", "phase", "authority", "executableFamilies", "familyLaws", "requiredCounts", "registryArtifacts", "rawArtifacts", "schemaArtifactPath", "rawSchemaArtifactPath"]) {
         if (!(key in policy)) fail("E_TRUST_POLICY", `trustedPolicy omits ${key}`);
     }
 }
@@ -362,8 +508,15 @@ function validateReferences(records, byId, policy) {
     for (const row of rows) {
         resolveRecord(byId, row.runId, "RUN", "E_FK_RUN_MISSING", "E_FK_RUN_KIND", `$.${row.id}.runId`);
         const arm = resolveRecord(byId, row.armId, "ARM", "E_FK_ARM_MISSING", "E_FK_ARM_KIND", `$.${row.id}.armId`);
-        resolveRecord(byId, row.fixtureId, "FIXTURE", "E_FK_FIXTURE_MISSING", "E_FK_FIXTURE_KIND", `$.${row.id}.fixtureId`);
+        const fixture = resolveRecord(byId, row.fixtureId, "FIXTURE", "E_FK_FIXTURE_MISSING", "E_FK_FIXTURE_KIND", `$.${row.id}.fixtureId`);
         resolveRecord(byId, row.productId, "PRODUCT", "E_FK_PRODUCT_MISSING", "E_FK_PRODUCT_KIND", `$.${row.id}.productId`);
+        if (row.productId !== fixture.expectedProductId) {
+            fail(
+                "E_ROW_FIXTURE_PRODUCT",
+                `${row.id} binds ${row.productId}, but ${fixture.id} expects ${fixture.expectedProductId}`,
+                `$.${row.id}.productId`,
+            );
+        }
         for (const lawId of row.lawIds) {
             resolveRecord(byId, lawId, "LAW", "E_FK_LAW_MISSING", "E_FK_LAW_KIND", `$.${row.id}.lawIds`);
         }
@@ -414,18 +567,28 @@ function validateNoOrphans(records, rows, arms) {
     }
 }
 
-export function validateNoveltyRegistry({ records, schemaBytes, expectedRoot, trustedPolicy, artifactReader }) {
+export function validateNoveltyRegistry({ records, schemaBytes, rawSchemaBytes, expectedRoot, trustedPolicy, artifactReader }) {
     validateTrustedPolicy(trustedPolicy, expectedRoot, artifactReader);
     const bytes = Buffer.isBuffer(schemaBytes) ? schemaBytes : Buffer.from(schemaBytes ?? "");
+    const rawBytes = Buffer.isBuffer(rawSchemaBytes) ? rawSchemaBytes : Buffer.from(rawSchemaBytes ?? "");
     let schema;
+    let rawSchema;
     try {
         schema = JSON.parse(bytes);
     } catch {
         fail("E_SCHEMA_BYTES", "schemaBytes are not valid JSON");
     }
+    try {
+        rawSchema = JSON.parse(rawBytes);
+    } catch {
+        fail("E_RAW_SCHEMA_BYTES", "rawSchemaBytes are not valid JSON");
+    }
     const schemaSha256 = sha256(bytes);
+    const rawSchemaSha256 = sha256(rawBytes);
     const ajv = new Ajv2020({ strict: true, allErrors: true });
+    const rawAjv = new Ajv2020({ strict: true, allErrors: true });
     const validateShape = ajv.compile(schema);
+    const validateRawShape = rawAjv.compile(rawSchema);
     if (!validateShape(records)) {
         fail("E_SCHEMA_STRUCTURE", ajv.errorsText(validateShape.errors, { separator: "; " }));
     }
@@ -452,13 +615,17 @@ export function validateNoveltyRegistry({ records, schemaBytes, expectedRoot, tr
     const { arms, fixtures, rows } = validateReferences(records, byId, trustedPolicy);
     validateFamilyRoleAndLaw(arms, rows, byId, trustedPolicy);
     validateNoOrphans(records, rows, arms);
-    validateArtifacts(records, resolve(trustedPolicy.repoRoot), artifactReader);
-    validateFixtureVectors(fixtures, resolve(trustedPolicy.repoRoot), artifactReader);
+    const bytesByPath = validateArtifacts(records, resolve(trustedPolicy.repoRoot), artifactReader);
+    bindSchemaBytes(receipt, trustedPolicy, bytes, rawBytes, bytesByPath);
+    validateFixtureVectors(fixtures, bytesByPath);
+    const rawRowCount = validateRawRows(rows, byId, receipt, bytesByPath, validateRawShape, rawAjv);
 
     return Object.freeze({
         status: "GREEN",
         schemaSha256,
+        rawSchemaSha256,
         recordCount: records.length,
+        rawRowCount,
         counts: Object.freeze(Object.fromEntries(KINDS.map((kind) => [kind, records.filter((record) => record.kind === kind).length]))),
     });
 }
@@ -469,6 +636,7 @@ async function main() {
     const result = validateNoveltyRegistry({
         records: JSON.parse(readFileSync(resolve(registryPath), "utf8")),
         schemaBytes: readFileSync(SCHEMA_PATH),
+        rawSchemaBytes: readFileSync(DEFAULT_RAW_SCHEMA_PATH),
         expectedRoot: DEFAULT_EXPECTED_ROOT,
         trustedPolicy: DEFAULT_TRUSTED_POLICY,
         artifactReader: defaultArtifactReader,

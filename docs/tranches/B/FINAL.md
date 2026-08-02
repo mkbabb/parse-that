@@ -25,8 +25,8 @@ active admission law by axiom.
 | Runtime correctness | `RED` | M2 is the accepted control; live production remains rejected M3. A3 is locally correctness-clean but performance-killed; no candidate exists |
 | Full-subject P1→P2→P3 | `COMPLETE` | P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`. All implemented candidates are killed; this supplies no isolated-proof or formation credit. |
 | Isolated every-scale/result proof | `RED` | S7's subset is local. S8, P2-UO/L/shaped and P2-C are RED/killed; P3 reaches 1.0656–1.5238×; P4 mechanism rows are below `1x`; P5 reaches 0.6076–0.7527× / 0.6149–0.7001×. P6/A1/A2 rows are inadmissible; conforming A3 rows are admissible but only 0.9208–1.0390×. Post-P6 Luna timings are unequal-selection evidence only; final Sol finds no current host edge. No candidate exists. |
-| Performance-law L1 / L2 / L3 | `OPEN` | L1 family research/common synthesis remain historical inputs. Original Luna `980d7781…` is false-green; performance-law A1 is terminal born-RED at 13 files/no manifest/raw `92516e02…` and may never resume. Novelty N1-A1 is blocked on fresh independent source audit; no N-IETM F0 may start. L2/L3 remain blocked. |
-| Novelty N1 / N2 / N3 | `N1-A IMMUTABLE; N1-A1 AUDIT OPEN; N2/N3 BLOCKED` | N1-A `a04a7e6` closed record shapes but was collection-semantics false-green. N1-A1's sole semantic validator, ten-record gold, 2/2 controls, 48/48 one-owner hostiles, results, and 14-entry manifest are owner-banked with zero credit. A fresh non-author must accept them before the sole future N-IETM PL-BE dispatch. N-DNF/N-WRR are born-RED holds; N-GLL is fatal-only. Zero product/CSS/API/release credit. |
+| Performance-law L1 / L2 / L3 | `OPEN` | L1 family research/common synthesis remain historical inputs. Original Luna `980d7781…` is false-green; performance-law A1 is terminal born-RED at 13 files/no manifest/raw `92516e02…` and may never resume. Novelty N1-A2 is blocked on another fresh independent source audit; no N-IETM F0 may start. L2/L3 remain blocked. |
+| Novelty N1 / N2 / N3 | `N1-A/A1 IMMUTABLE; N1-A2 AUDIT OPEN; N2/N3 BLOCKED` | N1-A `a04a7e6` and N1-A1 `914957f` are immutable false-green chronology. N1-A2 binds fixture-owned row products, a closed raw-row schema with exact one-use derivation, and lexical artifact paths. Its ten-record/one-raw gold, 2/2 controls, 71/71 hostiles, results, and 15-entry manifest are owner-banked with zero credit. Another fresh non-author must accept them before the sole future N-IETM PL-BE dispatch. N-DNF/N-WRR are born-RED holds; N-GLL is fatal-only. |
 | Formation Clean A / Clean B | `BLOCKED` | requires one immutable L3 law packet |
 | Formation admission | `BLOCKED` | requires both formation clean audits; creates zero execution credit |
 | Full Value CSS coverage | `OPEN` | Root denominator `2bc4abb2…` binds 1,717 raw/1,653 active Webref rows, 25 decisions, ten entry points, eleven algorithms, full recovery/fidelity, WPT manifests and 53 Keyframes references/51 files; Value owns implementation and no execution receipt exists |
@@ -119,7 +119,7 @@ preceding corrected S/recovery kernel and XR-21 amendment.
 ## Handoff
 
 Read `NOVELTY-FIRST-FINDINGS-AND-RESUME-HANDOFF-2026-08-01.md`, immutable N1-A
-`a04a7e6`, the N1-A1 schema/semantic-validator/gold/hostile packet, and
+`a04a7e6`, N1-A1 `914957f`, the N1-A2 two-schema/raw/semantic-validator/gold/hostile packet, and
 `PROGRESS.md §Next executable boundary`, then
 `audit/ACTIVE-GOAL-COMPLETION-AND-PRECEPTS-MATRIX-2026-07-30.md`. Preserve
 the branch, banked negative
@@ -131,7 +131,7 @@ has no continuation. Do not dispatch a renamed P7, run formation clean
 audits, pack a candidate, publish, widen the API, or begin Value-owned CSS
 product work. Preserve post-P6 owner evidence `40d8b4c` and do not cite
 Luna's unequal-selection ratios as equal-work proof. Failed A1 is terminal and
-must not be resumed. First obtain a fresh independent acceptance of N1-A1;
+must not be resumed. First obtain a fresh independent acceptance of N1-A2;
 until then the absent N2 path remains blocked and no prototype may start. Only
 after that acceptance may exactly one private N-IETM F0 target PL-BE, preserve
 cold cost, and compare every edit to fresh M2 plus the semantic-law envelope.

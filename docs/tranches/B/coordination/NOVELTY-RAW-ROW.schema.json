@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mkbabb.dev/parse-that/tranche-b/novelty-raw-row.schema.json",
+  "title": "Parse-that novelty raw NDJSON row",
+  "description": "Closed line schema. Registry timing, identity, selection, and mechanism counters are derived from authenticated rows conforming to this shape.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "rowId",
+    "runId",
+    "armId",
+    "fixtureId",
+    "fixtureBytesPath",
+    "fixtureVectorPath",
+    "selectedIndices",
+    "productId",
+    "rawNanoseconds",
+    "aggregateIterations",
+    "mechanismCounters"
+  ],
+  "properties": {
+    "version": { "const": "parse-that-novelty-raw-row-v1" },
+    "rowId": { "type": "string", "minLength": 1 },
+    "runId": { "type": "string", "minLength": 1 },
+    "armId": { "type": "string", "minLength": 1 },
+    "fixtureId": { "type": "string", "minLength": 1 },
+    "fixtureBytesPath": { "type": "string", "minLength": 1 },
+    "fixtureVectorPath": { "type": "string", "minLength": 1 },
+    "selectedIndices": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "integer", "minimum": 0 }
+    },
+    "productId": { "type": "string", "minLength": 1 },
+    "rawNanoseconds": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "pattern": "^[0-9]+$" }
+    },
+    "aggregateIterations": { "type": "integer", "minimum": 1 },
+    "mechanismCounters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "value"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "value": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

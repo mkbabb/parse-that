@@ -12,7 +12,7 @@
       "recordCount": 10
     }
   ],
-  "hostileCount": 48,
+  "hostileCount": 71,
   "hostiles": [
     {
       "id": "empty_registry",
@@ -344,6 +344,167 @@
       "path": "$.fixture.ietm.selectedIndices"
     },
     {
+      "id": "product_cross_swap",
+      "status": "RED",
+      "expectedCode": "E_ROW_FIXTURE_PRODUCT",
+      "actualCode": "E_ROW_FIXTURE_PRODUCT",
+      "path": "$.row.ietm.productId"
+    },
+    {
+      "id": "raw_timing_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_TIMING",
+      "actualCode": "E_RAW_TIMING",
+      "path": "$.row.ietm.rawNanoseconds"
+    },
+    {
+      "id": "raw_registry_counter_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COUNTER",
+      "actualCode": "E_RAW_COUNTER",
+      "path": "$.row.ietm.mechanismCounters"
+    },
+    {
+      "id": "raw_row_id_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_ROW_ID",
+      "actualCode": "E_RAW_ROW_ID",
+      "path": "$.raw.row.changed.rowId"
+    },
+    {
+      "id": "raw_arm_id_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_ARM_ID",
+      "actualCode": "E_RAW_ARM_ID",
+      "path": "$.raw.row.ietm.armId"
+    },
+    {
+      "id": "raw_run_id_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_ID",
+      "actualCode": "E_RAW_RUN_ID",
+      "path": "$.raw.row.ietm.runId"
+    },
+    {
+      "id": "raw_fixture_id_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_FIXTURE_ID",
+      "actualCode": "E_RAW_FIXTURE_ID",
+      "path": "$.raw.row.ietm.fixtureId"
+    },
+    {
+      "id": "raw_product_id_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_PRODUCT_ID",
+      "actualCode": "E_RAW_PRODUCT_ID",
+      "path": "$.raw.row.ietm.productId"
+    },
+    {
+      "id": "raw_duplicate_row",
+      "status": "RED",
+      "expectedCode": "E_RAW_ROW_DUPLICATE",
+      "actualCode": "E_RAW_ROW_DUPLICATE",
+      "path": "$.raw.row.ietm"
+    },
+    {
+      "id": "raw_omitted_row",
+      "status": "RED",
+      "expectedCode": "E_RAW_ROW_MISSING",
+      "actualCode": "E_RAW_ROW_MISSING",
+      "path": "$.raw"
+    },
+    {
+      "id": "raw_extra_row",
+      "status": "RED",
+      "expectedCode": "E_RAW_ROW_EXTRA",
+      "actualCode": "E_RAW_ROW_EXTRA",
+      "path": "$.raw"
+    },
+    {
+      "id": "raw_malformed_json",
+      "status": "RED",
+      "expectedCode": "E_RAW_JSON",
+      "actualCode": "E_RAW_JSON",
+      "path": "$.receipt.ietm.rawArtifacts"
+    },
+    {
+      "id": "raw_schema_violation",
+      "status": "RED",
+      "expectedCode": "E_RAW_SCHEMA",
+      "actualCode": "E_RAW_SCHEMA",
+      "path": "$.receipt.ietm.rawArtifacts"
+    },
+    {
+      "id": "raw_aggregate_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_AGGREGATE",
+      "actualCode": "E_RAW_AGGREGATE",
+      "path": "$.row.ietm.aggregateIterations"
+    },
+    {
+      "id": "raw_sample_count_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_SAMPLE_COUNT",
+      "actualCode": "E_RAW_SAMPLE_COUNT",
+      "path": "$.raw.row.ietm.rawNanoseconds"
+    },
+    {
+      "id": "raw_counter_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COUNTER",
+      "actualCode": "E_RAW_COUNTER",
+      "path": "$.row.ietm.mechanismCounters"
+    },
+    {
+      "id": "raw_counter_name_duplicate",
+      "status": "RED",
+      "expectedCode": "E_RAW_COUNTER_SCHEMA",
+      "actualCode": "E_RAW_COUNTER_SCHEMA",
+      "path": "$.raw.row.ietm.mechanismCounters"
+    },
+    {
+      "id": "raw_selected_indices_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_SELECTED_INDICES",
+      "actualCode": "E_RAW_SELECTED_INDICES",
+      "path": "$.raw.row.ietm.selectedIndices"
+    },
+    {
+      "id": "raw_fixture_vector_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_FIXTURE_VECTOR",
+      "actualCode": "E_RAW_FIXTURE_VECTOR",
+      "path": "$.raw.row.ietm.fixtureVectorPath"
+    },
+    {
+      "id": "raw_fixture_bytes_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_FIXTURE_BYTES",
+      "actualCode": "E_RAW_FIXTURE_BYTES",
+      "path": "$.raw.row.ietm.fixtureBytesPath"
+    },
+    {
+      "id": "raw_file_unused",
+      "status": "RED",
+      "expectedCode": "E_RAW_FILE_UNUSED",
+      "actualCode": "E_RAW_FILE_UNUSED",
+      "path": "$.receipt.ietm.rawArtifacts"
+    },
+    {
+      "id": "artifact_dot_segment",
+      "status": "RED",
+      "expectedCode": "E_ARTIFACT_PATH_CANONICAL",
+      "actualCode": "E_ARTIFACT_PATH_CANONICAL",
+      "path": "$[2].artifact.path"
+    },
+    {
+      "id": "artifact_double_separator",
+      "status": "RED",
+      "expectedCode": "E_ARTIFACT_PATH_CANONICAL",
+      "actualCode": "E_ARTIFACT_PATH_CANONICAL",
+      "path": "$[2].artifact.path"
+    },
+    {
       "id": "receipt_interrupted",
       "status": "RED",
       "expectedCode": "E_RECEIPT_INTERRUPTED",
@@ -352,12 +513,13 @@
     }
   ],
   "inputs": {
-    "baselineSha256": "fd10a215fed926ff71ad078f80494054a45c58eb875947bbb600139839c408a3",
-    "mutantsSha256": "d9153ffca08b243512a78b23749780e539af86a074858513edbfb3265bdb1064",
-    "validatorSha256": "050e7e522d64e8f07d92dcb8dab0b8b02b8cb3477c1ab7a7df93542547dcce9e",
-    "validatorTestSha256": "7057bd6609cee2da38c96e15b96acbabbc97f7715bf80621808b291e3a3cbc6f",
+    "baselineSha256": "d7449f4ffe676d4c9bb9dc723d0b9b3d3a949818e9c0d535e3ced7db0147d174",
+    "mutantsSha256": "1332fcd869b43b5087f3bdee60244118dcc0cafb5e98317f776b24c4dc6e4380",
+    "validatorSha256": "0ec4faffccd3b96e28885ed9802cebf42289bf143d920f916a92e2a155f7743a",
+    "validatorTestSha256": "d24f0950fadeb3902fb110957c066707da6f66a504ed662b4701be137c73addc",
     "schemaSha256": "9f8340af85a5efb06402c9c9d22ce4d84037ca0c9295a88e8cef1ef88ceb3d39",
-    "trustedPolicySha256": "12e4fbbc91db9e1e3131f4f82a3581ee0b5bd852515a246c6d33be49790ff1b0",
+    "rawSchemaSha256": "483c7eb1a73a5402ed2f82126b2effd8498e040cd9daf03785f78e2581bfb54e",
+    "trustedPolicySha256": "a74050058dde083788779e18ea94dadbd4373d6ef92ee66fbe78ca6356c0b7f0",
     "expectedRoot": "/Users/mkbabb/Documents/Codex/2026-08-01/parser-novelty-n2-ietm-f0"
   }
 }

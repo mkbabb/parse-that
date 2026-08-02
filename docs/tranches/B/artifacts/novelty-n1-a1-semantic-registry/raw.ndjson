@@ -1,1 +1,1 @@
-{"rowId":"row.ietm","rawNanoseconds":["1"],"mechanismCounters":{"examinedReads":2}}
+{"version":"parse-that-novelty-raw-row-v1","rowId":"row.ietm","runId":"run.ietm","armId":"arm.ietm","fixtureId":"fixture.ietm","fixtureBytesPath":"docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/fixture.txt","fixtureVectorPath":"docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/vector.json","selectedIndices":[0],"productId":"product.ietm","rawNanoseconds":["1"],"aggregateIterations":1,"mechanismCounters":[{"name":"memoReuse","value":1}]}

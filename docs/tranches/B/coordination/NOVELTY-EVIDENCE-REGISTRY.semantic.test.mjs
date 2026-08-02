@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
     DEFAULT_EXPECTED_ROOT,
+    DEFAULT_RAW_SCHEMA_PATH,
     DEFAULT_TRUSTED_POLICY,
     RegistrySemanticError,
     defaultArtifactReader,
@@ -19,6 +20,8 @@ const VALIDATOR_PATH = resolve(HERE, "NOVELTY-EVIDENCE-REGISTRY.semantic.mjs");
 const TEST_PATH = resolve(HERE, "NOVELTY-EVIDENCE-REGISTRY.semantic.test.mjs");
 const SCHEMA_PATH = resolve(HERE, "NOVELTY-EVIDENCE-REGISTRY.schema.json");
 const SCHEMA_BYTES = readFileSync(SCHEMA_PATH);
+const RAW_SCHEMA_BYTES = readFileSync(DEFAULT_RAW_SCHEMA_PATH);
+const RAW_PATH = "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/raw.ndjson";
 
 // Test literals are deliberately not imported from the validator or submitted evidence.
 const EXPECTED = Object.freeze({
@@ -70,6 +73,29 @@ const EXPECTED = Object.freeze({
     selected_index_out_of_range: "E_SELECTED_INDEX",
     selected_index_duplicate: "E_SELECTED_INDEX",
     receipt_interrupted: "E_RECEIPT_INTERRUPTED",
+    product_cross_swap: "E_ROW_FIXTURE_PRODUCT",
+    raw_timing_drift: "E_RAW_TIMING",
+    raw_registry_counter_drift: "E_RAW_COUNTER",
+    raw_row_id_drift: "E_RAW_ROW_ID",
+    raw_arm_id_drift: "E_RAW_ARM_ID",
+    raw_run_id_drift: "E_RAW_RUN_ID",
+    raw_fixture_id_drift: "E_RAW_FIXTURE_ID",
+    raw_product_id_drift: "E_RAW_PRODUCT_ID",
+    raw_duplicate_row: "E_RAW_ROW_DUPLICATE",
+    raw_omitted_row: "E_RAW_ROW_MISSING",
+    raw_extra_row: "E_RAW_ROW_EXTRA",
+    raw_malformed_json: "E_RAW_JSON",
+    raw_schema_violation: "E_RAW_SCHEMA",
+    raw_aggregate_drift: "E_RAW_AGGREGATE",
+    raw_sample_count_drift: "E_RAW_SAMPLE_COUNT",
+    raw_counter_drift: "E_RAW_COUNTER",
+    raw_counter_name_duplicate: "E_RAW_COUNTER_SCHEMA",
+    raw_selected_indices_drift: "E_RAW_SELECTED_INDICES",
+    raw_fixture_vector_drift: "E_RAW_FIXTURE_VECTOR",
+    raw_fixture_bytes_drift: "E_RAW_FIXTURE_BYTES",
+    raw_file_unused: "E_RAW_FILE_UNUSED",
+    artifact_dot_segment: "E_ARTIFACT_PATH_CANONICAL",
+    artifact_double_separator: "E_ARTIFACT_PATH_CANONICAL",
 });
 
 function sha256Bytes(bytes) {
@@ -93,11 +119,65 @@ function declareRecord(records, policy, id, kind) {
     policy.requiredCounts[kind] += 1;
 }
 
+function rawEntryForRow(records, row) {
+    const fixture = record(records, row.fixtureId);
+    return {
+        version: "parse-that-novelty-raw-row-v1",
+        rowId: row.id,
+        runId: row.runId,
+        armId: row.armId,
+        fixtureId: row.fixtureId,
+        fixtureBytesPath: fixture.bytes.path,
+        fixtureVectorPath: fixture.vector.path,
+        selectedIndices: structuredClone(fixture.selectedIndices),
+        productId: row.productId,
+        rawNanoseconds: structuredClone(row.rawNanoseconds),
+        aggregateIterations: row.aggregateIterations,
+        mechanismCounters: Object.entries(row.mechanismCounters).map(([name, value]) => ({ name, value })),
+    };
+}
+
+function addSecondProductFixtureRow(records, policy) {
+    const product = structuredClone(record(records, "product.ietm"));
+    product.id = "product.other";
+    records.push(product);
+    declareRecord(records, policy, product.id, "PRODUCT");
+
+    const fixture = structuredClone(record(records, "fixture.ietm"));
+    fixture.id = "fixture.other";
+    fixture.expectedProductId = product.id;
+    records.push(fixture);
+    declareRecord(records, policy, fixture.id, "FIXTURE");
+
+    const row = structuredClone(record(records, "row.ietm"));
+    row.id = "row.other";
+    row.fixtureId = fixture.id;
+    row.productId = product.id;
+    records.push(row);
+    declareRecord(records, policy, row.id, "ROW");
+    return row;
+}
+
+function encodeRaw(entries) {
+    return Buffer.from(`${entries.map((entry) => JSON.stringify(entry)).join("\n")}\n`);
+}
+
 function mutationContext(baseline, mutant) {
     let records = structuredClone(baseline);
     const trustedPolicy = structuredClone(DEFAULT_TRUSTED_POLICY);
     let artifactReader = defaultArtifactReader;
     let expectedRoot = DEFAULT_EXPECTED_ROOT;
+    const replaceRawBytes = (bytes) => {
+        const receipt = record(records, "receipt.ietm");
+        const descriptor = receipt.rawArtifacts.find((artifact) => artifact.path === RAW_PATH);
+        descriptor.bytes = bytes.length;
+        descriptor.sha256 = sha256Bytes(bytes);
+        const base = artifactReader;
+        artifactReader = (request) => request.relativePath === RAW_PATH
+            ? { ...base(request), bytes }
+            : base(request);
+    };
+    const replaceRawEntries = (entries) => replaceRawBytes(encodeRaw(entries));
     switch (mutant.op) {
         case "empty":
             records = [];
@@ -205,6 +285,81 @@ function mutationContext(baseline, mutant) {
         case "replaceCounters":
             record(records, "row.ietm").mechanismCounters = mutant.value;
             break;
+        case "crossSwapProducts": {
+            const second = addSecondProductFixtureRow(records, trustedPolicy);
+            record(records, "row.ietm").productId = "product.other";
+            second.productId = "product.ietm";
+            replaceRawEntries([
+                rawEntryForRow(records, record(records, "row.ietm")),
+                rawEntryForRow(records, second),
+            ]);
+            break;
+        }
+        case "setRawField": {
+            const entry = rawEntryForRow(records, record(records, "row.ietm"));
+            entry[mutant.field] = structuredClone(mutant.value);
+            replaceRawEntries([entry]);
+            break;
+        }
+        case "setRawCounter": {
+            const entry = rawEntryForRow(records, record(records, "row.ietm"));
+            entry.mechanismCounters[0].value = mutant.value;
+            replaceRawEntries([entry]);
+            break;
+        }
+        case "duplicateRawCounter": {
+            const entry = rawEntryForRow(records, record(records, "row.ietm"));
+            entry.mechanismCounters.push(structuredClone(entry.mechanismCounters[0]));
+            replaceRawEntries([entry]);
+            break;
+        }
+        case "duplicateRawRow": {
+            const entry = rawEntryForRow(records, record(records, "row.ietm"));
+            replaceRawEntries([entry, entry]);
+            break;
+        }
+        case "omitSecondRawRow":
+            addSecondProductFixtureRow(records, trustedPolicy);
+            replaceRawEntries([rawEntryForRow(records, record(records, "row.ietm"))]);
+            break;
+        case "extraRawRow": {
+            const entry = rawEntryForRow(records, record(records, "row.ietm"));
+            replaceRawEntries([entry, { ...structuredClone(entry), rowId: "row.extra" }]);
+            break;
+        }
+        case "malformedRaw":
+            replaceRawBytes(Buffer.from("{\n"));
+            break;
+        case "invalidRawSchema": {
+            const entry = rawEntryForRow(records, record(records, "row.ietm"));
+            delete entry.armId;
+            replaceRawEntries([entry]);
+            break;
+        }
+        case "rawAggregateDrift": {
+            const entry = rawEntryForRow(records, record(records, "row.ietm"));
+            entry.aggregateIterations = 2;
+            entry.rawNanoseconds = ["1", "1"];
+            replaceRawEntries([entry]);
+            break;
+        }
+        case "rawSampleCountDrift": {
+            const entry = rawEntryForRow(records, record(records, "row.ietm"));
+            entry.aggregateIterations = 2;
+            replaceRawEntries([entry]);
+            break;
+        }
+        case "unusedRawFile": {
+            const path = "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/unused.ndjson";
+            const bytes = Buffer.alloc(0);
+            record(records, "receipt.ietm").rawArtifacts.push({ path, bytes: 0, sha256: sha256Bytes(bytes) });
+            trustedPolicy.rawArtifacts.push(path);
+            const base = artifactReader;
+            artifactReader = (request) => request.relativePath === path
+                ? { bytes, isFile: true, isSymlink: false, realPath: request.absolutePath }
+                : base(request);
+            break;
+        }
         default:
             throw new Error(`unknown mutation op ${mutant.op}`);
     }
@@ -215,6 +370,7 @@ function validate(context) {
     return validateNoveltyRegistry({
         records: context.records,
         schemaBytes: SCHEMA_BYTES,
+        rawSchemaBytes: RAW_SCHEMA_BYTES,
         expectedRoot: context.expectedRoot,
         trustedPolicy: context.trustedPolicy,
         artifactReader: context.artifactReader,
@@ -273,6 +429,7 @@ export function runHostiles() {
             validatorSha256: sha256File(VALIDATOR_PATH),
             validatorTestSha256: sha256File(TEST_PATH),
             schemaSha256: sha256File(SCHEMA_PATH),
+            rawSchemaSha256: sha256File(DEFAULT_RAW_SCHEMA_PATH),
             trustedPolicySha256: sha256Bytes(Buffer.from(JSON.stringify(DEFAULT_TRUSTED_POLICY))),
             expectedRoot: DEFAULT_EXPECTED_ROOT,
         },
