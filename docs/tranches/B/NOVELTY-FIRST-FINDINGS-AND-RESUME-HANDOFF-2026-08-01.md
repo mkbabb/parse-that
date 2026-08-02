@@ -4,14 +4,14 @@ Date: 2026-08-01
 
 Last amended: 2026-08-02
 
-Status: **N1-A4 COMMITTED — N2-F0/N2A TERMINAL MECHANICS RED — N2B TERMINAL SCIENTIFIC-RUNNER RED — N2C SAME-TASK SOURCE-ONLY AUTHORIZED/NOT SENT — ZERO CREDIT — NO RELEASE**
+Status: **N1-A4 COMMITTED — N2-F0/N2A TERMINAL MECHANICS RED — N2B TERMINAL SCIENTIFIC-RUNNER RED — N2C TERMINAL SOURCE_REVIEW_RED — N2D SAME-TASK SOURCE-ARCHITECTURE AUTHORIZED/NOT SENT — ZERO CREDIT — NO RELEASE**
 
 ## Exact owner state
 
 - repository: `/Users/mkbabb/Programming/parse-that-css-totality`;
 - branch: `codex/css-totality-combinators-20260729`;
 - predecessor source HEAD for this boundary:
-  `73e4de1f72150507efc0790b694b13a91b03dccf`;
+  `a865ed9f68261b49c285dd16ebaa94ec2d1a7706`;
 - authenticated N1-A4 research authority:
   `81b2a0aacebc126ac1a093407cb2e24ed5d78ee8`;
 - immutable N1-A3 commit:
@@ -95,6 +95,14 @@ stream are frozen in
 `audit/NOVELTY-N2B-TERMINAL-SCIENTIFIC-RUNNER-RED-OWNER-INTAKE-AND-N2C-SOURCE-ONLY-RULING-2026-08-02.md`,
 SHA-256
 `35e72f24a4505e1d6f060ea47c0eecf2b470864ae43aea48490a5ce17914b2c4`.
+N2c then authored exactly two inert files, but owner review found caller-
+authored version trust, exported suppression, unauthenticated decoding/raw
+closure, incomplete relocation/M2/product/effect authority, path-only
+hostiles, a non-bijective/descriptor-blind comparator, and no machine/prose
+join. Its terminal intake and sole N2d route are in
+`audit/NOVELTY-N2C-TERMINAL-SOURCE-REVIEW-RED-OWNER-INTAKE-AND-N2D-SOURCE-ARCHITECTURE-RULING-2026-08-02.md`,
+SHA-256
+`0eb63a52bda09cb304bc508759fc166cbd9ccba05af7da3252fbd246f0678f05`.
 No result or credit exists. The earlier parser/CSS dependency chronology is in
 `coordination/PARSER-CSS-RESUMPTION-SAFE-BOUNDARY-2026-08-01.md`.
 
@@ -206,10 +214,11 @@ non-isomorphism predicate retires it before timing.
 
 ## Exact next boundary
 
-Do not create a parser task or reuse N2-F0, either N2a locus, or N2b. N1-A4 and
-the prior-art adjudication share committed coordinate `81b2a0a`. The sole
-existing Luna task may receive at most one two-file N2c source-only transaction
-at the fresh absent Aug-2 N2c root. This handoff does not send that packet.
+Do not create a parser task or reuse N2-F0, either N2a locus, N2b, or N2c.
+N1-A4 and the prior-art adjudication share committed coordinate `81b2a0a`.
+The sole existing Luna task may receive at most one two-file N2d source-
+architecture transaction at the fresh absent Aug-2 N2d root. This handoff does
+not send that packet.
 
 Then execute only in this order:
 
@@ -220,17 +229,20 @@ Then execute only in this order:
    either;
 4. preserve N2b's exact 15-file root; never repair, rerun, complete, manifest,
    copy, or reseal it;
-5. allow only the existing N-IETM Luna xhigh task to create one fresh N2c root
-   containing only `outputs/preflight-n2c.mjs` and
-   `outputs/SOURCE-READY.md`;
-6. prohibit Luna from running Node, importing/checking/auditing the source,
-   executing a parser/prototype, or producing raw/results/timing;
-7. owner freeze/census and static hostile review of version-object lineage,
-   shifted offsets/depth, pure DI production validation, authenticated complete
-   transitions, exact M2/effect products, type-preserving equality, and
-   production-consumed leaf controls;
-8. require a separate owner ruling before any future execution release; and
-9. stop. N-DNF-BIR remains separately banked and undispatched; N-WRR and N-GLL
+5. preserve N2c's exact two-file root; never import, check, execute, repair,
+   copy, complete, or reseal it;
+6. allow only the existing N-IETM Luna xhigh task to create one fresh N2d root
+   containing only `outputs/preflight-n2d.mjs` and
+   `outputs/SOURCE-ARCHITECTURE.md`;
+7. prohibit Luna from running Node, importing/checking/auditing the source,
+   executing a validator/parser/prototype, or producing raw/results/timing;
+8. owner freeze/census and static hostile review of the internal production/
+   audit split, canonical bytes/decoding, immutable external pins/version
+   ledger, complete relocation/target join, fixed raw/M2/effect authority,
+   bijective descriptor comparator, concrete injectors, and machine/prose join;
+9. require a separate owner ruling before any future execution release; and
+10. stop. N-DNF-BIR and N-CBLC remain separately banked and undispatched;
+    N-WRR and N-GLL
    remain NO-GO until a later explicit owner authority resolves their born-RED
    predicates.
 
@@ -249,16 +261,16 @@ No current or failed evidence root is resumed.
 - N1-A4 correction: gold controls `8/8`, raw rows `1/1`, hostiles `130/130`,
   fresh independent acceptance `1/1`, committed at `81b2a0a`;
 - N2 scientific experiments: `0/4` terminal receipts; N2-F0/N2a are terminal
-  mechanics attempts and N2b is terminal scientific-runner RED, all with zero
-  credit; one same-task two-file N2c source-only transaction is authorized but
-  not sent;
+  mechanics attempts, N2b is terminal scientific-runner RED, and N2c is
+  terminal source-review RED, all with zero credit; one same-task two-file N2d
+  source-architecture transaction is authorized but not sent;
 - N3 critiques/agglomeration: `0/5`;
 - strict 3x, strict 2x, measured break-even: each `0/5`;
 - Value receiver: `14/34 = 41.18%`;
 - full CSS/WPT/browser, product execution, package, API, consumer migration,
   release, Value/Keyframes/BBNF/Fourier credit: **0**.
 
-This closes only the owner source/scientific-runner intake. The long-horizon
-parser goal remains active. N2-F0, N2a, and N2b are terminal and frozen; N2c
-is source-only authorized but not sent, with no scientific receipt or
-downstream credit.
+This closes only the owner hostile source-review intake. The long-horizon
+parser goal remains active. N2-F0, N2a, N2b, and N2c are terminal and frozen;
+N2d is source-architecture authorized but not sent, with no scientific receipt
+or downstream credit.
