@@ -4,14 +4,14 @@ Date: 2026-08-01
 
 Last amended: 2026-08-02
 
-Status: **N1-A4 COMMITTED — N2-F0/N2A TERMINAL MECHANICS RED — N2B TERMINAL SCIENTIFIC-RUNNER RED — N2C TERMINAL SOURCE_REVIEW_RED — N2D SAME-TASK SOURCE-ARCHITECTURE AUTHORIZED/NOT SENT — ZERO CREDIT — NO RELEASE**
+Status: **N1-A4 COMMITTED — N2-F0/N2A TERMINAL MECHANICS RED — N2B TERMINAL SCIENTIFIC-RUNNER RED — N2C/N2D TERMINAL SOURCE_REVIEW_RED — PAPER DECOMPOSITION REQUIRED/NOT DISPATCHED — N2E SOURCE WITHHELD — ZERO CREDIT — NO RELEASE**
 
 ## Exact owner state
 
 - repository: `/Users/mkbabb/Programming/parse-that-css-totality`;
 - branch: `codex/css-totality-combinators-20260729`;
 - predecessor source HEAD for this boundary:
-  `a865ed9f68261b49c285dd16ebaa94ec2d1a7706`;
+  `e37431bc761149c3f742271e41c623b636102aa9`;
 - authenticated N1-A4 research authority:
   `81b2a0aacebc126ac1a093407cb2e24ed5d78ee8`;
 - immutable N1-A3 commit:
@@ -103,6 +103,14 @@ join. Its terminal intake and sole N2d route are in
 `audit/NOVELTY-N2C-TERMINAL-SOURCE-REVIEW-RED-OWNER-INTAKE-AND-N2D-SOURCE-ARCHITECTURE-RULING-2026-08-02.md`,
 SHA-256
 `0eb63a52bda09cb304bc508759fc166cbd9ccba05af7da3252fbd246f0678f05`.
+N2d then authored exactly two inert files. Owner review found that public
+handle bytes are hashed instead of ledger bytes and the single-version domain
+makes every relocation edit chain empty. Its decoder, declaration/schema,
+complete relocation/product, effect, M2, hostile-control, and source/prose
+planes independently fail. Its terminal intake and paper-only route are in
+`audit/NOVELTY-N2D-TERMINAL-SOURCE-REVIEW-RED-OWNER-INTAKE-AND-PAPER-DECOMPOSITION-RULING-2026-08-02.md`,
+SHA-256
+`a261f8224867a34221123d5d76125dac78b468dab0bc20664c039957ae09b2d0`.
 No result or credit exists. The earlier parser/CSS dependency chronology is in
 `coordination/PARSER-CSS-RESUMPTION-SAFE-BOUNDARY-2026-08-01.md`.
 
@@ -214,11 +222,11 @@ non-isomorphism predicate retires it before timing.
 
 ## Exact next boundary
 
-Do not create a parser task or reuse N2-F0, either N2a locus, N2b, or N2c.
-N1-A4 and the prior-art adjudication share committed coordinate `81b2a0a`.
-The sole existing Luna task may receive at most one two-file N2d source-
-architecture transaction at the fresh absent Aug-2 N2d root. This handoff does
-not send that packet.
+Do not create a parser/source task or reuse N2-F0, either N2a locus, N2b, N2c,
+or N2d. N1-A4 and the prior-art adjudication share committed coordinate
+`81b2a0a`. N2e source/execution has no authority. The next formation work is
+only the bounded paper decomposition; this handoff dispatches neither its
+author nor either independent reviewer.
 
 Then execute only in this order:
 
@@ -231,20 +239,19 @@ Then execute only in this order:
    copy, or reseal it;
 5. preserve N2c's exact two-file root; never import, check, execute, repair,
    copy, complete, or reseal it;
-6. allow only the existing N-IETM Luna xhigh task to create one fresh N2d root
-   containing only `outputs/preflight-n2d.mjs` and
-   `outputs/SOURCE-ARCHITECTURE.md`;
-7. prohibit Luna from running Node, importing/checking/auditing the source,
-   executing a validator/parser/prototype, or producing raw/results/timing;
-8. owner freeze/census and static hostile review of the internal production/
-   audit split, canonical bytes/decoding, immutable external pins/version
-   ledger, complete relocation/target join, fixed raw/M2/effect authority,
-   bijective descriptor comparator, concrete injectors, and machine/prose join;
-9. require a separate owner ruling before any future execution release; and
-10. stop. N-DNF-BIR and N-CBLC remain separately banked and undispatched;
+6. preserve N2d's exact two-file, 56,524-byte root; never import, check,
+   execute, repair, copy, complete, or reseal it;
+7. prohibit resuming the N2 Luna task and prohibit any N2e source root;
+8. author only eight separately hashable paper interfaces plus their manifest
+   and receipt under the hard eight-module/850-LOC future budget;
+9. freeze and hash the paper packet before two separately authorized,
+   independent non-author paper reviews: Sol xhigh and Luna xhigh;
+10. owner-agglomerate both sealed reviews; any material dissent returns to
+    paper, and a separate ruling is required before source or execution; and
+11. stop. N-DNF-BIR and N-CBLC remain separately banked and undispatched;
     N-WRR and N-GLL
-   remain NO-GO until a later explicit owner authority resolves their born-RED
-   predicates.
+    remain NO-GO until a later explicit owner authority resolves their born-RED
+    predicates.
 
 An interrupted root freezes permanently. A correction uses a new absent root.
 No current or failed evidence root is resumed.
@@ -260,10 +267,10 @@ No current or failed evidence root is resumed.
 - N1-A3 correction: immutable false-green after numeric/registry-byte audit;
 - N1-A4 correction: gold controls `8/8`, raw rows `1/1`, hostiles `130/130`,
   fresh independent acceptance `1/1`, committed at `81b2a0a`;
-- N2 scientific experiments: `0/4` terminal receipts; N2-F0/N2a are terminal
-  mechanics attempts, N2b is terminal scientific-runner RED, and N2c is
-  terminal source-review RED, all with zero credit; one same-task two-file N2d
-  source-architecture transaction is authorized but not sent;
+- N2 scientific receipts: `0/4`; N2-F0/N2a are terminal mechanics attempts,
+  N2b is terminal scientific-runner RED, and N2c/N2d are terminal source-review
+  RED, all with zero credit; paper decomposition is required/not dispatched
+  and N2e source is withheld;
 - N3 critiques/agglomeration: `0/5`;
 - strict 3x, strict 2x, measured break-even: each `0/5`;
 - Value receiver: `14/34 = 41.18%`;
@@ -271,6 +278,6 @@ No current or failed evidence root is resumed.
   release, Value/Keyframes/BBNF/Fourier credit: **0**.
 
 This closes only the owner hostile source-review intake. The long-horizon
-parser goal remains active. N2-F0, N2a, N2b, and N2c are terminal and frozen;
-N2d is source-architecture authorized but not sent, with no scientific receipt
-or downstream credit.
+parser goal remains active. N2-F0, N2a, N2b, N2c, and N2d are terminal and
+frozen. The next boundary is paper-only, undispatched, with no scientific
+receipt or downstream credit.

@@ -12,8 +12,9 @@ source-complete as immutable N1-A chronology; N1-A1, N1-A2, and N1-A3 are
 immutable failed-audit chronology; N1-A4 byte-owned ROW/RUN closure and its
 prior-art adjudication are committed at `81b2a0a`; N2-F0/N2a are terminal
 mechanics RED, N2b is terminal scientific-runner RED, and N2c is terminal
-source-review RED, all with zero credit; one same-task two-file N2d
-source-architecture transaction is authorized but not sent;
+source-review RED; N2d is terminal source-review RED on unbound ledger-root and
+vacuous relocation, all with zero credit; paper decomposition is required and
+not dispatched; N2e source/execution is withheld;
 N-DNF-BIR/N-WRR remain prior-art-bound born-RED holds,
 N-GLL is no-go/fatal-only, and both
 formation clean audits remain blocked**
@@ -26,7 +27,7 @@ Release status: **NO RELEASE**
 |---|---|---|
 | Archaeology | `research/PARSE-THAT-SESSION-ARCHAEOLOGY-2026-07-29.md` | Banked; prior scanner-shaped CSS attempts and stale completion claims rejected. |
 | Round zero | `research/ROUND-ZERO-PARSE-THAT-PORTFOLIO-2026-07-29.md` | Banked portfolio; incompatible families preserved for evidence. |
-| Novelty-first Pass N1 / N2 mechanics | immutable N1-A `a04a7e6`, N1-A1 `914957f`, N1-A2 `e663a91`, N1-A3 `164fc9a`; committed N1-A4 `81b2a0a`; A4 audit; prior-art adjudication; atlas/registry/law/handoff; N2-F0 ruling SHA `7c3cda9b…`; N2a/N2b ruling SHA `88b032fd…`; N2b/N2c ruling SHA `35e72f24…`; N2c/N2d ruling SHA `0eb63a52…` | N1-A4 owns registry/raw bytes and its fresh audit. N-IETM's algorithmic substrate folds to prior art. N2-F0/N2a are terminal mechanics RED; N2b is terminal scientific-runner RED. N2c has an exact two-file topology but fails owner source review on lineage, production/audit isolation, raw closure, relocation/product joins, M2/effects, hostiles, comparator, and machine/prose authority. All are zero-credit. One same-task two-file N2d source-architecture transaction is authorized but not sent; owner static review must precede any execution. N-DNF-BIR and N-CBLC remain independent and undispatched. CSS remains Value-owned chronology. **SOURCE/DEPENDENCY ONLY; ZERO PRODUCT/CSS/API/RELEASE CREDIT**. |
+| Novelty-first Pass N1 / N2 mechanics | immutable N1-A `a04a7e6`, N1-A1 `914957f`, N1-A2 `e663a91`, N1-A3 `164fc9a`; committed N1-A4 `81b2a0a`; A4 audit; prior-art adjudication; atlas/registry/law/handoff; N2-F0 ruling SHA `7c3cda9b…`; N2a/N2b ruling SHA `88b032fd…`; N2b/N2c ruling SHA `35e72f24…`; N2c/N2d ruling SHA `0eb63a52…`; N2d/paper ruling SHA `a261f822…` | N1-A4 owns registry/raw bytes and its fresh audit. N-IETM's algorithmic substrate folds to prior art. N2-F0/N2a are terminal mechanics RED; N2b is terminal scientific-runner RED; N2c/N2d are terminal source-review RED. N2d's ledger root is not externally bound and its one-version domain makes relocation unreachable; decoder/schema/product/effect/M2/control/prose planes independently fail. All are zero-credit. The next work is an eight-interface paper decomposition plus two independent paper reviews; it is not dispatched. N2e source/execution is withheld. N-DNF-BIR and N-CBLC remain independent and undispatched. CSS remains Value-owned chronology. **SOURCE/DEPENDENCY ONLY; ZERO PRODUCT/CSS/API/RELEASE CREDIT**. |
 | Pass 1 research adjudication/agglomeration | `research/PASS-1-SOL-ADJUDICATION-2026-07-29.md`, `research/PASS-1-SOL-AGGLOMERATION-2026-07-29.md` | Preliminary research only: R/E/V/K retired and S/D remained candidates; later reconciled by P1. |
 | P1 full-subject reconciliation | `69f72f7`, `research/P1-HASH-BOUND-REGISTRY-2026-07-29.md` | Twenty hash-bound rows: 8 GREEN, 7 OPEN, 4 RED, 1 OPEN/ROUTED. **P1 COMPLETE; FORMATION RED; ZERO LATER CREDIT**. |
 | M1 | `de36d57` predecessor formation | Parse-owned recovery and raw-memo isolation proceeded to M2. |
@@ -426,7 +427,7 @@ The outbound parse-that handoff is specifically gated by Value
 Formation admission creates zero execution credit. No later state in either
 chain may be recorded while an earlier arrow is RED.
 
-## Next executable boundary
+## Next formation boundary — paper only
 
 1. Read `NOVELTY-FIRST-FINDINGS-AND-RESUME-HANDOFF-2026-08-01.md`, immutable
    N1-A through N1-A3, the N1-A4 audit and prior-art adjudication, and the A4
@@ -443,17 +444,19 @@ chain may be recorded while an earlier arrow is RED.
    repair, rerun, complete, manifest, copy, or reseal it.
 7. Preserve N2c's exact two-file, 32,841-byte output root. Do not repair,
    import, check, execute, copy, complete, or reseal it.
-8. Do not create another task. At most one N2d packet may return to the same
-   Luna task `019fb12c-2624-7732-909a-e1e87ce7ef24`, using only the fresh
-   absent literal Aug-2 N2d root. It may create exactly
-   `outputs/preflight-n2d.mjs` and `outputs/SOURCE-ARCHITECTURE.md`; Luna runs
-   no Node/import/check/audit/validator/parser/prototype.
-9. Owner freezes/censuses N2d and statically reviews the closed byte envelope,
-   immutable external pins, private production/audit split, owner ledger,
-   internal canonical decoder/relocation/comparator, fixed transition/M2/effect
-   authority, concrete injectors/retentions, and machine/source/prose join. A
-   separate ruling is required before any future execution.
-   N-DNF-BIR, N-WRR, N-GLL, L2/L3, CSS product work, clean audits, package/API,
-   consumer migration, release, and BBNF remain blocked.
+8. Preserve N2d's exact two-file, 56,524-byte output root. Do not repair,
+   import, check, execute, copy, complete, or reseal it.
+9. Do not resume the N2 Luna task, create a source/prototype task, or create,
+   name, or populate an N2e source root.
+10. Author only the bounded ten-file paper packet defined by the N2d owner
+    ruling: eight separately hashable interfaces, one manifest, and one paper
+    receipt. No executable/source/raw/fixture/result file is permitted.
+11. Freeze and hash the paper packet, then obtain two separately authorized
+    independent non-author paper reviews: Sol xhigh and Luna xhigh, sealed
+    without cross-view. Any dissent returns to paper.
+12. Owner agglomeration follows both reviews. A separate ruling is required
+    before any bounded source transaction or execution.
+13. N-DNF-BIR, N-WRR, N-GLL, L2/L3, CSS product work, clean audits,
+    package/API, consumer migration, release, and BBNF remain blocked.
 
 `FINAL.md` remains an open gate ledger. Tranche B is not closeable.
