@@ -10,8 +10,9 @@ Formation status: **ACTIVE — P1–P6 and post-P6 NO-EDGE remain immutable
 historical-10x evidence; failed A1 is terminal archaeology; novelty Pass N1 is
 source-complete as immutable N1-A chronology; N1-A1, N1-A2, and N1-A3 are
 immutable failed-audit chronology; N1-A4 byte-owned ROW/RUN closure and its
-prior-art adjudication are committed at `81b2a0a`; the sole prior-art-aware
-Luna N2 integration experiment is isolated and active with zero credit;
+prior-art adjudication are committed at `81b2a0a`; N2-F0 is terminal mechanics
+RED with zero credit; one same-task fresh-root N2a correction is authorized
+but not sent;
 N-DNF/N-WRR remain born-RED holds, N-GLL is no-go/fatal-only, and both
 formation clean audits remain blocked**
 
@@ -23,7 +24,7 @@ Release status: **NO RELEASE**
 |---|---|---|
 | Archaeology | `research/PARSE-THAT-SESSION-ARCHAEOLOGY-2026-07-29.md` | Banked; prior scanner-shaped CSS attempts and stale completion claims rejected. |
 | Round zero | `research/ROUND-ZERO-PARSE-THAT-PORTFOLIO-2026-07-29.md` | Banked portfolio; incompatible families preserved for evidence. |
-| Novelty-first Pass N1 | immutable N1-A `a04a7e6`, N1-A1 `914957f`, N1-A2 `e663a91`, N1-A3 `164fc9a`; committed N1-A4 `81b2a0a`; A4 audit; prior-art adjudication; atlas/registry/law/handoff; resumption receipt | N1-A4 owns registry/raw bytes, canonical safe integers, UTF-8/duplicates/Unicode scalars, and exact Set membership; controls are 8/8, raw rows 1/1, hostiles 130/130, and fresh acceptance 1/1. N-IETM's algorithmic substrate folds to prior art; its sole parse-that-specific PL-BE integration experiment is active on existing Luna task `019fb12c-2624-7732-909a-e1e87ce7ef24`, with zero result/credit. CSS C3 is frozen RED; C4 is an active Value-owned source correction. **SOURCE/DEPENDENCY ONLY; ZERO PRODUCT/CSS/API/RELEASE CREDIT**. |
+| Novelty-first Pass N1 / N2-F0 mechanics | immutable N1-A `a04a7e6`, N1-A1 `914957f`, N1-A2 `e663a91`, N1-A3 `164fc9a`; committed N1-A4 `81b2a0a`; A4 audit; prior-art adjudication; atlas/registry/law/handoff; N2-F0 owner ruling SHA `7c3cda9b…` | N1-A4 owns registry/raw bytes, canonical safe integers, UTF-8/duplicates/Unicode scalars, and exact Set membership; controls are 8/8, raw rows 1/1, hostiles 130/130, and fresh acceptance 1/1. N-IETM's algorithmic substrate folds to prior art. N2-F0 on Luna task `019fb12c-2624-7732-909a-e1e87ce7ef24` failed package resolution before scientific gates, was later modified without a preserved pre-patch hash, and is terminal mechanics RED with zero credit. One same-task N2a fresh-root correction is authorized but not sent. CSS C3 is frozen RED; C4 remains Value-owned chronology. **SOURCE/DEPENDENCY ONLY; ZERO PRODUCT/CSS/API/RELEASE CREDIT**. |
 | Pass 1 research adjudication/agglomeration | `research/PASS-1-SOL-ADJUDICATION-2026-07-29.md`, `research/PASS-1-SOL-AGGLOMERATION-2026-07-29.md` | Preliminary research only: R/E/V/K retired and S/D remained candidates; later reconciled by P1. |
 | P1 full-subject reconciliation | `69f72f7`, `research/P1-HASH-BOUND-REGISTRY-2026-07-29.md` | Twenty hash-bound rows: 8 GREEN, 7 OPEN, 4 RED, 1 OPEN/ROUTED. **P1 COMPLETE; FORMATION RED; ZERO LATER CREDIT**. |
 | M1 | `de36d57` predecessor formation | Parse-owned recovery and raw-memo isolation proceeded to M2. |
@@ -432,19 +433,24 @@ chain may be recorded while an earlier arrow is RED.
    `92516e02…`. Never resume, repair, clear, or reseal it.
 3. Preserve the completed N1-A4 audit and committed authority coordinate
    `81b2a0a`; never rewrite A–A3.
-4. Do not dispatch another task. Monitor only the same existing Luna N2 task
-   `019fb12c-2624-7732-909a-e1e87ce7ef24`; do not patch current packrat or
-   widen the public API.
-5. First compare the mechanism to pinned Dubroy/Warth/Ohm and GPeg controls;
+4. Preserve the terminal N2-F0 root and `/tmp/f0-raw.ndjson` exactly. Do not
+   repair, rerun, clean, move, or reseal them.
+5. Do not create another task. At most one correction packet may return to the
+   same task `019fb12c-2624-7732-909a-e1e87ce7ef24`, using only the fresh
+   absent N2a root after the exact owner ruling, absolute Ohm pins, and
+   source-resolution preflight are reproduced. No packet was sent by the
+   owner ruling turn.
+6. First compare the mechanism to pinned Dubroy/Warth/Ohm and GPeg controls;
    reproducing prior art earns no novelty. Then compare every edit version to fresh accepted/rebuilt M2 speed controls plus
    the complete semantic-law envelope. Append EOF/assert final offset. Bind
    full examined/EOF dependencies, action/effect identity, complete products,
    allocation/GC/retained heap, and unit-bearing K-edit break-even.
-6. N-IETM targets PL-BE only. PL-BE may establish local utility, not novelty.
+7. N-IETM targets PL-BE only. PL-BE may establish local utility, not novelty.
    Descriptive local 2x/3x edit ratios grant no
    strict-law milestone. Freeze the root on the first stale product, unequal
    selection, schema drift, cache contamination, or hostile failure.
-7. Fresh Sol critiques the immutable F0; owner agglomerates and stops.
+8. Fresh Sol critiques only an immutable scientifically completed N2a; owner
+   agglomerates and stops.
    N-DNF, N-WRR, N-GLL, L2/L3, CSS product work, clean audits, package/API,
    consumer migration, release, and BBNF remain blocked.
 

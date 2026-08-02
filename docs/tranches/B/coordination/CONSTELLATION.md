@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | N1-A4 byte-authority/prior-art authority committed at `81b2a0a`; sole prior-art-aware N-IETM PL-BE integration task `019fb12c-2624-7732-909a-e1e87ce7ef24` is isolated/active with zero credit. Failed A1 is terminal. Post-P6 `40d8b4c` and P6-A3 `3ed4c43` remain immutable historical-10x evidence. |
+| parse-that worktree | B / generic runtime producer | N1-A4 byte-authority/prior-art authority committed at `81b2a0a`; N2-F0 on sole task `019fb12c-2624-7732-909a-e1e87ce7ef24` is terminal mechanics RED/zero credit; one same-task N2a fresh-root correction is authorized but not sent. Failed A1 is terminal. Post-P6 `40d8b4c` and P6-A3 `3ed4c43` remain immutable historical-10x evidence. |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
@@ -54,18 +54,24 @@ and closed evidence-schema
 It grants zero parser implementation, CSS, Value, Keyframes, package, API,
 release, or BBNF credit. Value remains a read-only future consumer; current
 Value imports no parse-that code. The accepted A4/prior-art pin is `81b2a0a`;
-exactly one isolated prior-art-aware N-IETM F0 equivalence/integration probe is
-active on the existing Luna task, followed only by fresh Sol critique and owner
-stop. There is no parser-to-Fourier edge.
+the first isolated prior-art-aware N-IETM F0 root is terminal mechanics RED.
+One same-task fresh-root N2a correction is authorized but not sent; only a
+scientifically complete immutable successor may proceed to fresh Sol critique
+and owner stop. There is no parser-to-Fourier edge.
 
 ## Parser/CSS resumption receipt
 
 The dependency-only resumption boundary is
 [`PARSER-CSS-RESUMPTION-SAFE-BOUNDARY-2026-08-01.md`](PARSER-CSS-RESUMPTION-SAFE-BOUNDARY-2026-08-01.md).
-It binds N1-A4 commit `81b2a0a`, the sole active N2 task, frozen RED CSS C3
+It binds N1-A4 commit `81b2a0a`, the then-active N2 task, frozen RED CSS C3
 source hashes `76fc9f58…` / `93de86e7…`, and the active Value-owned C4
 source-only correction. It creates no parser/CSS/product/package/release credit
-and authorizes no duplicate task.
+and authorizes no duplicate task. Its N2-active wording is superseded by
+[`../audit/NOVELTY-N2-F0-TERMINAL-RED-OWNER-INTAKE-AND-N2A-RULING-2026-08-01.md`](../audit/NOVELTY-N2-F0-TERMINAL-RED-OWNER-INTAKE-AND-N2A-RULING-2026-08-01.md),
+SHA-256
+`7c3cda9b8011c5efec3c1c3b2fa33342698a4a8fa9acf2524f75fbdbc8f64071`,
+which freezes F0 and authorizes one same-task fresh-root correction without
+sending it.
 
 ## Writer / reader boundary
 
