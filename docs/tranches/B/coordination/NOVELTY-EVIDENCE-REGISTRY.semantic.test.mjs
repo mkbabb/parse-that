@@ -96,6 +96,37 @@ const EXPECTED = Object.freeze({
     raw_file_unused: "E_RAW_FILE_UNUSED",
     artifact_dot_segment: "E_ARTIFACT_PATH_CANONICAL",
     artifact_double_separator: "E_ARTIFACT_PATH_CANONICAL",
+    unbound_sink_substitution: "E_RAW_SINK_DESCRIPTOR",
+    raw_law_drift: "E_RAW_LAWS",
+    unbound_warmup_drift: "E_RAW_WARMUP",
+    unbound_cold_drift: "E_RAW_COLD",
+    raw_gc_descriptor_drift: "E_RAW_GC_DESCRIPTOR",
+    raw_deopt_descriptor_drift: "E_RAW_DEOPT_DESCRIPTOR",
+    raw_ic_descriptor_drift: "E_RAW_IC_DESCRIPTOR",
+    raw_allocation_descriptor_drift: "E_RAW_ALLOCATION_DESCRIPTOR",
+    raw_sink_descriptor_drift: "E_RAW_SINK_DESCRIPTOR",
+    raw_run_root_drift: "E_RAW_RUN_ROOT",
+    unbound_run_pid_drift: "E_RAW_RUN_PID",
+    unbound_run_process_start_drift: "E_RAW_RUN_PROCESS_START",
+    unbound_run_seed_drift: "E_RAW_RUN_SEED",
+    unbound_run_order_drift: "E_RAW_RUN_ORDER",
+    unbound_run_node_drift: "E_RAW_RUN_NODE",
+    unbound_run_v8_drift: "E_RAW_RUN_V8",
+    raw_run_environment_drift: "E_RAW_RUN_ENVIRONMENT",
+    raw_run_compile_cache_drift: "E_RAW_RUN_COMPILE_CACHE",
+    raw_command_count_drift: "E_RAW_COMMAND_COUNT",
+    raw_command_argv_drift: "E_RAW_COMMAND_ARGV",
+    raw_command_cwd_drift: "E_RAW_COMMAND_CWD",
+    unbound_command_exit_drift: "E_RAW_COMMAND_EXIT",
+    raw_command_stdout_drift: "E_RAW_COMMAND_STDOUT",
+    raw_command_stderr_drift: "E_RAW_COMMAND_STDERR",
+    large_adjacent_counter_drift: "E_RAW_COUNTER",
+    noncanonical_counter: "E_RAW_SCHEMA",
+    duplicate_raw_top_key: "E_RAW_DUPLICATE_KEY",
+    duplicate_raw_escaped_top_key: "E_RAW_DUPLICATE_KEY",
+    duplicate_raw_counter_key: "E_RAW_DUPLICATE_KEY",
+    duplicate_raw_cold_key: "E_RAW_DUPLICATE_KEY",
+    duplicate_raw_command_key: "E_RAW_DUPLICATE_KEY",
 });
 
 function sha256Bytes(bytes) {
@@ -121,20 +152,50 @@ function declareRecord(records, policy, id, kind) {
 
 function rawEntryForRow(records, row) {
     const fixture = record(records, row.fixtureId);
+    const run = record(records, row.runId);
     return {
-        version: "parse-that-novelty-raw-row-v1",
+        version: "parse-that-novelty-raw-row-v2",
         rowId: row.id,
         runId: row.runId,
+        run: {
+            root: run.root,
+            pid: run.pid,
+            processStart: run.processStart,
+            seed: run.seed,
+            order: run.order,
+            node: run.node,
+            v8: run.v8,
+            environment: structuredClone(run.environment),
+            compileCacheCanary: run.compileCacheCanary,
+            commands: structuredClone(run.commands),
+        },
         armId: row.armId,
         fixtureId: row.fixtureId,
         fixtureBytesPath: fixture.bytes.path,
         fixtureVectorPath: fixture.vector.path,
         selectedIndices: structuredClone(fixture.selectedIndices),
         productId: row.productId,
+        lawIds: structuredClone(row.lawIds),
         rawNanoseconds: structuredClone(row.rawNanoseconds),
+        warmupIterations: row.warmupIterations,
         aggregateIterations: row.aggregateIterations,
+        coldSubintervals: structuredClone(row.coldSubintervals),
         mechanismCounters: Object.entries(row.mechanismCounters).map(([name, value]) => ({ name, value })),
+        gcBytes: structuredClone(row.gcBytes),
+        deoptBytes: structuredClone(row.deoptBytes),
+        icBytes: structuredClone(row.icBytes),
+        allocationBytes: structuredClone(row.allocationBytes),
+        sink: structuredClone(row.sink),
     };
+}
+
+function valueAtPath(value, path) {
+    return path.reduce((parent, key) => parent[key], value);
+}
+
+function setAtPath(value, path, replacement) {
+    const parent = valueAtPath(value, path.slice(0, -1));
+    parent[path.at(-1)] = structuredClone(replacement);
 }
 
 function addSecondProductFixtureRow(records, policy) {
@@ -187,6 +248,19 @@ function mutationContext(baseline, mutant) {
             break;
         case "set":
             record(records, mutant.recordId)[mutant.field] = mutant.value;
+            break;
+        case "setNested":
+            setAtPath(record(records, mutant.recordId), mutant.path, mutant.value);
+            break;
+        case "copyNested":
+            setAtPath(
+                record(records, mutant.recordId),
+                mutant.path,
+                valueAtPath(record(records, mutant.sourceRecordId), mutant.sourcePath),
+            );
+            break;
+        case "duplicateRunCommand":
+            record(records, "run.ietm").commands.push(structuredClone(record(records, "run.ietm").commands[0]));
             break;
         case "renameAuthority": {
             const authority = record(records, "auth.n1-a");
@@ -278,6 +352,7 @@ function mutationContext(baseline, mutant) {
         }
         case "setFixtureHash":
             record(records, "fixture.ietm").bytes.sha256 = mutant.value;
+            record(records, "row.ietm").allocationBytes.sha256 = mutant.value;
             break;
         case "setCounter":
             record(records, "row.ietm").mechanismCounters[mutant.name] = mutant.value;
@@ -301,9 +376,28 @@ function mutationContext(baseline, mutant) {
             replaceRawEntries([entry]);
             break;
         }
+        case "setRawNested": {
+            const entry = rawEntryForRow(records, record(records, "row.ietm"));
+            setAtPath(entry, mutant.path, mutant.value);
+            replaceRawEntries([entry]);
+            break;
+        }
+        case "copyRawNested": {
+            const entry = rawEntryForRow(records, record(records, "row.ietm"));
+            setAtPath(entry, mutant.path, valueAtPath(entry, mutant.sourcePath));
+            replaceRawEntries([entry]);
+            break;
+        }
         case "setRawCounter": {
             const entry = rawEntryForRow(records, record(records, "row.ietm"));
             entry.mechanismCounters[0].value = mutant.value;
+            replaceRawEntries([entry]);
+            break;
+        }
+        case "adjacentCounter": {
+            record(records, "row.ietm").mechanismCounters.memoReuse = mutant.registryValue;
+            const entry = rawEntryForRow(records, record(records, "row.ietm"));
+            entry.mechanismCounters[0].value = mutant.rawValue;
             replaceRawEntries([entry]);
             break;
         }
@@ -330,6 +424,22 @@ function mutationContext(baseline, mutant) {
         case "malformedRaw":
             replaceRawBytes(Buffer.from("{\n"));
             break;
+        case "duplicateRawKey": {
+            const entry = rawEntryForRow(records, record(records, "row.ietm"));
+            const encoded = JSON.stringify(entry);
+            const replacements = {
+                top: ['"rowId":"row.ietm"', '"rowId":"row.ietm","rowId":"row.ietm"'],
+                escapedTop: ['"rowId":"row.ietm"', '"rowId":"row.ietm","row\\u0049d":"row.ietm"'],
+                counter: ['"name":"memoReuse","value":"1"', '"name":"memoReuse","value":"1","value":"1"'],
+                cold: ['"startupNs":"1"', '"startupNs":"1","startupNs":"1"'],
+                command: ['"exitCode":0', '"exitCode":0,"exitCode":0'],
+            };
+            const [needle, replacement] = replacements[mutant.location] ?? [];
+            const duplicate = encoded.replace(needle, replacement);
+            if (!needle || duplicate === encoded) throw new Error(`duplicate key setup failed for ${mutant.location}`);
+            replaceRawBytes(Buffer.from(`${duplicate}\n`));
+            break;
+        }
         case "invalidRawSchema": {
             const entry = rawEntryForRow(records, record(records, "row.ietm"));
             delete entry.armId;

@@ -2,18 +2,20 @@
 
 Date: 2026-08-01
 
-Status: **N1-A2 SOURCE CORRECTION BANKED — FRESH AUDIT REQUIRED — N2 BLOCKED — NO RELEASE**
+Status: **N1-A3 SOURCE CORRECTION BANKED — FRESH AUDIT REQUIRED — N2 BLOCKED — NO RELEASE**
 
 ## Exact owner state
 
 - repository: `/Users/mkbabb/Programming/parse-that-css-totality`;
 - branch: `codex/css-totality-combinators-20260729`;
-- authenticated pre-boundary HEAD:
-  `fd6062bda4ad6a7c575a7bfde2885a7997c2f08b`;
+- authenticated N1-A3 parent HEAD:
+  `e663a91b5dca760ef181f0abf661cf7d1037010a`;
 - immutable N1-A commit:
   `a04a7e658bee32a1fb252a4e5b4f3ce359a5947d`;
 - immutable N1-A1 correction commit:
   `914957fb354e80b51207118f1cc5f01564111b7a`;
+- immutable N1-A2 correction commit:
+  `e663a91b5dca760ef181f0abf661cf7d1037010a`;
 - protected pre-existing untracked paths: `data` and
   `docs/tranches/B/PARSER-RESURRECTION-HANDOFF-2026-07-31.md`;
 - resurrection handoff SHA-256:
@@ -33,37 +35,38 @@ pre-existing untracked paths were neither read as authority nor staged.
 | Artifact | SHA-256 | Lines | Role |
 |---|---|---:|---|
 | `research/NOVELTY-FIRST-MECHANISM-ATLAS-2026-08-01.md` | `0ad39480dafa973c424fba9983780f150842cf0c4dded37075e9e1623a54a5c1` | 457 | Orthogonal mechanism atlas, primary sources, genealogy, cost/fatal/host effects, equivalence-retirement matrix. |
-| `coordination/NOVELTY-PASS-REGISTRY-AND-EXPERIMENT-LAW-2026-08-01.md` | `22f699f4e14603cbd7079f917e73ce3f7c167ec3d399da154539746646107d6f` | 371 | N1–N3 registry, N1-A/A1 chronology, N1-A2 relational/raw/path correction, and blocked N2 dispatch. |
-| `coordination/NOVELTY-EVIDENCE-REGISTRY.schema.json` | `9f8340af85a5efb06402c9c9d22ce4d84037ca0c9295a88e8cef1ef88ceb3d39` | 386 | Strict ten-record Draft 2020-12 tagged union with receipt authority and exact record-set closure fields. |
-| `coordination/NOVELTY-RAW-ROW.schema.json` | `483c7eb1a73a5402ed2f82126b2effd8498e040cd9daf03785f78e2581bfb54e` | 56 | Closed authenticated NDJSON row schema. |
-| `coordination/NOVELTY-EVIDENCE-REGISTRY.semantic.mjs` | `0ec4faffccd3b96e28885ed9802cebf42289bf143d920f916a92e2a155f7743a` | 655 | Sole validator: external trust, graph closure, raw derivation, product relation, and lexical artifacts. |
-| `coordination/NOVELTY-EVIDENCE-REGISTRY.semantic.test.mjs` | `d24f0950fadeb3902fb110957c066707da6f66a504ed662b4701be137c73addc` | 446 | Gold/reversed controls and independent literal-code hostile runner; no shadow validator. |
-| `coordination/NOVELTY-EVIDENCE-REGISTRY.baseline.json` | `d7449f4ffe676d4c9bb9dc723d0b9b3d3a949818e9c0d535e3ced7db0147d174` | 187 | Ten-record gold with one internally exact authenticated raw row. |
-| `coordination/NOVELTY-EVIDENCE-REGISTRY.mutants.json` | `1332fcd869b43b5087f3bdee60244118dcc0cafb5e98317f776b24c4dc6e4380` | 73 | 71 one-owner mutants with no embedded expected-code oracle. |
-| `coordination/NOVELTY-EVIDENCE-REGISTRY.results.json` | `fe378225e4f2e507fe6a2aa5eaf1acb78aa8ea3adec32f0409c5d99a1d43185e` | 525 | Gold controls 2/2 GREEN and hostiles 71/71 exact RED. |
-| `artifacts/novelty-n1-a1-semantic-registry/raw.ndjson` | `f1e6f2d777c758fb676eec126bc9527a74fcc9da1245d9781aa2b7c0d3f0844d` | 1 | Exact raw source for the gold ROW. |
-| `artifacts/novelty-n1-a1-semantic-registry/MANIFEST.sha256` | `032502dab34fc9bd1ed46a2bb9b43228e077e79f97f65e84253fbeaad66fc68b` | 15 | Exact source/fixture/results manifest. |
+| `coordination/NOVELTY-PASS-REGISTRY-AND-EXPERIMENT-LAW-2026-08-01.md` | `76ce7afcee2d969b45fc0bd81574f4f306455973cdf18d025d7b4709a72020db` | 410 | N1–N3 registry, immutable N1-A/A1/A2 chronology, N1-A3 raw-authority correction, and blocked N2 dispatch. |
+| `coordination/NOVELTY-EVIDENCE-REGISTRY.schema.json` | `0298093d279364c26f0b2cc7c6d05b2c5e082b86f2104690a9597a13dcd55317` | 386 | Strict ten-record Draft 2020-12 tagged union with safe numeric bounds and canonical decimal counters. |
+| `coordination/NOVELTY-RAW-ROW.schema.json` | `fc51edf187deb239ce4e55eb89e5566e456d19d80661f1a9b6196fdd553e61f6` | 160 | Closed authenticated NDJSON schema for full ROW and resolved RUN truth. |
+| `coordination/NOVELTY-EVIDENCE-REGISTRY.semantic.mjs` | `53998004bc3e85ec486c82052f18d416abb3286a71e52ee75a11568461ac5d1f` | 900 | Sole validator: strict recursive JSON, external trust, graph closure, exact raw projection, product relation, and lexical artifacts. |
+| `coordination/NOVELTY-EVIDENCE-REGISTRY.semantic.test.mjs` | `157bedb86a1e3afcc9190d9b0c04d71fa7dacc75230ad32bd3814ee68442f692` | 556 | Gold/reversed controls and independent literal-code hostile runner; no shadow validator. |
+| `coordination/NOVELTY-EVIDENCE-REGISTRY.baseline.json` | `dffe95ef86a13debb373ae3c20cb48f612e24d6771348899533f5da1cf7bf1ca` | 187 | Ten-record gold with one exact raw row and distinct authenticated descriptors. |
+| `coordination/NOVELTY-EVIDENCE-REGISTRY.mutants.json` | `9107a27ee6a3b53c62963fcf73097384a330f814eb614e4d60f83f08fa550e7e` | 104 | 102 one-owner mutants with no embedded expected-code oracle. |
+| `coordination/NOVELTY-EVIDENCE-REGISTRY.results.json` | `0d4dc73db88aa958b9fc417ead591fc3cc8bbf23b2865f04538c7fb9d7a130cc` | 742 | Gold controls 2/2 GREEN and hostiles 102/102 exact RED. |
+| `artifacts/novelty-n1-a1-semantic-registry/raw.ndjson` | `2e33d38adb13d038553b6f1801f0e5c4f35cbe8d2ba79e103c4ca0f4097a3896` | 1 | Exact raw source for every performance-bearing ROW and resolved RUN field. |
+| `artifacts/novelty-n1-a1-semantic-registry/MANIFEST.sha256` | `a6a54678c54451ba5ce225534a82baa6e378b5c6e09ca420783d8f812490d23f` | 15 | Exact source/fixture/results manifest. |
 
-N1-A and N1-A1 remain immutable chronology. N1-A1's externally pinned
+N1-A, N1-A1, and N1-A2 remain immutable chronology. N1-A1's externally pinned
 validator passed its shipped `48/48`, but the fresh audit found that products
 could cross-swap between fixtures, registry timing/counters need not match raw
 bytes, and lexical path aliases passed. N1-A2 closes all three: the fixture
 owns the row product, every registry measurement/identity/selection is derived
 from a uniquely consumed strict raw line, and artifact paths are lexical normal
-form. The fresh N2 path remains absent. Another independent non-author replay
-is required, so N1-A2 is not yet N2 authority.
+form. Its fresh audit then found unbound sink/RUN/ROW fields, rounded adjacent
+large counters, and duplicate-key acceptance. N1-A3 closes those defects with
+an authenticated complete ROW/RUN projection, decimal-string/`BigInt`
+counters, safe remaining numeric bounds, and a recursive duplicate-key-aware
+JSON parser. The N2 path remains absent. Another independent non-author replay
+is required, so N1-A3 is not yet N2 authority.
 
-For the preceding N1-A boundary, `jq empty`, Ajv Draft 2020-12 strict
-compilation, and `git diff --check` were green. Strict TypeScript, 14/14 test
-files with 134/134 tests, and the production build were green. `proof:all`
-cleared manifest, no-CSS-surface, four subpaths,
-four packrat checks, no-span, and no-dead-combinator, then remains RED at the
-pre-existing JSON performance guard: 2,057 ns/parse versus 1,742 ns baseline,
-`+18.0%` against the 15% ceiling. The same run measured 1.70x lower retained
-heap for fused `all()` and 73.8% faster live CSS first-character dispatch. The
-RED JSON result was not retried, waived, or credited to this documentation
-packet. No novelty benchmark, prototype, consumer, browser, package, or release
-command was run.
+For N1-A3, `jq empty`, both Ajv Draft 2020-12 strict compilations, Node syntax
+checks, the ten-record/one-raw semantic gold, controls `2/2`, hostiles
+`102/102`, the 15-entry manifest, N2-root absence, and `git diff --check` were
+green. Strict TypeScript, 14/14 test files with 134/134 tests, and the
+production build were green. The nine non-performance proofs cleared manifest,
+no-CSS-surface, four subpaths, four packrat checks, no-span, and
+no-dead-combinator. `proof:perf`, novelty benchmarks, prototypes, consumers,
+browser, package, and release commands were deliberately not run.
 
 ## Independent research receipt
 
@@ -145,14 +148,15 @@ non-isomorphism predicate retires it before timing.
 
 ## Exact next boundary
 
-Do not create a prototype until a fresh independent audit accepts N1-A2, its
+Do not create a prototype until a fresh independent audit accepts N1-A3, its
 committed SHA is the sole dispatch input, and the still-absent root is assigned.
 
 Then execute only in this order:
 
-1. fresh independent source audit of the N1-A2 15-entry manifest, both strict
-   schemas, gold/raw derivation, controls, 71 hostile dispositions, external
-   trust boundary, product relation, path normal form, and absent root;
+1. fresh independent source audit of the N1-A3 15-entry manifest, both strict
+   schemas, gold/raw ROW/RUN derivation, controls, 102 hostile dispositions,
+   duplicate-key rejection, external trust boundary, product relation, path
+   normal form, and absent root;
 2. only after acceptance, exactly one N-IETM Luna xhigh greenfield prototype against accepted and
    rebuilt M2 plus the semantic-law envelope, using the frozen
    generic/Value/standards suites;
@@ -170,7 +174,9 @@ No current or failed evidence root is resumed.
   chronology `1/1`;
 - N1-A1 collection correction: immutable at `914957f`; fresh audit completed
   and found three material false-greens;
-- N1-A2 correction: gold controls `2/2`, raw rows `1/1`, hostiles `71/71`,
+- N1-A2 correction: immutable at `e663a91`; fresh audit completed and found
+  four material false-green classes;
+- N1-A3 correction: gold controls `2/2`, raw rows `1/1`, hostiles `102/102`,
   fresh independent acceptance `0/1` — **banked but not dispatch authority**;
 - N2 prototypes: `0/4`;
 - N3 critiques/agglomeration: `0/5`;

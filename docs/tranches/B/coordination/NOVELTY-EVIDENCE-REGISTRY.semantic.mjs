@@ -107,6 +107,183 @@ function sameArray(left, right) {
     return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
+function sameArtifact(left, right) {
+    return left.path === right.path && left.bytes === right.bytes && left.sha256 === right.sha256;
+}
+
+class StrictJsonError extends Error {
+    constructor(kind, message, path) {
+        super(message);
+        this.kind = kind;
+        this.path = path;
+    }
+}
+
+class StrictJsonParser {
+    constructor(source) {
+        this.source = source;
+        this.offset = 0;
+    }
+
+    parse() {
+        const value = this.parseValue("$");
+        this.skipWhitespace();
+        if (this.offset !== this.source.length) this.syntax("trailing bytes", "$");
+        return value;
+    }
+
+    syntax(message, path) {
+        throw new StrictJsonError("SYNTAX", `${message} at byte ${this.offset}`, path);
+    }
+
+    skipWhitespace() {
+        while (this.offset < this.source.length) {
+            const code = this.source.charCodeAt(this.offset);
+            if (code !== 0x20 && code !== 0x09 && code !== 0x0a && code !== 0x0d) break;
+            this.offset += 1;
+        }
+    }
+
+    parseValue(path) {
+        this.skipWhitespace();
+        const char = this.source[this.offset];
+        if (char === "{") return this.parseObject(path);
+        if (char === "[") return this.parseArray(path);
+        if (char === '"') return this.parseString(path);
+        if (char === "t") return this.parseLiteral("true", true, path);
+        if (char === "f") return this.parseLiteral("false", false, path);
+        if (char === "n") return this.parseLiteral("null", null, path);
+        if (char === "-" || (char >= "0" && char <= "9")) return this.parseNumber(path);
+        this.syntax("expected JSON value", path);
+    }
+
+    parseObject(path) {
+        this.offset += 1;
+        const result = Object.create(null);
+        const keys = new Set();
+        this.skipWhitespace();
+        if (this.source[this.offset] === "}") {
+            this.offset += 1;
+            return result;
+        }
+        while (true) {
+            this.skipWhitespace();
+            if (this.source[this.offset] !== '"') this.syntax("expected object key", path);
+            const key = this.parseString(path);
+            const keyPath = `${path}.${key}`;
+            if (keys.has(key)) throw new StrictJsonError("DUPLICATE_KEY", `duplicate object key ${JSON.stringify(key)}`, keyPath);
+            keys.add(key);
+            this.skipWhitespace();
+            if (this.source[this.offset] !== ":") this.syntax("expected colon", keyPath);
+            this.offset += 1;
+            result[key] = this.parseValue(keyPath);
+            this.skipWhitespace();
+            const delimiter = this.source[this.offset];
+            if (delimiter === "}") {
+                this.offset += 1;
+                return result;
+            }
+            if (delimiter !== ",") this.syntax("expected object delimiter", path);
+            this.offset += 1;
+        }
+    }
+
+    parseArray(path) {
+        this.offset += 1;
+        const result = [];
+        this.skipWhitespace();
+        if (this.source[this.offset] === "]") {
+            this.offset += 1;
+            return result;
+        }
+        while (true) {
+            result.push(this.parseValue(`${path}[${result.length}]`));
+            this.skipWhitespace();
+            const delimiter = this.source[this.offset];
+            if (delimiter === "]") {
+                this.offset += 1;
+                return result;
+            }
+            if (delimiter !== ",") this.syntax("expected array delimiter", path);
+            this.offset += 1;
+        }
+    }
+
+    parseString(path) {
+        this.offset += 1;
+        let result = "";
+        while (this.offset < this.source.length) {
+            const code = this.source.charCodeAt(this.offset);
+            this.offset += 1;
+            if (code === 0x22) return result;
+            if (code < 0x20) this.syntax("unescaped control character", path);
+            if (code !== 0x5c) {
+                result += String.fromCharCode(code);
+                continue;
+            }
+            if (this.offset >= this.source.length) this.syntax("unterminated escape", path);
+            const escaped = this.source[this.offset];
+            this.offset += 1;
+            const simple = { '"': '"', "\\": "\\", "/": "/", b: "\b", f: "\f", n: "\n", r: "\r", t: "\t" };
+            if (Object.hasOwn(simple, escaped)) {
+                result += simple[escaped];
+                continue;
+            }
+            if (escaped !== "u") this.syntax("invalid string escape", path);
+            if (this.offset + 4 > this.source.length) this.syntax("short Unicode escape", path);
+            let value = 0;
+            for (let index = 0; index < 4; index += 1) {
+                const hex = this.source.charCodeAt(this.offset + index);
+                let digit;
+                if (hex >= 0x30 && hex <= 0x39) digit = hex - 0x30;
+                else if (hex >= 0x41 && hex <= 0x46) digit = hex - 0x41 + 10;
+                else if (hex >= 0x61 && hex <= 0x66) digit = hex - 0x61 + 10;
+                else this.syntax("invalid Unicode escape", path);
+                value = value * 16 + digit;
+            }
+            this.offset += 4;
+            result += String.fromCharCode(value);
+        }
+        this.syntax("unterminated string", path);
+    }
+
+    parseLiteral(token, value, path) {
+        if (!this.source.startsWith(token, this.offset)) this.syntax(`invalid ${token} literal`, path);
+        this.offset += token.length;
+        return value;
+    }
+
+    parseNumber(path) {
+        const start = this.offset;
+        if (this.source[this.offset] === "-") this.offset += 1;
+        if (this.source[this.offset] === "0") {
+            this.offset += 1;
+            if (this.source[this.offset] >= "0" && this.source[this.offset] <= "9") this.syntax("leading-zero number", path);
+        } else {
+            if (!(this.source[this.offset] >= "1" && this.source[this.offset] <= "9")) this.syntax("invalid number", path);
+            while (this.source[this.offset] >= "0" && this.source[this.offset] <= "9") this.offset += 1;
+        }
+        if (this.source[this.offset] === ".") {
+            this.offset += 1;
+            if (!(this.source[this.offset] >= "0" && this.source[this.offset] <= "9")) this.syntax("invalid fraction", path);
+            while (this.source[this.offset] >= "0" && this.source[this.offset] <= "9") this.offset += 1;
+        }
+        if (this.source[this.offset] === "e" || this.source[this.offset] === "E") {
+            this.offset += 1;
+            if (this.source[this.offset] === "+" || this.source[this.offset] === "-") this.offset += 1;
+            if (!(this.source[this.offset] >= "0" && this.source[this.offset] <= "9")) this.syntax("invalid exponent", path);
+            while (this.source[this.offset] >= "0" && this.source[this.offset] <= "9") this.offset += 1;
+        }
+        const value = Number(this.source.slice(start, this.offset));
+        if (!Number.isFinite(value)) this.syntax("non-finite number", path);
+        return value;
+    }
+}
+
+function parseStrictJson(source) {
+    return new StrictJsonParser(source).parse();
+}
+
 function rootContains(root, target) {
     const rel = relative(root, target);
     return rel === "" || (!rel.startsWith(`..${sep}`) && rel !== ".." && !isAbsolute(rel));
@@ -265,8 +442,15 @@ function parseRawFiles(receipt, bytesByPath, validateRawShape, rawAjv) {
             }
             let entry;
             try {
-                entry = JSON.parse(lines[index]);
-            } catch {
+                entry = parseStrictJson(lines[index]);
+            } catch (error) {
+                if (error instanceof StrictJsonError && error.kind === "DUPLICATE_KEY") {
+                    fail(
+                        "E_RAW_DUPLICATE_KEY",
+                        `${artifact.path}:${index + 1} contains ${error.message}`,
+                        `$.${receipt.id}.rawArtifacts${error.path}`,
+                    );
+                }
                 fail("E_RAW_JSON", `${artifact.path}:${index + 1} is malformed JSON`, `$.${receipt.id}.rawArtifacts`);
             }
             if (!validateRawShape(entry)) {
@@ -283,7 +467,7 @@ function parseRawFiles(receipt, bytesByPath, validateRawShape, rawAjv) {
 }
 
 function countersFromRaw(entry) {
-    const counters = {};
+    const counters = Object.create(null);
     for (const counter of entry.mechanismCounters) {
         if (Object.hasOwn(counters, counter.name)) {
             fail("E_RAW_COUNTER_SCHEMA", `${entry.rowId} repeats counter ${counter.name}`, `$.raw.${entry.rowId}.mechanismCounters`);
@@ -291,6 +475,52 @@ function countersFromRaw(entry) {
         counters[counter.name] = counter.value;
     }
     return counters;
+}
+
+function validateRawArtifact(rowId, field, raw, registry) {
+    if (!sameArtifact(raw, registry)) {
+        const codes = {
+            gcBytes: "E_RAW_GC_DESCRIPTOR",
+            deoptBytes: "E_RAW_DEOPT_DESCRIPTOR",
+            icBytes: "E_RAW_IC_DESCRIPTOR",
+            allocationBytes: "E_RAW_ALLOCATION_DESCRIPTOR",
+            sink: "E_RAW_SINK_DESCRIPTOR",
+        };
+        fail(codes[field], `${rowId} raw ${field} descriptor differs`, `$.raw.${rowId}.${field}`);
+    }
+}
+
+function validateRawCommand(rowId, raw, expected, index) {
+    const path = `$.raw.${rowId}.run.commands[${index}]`;
+    if (!sameArray(raw.argv, expected.argv)) fail("E_RAW_COMMAND_ARGV", `${rowId} command argv differs`, `${path}.argv`);
+    if (raw.cwd !== expected.cwd) fail("E_RAW_COMMAND_CWD", `${rowId} command cwd differs`, `${path}.cwd`);
+    if (raw.exitCode !== expected.exitCode) fail("E_RAW_COMMAND_EXIT", `${rowId} command exit code differs`, `${path}.exitCode`);
+    if (!sameArtifact(raw.stdout, expected.stdout)) fail("E_RAW_COMMAND_STDOUT", `${rowId} command stdout differs`, `${path}.stdout`);
+    if (!sameArtifact(raw.stderr, expected.stderr)) fail("E_RAW_COMMAND_STDERR", `${rowId} command stderr differs`, `${path}.stderr`);
+}
+
+function validateRawRun(row, raw, run) {
+    const scalarChecks = [
+        ["root", "E_RAW_RUN_ROOT"],
+        ["pid", "E_RAW_RUN_PID"],
+        ["processStart", "E_RAW_RUN_PROCESS_START"],
+        ["seed", "E_RAW_RUN_SEED"],
+        ["order", "E_RAW_RUN_ORDER"],
+        ["node", "E_RAW_RUN_NODE"],
+        ["v8", "E_RAW_RUN_V8"],
+        ["compileCacheCanary", "E_RAW_RUN_COMPILE_CACHE"],
+    ];
+    for (const [field, code] of scalarChecks) {
+        if (raw[field] !== run[field]) fail(code, `${row.id} raw run ${field} differs`, `$.raw.${row.id}.run.${field}`);
+    }
+    const environmentKeys = ["NODE_DISABLE_COMPILE_CACHE", "NODE_OPTIONS", "NODE_COMPILE_CACHE"];
+    if (environmentKeys.some((key) => raw.environment[key] !== run.environment[key])) {
+        fail("E_RAW_RUN_ENVIRONMENT", `${row.id} raw run environment differs`, `$.raw.${row.id}.run.environment`);
+    }
+    if (raw.commands.length !== run.commands.length) {
+        fail("E_RAW_COMMAND_COUNT", `${row.id} raw command count differs`, `$.raw.${row.id}.run.commands`);
+    }
+    raw.commands.forEach((command, index) => validateRawCommand(row.id, command, run.commands[index], index));
 }
 
 function validateRawRows(rows, byId, receipt, bytesByPath, validateRawShape, rawAjv) {
@@ -315,6 +545,7 @@ function validateRawRows(rows, byId, receipt, bytesByPath, validateRawShape, raw
     for (const row of rows) {
         const raw = rawById.get(row.id);
         const fixture = byId.get(row.fixtureId);
+        const run = byId.get(row.runId);
         const identityChecks = [
             ["runId", "E_RAW_RUN_ID"],
             ["armId", "E_RAW_ARM_ID"],
@@ -324,6 +555,7 @@ function validateRawRows(rows, byId, receipt, bytesByPath, validateRawShape, raw
         for (const [key, code] of identityChecks) {
             if (raw[key] !== row[key]) fail(code, `${row.id} raw ${key} is ${raw[key]}, expected ${row[key]}`, `$.raw.${row.id}.${key}`);
         }
+        validateRawRun(row, raw.run, run);
         if (raw.fixtureBytesPath !== fixture.bytes.path) {
             fail("E_RAW_FIXTURE_BYTES", `${row.id} raw fixture bytes path differs`, `$.raw.${row.id}.fixtureBytesPath`);
         }
@@ -332,6 +564,9 @@ function validateRawRows(rows, byId, receipt, bytesByPath, validateRawShape, raw
         }
         if (!sameArray(raw.selectedIndices, fixture.selectedIndices)) {
             fail("E_RAW_SELECTED_INDICES", `${row.id} raw selection differs`, `$.raw.${row.id}.selectedIndices`);
+        }
+        if (!sameArray(raw.lawIds, row.lawIds)) {
+            fail("E_RAW_LAWS", `${row.id} raw laws differ`, `$.raw.${row.id}.lawIds`);
         }
         if (raw.rawNanoseconds.length !== raw.aggregateIterations) {
             fail("E_RAW_SAMPLE_COUNT", `${row.id} raw vector length differs from raw aggregate`, `$.raw.${row.id}.rawNanoseconds`);
@@ -342,12 +577,22 @@ function validateRawRows(rows, byId, receipt, bytesByPath, validateRawShape, raw
         if (!sameArray(raw.rawNanoseconds, row.rawNanoseconds)) {
             fail("E_RAW_TIMING", `${row.id} registry timings are not derived from raw`, `$.${row.id}.rawNanoseconds`);
         }
+        if (raw.warmupIterations !== row.warmupIterations) {
+            fail("E_RAW_WARMUP", `${row.id} registry warmup differs from raw`, `$.${row.id}.warmupIterations`);
+        }
+        const coldFields = ["startupNs", "importNs", "buildNs", "firstCompleteParseNs"];
+        if (coldFields.some((field) => raw.coldSubintervals[field] !== row.coldSubintervals[field])) {
+            fail("E_RAW_COLD", `${row.id} registry cold subintervals differ from raw`, `$.${row.id}.coldSubintervals`);
+        }
         const rawCounters = countersFromRaw(raw);
         if (
             !sameSet(Object.keys(rawCounters), Object.keys(row.mechanismCounters)) ||
-            Object.keys(rawCounters).some((name) => rawCounters[name] !== row.mechanismCounters[name])
+            Object.keys(rawCounters).some((name) => BigInt(rawCounters[name]) !== BigInt(row.mechanismCounters[name]))
         ) {
             fail("E_RAW_COUNTER", `${row.id} registry counters are not derived from raw`, `$.${row.id}.mechanismCounters`);
+        }
+        for (const field of ["gcBytes", "deoptBytes", "icBytes", "allocationBytes", "sink"]) {
+            validateRawArtifact(row.id, field, raw[field], row[field]);
         }
     }
     return entries.length;
@@ -528,7 +773,7 @@ function validateReferences(records, byId, policy) {
             if (!names.length || !sameSet(Object.keys(row.mechanismCounters), names)) {
                 fail("E_COUNTER_SCHEMA", `${row.id} counters differ from ${arm.id} declarations`, `$.${row.id}.mechanismCounters`);
             }
-            if (Object.values(row.mechanismCounters).reduce((sum, value) => sum + value, 0) === 0) {
+            if (Object.values(row.mechanismCounters).reduce((sum, value) => sum + BigInt(value), 0n) === 0n) {
                 fail("E_MECHANISM_UNREACHED", `${row.id} does not reach the candidate mechanism`, `$.${row.id}.mechanismCounters`);
             }
         }

@@ -2,7 +2,7 @@
 
 Date: 2026-08-01
 
-Status: **N1-A2 RELATIONAL/RAW/PATH CORRECTION BANKED — INDEPENDENT AUDIT REQUIRED — N2 BLOCKED — ZERO DOWNSTREAM CREDIT**
+Status: **N1-A3 RAW-AUTHORITY CORRECTION BANKED — INDEPENDENT AUDIT REQUIRED — N2 BLOCKED — ZERO DOWNSTREAM CREDIT**
 
 ## Scope
 
@@ -20,8 +20,8 @@ They may produce inputs to the law portfolio but cannot satisfy it by name.
 |---|---|---|---|---|
 | `N1.RG` | GPT Sol xhigh, independent genealogy/falsification | family charter, live parser source, P1–P6 evidence, supplied primary sources | independent alias/retirement view | `COMPLETE; READ-ONLY` |
 | `N1.RH` | GPT Sol xhigh, independent host/economics | family charter, Node 26/V8 14.6, live benches/source, active law families | independent reachability/cost view | `COMPLETE; READ-ONLY` |
-| `N1.O` | parser owner, synthesis/adjudication | `N1.RG`, `N1.RH`, independent root/consumer audits | atlas, matrix, registry, closed schemas, semantic closure, handoff | `N1-A/N1-A1 IMMUTABLE; N1-A2 BANKED; FRESH AUDIT REQUIRED` |
-| `N2.IETM` | GPT Luna xhigh, isolated prototype | independently accepted N1-A2 packet only | effect-aware edit-indexed prototype and raw receipts | `BLOCKED ON FRESH N1-A2 AUDIT; SOLE FUTURE N2 DISPATCH` |
+| `N1.O` | parser owner, synthesis/adjudication | `N1.RG`, `N1.RH`, independent root/consumer audits | atlas, matrix, registry, closed schemas, semantic closure, handoff | `N1-A/A1/A2 IMMUTABLE; N1-A3 BANKED; FRESH AUDIT REQUIRED` |
+| `N2.IETM` | GPT Luna xhigh, isolated prototype | independently accepted N1-A3 packet only | effect-aware edit-indexed prototype and raw receipts | `BLOCKED ON FRESH N1-A3 AUDIT; SOLE FUTURE N2 DISPATCH` |
 | `N2.DNF` | GPT Luna xhigh, isolated falsifier | sealed N1 packet and explicit S/C/V non-isomorphism predicate | normal-form direct-source proof or retirement | `NO-GO; BORN-RED HOLD` |
 | `N2.WRR` | GPT Luna xhigh, isolated falsifier | sealed N1 packet and explicit V/E/BBNF-WASM non-isomorphism predicate | WASM boundary proof or retirement | `NO-GO; BORN-RED HOLD` |
 | `N2.GLL` | GPT Luna xhigh, tiny fatal probe | sealed N1 packet, real ambiguity/left-recursion counterexample | descriptor/GSS counters and exact product | `NO-GO; FATAL-ONLY HOLD` |
@@ -31,7 +31,7 @@ They may produce inputs to the law portfolio but cannot satisfy it by name.
 
 No prototype task or evidence root is created by this packet. Exactly one
 formation-only N-IETM prototype may be authorized only after a fresh
-independent audit accepts the N1-A2 semantic correction. N-DNF and N-WRR
+independent audit accepts the N1-A3 semantic correction. N-DNF and N-WRR
 cannot start merely because they have
 names: their source-only non-isomorphism proofs are born-RED. N-GLL is a
 one-probe falsifier, not a portfolio center, and has no current dispatch.
@@ -139,10 +139,47 @@ path cases. Exact N1-A2 identities are:
 | exact raw NDJSON | `f1e6f2d777c758fb676eec126bc9527a74fcc9da1245d9781aa2b7c0d3f0844d` |
 | 15-entry manifest | `032502dab34fc9bd1ed46a2bb9b43228e077e79f97f65e84253fbeaad66fc68b` |
 
+The next fresh audit found that N1-A2 still allowed sink substitution, caller-
+owned RUN/ROW fields, rounded adjacent large counters, and duplicate JSON keys.
+N1-A2 is therefore immutable chronology, not N2 authority.
+
+### N1-A3 authenticated ROW/RUN correction
+
+N1-A3 preserves the N1-A2 graph and adds four source-only closure laws:
+
+1. every performance-bearing ROW field, all artifact descriptors, and the
+   sink are derived from the authenticated raw line;
+2. the full resolved RUN projection—root, process identity, seed/order,
+   runtime, environment, compile-cache canary, and every command field and
+   stream descriptor—is derived from those same bytes;
+3. counters are canonical unsigned decimal strings compared with `BigInt`,
+   while remaining numeric registry/raw scalars are schema-bounded to
+   `Number.MAX_SAFE_INTEGER`; and
+4. a source-owned recursive JSON parser rejects decoded duplicate object keys
+   at every depth before the raw schema is evaluated.
+
+The gold keeps ten records and one raw row but deliberately uses distinct
+authenticated descriptors for command streams, GC, deopt, IC, allocation,
+and sink. The same production validator accepts both controls `2/2` and
+rejects `102/102` one-owner hostiles, including all prior `71/71`. Exact N1-A3
+identities are:
+
+| Artifact | SHA-256 |
+|---|---|
+| registry schema | `0298093d279364c26f0b2cc7c6d05b2c5e082b86f2104690a9597a13dcd55317` |
+| raw-row schema | `fc51edf187deb239ce4e55eb89e5566e456d19d80661f1a9b6196fdd553e61f6` |
+| semantic validator | `53998004bc3e85ec486c82052f18d416abb3286a71e52ee75a11568461ac5d1f` |
+| hostile runner | `157bedb86a1e3afcc9190d9b0c04d71fa7dacc75230ad32bd3814ee68442f692` |
+| gold registry | `dffe95ef86a13debb373ae3c20cb48f612e24d6771348899533f5da1cf7bf1ca` |
+| hostile definitions | `9107a27ee6a3b53c62963fcf73097384a330f814eb614e4d60f83f08fa550e7e` |
+| executable results | `0d4dc73db88aa958b9fc417ead591fc3cc8bbf23b2865f04538c7fb9d7a130cc` |
+| exact raw NDJSON | `2e33d38adb13d038553b6f1801f0e5c4f35cbe8d2ba79e103c4ca0f4097a3896` |
+| 15-entry manifest | `a6a54678c54451ba5ce225534a82baa6e378b5c6e09ca420783d8f812490d23f` |
+
 This remains source validation only. Another fresh independent audit must
-replay both schemas, all manifest entries, gold controls, every hostile, raw
-derivation, lexical path rejection, and absent N2 root before `N2.IETM` can
-change from BLOCKED.
+replay both strict schemas, all manifest entries, controls, every hostile,
+duplicate-key rejection, exact raw ROW/RUN projection, and absent N2 root
+before `N2.IETM` can change from BLOCKED.
 
 Canonical product encoding must preserve:
 
@@ -356,13 +393,15 @@ after owner adjudication. Raw bytes are never overwritten.
 
 ## Boundary receipt
 
-At N1-A2 correction close:
+At N1-A3 correction close:
 
 - N1 research views: `2/2` complete;
 - owner synthesis: `1/1` complete in immutable N1-A chronology;
 - N1-A1 collection-semantics correction: immutable at `914957f`, superseded
   as authority by its fresh audit findings;
-- N1-A2 correction: gold controls `2/2`, hostiles `71/71`, raw rows `1/1`,
+- N1-A2 relational/raw/path correction: immutable at `e663a91`, superseded as
+  authority by its fresh audit findings;
+- N1-A3 correction: gold controls `2/2`, hostiles `102/102`, raw rows `1/1`,
   fresh independent acceptance `0/1`; N2 remains blocked;
 - candidate families: N-IETM `KEEP`; N-DNF/N-WRR born-RED `HOLD`; N-GLL
   fatal-only `HOLD`; all other axes dispositioned;

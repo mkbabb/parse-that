@@ -12,7 +12,7 @@
       "recordCount": 10
     }
   ],
-  "hostileCount": 71,
+  "hostileCount": 102,
   "hostiles": [
     {
       "id": "empty_registry",
@@ -505,6 +505,223 @@
       "path": "$[2].artifact.path"
     },
     {
+      "id": "unbound_sink_substitution",
+      "status": "RED",
+      "expectedCode": "E_RAW_SINK_DESCRIPTOR",
+      "actualCode": "E_RAW_SINK_DESCRIPTOR",
+      "path": "$.raw.row.ietm.sink"
+    },
+    {
+      "id": "raw_law_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_LAWS",
+      "actualCode": "E_RAW_LAWS",
+      "path": "$.raw.row.ietm.lawIds"
+    },
+    {
+      "id": "unbound_warmup_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_WARMUP",
+      "actualCode": "E_RAW_WARMUP",
+      "path": "$.row.ietm.warmupIterations"
+    },
+    {
+      "id": "unbound_cold_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COLD",
+      "actualCode": "E_RAW_COLD",
+      "path": "$.row.ietm.coldSubintervals"
+    },
+    {
+      "id": "raw_gc_descriptor_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_GC_DESCRIPTOR",
+      "actualCode": "E_RAW_GC_DESCRIPTOR",
+      "path": "$.raw.row.ietm.gcBytes"
+    },
+    {
+      "id": "raw_deopt_descriptor_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_DEOPT_DESCRIPTOR",
+      "actualCode": "E_RAW_DEOPT_DESCRIPTOR",
+      "path": "$.raw.row.ietm.deoptBytes"
+    },
+    {
+      "id": "raw_ic_descriptor_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_IC_DESCRIPTOR",
+      "actualCode": "E_RAW_IC_DESCRIPTOR",
+      "path": "$.raw.row.ietm.icBytes"
+    },
+    {
+      "id": "raw_allocation_descriptor_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_ALLOCATION_DESCRIPTOR",
+      "actualCode": "E_RAW_ALLOCATION_DESCRIPTOR",
+      "path": "$.raw.row.ietm.allocationBytes"
+    },
+    {
+      "id": "raw_sink_descriptor_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_SINK_DESCRIPTOR",
+      "actualCode": "E_RAW_SINK_DESCRIPTOR",
+      "path": "$.raw.row.ietm.sink"
+    },
+    {
+      "id": "raw_run_root_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_ROOT",
+      "actualCode": "E_RAW_RUN_ROOT",
+      "path": "$.raw.row.ietm.run.root"
+    },
+    {
+      "id": "unbound_run_pid_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_PID",
+      "actualCode": "E_RAW_RUN_PID",
+      "path": "$.raw.row.ietm.run.pid"
+    },
+    {
+      "id": "unbound_run_process_start_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_PROCESS_START",
+      "actualCode": "E_RAW_RUN_PROCESS_START",
+      "path": "$.raw.row.ietm.run.processStart"
+    },
+    {
+      "id": "unbound_run_seed_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_SEED",
+      "actualCode": "E_RAW_RUN_SEED",
+      "path": "$.raw.row.ietm.run.seed"
+    },
+    {
+      "id": "unbound_run_order_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_ORDER",
+      "actualCode": "E_RAW_RUN_ORDER",
+      "path": "$.raw.row.ietm.run.order"
+    },
+    {
+      "id": "unbound_run_node_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_NODE",
+      "actualCode": "E_RAW_RUN_NODE",
+      "path": "$.raw.row.ietm.run.node"
+    },
+    {
+      "id": "unbound_run_v8_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_V8",
+      "actualCode": "E_RAW_RUN_V8",
+      "path": "$.raw.row.ietm.run.v8"
+    },
+    {
+      "id": "raw_run_environment_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_ENVIRONMENT",
+      "actualCode": "E_RAW_RUN_ENVIRONMENT",
+      "path": "$.raw.row.ietm.run.environment"
+    },
+    {
+      "id": "raw_run_compile_cache_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_COMPILE_CACHE",
+      "actualCode": "E_RAW_RUN_COMPILE_CACHE",
+      "path": "$.raw.row.ietm.run.compileCacheCanary"
+    },
+    {
+      "id": "raw_command_count_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COMMAND_COUNT",
+      "actualCode": "E_RAW_COMMAND_COUNT",
+      "path": "$.raw.row.ietm.run.commands"
+    },
+    {
+      "id": "raw_command_argv_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COMMAND_ARGV",
+      "actualCode": "E_RAW_COMMAND_ARGV",
+      "path": "$.raw.row.ietm.run.commands[0].argv"
+    },
+    {
+      "id": "raw_command_cwd_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COMMAND_CWD",
+      "actualCode": "E_RAW_COMMAND_CWD",
+      "path": "$.raw.row.ietm.run.commands[0].cwd"
+    },
+    {
+      "id": "unbound_command_exit_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COMMAND_EXIT",
+      "actualCode": "E_RAW_COMMAND_EXIT",
+      "path": "$.raw.row.ietm.run.commands[0].exitCode"
+    },
+    {
+      "id": "raw_command_stdout_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COMMAND_STDOUT",
+      "actualCode": "E_RAW_COMMAND_STDOUT",
+      "path": "$.raw.row.ietm.run.commands[0].stdout"
+    },
+    {
+      "id": "raw_command_stderr_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COMMAND_STDERR",
+      "actualCode": "E_RAW_COMMAND_STDERR",
+      "path": "$.raw.row.ietm.run.commands[0].stderr"
+    },
+    {
+      "id": "large_adjacent_counter_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COUNTER",
+      "actualCode": "E_RAW_COUNTER",
+      "path": "$.row.ietm.mechanismCounters"
+    },
+    {
+      "id": "noncanonical_counter",
+      "status": "RED",
+      "expectedCode": "E_RAW_SCHEMA",
+      "actualCode": "E_RAW_SCHEMA",
+      "path": "$.receipt.ietm.rawArtifacts"
+    },
+    {
+      "id": "duplicate_raw_top_key",
+      "status": "RED",
+      "expectedCode": "E_RAW_DUPLICATE_KEY",
+      "actualCode": "E_RAW_DUPLICATE_KEY",
+      "path": "$.receipt.ietm.rawArtifacts$.rowId"
+    },
+    {
+      "id": "duplicate_raw_escaped_top_key",
+      "status": "RED",
+      "expectedCode": "E_RAW_DUPLICATE_KEY",
+      "actualCode": "E_RAW_DUPLICATE_KEY",
+      "path": "$.receipt.ietm.rawArtifacts$.rowId"
+    },
+    {
+      "id": "duplicate_raw_counter_key",
+      "status": "RED",
+      "expectedCode": "E_RAW_DUPLICATE_KEY",
+      "actualCode": "E_RAW_DUPLICATE_KEY",
+      "path": "$.receipt.ietm.rawArtifacts$.mechanismCounters[0].value"
+    },
+    {
+      "id": "duplicate_raw_cold_key",
+      "status": "RED",
+      "expectedCode": "E_RAW_DUPLICATE_KEY",
+      "actualCode": "E_RAW_DUPLICATE_KEY",
+      "path": "$.receipt.ietm.rawArtifacts$.coldSubintervals.startupNs"
+    },
+    {
+      "id": "duplicate_raw_command_key",
+      "status": "RED",
+      "expectedCode": "E_RAW_DUPLICATE_KEY",
+      "actualCode": "E_RAW_DUPLICATE_KEY",
+      "path": "$.receipt.ietm.rawArtifacts$.run.commands[0].exitCode"
+    },
+    {
       "id": "receipt_interrupted",
       "status": "RED",
       "expectedCode": "E_RECEIPT_INTERRUPTED",
@@ -513,12 +730,12 @@
     }
   ],
   "inputs": {
-    "baselineSha256": "d7449f4ffe676d4c9bb9dc723d0b9b3d3a949818e9c0d535e3ced7db0147d174",
-    "mutantsSha256": "1332fcd869b43b5087f3bdee60244118dcc0cafb5e98317f776b24c4dc6e4380",
-    "validatorSha256": "0ec4faffccd3b96e28885ed9802cebf42289bf143d920f916a92e2a155f7743a",
-    "validatorTestSha256": "d24f0950fadeb3902fb110957c066707da6f66a504ed662b4701be137c73addc",
-    "schemaSha256": "9f8340af85a5efb06402c9c9d22ce4d84037ca0c9295a88e8cef1ef88ceb3d39",
-    "rawSchemaSha256": "483c7eb1a73a5402ed2f82126b2effd8498e040cd9daf03785f78e2581bfb54e",
+    "baselineSha256": "dffe95ef86a13debb373ae3c20cb48f612e24d6771348899533f5da1cf7bf1ca",
+    "mutantsSha256": "9107a27ee6a3b53c62963fcf73097384a330f814eb614e4d60f83f08fa550e7e",
+    "validatorSha256": "53998004bc3e85ec486c82052f18d416abb3286a71e52ee75a11568461ac5d1f",
+    "validatorTestSha256": "157bedb86a1e3afcc9190d9b0c04d71fa7dacc75230ad32bd3814ee68442f692",
+    "schemaSha256": "0298093d279364c26f0b2cc7c6d05b2c5e082b86f2104690a9597a13dcd55317",
+    "rawSchemaSha256": "fc51edf187deb239ce4e55eb89e5566e456d19d80661f1a9b6196fdd553e61f6",
     "trustedPolicySha256": "a74050058dde083788779e18ea94dadbd4373d6ef92ee66fbe78ca6356c0b7f0",
     "expectedRoot": "/Users/mkbabb/Documents/Codex/2026-08-01/parser-novelty-n2-ietm-f0"
   }

@@ -8,8 +8,8 @@ Active wave: `B.W0 - Candidate-to-Release Closure`
 
 Formation status: **ACTIVE — P1–P6 and post-P6 NO-EDGE remain immutable
 historical-10x evidence; failed A1 is terminal archaeology; novelty Pass N1 is
-source-complete as immutable N1-A chronology; N1-A1 is immutable failed audit
-chronology; N1-A2 relational/raw/path closure is owner-banked but awaits
+source-complete as immutable N1-A chronology; N1-A1 and N1-A2 are immutable failed audit
+chronology; N1-A3 authenticated ROW/RUN closure is owner-banked but awaits
 another fresh independent audit; N2 is blocked and no prototype is next;
 N-DNF/N-WRR remain born-RED holds, N-GLL is no-go/fatal-only, and both
 formation clean audits remain blocked**
@@ -22,7 +22,7 @@ Release status: **NO RELEASE**
 |---|---|---|
 | Archaeology | `research/PARSE-THAT-SESSION-ARCHAEOLOGY-2026-07-29.md` | Banked; prior scanner-shaped CSS attempts and stale completion claims rejected. |
 | Round zero | `research/ROUND-ZERO-PARSE-THAT-PORTFOLIO-2026-07-29.md` | Banked portfolio; incompatible families preserved for evidence. |
-| Novelty-first Pass N1 | immutable N1-A `a04a7e6` and N1-A1 `914957f`; `research/NOVELTY-FIRST-MECHANISM-ATLAS-2026-08-01.md`; `coordination/NOVELTY-PASS-REGISTRY-AND-EXPERIMENT-LAW-2026-08-01.md`; N1-A2 validator/two schemas/gold/raw/71-hostile results under `artifacts/novelty-n1-a1-semantic-registry/`; resume handoff | N1-A1 passed its 48 shipped hostiles, but fresh audit found cross-swappable products, opaque raw summaries, and path aliases. N1-A2 enforces fixture-owned row products, exact one-use derivation from strict raw NDJSON, and lexical path normal form; controls are 2/2, raw rows 1/1, and hostiles 71/71. Fresh N1-A2 acceptance is 0/1, so N2 remains blocked. N-IETM is the sole future PL-BE route; N-DNF/N-WRR/N-GLL remain held. **SOURCE-ONLY; ZERO PRODUCT/CSS/API/RELEASE CREDIT**. |
+| Novelty-first Pass N1 | immutable N1-A `a04a7e6`, N1-A1 `914957f`, and N1-A2 `e663a91`; `research/NOVELTY-FIRST-MECHANISM-ATLAS-2026-08-01.md`; `coordination/NOVELTY-PASS-REGISTRY-AND-EXPERIMENT-LAW-2026-08-01.md`; N1-A3 validator/two schemas/gold/raw/102-hostile results under `artifacts/novelty-n1-a1-semantic-registry/`; resume handoff | N1-A2 passed 71 shipped hostiles, but fresh audit found unbound sink/RUN/ROW truth, unsafe adjacent-large-counter comparison, and duplicate-key acceptance. N1-A3 binds every performance-bearing ROW field and complete resolved RUN projection to strict authenticated raw bytes, uses canonical decimal-string/`BigInt` counters, rejects decoded duplicate keys, and preserves exact one-use/path/product laws; controls are 2/2, raw rows 1/1, and hostiles 102/102. Fresh N1-A3 acceptance is 0/1, so N2 remains blocked. N-IETM is the sole future PL-BE route; N-DNF/N-WRR/N-GLL remain held. **SOURCE-ONLY; ZERO PRODUCT/CSS/API/RELEASE CREDIT**. |
 | Pass 1 research adjudication/agglomeration | `research/PASS-1-SOL-ADJUDICATION-2026-07-29.md`, `research/PASS-1-SOL-AGGLOMERATION-2026-07-29.md` | Preliminary research only: R/E/V/K retired and S/D remained candidates; later reconciled by P1. |
 | P1 full-subject reconciliation | `69f72f7`, `research/P1-HASH-BOUND-REGISTRY-2026-07-29.md` | Twenty hash-bound rows: 8 GREEN, 7 OPEN, 4 RED, 1 OPEN/ROUTED. **P1 COMPLETE; FORMATION RED; ZERO LATER CREDIT**. |
 | M1 | `de36d57` predecessor formation | Parse-owned recovery and raw-memo isolation proceeded to M2. |
@@ -425,16 +425,17 @@ chain may be recorded while an earlier arrow is RED.
 ## Next executable boundary
 
 1. Read `NOVELTY-FIRST-FINDINGS-AND-RESUME-HANDOFF-2026-08-01.md`, immutable
-   N1-A `a04a7e6`, N1-A1 `914957f`, and the N1-A2 two-schema,
+   N1-A `a04a7e6`, N1-A1 `914957f`, N1-A2 `e663a91`, and the N1-A3 two-schema,
    semantic-validator, gold/raw, hostile, and manifest packet.
 2. Preserve failed A1 exactly: 13 files, no manifest, immutable raw SHA
    `92516e02…`. Never resume, repair, clear, or reseal it.
 3. A fresh independent non-author must replay the 15-entry manifest, both
-   strict schemas, 2/2 gold controls, 1/1 raw derivation, 71/71 exact hostile
-   dispositions, product relation, path normal form, external trust boundary,
-   and absence of the frozen N2 root. Any failure amends N1-A2 in a new commit;
-   it does not rewrite N1-A or N1-A1.
-4. Only after that audit accepts a committed N1-A2 coordinate, assign one fresh
+   strict schemas, 2/2 gold controls, 1/1 complete ROW/RUN raw derivation,
+   102/102 exact hostile dispositions, duplicate-key rejection, product
+   relation, path normal form, external trust boundary, and absence of the
+   frozen N2 root. Any failure amends N1-A3 in a new commit; it does not rewrite
+   N1-A, N1-A1, or N1-A2.
+4. Only after that audit accepts a committed N1-A3 coordinate, assign one fresh
    absent non-overlapping root for exactly one Luna xhigh N-IETM F0. Do not
    patch current packrat or widen the public API.
 5. Compare every edit version to fresh accepted/rebuilt M2 speed controls plus

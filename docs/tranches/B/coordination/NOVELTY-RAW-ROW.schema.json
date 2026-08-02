@@ -1,45 +1,63 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mkbabb.dev/parse-that/tranche-b/novelty-raw-row.schema.json",
-  "title": "Parse-that novelty raw NDJSON row",
-  "description": "Closed line schema. Registry timing, identity, selection, and mechanism counters are derived from authenticated rows conforming to this shape.",
+  "title": "Parse-that novelty authenticated raw row",
+  "description": "Closed NDJSON row whose authenticated bytes own every performance-bearing ROW and RUN field.",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "version",
     "rowId",
     "runId",
+    "run",
     "armId",
     "fixtureId",
     "fixtureBytesPath",
     "fixtureVectorPath",
     "selectedIndices",
     "productId",
+    "lawIds",
     "rawNanoseconds",
+    "warmupIterations",
     "aggregateIterations",
-    "mechanismCounters"
+    "coldSubintervals",
+    "mechanismCounters",
+    "gcBytes",
+    "deoptBytes",
+    "icBytes",
+    "allocationBytes",
+    "sink"
   ],
   "properties": {
-    "version": { "const": "parse-that-novelty-raw-row-v1" },
-    "rowId": { "type": "string", "minLength": 1 },
-    "runId": { "type": "string", "minLength": 1 },
-    "armId": { "type": "string", "minLength": 1 },
-    "fixtureId": { "type": "string", "minLength": 1 },
-    "fixtureBytesPath": { "type": "string", "minLength": 1 },
-    "fixtureVectorPath": { "type": "string", "minLength": 1 },
+    "version": { "const": "parse-that-novelty-raw-row-v2" },
+    "rowId": { "$ref": "#/$defs/nonEmpty" },
+    "runId": { "$ref": "#/$defs/nonEmpty" },
+    "run": { "$ref": "#/$defs/runProjection" },
+    "armId": { "$ref": "#/$defs/nonEmpty" },
+    "fixtureId": { "$ref": "#/$defs/nonEmpty" },
+    "fixtureBytesPath": { "$ref": "#/$defs/nonEmpty" },
+    "fixtureVectorPath": { "$ref": "#/$defs/nonEmpty" },
     "selectedIndices": {
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
-      "items": { "type": "integer", "minimum": 0 }
+      "items": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
     },
-    "productId": { "type": "string", "minLength": 1 },
+    "productId": { "$ref": "#/$defs/nonEmpty" },
+    "lawIds": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonEmpty" }
+    },
     "rawNanoseconds": {
       "type": "array",
       "minItems": 1,
-      "items": { "type": "string", "pattern": "^[0-9]+$" }
+      "items": { "$ref": "#/$defs/unsignedDecimal" }
     },
-    "aggregateIterations": { "type": "integer", "minimum": 1 },
+    "warmupIterations": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "aggregateIterations": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "coldSubintervals": { "$ref": "#/$defs/coldSubintervals" },
     "mechanismCounters": {
       "type": "array",
       "items": {
@@ -47,9 +65,95 @@
         "additionalProperties": false,
         "required": ["name", "value"],
         "properties": {
-          "name": { "type": "string", "minLength": 1 },
-          "value": { "type": "integer", "minimum": 0 }
+          "name": { "$ref": "#/$defs/nonEmpty" },
+          "value": { "$ref": "#/$defs/unsignedDecimal" }
         }
+      }
+    },
+    "gcBytes": { "$ref": "#/$defs/artifact" },
+    "deoptBytes": { "$ref": "#/$defs/artifact" },
+    "icBytes": { "$ref": "#/$defs/artifact" },
+    "allocationBytes": { "$ref": "#/$defs/artifact" },
+    "sink": { "$ref": "#/$defs/artifact" }
+  },
+  "$defs": {
+    "nonEmpty": {
+      "type": "string",
+      "minLength": 1
+    },
+    "unsignedDecimal": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "bytes", "sha256"],
+      "properties": {
+        "path": { "$ref": "#/$defs/nonEmpty" },
+        "bytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["argv", "cwd", "exitCode", "stdout", "stderr"],
+      "properties": {
+        "argv": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "cwd": { "$ref": "#/$defs/nonEmpty" },
+        "exitCode": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 },
+        "stdout": { "$ref": "#/$defs/artifact" },
+        "stderr": { "$ref": "#/$defs/artifact" }
+      }
+    },
+    "runProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "pid", "processStart", "seed", "order", "node", "v8", "environment", "compileCacheCanary", "commands"],
+      "properties": {
+        "root": { "$ref": "#/$defs/nonEmpty" },
+        "pid": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "processStart": { "$ref": "#/$defs/nonEmpty" },
+        "seed": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "order": { "enum": ["AB", "BA", "AA", "BB"] },
+        "node": { "$ref": "#/$defs/nonEmpty" },
+        "v8": { "$ref": "#/$defs/nonEmpty" },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["NODE_DISABLE_COMPILE_CACHE", "NODE_OPTIONS", "NODE_COMPILE_CACHE"],
+          "properties": {
+            "NODE_DISABLE_COMPILE_CACHE": { "type": "string" },
+            "NODE_OPTIONS": { "type": "string" },
+            "NODE_COMPILE_CACHE": { "type": ["string", "null"] }
+          }
+        },
+        "compileCacheCanary": { "enum": ["GREEN_DISABLED", "RED_CONTAMINATED"] },
+        "commands": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/command" }
+        }
+      }
+    },
+    "coldSubintervals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["startupNs", "importNs", "buildNs", "firstCompleteParseNs"],
+      "properties": {
+        "startupNs": { "$ref": "#/$defs/unsignedDecimal" },
+        "importNs": { "$ref": "#/$defs/unsignedDecimal" },
+        "buildNs": { "$ref": "#/$defs/unsignedDecimal" },
+        "firstCompleteParseNs": { "$ref": "#/$defs/unsignedDecimal" }
       }
     }
   }

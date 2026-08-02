@@ -20,7 +20,7 @@
       "required": ["path", "bytes", "sha256"],
       "properties": {
         "path": { "$ref": "#/$defs/nonEmpty" },
-        "bytes": { "type": "integer", "minimum": 0 },
+        "bytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
         "sha256": { "$ref": "#/$defs/sha256" }
       }
     },
@@ -35,7 +35,7 @@
           "items": { "type": "string" }
         },
         "cwd": { "$ref": "#/$defs/nonEmpty" },
-        "exitCode": { "type": "integer" },
+        "exitCode": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 },
         "stdout": { "$ref": "#/$defs/artifact" },
         "stderr": { "$ref": "#/$defs/artifact" }
       }
@@ -83,9 +83,9 @@
         "schemaSha256": { "$ref": "#/$defs/sha256" },
         "phase": { "enum": ["N2", "N3", "L1", "L2", "L3", "CLEAN_A", "CLEAN_B"] },
         "root": { "$ref": "#/$defs/nonEmpty" },
-        "pid": { "type": "integer", "minimum": 1 },
+        "pid": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
         "processStart": { "$ref": "#/$defs/nonEmpty" },
-        "seed": { "type": "integer", "minimum": 0 },
+        "seed": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
         "order": { "enum": ["AB", "BA", "AA", "BB"] },
         "node": { "$ref": "#/$defs/nonEmpty" },
         "v8": { "$ref": "#/$defs/nonEmpty" },
@@ -179,7 +179,7 @@
         "selectedIndices": {
           "type": "array",
           "minItems": 1,
-          "items": { "type": "integer", "minimum": 0 }
+          "items": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
         },
         "expectedProductId": { "$ref": "#/$defs/nonEmpty" }
       }
@@ -206,24 +206,24 @@
         "rawNanoseconds": {
           "type": "array",
           "minItems": 1,
-          "items": { "type": "string", "pattern": "^[0-9]+$" }
+          "items": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" }
         },
-        "warmupIterations": { "type": "integer", "minimum": 0 },
-        "aggregateIterations": { "type": "integer", "minimum": 1 },
+        "warmupIterations": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "aggregateIterations": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
         "coldSubintervals": {
           "type": "object",
           "additionalProperties": false,
           "required": ["startupNs", "importNs", "buildNs", "firstCompleteParseNs"],
           "properties": {
-            "startupNs": { "type": "string", "pattern": "^[0-9]+$" },
-            "importNs": { "type": "string", "pattern": "^[0-9]+$" },
-            "buildNs": { "type": "string", "pattern": "^[0-9]+$" },
-            "firstCompleteParseNs": { "type": "string", "pattern": "^[0-9]+$" }
+            "startupNs": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
+            "importNs": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
+            "buildNs": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
+            "firstCompleteParseNs": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" }
           }
         },
         "mechanismCounters": {
           "type": "object",
-          "additionalProperties": { "type": "integer", "minimum": 0 }
+          "additionalProperties": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" }
         },
         "gcBytes": { "$ref": "#/$defs/artifact" },
         "deoptBytes": { "$ref": "#/$defs/artifact" },
