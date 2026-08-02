@@ -4,7 +4,7 @@ Date: 2026-08-01
 
 Last amended: 2026-08-02
 
-Status: **N1-A4 COMMITTED — N2-F0/N2A TERMINAL MECHANICS RED — N2B SAME-TASK FRESH-ROOT AUTHORIZED/NOT SENT — ZERO DOWNSTREAM CREDIT**
+Status: **N1-A4 COMMITTED — N2-F0/N2A TERMINAL MECHANICS RED — N2B TERMINAL SCIENTIFIC-RUNNER RED — N2C SAME-TASK SOURCE-ONLY AUTHORIZED/NOT SENT — ZERO DOWNSTREAM CREDIT**
 
 ## Scope
 
@@ -23,7 +23,7 @@ They may produce inputs to the law portfolio but cannot satisfy it by name.
 | `N1.RG` | GPT Sol xhigh, independent genealogy/falsification | family charter, live parser source, P1–P6 evidence, supplied primary sources | independent alias/retirement view | `COMPLETE; READ-ONLY` |
 | `N1.RH` | GPT Sol xhigh, independent host/economics | family charter, Node 26/V8 14.6, live benches/source, active law families | independent reachability/cost view | `COMPLETE; READ-ONLY` |
 | `N1.O` | parser owner, synthesis/adjudication | `N1.RG`, `N1.RH`, independent root/consumer audits | atlas, matrix, registry, closed schemas, semantic closure, handoff | `N1-A/A1/A2/A3 IMMUTABLE; N1-A4 COMMITTED AT 81b2a0a` |
-| `N2.IETM` | GPT Luna xhigh, isolated prototype | committed independently accepted N1-A4 packet, prior-art adjudication, and N2b owner ruling only | parse-that recognition-island/complete-product PL-BE integration probe and comparative raw receipts | `F0/N2A TERMINAL MECHANICS RED; SAME IDLE TASK 019fb12c-2624-7732-909a-e1e87ce7ef24 MAY RECEIVE ONE FRESH-ROOT N2B CORRECTION; NOT SENT; ZERO CREDIT` |
+| `N2.IETM` | GPT Luna xhigh, isolated prototype | committed independently accepted N1-A4 packet, prior-art adjudication, and current N2b/N2c owner ruling only | source-only pure-DI/version-object/complete-product validator, then separately authorized future probe | `F0/N2A TERMINAL MECHANICS RED; N2B TERMINAL SCIENTIFIC-RUNNER RED; SAME TASK 019fb12c-2624-7732-909a-e1e87ce7ef24 MAY RECEIVE ONE TWO-FILE N2C SOURCE-ONLY TRANSACTION; NOT SENT; ZERO CREDIT` |
 | `N2.DNF` / `N-DNF-BIR` | GPT Luna xhigh, isolated falsifier | established fusion/staging/CST/parse-print prior art plus exact S/C/V/E non-isomorphism predicate | parse-that-specific bidirectional direct-source integration proof or retirement | `NO-GO; SECOND BORN-RED INTEGRATION HOLD; NO NOVELTY CLAIM` |
 | `N2.WRR` | GPT Luna xhigh, isolated falsifier | sealed N1 packet and explicit V/E/BBNF-WASM non-isomorphism predicate | WASM boundary proof or retirement | `NO-GO; BORN-RED HOLD` |
 | `N2.GLL` | GPT Luna xhigh, tiny fatal probe | sealed N1 packet, real ambiguity/left-recursion counterexample | descriptor/GSS counters and exact product | `NO-GO; FATAL-ONLY HOLD` |
@@ -34,11 +34,14 @@ They may produce inputs to the law portfolio but cannot satisfy it by name.
 This packet creates no task or evidence root. N1-A4 and the prior-art
 adjudication are committed together at `81b2a0aacebc126ac1a093407cb2e24ed5d78ee8`.
 The first formation-only N-IETM root and its N2a correction on the pre-existing
-Luna task are frozen terminal mechanics RED. Exactly one same-task,
-non-overlapping N2b correction is authorized but not sent under
-[`../audit/NOVELTY-N2A-TERMINAL-MECHANICS-RED-OWNER-INTAKE-AND-N2B-RULING-2026-08-02.md`](../audit/NOVELTY-N2A-TERMINAL-MECHANICS-RED-OWNER-INTAKE-AND-N2B-RULING-2026-08-02.md),
+Luna task are frozen terminal mechanics RED. N2b is frozen terminal
+scientific-runner RED: its source-resolution mechanics passed, but its runner,
+hardcoded gates, relocation/product plane, and raw authority did not. Exactly
+one same-task, non-overlapping two-file N2c source-only transaction is
+authorized but not sent under
+[`../audit/NOVELTY-N2B-TERMINAL-SCIENTIFIC-RUNNER-RED-OWNER-INTAKE-AND-N2C-SOURCE-ONLY-RULING-2026-08-02.md`](../audit/NOVELTY-N2B-TERMINAL-SCIENTIFIC-RUNNER-RED-OWNER-INTAKE-AND-N2C-SOURCE-ONLY-RULING-2026-08-02.md),
 SHA-256
-`88b032fd00502e7cdbb97e38dd01b663cf93a3e1934bcac076f71f240f9fb04a`.
+`35e72f24a4505e1d6f060ea47c0eecf2b470864ae43aea48490a5ce17914b2c4`.
 The immutable N2-F0 predecessor ruling remains
 `7c3cda9b8011c5efec3c1c3b2fa33342698a4a8fa9acf2524f75fbdbc8f64071`.
 N-DNF-BIR and N-WRR
@@ -472,8 +475,10 @@ At N1-A4 correction close:
 - N1-A4 correction: controls `8/8`, hostiles `130/130`, raw rows `1/1`,
   fresh independent acceptance `1/1`, committed at `81b2a0a`;
 - N2-F0/N2a: two terminal mechanics attempts on the sole existing Luna task;
+  N2b: terminal scientific-runner RED with source-resolution-only mechanics;
   no sealed scientific result, timing, prototype, law, or downstream credit;
-  one fresh N2b correction on that same task is authorized but not sent;
+  one two-file N2c source-only transaction on that same task is authorized but
+  not sent;
 - candidate families: N-IETM algorithmic substrate `FOLD PRIOR ART`, local
   parse-that integration hypothesis `HOLD/TEST`; N-DNF-BIR is a second
   prior-art-bound integration `HOLD`, N-WRR born-RED `HOLD`; N-GLL

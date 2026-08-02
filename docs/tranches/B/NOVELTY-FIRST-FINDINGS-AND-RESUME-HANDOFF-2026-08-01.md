@@ -4,13 +4,15 @@ Date: 2026-08-01
 
 Last amended: 2026-08-02
 
-Status: **N1-A4 COMMITTED — N2-F0/N2A TERMINAL MECHANICS RED — N2B SAME-TASK FRESH-ROOT AUTHORIZED/NOT SENT — ZERO CREDIT — NO RELEASE**
+Status: **N1-A4 COMMITTED — N2-F0/N2A TERMINAL MECHANICS RED — N2B TERMINAL SCIENTIFIC-RUNNER RED — N2C SAME-TASK SOURCE-ONLY AUTHORIZED/NOT SENT — ZERO CREDIT — NO RELEASE**
 
 ## Exact owner state
 
 - repository: `/Users/mkbabb/Programming/parse-that-css-totality`;
 - branch: `codex/css-totality-combinators-20260729`;
-- authenticated N1-A4 authority/current source HEAD:
+- predecessor source HEAD for this boundary:
+  `73e4de1f72150507efc0790b694b13a91b03dccf`;
+- authenticated N1-A4 research authority:
   `81b2a0aacebc126ac1a093407cb2e24ed5d78ee8`;
 - immutable N1-A3 commit:
   `164fc9a672d4dee20233b5547275affc4df16dd7`;
@@ -87,6 +89,12 @@ integration amendment, and sole N2b route are in
 `audit/NOVELTY-N2A-TERMINAL-MECHANICS-RED-OWNER-INTAKE-AND-N2B-RULING-2026-08-02.md`.
 Its SHA-256 is
 `88b032fd00502e7cdbb97e38dd01b663cf93a3e1934bcac076f71f240f9fb04a`.
+N2b then passed source resolution but crashed before timing. Its incomplete
+version relocation, hardcoded gates, lossy comparator, and one-newline raw
+stream are frozen in
+`audit/NOVELTY-N2B-TERMINAL-SCIENTIFIC-RUNNER-RED-OWNER-INTAKE-AND-N2C-SOURCE-ONLY-RULING-2026-08-02.md`,
+SHA-256
+`35e72f24a4505e1d6f060ea47c0eecf2b470864ae43aea48490a5ce17914b2c4`.
 No result or credit exists. The earlier parser/CSS dependency chronology is in
 `coordination/PARSER-CSS-RESUMPTION-SAFE-BOUNDARY-2026-08-01.md`.
 
@@ -198,11 +206,10 @@ non-isomorphism predicate retires it before timing.
 
 ## Exact next boundary
 
-Do not create a parser task or reuse N2-F0 or either N2a locus. N1-A4 and the
-prior-art adjudication share committed coordinate `81b2a0a`. The sole existing
-Luna task may receive at most one N2b correction at the fresh absent Aug-2 N2b
-root only after both N2a censuses and absolute Ohm-pin checks pass. This
-handoff does not send that packet.
+Do not create a parser task or reuse N2-F0, either N2a locus, or N2b. N1-A4 and
+the prior-art adjudication share committed coordinate `81b2a0a`. The sole
+existing Luna task may receive at most one two-file N2c source-only transaction
+at the fresh absent Aug-2 N2c root. This handoff does not send that packet.
 
 Then execute only in this order:
 
@@ -211,20 +218,21 @@ Then execute only in this order:
    or reseal either;
 3. preserve both N2a loci exactly; never repair, merge, rerun, clean, or reseal
    either;
-4. allow only the existing N-IETM Luna xhigh task to create one fresh N2b root
-   with a literal machine-bound writer root, direct Ohm pins, no shell date/
-   variable/redirection logic, and every output/temporary byte root-contained;
-5. run source-resolution preflight first, then the amended recognition-island
-   integration/equivalence probe against accepted and
-   rebuilt M2 plus the semantic-law envelope, using the frozen
-   generic/Value/standards suites;
-6. require Ohm/Dubroy/GPeg equivalence and all fatal gates before
-   timing;
-7. fresh Sol xhigh hostile critique of an immutable scientifically completed
-   N2b root only;
-8. owner agglomeration; and
-9. stop. N-DNF-BIR, N-WRR, and N-GLL remain NO-GO until a later explicit owner
-   authority resolves their born-RED predicates.
+4. preserve N2b's exact 15-file root; never repair, rerun, complete, manifest,
+   copy, or reseal it;
+5. allow only the existing N-IETM Luna xhigh task to create one fresh N2c root
+   containing only `outputs/preflight-n2c.mjs` and
+   `outputs/SOURCE-READY.md`;
+6. prohibit Luna from running Node, importing/checking/auditing the source,
+   executing a parser/prototype, or producing raw/results/timing;
+7. owner freeze/census and static hostile review of version-object lineage,
+   shifted offsets/depth, pure DI production validation, authenticated complete
+   transitions, exact M2/effect products, type-preserving equality, and
+   production-consumed leaf controls;
+8. require a separate owner ruling before any future execution release; and
+9. stop. N-DNF-BIR remains separately banked and undispatched; N-WRR and N-GLL
+   remain NO-GO until a later explicit owner authority resolves their born-RED
+   predicates.
 
 An interrupted root freezes permanently. A correction uses a new absent root.
 No current or failed evidence root is resumed.
@@ -240,15 +248,17 @@ No current or failed evidence root is resumed.
 - N1-A3 correction: immutable false-green after numeric/registry-byte audit;
 - N1-A4 correction: gold controls `8/8`, raw rows `1/1`, hostiles `130/130`,
   fresh independent acceptance `1/1`, committed at `81b2a0a`;
-- N2 scientific experiments: `0/4` terminal receipts; N2-F0 and N2a are two
-  terminal mechanics attempts with zero credit; one same-task N2b correction
-  is authorized but not sent;
+- N2 scientific experiments: `0/4` terminal receipts; N2-F0/N2a are terminal
+  mechanics attempts and N2b is terminal scientific-runner RED, all with zero
+  credit; one same-task two-file N2c source-only transaction is authorized but
+  not sent;
 - N3 critiques/agglomeration: `0/5`;
 - strict 3x, strict 2x, measured break-even: each `0/5`;
 - Value receiver: `14/34 = 41.18%`;
 - full CSS/WPT/browser, product execution, package, API, consumer migration,
   release, Value/Keyframes/BBNF/Fourier credit: **0**.
 
-This closes only the owner mechanics intake. The long-horizon parser goal
-remains active. N2-F0 and N2a are terminal and frozen; N2b is authorized but
-not sent, with no scientific receipt or downstream credit.
+This closes only the owner source/scientific-runner intake. The long-horizon
+parser goal remains active. N2-F0, N2a, and N2b are terminal and frozen; N2c
+is source-only authorized but not sent, with no scientific receipt or
+downstream credit.

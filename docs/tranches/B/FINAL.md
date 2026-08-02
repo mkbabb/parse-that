@@ -25,8 +25,8 @@ active admission law by axiom.
 | Runtime correctness | `RED` | M2 is the accepted control; live production remains rejected M3. A3 is locally correctness-clean but performance-killed; no candidate exists |
 | Full-subject P1→P2→P3 | `COMPLETE` | P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`. All implemented candidates are killed; this supplies no isolated-proof or formation credit. |
 | Isolated every-scale/result proof | `RED` | S7's subset is local. S8, P2-UO/L/shaped and P2-C are RED/killed; P3 reaches 1.0656–1.5238×; P4 mechanism rows are below `1x`; P5 reaches 0.6076–0.7527× / 0.6149–0.7001×. P6/A1/A2 rows are inadmissible; conforming A3 rows are admissible but only 0.9208–1.0390×. Post-P6 Luna timings are unequal-selection evidence only; final Sol finds no current host edge. No candidate exists. |
-| Performance-law L1 / L2 / L3 | `OPEN` | L1 family research/common synthesis remain historical inputs. Original Luna `980d7781…` is false-green; performance-law A1 is terminal born-RED. N1-A4/prior-art authority is committed at `81b2a0a`. N2-F0 and N2a are terminal mechanics RED with zero credit; N2b is authorized on the same task/fresh root but not sent. L2/L3 remain blocked. |
-| Novelty N1 / N2 / N3 | `N1-A/A1/A2/A3 IMMUTABLE; N1-A4 COMMITTED; N2-F0/N2A TERMINAL MECHANICS RED; N2B AUTHORIZED/NOT SENT; N3 BLOCKED` | N1-A through A3 are immutable false-green chronology. N1-A4 closes byte authority and passes its fresh audit. Broad N-IETM novelty folds to prior art. N2-F0 failed package resolution; N2a split writer/birth/output roots and never invoked Node. The only route is one same-task N2b fresh-root recognition-island/complete-product PL-BE correction. N-DNF-BIR is prior-art-bound/no novelty; N-WRR is born-RED; N-GLL is fatal-only. |
+| Performance-law L1 / L2 / L3 | `OPEN` | L1 family research/common synthesis remain historical inputs. Original Luna `980d7781…` is false-green; performance-law A1 is terminal born-RED. N1-A4/prior-art authority is committed at `81b2a0a`. N2-F0/N2a are terminal mechanics RED; N2b is terminal scientific-runner RED; all have zero credit. One same-task N2c source-only transaction is authorized but not sent. L2/L3 remain blocked. |
+| Novelty N1 / N2 / N3 | `N1-A/A1/A2/A3 IMMUTABLE; N1-A4 COMMITTED; N2-F0/N2A TERMINAL MECHANICS RED; N2B TERMINAL SCIENTIFIC-RUNNER RED; N2C SOURCE-ONLY AUTHORIZED/NOT SENT; N3 BLOCKED` | N1-A through A3 are immutable false-green chronology. N1-A4 closes byte authority and passes its fresh audit. Broad N-IETM novelty folds to prior art. N2-F0 failed package resolution; N2a split writer/birth/output roots; N2b passed source resolution but crashed before timing and its hardcoded gates/raw/product plane are invalid. The only route is a two-file, non-executed N2c source transaction followed by owner static hostile review. N-DNF-BIR is independently banked, prior-art-bound/no novelty, and undispatched; N-WRR is born-RED; N-GLL is fatal-only. |
 | Formation Clean A / Clean B | `BLOCKED` | requires one immutable L3 law packet |
 | Formation admission | `BLOCKED` | requires both formation clean audits; creates zero execution credit |
 | Full Value CSS coverage | `OPEN` | Root denominator `2bc4abb2…` binds 1,717 raw/1,653 active Webref rows, 25 decisions, ten entry points, eleven algorithms, full recovery/fidelity, WPT manifests and 53 Keyframes references/51 files; Value owns implementation and no execution receipt exists |
@@ -134,12 +134,13 @@ product work. Preserve post-P6 owner evidence `40d8b4c` and do not cite
 Luna's unequal-selection ratios as equal-work proof. Failed A1 is terminal and
 must not be resumed. N1-A4 and its prior-art adjudication are committed at
 `81b2a0a`; do not dispatch a duplicate. N2-F0 and both N2a loci are terminal
-frozen mechanics evidence. Only the existing Luna task may receive one N2b
-correction at the fresh absent literal Aug-2 N2b root after both N2a censuses,
-absolute Ohm pins, and machine-bound source-resolution checks; this packet has
-not been sent. If N2b
-passes preflight, it may continue the private prior-art-aware N-IETM PL-BE
-integration assay, preserve cold cost, and compare every edit to fresh M2 plus
-the semantic-law envelope.
+frozen mechanics evidence. N2b is also terminal: its preflight passed, but its
+scientific runner crashed before timing and static review found hardcoded
+gates, absent transition authority, incomplete relocation, and lossy product
+equality. Preserve its exact 15-file root. Only the existing Luna task may
+receive one two-file N2c source-only transaction at the fresh absent literal
+Aug-2 N2c root. Luna may author source but may not run Node, import/check it, or
+execute a parser. Owner static hostile review must precede any separate future
+execution authority; this N2c packet has not been sent.
 Do not begin product source, CSS implementation,
 candidate packing, API work, release, or consumer execution.

@@ -10,9 +10,10 @@ Formation status: **ACTIVE — P1–P6 and post-P6 NO-EDGE remain immutable
 historical-10x evidence; failed A1 is terminal archaeology; novelty Pass N1 is
 source-complete as immutable N1-A chronology; N1-A1, N1-A2, and N1-A3 are
 immutable failed-audit chronology; N1-A4 byte-owned ROW/RUN closure and its
-prior-art adjudication are committed at `81b2a0a`; N2-F0 and N2a are terminal
-mechanics RED with zero credit; one same-task fresh-root N2b correction is
-authorized but not sent; N-DNF-BIR/N-WRR remain prior-art-bound born-RED holds,
+prior-art adjudication are committed at `81b2a0a`; N2-F0/N2a are terminal
+mechanics RED and N2b is terminal scientific-runner RED, all with zero credit;
+one same-task two-file N2c source-only transaction is authorized but not sent;
+N-DNF-BIR/N-WRR remain prior-art-bound born-RED holds,
 N-GLL is no-go/fatal-only, and both
 formation clean audits remain blocked**
 
@@ -24,7 +25,7 @@ Release status: **NO RELEASE**
 |---|---|---|
 | Archaeology | `research/PARSE-THAT-SESSION-ARCHAEOLOGY-2026-07-29.md` | Banked; prior scanner-shaped CSS attempts and stale completion claims rejected. |
 | Round zero | `research/ROUND-ZERO-PARSE-THAT-PORTFOLIO-2026-07-29.md` | Banked portfolio; incompatible families preserved for evidence. |
-| Novelty-first Pass N1 / N2 mechanics | immutable N1-A `a04a7e6`, N1-A1 `914957f`, N1-A2 `e663a91`, N1-A3 `164fc9a`; committed N1-A4 `81b2a0a`; A4 audit; prior-art adjudication; atlas/registry/law/handoff; N2-F0 ruling SHA `7c3cda9b…`; N2a/N2b owner ruling SHA `88b032fd…` | N1-A4 owns registry/raw bytes and its fresh audit. N-IETM's algorithmic substrate folds to prior art. N2-F0 failed package resolution; N2a split writer/birth/output roots and failed before Node. Both are terminal mechanics RED/zero credit. One same-task N2b fresh-root correction is authorized but not sent under an unforgeable WeakMap recognition-island/complete-product PL-BE law. N-DNF-BIR is prior-art-bound/no novelty and remains a second born-RED integration route. CSS remains Value-owned chronology. **SOURCE/DEPENDENCY ONLY; ZERO PRODUCT/CSS/API/RELEASE CREDIT**. |
+| Novelty-first Pass N1 / N2 mechanics | immutable N1-A `a04a7e6`, N1-A1 `914957f`, N1-A2 `e663a91`, N1-A3 `164fc9a`; committed N1-A4 `81b2a0a`; A4 audit; prior-art adjudication; atlas/registry/law/handoff; N2-F0 ruling SHA `7c3cda9b…`; N2a/N2b ruling SHA `88b032fd…`; N2b/N2c ruling SHA `35e72f24…` | N1-A4 owns registry/raw bytes and its fresh audit. N-IETM's algorithmic substrate folds to prior art. N2-F0/N2a are terminal mechanics RED. N2b passed source resolution but crashed before timing; static review rejects its hardcoded gates, incomplete relocation/product equality, and empty raw stream. All are zero-credit. One same-task two-file N2c source-only transaction is authorized but not sent; owner static hostile review must precede any later execution. N-DNF-BIR is independently prior-art-bound/no novelty and remains undispatched. CSS remains Value-owned chronology. **SOURCE/DEPENDENCY ONLY; ZERO PRODUCT/CSS/API/RELEASE CREDIT**. |
 | Pass 1 research adjudication/agglomeration | `research/PASS-1-SOL-ADJUDICATION-2026-07-29.md`, `research/PASS-1-SOL-AGGLOMERATION-2026-07-29.md` | Preliminary research only: R/E/V/K retired and S/D remained candidates; later reconciled by P1. |
 | P1 full-subject reconciliation | `69f72f7`, `research/P1-HASH-BOUND-REGISTRY-2026-07-29.md` | Twenty hash-bound rows: 8 GREEN, 7 OPEN, 4 RED, 1 OPEN/ROUTED. **P1 COMPLETE; FORMATION RED; ZERO LATER CREDIT**. |
 | M1 | `de36d57` predecessor formation | Parse-owned recovery and raw-memo isolation proceeded to M2. |
@@ -437,24 +438,21 @@ chain may be recorded while an earlier arrow is RED.
    repair, rerun, clean, move, or reseal them.
 5. Preserve both N2a loci exactly. Do not repair, merge, rerun, clean, copy, or
    reseal them.
-6. Do not create another task. At most one N2b packet may return to the same
-   idle task `019fb12c-2624-7732-909a-e1e87ce7ef24`, using only the fresh
-   absent literal Aug-2 N2b root after both N2a censuses and direct Ohm pins are
-   reproduced. No packet was sent by the owner ruling turn.
-7. Run source-resolution preflight first with no shell date derivation,
-   variables, or redirection; every path and output is machine-bound to the
-   literal writer root. If GREEN, compare the mechanism to pinned Dubroy/
-   Warth/Ohm and GPeg controls; reproducing prior art earns no novelty. Compare
-   every edit version to fresh accepted/rebuilt M2 speed controls plus
-   the complete semantic-law envelope. Append EOF/assert final offset. Bind
-   full examined/EOF dependencies, action/effect identity, complete products,
-   allocation/GC/retained heap, and unit-bearing K-edit break-even.
-8. N-IETM targets PL-BE only. PL-BE may establish local utility, not novelty.
-   Descriptive local 2x/3x edit ratios grant no
-   strict-law milestone. Freeze the root on the first stale product, unequal
-   selection, schema drift, cache contamination, or hostile failure.
-9. Fresh Sol critiques only an immutable scientifically completed N2b; owner
-   agglomerates and stops.
+6. Preserve N2b's exact 15-file, six-directory, 67,289-byte root. Do not
+   repair, rerun, complete, manifest, copy, or reseal it.
+7. Do not create another task. At most one N2c packet may return to the same
+   Luna task `019fb12c-2624-7732-909a-e1e87ce7ef24`, using only the fresh
+   absent literal Aug-2 N2c root. It may create exactly
+   `outputs/preflight-n2c.mjs` and `outputs/SOURCE-READY.md`.
+8. Luna authors source only: no Node, import, check, audit, parser/prototype
+   execution, raw/result generation, or timing. The first extra node, external
+   write, command, hardcoded gate, incomplete version/coordinate/depth
+   relocation, lossy comparator, unauthenticated transition, or shaped product
+   is RED and freezes N2c.
+9. Owner freezes/censuses N2c and performs a static hostile review using the
+   exact production validator, version-object, authenticated transition,
+   type-preserving complete-product, effect, leaf-control, and rebuilt-M2 laws.
+   A separate ruling is required before any future execution.
    N-DNF-BIR, N-WRR, N-GLL, L2/L3, CSS product work, clean audits, package/API,
    consumer migration, release, and BBNF remain blocked.
 

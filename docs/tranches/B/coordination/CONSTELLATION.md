@@ -10,7 +10,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | N1-A4 authority is `81b2a0a`; N2-F0 and N2a on sole task `019fb12c-2624-7732-909a-e1e87ce7ef24` are terminal mechanics RED/zero credit; one same-task N2b fresh-root correction is authorized but not sent. Failed A1 is terminal. Post-P6 `40d8b4c` and P6-A3 `3ed4c43` remain immutable historical-10x evidence. |
+| parse-that worktree | B / generic runtime producer | N1-A4 authority is `81b2a0a`; N2-F0/N2a on sole task `019fb12c-2624-7732-909a-e1e87ce7ef24` are terminal mechanics RED and N2b is terminal scientific-runner RED, all zero-credit; one same-task N2c two-file source-only transaction is authorized but not sent. Failed A1 is terminal. Post-P6 `40d8b4c` and P6-A3 `3ed4c43` remain immutable historical-10x evidence. |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
@@ -57,10 +57,11 @@ It grants zero parser implementation, CSS, Value, Keyframes, package, API,
 release, or BBNF credit. Value remains a read-only future consumer; current
 Value imports no parse-that code. The accepted A4/prior-art pin is `81b2a0a`;
 the first isolated prior-art-aware N-IETM F0 root and N2a correction are
-terminal mechanics RED. One same-task fresh-root N2b correction is authorized
-but not sent; only a
-scientifically complete immutable successor may proceed to fresh Sol critique
-and owner stop. There is no parser-to-Fourier edge.
+terminal mechanics RED. N2b passed source resolution but is terminal
+scientific-runner RED before timing. One same-task N2c two-file source-only
+transaction is authorized but not sent; owner static hostile review and a
+separate ruling are required before any future execution. There is no
+parser-to-Fourier edge.
 
 ## Parser/CSS resumption receipt
 
@@ -84,6 +85,15 @@ It freezes both split N2a loci, narrows N-IETM to an unforgeable
 recognition-island/complete-product PL-BE integration hypothesis, binds
 N-DNF-BIR as prior-art/no-novelty, and authorizes but does not send one N2b
 same-task fresh-root correction.
+
+The superseding N2b terminal intake and N2c source-only ruling is
+[`../audit/NOVELTY-N2B-TERMINAL-SCIENTIFIC-RUNNER-RED-OWNER-INTAKE-AND-N2C-SOURCE-ONLY-RULING-2026-08-02.md`](../audit/NOVELTY-N2B-TERMINAL-SCIENTIFIC-RUNNER-RED-OWNER-INTAKE-AND-N2C-SOURCE-ONLY-RULING-2026-08-02.md),
+SHA-256
+`35e72f24a4505e1d6f060ea47c0eecf2b470864ae43aea48490a5ce17914b2c4`.
+It freezes N2b's exact 15-file root, rejects its hardcoded/incomplete source
+planes, and authorizes without sending one same-task two-file N2c source-only
+transaction. It grants zero product, execution, law, package, API, or release
+credit.
 
 ## Writer / reader boundary
 
