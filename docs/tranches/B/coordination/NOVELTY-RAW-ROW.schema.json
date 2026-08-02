@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mkbabb.dev/parse-that/tranche-b/novelty-raw-row.schema.json",
   "title": "Parse-that novelty authenticated raw row",
-  "description": "Closed NDJSON row whose authenticated bytes own every performance-bearing ROW and RUN field.",
+  "description": "Closed NDJSON row whose authenticated bytes own every performance-bearing ROW and RUN field; all JSON number tokens are canonical exact safe integers and every decoded string is a Unicode-scalar sequence before schema evaluation.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -29,7 +29,7 @@
     "sink"
   ],
   "properties": {
-    "version": { "const": "parse-that-novelty-raw-row-v2" },
+    "version": { "const": "parse-that-novelty-raw-row-v3" },
     "rowId": { "$ref": "#/$defs/nonEmpty" },
     "runId": { "$ref": "#/$defs/nonEmpty" },
     "run": { "$ref": "#/$defs/runProjection" },

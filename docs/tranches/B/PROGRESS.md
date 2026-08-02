@@ -8,9 +8,10 @@ Active wave: `B.W0 - Candidate-to-Release Closure`
 
 Formation status: **ACTIVE — P1–P6 and post-P6 NO-EDGE remain immutable
 historical-10x evidence; failed A1 is terminal archaeology; novelty Pass N1 is
-source-complete as immutable N1-A chronology; N1-A1 and N1-A2 are immutable failed audit
-chronology; N1-A3 authenticated ROW/RUN closure is owner-banked but awaits
-another fresh independent audit; N2 is blocked and no prototype is next;
+source-complete as immutable N1-A chronology; N1-A1, N1-A2, and N1-A3 are
+immutable failed-audit chronology; N1-A4 byte-owned ROW/RUN closure is
+independently source-clean and awaits its commit/pin with the prior-art
+adjudication; N2 is blocked and no prototype is next;
 N-DNF/N-WRR remain born-RED holds, N-GLL is no-go/fatal-only, and both
 formation clean audits remain blocked**
 
@@ -22,7 +23,7 @@ Release status: **NO RELEASE**
 |---|---|---|
 | Archaeology | `research/PARSE-THAT-SESSION-ARCHAEOLOGY-2026-07-29.md` | Banked; prior scanner-shaped CSS attempts and stale completion claims rejected. |
 | Round zero | `research/ROUND-ZERO-PARSE-THAT-PORTFOLIO-2026-07-29.md` | Banked portfolio; incompatible families preserved for evidence. |
-| Novelty-first Pass N1 | immutable N1-A `a04a7e6`, N1-A1 `914957f`, and N1-A2 `e663a91`; `research/NOVELTY-FIRST-MECHANISM-ATLAS-2026-08-01.md`; `coordination/NOVELTY-PASS-REGISTRY-AND-EXPERIMENT-LAW-2026-08-01.md`; N1-A3 validator/two schemas/gold/raw/102-hostile results under `artifacts/novelty-n1-a1-semantic-registry/`; resume handoff | N1-A2 passed 71 shipped hostiles, but fresh audit found unbound sink/RUN/ROW truth, unsafe adjacent-large-counter comparison, and duplicate-key acceptance. N1-A3 binds every performance-bearing ROW field and complete resolved RUN projection to strict authenticated raw bytes, uses canonical decimal-string/`BigInt` counters, rejects decoded duplicate keys, and preserves exact one-use/path/product laws; controls are 2/2, raw rows 1/1, and hostiles 102/102. Fresh N1-A3 acceptance is 0/1, so N2 remains blocked. N-IETM is the sole future PL-BE route; N-DNF/N-WRR/N-GLL remain held. **SOURCE-ONLY; ZERO PRODUCT/CSS/API/RELEASE CREDIT**. |
+| Novelty-first Pass N1 | immutable N1-A `a04a7e6`, N1-A1 `914957f`, N1-A2 `e663a91`, N1-A3 `164fc9a`; A4 audit; prior-art adjudication; atlas/registry/law/handoff; A4 15-entry packet under `artifacts/novelty-n1-a1-semantic-registry/` | N1-A3 passed 102 shipped hostiles, but fresh audit found numeric rounding and a caller-parsed registry boundary. N1-A4 owns registry/raw bytes, canonical safe integers, UTF-8/duplicates/Unicode scalars, and exact Set membership; controls are 8/8, raw rows 1/1, hostiles 130/130, and fresh acceptance 1/1. Commit/pin remains before N2. N-IETM's algorithmic substrate folds to prior art; it is the sole authorized prior-art-aware PL-BE integration experiment, not an algorithm-novelty claim. **SOURCE-ONLY; ZERO PRODUCT/CSS/API/RELEASE CREDIT**. |
 | Pass 1 research adjudication/agglomeration | `research/PASS-1-SOL-ADJUDICATION-2026-07-29.md`, `research/PASS-1-SOL-AGGLOMERATION-2026-07-29.md` | Preliminary research only: R/E/V/K retired and S/D remained candidates; later reconciled by P1. |
 | P1 full-subject reconciliation | `69f72f7`, `research/P1-HASH-BOUND-REGISTRY-2026-07-29.md` | Twenty hash-bound rows: 8 GREEN, 7 OPEN, 4 RED, 1 OPEN/ROUTED. **P1 COMPLETE; FORMATION RED; ZERO LATER CREDIT**. |
 | M1 | `de36d57` predecessor formation | Parse-owned recovery and raw-memo isolation proceeded to M2. |
@@ -425,24 +426,24 @@ chain may be recorded while an earlier arrow is RED.
 ## Next executable boundary
 
 1. Read `NOVELTY-FIRST-FINDINGS-AND-RESUME-HANDOFF-2026-08-01.md`, immutable
-   N1-A `a04a7e6`, N1-A1 `914957f`, N1-A2 `e663a91`, and the N1-A3 two-schema,
-   semantic-validator, gold/raw, hostile, and manifest packet.
+   N1-A through N1-A3, the N1-A4 audit and prior-art adjudication, and the A4
+   two-schema/byte-validator/gold/raw/hostile/manifest packet.
 2. Preserve failed A1 exactly: 13 files, no manifest, immutable raw SHA
    `92516e02…`. Never resume, repair, clear, or reseal it.
-3. A fresh independent non-author must replay the 15-entry manifest, both
-   strict schemas, 2/2 gold controls, 1/1 complete ROW/RUN raw derivation,
-   102/102 exact hostile dispositions, duplicate-key rejection, product
-   relation, path normal form, external trust boundary, and absence of the
-   frozen N2 root. Any failure amends N1-A3 in a new commit; it does not rewrite
-   N1-A, N1-A1, or N1-A2.
-4. Only after that audit accepts a committed N1-A3 coordinate, assign one fresh
+3. Preserve the completed fresh N1-A4 audit: 15/15 manifest, both strict
+   schemas, 8/8 controls, 1/1 ROW/RUN raw derivation, 130/130 exact hostiles,
+   numeric/UTF-8/Unicode/Set closure, external trust, and absent N2 root.
+   Commit it with the prior-art adjudication; never rewrite A–A3.
+4. Only after that committed N1-A4 coordinate, assign one fresh
    absent non-overlapping root for exactly one Luna xhigh N-IETM F0. Do not
    patch current packrat or widen the public API.
-5. Compare every edit version to fresh accepted/rebuilt M2 speed controls plus
+5. First compare the mechanism to pinned Dubroy/Warth/Ohm and GPeg controls;
+   reproducing prior art earns no novelty. Then compare every edit version to fresh accepted/rebuilt M2 speed controls plus
    the complete semantic-law envelope. Append EOF/assert final offset. Bind
    full examined/EOF dependencies, action/effect identity, complete products,
    allocation/GC/retained heap, and unit-bearing K-edit break-even.
-6. N-IETM targets PL-BE only. Descriptive local 2x/3x edit ratios grant no
+6. N-IETM targets PL-BE only. PL-BE may establish local utility, not novelty.
+   Descriptive local 2x/3x edit ratios grant no
    strict-law milestone. Freeze the root on the first stale product, unequal
    selection, schema drift, cache contamination, or hostile failure.
 7. Fresh Sol critiques the immutable F0; owner agglomerates and stops.

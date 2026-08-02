@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | Novelty N1 source packet at `research/NOVELTY-FIRST-MECHANISM-ATLAS-2026-08-01.md`, registry/schema in this directory, and `NOVELTY-FIRST-FINDINGS-AND-RESUME-HANDOFF-2026-08-01.md`; N-IETM is sole private next GO for PL-BE only. Failed A1 is terminal. Post-P6 `40d8b4c` and P6-A3 `3ed4c43` remain immutable historical-10x evidence. |
+| parse-that worktree | B / generic runtime producer | N1-A4 byte-authority packet, prior-art adjudication, atlas/registry/law, and resume handoff; N-IETM is the sole authorized prior-art-aware local PL-BE experiment after commit/pin, not an algorithm-novelty claim. Failed A1 is terminal. Post-P6 `40d8b4c` and P6-A3 `3ed4c43` remain immutable historical-10x evidence. |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
@@ -43,16 +43,19 @@ or unrelated Fourier blocker as parser credit.
 
 ## Novelty N1 source receipt
 
-The source-only packet binds atlas SHA-256
-`0ad39480dafa973c424fba9983780f150842cf0c4dded37075e9e1623a54a5c1`,
-pass/experiment-law SHA-256
-`6bba1b5b8926f9410d879bc86e6f6fea2bcd8b9e93f15f24f0c7e7026e4bf4fa`,
-and closed evidence-schema SHA-256
-`45ad9338d8248916ed50e2201759a476009813bb6c67d2b127abc7cc53768f48`.
+The current source-only packet binds atlas SHA-256
+`f73ecf051ae432307da816473424368f0896abe449b9c65cd8aa717091e91335`,
+prior-art adjudication `6608fa2cd346b9cbd5c43d440a1053a059d961aa017a8aad6d1e50b8caed77f6`,
+pass/experiment-law `e9d777b4ab1564751b747e90691e157e4cde35349240d4d840b15080c26490c5`,
+N1-A4 owner audit `74fce21cc0cf1470af86633b7f514ef33b90da1331d992e31158947e51b84031`,
+resume handoff `bd31b70ed58a22c760c8ad7d363efe660b6b1f54ad2765d8c393862ddb1754c1`,
+and closed evidence-schema
+`9520d29a401947527ea8e26a19180cdb0797c253f0f6253cc9662b04ad8aeb23`.
 It grants zero parser implementation, CSS, Value, Keyframes, package, API,
 release, or BBNF credit. Value remains a read-only future consumer; current
-Value imports no parse-that code. The next producer action is exactly one
-isolated N-IETM F0 followed by fresh Sol critique and owner stop. There is no
+Value imports no parse-that code. After the accepted A4/prior-art commit pin,
+the next producer action is exactly one isolated prior-art-aware N-IETM F0
+equivalence/integration probe followed by fresh Sol critique and owner stop. There is no
 parser-to-Fourier edge.
 
 ## Writer / reader boundary

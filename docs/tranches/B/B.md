@@ -25,9 +25,11 @@ longer the active admission floor by axiom.
 The 2026-08-01 resurrection source packet is
 `research/NOVELTY-FIRST-MECHANISM-ATLAS-2026-08-01.md`, with its closed
 registry schema and experiment law under `coordination/` and exact resume at
-`NOVELTY-FIRST-FINDINGS-AND-RESUME-HANDOFF-2026-08-01.md`. N-IETM
-(effect-aware, edit-indexed transactional memoization) is the sole next private
-prototype and targets PL-BE only. N-DNF/N-WRR remain born-RED NO-GO holds;
+`NOVELTY-FIRST-FINDINGS-AND-RESUME-HANDOFF-2026-08-01.md`. N-IETM is the sole
+next private prior-art-aware integration experiment and targets PL-BE only.
+Its incremental-packrat substrate is established prior art; only parse-that-
+specific callback/environment/effect and complete-product closure remains an
+open hypothesis. N-DNF/N-WRR remain born-RED NO-GO holds;
 N-GLL is fatal-only and currently NO-GO. Failed A1 is terminal archaeology and
 may not be resumed. This source boundary changes no ownership, product,
 candidate, package, API, release, or BBNF edge.

@@ -132,6 +132,15 @@ row ineligible.
 
 External claims are hypotheses, never parse-that evidence.
 
+The complete prior-art adjudication is
+[`N-IETM-PRIOR-ART-ADJUDICATION-2026-08-01.md`](./N-IETM-PRIOR-ART-ADJUDICATION-2026-08-01.md).
+It rules that incremental examined-region reuse, relocation, shifting indexes,
+transactional parser state, and selective/state-aware memoization are
+established prior art. N-IETM is therefore a prior-art-aware local integration
+experiment, not a broad algorithm-novelty claim. The remaining hypothesis is
+limited to conservative callback/action/environment/effect identity plus
+parse-that's complete observable product.
+
 - Dubroy/Warth, [Incremental Packrat Parsing](https://ohmjs.org/pubs/sle2017/incremental-packrat-parsing.pdf):
   persistent memo results, full examined intervals, edit invalidation, and
   relocation. Its central correctness law is fresh-parse equivalence.
@@ -185,12 +194,14 @@ separate.
 
 ## Orthogonal family atlas
 
-### N-IETM — effect-aware, edit-indexed transactional memoization
+### N-IETM — prior-art-aware incremental/effect integration
 
-Disposition: **KEEP — primary cross-version family**.
+Disposition: **KEEP AS LOCAL EXPERIMENT — ALGORITHMIC SUBSTRATE FOLDS TO PRIOR ART — NO NOVELTY CREDIT**.
 
-Load-bearing primitive: persistent parse-result dependencies across source
-versions, not a faster per-run carrier. Each reusable entry binds:
+Established substrate: persistent examined-region parse-result reuse across
+source versions. Parse-that-specific hypothesis: conservative reuse through
+its callback-rich ABI while retaining the complete observable product. Each
+reusable entry binds:
 
 - stable parser-graph identity and immutable grammar/action hash;
 - old source version plus a relocatable interval anchor;
@@ -208,7 +219,8 @@ external state are non-reusable unless their dependency/version contract is
 proved; they rerun otherwise. A piece table, rope, or interval tree is only a
 private prototype substrate.
 
-Why it is orthogonal: M1–P6 discard per-run state after one source. Current
+Why it remains locally non-aliased to M1–P6: those mechanisms discard per-run
+state after one source. This local non-isomorphism does not imply world novelty. Current
 packrat uses `(parser, offset)` cells inside an armed parse epoch. Its completed
 cell is only `{offset, value, isError}`; `MEMO`, `HEADS`, `LR_STACK`,
 `CURRENT_SRC`, and `GROWING` are intentionally fresh and discarded at each top
@@ -236,7 +248,8 @@ is compared to a new full M2 parse of identical bytes. N-IETM may target
 pass their every-row law. Local edit rows may report observed 3x/2x ratios, but
 those ratios are descriptive and grant no strict-family milestone.
 
-The smallest sound private F0 uses an immutable `SourceVersion` and completed
+The smallest sound private F0 is a differential integration/equivalence probe,
+not a new incremental algorithm. It uses an immutable `SourceVersion` and completed
 `MemoEntry` values binding grammar epoch, rule, start, entry depth, match length,
 examined length, examined EOF, source-slice hash, relocatable immutable product,
 relative failure frontier, and max-depth delta. A persistent shift interval
@@ -254,7 +267,10 @@ frontiers, and opaque syntax. Required measures are affected/read spans,
 relocated/invalidated/reused cells, edit latency, cold time, retained and peak
 heap, allocation/GC, package size, and exact consumer break-even.
 
-Fatal counterexamples: a previously failing arm becomes successful after an
+Fatal counterexamples begin with algorithmic equivalence: if the experiment
+reduces to Dubroy/Warth/Ohm examined-region reuse or its shifting index/entry
+topology reduces to GPeg, the substrate is recorded as prior-art reproduction
+and receives no novelty credit. Further fatal cases are: a previously failing arm becomes successful after an
 insertion outside its consumed span; a recovery diagnostic reads beyond its
 consumed interval; external action state changes without invalidation; span
 relocation changes UTF-16 bytes; retained heap grows without a bounded policy;
@@ -401,7 +417,7 @@ tape.
 | Offline merged residual/DFA | `MOVE` into N-DNF/N-WRR; no family | Live D is dead. A data-table executor is V/C; direct persisted control is N-DNF; WASM table control is N-WRR. |
 | Event tape/region/arena | `PRUNE` standalone | Parser-input tape is forbidden. Output-only journal/region repeats E/F2 unless the N-WRR substrate removes the duplicated work. |
 | Hybrid/native/WASM leaf scan | `PRUNE` | JS leaf fusion is L/F3; WASM leaf transfer without full grammar control is a modifier with no family credit. |
-| Incremental continuation/recovery transaction | `FOLD` into N-IETM | Cross-version dependencies/effects are novel; ordinary per-run checkpoints and recovery are M3/P6/S7 laws. |
+| Incremental continuation/recovery transaction | `FOLD algorithmic substrate`; retain only parse-that ABI/product integration test | Cross-version examined-region reuse, transactionality, and effect/dependency control are prior art; ordinary per-run checkpoints and recovery are M3/P6/S7 laws. |
 | Pika/reverse DP | `HOLD` as a counterexample, no prototype | Reverse O(grammar × input) filling and complex-grammar constants threaten every active law; it reopens only with a reached cost-removal edge absent from current packrat/V. |
 | Regional parallelism | `PRUNE pending boundary proof` | CSS boundaries, recovery, and dependencies cannot be found by a forbidden prepass. Parallelism reopens only after a source-direct independence proof. |
 
@@ -417,7 +433,8 @@ tape.
 | Compiled WASM control + linear memory + sparse memo + exact region projection | Born-RED until removing the substrate demonstrably restores JS control/allocation work rather than only changing host representation. | `HOLD N-WRR` |
 | Ordinary `(parser, offset)` packrat | Existing opt-in packrat, per-run epoch. | `FOLD existing` |
 | Persistent versioned cells relocated by consumed span only | Unsound for failed reads, lookahead, recovery, and effects. | `PRUNE` |
-| Effect-aware edit-indexed dependency reuse | Translation to current packrat loses version, full read footprint, action/effect identity, and cross-version reuse. | `KEEP N-IETM` |
+| Examined-region edit-indexed packrat reuse | Equivalent to Dubroy/Warth/Ohm; shifting-tree variants compare against GPeg. | `FOLD PRIOR ART` |
+| Parse-that callback/environment identity plus complete-product reuse | Must survive Ohm-equivalence and effect/product hostiles; local current packrat lacks the required identities/product. | `HOLD N-IETM INTEGRATION TEST` |
 | Live derivative/residual zipper | Same live residual state/capture cost as D. | `FOLD D`, then `PRUNE` |
 | Precomputed residual data interpreted by a generic loop | Same table/VM work as C/V. | `FOLD C/V` |
 | Fused recognition plus output tape/finalizer | Same duplicate product walk as E/SP/P4. | `FOLD E/SP/P4`, then `PRUNE` |
@@ -444,10 +461,11 @@ back to another evaluator when RED.
 
 ## Pass N1 disposition
 
-The atlas covers 14 named axes/routes. Disposition count is 1 leading `KEEP`,
+The atlas covers 14 named axes/routes. Disposition count is 1 prior-art-aware
+integration experiment,
 2 unresolved born-RED `HOLD`, 1 fatal-only `HOLD`, 1 `SPLIT/PRUNE`, and 9
 `FOLD/MOVE/PRUNE` cross-cutting or alias routes. The small early portfolio is
-N-IETM first; N-DNF and N-WRR may remain only until their explicit S/C/V/E
+N-IETM first as a local equivalence/integration test; N-DNF and N-WRR may remain only until their explicit S/C/V/E
 non-isomorphism gates resolve. N-GLL is a deliberately bounded counterexample,
 not a fourth favored design.
 

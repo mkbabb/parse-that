@@ -93,14 +93,12 @@ function sha256(bytes) {
     return createHash("sha256").update(bytes).digest("hex");
 }
 
-function sorted(values) {
-    return [...values].sort((a, b) => a.localeCompare(b));
-}
-
 function sameSet(left, right) {
-    const a = sorted(left);
-    const b = sorted(right);
-    return a.length === b.length && a.every((value, index) => value === b[index]);
+    if (left.length !== right.length) return false;
+    const leftSet = new Set(left);
+    const rightSet = new Set(right);
+    if (leftSet.size !== left.length || rightSet.size !== right.length) return false;
+    return left.every((value) => rightSet.has(value));
 }
 
 function sameArray(left, right) {
@@ -218,6 +216,18 @@ class StrictJsonParser {
             if (code === 0x22) return result;
             if (code < 0x20) this.syntax("unescaped control character", path);
             if (code !== 0x5c) {
+                if (code >= 0xd800 && code <= 0xdbff) {
+                    const low = this.source.charCodeAt(this.offset);
+                    if (!(low >= 0xdc00 && low <= 0xdfff)) {
+                        throw new StrictJsonError("UNICODE_SCALAR", "unpaired high surrogate", path);
+                    }
+                    result += String.fromCharCode(code, low);
+                    this.offset += 1;
+                    continue;
+                }
+                if (code >= 0xdc00 && code <= 0xdfff) {
+                    throw new StrictJsonError("UNICODE_SCALAR", "unpaired low surrogate", path);
+                }
                 result += String.fromCharCode(code);
                 continue;
             }
@@ -242,6 +252,32 @@ class StrictJsonParser {
                 value = value * 16 + digit;
             }
             this.offset += 4;
+            if (value >= 0xd800 && value <= 0xdbff) {
+                if (this.source.slice(this.offset, this.offset + 2) !== "\\u") {
+                    throw new StrictJsonError("UNICODE_SCALAR", "escaped high surrogate has no escaped low surrogate", path);
+                }
+                this.offset += 2;
+                if (this.offset + 4 > this.source.length) this.syntax("short low-surrogate escape", path);
+                let low = 0;
+                for (let index = 0; index < 4; index += 1) {
+                    const hex = this.source.charCodeAt(this.offset + index);
+                    let digit;
+                    if (hex >= 0x30 && hex <= 0x39) digit = hex - 0x30;
+                    else if (hex >= 0x41 && hex <= 0x46) digit = hex - 0x41 + 10;
+                    else if (hex >= 0x61 && hex <= 0x66) digit = hex - 0x61 + 10;
+                    else this.syntax("invalid low-surrogate escape", path);
+                    low = low * 16 + digit;
+                }
+                if (!(low >= 0xdc00 && low <= 0xdfff)) {
+                    throw new StrictJsonError("UNICODE_SCALAR", "escaped high surrogate is not followed by a low surrogate", path);
+                }
+                this.offset += 4;
+                result += String.fromCharCode(value, low);
+                continue;
+            }
+            if (value >= 0xdc00 && value <= 0xdfff) {
+                throw new StrictJsonError("UNICODE_SCALAR", "unpaired escaped low surrogate", path);
+            }
             result += String.fromCharCode(value);
         }
         this.syntax("unterminated string", path);
@@ -274,14 +310,48 @@ class StrictJsonParser {
             if (!(this.source[this.offset] >= "0" && this.source[this.offset] <= "9")) this.syntax("invalid exponent", path);
             while (this.source[this.offset] >= "0" && this.source[this.offset] <= "9") this.offset += 1;
         }
-        const value = Number(this.source.slice(start, this.offset));
-        if (!Number.isFinite(value)) this.syntax("non-finite number", path);
-        return value;
+        const lexeme = this.source.slice(start, this.offset);
+        if (!/^(?:0|[1-9][0-9]*|-[1-9][0-9]*)$/u.test(lexeme)) {
+            throw new StrictJsonError(
+                "NUMBER_LEXEME",
+                `numeric evidence must use a canonical integer lexeme, received ${lexeme}`,
+                path,
+            );
+        }
+        const integer = BigInt(lexeme);
+        if (integer < BigInt(Number.MIN_SAFE_INTEGER) || integer > BigInt(Number.MAX_SAFE_INTEGER)) {
+            throw new StrictJsonError("NUMBER_RANGE", `raw integer ${lexeme} is outside the exact safe range`, path);
+        }
+        return Number(integer);
     }
 }
 
 function parseStrictJson(source) {
     return new StrictJsonParser(source).parse();
+}
+
+function parseStrictJsonBytes(bytes, domain) {
+    let source;
+    try {
+        source = new TextDecoder("utf-8", { fatal: true }).decode(Buffer.from(bytes));
+    } catch {
+        fail(`E_${domain}_ENCODING`, `${domain.toLowerCase()} bytes are not valid UTF-8`);
+    }
+    try {
+        return parseStrictJson(source);
+    } catch (error) {
+        if (error instanceof StrictJsonError) {
+            const codes = {
+                DUPLICATE_KEY: `E_${domain}_DUPLICATE_KEY`,
+                NUMBER_LEXEME: `E_${domain}_NUMBER_LEXEME`,
+                NUMBER_RANGE: `E_${domain}_NUMBER_RANGE`,
+                UNICODE_SCALAR: `E_${domain}_UNICODE_SCALAR`,
+            };
+            const code = codes[error.kind];
+            if (code) fail(code, error.message, error.path);
+        }
+        fail(`E_${domain}_JSON`, `${domain.toLowerCase()} bytes are malformed JSON`);
+    }
 }
 
 function rootContains(root, target) {
@@ -444,12 +514,21 @@ function parseRawFiles(receipt, bytesByPath, validateRawShape, rawAjv) {
             try {
                 entry = parseStrictJson(lines[index]);
             } catch (error) {
-                if (error instanceof StrictJsonError && error.kind === "DUPLICATE_KEY") {
-                    fail(
-                        "E_RAW_DUPLICATE_KEY",
-                        `${artifact.path}:${index + 1} contains ${error.message}`,
-                        `$.${receipt.id}.rawArtifacts${error.path}`,
-                    );
+                if (error instanceof StrictJsonError) {
+                    const codes = {
+                        DUPLICATE_KEY: "E_RAW_DUPLICATE_KEY",
+                        NUMBER_LEXEME: "E_RAW_NUMBER_LEXEME",
+                        NUMBER_RANGE: "E_RAW_NUMBER_RANGE",
+                        UNICODE_SCALAR: "E_RAW_UNICODE_SCALAR",
+                    };
+                    const code = codes[error.kind];
+                    if (code) {
+                        fail(
+                            code,
+                            `${artifact.path}:${index + 1} contains ${error.message}`,
+                            `$.${receipt.id}.rawArtifacts${error.path}`,
+                        );
+                    }
                 }
                 fail("E_RAW_JSON", `${artifact.path}:${index + 1} is malformed JSON`, `$.${receipt.id}.rawArtifacts`);
             }
@@ -812,7 +891,7 @@ function validateNoOrphans(records, rows, arms) {
     }
 }
 
-export function validateNoveltyRegistry({ records, schemaBytes, rawSchemaBytes, expectedRoot, trustedPolicy, artifactReader }) {
+function validateParsedNoveltyRegistry({ records, schemaBytes, rawSchemaBytes, expectedRoot, trustedPolicy, artifactReader }) {
     validateTrustedPolicy(trustedPolicy, expectedRoot, artifactReader);
     const bytes = Buffer.isBuffer(schemaBytes) ? schemaBytes : Buffer.from(schemaBytes ?? "");
     const rawBytes = Buffer.isBuffer(rawSchemaBytes) ? rawSchemaBytes : Buffer.from(rawSchemaBytes ?? "");
@@ -875,11 +954,23 @@ export function validateNoveltyRegistry({ records, schemaBytes, rawSchemaBytes, 
     });
 }
 
+export function validateNoveltyRegistry({ registryBytes, schemaBytes, rawSchemaBytes, expectedRoot, trustedPolicy, artifactReader }) {
+    const records = parseStrictJsonBytes(registryBytes, "REGISTRY");
+    return validateParsedNoveltyRegistry({
+        records,
+        schemaBytes,
+        rawSchemaBytes,
+        expectedRoot,
+        trustedPolicy,
+        artifactReader,
+    });
+}
+
 async function main() {
     const registryPath = process.argv[2];
     if (!registryPath) fail("E_CLI_USAGE", "usage: node NOVELTY-EVIDENCE-REGISTRY.semantic.mjs <registry.json>");
     const result = validateNoveltyRegistry({
-        records: JSON.parse(readFileSync(resolve(registryPath), "utf8")),
+        registryBytes: readFileSync(resolve(registryPath)),
         schemaBytes: readFileSync(SCHEMA_PATH),
         rawSchemaBytes: readFileSync(DEFAULT_RAW_SCHEMA_PATH),
         expectedRoot: DEFAULT_EXPECTED_ROOT,

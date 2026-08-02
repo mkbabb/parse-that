@@ -127,6 +127,34 @@ const EXPECTED = Object.freeze({
     duplicate_raw_counter_key: "E_RAW_DUPLICATE_KEY",
     duplicate_raw_cold_key: "E_RAW_DUPLICATE_KEY",
     duplicate_raw_command_key: "E_RAW_DUPLICATE_KEY",
+    raw_pid_fractional_round: "E_RAW_NUMBER_LEXEME",
+    raw_pid_exponent_alias: "E_RAW_NUMBER_LEXEME",
+    raw_seed_negative_zero: "E_RAW_NUMBER_LEXEME",
+    raw_warmup_underflow: "E_RAW_NUMBER_LEXEME",
+    raw_aggregate_fractional_round: "E_RAW_NUMBER_LEXEME",
+    raw_selected_index_fractional_round: "E_RAW_NUMBER_LEXEME",
+    raw_artifact_bytes_fractional_round: "E_RAW_NUMBER_LEXEME",
+    raw_command_exit_negative_zero: "E_RAW_NUMBER_LEXEME",
+    raw_pid_above_safe: "E_RAW_NUMBER_RANGE",
+    raw_command_exit_below_safe: "E_RAW_NUMBER_RANGE",
+    raw_pid_overflow_exponent: "E_RAW_NUMBER_LEXEME",
+    raw_unicode_unpaired_high: "E_RAW_UNICODE_SCALAR",
+    raw_unicode_unpaired_low: "E_RAW_UNICODE_SCALAR",
+    raw_unicode_high_non_low: "E_RAW_UNICODE_SCALAR",
+    raw_unicode_reversed_pair: "E_RAW_UNICODE_SCALAR",
+    raw_invalid_utf8: "E_RAW_ENCODING",
+    raw_pid_plus: "E_RAW_JSON",
+    raw_pid_leading_zero: "E_RAW_JSON",
+    raw_pid_zero: "E_RAW_SCHEMA",
+    raw_seed_negative: "E_RAW_SCHEMA",
+    registry_pid_fractional_round: "E_REGISTRY_NUMBER_LEXEME",
+    registry_pid_exponent_alias: "E_REGISTRY_NUMBER_LEXEME",
+    registry_seed_negative_zero: "E_REGISTRY_NUMBER_LEXEME",
+    registry_pid_above_safe: "E_REGISTRY_NUMBER_RANGE",
+    registry_duplicate_key: "E_REGISTRY_DUPLICATE_KEY",
+    registry_unicode_unpaired_high: "E_REGISTRY_UNICODE_SCALAR",
+    registry_invalid_utf8: "E_REGISTRY_ENCODING",
+    registry_malformed_json: "E_REGISTRY_JSON",
 });
 
 function sha256Bytes(bytes) {
@@ -154,7 +182,7 @@ function rawEntryForRow(records, row) {
     const fixture = record(records, row.fixtureId);
     const run = record(records, row.runId);
     return {
-        version: "parse-that-novelty-raw-row-v2",
+        version: "parse-that-novelty-raw-row-v3",
         rowId: row.id,
         runId: row.runId,
         run: {
@@ -198,6 +226,29 @@ function setAtPath(value, path, replacement) {
     parent[path.at(-1)] = structuredClone(replacement);
 }
 
+function replaceUniqueToken(encoded, sentinel, token, id) {
+    const quoted = JSON.stringify(sentinel);
+    const first = encoded.indexOf(quoted);
+    if (first < 0 || first !== encoded.lastIndexOf(quoted)) {
+        throw new Error(`${id}: token sentinel must occur exactly once`);
+    }
+    return `${encoded.slice(0, first)}${token}${encoded.slice(first + quoted.length)}`;
+}
+
+function encodeWithRawToken(entry, path, token, id) {
+    const clone = structuredClone(entry);
+    const sentinel = `__N1_A4_RAW_TOKEN_${id}__`;
+    setAtPath(clone, path, sentinel);
+    return replaceUniqueToken(JSON.stringify(clone), sentinel, token, id);
+}
+
+function encodeWithRegistryToken(records, recordId, path, token, id) {
+    const clone = structuredClone(records);
+    const sentinel = `__N1_A4_REGISTRY_TOKEN_${id}__`;
+    setAtPath(record(clone, recordId), path, sentinel);
+    return replaceUniqueToken(JSON.stringify(clone), sentinel, token, id);
+}
+
 function addSecondProductFixtureRow(records, policy) {
     const product = structuredClone(record(records, "product.ietm"));
     product.id = "product.other";
@@ -225,6 +276,7 @@ function encodeRaw(entries) {
 
 function mutationContext(baseline, mutant) {
     let records = structuredClone(baseline);
+    let registryBytes;
     const trustedPolicy = structuredClone(DEFAULT_TRUSTED_POLICY);
     let artifactReader = defaultArtifactReader;
     let expectedRoot = DEFAULT_EXPECTED_ROOT;
@@ -440,6 +492,33 @@ function mutationContext(baseline, mutant) {
             replaceRawBytes(Buffer.from(`${duplicate}\n`));
             break;
         }
+        case "replaceRawToken": {
+            const entry = rawEntryForRow(records, record(records, "row.ietm"));
+            const encoded = encodeWithRawToken(entry, mutant.path, mutant.token, mutant.id);
+            replaceRawBytes(Buffer.from(`${encoded}\n`));
+            break;
+        }
+        case "invalidRawUtf8":
+            replaceRawBytes(Buffer.from([0x7b, 0x22, 0x78, 0x22, 0x3a, 0x22, 0xed, 0xa0, 0x80, 0x22, 0x7d, 0x0a]));
+            break;
+        case "replaceRegistryToken":
+            registryBytes = Buffer.from(encodeWithRegistryToken(records, mutant.recordId, mutant.path, mutant.token, mutant.id));
+            break;
+        case "duplicateRegistryKey": {
+            const encoded = JSON.stringify(records);
+            const needle = '"pid":1,';
+            if (encoded.indexOf(needle) < 0 || encoded.indexOf(needle) !== encoded.lastIndexOf(needle)) {
+                throw new Error("registry duplicate-key setup did not resolve one PID token");
+            }
+            registryBytes = Buffer.from(encoded.replace(needle, '"pid":1,"pid":1,'));
+            break;
+        }
+        case "invalidRegistryUtf8":
+            registryBytes = Buffer.from([0x5b, 0x22, 0xed, 0xa0, 0x80, 0x22, 0x5d]);
+            break;
+        case "malformedRegistry":
+            registryBytes = Buffer.from("[{");
+            break;
         case "invalidRawSchema": {
             const entry = rawEntryForRow(records, record(records, "row.ietm"));
             delete entry.armId;
@@ -473,12 +552,18 @@ function mutationContext(baseline, mutant) {
         default:
             throw new Error(`unknown mutation op ${mutant.op}`);
     }
-    return { records, trustedPolicy, artifactReader, expectedRoot };
+    return {
+        registryBytes: registryBytes ?? Buffer.from(JSON.stringify(records)),
+        records,
+        trustedPolicy,
+        artifactReader,
+        expectedRoot,
+    };
 }
 
 function validate(context) {
     return validateNoveltyRegistry({
-        records: context.records,
+        registryBytes: context.registryBytes ?? Buffer.from(JSON.stringify(context.records)),
         schemaBytes: SCHEMA_BYTES,
         rawSchemaBytes: RAW_SCHEMA_BYTES,
         expectedRoot: context.expectedRoot,
@@ -509,7 +594,8 @@ function expectRed(mutant, context) {
 }
 
 export function runHostiles() {
-    const baseline = JSON.parse(readFileSync(BASELINE_PATH, "utf8"));
+    const baselineBytes = readFileSync(BASELINE_PATH);
+    const baseline = JSON.parse(baselineBytes);
     const mutants = JSON.parse(readFileSync(MUTANTS_PATH, "utf8"));
     const unknown = mutants.map((mutant) => mutant.id).filter((id) => !(id in EXPECTED));
     const missing = Object.keys(EXPECTED).filter((id) => !mutants.some((mutant) => mutant.id === id));
@@ -518,14 +604,69 @@ export function runHostiles() {
     }
 
     const baselineContext = {
+        registryBytes: baselineBytes,
         records: baseline,
         trustedPolicy: structuredClone(DEFAULT_TRUSTED_POLICY),
         artifactReader: defaultArtifactReader,
         expectedRoot: DEFAULT_EXPECTED_ROOT,
     };
+    const makeControl = ({ id, pid = 1, seed = 0, exitCode = 0, processStart, escaped }) => {
+        const records = structuredClone(baseline);
+        const run = record(records, "run.ietm");
+        run.pid = pid;
+        run.seed = seed;
+        run.commands[0].exitCode = exitCode;
+        if (processStart !== undefined) run.processStart = processStart;
+        const entry = rawEntryForRow(records, record(records, "row.ietm"));
+        let encoded = JSON.stringify(entry);
+        if (escaped) {
+            const literal = JSON.stringify(processStart).slice(1, -1);
+            if (!encoded.includes(literal)) throw new Error(`${id}: Unicode control literal is absent`);
+            encoded = encoded.replace(literal, escaped);
+        }
+        const bytes = Buffer.from(`${encoded}\n`);
+        const descriptor = record(records, "receipt.ietm").rawArtifacts.find((artifact) => artifact.path === RAW_PATH);
+        descriptor.bytes = bytes.length;
+        descriptor.sha256 = sha256Bytes(bytes);
+        const reader = (request) => request.relativePath === RAW_PATH
+            ? { ...defaultArtifactReader(request), bytes }
+            : defaultArtifactReader(request);
+        return {
+            id,
+            context: {
+                ...baselineContext,
+                registryBytes: Buffer.from(JSON.stringify(records)),
+                records,
+                artifactReader: reader,
+            },
+        };
+    };
+    const controlInputs = [
+        makeControl({ id: "baseline_safe_integer_boundaries", pid: Number.MAX_SAFE_INTEGER, seed: Number.MAX_SAFE_INTEGER, exitCode: Number.MIN_SAFE_INTEGER }),
+        makeControl({ id: "baseline_literal_astral_scalar", processStart: "💜" }),
+        makeControl({ id: "baseline_escaped_scalar_pair", processStart: "💜", escaped: "\\uD83D\\uDC9C" }),
+        makeControl({ id: "baseline_escaped_low_boundary_pair", processStart: "𐀀", escaped: "\\uD800\\uDC00" }),
+        makeControl({ id: "baseline_escaped_high_boundary_pair", processStart: "􏿿", escaped: "\\uDBFF\\uDFFF" }),
+    ];
+    const distinctScopeRecords = structuredClone(baseline);
+    const distinctScopePolicy = structuredClone(DEFAULT_TRUSTED_POLICY);
+    const distinctScope = ["é", "e\u0301", "ZERO_DOWNSTREAM_CREDIT", "N2_LAW=PL_BE_NET_BENEFIT"];
+    record(distinctScopeRecords, "auth.n1-a").scope = structuredClone(distinctScope);
+    distinctScopePolicy.authority.scope = [...distinctScope].reverse();
     const controls = [
         expectGreen("baseline", baselineContext),
-        expectGreen("baseline_reversed_order", { ...baselineContext, records: [...baseline].reverse() }),
+        expectGreen("baseline_reversed_order", {
+            ...baselineContext,
+            registryBytes: Buffer.from(JSON.stringify([...baseline].reverse())),
+            records: [...baseline].reverse(),
+        }),
+        expectGreen("baseline_code_unit_distinct_scope", {
+            ...baselineContext,
+            registryBytes: Buffer.from(JSON.stringify(distinctScopeRecords)),
+            records: distinctScopeRecords,
+            trustedPolicy: distinctScopePolicy,
+        }),
+        ...controlInputs.map(({ id, context }) => expectGreen(id, context)),
     ];
     const hostileResults = mutants.map((mutant) => expectRed(mutant, mutationContext(baseline, mutant)));
     return {
