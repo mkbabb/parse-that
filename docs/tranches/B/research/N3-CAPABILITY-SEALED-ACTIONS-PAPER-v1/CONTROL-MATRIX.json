@@ -1,0 +1,231 @@
+{
+  "schemaVersion": "parse-that.n3.capability-sealed-actions.control-matrix.v1",
+  "status": "PAPER_V1_SOURCE_RED",
+  "worldNovelty": "REJECTED",
+  "actionClasses": [
+    {
+      "id": "PURE",
+      "reusePolicy": "COMPLETE_RESULT_REUSE_WHILE_CAPSULE_AND_INPUTS_VALID"
+    },
+    {
+      "id": "BOUNDED_SOURCE_READER",
+      "reusePolicy": "COMPLETE_RESULT_REUSE_AFTER_EXACT_FOOTPRINT_REVALIDATION"
+    },
+    {
+      "id": "DETERMINISTIC_EFFECTFUL",
+      "reusePolicy": "STRUCTURAL_REUSE_ONLY_ACTION_EXECUTES_EXACTLY_ONCE_IN_ORDER"
+    },
+    {
+      "id": "OPAQUE",
+      "reusePolicy": "NEVER_REUSABLE_ORDINARY_INCUMBENT_EXECUTION_ONLY"
+    }
+  ],
+  "expectedOutcomes": [
+    "REFUSE_CAPSULE",
+    "INVALIDATE_CAPSULE",
+    "ACCEPT_NO_CHANGE"
+  ],
+  "structuralEquality": {
+    "objectKeys": "EXACT_SET_ORDER_INDEPENDENT",
+    "arrays": "ORDERED",
+    "strings": "UNICODE_SCALAR_EXACT",
+    "numbers": "SAFE_INTEGER_MATHEMATICAL_EXACT",
+    "duplicateKeys": "REJECT",
+    "unknownKeys": "REJECT",
+    "decodeCanonicalEncode": "BYTE_IDENTICAL"
+  },
+  "denominators": {
+    "matrixRows": 15,
+    "materialHostileRows": 14,
+    "noOpRows": 1,
+    "expectedInvalidationRows": 9,
+    "expectedRefusalRows": 5,
+    "expectedAcceptanceRows": 1,
+    "ownerSuppressionRows": 14,
+    "nonOwnerRetentionRows": 182,
+    "erasureRows": 14,
+    "unknownOwnerRows": 1,
+    "duplicateIdRows": 1,
+    "futureReceiptTotal": 227
+  },
+  "controlLaw": {
+    "materialOwnerCount": 14,
+    "ownerSuppressionPerMaterialRow": 1,
+    "nonOwnerRetentionsPerMaterialRow": 13,
+    "erasurePerMaterialRow": 1,
+    "sequence": [
+      "MATRIX_PRODUCTION_ROWS_IN_ID_ORDER",
+      "OWNER_SUPPRESSIONS_IN_ID_ORDER",
+      "NON_OWNER_RETENTIONS_IN_ROW_THEN_OWNER_ORDER",
+      "ERASURES_IN_ID_ORDER",
+      "UNKNOWN_OWNER",
+      "DUPLICATE_ROW_ID"
+    ],
+    "productionSignatureCarriesAuditToken": false,
+    "mutantCarriesExpectedCode": false,
+    "sameProductionDeriverForAllRows": true
+  },
+  "rows": [
+    {
+      "id": "N3-H01",
+      "family": "CAPTURED_OBJECT_MUTATION",
+      "actionClasses": ["PURE", "BOUNDED_SOURCE_READER", "DETERMINISTIC_EFFECTFUL"],
+      "ownerPredicateId": "N3.P01.VALIDATE_CAPTURED_OBJECT_EPOCH",
+      "code": "N3_CAPTURED_OBJECT_EPOCH_CHANGED",
+      "authorityField": "mutableIdentityEpochRoot",
+      "mutation": "A captured mutable object retains identity and changes its owner-issued mutation epoch after capsule seal.",
+      "expected": "INVALIDATE_CAPSULE"
+    },
+    {
+      "id": "N3-H02",
+      "family": "MODULE_GLOBAL_MUTATION",
+      "actionClasses": ["DETERMINISTIC_EFFECTFUL"],
+      "ownerPredicateId": "N3.P02.VALIDATE_MODULE_GLOBAL_EPOCH",
+      "code": "N3_MODULE_GLOBAL_EPOCH_CHANGED",
+      "authorityField": "environmentEpochRoot",
+      "mutation": "A permitted module-global identity changes its authenticated epoch without changing action body bytes.",
+      "expected": "INVALIDATE_CAPSULE"
+    },
+    {
+      "id": "N3-H03",
+      "family": "ENVIRONMENT_MUTATION",
+      "actionClasses": ["DETERMINISTIC_EFFECTFUL"],
+      "ownerPredicateId": "N3.P03.VALIDATE_ENVIRONMENT_EPOCH",
+      "code": "N3_ENVIRONMENT_EPOCH_CHANGED",
+      "authorityField": "environmentEpochRoot",
+      "mutation": "A permitted process or host environment value changes under a new owner-issued environment epoch.",
+      "expected": "INVALIDATE_CAPSULE"
+    },
+    {
+      "id": "N3-H04",
+      "family": "TRANSITIVE_IMPORT_DRIFT",
+      "actionClasses": ["PURE", "BOUNDED_SOURCE_READER", "DETERMINISTIC_EFFECTFUL"],
+      "ownerPredicateId": "N3.P04.VALIDATE_TRANSITIVE_IMPORT_CLOSURE",
+      "code": "N3_TRANSITIVE_IMPORT_CLOSURE_DRIFT",
+      "authorityField": "importClosureRoot",
+      "mutation": "A transitively imported export byte changes while the direct action module remains byte-identical.",
+      "expected": "INVALIDATE_CAPSULE"
+    },
+    {
+      "id": "N3-H05",
+      "family": "PROTOTYPE_DESCRIPTOR_DRIFT",
+      "actionClasses": ["PURE", "BOUNDED_SOURCE_READER", "DETERMINISTIC_EFFECTFUL"],
+      "ownerPredicateId": "N3.P05.VALIDATE_PROTOTYPE_DESCRIPTOR_GRAPH",
+      "code": "N3_PROTOTYPE_DESCRIPTOR_GRAPH_DRIFT",
+      "authorityField": "allocationAliasingLawRoot",
+      "mutation": "A captured or returned graph changes prototype, own symbol key, accessor, or property descriptor without changing enumerable values.",
+      "expected": "INVALIDATE_CAPSULE"
+    },
+    {
+      "id": "N3-H06",
+      "family": "EXCEPTION_CLASS_DRIFT",
+      "actionClasses": ["PURE", "BOUNDED_SOURCE_READER", "DETERMINISTIC_EFFECTFUL"],
+      "ownerPredicateId": "N3.P06.VALIDATE_EXCEPTION_CLASS_LAW",
+      "code": "N3_EXCEPTION_CLASS_LAW_DRIFT",
+      "authorityField": "exceptionLawRoot",
+      "mutation": "A throw branch changes constructor, prototype, name, cause, descriptor, payload, or fresh-allocation law.",
+      "expected": "INVALIDATE_CAPSULE"
+    },
+    {
+      "id": "N3-H07",
+      "family": "ALLOCATION_ALIASING_DRIFT",
+      "actionClasses": ["PURE", "BOUNDED_SOURCE_READER", "DETERMINISTIC_EFFECTFUL"],
+      "ownerPredicateId": "N3.P07.VALIDATE_ALLOCATION_ALIAS_BIJECTION",
+      "code": "N3_ALLOCATION_ALIASING_LAW_DRIFT",
+      "authorityField": "allocationAliasingLawRoot",
+      "mutation": "A result changes fresh-versus-retained allocation, cycle, shared identity, input alias, capture alias, or freeze behavior.",
+      "expected": "INVALIDATE_CAPSULE"
+    },
+    {
+      "id": "N3-H08",
+      "family": "SAME_SOURCE_DISTINCT_CLOSURE_STATE",
+      "actionClasses": ["PURE", "BOUNDED_SOURCE_READER", "DETERMINISTIC_EFFECTFUL"],
+      "ownerPredicateId": "N3.P08.REFUSE_SOURCE_IDENTITY_SUBSTITUTION",
+      "code": "N3_SOURCE_IDENTITY_CANNOT_SEAL_CLOSURE",
+      "authorityField": "captureClosureRoot",
+      "mutation": "Two function objects have identical source text and distinct captured values or mutable object identities.",
+      "expected": "REFUSE_CAPSULE"
+    },
+    {
+      "id": "N3-H09",
+      "family": "RETURNED_CHAIN_PARSER_TOPOLOGY_DRIFT",
+      "actionClasses": ["PURE", "BOUNDED_SOURCE_READER", "DETERMINISTIC_EFFECTFUL"],
+      "ownerPredicateId": "N3.P09.VALIDATE_RETURNED_PARSER_TOPOLOGY",
+      "code": "N3_RETURNED_PARSER_TOPOLOGY_DRIFT",
+      "authorityField": "returnedParserTopologyRoot",
+      "mutation": "A chain or lazy action selects a different branch identity, parser object topology, recursion knot, or construction multiplicity.",
+      "expected": "INVALIDATE_CAPSULE"
+    },
+    {
+      "id": "N3-H10",
+      "family": "CAPABILITY_WIDENING",
+      "actionClasses": ["PURE", "BOUNDED_SOURCE_READER", "DETERMINISTIC_EFFECTFUL", "OPAQUE"],
+      "ownerPredicateId": "N3.P10.REFUSE_CAPABILITY_SET_WIDENING",
+      "code": "N3_CAPABILITY_SET_WIDENED",
+      "authorityField": "capabilitySetRoot",
+      "mutation": "The derived body or import closure reaches a capability absent from the externally pinned allowlist.",
+      "expected": "REFUSE_CAPSULE"
+    },
+    {
+      "id": "N3-H11",
+      "family": "STALE_EPOCH",
+      "actionClasses": ["PURE", "BOUNDED_SOURCE_READER", "DETERMINISTIC_EFFECTFUL"],
+      "ownerPredicateId": "N3.P11.VALIDATE_CAPSULE_EPOCH_FRESHNESS",
+      "code": "N3_CAPSULE_EPOCH_STALE",
+      "authorityField": "environmentEpochRoot",
+      "mutation": "A reuse request presents a capsule sealed against an ancestor capture, module, environment, capability, or topology epoch.",
+      "expected": "INVALIDATE_CAPSULE"
+    },
+    {
+      "id": "N3-H12",
+      "family": "OMITTED_CAPSULE_FIELD",
+      "actionClasses": ["PURE", "BOUNDED_SOURCE_READER", "DETERMINISTIC_EFFECTFUL", "OPAQUE"],
+      "ownerPredicateId": "N3.P12.REFUSE_INCOMPLETE_CAPSULE_SCHEMA",
+      "code": "N3_CAPSULE_FIELD_OMITTED",
+      "authorityField": "CapabilityCapsule",
+      "mutation": "Exactly one required capsule field is absent and all remaining roots are recomputed.",
+      "expected": "REFUSE_CAPSULE"
+    },
+    {
+      "id": "N3-H13",
+      "family": "DUPLICATE_CAPSULE_FIELD",
+      "actionClasses": ["PURE", "BOUNDED_SOURCE_READER", "DETERMINISTIC_EFFECTFUL", "OPAQUE"],
+      "ownerPredicateId": "N3.P13.REFUSE_DUPLICATE_CAPSULE_KEY",
+      "code": "N3_CAPSULE_FIELD_DUPLICATED",
+      "authorityField": "CapabilityCapsule",
+      "mutation": "Canonical capsule bytes contain a duplicate required key with conflicting values.",
+      "expected": "REFUSE_CAPSULE"
+    },
+    {
+      "id": "N3-H14",
+      "family": "CALLER_FORGED_CLASSIFICATION",
+      "actionClasses": ["PURE", "BOUNDED_SOURCE_READER", "DETERMINISTIC_EFFECTFUL", "OPAQUE"],
+      "ownerPredicateId": "N3.P14.REFUSE_CALLER_CLASSIFICATION_AUTHORITY",
+      "code": "N3_CALLER_CLASSIFICATION_FORBIDDEN",
+      "authorityField": "productionDerivationRoot",
+      "mutation": "Caller evidence supplies actionClass, actionHash, environmentHash, capability truth, or reuse eligibility.",
+      "expected": "REFUSE_CAPSULE"
+    },
+    {
+      "id": "N3-H15",
+      "family": "NO_OP_CONTROL",
+      "actionClasses": ["PURE", "BOUNDED_SOURCE_READER", "DETERMINISTIC_EFFECTFUL", "OPAQUE"],
+      "ownerPredicateId": "N3.P15.VALIDATE_STRUCTURAL_NO_OP",
+      "code": "N3_STRUCTURAL_NO_OP_ACCEPTED",
+      "authorityField": "productionDerivationRoot",
+      "mutation": "Authenticated fields are canonically reserialized without structural, identity, epoch, capability, or topology change.",
+      "expected": "ACCEPT_NO_CHANGE"
+    }
+  ],
+  "credits": {
+    "paper": 0,
+    "source": 0,
+    "execution": 0,
+    "product": 0,
+    "css": 0,
+    "law": 0,
+    "release": 0
+  },
+  "reviewsRequired": 2,
+  "reviewsDispatched": 0
+}
