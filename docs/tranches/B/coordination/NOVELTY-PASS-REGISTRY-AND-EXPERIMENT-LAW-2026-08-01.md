@@ -2,7 +2,9 @@
 
 Date: 2026-08-01
 
-Status: **N1-A4 COMMITTED — N2-F0 TERMINAL MECHANICS RED — N2A SAME-TASK FRESH-ROOT AUTHORIZED/NOT SENT — ZERO DOWNSTREAM CREDIT**
+Last amended: 2026-08-02
+
+Status: **N1-A4 COMMITTED — N2-F0/N2A TERMINAL MECHANICS RED — N2B SAME-TASK FRESH-ROOT AUTHORIZED/NOT SENT — ZERO DOWNSTREAM CREDIT**
 
 ## Scope
 
@@ -21,8 +23,8 @@ They may produce inputs to the law portfolio but cannot satisfy it by name.
 | `N1.RG` | GPT Sol xhigh, independent genealogy/falsification | family charter, live parser source, P1–P6 evidence, supplied primary sources | independent alias/retirement view | `COMPLETE; READ-ONLY` |
 | `N1.RH` | GPT Sol xhigh, independent host/economics | family charter, Node 26/V8 14.6, live benches/source, active law families | independent reachability/cost view | `COMPLETE; READ-ONLY` |
 | `N1.O` | parser owner, synthesis/adjudication | `N1.RG`, `N1.RH`, independent root/consumer audits | atlas, matrix, registry, closed schemas, semantic closure, handoff | `N1-A/A1/A2/A3 IMMUTABLE; N1-A4 COMMITTED AT 81b2a0a` |
-| `N2.IETM` | GPT Luna xhigh, isolated prototype | committed independently accepted N1-A4 packet plus prior-art adjudication only | prior-art-aware parse-that ABI/product integration probe and comparative raw receipts | `F0 TERMINAL MECHANICS RED; SAME TASK 019fb12c-2624-7732-909a-e1e87ce7ef24 MAY RECEIVE ONE FRESH-ROOT N2A CORRECTION; NOT SENT; ZERO CREDIT` |
-| `N2.DNF` | GPT Luna xhigh, isolated falsifier | sealed N1 packet and explicit S/C/V non-isomorphism predicate | normal-form direct-source proof or retirement | `NO-GO; BORN-RED HOLD` |
+| `N2.IETM` | GPT Luna xhigh, isolated prototype | committed independently accepted N1-A4 packet, prior-art adjudication, and N2b owner ruling only | parse-that recognition-island/complete-product PL-BE integration probe and comparative raw receipts | `F0/N2A TERMINAL MECHANICS RED; SAME IDLE TASK 019fb12c-2624-7732-909a-e1e87ce7ef24 MAY RECEIVE ONE FRESH-ROOT N2B CORRECTION; NOT SENT; ZERO CREDIT` |
+| `N2.DNF` / `N-DNF-BIR` | GPT Luna xhigh, isolated falsifier | established fusion/staging/CST/parse-print prior art plus exact S/C/V/E non-isomorphism predicate | parse-that-specific bidirectional direct-source integration proof or retirement | `NO-GO; SECOND BORN-RED INTEGRATION HOLD; NO NOVELTY CLAIM` |
 | `N2.WRR` | GPT Luna xhigh, isolated falsifier | sealed N1 packet and explicit V/E/BBNF-WASM non-isomorphism predicate | WASM boundary proof or retirement | `NO-GO; BORN-RED HOLD` |
 | `N2.GLL` | GPT Luna xhigh, tiny fatal probe | sealed N1 packet, real ambiguity/left-recursion counterexample | descriptor/GSS counters and exact product | `NO-GO; FATAL-ONLY HOLD` |
 | `N3.C*` | fresh GPT Sol xhigh critics, one per executed N2 packet | immutable N2 root/manifest/raw only | equality, arithmetic, genealogy, hostiles | `BLOCKED ON N2` |
@@ -31,13 +33,15 @@ They may produce inputs to the law portfolio but cannot satisfy it by name.
 
 This packet creates no task or evidence root. N1-A4 and the prior-art
 adjudication are committed together at `81b2a0aacebc126ac1a093407cb2e24ed5d78ee8`.
-The first formation-only N-IETM root on the pre-existing Luna task is frozen
-terminal RED after a package-resolution mechanics failure. Exactly one
-same-task, non-overlapping N2a correction is authorized but not sent under
-[`../audit/NOVELTY-N2-F0-TERMINAL-RED-OWNER-INTAKE-AND-N2A-RULING-2026-08-01.md`](../audit/NOVELTY-N2-F0-TERMINAL-RED-OWNER-INTAKE-AND-N2A-RULING-2026-08-01.md).
-Its SHA-256 is
+The first formation-only N-IETM root and its N2a correction on the pre-existing
+Luna task are frozen terminal mechanics RED. Exactly one same-task,
+non-overlapping N2b correction is authorized but not sent under
+[`../audit/NOVELTY-N2A-TERMINAL-MECHANICS-RED-OWNER-INTAKE-AND-N2B-RULING-2026-08-02.md`](../audit/NOVELTY-N2A-TERMINAL-MECHANICS-RED-OWNER-INTAKE-AND-N2B-RULING-2026-08-02.md),
+SHA-256
+`88b032fd00502e7cdbb97e38dd01b663cf93a3e1934bcac076f71f240f9fb04a`.
+The immutable N2-F0 predecessor ruling remains
 `7c3cda9b8011c5efec3c1c3b2fa33342698a4a8fa9acf2524f75fbdbc8f64071`.
-N-DNF and N-WRR
+N-DNF-BIR and N-WRR
 cannot start merely because they have
 names: their source-only non-isomorphism proofs are born-RED. N-GLL is a
 one-probe falsifier, not a portfolio center, and has no current dispatch.
@@ -332,48 +336,64 @@ matrix is later Value-owned execution work and never parser-throughput credit.
 
 1. Run `OHM-ALGORITHM-EQUIVALENCE` and `GPEG-STRUCTURE-EQUIVALENCE`
    against pinned prior-art controls. Reproduction earns no novelty credit.
-2. Freeze an immutable edit stream covering insert/delete/replace at BOF,
+2. Treat `ParserContext` as audit prose only: it is public, mutable,
+   incomplete, and forgeable. Authorize reuse only through an unexported
+   `WeakMap<Parser, NodeProof>` populated by trusted library constructors.
+3. Initially certify only callback-free `string`, `eof`, and closed structural
+   compositions of certified children. Arbitrary `new Parser`, `map`,
+   `mapState`, `chain`, `call`, `debug`, `lazy`, custom parsers, custom RegExp, and
+   effectful recovery are opaque and rerun. RegExp reads to EOF absent a
+   separately proved bounded subset.
+4. Freeze an immutable edit stream covering insert/delete/replace at BOF,
    comments, strings, escapes, declaration boundaries, nested functions,
    failed choices, negative lookahead, malformed frontiers, and EOF.
-3. Use a private immutable `SourceVersion` and completed `MemoEntry` binding
+5. Use a private immutable `SourceVersion` and completed `MemoEntry` binding
    grammar epoch, rule, start, entry depth, match/examined lengths, examined
    EOF, source-slice hash, relocatable immutable product, relative failure
    frontier, and max-depth delta; index entries in a persistent shift interval
    tree. Do not reuse in-progress left-recursion state.
-4. Parse version zero cold and construct the index. Invalidate examined rather
+6. Parse version zero cold and construct the index. Invalidate examined rather
    than consumed intervals, remove starts in the replaced domain, lazy-shift
    safe right-hand entries, revalidate slice/EOF, rebase nested spans, and replay
    ordered failure contribution.
-5. For every edit, compare the complete candidate product to a new isolated
+7. For every edit, compare the complete candidate product to a new isolated
    full M2 parse plus semantic-law assertions.
-6. Require stable graph/action/environment/diagnostic-policy version,
+8. Require stable graph/action/environment/diagnostic-policy version,
    relocatable anchor, consumed and full
    read interval, failed-arm/negative-result dependencies, child dependencies,
    effect summary, and complete product in every reusable entry.
-7. Arbitrary `.map`, `.mapState`, `.chain`, or `.call` without proved pure and
-   versioned dependencies is non-reusable and reruns.
-8. Recovery, diagnostics, faults, opaque RegExp, arbitrary callbacks, and custom
-   parsers are initially `nonReusable`; instrument every source read.
-9. Mandatory first witnesses are `string("ab").or(string(""))`, editing `"a!"`
+9. Semantic/effect callbacks always rerun and reconstruct fresh values. Reuse
+   only recognition, offset, and selected branch under complete dependency
+   proof. Never persist LR seed/head/in-progress growth or transient epoch
+   state.
+10. Require exact values/spans/slots/frontier/fault/rollback/recovery/
+   diagnostics/provenance/depth, branching isolation, arbitrary source-read
+   and environment identity, and effect-exactly-once.
+11. Mandatory first witnesses are `string("ab").or(string(""))`, editing `"a!"`
    at `[1,2)` to `"ab"`, and appending a closer to an unterminated CSS
    comment/string that examined EOF.
-10. Independently mutate captured state, module globals, undeclared source
+12. Independently mutate captured state, module globals, undeclared source
    reads, effects, diagnostic policy, UTF-16 relocation, and branched versions;
    require effect-exactly-once and per-leaf control-of-control.
-11. Kill on the first stale read, recovery/provenance mismatch, routine
+13. Measure dynamic work actually skipped and complete K-edit economics, not
+   static certified-node count.
+14. Kill on the first stale read, recovery/provenance mismatch, routine
    whole-tree invalidation, unbounded retained heap, or non-positive measured
    break-even at the declared K. Cold overhead remains visible. N-IETM targets
    PL-BE only; local 2x/3x edit ratios are descriptive and grant no strict-law
    milestone.
 
-### N-DNF
+### N-DNF-BIR
 
-Before implementation, prove a structural predicate showing that the emitted
-runtime contains no `ParserFunction` graph traversal, closure-choice executor,
-generic table/opcode loop, or fallback. Kill as S/C/V/P3 when translation
-preserves dynamic calls/checkpoints. Then assay normalization growth, emitted
-bytes, import/first/hot, opaque actions, `.chain`, recovery, CSS escapes,
-longest-match, unordered values, and exact products.
+Scanner/combinator fusion, staged direct code, lossless CST, and bidirectional
+parse/print are prior art; this route makes no novelty claim. Before
+implementation, prove exact non-isomorphism to S/C/V/E and show that the
+emitted runtime contains no `ParserFunction` graph traversal, closure-choice
+executor, generic table/opcode loop, or fallback. A token/index/tape, scanner
+stage, or CST/event/region followed by separate typed projection is fatal.
+Then assay normalization growth, emitted bytes, import/first/hot, opaque
+actions, `.chain`, recovery, CSS escapes, longest-match, unordered values,
+complete products, and Value-owned grammar boundaries.
 
 ### N-WRR
 
@@ -451,11 +471,12 @@ At N1-A4 correction close:
   fresh independent audit found numeric/registry-byte false-greens; immutable;
 - N1-A4 correction: controls `8/8`, hostiles `130/130`, raw rows `1/1`,
   fresh independent acceptance `1/1`, committed at `81b2a0a`;
-- N2-F0: one terminal mechanics root on the sole existing Luna task; no sealed
-  scientific result, timing, prototype, law, or downstream credit; one fresh
-  N2a correction on that same task is authorized but not sent;
+- N2-F0/N2a: two terminal mechanics attempts on the sole existing Luna task;
+  no sealed scientific result, timing, prototype, law, or downstream credit;
+  one fresh N2b correction on that same task is authorized but not sent;
 - candidate families: N-IETM algorithmic substrate `FOLD PRIOR ART`, local
-  parse-that integration hypothesis `HOLD/TEST`; N-DNF/N-WRR born-RED `HOLD`; N-GLL
+  parse-that integration hypothesis `HOLD/TEST`; N-DNF-BIR is a second
+  prior-art-bound integration `HOLD`, N-WRR born-RED `HOLD`; N-GLL
   fatal-only `HOLD`; all other axes dispositioned;
 - prototypes, benchmark rows, product/CSS/WPT coverage, law milestones,
   candidate, package, consumer, API, release, Value/Keyframes/BBNF/Fourier

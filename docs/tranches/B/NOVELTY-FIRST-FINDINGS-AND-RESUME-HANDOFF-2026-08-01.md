@@ -2,7 +2,9 @@
 
 Date: 2026-08-01
 
-Status: **N1-A4 COMMITTED — N2-F0 TERMINAL MECHANICS RED — N2A SAME-TASK FRESH-ROOT AUTHORIZED/NOT SENT — ZERO CREDIT — NO RELEASE**
+Last amended: 2026-08-02
+
+Status: **N1-A4 COMMITTED — N2-F0/N2A TERMINAL MECHANICS RED — N2B SAME-TASK FRESH-ROOT AUTHORIZED/NOT SENT — ZERO CREDIT — NO RELEASE**
 
 ## Exact owner state
 
@@ -79,6 +81,12 @@ census and one same-task fresh-root correction law are in
 `audit/NOVELTY-N2-F0-TERMINAL-RED-OWNER-INTAKE-AND-N2A-RULING-2026-08-01.md`.
 Its SHA-256 is
 `7c3cda9b8011c5efec3c1c3b2fa33342698a4a8fa9acf2524f75fbdbc8f64071`.
+N2a then split its source and birth/output coordinates across Aug-1 and Aug-2;
+shell redirection failed before Node. Its exact terminal census, substantive
+integration amendment, and sole N2b route are in
+`audit/NOVELTY-N2A-TERMINAL-MECHANICS-RED-OWNER-INTAKE-AND-N2B-RULING-2026-08-02.md`.
+Its SHA-256 is
+`88b032fd00502e7cdbb97e38dd01b663cf93a3e1934bcac076f71f240f9fb04a`.
 No result or credit exists. The earlier parser/CSS dependency chronology is in
 `coordination/PARSER-CSS-RESUMPTION-SAFE-BOUNDARY-2026-08-01.md`.
 
@@ -115,14 +123,24 @@ The broad N-IETM novelty claim is rejected. Incremental examined-region reuse,
 relocation, shifting indexes, transactional state, and selective/state-aware
 memoization are established prior art. The exact adjudication is
 [`research/N-IETM-PRIOR-ART-ADJUDICATION-2026-08-01.md`](research/N-IETM-PRIOR-ART-ADJUDICATION-2026-08-01.md).
-The only remaining HOLD/TEST is whether explicit source, parser graph, action,
-environment, diagnostic-policy, effect, and read identity can safely preserve
-parse-that's complete callback-rich product and achieve PL-BE.
+The only remaining HOLD/TEST is whether an unforgeable library-owned node proof
+can reuse callback-free recognition islands while rerunning all semantic/effect
+work, reconstructing fresh values, preserving the complete callback-rich
+product, and achieving PL-BE.
+
+`ParserContext` is prose, not authority: it is public, mutable, incomplete, and
+forgeable. Eligibility comes only from an unexported
+`WeakMap<Parser, NodeProof>` populated by trusted library constructors.
+Initially only callback-free `string`, `eof`, and closed certified structural
+compositions may reuse recognition/offset/branch. Arbitrary parsers,
+`.map`/`.mapState`/`.chain`/`.call`/`.debug`/`.lazy`, custom RegExp, and recovery are
+opaque. RegExp reads to EOF absent a proved bounded subset. Semantic/effect
+callbacks always rerun, fresh values are reconstructed, and no LR seed/head or
+in-progress growth persists.
 
 Every reusable cell binds consumed and examined intervals, failed arms and
 negative reads, child dependencies, action/effect version, and the complete
-immutable public product. Unknown-effect `.map`, `.mapState`, `.chain`, and
-`.call` nodes rerun. Each edit result is compared to a fresh full M2 parse plus
+immutable public product. Each edit result is compared to a fresh full M2 parse plus
 the semantic-law envelope. Cold first parse remains binding; edit rows never
 redefine a one-shot workload. N-IETM targets PL-BE only. Local edit rows may
 report descriptive 2x/3x ratios, but cold index construction makes the family
@@ -134,13 +152,18 @@ and they omit grammar/source/action/edit/diagnostic identities. The private F0
 uses immutable source versions, completed entries with full examined/EOF and
 effect/product identity, and a persistent shift interval index. Recovery,
 diagnostics, faults, opaque RegExp, arbitrary callbacks, and custom parsers are
-initially non-reusable. No public API widens.
+initially non-reusable. Complete diagnostics/fault/recovery/span/provenance/
+depth equality, branching isolation, arbitrary source-read/environment
+identity, and effect-exactly-once remain binding. Economics use dynamic work
+actually skipped, not static certified-node counts. No public API widens.
 
 ### Unresolved born-RED holds
 
-- N-DNF survives only long enough to prove that deterministic whole-grammar
-  direct-source normalization removes S/C/V/P3 work rather than emitting it in
-  a new shape.
+- N-DNF-BIR makes no novelty claim: scanner/combinator fusion, staged direct
+  code, lossless CST, and bidirectional parse/print are prior art. It survives
+  only as a second born-RED integration route if it proves exact S/C/V/E
+  non-isomorphism without token/index/tape, scanner, fallback, or CST-to-typed
+  projection.
 - N-WRR survives only long enough to prove that compiled WASM control, linear
   memory, sparse eligibility, and exact region projection remove V/E/L/F2 work
   beyond the existing BBNF WASM VM/check/formatter benches.
@@ -175,29 +198,32 @@ non-isomorphism predicate retires it before timing.
 
 ## Exact next boundary
 
-Do not create a parser task or reuse the failed N2-F0 root. N1-A4 and the
+Do not create a parser task or reuse N2-F0 or either N2a locus. N1-A4 and the
 prior-art adjudication share committed coordinate `81b2a0a`. The sole existing
-Luna task may receive at most one N2a correction at the fresh absent root only
-after the owner ruling's failed-root, outside-residue, and absolute Ohm-pin
-checks pass. This handoff does not send that packet.
+Luna task may receive at most one N2b correction at the fresh absent Aug-2 N2b
+root only after both N2a censuses and absolute Ohm-pin checks pass. This
+handoff does not send that packet.
 
 Then execute only in this order:
 
 1. preserve the completed N1-A4 source audit and committed pin at `81b2a0a`;
 2. preserve N2-F0 and `/tmp/f0-raw.ndjson` exactly; never repair, rerun, clean,
    or reseal either;
-3. allow only the existing N-IETM Luna xhigh task to create one fresh N2a root
-   after absolute pinned-Ohm and source-resolution preflight, with every output
-   and temporary byte root-contained;
-4. run the greenfield integration/equivalence probe against accepted and
+3. preserve both N2a loci exactly; never repair, merge, rerun, clean, or reseal
+   either;
+4. allow only the existing N-IETM Luna xhigh task to create one fresh N2b root
+   with a literal machine-bound writer root, direct Ohm pins, no shell date/
+   variable/redirection logic, and every output/temporary byte root-contained;
+5. run source-resolution preflight first, then the amended recognition-island
+   integration/equivalence probe against accepted and
    rebuilt M2 plus the semantic-law envelope, using the frozen
    generic/Value/standards suites;
-5. require Ohm/Dubroy/GPeg equivalence and eleven other fatal gates before
+6. require Ohm/Dubroy/GPeg equivalence and all fatal gates before
    timing;
-6. fresh Sol xhigh hostile critique of an immutable scientifically completed
-   N2a root only;
-7. owner agglomeration; and
-8. stop. N-DNF, N-WRR, and N-GLL remain NO-GO until a later explicit owner
+7. fresh Sol xhigh hostile critique of an immutable scientifically completed
+   N2b root only;
+8. owner agglomeration; and
+9. stop. N-DNF-BIR, N-WRR, and N-GLL remain NO-GO until a later explicit owner
    authority resolves their born-RED predicates.
 
 An interrupted root freezes permanently. A correction uses a new absent root.
@@ -214,9 +240,9 @@ No current or failed evidence root is resumed.
 - N1-A3 correction: immutable false-green after numeric/registry-byte audit;
 - N1-A4 correction: gold controls `8/8`, raw rows `1/1`, hostiles `130/130`,
   fresh independent acceptance `1/1`, committed at `81b2a0a`;
-- N2 scientific experiments: `0/4` terminal receipts; N2-F0 is one terminal
-  mechanics root with zero credit; one same-task N2a correction is authorized
-  but not sent;
+- N2 scientific experiments: `0/4` terminal receipts; N2-F0 and N2a are two
+  terminal mechanics attempts with zero credit; one same-task N2b correction
+  is authorized but not sent;
 - N3 critiques/agglomeration: `0/5`;
 - strict 3x, strict 2x, measured break-even: each `0/5`;
 - Value receiver: `14/34 = 41.18%`;
@@ -224,5 +250,5 @@ No current or failed evidence root is resumed.
   release, Value/Keyframes/BBNF/Fourier credit: **0**.
 
 This closes only the owner mechanics intake. The long-horizon parser goal
-remains active. N2-F0 is terminal and frozen; N2a is authorized but not sent,
-with no scientific receipt or downstream credit.
+remains active. N2-F0 and N2a are terminal and frozen; N2b is authorized but
+not sent, with no scientific receipt or downstream credit.
