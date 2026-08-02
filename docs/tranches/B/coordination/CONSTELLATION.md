@@ -10,7 +10,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | N1-A4 authority is `81b2a0a`; N2-F0/N2a on sole task `019fb12c-2624-7732-909a-e1e87ce7ef24` are terminal mechanics RED, N2b is terminal scientific-runner RED, and N2c/N2d are terminal source-review RED, all zero-credit. Paper decomposition is required/not dispatched; N2e source/execution is withheld. Failed A1 is terminal. Post-P6 `40d8b4c` and P6-A3 `3ed4c43` remain immutable historical-10x evidence. |
+| parse-that worktree | B / generic runtime producer | N1-A4 authority is `81b2a0a`; N2-F0/N2a are terminal mechanics RED, N2b is terminal scientific-runner RED, and N2c/N2d are terminal source-review RED. Paper v1–v3 and paired reviews are immutable zero-credit chronology; v3 A3/B3 are terminal AMEND/RED. V4, further review, and N2e source/execution are withheld pending owner/root ruling. Failed A1 is terminal. Post-P6 `40d8b4c` and P6-A3 `3ed4c43` remain immutable historical-10x evidence. |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
@@ -61,9 +61,11 @@ terminal mechanics RED. N2b passed source resolution but is terminal
 scientific-runner RED before timing. N2c is terminal source-review RED on its
 caller-authored trust/audit/raw/product planes. N2d is terminal source-review
 RED on unbound ledger bytes and vacuous one-version relocation, plus independent
-decoder/schema/product/effect/M2/control/prose failures. The next work is paper
-decomposition plus two independent paper reviews; it is not dispatched. N2e
-source/execution is withheld. There is no parser-to-Fourier edge.
+decoder/schema/product/effect/M2/control/prose failures. Paper v1–v3 and their
+paired fresh reviews are now immutable zero-credit chronology. V3 A3/B3 are
+terminal AMEND/RED on disconnected P6 production leaves and unbound
+effect-epoch selection. V4, further review, and N2e source/execution are
+withheld pending owner/root ruling. There is no parser-to-Fourier edge.
 
 ## Parser/CSS resumption receipt
 
@@ -114,6 +116,14 @@ It freezes N2d's exact two-file root, binds unbound owner ledger bytes and
 vacuous relocation as the first structural failure, withholds N2e source and
 execution, and routes only an undispatched eight-interface paper decomposition
 plus two independent paper reviews. It grants zero downstream credit.
+
+The terminal paper-v3 review boundary is packet commit `1fae739`, tree
+`6f5c9106…`, manifest `b79b0303…`, with exact A3/B3 owner intakes
+[`../audit/N2-IETM-PAPER-V3-REVIEW-A3-OWNER-INTAKE-AMEND-RED-2026-08-02.md`](../audit/N2-IETM-PAPER-V3-REVIEW-A3-OWNER-INTAKE-AMEND-RED-2026-08-02.md)
+and
+[`../audit/N2-IETM-PAPER-V3-REVIEW-B3-OWNER-INTAKE-AMEND-RED-2026-08-02.md`](../audit/N2-IETM-PAPER-V3-REVIEW-B3-OWNER-INTAKE-AMEND-RED-2026-08-02.md).
+Both are terminal AMEND/RED with zero credit. V3 remains immutable; v4,
+further review, source, and execution have no authority.
 
 ## Writer / reader boundary
 

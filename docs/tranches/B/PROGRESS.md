@@ -13,8 +13,10 @@ immutable failed-audit chronology; N1-A4 byte-owned ROW/RUN closure and its
 prior-art adjudication are committed at `81b2a0a`; N2-F0/N2a are terminal
 mechanics RED, N2b is terminal scientific-runner RED, and N2c is terminal
 source-review RED; N2d is terminal source-review RED on unbound ledger-root and
-vacuous relocation, all with zero credit; paper decomposition is required and
-not dispatched; N2e source/execution is withheld;
+vacuous relocation, all with zero credit; paper v1–v3 and their paired fresh
+reviews are immutable zero-credit chronology; v3 A3/B3 are terminal AMEND/RED
+on disconnected P6 production leaves and unbound effect-epoch selection; v4,
+N2e source/execution, and further review are withheld pending owner/root ruling;
 N-DNF-BIR/N-WRR remain prior-art-bound born-RED holds,
 N-GLL is no-go/fatal-only, and both
 formation clean audits remain blocked**
@@ -27,7 +29,7 @@ Release status: **NO RELEASE**
 |---|---|---|
 | Archaeology | `research/PARSE-THAT-SESSION-ARCHAEOLOGY-2026-07-29.md` | Banked; prior scanner-shaped CSS attempts and stale completion claims rejected. |
 | Round zero | `research/ROUND-ZERO-PARSE-THAT-PORTFOLIO-2026-07-29.md` | Banked portfolio; incompatible families preserved for evidence. |
-| Novelty-first Pass N1 / N2 mechanics | immutable N1-A `a04a7e6`, N1-A1 `914957f`, N1-A2 `e663a91`, N1-A3 `164fc9a`; committed N1-A4 `81b2a0a`; A4 audit; prior-art adjudication; atlas/registry/law/handoff; N2-F0 ruling SHA `7c3cda9b…`; N2a/N2b ruling SHA `88b032fd…`; N2b/N2c ruling SHA `35e72f24…`; N2c/N2d ruling SHA `0eb63a52…`; N2d/paper ruling SHA `a261f822…` | N1-A4 owns registry/raw bytes and its fresh audit. N-IETM's algorithmic substrate folds to prior art. N2-F0/N2a are terminal mechanics RED; N2b is terminal scientific-runner RED; N2c/N2d are terminal source-review RED. N2d's ledger root is not externally bound and its one-version domain makes relocation unreachable; decoder/schema/product/effect/M2/control/prose planes independently fail. All are zero-credit. The next work is an eight-interface paper decomposition plus two independent paper reviews; it is not dispatched. N2e source/execution is withheld. N-DNF-BIR and N-CBLC remain independent and undispatched. CSS remains Value-owned chronology. **SOURCE/DEPENDENCY ONLY; ZERO PRODUCT/CSS/API/RELEASE CREDIT**. |
+| Novelty-first Pass N1 / N2 mechanics | immutable N1-A `a04a7e6`, N1-A1 `914957f`, N1-A2 `e663a91`, N1-A3 `164fc9a`; committed N1-A4 `81b2a0a`; A4 audit; prior-art adjudication; atlas/registry/law/handoff; N2-F0 ruling SHA `7c3cda9b…`; N2a/N2b ruling SHA `88b032fd…`; N2b/N2c ruling SHA `35e72f24…`; N2c/N2d ruling SHA `0eb63a52…`; N2d/paper ruling SHA `a261f822…`; paper v3 `1fae739`/manifest `b79b0303…`; A3/B3 intakes `audit/N2-IETM-PAPER-V3-REVIEW-A3-OWNER-INTAKE-AMEND-RED-2026-08-02.md` and `audit/N2-IETM-PAPER-V3-REVIEW-B3-OWNER-INTAKE-AMEND-RED-2026-08-02.md` | N1-A4 owns registry/raw bytes and its fresh audit. N-IETM's algorithmic substrate folds to prior art. N2-F0/N2a are terminal mechanics RED; N2b is terminal scientific-runner RED; N2c/N2d are terminal source-review RED. Paper v1–v3 and paired reviews are immutable zero-credit evidence. V3 A3 rejects disconnected P6 production leaves; B3 rejects unbound effect-epoch selection, with independent candidate-executor, semantic-coordinate, P5-root, P6-collateral, and P7-own-reason gaps. V4, further review, and N2e source/execution are withheld pending owner/root ruling. N-DNF-BIR and N-CBLC remain independent and undispatched. CSS remains Value-owned chronology. **SOURCE/DEPENDENCY ONLY; ZERO PRODUCT/CSS/API/RELEASE CREDIT**. |
 | Pass 1 research adjudication/agglomeration | `research/PASS-1-SOL-ADJUDICATION-2026-07-29.md`, `research/PASS-1-SOL-AGGLOMERATION-2026-07-29.md` | Preliminary research only: R/E/V/K retired and S/D remained candidates; later reconciled by P1. |
 | P1 full-subject reconciliation | `69f72f7`, `research/P1-HASH-BOUND-REGISTRY-2026-07-29.md` | Twenty hash-bound rows: 8 GREEN, 7 OPEN, 4 RED, 1 OPEN/ROUTED. **P1 COMPLETE; FORMATION RED; ZERO LATER CREDIT**. |
 | M1 | `de36d57` predecessor formation | Parse-owned recovery and raw-memo isolation proceeded to M2. |
