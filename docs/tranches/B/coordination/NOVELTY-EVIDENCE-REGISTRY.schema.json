@@ -308,15 +308,39 @@
     "receipt": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "id", "schemaSha256", "phase", "root", "rootWasAbsent", "interrupted", "registryArtifacts", "rawArtifacts", "verdict", "credit"],
+      "required": ["kind", "id", "schemaSha256", "phase", "authorityId", "recordIds", "root", "rootWasAbsent", "interrupted", "declaredCounts", "registryArtifacts", "rawArtifacts", "verdict", "credit"],
       "properties": {
         "kind": { "const": "RECEIPT" },
         "id": { "$ref": "#/$defs/nonEmpty" },
         "schemaSha256": { "$ref": "#/$defs/sha256" },
         "phase": { "enum": ["N1", "N2", "N3", "L1", "L2", "L3", "CLEAN_A", "CLEAN_B"] },
+        "authorityId": { "$ref": "#/$defs/nonEmpty" },
+        "recordIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmpty" }
+        },
         "root": { "$ref": "#/$defs/nonEmpty" },
         "rootWasAbsent": { "const": true },
         "interrupted": { "type": "boolean" },
+        "declaredCounts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["AUTHORITY", "RUN", "ARM", "BUILD", "FIXTURE", "ROW", "PRODUCT", "LAW", "HOSTILE", "RECEIPT"],
+          "properties": {
+            "AUTHORITY": { "type": "integer", "minimum": 1 },
+            "RUN": { "type": "integer", "minimum": 1 },
+            "ARM": { "type": "integer", "minimum": 1 },
+            "BUILD": { "type": "integer", "minimum": 1 },
+            "FIXTURE": { "type": "integer", "minimum": 1 },
+            "ROW": { "type": "integer", "minimum": 1 },
+            "PRODUCT": { "type": "integer", "minimum": 1 },
+            "LAW": { "type": "integer", "minimum": 1 },
+            "HOSTILE": { "type": "integer", "minimum": 1 },
+            "RECEIPT": { "const": 1 }
+          }
+        },
         "registryArtifacts": {
           "type": "array",
           "minItems": 1,
@@ -324,6 +348,7 @@
         },
         "rawArtifacts": {
           "type": "array",
+          "minItems": 1,
           "items": { "$ref": "#/$defs/artifact" }
         },
         "verdict": { "enum": ["KEEP", "HOLD", "FOLD", "MOVE", "SPLIT", "PRUNE", "AMEND", "REJECT"] },

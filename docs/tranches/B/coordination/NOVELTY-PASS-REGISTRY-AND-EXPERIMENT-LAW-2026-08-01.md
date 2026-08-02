@@ -2,7 +2,7 @@
 
 Date: 2026-08-01
 
-Status: **SOURCE-ONLY N1 BOUNDARY — NO PROTOTYPE STARTED — ZERO DOWNSTREAM CREDIT**
+Status: **N1-A1 SEMANTIC CORRECTION BANKED — INDEPENDENT AUDIT REQUIRED — N2 BLOCKED — ZERO DOWNSTREAM CREDIT**
 
 ## Scope
 
@@ -20,8 +20,8 @@ They may produce inputs to the law portfolio but cannot satisfy it by name.
 |---|---|---|---|---|
 | `N1.RG` | GPT Sol xhigh, independent genealogy/falsification | family charter, live parser source, P1–P6 evidence, supplied primary sources | independent alias/retirement view | `COMPLETE; READ-ONLY` |
 | `N1.RH` | GPT Sol xhigh, independent host/economics | family charter, Node 26/V8 14.6, live benches/source, active law families | independent reachability/cost view | `COMPLETE; READ-ONLY` |
-| `N1.O` | parser owner, synthesis/adjudication | `N1.RG`, `N1.RH`, independent root/consumer audits | atlas, matrix, registry, closed schema, handoff | `ACTIVE UNTIL CONTENT-ADDRESSED` |
-| `N2.IETM` | GPT Luna xhigh, isolated prototype | sealed N1 packet only | effect-aware edit-indexed prototype and raw receipts | `GO AFTER COMMIT; SOLE N2 DISPATCH` |
+| `N1.O` | parser owner, synthesis/adjudication | `N1.RG`, `N1.RH`, independent root/consumer audits | atlas, matrix, registry, closed schema, semantic closure, handoff | `N1-A IMMUTABLE; N1-A1 BANKED; FRESH AUDIT REQUIRED` |
+| `N2.IETM` | GPT Luna xhigh, isolated prototype | independently accepted N1-A1 packet only | effect-aware edit-indexed prototype and raw receipts | `BLOCKED ON FRESH N1-A1 AUDIT; SOLE FUTURE N2 DISPATCH` |
 | `N2.DNF` | GPT Luna xhigh, isolated falsifier | sealed N1 packet and explicit S/C/V non-isomorphism predicate | normal-form direct-source proof or retirement | `NO-GO; BORN-RED HOLD` |
 | `N2.WRR` | GPT Luna xhigh, isolated falsifier | sealed N1 packet and explicit V/E/BBNF-WASM non-isomorphism predicate | WASM boundary proof or retirement | `NO-GO; BORN-RED HOLD` |
 | `N2.GLL` | GPT Luna xhigh, tiny fatal probe | sealed N1 packet, real ambiguity/left-recursion counterexample | descriptor/GSS counters and exact product | `NO-GO; FATAL-ONLY HOLD` |
@@ -30,8 +30,9 @@ They may produce inputs to the law portfolio but cannot satisfy it by name.
 | `L1`–`L3`, Clean A/B | existing performance-law authority | only immutable admitted novelty evidence | law selection or no-runtime result | `UNCHANGED; 0/5 PER FAMILY` |
 
 No prototype task or evidence root is created by this packet. Exactly one
-formation-only N-IETM prototype is authorized after the committed source packet
-is the immutable input. N-DNF and N-WRR cannot start merely because they have
+formation-only N-IETM prototype may be authorized only after a fresh
+independent audit accepts the N1-A1 semantic correction. N-DNF and N-WRR
+cannot start merely because they have
 names: their source-only non-isomorphism proofs are born-RED. N-GLL is a
 one-probe falsifier, not a portfolio center, and has no current dispatch.
 Current packrat and the public API may not be patched or widened.
@@ -63,6 +64,46 @@ PRODUCT | LAW | HOSTILE | RECEIPT
 Every object sets `additionalProperties: false`, carries the schema SHA-256,
 and names immutable artifacts by path, byte count, and SHA-256. A digest or
 aggregate sink is never a substitute for the bound bytes.
+
+### N1-A1 collection-semantics correction
+
+Commit `a04a7e658bee32a1fb252a4e5b4f3ce359a5947d` is immutable N1-A
+chronology. Its schema closed individual record shapes but did not close the
+registry set: an empty array, dangling references, incompatible N-IETM law
+membership, and evidence-authored authority/root claims could pass shape
+validation. N1-A therefore grants no N2 dispatch authority.
+
+N1-A1 adds exactly one production collection validator,
+`NOVELTY-EVIDENCE-REGISTRY.semantic.mjs`. Its call boundary receives
+`records`, trusted `schemaBytes`, an externally pinned `expectedRoot`, an
+externally pinned `trustedPolicy`, and an injected `artifactReader`. Submitted
+AUTHORITY or `rootWasAbsent` claims cannot expand those inputs. The validator
+enforces exact nonempty packet counts; global IDs and schema SHA; typed and
+phase-consistent foreign keys; exhaustive `RECEIPT.recordIds`; authority,
+root, law-unit, family/role, and N-IETM→PL-BE compatibility; required record
+reachability; raw/sample/counter relations; disjoint exact registry/raw
+inventories; canonical root-contained regular artifact paths, bytes, and SHA;
+and a noninterrupted absent root.
+
+The schema-valid gold registry contains ten records. The same production
+validator accepts the gold packet and reversed-order control and rejects
+`48/48` one-owner mutants with their independently literal expected codes.
+The mutant records contain no expected-code oracle and no shadow validator
+exists. Exact source identities are:
+
+| Artifact | SHA-256 |
+|---|---|
+| schema | `9f8340af85a5efb06402c9c9d22ce4d84037ca0c9295a88e8cef1ef88ceb3d39` |
+| semantic validator | `050e7e522d64e8f07d92dcb8dab0b8b02b8cb3477c1ab7a7df93542547dcce9e` |
+| hostile runner | `7057bd6609cee2da38c96e15b96acbabbc97f7715bf80621808b291e3a3cbc6f` |
+| gold registry | `fd10a215fed926ff71ad078f80494054a45c58eb875947bbb600139839c408a3` |
+| hostile definitions | `d9153ffca08b243512a78b23749780e539af86a074858513edbfb3265bdb1064` |
+| executable results | `be377bbc82e43f5959a87c463bc499ca63edec2b59eab532239c60fc9a4b7d05` |
+| 14-entry manifest | `28dee01cbbe0f1fc8e37662d61a7ba846fceb9b91f67f2b4ea9f65a5780ed319` |
+
+This is a source-validation correction only. A fresh independent audit must
+replay the manifest, strict schema, gold controls, all hostile dispositions,
+and absent N2 root before `N2.IETM` can change from BLOCKED.
 
 Canonical product encoding must preserve:
 
@@ -276,10 +317,12 @@ after owner adjudication. Raw bytes are never overwritten.
 
 ## Boundary receipt
 
-At source close:
+At N1-A1 correction close:
 
 - N1 research views: `2/2` complete;
-- owner synthesis: `1/1` complete after content addressing;
+- owner synthesis: `1/1` complete in immutable N1-A chronology;
+- collection-semantics correction: gold controls `2/2`, hostiles `48/48`,
+  fresh independent acceptance `0/1`; N2 remains blocked;
 - candidate families: N-IETM `KEEP`; N-DNF/N-WRR born-RED `HOLD`; N-GLL
   fatal-only `HOLD`; all other axes dispositioned;
 - prototypes, benchmark rows, product/CSS/WPT coverage, law milestones,

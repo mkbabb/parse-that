@@ -1,0 +1,289 @@
+import { createHash } from "node:crypto";
+import { readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+import {
+    DEFAULT_EXPECTED_ROOT,
+    DEFAULT_TRUSTED_POLICY,
+    RegistrySemanticError,
+    defaultArtifactReader,
+    validateNoveltyRegistry,
+} from "./NOVELTY-EVIDENCE-REGISTRY.semantic.mjs";
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const BASELINE_PATH = resolve(HERE, "NOVELTY-EVIDENCE-REGISTRY.baseline.json");
+const MUTANTS_PATH = resolve(HERE, "NOVELTY-EVIDENCE-REGISTRY.mutants.json");
+const RESULTS_PATH = resolve(HERE, "NOVELTY-EVIDENCE-REGISTRY.results.json");
+const VALIDATOR_PATH = resolve(HERE, "NOVELTY-EVIDENCE-REGISTRY.semantic.mjs");
+const TEST_PATH = resolve(HERE, "NOVELTY-EVIDENCE-REGISTRY.semantic.test.mjs");
+const SCHEMA_PATH = resolve(HERE, "NOVELTY-EVIDENCE-REGISTRY.schema.json");
+const SCHEMA_BYTES = readFileSync(SCHEMA_PATH);
+
+// Test literals are deliberately not imported from the validator or submitted evidence.
+const EXPECTED = Object.freeze({
+    empty_registry: "E_REGISTRY_EMPTY",
+    duplicate_ids: "E_DUPLICATE_ID",
+    dangling_build_fk: "E_FK_BUILD_MISSING",
+    dangling_expected_product_fk: "E_FK_EXPECTED_PRODUCT_MISSING",
+    dangling_run_fk: "E_FK_RUN_MISSING",
+    dangling_arm_fk: "E_FK_ARM_MISSING",
+    dangling_fixture_fk: "E_FK_FIXTURE_MISSING",
+    dangling_product_fk: "E_FK_PRODUCT_MISSING",
+    dangling_law_fk: "E_FK_LAW_MISSING",
+    wrong_kind_run_target: "E_FK_RUN_KIND",
+    authority_trust_drift: "E_AUTHORITY_TRUST",
+    authority_identity_drift: "E_AUTHORITY_TRUST",
+    receipt_authority_drift: "E_RECEIPT_AUTHORITY",
+    trusted_root_mismatch: "E_ROOT_TRUST",
+    run_root_mismatch: "E_RUN_ROOT",
+    record_set_omission: "E_RECORD_SET_OMISSION",
+    record_set_extra: "E_RECORD_SET_EXTRA",
+    phase_mismatch: "E_PHASE_MISMATCH",
+    build_source_drift: "E_BUILD_SOURCE",
+    role_family_mismatch: "E_ROLE_FAMILY",
+    pl_be_ratio_unit: "E_LAW_UNIT",
+    ietm_pl3_membership: "E_IETM_LAW_COMPAT",
+    ietm_pl2_membership: "E_IETM_LAW_COMPAT",
+    missing_pl_be: "E_PL_BE_MISSING",
+    orphan_receipt: "E_RECEIPT_COUNT",
+    orphan_run_record: "E_ORPHAN_RUN",
+    extra_undeclared_record: "E_RECORD_SET_OMISSION",
+    declared_count_mismatch: "E_DECLARED_COUNT",
+    schema_sha_drift: "E_SCHEMA_SHA",
+    missing_authority: "E_AUTHORITY_COUNT",
+    inactive_dnf_family: "E_FAMILY_INACTIVE",
+    inactive_wrr_family: "E_FAMILY_INACTIVE",
+    inactive_gll_family: "E_GLL_INACTIVE",
+    registry_inventory_orphan: "E_REGISTRY_ARTIFACT_SET",
+    raw_inventory_orphan: "E_RAW_ARTIFACT_SET",
+    artifact_class_overlap: "E_ARTIFACT_CLASS_OVERLAP",
+    artifact_descriptor_conflict: "E_ARTIFACT_DESCRIPTOR_CONFLICT",
+    artifact_path_traversal: "E_ARTIFACT_OUTSIDE",
+    artifact_symlink: "E_ARTIFACT_SYMLINK",
+    orphan_raw: "E_ARTIFACT_MISSING",
+    orphan_artifact: "E_ARTIFACT_MISSING",
+    leaf_artifact_hash_bypass: "E_ARTIFACT_HASH",
+    zero_route_counter: "E_MECHANISM_UNREACHED",
+    counter_schema_drift: "E_COUNTER_SCHEMA",
+    sample_count_mismatch: "E_SAMPLE_COUNT",
+    selected_index_out_of_range: "E_SELECTED_INDEX",
+    selected_index_duplicate: "E_SELECTED_INDEX",
+    receipt_interrupted: "E_RECEIPT_INTERRUPTED",
+});
+
+function sha256Bytes(bytes) {
+    return createHash("sha256").update(bytes).digest("hex");
+}
+
+function sha256File(path) {
+    return sha256Bytes(readFileSync(path));
+}
+
+function record(records, id) {
+    const found = records.find((item) => item.id === id);
+    if (!found) throw new Error(`mutation setup cannot find ${id}`);
+    return found;
+}
+
+function declareRecord(records, policy, id, kind) {
+    const receipt = record(records, "receipt.ietm");
+    receipt.recordIds.push(id);
+    receipt.declaredCounts[kind] += 1;
+    policy.requiredCounts[kind] += 1;
+}
+
+function mutationContext(baseline, mutant) {
+    let records = structuredClone(baseline);
+    const trustedPolicy = structuredClone(DEFAULT_TRUSTED_POLICY);
+    let artifactReader = defaultArtifactReader;
+    let expectedRoot = DEFAULT_EXPECTED_ROOT;
+    switch (mutant.op) {
+        case "empty":
+            records = [];
+            break;
+        case "duplicate":
+            records.push(structuredClone(record(records, mutant.recordId)));
+            break;
+        case "set":
+            record(records, mutant.recordId)[mutant.field] = mutant.value;
+            break;
+        case "renameAuthority": {
+            const authority = record(records, "auth.n1-a");
+            authority.id = mutant.value;
+            const receipt = record(records, "receipt.ietm");
+            receipt.authorityId = mutant.value;
+            receipt.recordIds = receipt.recordIds.map((id) => id === "auth.n1-a" ? mutant.value : id);
+            break;
+        }
+        case "addLawAndRebind": {
+            const law = structuredClone(record(records, "law.be"));
+            law.id = mutant.newId;
+            law.family = mutant.family;
+            law.decisionUnit = "RATIO";
+            records.push(law);
+            record(records, "row.ietm").lawIds = [mutant.newId];
+            declareRecord(records, trustedPolicy, mutant.newId, "LAW");
+            break;
+        }
+        case "replaceLawFamily":
+            record(records, "law.be").family = mutant.family;
+            record(records, "law.be").decisionUnit = "RATIO";
+            break;
+        case "deleteKind":
+            records = records.filter((item) => item.kind !== mutant.kind);
+            break;
+        case "clone": {
+            const copy = structuredClone(record(records, mutant.recordId));
+            copy.id = mutant.newId;
+            records.push(copy);
+            break;
+        }
+        case "cloneDeclareAndTrust": {
+            const source = record(records, mutant.recordId);
+            const copy = structuredClone(source);
+            copy.id = mutant.newId;
+            records.push(copy);
+            declareRecord(records, trustedPolicy, mutant.newId, source.kind);
+            break;
+        }
+        case "removeRecordId":
+            record(records, "receipt.ietm").recordIds = record(records, "receipt.ietm").recordIds.filter((id) => id !== mutant.value);
+            break;
+        case "addRecordId":
+            record(records, "receipt.ietm").recordIds.push(mutant.value);
+            break;
+        case "setDeclaredCount":
+            record(records, "receipt.ietm").declaredCounts[mutant.kind] = mutant.value;
+            break;
+        case "setSchemaSha":
+            record(records, mutant.recordId).schemaSha256 = mutant.value;
+            break;
+        case "setArmFamily":
+            record(records, "arm.ietm").family = mutant.family;
+            break;
+        case "setRegistryPath":
+            record(records, "receipt.ietm").registryArtifacts[mutant.index].path = mutant.value;
+            break;
+        case "setRawPath":
+            record(records, "receipt.ietm").rawArtifacts[0].path = mutant.value;
+            break;
+        case "copyRegistryToRaw":
+            record(records, "receipt.ietm").rawArtifacts[0] = structuredClone(record(records, "receipt.ietm").registryArtifacts[mutant.index]);
+            break;
+        case "setArmArtifactBytes":
+            record(records, "arm.ietm").artifact.bytes = mutant.value;
+            break;
+        case "setArmArtifactPath":
+            record(records, "arm.ietm").artifact.path = mutant.value;
+            break;
+        case "readerSymlink": {
+            const base = artifactReader;
+            artifactReader = (request) => request.relativePath === mutant.path
+                ? { ...base(request), isSymlink: true }
+                : base(request);
+            break;
+        }
+        case "readerMissing": {
+            const base = artifactReader;
+            artifactReader = (request) => {
+                if (request.relativePath === mutant.path) {
+                    const error = new Error("hostile missing artifact");
+                    error.code = "ENOENT";
+                    throw error;
+                }
+                return base(request);
+            };
+            break;
+        }
+        case "setFixtureHash":
+            record(records, "fixture.ietm").bytes.sha256 = mutant.value;
+            break;
+        case "setCounter":
+            record(records, "row.ietm").mechanismCounters[mutant.name] = mutant.value;
+            break;
+        case "replaceCounters":
+            record(records, "row.ietm").mechanismCounters = mutant.value;
+            break;
+        default:
+            throw new Error(`unknown mutation op ${mutant.op}`);
+    }
+    return { records, trustedPolicy, artifactReader, expectedRoot };
+}
+
+function validate(context) {
+    return validateNoveltyRegistry({
+        records: context.records,
+        schemaBytes: SCHEMA_BYTES,
+        expectedRoot: context.expectedRoot,
+        trustedPolicy: context.trustedPolicy,
+        artifactReader: context.artifactReader,
+    });
+}
+
+function expectGreen(id, context) {
+    const result = validate(context);
+    if (result.status !== "GREEN") throw new Error(`${id} did not return GREEN`);
+    return { id, status: result.status, recordCount: result.recordCount };
+}
+
+function expectRed(mutant, context) {
+    const expectedCode = EXPECTED[mutant.id];
+    if (!expectedCode) throw new Error(`no independent expectation for ${mutant.id}`);
+    try {
+        validate(context);
+    } catch (error) {
+        if (!(error instanceof RegistrySemanticError)) throw error;
+        if (error.code !== expectedCode) {
+            throw new Error(`${mutant.id}: expected ${expectedCode}, received ${error.code}`);
+        }
+        return { id: mutant.id, status: "RED", expectedCode, actualCode: error.code, path: error.path };
+    }
+    throw new Error(`${mutant.id}: validator accepted hostile registry`);
+}
+
+export function runHostiles() {
+    const baseline = JSON.parse(readFileSync(BASELINE_PATH, "utf8"));
+    const mutants = JSON.parse(readFileSync(MUTANTS_PATH, "utf8"));
+    const unknown = mutants.map((mutant) => mutant.id).filter((id) => !(id in EXPECTED));
+    const missing = Object.keys(EXPECTED).filter((id) => !mutants.some((mutant) => mutant.id === id));
+    if (unknown.length || missing.length) {
+        throw new Error(`expectation/mutant census mismatch: unknown=${unknown.join(",")} missing=${missing.join(",")}`);
+    }
+
+    const baselineContext = {
+        records: baseline,
+        trustedPolicy: structuredClone(DEFAULT_TRUSTED_POLICY),
+        artifactReader: defaultArtifactReader,
+        expectedRoot: DEFAULT_EXPECTED_ROOT,
+    };
+    const controls = [
+        expectGreen("baseline", baselineContext),
+        expectGreen("baseline_reversed_order", { ...baselineContext, records: [...baseline].reverse() }),
+    ];
+    const hostileResults = mutants.map((mutant) => expectRed(mutant, mutationContext(baseline, mutant)));
+    return {
+        status: "GREEN",
+        controls,
+        hostileCount: hostileResults.length,
+        hostiles: hostileResults,
+        inputs: {
+            baselineSha256: sha256File(BASELINE_PATH),
+            mutantsSha256: sha256File(MUTANTS_PATH),
+            validatorSha256: sha256File(VALIDATOR_PATH),
+            validatorTestSha256: sha256File(TEST_PATH),
+            schemaSha256: sha256File(SCHEMA_PATH),
+            trustedPolicySha256: sha256Bytes(Buffer.from(JSON.stringify(DEFAULT_TRUSTED_POLICY))),
+            expectedRoot: DEFAULT_EXPECTED_ROOT,
+        },
+    };
+}
+
+function main() {
+    const result = runHostiles();
+    const output = `${JSON.stringify(result, null, 2)}\n`;
+    if (process.argv.includes("--write-results")) writeFileSync(RESULTS_PATH, output);
+    process.stdout.write(output);
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) main();

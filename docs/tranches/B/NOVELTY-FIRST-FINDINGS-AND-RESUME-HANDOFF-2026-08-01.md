@@ -2,7 +2,7 @@
 
 Date: 2026-08-01
 
-Status: **SOURCE-ONLY BOUNDARY COMPLETE — PROTOTYPE EXECUTION NOT STARTED — NO RELEASE**
+Status: **N1-A1 SOURCE CORRECTION BANKED — FRESH AUDIT REQUIRED — N2 BLOCKED — NO RELEASE**
 
 ## Exact owner state
 
@@ -10,6 +10,8 @@ Status: **SOURCE-ONLY BOUNDARY COMPLETE — PROTOTYPE EXECUTION NOT STARTED — 
 - branch: `codex/css-totality-combinators-20260729`;
 - authenticated pre-boundary HEAD:
   `fd6062bda4ad6a7c575a7bfde2885a7997c2f08b`;
+- immutable N1-A commit:
+  `a04a7e658bee32a1fb252a4e5b4f3ce359a5947d`;
 - protected pre-existing untracked paths: `data` and
   `docs/tranches/B/PARSER-RESURRECTION-HANDOFF-2026-07-31.md`;
 - resurrection handoff SHA-256:
@@ -29,12 +31,27 @@ pre-existing untracked paths were neither read as authority nor staged.
 | Artifact | SHA-256 | Lines | Role |
 |---|---|---:|---|
 | `research/NOVELTY-FIRST-MECHANISM-ATLAS-2026-08-01.md` | `0ad39480dafa973c424fba9983780f150842cf0c4dded37075e9e1623a54a5c1` | 457 | Orthogonal mechanism atlas, primary sources, genealogy, cost/fatal/host effects, equivalence-retirement matrix. |
-| `coordination/NOVELTY-PASS-REGISTRY-AND-EXPERIMENT-LAW-2026-08-01.md` | `6bba1b5b8926f9410d879bc86e6f6fea2bcd8b9e93f15f24f0c7e7026e4bf4fa` | 287 | N1–N3 registry, truthful product suites, process/raw/law/hostile contract, bounded dispatch. |
-| `coordination/NOVELTY-EVIDENCE-REGISTRY.schema.json` | `45ad9338d8248916ed50e2201759a476009813bb6c67d2b127abc7cc53768f48` | 361 | Closed ten-record Draft 2020-12 tagged union; `additionalProperties:false` for every evidence record. |
+| `coordination/NOVELTY-PASS-REGISTRY-AND-EXPERIMENT-LAW-2026-08-01.md` | `9fc6469f43614bc581d4030af9959e70b43ef989965e86afa6743bd734fd9e57` | 330 | N1–N3 registry, experiment law, N1-A false-green correction, and blocked N2 dispatch. |
+| `coordination/NOVELTY-EVIDENCE-REGISTRY.schema.json` | `9f8340af85a5efb06402c9c9d22ce4d84037ca0c9295a88e8cef1ef88ceb3d39` | 386 | Strict ten-record Draft 2020-12 tagged union with receipt authority and exact record-set closure fields. |
+| `coordination/NOVELTY-EVIDENCE-REGISTRY.semantic.mjs` | `050e7e522d64e8f07d92dcb8dab0b8b02b8cb3477c1ab7a7df93542547dcce9e` | 487 | Sole production collection validator with externally pinned authority/root/policy and injected artifact reader. |
+| `coordination/NOVELTY-EVIDENCE-REGISTRY.semantic.test.mjs` | `7057bd6609cee2da38c96e15b96acbabbc97f7715bf80621808b291e3a3cbc6f` | 289 | Gold/reversed controls and independent literal-code hostile runner; no shadow validator. |
+| `coordination/NOVELTY-EVIDENCE-REGISTRY.baseline.json` | `fd10a215fed926ff71ad078f80494054a45c58eb875947bbb600139839c408a3` | 186 | Schema-valid ten-record source-only gold packet. |
+| `coordination/NOVELTY-EVIDENCE-REGISTRY.mutants.json` | `d9153ffca08b243512a78b23749780e539af86a074858513edbfb3265bdb1064` | 50 | 48 one-owner mutants with no embedded expected-code oracle. |
+| `coordination/NOVELTY-EVIDENCE-REGISTRY.results.json` | `be377bbc82e43f5959a87c463bc499ca63edec2b59eab532239c60fc9a4b7d05` | 363 | Gold controls 2/2 GREEN and hostiles 48/48 exact RED. |
+| `artifacts/novelty-n1-a1-semantic-registry/MANIFEST.sha256` | `28dee01cbbe0f1fc8e37662d61a7ba846fceb9b91f67f2b4ea9f65a5780ed319` | 14 | Exact source/fixture/results manifest. |
 
-`jq empty`, Ajv Draft 2020-12 strict compilation, and `git diff --check` are
-green. Strict TypeScript, 14/14 test files with 134/134 tests, and the production
-build are green. `proof:all` clears manifest, no-CSS-surface, four subpaths,
+N1-A remains immutable chronology. Its JSON Schema closed record shapes but
+not registry-set semantics; empty or referentially incompatible arrays could
+pass. N1-A therefore cannot dispatch N2. N1-A1's externally pinned semantic
+validator accepts the ten-record gold packet in both source and reversed order
+and rejects all 48 schema-valid hostiles for their independently literal owning
+codes. The fresh N2 path remains absent. An independent non-author replay is
+still required, so the correction is not yet N2 authority.
+
+For the preceding N1-A boundary, `jq empty`, Ajv Draft 2020-12 strict
+compilation, and `git diff --check` were green. Strict TypeScript, 14/14 test
+files with 134/134 tests, and the production build were green. `proof:all`
+cleared manifest, no-CSS-surface, four subpaths,
 four packrat checks, no-span, and no-dead-combinator, then remains RED at the
 pre-existing JSON performance guard: 2,057 ns/parse versus 1,742 ns baseline,
 `+18.0%` against the 15% ceiling. The same run measured 1.70x lower retained
@@ -123,17 +140,19 @@ non-isomorphism predicate retires it before timing.
 
 ## Exact next boundary
 
-Do not create a prototype until the committed SHA of this source packet is the
-sole dispatch input and a fresh absent root has been assigned.
+Do not create a prototype until a fresh independent audit accepts N1-A1, its
+committed SHA is the sole dispatch input, and the still-absent root is assigned.
 
 Then execute only in this order:
 
-1. exactly one N-IETM Luna xhigh greenfield prototype against accepted and
+1. fresh independent source audit of the N1-A1 manifest, strict schema, gold
+   controls, 48 hostile dispositions, external trust boundary, and absent root;
+2. only after acceptance, exactly one N-IETM Luna xhigh greenfield prototype against accepted and
    rebuilt M2 plus the semantic-law envelope, using the frozen
    generic/Value/standards suites;
-2. fresh Sol xhigh hostile critique of the immutable N-IETM root;
-3. owner agglomeration; and
-4. stop. N-DNF, N-WRR, and N-GLL remain NO-GO until a later explicit owner
+3. fresh Sol xhigh hostile critique of the immutable N-IETM root;
+4. owner agglomeration; and
+5. stop. N-DNF, N-WRR, and N-GLL remain NO-GO until a later explicit owner
    authority resolves their born-RED predicates.
 
 An interrupted root freezes permanently. A correction uses a new absent root.
@@ -141,8 +160,10 @@ No current or failed evidence root is resumed.
 
 ## Convergence and credit
 
-- novelty source Pass N1: research `2/2`, owner synthesis `1/1`, required
-  source artifacts `3/3` — **100% for this source-only boundary**;
+- novelty source Pass N1-A: research `2/2`, owner synthesis `1/1`, immutable
+  chronology `1/1`;
+- N1-A1 collection correction: gold controls `2/2`, hostiles `48/48`, fresh
+  independent acceptance `0/1` — **banked but not dispatch authority**;
 - N2 prototypes: `0/4`;
 - N3 critiques/agglomeration: `0/5`;
 - strict 3x, strict 2x, measured break-even: each `0/5`;
@@ -150,5 +171,5 @@ No current or failed evidence root is resumed.
 - full CSS/WPT/browser, product execution, package, API, consumer migration,
   release, Value/Keyframes/BBNF/Fourier credit: **0**.
 
-This closes only the requested first source boundary. The long-horizon parser
-goal remains active and no successor exists.
+This closes only the owner correction turn. The long-horizon parser goal
+remains active, N2 is blocked on the fresh audit, and no successor exists.
