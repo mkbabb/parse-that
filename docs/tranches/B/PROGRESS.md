@@ -1,17 +1,16 @@
 # Tranche B — PROGRESS
 
-Updated: 2026-07-30
+Updated: 2026-08-01
 
 Tranche status: `in_progress`
 
 Active wave: `B.W0 - Candidate-to-Release Closure`
 
-Formation status: **ACTIVE — P1–P6 and the post-P6 reached/current-host
-NO-EDGE ruling remain immutable negative evidence under the historical 10x
-law; the user has reopened the admission floor as strict 3x, strict 2x, and
-measured constellation break-even; Round Zero and L1 research/synthesis are
-banked, the first Luna/fresh-Sol mechanics loop is `AMEND`,
-and both formation clean audits remain blocked**
+Formation status: **ACTIVE — P1–P6 and post-P6 NO-EDGE remain immutable
+historical-10x evidence; failed A1 is terminal archaeology; novelty Pass N1 is
+source-complete; exactly one isolated N-IETM prototype is next for PL-BE only;
+N-DNF/N-WRR remain born-RED holds, N-GLL is no-go/fatal-only, and both
+formation clean audits remain blocked**
 
 Release status: **NO RELEASE**
 
@@ -21,6 +20,7 @@ Release status: **NO RELEASE**
 |---|---|---|
 | Archaeology | `research/PARSE-THAT-SESSION-ARCHAEOLOGY-2026-07-29.md` | Banked; prior scanner-shaped CSS attempts and stale completion claims rejected. |
 | Round zero | `research/ROUND-ZERO-PARSE-THAT-PORTFOLIO-2026-07-29.md` | Banked portfolio; incompatible families preserved for evidence. |
+| Novelty-first Pass N1 | `research/NOVELTY-FIRST-MECHANISM-ATLAS-2026-08-01.md`, `coordination/NOVELTY-PASS-REGISTRY-AND-EXPERIMENT-LAW-2026-08-01.md`, `coordination/NOVELTY-EVIDENCE-REGISTRY.schema.json`, `NOVELTY-FIRST-FINDINGS-AND-RESUME-HANDOFF-2026-08-01.md` | Two independent Sol views plus owner synthesis disposition every supplied axis. N-IETM is the sole GO after source commit and targets PL-BE only. N-DNF/N-WRR are unresolved born-RED holds; N-GLL and all other routes have no dispatch. **SOURCE-ONLY; ZERO PRODUCT/CSS/API/RELEASE CREDIT**. |
 | Pass 1 research adjudication/agglomeration | `research/PASS-1-SOL-ADJUDICATION-2026-07-29.md`, `research/PASS-1-SOL-AGGLOMERATION-2026-07-29.md` | Preliminary research only: R/E/V/K retired and S/D remained candidates; later reconciled by P1. |
 | P1 full-subject reconciliation | `69f72f7`, `research/P1-HASH-BOUND-REGISTRY-2026-07-29.md` | Twenty hash-bound rows: 8 GREEN, 7 OPEN, 4 RED, 1 OPEN/ROUTED. **P1 COMPLETE; FORMATION RED; ZERO LATER CREDIT**. |
 | M1 | `de36d57` predecessor formation | Parse-owned recovery and raw-memo isolation proceeded to M2. |
@@ -422,26 +422,22 @@ chain may be recorded while an earlier arrow is RED.
 
 ## Next executable boundary
 
-1. Preserve P1–P6, every raw packet, P6-A3 correctness and
-   `0.9207681564x–1.0389571550x`, and post-P6 owner ruling `40d8b4c` as
-   immutable historical-10x evidence.
-2. Preserve the three L1 research packets, common Sol synthesis, original
-   Luna manifest `980d7781…`, raw `565148af…`, and fresh-Sol amendment
-   manifest `3cd94fee…` exactly.
-3. Resume the existing Luna xhigh seat for the correction-only A1 transaction
-   specified in
-   `audit/PERFORMANCE-LAW-PASS-L1-OWNER-AMENDMENT-2026-07-30.md`, then replay
-   it with the same fresh non-author Sol scope. Do not create a duplicate
-   task or reuse the original raw as corrected evidence.
-4. Preserve one fixture-index vector across every timed arm, complete
-   immutable products, per-batch and aggregate sink equality, exact
-   bootstrap, live JSON, generic nested, CSS-representative, allocation,
-   package, and read-only Value/Keyframes/Fourier accounting.
-5. Stop and mark a packet inadmissible on the first unequal stream, sink,
-   product, arithmetic, or unmeasured break-even conversion. Do not overwrite
-   failed evidence.
-6. L2, L3, full CSS implementation, formation Clean A/B, production freeze,
-   candidate packing, API changes, Value/JSON consumption, release and BBNF
-   remain blocked. This amendment grants formation-research credit only.
+1. Read `NOVELTY-FIRST-FINDINGS-AND-RESUME-HANDOFF-2026-08-01.md` and its
+   content-addressed atlas, registry, and closed schema.
+2. Preserve failed A1 exactly: 13 files, no manifest, immutable raw SHA
+   `92516e02…`. Never resume, repair, clear, or reseal it.
+3. After the N1 source commit is the sole immutable dispatch input, assign one
+   fresh absent non-overlapping root for exactly one Luna xhigh N-IETM F0.
+   Do not patch current packrat or widen the public API.
+4. Compare every edit version to fresh accepted/rebuilt M2 speed controls plus
+   the complete semantic-law envelope. Append EOF/assert final offset. Bind
+   full examined/EOF dependencies, action/effect identity, complete products,
+   allocation/GC/retained heap, and unit-bearing K-edit break-even.
+5. N-IETM targets PL-BE only. Descriptive local 2x/3x edit ratios grant no
+   strict-law milestone. Freeze the root on the first stale product, unequal
+   selection, schema drift, cache contamination, or hostile failure.
+6. Fresh Sol critiques the immutable F0; owner agglomerates and stops.
+   N-DNF, N-WRR, N-GLL, L2/L3, CSS product work, clean audits, package/API,
+   consumer migration, release, and BBNF remain blocked.
 
 `FINAL.md` remains an open gate ledger. Tranche B is not closeable.

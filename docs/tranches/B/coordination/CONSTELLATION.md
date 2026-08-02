@@ -1,6 +1,6 @@
 # Tranche B constellation coordination
 
-Date: 2026-07-30
+Date: 2026-08-01
 
 Status: `in_progress`
 
@@ -8,7 +8,7 @@ Status: `in_progress`
 
 | Repository | Tranche / role | Coordinate |
 |---|---|---|
-| parse-that worktree | B / generic runtime producer | Active performance-law portfolio `research/PERFORMANCE-LAW-AMENDMENT-PORTFOLIO-2026-07-30.md`, SHA `f58442ed…`; L1 owner amendment `audit/PERFORMANCE-LAW-PASS-L1-OWNER-AMENDMENT-2026-07-30.md`; original Luna `980d7781…` and fresh-Sol `3cd94fee…` bind `AMEND`; post-P6 `40d8b4c` and P6-A3 `3ed4c43` remain immutable historical-10x evidence |
+| parse-that worktree | B / generic runtime producer | Novelty N1 source packet at `research/NOVELTY-FIRST-MECHANISM-ATLAS-2026-08-01.md`, registry/schema in this directory, and `NOVELTY-FIRST-FINDINGS-AND-RESUME-HANDOFF-2026-08-01.md`; N-IETM is sole private next GO for PL-BE only. Failed A1 is terminal. Post-P6 `40d8b4c` and P6-A3 `3ed4c43` remain immutable historical-10x evidence. |
 | Value | V / sole CSS grammar, consumer and UI owner | R2 formation independently admitted with zero execution/release/product/visual credit at root receipt `0c151de9…`, binding `a27d72a4…`, quartet `b4d46ec1…`/`f77870b0…`/`9073d0f7…`/`f2cc76f1…`, owner verification `7865862a…` |
 | Keyframes | W / Value CSS consumer | receipt-only through Value |
 | BBNF | ABI peer after `V.L6.css-path-abi-freeze` | no implementation or CSS parser before the exact freeze |
@@ -40,6 +40,20 @@ Parser-relevant dependencies only:
 
 The parser packet does not import Value's 18-wave authority, component state,
 or unrelated Fourier blocker as parser credit.
+
+## Novelty N1 source receipt
+
+The source-only packet binds atlas SHA-256
+`0ad39480dafa973c424fba9983780f150842cf0c4dded37075e9e1623a54a5c1`,
+pass/experiment-law SHA-256
+`6bba1b5b8926f9410d879bc86e6f6fea2bcd8b9e93f15f24f0c7e7026e4bf4fa`,
+and closed evidence-schema SHA-256
+`45ad9338d8248916ed50e2201759a476009813bb6c67d2b127abc7cc53768f48`.
+It grants zero parser implementation, CSS, Value, Keyframes, package, API,
+release, or BBNF credit. Value remains a read-only future consumer; current
+Value imports no parse-that code. The next producer action is exactly one
+isolated N-IETM F0 followed by fresh Sol critique and owner stop. There is no
+parser-to-Fourier edge.
 
 ## Writer / reader boundary
 

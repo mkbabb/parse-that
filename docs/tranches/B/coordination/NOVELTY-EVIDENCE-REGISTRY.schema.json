@@ -1,0 +1,361 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mkbabb.dev/parse-that/tranche-b/novelty-evidence-registry.schema.json",
+  "title": "Parse-that novelty evidence registry",
+  "description": "Closed source-only schema for immutable N2/N3 evidence. A digest never substitutes for the bound artifact bytes.",
+  "type": "array",
+  "items": { "$ref": "#/$defs/record" },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "nonEmpty": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "bytes", "sha256"],
+      "properties": {
+        "path": { "$ref": "#/$defs/nonEmpty" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["argv", "cwd", "exitCode", "stdout", "stderr"],
+      "properties": {
+        "argv": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "cwd": { "$ref": "#/$defs/nonEmpty" },
+        "exitCode": { "type": "integer" },
+        "stdout": { "$ref": "#/$defs/artifact" },
+        "stderr": { "$ref": "#/$defs/artifact" }
+      }
+    },
+    "recordBase": {
+      "type": "object",
+      "required": ["kind", "id", "schemaSha256", "phase"],
+      "properties": {
+        "kind": { "type": "string" },
+        "id": { "$ref": "#/$defs/nonEmpty" },
+        "schemaSha256": { "$ref": "#/$defs/sha256" },
+        "phase": { "enum": ["N1", "N2", "N3", "L1", "L2", "L3", "CLEAN_A", "CLEAN_B"] }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "schemaSha256", "phase", "branch", "head", "parentHashes", "scope", "zeroCredit"],
+      "properties": {
+        "kind": { "const": "AUTHORITY" },
+        "id": { "$ref": "#/$defs/nonEmpty" },
+        "schemaSha256": { "$ref": "#/$defs/sha256" },
+        "phase": { "enum": ["N1", "N2", "N3", "L1", "L2", "L3", "CLEAN_A", "CLEAN_B"] },
+        "branch": { "$ref": "#/$defs/nonEmpty" },
+        "head": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "parentHashes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/sha256" }
+        },
+        "scope": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/nonEmpty" }
+        },
+        "zeroCredit": { "const": true }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "schemaSha256", "phase", "root", "pid", "processStart", "seed", "order", "node", "v8", "environment", "compileCacheCanary", "commands"],
+      "properties": {
+        "kind": { "const": "RUN" },
+        "id": { "$ref": "#/$defs/nonEmpty" },
+        "schemaSha256": { "$ref": "#/$defs/sha256" },
+        "phase": { "enum": ["N2", "N3", "L1", "L2", "L3", "CLEAN_A", "CLEAN_B"] },
+        "root": { "$ref": "#/$defs/nonEmpty" },
+        "pid": { "type": "integer", "minimum": 1 },
+        "processStart": { "$ref": "#/$defs/nonEmpty" },
+        "seed": { "type": "integer", "minimum": 0 },
+        "order": { "enum": ["AB", "BA", "AA", "BB"] },
+        "node": { "$ref": "#/$defs/nonEmpty" },
+        "v8": { "$ref": "#/$defs/nonEmpty" },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["NODE_DISABLE_COMPILE_CACHE", "NODE_OPTIONS", "NODE_COMPILE_CACHE"],
+          "properties": {
+            "NODE_DISABLE_COMPILE_CACHE": { "const": "1" },
+            "NODE_OPTIONS": { "const": "" },
+            "NODE_COMPILE_CACHE": { "const": null }
+          }
+        },
+        "compileCacheCanary": { "enum": ["GREEN_DISABLED", "RED_CONTAMINATED"] },
+        "commands": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/command" }
+        }
+      }
+    },
+    "arm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "schemaSha256", "phase", "role", "family", "artifact", "buildId", "importGraph", "mechanismCounterNames"],
+      "properties": {
+        "kind": { "const": "ARM" },
+        "id": { "$ref": "#/$defs/nonEmpty" },
+        "schemaSha256": { "$ref": "#/$defs/sha256" },
+        "phase": { "enum": ["N2", "N3", "L1", "L2", "L3", "CLEAN_A", "CLEAN_B"] },
+        "role": { "enum": ["ACCEPTED_M2", "REBUILT_M2", "SEMANTIC_ORACLE", "CANDIDATE", "NOOP", "AA", "BB"] },
+        "family": { "enum": ["M2", "M3_SEMANTIC", "N_IETM", "N_DNF", "N_WRR", "N_GLL", "HOSTILE"] },
+        "artifact": { "$ref": "#/$defs/artifact" },
+        "buildId": { "$ref": "#/$defs/nonEmpty" },
+        "importGraph": { "$ref": "#/$defs/artifact" },
+        "mechanismCounterNames": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmpty" }
+        }
+      }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "schemaSha256", "phase", "sourceCommit", "sourceManifest", "toolchain", "commands", "outputs", "packageGraph", "exportGraph"],
+      "properties": {
+        "kind": { "const": "BUILD" },
+        "id": { "$ref": "#/$defs/nonEmpty" },
+        "schemaSha256": { "$ref": "#/$defs/sha256" },
+        "phase": { "enum": ["N2", "N3", "L1", "L2", "L3", "CLEAN_A", "CLEAN_B"] },
+        "sourceCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "sourceManifest": { "$ref": "#/$defs/artifact" },
+        "toolchain": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["node", "v8", "typescript", "npm"],
+          "properties": {
+            "node": { "$ref": "#/$defs/nonEmpty" },
+            "v8": { "$ref": "#/$defs/nonEmpty" },
+            "typescript": { "$ref": "#/$defs/nonEmpty" },
+            "npm": { "$ref": "#/$defs/nonEmpty" }
+          }
+        },
+        "commands": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/command" }
+        },
+        "outputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/artifact" }
+        },
+        "packageGraph": { "$ref": "#/$defs/artifact" },
+        "exportGraph": { "$ref": "#/$defs/artifact" }
+      }
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "schemaSha256", "phase", "subject", "bytes", "vector", "selectedIndices", "expectedProductId"],
+      "properties": {
+        "kind": { "const": "FIXTURE" },
+        "id": { "$ref": "#/$defs/nonEmpty" },
+        "schemaSha256": { "$ref": "#/$defs/sha256" },
+        "phase": { "enum": ["N2", "N3", "L1", "L2", "L3", "CLEAN_A", "CLEAN_B"] },
+        "subject": { "enum": ["GENERIC", "JSON", "NESTED", "VALUE_CSS", "KEYFRAMES", "WPT_SEED", "HOSTILE"] },
+        "bytes": { "$ref": "#/$defs/artifact" },
+        "vector": { "$ref": "#/$defs/artifact" },
+        "selectedIndices": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "expectedProductId": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "schemaSha256", "phase", "runId", "armId", "fixtureId", "productId", "lawIds", "rawNanoseconds", "warmupIterations", "aggregateIterations", "coldSubintervals", "mechanismCounters", "gcBytes", "deoptBytes", "icBytes", "allocationBytes", "sink"],
+      "properties": {
+        "kind": { "const": "ROW" },
+        "id": { "$ref": "#/$defs/nonEmpty" },
+        "schemaSha256": { "$ref": "#/$defs/sha256" },
+        "phase": { "enum": ["N2", "N3", "L1", "L2", "L3", "CLEAN_A", "CLEAN_B"] },
+        "runId": { "$ref": "#/$defs/nonEmpty" },
+        "armId": { "$ref": "#/$defs/nonEmpty" },
+        "fixtureId": { "$ref": "#/$defs/nonEmpty" },
+        "productId": { "$ref": "#/$defs/nonEmpty" },
+        "lawIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmpty" }
+        },
+        "rawNanoseconds": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^[0-9]+$" }
+        },
+        "warmupIterations": { "type": "integer", "minimum": 0 },
+        "aggregateIterations": { "type": "integer", "minimum": 1 },
+        "coldSubintervals": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["startupNs", "importNs", "buildNs", "firstCompleteParseNs"],
+          "properties": {
+            "startupNs": { "type": "string", "pattern": "^[0-9]+$" },
+            "importNs": { "type": "string", "pattern": "^[0-9]+$" },
+            "buildNs": { "type": "string", "pattern": "^[0-9]+$" },
+            "firstCompleteParseNs": { "type": "string", "pattern": "^[0-9]+$" }
+          }
+        },
+        "mechanismCounters": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "gcBytes": { "$ref": "#/$defs/artifact" },
+        "deoptBytes": { "$ref": "#/$defs/artifact" },
+        "icBytes": { "$ref": "#/$defs/artifact" },
+        "allocationBytes": { "$ref": "#/$defs/artifact" },
+        "sink": { "$ref": "#/$defs/artifact" }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["holes", "undefined", "falsy", "negativeZero", "nan", "infinities", "typedValue", "slots", "utf16Spans", "terminal", "frontier", "mismatch", "fault", "rollback", "recovery", "diagnostics", "provenance", "freeze"],
+      "properties": {
+        "holes": { "const": true },
+        "undefined": { "const": true },
+        "falsy": { "const": true },
+        "negativeZero": { "const": true },
+        "nan": { "const": true },
+        "infinities": { "const": true },
+        "typedValue": { "const": true },
+        "slots": { "const": true },
+        "utf16Spans": { "const": true },
+        "terminal": { "const": true },
+        "frontier": { "const": true },
+        "mismatch": { "const": true },
+        "fault": { "const": true },
+        "rollback": { "const": true },
+        "recovery": { "const": true },
+        "diagnostics": { "const": true },
+        "provenance": { "const": true },
+        "freeze": { "const": true }
+      }
+    },
+    "product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "schemaSha256", "phase", "subject", "encoding", "canonicalBytes", "coverage", "freezeProof", "finalOffsetAsserted", "mechanismReachAsserted"],
+      "properties": {
+        "kind": { "const": "PRODUCT" },
+        "id": { "$ref": "#/$defs/nonEmpty" },
+        "schemaSha256": { "$ref": "#/$defs/sha256" },
+        "phase": { "enum": ["N2", "N3", "L1", "L2", "L3", "CLEAN_A", "CLEAN_B"] },
+        "subject": { "enum": ["SEMANTIC_LAW", "M2_SPEED", "CANDIDATE_GENERIC", "VALUE", "KEYFRAMES", "STANDARDS"] },
+        "encoding": { "const": "parse-that-complete-product-v1" },
+        "canonicalBytes": { "$ref": "#/$defs/artifact" },
+        "coverage": { "$ref": "#/$defs/coverage" },
+        "freezeProof": { "$ref": "#/$defs/artifact" },
+        "finalOffsetAsserted": { "const": true },
+        "mechanismReachAsserted": { "type": "boolean" }
+      }
+    },
+    "law": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "schemaSha256", "phase", "family", "evaluator", "enumerationOrder", "indexConvention", "decisionUnit"],
+      "properties": {
+        "kind": { "const": "LAW" },
+        "id": { "$ref": "#/$defs/nonEmpty" },
+        "schemaSha256": { "$ref": "#/$defs/sha256" },
+        "phase": { "enum": ["N2", "N3", "L1", "L2", "L3", "CLEAN_A", "CLEAN_B"] },
+        "family": { "enum": ["PL_3X_MEDIAN", "PL_2X_GEOMETRIC", "PL_BE_NET_BENEFIT", "PL_10X_HISTORICAL"] },
+        "evaluator": { "$ref": "#/$defs/artifact" },
+        "enumerationOrder": { "const": "ORDERED_7_POWER_7" },
+        "indexConvention": { "$ref": "#/$defs/nonEmpty" },
+        "decisionUnit": { "enum": ["RATIO", "NANOSECONDS"] }
+      }
+    },
+    "hostile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "schemaSha256", "phase", "mutation", "artifact", "expectedDisposition"],
+      "properties": {
+        "kind": { "const": "HOSTILE" },
+        "id": { "$ref": "#/$defs/nonEmpty" },
+        "schemaSha256": { "$ref": "#/$defs/sha256" },
+        "phase": { "enum": ["N2", "N3", "L1", "L2", "L3", "CLEAN_A", "CLEAN_B"] },
+        "mutation": { "enum": ["NOOP_GREEN", "RANDOMIZED_IDS", "AA_NEUTRAL", "BB_NEUTRAL", "SHARED_EXECUTOR", "ARM_SWAP", "CONDITIONAL_PRODUCT", "ROUTE_ERASURE", "FIXTURE_ERASURE", "COMPILE_CACHE", "MISSING_BYTES", "SCHEMA_DRIFT", "RATIO_CORRUPTION", "BOOTSTRAP_CORRUPTION", "LABEL_ONLY", "HARDCODED_SELECTION", "LAW_DISAGREEMENT"] },
+        "artifact": { "$ref": "#/$defs/artifact" },
+        "expectedDisposition": { "enum": ["GREEN_DETECTED", "NEUTRAL_INELIGIBLE", "RED_REJECTED"] }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "schemaSha256", "phase", "root", "rootWasAbsent", "interrupted", "registryArtifacts", "rawArtifacts", "verdict", "credit"],
+      "properties": {
+        "kind": { "const": "RECEIPT" },
+        "id": { "$ref": "#/$defs/nonEmpty" },
+        "schemaSha256": { "$ref": "#/$defs/sha256" },
+        "phase": { "enum": ["N1", "N2", "N3", "L1", "L2", "L3", "CLEAN_A", "CLEAN_B"] },
+        "root": { "$ref": "#/$defs/nonEmpty" },
+        "rootWasAbsent": { "const": true },
+        "interrupted": { "type": "boolean" },
+        "registryArtifacts": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/artifact" }
+        },
+        "rawArtifacts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/artifact" }
+        },
+        "verdict": { "enum": ["KEEP", "HOLD", "FOLD", "MOVE", "SPLIT", "PRUNE", "AMEND", "REJECT"] },
+        "credit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["prototype", "formation", "product", "css", "api", "package", "release"],
+          "properties": {
+            "prototype": { "type": "integer", "minimum": 0, "maximum": 1 },
+            "formation": { "const": 0 },
+            "product": { "const": 0 },
+            "css": { "const": 0 },
+            "api": { "const": 0 },
+            "package": { "const": 0 },
+            "release": { "const": 0 }
+          }
+        }
+      }
+    },
+    "record": {
+      "oneOf": [
+        { "$ref": "#/$defs/authority" },
+        { "$ref": "#/$defs/run" },
+        { "$ref": "#/$defs/arm" },
+        { "$ref": "#/$defs/build" },
+        { "$ref": "#/$defs/fixture" },
+        { "$ref": "#/$defs/row" },
+        { "$ref": "#/$defs/product" },
+        { "$ref": "#/$defs/law" },
+        { "$ref": "#/$defs/hostile" },
+        { "$ref": "#/$defs/receipt" }
+      ]
+    }
+  }
+}

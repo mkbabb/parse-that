@@ -1,0 +1,287 @@
+# Novelty pass registry and experiment law
+
+Date: 2026-08-01
+
+Status: **SOURCE-ONLY N1 BOUNDARY — NO PROTOTYPE STARTED — ZERO DOWNSTREAM CREDIT**
+
+## Scope
+
+This registry operationalizes
+`../research/NOVELTY-FIRST-MECHANISM-ATLAS-2026-08-01.md`. It does not
+select a performance law, admit a runtime, modify product source, or authorize
+a package/release edge.
+
+## Pass registry
+
+Novelty passes `N1`–`N3` are distinct from performance-law passes `L1`–`L3`.
+They may produce inputs to the law portfolio but cannot satisfy it by name.
+
+| Unit | Model/role | Inputs | Output | State |
+|---|---|---|---|---|
+| `N1.RG` | GPT Sol xhigh, independent genealogy/falsification | family charter, live parser source, P1–P6 evidence, supplied primary sources | independent alias/retirement view | `COMPLETE; READ-ONLY` |
+| `N1.RH` | GPT Sol xhigh, independent host/economics | family charter, Node 26/V8 14.6, live benches/source, active law families | independent reachability/cost view | `COMPLETE; READ-ONLY` |
+| `N1.O` | parser owner, synthesis/adjudication | `N1.RG`, `N1.RH`, independent root/consumer audits | atlas, matrix, registry, closed schema, handoff | `ACTIVE UNTIL CONTENT-ADDRESSED` |
+| `N2.IETM` | GPT Luna xhigh, isolated prototype | sealed N1 packet only | effect-aware edit-indexed prototype and raw receipts | `GO AFTER COMMIT; SOLE N2 DISPATCH` |
+| `N2.DNF` | GPT Luna xhigh, isolated falsifier | sealed N1 packet and explicit S/C/V non-isomorphism predicate | normal-form direct-source proof or retirement | `NO-GO; BORN-RED HOLD` |
+| `N2.WRR` | GPT Luna xhigh, isolated falsifier | sealed N1 packet and explicit V/E/BBNF-WASM non-isomorphism predicate | WASM boundary proof or retirement | `NO-GO; BORN-RED HOLD` |
+| `N2.GLL` | GPT Luna xhigh, tiny fatal probe | sealed N1 packet, real ambiguity/left-recursion counterexample | descriptor/GSS counters and exact product | `NO-GO; FATAL-ONLY HOLD` |
+| `N3.C*` | fresh GPT Sol xhigh critics, one per executed N2 packet | immutable N2 root/manifest/raw only | equality, arithmetic, genealogy, hostiles | `BLOCKED ON N2` |
+| `N3.O` | parser owner, agglomeration | all sealed N2/N3 evidence | KEEP/FOLD/MOVE/SPLIT/PRUNE, gaps, convergence | `BLOCKED ON N3` |
+| `L1`–`L3`, Clean A/B | existing performance-law authority | only immutable admitted novelty evidence | law selection or no-runtime result | `UNCHANGED; 0/5 PER FAMILY` |
+
+No prototype task or evidence root is created by this packet. Exactly one
+formation-only N-IETM prototype is authorized after the committed source packet
+is the immutable input. N-DNF and N-WRR cannot start merely because they have
+names: their source-only non-isomorphism proofs are born-RED. N-GLL is a
+one-probe falsifier, not a portfolio center, and has no current dispatch.
+Current packrat and the public API may not be patched or widened.
+
+## Root lifecycle
+
+1. Every stage receives a fresh path that is proven absent before dispatch and
+   does not overlap another writer.
+2. An interrupted, partially written, cleared, or schema-divergent root freezes
+   forever as failed archaeology. It is never resumed or resealed.
+3. A1 is the binding counterexample: 13 files, no manifest, contradictory
+   receipt/integrity chronology. No future stage reads or writes it.
+4. Sol freezes schemas, fixtures, rows, products, laws, and hostiles before Luna
+   receives a dispatch. Luna cannot rewrite a schema after observing timing.
+5. One serial owner integrates source documents. Prototype and critic writers
+   own disjoint absent roots. No overlapping writer is permitted.
+
+## Closed evidence registry
+
+The binding source schema is
+`NOVELTY-EVIDENCE-REGISTRY.schema.json`. Its top-level tagged union contains
+exactly:
+
+```text
+AUTHORITY | RUN | ARM | BUILD | FIXTURE | ROW |
+PRODUCT | LAW | HOSTILE | RECEIPT
+```
+
+Every object sets `additionalProperties: false`, carries the schema SHA-256,
+and names immutable artifacts by path, byte count, and SHA-256. A digest or
+aggregate sink is never a substitute for the bound bytes.
+
+Canonical product encoding must preserve:
+
+- array holes separately from `undefined`;
+- `false`, `0`, `-0`, `NaN`, infinities, and empty strings;
+- object keys and complete typed value bytes;
+- authored slots and original UTF-16 spans;
+- terminal offset/status and failure offset/frontier;
+- ordinary mismatch and sticky typed fault;
+- rollback state, successful recovery, immutable diagnostics, and provenance;
+- freeze/extensibility proof for every public aggregate.
+
+The candidate, semantic-law envelope, Value product, Keyframes product, and
+standards denominator use different product IDs. Sharing a digest, sink, or
+handwritten executor does not establish equality.
+
+## Process and cache isolation
+
+- The controller imports no parser, candidate, control, or consumer module.
+- Each arm starts in a fresh OS child and imports only its bound artifact.
+- Environment is fixed to `NODE_DISABLE_COMPILE_CACHE=1`, empty
+  `NODE_OPTIONS`, and absent `NODE_COMPILE_CACHE`.
+- A startup canary proves neither imported code nor the arm programmatically
+  enables the compile cache. A contaminated child is ineligible, not retried.
+- Use seven independent complementary AB/BA blocks with bound PIDs, process
+  start identities, seeds, order, selected indices, and vectors. No retry,
+  outlier removal, process substitution, or fixed-order minimum is permitted.
+- Exact accepted M2 and an independently rebuilt M2 artifact are separate
+  controls. Current M3-derived rollback/depth obligations live in the semantic
+  product, not the speed denominator.
+
+## Raw receipt contract
+
+Each raw row binds:
+
+- authority, schema, source, artifact, build, fixture, vector, row, product,
+  law, and hostile hashes;
+- exact fixture bytes and selected indices;
+- canonical product bytes and freeze proof before timing;
+- raw integer nanoseconds, warmup counts, aggregate counts, PIDs, process start
+  identity, seed, AB/BA order, and cold subintervals;
+- commands, exits, stdout/stderr bytes and hashes;
+- allocation controls, retained/peak heap, complete GC/deopt/IC bytes;
+- package, source, import, and export graphs; and
+- mechanism counters proving the candidate route was reached.
+
+Every batch and full run deep-compares products and aggregate sinks before its
+timing is eligible. Conditional equality, unreachable fixtures, and
+recognizer-vs-parser work are fatal.
+
+## Measurement boundaries
+
+```text
+Cold = child startup + import/evaluation + build/instantiate
+     + first CompleteParse
+
+CompleteParse = routing + matching + traversal/control
+              + rollback/commit + typed values + UTF-16 spans
+              + ordinary failure + typed fault
+              + recovery + diagnostics + provenance
+              + consumer projection + deep freeze
+              + allocation + attributable GC/deopt/IC
+```
+
+AOT build time and emitted bytes are reported separately even when performed
+off the runtime path. WASM includes UTF-16 transfer, every JS/WASM crossing,
+module compile/import/tier-up, region writes, and JS projection. Incremental
+rows include edit mapping, dependency invalidation, rerun, relocation, product
+patch/freeze, retained memory, and GC.
+
+## Truthful Pass-2 subject suites
+
+Suites are scored separately. No suite borrows another's credit.
+
+### A. Generic zero-CSS product
+
+- Webref-name dispatch at 4/33/753, early/late/miss/Unicode plus EOF;
+- six same-FIRST permutations with diagnostics and exact frontier/provenance;
+- `jsonParser` plus EOF/final-offset assertion over normal recursion and a typed
+  pre-`RangeError` depth fault; and
+- candidate mechanism counters greater than zero.
+
+M2 is the speed control. The full semantic-law envelope owns rollback and depth
+correctness. The 753 rows are name dispatch only and earn no CSS conformance.
+
+### B. Value-owned consumer product
+
+- a real nested CSS value;
+- a mixed stylesheet containing `@property`, `@function`, unknown `@media`, a
+  style rule, `@keyframes`, and collectors;
+- current honest fail-whole behavior for a malformed known declaration;
+- an opaque unknown at-rule; and
+- one Keyframes projection over frames, timing, composition, registries,
+  options, diagnostics, and retained stylesheet provenance.
+
+The Value artifact returns its AST, issues, collectors, and canonical
+serialize/reparse result. Keyframes returns its resolved animation product.
+Current Value has no parse-that import; a shared handwritten body or label-only
+“recovery” row is ineligible.
+
+### C. Standards product
+
+The initial isolated boundary contains exactly the nine already bound
+WPT-derived seeds. They are seeds, not coverage. The frozen full WPT/browser
+matrix is later Value-owned execution work and never parser-throughput credit.
+
+## Family-specific fatal order
+
+### N-IETM
+
+1. Freeze an immutable edit stream covering insert/delete/replace at BOF,
+   comments, strings, escapes, declaration boundaries, nested functions,
+   failed choices, negative lookahead, malformed frontiers, and EOF.
+2. Use a private immutable `SourceVersion` and completed `MemoEntry` binding
+   grammar epoch, rule, start, entry depth, match/examined lengths, examined
+   EOF, source-slice hash, relocatable immutable product, relative failure
+   frontier, and max-depth delta; index entries in a persistent shift interval
+   tree. Do not reuse in-progress left-recursion state.
+3. Parse version zero cold and construct the index. Invalidate examined rather
+   than consumed intervals, remove starts in the replaced domain, lazy-shift
+   safe right-hand entries, revalidate slice/EOF, rebase nested spans, and replay
+   ordered failure contribution.
+4. For every edit, compare the complete candidate product to a new isolated
+   full M2 parse plus semantic-law assertions.
+5. Require stable graph/action version, relocatable anchor, consumed and full
+   read interval, failed-arm/negative-result dependencies, child dependencies,
+   effect summary, and complete product in every reusable entry.
+6. Arbitrary `.map`, `.mapState`, `.chain`, or `.call` without proved pure and
+   versioned dependencies is non-reusable and reruns.
+7. Recovery, diagnostics, faults, opaque RegExp, arbitrary callbacks, and custom
+   parsers are initially `nonReusable`; instrument every source read.
+8. Mandatory first witnesses are `string("ab").or(string(""))`, editing `"a!"`
+   at `[1,2)` to `"ab"`, and appending a closer to an unterminated CSS
+   comment/string that examined EOF.
+9. Kill on the first stale read, recovery/provenance mismatch, routine
+   whole-tree invalidation, unbounded retained heap, or non-positive measured
+   break-even at the declared K. Cold overhead remains visible. N-IETM targets
+   PL-BE only; local 2x/3x edit ratios are descriptive and grant no strict-law
+   milestone.
+
+### N-DNF
+
+Before implementation, prove a structural predicate showing that the emitted
+runtime contains no `ParserFunction` graph traversal, closure-choice executor,
+generic table/opcode loop, or fallback. Kill as S/C/V/P3 when translation
+preserves dynamic calls/checkpoints. Then assay normalization growth, emitted
+bytes, import/first/hot, opaque actions, `.chain`, recovery, CSS escapes,
+longest-match, unordered values, and exact products.
+
+### N-WRR
+
+Before implementation, prove that compiled WASM control plus linear-memory
+layout and sparse eligibility remove load-bearing JS work beyond the existing
+BBNF VM/check/formatter benches. Kill as V/E/L/F2 when only the host or storage
+representation changes. Then assay UTF-16 transfer, crossings, short/large
+inputs, compile/import/tier-up, sparse memo touches, region high-water, exact
+immutable projection, callbacks, recovery, and package bytes.
+
+### N-GLL
+
+Run only if one bound fixture produces nonzero concurrent descriptors and a
+shared GSS tail. Measure descriptors, GSS edges, forest nodes, typed projection,
+retained heap, recovery, and deterministic JSON overhead. Kill on a single
+live descriptor, no shared tail, forest/product duplication, or the first
+binding deterministic-law miss. Do not proceed to CSS breadth.
+
+## Law evaluators
+
+- PL-3X uses its predeclared median statistic and exact ordered `7^7`
+  bootstrap. Every binding CI-low must be at least 3.
+- PL-2X uses its distinct predeclared geometric-mean statistic and exact
+  ordered `7^7` bootstrap. Every binding CI-low must be at least 2.
+- PL-BE uses unit-bearing NetBenefit with joint uncertainty:
+
+```text
+NetBenefit(K) = sum(control complete-work time)
+              - sum(candidate complete-work time)
+              - candidate incremental allocation/GC
+              - startup/package
+              - measured migration/validation
+```
+
+It never falls back to a ratio. Source/LOC/deletion counts remain separate and
+cannot be converted into time without a measured conversion. Historical 10x is
+reported unchanged as a comparator only.
+
+N-IETM is ineligible for PL-3X and PL-2X under the active every-row contracts
+because cold build/index work is additive. Its local edit ratios may be emitted
+only as descriptive rows. Its sole admission hypothesis is PL-BE.
+
+## Mandatory hostile controls
+
+The frozen HOSTILE registry contains at least:
+
+- no-op/erased mutation becoming GREEN;
+- randomized parser/rule/action IDs;
+- A/A and B/B neutral-ineligible controls;
+- shared-executor or self/self rejection;
+- arm-swap inversion;
+- conditional-product mismatch;
+- route erasure and fixture erasure;
+- compile-cache contamination;
+- missing fixture bytes and schema drift;
+- ratio and bootstrap corruption;
+- label-only fault/rollback/recovery rows;
+- hardcoded mutant or selected-index knowledge; and
+- synthetic vectors on which PL-3X, PL-2X, and PL-BE return different rulings.
+
+A hostile failure freezes the root and routes a fresh correction root only
+after owner adjudication. Raw bytes are never overwritten.
+
+## Boundary receipt
+
+At source close:
+
+- N1 research views: `2/2` complete;
+- owner synthesis: `1/1` complete after content addressing;
+- candidate families: N-IETM `KEEP`; N-DNF/N-WRR born-RED `HOLD`; N-GLL
+  fatal-only `HOLD`; all other axes dispositioned;
+- prototypes, benchmark rows, product/CSS/WPT coverage, law milestones,
+  candidate, package, consumer, API, release, Value/Keyframes/BBNF/Fourier
+  credit: exactly zero.
