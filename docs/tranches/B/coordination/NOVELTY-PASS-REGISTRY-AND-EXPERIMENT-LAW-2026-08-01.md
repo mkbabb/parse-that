@@ -2,7 +2,7 @@
 
 Date: 2026-08-01
 
-Status: **N1-A4 BYTE-AUTHORITY CLEAN — PRIOR-ART REBOUND — COMMIT/PIN REQUIRED BEFORE N2 — ZERO DOWNSTREAM CREDIT**
+Status: **N1-A4 COMMITTED — PRIOR-ART-AWARE N2 ISOLATED/ACTIVE — ZERO DOWNSTREAM CREDIT**
 
 ## Scope
 
@@ -20,8 +20,8 @@ They may produce inputs to the law portfolio but cannot satisfy it by name.
 |---|---|---|---|---|
 | `N1.RG` | GPT Sol xhigh, independent genealogy/falsification | family charter, live parser source, P1–P6 evidence, supplied primary sources | independent alias/retirement view | `COMPLETE; READ-ONLY` |
 | `N1.RH` | GPT Sol xhigh, independent host/economics | family charter, Node 26/V8 14.6, live benches/source, active law families | independent reachability/cost view | `COMPLETE; READ-ONLY` |
-| `N1.O` | parser owner, synthesis/adjudication | `N1.RG`, `N1.RH`, independent root/consumer audits | atlas, matrix, registry, closed schemas, semantic closure, handoff | `N1-A/A1/A2/A3 IMMUTABLE; N1-A4 CLEAN; COMMIT/PIN OPEN` |
-| `N2.IETM` | GPT Luna xhigh, isolated prototype | committed independently accepted N1-A4 packet plus prior-art adjudication only | prior-art-aware parse-that ABI/product integration probe and comparative raw receipts | `BLOCKED ON A4 COMMIT/PIN; SOLE FUTURE N2 EXPERIMENT` |
+| `N1.O` | parser owner, synthesis/adjudication | `N1.RG`, `N1.RH`, independent root/consumer audits | atlas, matrix, registry, closed schemas, semantic closure, handoff | `N1-A/A1/A2/A3 IMMUTABLE; N1-A4 COMMITTED AT 81b2a0a` |
+| `N2.IETM` | GPT Luna xhigh, isolated prototype | committed independently accepted N1-A4 packet plus prior-art adjudication only | prior-art-aware parse-that ABI/product integration probe and comparative raw receipts | `ACTIVE; TASK 019fb12c-2624-7732-909a-e1e87ce7ef24; ZERO CREDIT` |
 | `N2.DNF` | GPT Luna xhigh, isolated falsifier | sealed N1 packet and explicit S/C/V non-isomorphism predicate | normal-form direct-source proof or retirement | `NO-GO; BORN-RED HOLD` |
 | `N2.WRR` | GPT Luna xhigh, isolated falsifier | sealed N1 packet and explicit V/E/BBNF-WASM non-isomorphism predicate | WASM boundary proof or retirement | `NO-GO; BORN-RED HOLD` |
 | `N2.GLL` | GPT Luna xhigh, tiny fatal probe | sealed N1 packet, real ambiguity/left-recursion counterexample | descriptor/GSS counters and exact product | `NO-GO; FATAL-ONLY HOLD` |
@@ -29,10 +29,10 @@ They may produce inputs to the law portfolio but cannot satisfy it by name.
 | `N3.O` | parser owner, agglomeration | all sealed N2/N3 evidence | KEEP/FOLD/MOVE/SPLIT/PRUNE, gaps, convergence | `BLOCKED ON N3` |
 | `L1`–`L3`, Clean A/B | existing performance-law authority | only immutable admitted novelty evidence | law selection or no-runtime result | `UNCHANGED; 0/5 PER FAMILY` |
 
-No prototype task or evidence root is created by this packet. Exactly one
-formation-only N-IETM integration experiment may be authorized only after the
-clean N1-A4 semantic correction and prior-art adjudication share a committed
-pin. N-DNF and N-WRR
+This packet creates no task or evidence root. N1-A4 and the prior-art
+adjudication are committed together at `81b2a0aacebc126ac1a093407cb2e24ed5d78ee8`.
+Exactly one formation-only N-IETM integration experiment is active on the
+pre-existing Luna task named above. N-DNF and N-WRR
 cannot start merely because they have
 names: their source-only non-isomorphism proofs are born-RED. N-GLL is a
 one-probe falsifier, not a portfolio center, and has no current dispatch.
@@ -211,6 +211,8 @@ The detailed audit is
 [`../audit/NOVELTY-N1-A4-OWNER-AUDIT-2026-08-01.md`](../audit/NOVELTY-N1-A4-OWNER-AUDIT-2026-08-01.md).
 Algorithmic novelty is separately rejected by
 [`../research/N-IETM-PRIOR-ART-ADJUDICATION-2026-08-01.md`](../research/N-IETM-PRIOR-ART-ADJUDICATION-2026-08-01.md).
+The committed-pin, active-N2, and CSS C3/C4 dependency chronology is
+[`PARSER-CSS-RESUMPTION-SAFE-BOUNDARY-2026-08-01.md`](PARSER-CSS-RESUMPTION-SAFE-BOUNDARY-2026-08-01.md).
 
 Canonical product encoding must preserve:
 
@@ -441,7 +443,9 @@ At N1-A4 correction close:
 - N1-A3 correction: gold controls `2/2`, hostiles `102/102`, raw rows `1/1`,
   fresh independent audit found numeric/registry-byte false-greens; immutable;
 - N1-A4 correction: controls `8/8`, hostiles `130/130`, raw rows `1/1`,
-  fresh independent acceptance `1/1`; commit/pin remains before N2;
+  fresh independent acceptance `1/1`, committed at `81b2a0a`;
+- N2 prior-art-aware integration experiment: active on the sole existing Luna
+  task; no result, timing, prototype, law, or downstream credit yet;
 - candidate families: N-IETM algorithmic substrate `FOLD PRIOR ART`, local
   parse-that integration hypothesis `HOLD/TEST`; N-DNF/N-WRR born-RED `HOLD`; N-GLL
   fatal-only `HOLD`; all other axes dispositioned;

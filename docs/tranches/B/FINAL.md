@@ -25,8 +25,8 @@ active admission law by axiom.
 | Runtime correctness | `RED` | M2 is the accepted control; live production remains rejected M3. A3 is locally correctness-clean but performance-killed; no candidate exists |
 | Full-subject P1→P2→P3 | `COMPLETE` | P1 `69f72f7`; P2 `c3d42d4`; P3 `43d7d4a`. All implemented candidates are killed; this supplies no isolated-proof or formation credit. |
 | Isolated every-scale/result proof | `RED` | S7's subset is local. S8, P2-UO/L/shaped and P2-C are RED/killed; P3 reaches 1.0656–1.5238×; P4 mechanism rows are below `1x`; P5 reaches 0.6076–0.7527× / 0.6149–0.7001×. P6/A1/A2 rows are inadmissible; conforming A3 rows are admissible but only 0.9208–1.0390×. Post-P6 Luna timings are unequal-selection evidence only; final Sol finds no current host edge. No candidate exists. |
-| Performance-law L1 / L2 / L3 | `OPEN` | L1 family research/common synthesis remain historical inputs. Original Luna `980d7781…` is false-green; performance-law A1 is terminal born-RED at 13 files/no manifest/raw `92516e02…` and may never resume. Novelty N1-A4 is source-clean but blocked on its commit/pin with the prior-art adjudication; no N-IETM F0 may start before it. L2/L3 remain blocked. |
-| Novelty N1 / N2 / N3 | `N1-A/A1/A2/A3 IMMUTABLE; N1-A4 CLEAN/PIN OPEN; N2/N3 BLOCKED` | N1-A through A3 are immutable false-green chronology. N1-A4 makes registry/raw authority byte-owned, closes numeric/UTF-8/duplicate/Unicode/Set semantics, and passes 8/8 controls plus 130/130 hostiles and a fresh audit. The N-IETM algorithmic substrate folds to prior art; only one prior-art-aware parse-that callback/effect/complete-product PL-BE integration experiment may follow the committed pin. N-DNF/N-WRR are born-RED holds; N-GLL is fatal-only. |
+| Performance-law L1 / L2 / L3 | `OPEN` | L1 family research/common synthesis remain historical inputs. Original Luna `980d7781…` is false-green; performance-law A1 is terminal born-RED at 13 files/no manifest/raw `92516e02…` and may never resume. N1-A4/prior-art authority is committed at `81b2a0a`; its sole prior-art-aware Luna N2 integration experiment is active with zero credit. L2/L3 remain blocked. |
+| Novelty N1 / N2 / N3 | `N1-A/A1/A2/A3 IMMUTABLE; N1-A4 COMMITTED; N2 ACTIVE/ZERO CREDIT; N3 BLOCKED` | N1-A through A3 are immutable false-green chronology. N1-A4 makes registry/raw authority byte-owned, closes numeric/UTF-8/duplicate/Unicode/Set semantics, and passes 8/8 controls plus 130/130 hostiles and a fresh audit. The N-IETM algorithmic substrate folds to prior art; the existing Luna task tests only the parse-that callback/effect/complete-product PL-BE integration hypothesis. N-DNF/N-WRR are born-RED holds; N-GLL is fatal-only. |
 | Formation Clean A / Clean B | `BLOCKED` | requires one immutable L3 law packet |
 | Formation admission | `BLOCKED` | requires both formation clean audits; creates zero execution credit |
 | Full Value CSS coverage | `OPEN` | Root denominator `2bc4abb2…` binds 1,717 raw/1,653 active Webref rows, 25 decisions, ten entry points, eleven algorithms, full recovery/fidelity, WPT manifests and 53 Keyframes references/51 files; Value owns implementation and no execution receipt exists |
@@ -132,10 +132,9 @@ has no continuation. Do not dispatch a renamed P7, run formation clean
 audits, pack a candidate, publish, widen the API, or begin Value-owned CSS
 product work. Preserve post-P6 owner evidence `40d8b4c` and do not cite
 Luna's unequal-selection ratios as equal-work proof. Failed A1 is terminal and
-must not be resumed. First commit/pin the independently accepted N1-A4 packet
-with its prior-art adjudication; until then the absent N2 path remains blocked
-and no prototype may start. Only after that pin may exactly one private
-prior-art-aware N-IETM F0 target PL-BE, preserve
+must not be resumed. N1-A4 and its prior-art adjudication are committed at
+`81b2a0a`; do not dispatch a duplicate. Only the existing Luna N2 task may
+continue the private prior-art-aware N-IETM PL-BE integration assay, preserve
 cold cost, and compare every edit to fresh M2 plus the semantic-law envelope.
 Do not begin product source, CSS implementation,
 candidate packing, API work, release, or consumer execution.

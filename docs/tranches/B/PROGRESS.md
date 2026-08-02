@@ -9,9 +9,9 @@ Active wave: `B.W0 - Candidate-to-Release Closure`
 Formation status: **ACTIVE — P1–P6 and post-P6 NO-EDGE remain immutable
 historical-10x evidence; failed A1 is terminal archaeology; novelty Pass N1 is
 source-complete as immutable N1-A chronology; N1-A1, N1-A2, and N1-A3 are
-immutable failed-audit chronology; N1-A4 byte-owned ROW/RUN closure is
-independently source-clean and awaits its commit/pin with the prior-art
-adjudication; N2 is blocked and no prototype is next;
+immutable failed-audit chronology; N1-A4 byte-owned ROW/RUN closure and its
+prior-art adjudication are committed at `81b2a0a`; the sole prior-art-aware
+Luna N2 integration experiment is isolated and active with zero credit;
 N-DNF/N-WRR remain born-RED holds, N-GLL is no-go/fatal-only, and both
 formation clean audits remain blocked**
 
@@ -23,7 +23,7 @@ Release status: **NO RELEASE**
 |---|---|---|
 | Archaeology | `research/PARSE-THAT-SESSION-ARCHAEOLOGY-2026-07-29.md` | Banked; prior scanner-shaped CSS attempts and stale completion claims rejected. |
 | Round zero | `research/ROUND-ZERO-PARSE-THAT-PORTFOLIO-2026-07-29.md` | Banked portfolio; incompatible families preserved for evidence. |
-| Novelty-first Pass N1 | immutable N1-A `a04a7e6`, N1-A1 `914957f`, N1-A2 `e663a91`, N1-A3 `164fc9a`; A4 audit; prior-art adjudication; atlas/registry/law/handoff; A4 15-entry packet under `artifacts/novelty-n1-a1-semantic-registry/` | N1-A3 passed 102 shipped hostiles, but fresh audit found numeric rounding and a caller-parsed registry boundary. N1-A4 owns registry/raw bytes, canonical safe integers, UTF-8/duplicates/Unicode scalars, and exact Set membership; controls are 8/8, raw rows 1/1, hostiles 130/130, and fresh acceptance 1/1. Commit/pin remains before N2. N-IETM's algorithmic substrate folds to prior art; it is the sole authorized prior-art-aware PL-BE integration experiment, not an algorithm-novelty claim. **SOURCE-ONLY; ZERO PRODUCT/CSS/API/RELEASE CREDIT**. |
+| Novelty-first Pass N1 | immutable N1-A `a04a7e6`, N1-A1 `914957f`, N1-A2 `e663a91`, N1-A3 `164fc9a`; committed N1-A4 `81b2a0a`; A4 audit; prior-art adjudication; atlas/registry/law/handoff; resumption receipt | N1-A4 owns registry/raw bytes, canonical safe integers, UTF-8/duplicates/Unicode scalars, and exact Set membership; controls are 8/8, raw rows 1/1, hostiles 130/130, and fresh acceptance 1/1. N-IETM's algorithmic substrate folds to prior art; its sole parse-that-specific PL-BE integration experiment is active on existing Luna task `019fb12c-2624-7732-909a-e1e87ce7ef24`, with zero result/credit. CSS C3 is frozen RED; C4 is an active Value-owned source correction. **SOURCE/DEPENDENCY ONLY; ZERO PRODUCT/CSS/API/RELEASE CREDIT**. |
 | Pass 1 research adjudication/agglomeration | `research/PASS-1-SOL-ADJUDICATION-2026-07-29.md`, `research/PASS-1-SOL-AGGLOMERATION-2026-07-29.md` | Preliminary research only: R/E/V/K retired and S/D remained candidates; later reconciled by P1. |
 | P1 full-subject reconciliation | `69f72f7`, `research/P1-HASH-BOUND-REGISTRY-2026-07-29.md` | Twenty hash-bound rows: 8 GREEN, 7 OPEN, 4 RED, 1 OPEN/ROUTED. **P1 COMPLETE; FORMATION RED; ZERO LATER CREDIT**. |
 | M1 | `de36d57` predecessor formation | Parse-owned recovery and raw-memo isolation proceeded to M2. |
@@ -430,13 +430,11 @@ chain may be recorded while an earlier arrow is RED.
    two-schema/byte-validator/gold/raw/hostile/manifest packet.
 2. Preserve failed A1 exactly: 13 files, no manifest, immutable raw SHA
    `92516e02…`. Never resume, repair, clear, or reseal it.
-3. Preserve the completed fresh N1-A4 audit: 15/15 manifest, both strict
-   schemas, 8/8 controls, 1/1 ROW/RUN raw derivation, 130/130 exact hostiles,
-   numeric/UTF-8/Unicode/Set closure, external trust, and absent N2 root.
-   Commit it with the prior-art adjudication; never rewrite A–A3.
-4. Only after that committed N1-A4 coordinate, assign one fresh
-   absent non-overlapping root for exactly one Luna xhigh N-IETM F0. Do not
-   patch current packrat or widen the public API.
+3. Preserve the completed N1-A4 audit and committed authority coordinate
+   `81b2a0a`; never rewrite A–A3.
+4. Do not dispatch another task. Monitor only the same existing Luna N2 task
+   `019fb12c-2624-7732-909a-e1e87ce7ef24`; do not patch current packrat or
+   widen the public API.
 5. First compare the mechanism to pinned Dubroy/Warth/Ohm and GPeg controls;
    reproducing prior art earns no novelty. Then compare every edit version to fresh accepted/rebuilt M2 speed controls plus
    the complete semantic-law envelope. Append EOF/assert final offset. Bind

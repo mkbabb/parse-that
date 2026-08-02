@@ -2,13 +2,15 @@
 
 Date: 2026-08-01
 
-Status: **N1-A4 SOURCE CLEAN — PRIOR-ART REBOUND — COMMIT/PIN REQUIRED — N2 BLOCKED — NO RELEASE**
+Status: **N1-A4 COMMITTED — PRIOR-ART-AWARE N2 ISOLATED/ACTIVE — ZERO CREDIT — NO RELEASE**
 
 ## Exact owner state
 
 - repository: `/Users/mkbabb/Programming/parse-that-css-totality`;
 - branch: `codex/css-totality-combinators-20260729`;
-- authenticated N1-A4 parent HEAD / immutable N1-A3 commit:
+- authenticated N1-A4 authority/current source HEAD:
+  `81b2a0aacebc126ac1a093407cb2e24ed5d78ee8`;
+- immutable N1-A3 commit:
   `164fc9a672d4dee20233b5547275affc4df16dd7`;
 - immutable N1-A commit:
   `a04a7e658bee32a1fb252a4e5b4f3ce359a5947d`;
@@ -36,7 +38,8 @@ pre-existing untracked paths were neither read as authority nor staged.
 |---|---|---:|---|
 | `research/NOVELTY-FIRST-MECHANISM-ATLAS-2026-08-01.md` | `f73ecf051ae432307da816473424368f0896abe449b9c65cd8aa717091e91335` | 475 | Orthogonal mechanism atlas, genealogy, costs/fatals, and prior-art-rebound equivalence matrix. |
 | `research/N-IETM-PRIOR-ART-ADJUDICATION-2026-08-01.md` | `6608fa2cd346b9cbd5c43d440a1053a059d961aa017a8aad6d1e50b8caed77f6` | 120 | Primary-source ruling: algorithmic substrate prior art; parse-that integration hypothesis only. |
-| `coordination/NOVELTY-PASS-REGISTRY-AND-EXPERIMENT-LAW-2026-08-01.md` | `e9d777b4ab1564751b747e90691e157e4cde35349240d4d840b15080c26490c5` | 450 | N1–N3 registry, immutable A–A3 chronology, clean A4 byte authority, and blocked N2 pin. |
+| `coordination/NOVELTY-PASS-REGISTRY-AND-EXPERIMENT-LAW-2026-08-01.md` | `fa796c7fd116e0de63d850a2958a6d145c55155517f3c572258e36125264bcb2` | 454 | N1–N3 registry, immutable A–A3 chronology, committed A4 authority, and sole active zero-credit N2 task. |
+| `coordination/PARSER-CSS-RESUMPTION-SAFE-BOUNDARY-2026-08-01.md` | `c62e1d00340bb3d0e09ca89700311241ffcefd9f87e1812966b2728d99e61f3b` | 58 | N1-A4/N2 and CSS C3/C4 dependency chronology; no duplicate task or credit. |
 | `audit/NOVELTY-N1-A4-OWNER-AUDIT-2026-08-01.md` | `74fce21cc0cf1470af86633b7f514ef33b90da1331d992e31158947e51b84031` | 80 | Fresh non-author acceptance, exact packet identities, zero-credit owner disposition. |
 | `coordination/NOVELTY-EVIDENCE-REGISTRY.schema.json` | `9520d29a401947527ea8e26a19180cdb0797c253f0f6253cc9662b04ad8aeb23` | 386 | Strict ten-record Draft 2020-12 tagged union with exact safe numeric bounds and canonical decimal counters. |
 | `coordination/NOVELTY-RAW-ROW.schema.json` | `48507dccc084755c9b3dea4bf39d0dbb1ce30b3d49e8157b656c3d48b3af8e8d` | 160 | Closed v3 NDJSON schema for full ROW/RUN truth, canonical safe integers, and Unicode-scalar strings. |
@@ -62,8 +65,11 @@ JSON parser, but a fresh audit then showed that fractional raw PID could round
 through `Number(...)` and that the registry CLI still trusted `JSON.parse`.
 N1-A4 makes both domains byte-owned, enforces canonical safe-integer tokens,
 invalid UTF-8/duplicate-key/Unicode-scalar rejection, and exact Set membership.
-The N2 path remains absent. Its fresh independent source audit is CLEAN; the
-commit/pin boundary remains before N2.
+Its fresh independent source audit is CLEAN and the authority/prior-art pin is
+committed at `81b2a0a`. The same genuine Luna xhigh task
+`019fb12c-2624-7732-909a-e1e87ce7ef24` is active at a fresh isolated N2 root.
+No result or credit exists. The exact parser/CSS dependency chronology is in
+`coordination/PARSER-CSS-RESUMPTION-SAFE-BOUNDARY-2026-08-01.md`.
 
 For N1-A4, `jq empty`, both Ajv Draft 2020-12 strict compilations, Node syntax
 checks, the ten-record/one-raw semantic gold, controls `8/8`, hostiles
@@ -158,19 +164,18 @@ non-isomorphism predicate retires it before timing.
 
 ## Exact next boundary
 
-Do not create a prototype until N1-A4 and the prior-art adjudication share a
-committed SHA that is the sole dispatch input and the still-absent root is
-rechecked.
+Do not create or dispatch another parser prototype. N1-A4 and the prior-art
+adjudication share committed coordinate `81b2a0a`; the sole existing Luna N2
+task is already active at its isolated root.
 
 Then execute only in this order:
 
-1. bank the completed fresh independent N1-A4 source audit: 15-entry manifest,
-   both strict schemas, byte-owned gold/raw ROW/RUN derivation, 8 controls, 130
-   hostile dispositions, and absent root;
-2. commit/pin N1-A4 plus the prior-art adjudication;
-3. only after that pin, exactly one N-IETM Luna xhigh greenfield integration/equivalence probe against accepted and
+1. preserve the completed N1-A4 source audit and committed pin at `81b2a0a`;
+2. allow only the existing N-IETM Luna xhigh greenfield integration/equivalence probe against accepted and
    rebuilt M2 plus the semantic-law envelope, using the frozen
    generic/Value/standards suites;
+3. require Ohm/Dubroy/GPeg equivalence and eleven other fatal gates before
+   timing;
 4. fresh Sol xhigh hostile critique of the immutable N-IETM root;
 5. owner agglomeration; and
 6. stop. N-DNF, N-WRR, and N-GLL remain NO-GO until a later explicit owner
@@ -189,14 +194,15 @@ No current or failed evidence root is resumed.
   four material false-green classes;
 - N1-A3 correction: immutable false-green after numeric/registry-byte audit;
 - N1-A4 correction: gold controls `8/8`, raw rows `1/1`, hostiles `130/130`,
-  fresh independent acceptance `1/1` — **clean; commit/pin remains**;
-- N2 prototypes: `0/4`;
+  fresh independent acceptance `1/1`, committed at `81b2a0a`;
+- N2 experiments: `0/4` terminal receipts; one prior-art-aware Luna task
+  active with zero credit;
 - N3 critiques/agglomeration: `0/5`;
 - strict 3x, strict 2x, measured break-even: each `0/5`;
 - Value receiver: `14/34 = 41.18%`;
 - full CSS/WPT/browser, product execution, package, API, consumer migration,
   release, Value/Keyframes/BBNF/Fourier credit: **0**.
 
-This closes only the owner correction turn. The long-horizon parser goal
-remains active; N2 is blocked only on the A4/prior-art commit pin, and no
-prototype successor has yet been dispatched.
+This closes only the coordination intake. The long-horizon parser goal remains
+active; the sole prior-art-aware Luna N2 task is already isolated and active,
+with no terminal receipt or downstream credit.
