@@ -1,0 +1,6 @@
+{
+    "name": "x-p-w1-bench",
+    "private": true,
+    "type": "module",
+    "why": "SERVED MODEL: claude-opus-5[1m]. This file declares the module type of the files THIS UNIT authored, and does nothing else — no dependencies, no scripts, no lockfile. Without it, node resolves the nearest package.json for `bench.ts` all the way up to a stray one in the user's home directory, finds no `type`, and emits MODULE_TYPELESS_PACKAGE_JSON on stderr. W1.md G-5 requires the bench's stderr to be BYTE-EMPTY, so a warning caused by an undeclared module type is a gate failure with a one-line root cause. Declaring the type is that root cause cured at the only place this unit may write (W1.md §4: `harness/bench/**`, create); suppressing the warning, redirecting it, or filtering stderr would each be a mask. It is NOT the `<p2>/package.json` that X-P-W1.md §Open Q-1 declares unauthorized: it installs nothing, it is scoped to this directory, and `npm ci` is never run against it."
+}

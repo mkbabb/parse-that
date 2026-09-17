@@ -1,0 +1,617 @@
+{
+  "schema": "x-p-w1.bench-results/1",
+  "servedModel": "claude-opus-5[1m]",
+  "generated": "2026-09-17T20:02:44.647Z",
+  "sourceRaw": "/Users/mkbabb/Programming/parse-that-css-totality-p2/harness/bench/bench-raw.json",
+  "machine": {
+    "node": "v26.0.0",
+    "v8": "14.6.202.33-node.19",
+    "os": "darwin",
+    "os_release": "25.4.0",
+    "cpu": "Apple M5 Max",
+    "cores": 18,
+    "bound": "N=1 machine; same-process hot loop within a cell; ratios only"
+  },
+  "method": {
+    "rounds": 40,
+    "warmupRoundsDiscarded": 10,
+    "statistic": "median of scored rounds",
+    "interleaving": "cells interleaved per round across a live process set",
+    "processModel": "one fresh process per cell; all cells alive simultaneously",
+    "latchObservation": "node loader hook appends a reader to every module declaring PACKRAT_ARMED; read at preload, entry and exit",
+    "barsApplied": "NONE — COHESION §0j.E OC-1: the bench table is RECORDED-NOT-GATING",
+    "historicalFloorsRecordedNotApplied": {
+      "VALUE_RATIO_FLOOR": 0.05,
+      "SHEET_RATIO_FLOOR": 0.1
+    }
+  },
+  "subjects": {
+    "published-4.0.0": {
+      "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/cand-o/vendor/value-js-4.0.0/dist/subpaths/css.js",
+      "bytes": 43972,
+      "sha256": "8b5381305ea26236326f06a38559247b2089a5be7fa78abe43640d0556320c42"
+    },
+    "c14": {
+      "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+      "bytes": 46661,
+      "sha256": "2b57626fff0975276f7d46d84ffc01835bc83bfe4f28ce6b5855622f6a22f0d6"
+    },
+    "deposed": {
+      "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/deposed-full/deposed-bundle.mjs",
+      "bytes": 202595,
+      "sha256": "6c62368f6b4e6c1c28e6c0542bc86004c243fba6bb6d70ac0bba8435a81618eb"
+    },
+    "parse-that-dist": {
+      "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+      "bytes": 40576,
+      "sha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8"
+    }
+  },
+  "depthDeclaration": {
+    "deepestOk": 7773,
+    "mode": "RangeError thrown at depth 7774",
+    "lazyArity": 1,
+    "corpora": [
+      {
+        "corpus": "shared-accepted",
+        "items": 7,
+        "bytes": 306,
+        "declaredMaxDepth": 2,
+        "deepestItem": "acc-sheet-1",
+        "allStrings": true,
+        "margin": 7771,
+        "marginPct": 99.97426990865817
+      },
+      {
+        "corpus": "reject-non-throwing",
+        "items": 9,
+        "bytes": 100,
+        "declaredMaxDepth": 3,
+        "deepestItem": "rej-sheet-1",
+        "allStrings": true,
+        "margin": 7770,
+        "marginPct": 99.96140486298727
+      },
+      {
+        "corpus": "r1-throw-class",
+        "items": 172,
+        "bytes": 1419,
+        "declaredMaxDepth": 1,
+        "deepestItem": "r1-4",
+        "allStrings": true,
+        "margin": 7772,
+        "marginPct": 99.9871349543291
+      },
+      {
+        "corpus": "json-normaliser",
+        "items": 1,
+        "bytes": 220,
+        "declaredMaxDepth": 3,
+        "deepestItem": "json-1",
+        "allStrings": true,
+        "margin": 7770,
+        "marginPct": 99.96140486298727
+      }
+    ]
+  },
+  "jsBoundaryInvariant": {
+    "probes": 5,
+    "rawThrows": 5,
+    "rawModes": [
+      "TypeError"
+    ],
+    "guardedThrows": 0,
+    "guardedCodes": [
+      "non_string_input"
+    ],
+    "holds": true
+  },
+  "latchLedger": [
+    {
+      "cell": "census",
+      "pid": 96134,
+      "entryArmed": false,
+      "exitArmed": false,
+      "modules": [
+        {
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "sha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8"
+        },
+        {
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "declLine": 683,
+          "armSites": 0,
+          "armLines": [],
+          "sha256": "2b57626fff0975276f7d46d84ffc01835bc83bfe4f28ce6b5855622f6a22f0d6"
+        },
+        {
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/deposed-full/deposed-bundle.mjs",
+          "declLine": 727,
+          "armSites": 0,
+          "armLines": [],
+          "sha256": "6c62368f6b4e6c1c28e6c0542bc86004c243fba6bb6d70ac0bba8435a81618eb"
+        }
+      ]
+    },
+    {
+      "cell": "published-4.0.0/shared-accepted",
+      "pid": 96143,
+      "entryArmed": false,
+      "exitArmed": false,
+      "modules": [
+        {
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "sha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8"
+        }
+      ]
+    },
+    {
+      "cell": "published-4.0.0/reject-non-throwing",
+      "pid": 96144,
+      "entryArmed": false,
+      "exitArmed": false,
+      "modules": [
+        {
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "sha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8"
+        }
+      ]
+    },
+    {
+      "cell": "published-4.0.0/r1-throw-class",
+      "pid": 96145,
+      "entryArmed": false,
+      "exitArmed": false,
+      "modules": [
+        {
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "sha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8"
+        }
+      ]
+    },
+    {
+      "cell": "c14/shared-accepted",
+      "pid": 96146,
+      "entryArmed": false,
+      "exitArmed": false,
+      "modules": [
+        {
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "sha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8"
+        },
+        {
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "declLine": 683,
+          "armSites": 0,
+          "armLines": [],
+          "sha256": "2b57626fff0975276f7d46d84ffc01835bc83bfe4f28ce6b5855622f6a22f0d6"
+        }
+      ]
+    },
+    {
+      "cell": "c14/reject-non-throwing",
+      "pid": 96147,
+      "entryArmed": false,
+      "exitArmed": false,
+      "modules": [
+        {
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "sha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8"
+        },
+        {
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "declLine": 683,
+          "armSites": 0,
+          "armLines": [],
+          "sha256": "2b57626fff0975276f7d46d84ffc01835bc83bfe4f28ce6b5855622f6a22f0d6"
+        }
+      ]
+    },
+    {
+      "cell": "c14/r1-throw-class",
+      "pid": 96148,
+      "entryArmed": false,
+      "exitArmed": false,
+      "modules": [
+        {
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "sha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8"
+        },
+        {
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "declLine": 683,
+          "armSites": 0,
+          "armLines": [],
+          "sha256": "2b57626fff0975276f7d46d84ffc01835bc83bfe4f28ce6b5855622f6a22f0d6"
+        }
+      ]
+    },
+    {
+      "cell": "deposed/shared-accepted",
+      "pid": 96149,
+      "entryArmed": false,
+      "exitArmed": false,
+      "modules": [
+        {
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "sha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8"
+        },
+        {
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/deposed-full/deposed-bundle.mjs",
+          "declLine": 727,
+          "armSites": 0,
+          "armLines": [],
+          "sha256": "6c62368f6b4e6c1c28e6c0542bc86004c243fba6bb6d70ac0bba8435a81618eb"
+        }
+      ]
+    },
+    {
+      "cell": "json-normaliser/json-normaliser",
+      "pid": 96150,
+      "entryArmed": false,
+      "exitArmed": false,
+      "modules": [
+        {
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "sha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8"
+        }
+      ]
+    }
+  ],
+  "legs": {
+    "shared-accepted": [
+      {
+        "engine": "published-4.0.0",
+        "pid": 96143,
+        "doors": [
+          "parseCssColor",
+          "parseTimingFunction",
+          "parseStylesheet"
+        ],
+        "disposition": {
+          "accept": 7,
+          "reject": 0,
+          "throw": 0
+        },
+        "passesPerRound": 119,
+        "callsPerPass": 7,
+        "bytesPerPass": 306,
+        "roundsScored": 30,
+        "ns_per_call": {
+          "median": 2085.1092436974786,
+          "min": 1990.546218487395,
+          "max": 2238.795918367347,
+          "spread_pct": 11.905836618887951,
+          "n": 30
+        },
+        "mbps": {
+          "median": 20.96499855421672,
+          "min": 19.525801952580196,
+          "max": 21.96094986807388,
+          "spread_pct": 11.615302091227182,
+          "n": 30
+        },
+        "ratio_vs_published": 1,
+        "ratio_mbps_vs_jsonParser": 0.1921425062594136,
+        "dispositionMatchesReference": true,
+        "sink": 33320
+      },
+      {
+        "engine": "c14",
+        "pid": 96146,
+        "doors": [
+          "parseColor",
+          "parseEasing",
+          "parseStylesheet"
+        ],
+        "disposition": {
+          "accept": 7,
+          "reject": 0,
+          "throw": 0
+        },
+        "passesPerRound": 50,
+        "callsPerPass": 7,
+        "bytesPerPass": 306,
+        "roundsScored": 30,
+        "ns_per_call": {
+          "median": 8010.655714285715,
+          "min": 7368.331428571429,
+          "max": 10382.5,
+          "spread_pct": 37.62698933688146,
+          "n": 30
+        },
+        "mbps": {
+          "median": 5.457123826765809,
+          "min": 4.210381479825255,
+          "max": 5.9327252225353595,
+          "spread_pct": 31.561382834350304,
+          "n": 30
+        },
+        "ratio_vs_published": 0.2602919558731031,
+        "ratio_mbps_vs_jsonParser": 0.05001409593857802,
+        "dispositionMatchesReference": true,
+        "sink": 14000
+      },
+      {
+        "engine": "deposed",
+        "pid": 96149,
+        "doors": [
+          "CSSValues.Value.parse",
+          "parseCSSStylesheet"
+        ],
+        "disposition": {
+          "accept": 7,
+          "reject": 0,
+          "throw": 0
+        },
+        "passesPerRound": 132,
+        "callsPerPass": 7,
+        "bytesPerPass": 306,
+        "roundsScored": 30,
+        "ns_per_call": {
+          "median": 2251.713203463203,
+          "min": 2165.224025974026,
+          "max": 2353.310606060606,
+          "spread_pct": 8.353043353713833,
+          "n": 30
+        },
+        "mbps": {
+          "median": 19.41392290926626,
+          "min": 18.575654910025893,
+          "max": 20.18926687949569,
+          "spread_pct": 8.311622421760111,
+          "n": 30
+        },
+        "ratio_vs_published": 0.9260101333022862,
+        "ratio_mbps_vs_jsonParser": 0.1779270241525105,
+        "dispositionMatchesReference": true,
+        "sink": 147840
+      }
+    ],
+    "reject-non-throwing": [
+      {
+        "engine": "published-4.0.0",
+        "pid": 96144,
+        "doors": [
+          "parseCssColor",
+          "parseTimingFunction",
+          "parseStylesheet"
+        ],
+        "disposition": {
+          "accept": 0,
+          "reject": 9,
+          "throw": 0
+        },
+        "passesPerRound": 1212,
+        "callsPerPass": 9,
+        "bytesPerPass": 100,
+        "roundsScored": 30,
+        "ns_per_call": {
+          "median": 146.8016593325999,
+          "min": 141.34506784011734,
+          "max": 159.77191052438576,
+          "spread_pct": 12.552203270754458,
+          "n": 30
+        },
+        "mbps": {
+          "median": 75.68792621093996,
+          "min": 69.54358294047712,
+          "max": 78.60982544986614,
+          "spread_pct": 11.97845279063621,
+          "n": 30
+        },
+        "ratio_vs_published": 1,
+        "ratio_mbps_vs_jsonParser": 0.6936736865561357,
+        "dispositionMatchesReference": true,
+        "sink": 872640
+      },
+      {
+        "engine": "c14",
+        "pid": 96147,
+        "doors": [
+          "parseColor",
+          "parseEasing",
+          "parseStylesheet"
+        ],
+        "disposition": {
+          "accept": 0,
+          "reject": 9,
+          "throw": 0
+        },
+        "passesPerRound": 313,
+        "callsPerPass": 9,
+        "bytesPerPass": 100,
+        "roundsScored": 30,
+        "ns_per_call": {
+          "median": 801.5102946396876,
+          "min": 737.9009584664536,
+          "max": 951.588569400071,
+          "spread_pct": 26.66061962805842,
+          "n": 30
+        },
+        "mbps": {
+          "median": 13.863274967007323,
+          "min": 11.676381440895314,
+          "max": 15.057726899017494,
+          "spread_pct": 24.390668627501903,
+          "n": 30
+        },
+        "ratio_vs_published": 0.18315629919462656,
+        "ratio_mbps_vs_jsonParser": 0.12705578730356828,
+        "dispositionMatchesReference": true,
+        "sink": 225360
+      }
+    ],
+    "r1-throw-class": [
+      {
+        "engine": "published-4.0.0",
+        "pid": 96145,
+        "doors": [
+          "parseCssColor"
+        ],
+        "disposition": {
+          "accept": 0,
+          "reject": 70,
+          "throw": 102
+        },
+        "passesPerRound": 1,
+        "callsPerPass": 172,
+        "bytesPerPass": 1419,
+        "roundsScored": 30,
+        "ns_per_call": {
+          "median": 18960.752906976744,
+          "min": 18363.61046511628,
+          "max": 19666.424418604653,
+          "spread_pct": 6.871108757548305,
+          "n": 30
+        },
+        "mbps": {
+          "median": 0.43510939098947854,
+          "min": 0.4194966926573297,
+          "max": 0.44925805933815643,
+          "spread_pct": 6.839973417523044,
+          "n": 30
+        },
+        "ratio_vs_published": 1,
+        "ratio_mbps_vs_jsonParser": 0.003987742172532148,
+        "dispositionMatchesReference": true,
+        "sink": 250400
+      },
+      {
+        "engine": "c14",
+        "pid": 96148,
+        "doors": [
+          "parseColor"
+        ],
+        "disposition": {
+          "accept": 0,
+          "reject": 172,
+          "throw": 0
+        },
+        "passesPerRound": 64,
+        "callsPerPass": 172,
+        "bytesPerPass": 1419,
+        "roundsScored": 30,
+        "ns_per_call": {
+          "median": 63.762309229651166,
+          "min": 62.30323401162791,
+          "max": 65.66433502906976,
+          "spread_pct": 5.271297507962356,
+          "n": 30
+        },
+        "mbps": {
+          "median": 129.3867848034772,
+          "min": 125.63897885126993,
+          "max": 132.41688221931255,
+          "spread_pct": 5.2384819503301205,
+          "n": 30
+        },
+        "ratio_vs_published": 297.3661577827468,
+        "ratio_mbps_vs_jsonParser": 1.1858193571869935,
+        "dispositionMatchesReference": false,
+        "sink": 880640
+      }
+    ],
+    "json-normaliser": [
+      {
+        "engine": "json-normaliser",
+        "pid": 96150,
+        "doors": [
+          "jsonParser.parse"
+        ],
+        "disposition": {
+          "accept": 1,
+          "reject": 0,
+          "throw": 0
+        },
+        "passesPerRound": 403,
+        "callsPerPass": 1,
+        "bytesPerPass": 220,
+        "roundsScored": 30,
+        "ns_per_call": {
+          "median": 2016.2841191066998,
+          "min": 1939.9305210918114,
+          "max": 2172.352357320099,
+          "spread_pct": 11.527236366433344,
+          "n": 30
+        },
+        "mbps": {
+          "median": 109.11171589440838,
+          "min": 101.27270525827625,
+          "max": 113.40612336785232,
+          "spread_pct": 11.120178992802247,
+          "n": 30
+        },
+        "ratio_vs_published": null,
+        "ratio_mbps_vs_jsonParser": 1,
+        "dispositionMatchesReference": true,
+        "sink": 64480
+      }
+    ]
+  },
+  "bar": {
+    "applied": "NONE",
+    "ruling": "COHESION §0j.E OC-1 — the bench table is RECORDED-NOT-GATING; admission is decided on correctness.",
+    "planeB": "OWNER-GATED-PENDING-RATIFICATION — ≥10× RETIRED AS LAW; strict-3× / strict-2× / break-even each 0/5 OPEN and UNRATIFIED (handoff §3.1).",
+    "planeA": "CC-095's interleaved three-leg bar (accepted ≥0.9× · reject ≥0.6× · R1 zero throws) is attributed to CC-095, whose ruled home is X-W9. Its applicability to X·P is an OWNER CONFIRMATION, not an assumption of this harness.",
+    "historicalFloorsRecordedNotApplied": {
+      "VALUE_RATIO_FLOOR": 0.05,
+      "SHEET_RATIO_FLOOR": 0.1,
+      "provenance": "U-F14 re-anchor constants from the pre-v4 gate. Recorded for lineage only. The gate's own calibration subject failed them on 3 of 5 scenarios — a bar the calibration subject cannot meet is a broken ruler, not a standard.",
+      "appliedTo": "nothing in this file"
+    },
+    "note": "No verdict field exists in this schema, by construction. A ✓/✗ column on Plane B is the claim, and this wave does not make it."
+  },
+  "honestBounds": [
+    "N=1 machine; one build; one clock.",
+    "Within a cell, a same-process hot loop — the classic microbenchmark caveat applies.",
+    "Across cells, one live process set with cells interleaved per round.",
+    "Absolute ns/parse is not portable across runs or boxes (this wave's open measured 56.4 then 58.0 ns/parse for the same unarmed subject; the spec's own baseline read 55.6 and O-15 read 93.9). Read the ratios.",
+    "No speed claim exists outside the printed table."
+  ]
+}
