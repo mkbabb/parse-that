@@ -1,0 +1,10 @@
+{
+    "why": "SERVED MODEL: claude-opus-5[1m]. JSON admits no line-1 comment, so this key carries the seat receipt, following the precedent of harness/bench/package.json (X.P.W1.d). This manifest exists for exactly one reason, ruled at COHESION.md §0l E-1: the fresh root OWNS ITS TOOLCHAIN. Without a root package.json, npm's prefix up-walk from here terminates at a stray /Users/mkbabb/package.json, the home directory becomes npm's local prefix, and `npx tsx <anything>` from this root OOMs at 4 GB after ~150 s inside npm's Arborist — measured twice at X.P.W1 (D-F5/R-b1) and re-dated at X.P.W2's open. That blocks the LITERAL form of every gate whose entry is `npx tsx harness/...`. The cure is this file plus its lockfile: npx then finds the binaries in ./node_modules/.bin and takes its fast path. NO `type` FIELD, deliberately: harness/bench/package.json already declares \"type\": \"module\" for the directory whose stderr G-5 reads byte-empty, that file belongs to X.P.W1 and is execute-no-write for this wave (W2.md §4 R-E row), and a root `type` would re-type every file under this root whose nearest manifest is this one. Versions are pinned EXACTLY, no ranges: typescript and vitest are the newest releases satisfying typescript/package.json's own ^5.8.0 / ^3.2.0, so the fresh root's toolchain cannot drift away from the library it typechecks. Admitted to W2.md §4 by the dated addendum-beside docs/tranches/X/parse-that/waves/W2-ADDENDA-2026-09-17.md §A-1.1 in the value.js repository. Base of this root: f5757082ca160dd5f25fcf437e692c9df8f7e78d (§0l R-13).",
+    "name": "parse-that-css-totality-p2",
+    "private": true,
+    "devDependencies": {
+        "tsx": "4.23.13",
+        "typescript": "5.9.3",
+        "vitest": "3.2.7"
+    }
+}
