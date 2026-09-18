@@ -277,15 +277,54 @@ const NON_STRING = [
     ["function", () => {}],
 ];
 
+/**
+ * REPAIR 1 · F-k1 — ONE ROW'S SOURCE, OVER EVERY SHAPE THIS WAVE'S TWO CORPORA ACTUALLY USE.
+ *
+ * `W3.md` §6 G-4 names `--corpus test/css-totality/corpus.json` — `.a`'s 26,604-row union — as this
+ * gate's operand. Every seat of this wave, and the Close, ran `.b`'s own 685-row
+ * `test/css-recovery/corpus.json` instead, and the spec's LITERAL command did not merely disagree:
+ * it CRASHED, with an unhandled `TypeError: Cannot read properties of undefined (reading 'length')`
+ * raised from `lowering-js/js-alg.mjs:236` on the RAW path, because `.a`'s rows key their source as
+ * **`s`** (`{"i":0,"s":"rgb()","bands":["ground-a"],"prods":[]}`) and this reader knew only `src`
+ * and `input`, so `undefined` reached `sg.src.length`.
+ *
+ * The cure is the KEY, not a guard. `s` is read beside `src` and `input`, and `.a`'s 172 `r1` rows
+ * whose `s` is the `{id, src}` pair (F-c3, raised by `.c`) are unwrapped by `.d`'s own published
+ * idiom (`test/css-equivalence/lib/corpus.mjs:52-66`): **lossless, counted, and HALTing on a third
+ * shape**. A row this reader cannot resolve to a string HALTS — it is never skipped, never
+ * defaulted to `""`, and never coerced with `String(row)`. Each of those three would let the gate
+ * run on fewer cells than it reports, which is the masking fallback G-4 exists to forbid, and the
+ * count of unwraps is printed beside the corpus so the figure is never silent.
+ */
 function readCorpus(file) {
     const json = JSON.parse(readFileSync(file, "utf8"));
-    if (Array.isArray(json) && json.every((r) => typeof r === "string")) return { shape: "string[]", inputs: json };
-    if (Array.isArray(json.rows)) return { shape: "{rows:[{src}]}", inputs: json.rows.map((r) => r.src ?? r.input) };
+    let unwrapped = 0;
+
+    const sourceOf = (row, at) => {
+        if (typeof row === "string") return row;
+        const raw = row?.src ?? row?.input ?? row?.s;
+        if (typeof raw === "string") return raw;
+        if (raw !== null && typeof raw === "object" && typeof raw.src === "string") {
+            unwrapped += 1; //                                   F-c3's {id, src} pair, unwrapped
+            return raw.src;
+        }
+        throw new Error(
+            `HALT: the corpus at ${file} row ${at} resolves to no string source — ` +
+                `keys=[${Object.keys(row ?? {}).join(", ")}], src/input/s=${JSON.stringify(raw)?.slice(0, 120)}. ` +
+                `A row this gate cannot read is a HALT, never a skipped cell: a skipped cell would ` +
+                `let the ⊇ direction report a closure it never executed.`,
+        );
+    };
+
+    if (Array.isArray(json) && json.every((r) => typeof r === "string")) return { shape: "string[]", inputs: json, unwrapped };
+    if (Array.isArray(json.rows)) {
+        return { shape: "{rows:[{src}]}", inputs: json.rows.map(sourceOf), unwrapped };
+    }
     if (Array.isArray(json.inputs)) {
-        return { shape: "{inputs:[…]}", inputs: json.inputs.map((r) => (typeof r === "string" ? r : r.src ?? r.input)) };
+        return { shape: "{inputs:[…]}", inputs: json.inputs.map(sourceOf), unwrapped };
     }
     throw new Error(
-        `HALT: the corpus at ${file} is none of the declared shapes (string[] · {rows:[{src|input}]} · ` +
+        `HALT: the corpus at ${file} is none of the declared shapes (string[] · {rows:[{src|input|s}]} · ` +
             `{inputs:[…]}) — keys=[${Object.keys(json).join(", ")}]. A corpus this gate cannot read is a HALT, ` +
             `never a defaulted empty run.`,
     );
@@ -466,7 +505,10 @@ const emittedCodes = [...run.emitted.keys()].sort();
 const signature = assertClosedOperatorSet();
 
 console.log("X.P.W3.b — CSS RECOVERY CLOSURE (G-4 · G-8)\n");
-console.log(`corpus          ${rel(path.resolve(CORPUS.value))} — ${corpus.inputs.length} inputs, shape ${corpus.shape}${CORPUS.defaulted ? "  [DEFAULTED]" : ""}`);
+console.log(
+    `corpus          ${rel(path.resolve(CORPUS.value))} — ${corpus.inputs.length} inputs, shape ${corpus.shape}` +
+        `${corpus.unwrapped ? ` · F-c3 {id,src} rows unwrapped ${corpus.unwrapped}` : ""}${CORPUS.defaulted ? "  [DEFAULTED]" : ""}`,
+);
 console.log(`frozen union    ${FROZEN_UNION.value}${FROZEN_UNION.defaulted ? "  [DEFAULTED to the working tree]" : ""}`);
 console.log(`reachable set   ${modules.files.size} modules from ${PUBLIC_ENTRIES.length} public entries (${AUTHORED.size} authored) · bare specifiers [${modules.bare.join(", ")}]`);
 console.log(`executed        ${run.calls} calls · ${run.rejections} rejections · ${run.issues} issues, over ${Object.keys(recoveries).length} lowerings × 3 entries\n`);
