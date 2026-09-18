@@ -43,6 +43,16 @@ export const R_cls = {
         table: table256((b) => b !== ch(";") && b !== ch("}")),
     },
     "any-but-brace-close": { label: "any-but-brace-close", table: table256((b) => b !== ch("}")) },
+    // X.P.W3.g — the code points that START an ident sequence (css-syntax-3 §4.3.9, "Check if three
+    // code points would start an ident sequence": an ident-start code point — a letter, U+005F, or
+    // a non-ASCII code point — begins one). `ident` above is the CONTINUATION class: it admits
+    // digits and U+002D, which may stand INSIDE a unit but can never begin one. The distinction is
+    // the whole of §4.3.3's width decision, so the two classes must not be conflated: `rgb(1-2 3)`
+    // is two numbers (§4.3.9 returns false for `-` followed by a digit) while `rgb(255none none)`
+    // is one <dimension-token>. The label is `ident`'s OWN — `collectLabels` dedupes, so `L` does
+    // not move (K-10: no Wasm DLAB index changes) and `diagnostics.mjs` already promotes it to
+    // `<ident>` without a new row.
+    "ident-start": { label: "ident", table: table256((b) => isAlpha(b) || b === ch("_") || b === 0xff) },
 };
 
 /* ── R_kw: keyword → value (§4.4, seven tables) ────────────────────────────────────────────── */

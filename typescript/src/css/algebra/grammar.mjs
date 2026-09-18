@@ -33,6 +33,36 @@ export function buildGrammar(A) {
     const D2 = () => DIGITS(16, 2);
     const D1 = () => DIGITS(16, 1);
 
+    /* ── X.P.W3.g — the numeric token's right edge (css-syntax-3 §4.3.3) ──────────────────── */
+    //
+    // §4.3.3 "Consume a numeric token": after the number is consumed, "If the next 3 input code
+    // points would start an ident sequence, then: … Consume an ident sequence. Set the
+    // <dimension-token>'s unit to the returned value." The unit is therefore the MAXIMAL ident
+    // sequence, and the decision is made at the TOKEN boundary, before any production sees a
+    // value: `120deg50` is ONE <dimension-token> with the (invalid) unit `deg50` — never a number
+    // `120`, a unit `deg`, and a second value `50`. `255none` is one <dimension-token> with the
+    // unit `none` — never a number and a `none` keyword.
+    //
+    // Two ZERO-WIDTH assertions realise that width, out of OP-01 alone: `SCAN(cls, 0, 0)` succeeds
+    // exactly when the run of `cls` at the cursor is EMPTY. It consumes nothing, and because both
+    // lowerings' `DROP` appends a `C` row only for a non-empty span, it appends nothing in either
+    // target — so the drop's kind is inert by construction and the journals are untouched.
+    //
+    //   NO_UNIT  — no ident-START code point may follow a bare number, or the number carries a
+    //              unit and the run is one <dimension-token> this position does not admit.
+    //   UNIT_END — a dimension's unit is MAXIMAL, so no ident CONTINUATION code point may follow
+    //              the unit an arm names; `deg50` is not `deg`.
+    //
+    // §4.3.9's third clause (U+005C REVERSE SOLIDUS beginning a valid escape) has no realization
+    // anywhere in this slice — no production consumes an escape — so it is named here and not
+    // coded: an input reaching it fails on the backslash itself, in both lowerings, already.
+    const NO_UNIT = () => DROP("keyword", SCAN("ident-start", 0, 0));
+    const UNIT_END = () => DROP("keyword", SCAN("ident", 0, 0));
+    /** §4.3.3's `<number-token>`: a number that ends where it ends — no unit, no juxtaposition. */
+    const NUMT = () => SEQ(NUM(), NO_UNIT());
+    /** §4.3.3's `<dimension-token>` whose unit is EXACTLY `u`, read to its maximal width. */
+    const DIM = (u) => SEQ(NUM(), UNIT_KW(u), UNIT_END());
+
     /* ── §10.1 `P:color` ──────────────────────────────────────────────────────────────────── */
 
     const hex = () =>
@@ -54,22 +84,22 @@ export function buildGrammar(A) {
     const none = () => KW("ident", "none");
     const pctOf = (num, den) => SCALE(num, den, SEQ(NUM(), TOK("%")));
 
-    const rgbCh = () => CLAMP(0, 255, ALT(pctOf(255, 100), NUM(), none()));
-    const pctCh = () => CLAMP(0, 1, ALT(pctOf(1, 100), SCALE(1, 100, NUM()), none()));
+    const rgbCh = () => CLAMP(0, 255, ALT(pctOf(255, 100), NUMT(), none()));
+    const pctCh = () => CLAMP(0, 1, ALT(pctOf(1, 100), SCALE(1, 100, NUMT()), none()));
     const pctOnly = () => CLAMP(0, 1, ALT(pctOf(1, 100), none()));
-    const okL = () => CLAMP(0, 1, ALT(pctOf(1, 100), NUM(), none()));
-    const okC = () => CLAMP(0, INF, ALT(pctOf(0.4, 100), NUM(), none()));
-    const alpha = () => CLAMP(0, 1, ALT(pctOf(1, 100), NUM(), none()));
+    const okL = () => CLAMP(0, 1, ALT(pctOf(1, 100), NUMT(), none()));
+    const okC = () => CLAMP(0, INF, ALT(pctOf(0.4, 100), NUMT(), none()));
+    const alpha = () => CLAMP(0, 1, ALT(pctOf(1, 100), NUMT(), none()));
     const alphaSlash = () => OPT(SEQ(WS(), TOK("/"), WS(), alpha()), 1);
     const sep = () => SEQ(WS(), TOK(","), WS());
 
     const hue = () =>
         ALT(
-            SCALE(1, 1, SEQ(NUM(), UNIT_KW("deg"))),
-            SCALE(0.9, 1, SEQ(NUM(), UNIT_KW("grad"))),
-            SCALE(180, PI, SEQ(NUM(), UNIT_KW("rad"))),
-            SCALE(360, 1, SEQ(NUM(), UNIT_KW("turn"))),
-            NUM(),
+            SCALE(1, 1, DIM("deg")),
+            SCALE(0.9, 1, DIM("grad")),
+            SCALE(180, PI, DIM("rad")),
+            SCALE(360, 1, DIM("turn")),
+            NUMT(),
             none(),
         );
 
@@ -111,6 +141,18 @@ export function buildGrammar(A) {
         );
     const headSteps = () =>
         CTOR("steps", SEQ(TOK("("), CUT(), WS(), NUM(), OPT(SEQ(sep(), KW("ident", "jump-position")), 1), WS(), TOK(")")));
+    //  §10.2's numbers keep a BARE `NUM`, and the reason is structural, not an omission. `NUMT`
+    //  exists to stop a juxtaposed ident run from being read as a SECOND value; here every number's
+    //  right edge is already pinned by a MANDATORY terminal that no ident code point can satisfy —
+    //  `sep()`'s `,`, the closing `)`, or `WS1` before a `%` stop — so the run cannot be split and
+    //  the verdict is identical either way. That identity is MEASURED, not asserted: the fixture's
+    //  `pinned-edge` family drives the juxtaposition witnesses of all three timing productions and
+    //  reads `ok:false css_syntax` from both lowerings.
+    //  It is also the bound: a `SCAN` allocates a 16-byte span node in the Wasm arena even when it
+    //  matches nothing, so guarding these three sites raises `P:timing-function`'s derived arena
+    //  rate 98 → 114 B/code unit, which lowers X.P.W3.f's Θ.input 65,458 → 63,236 — a declared
+    //  capacity whose label lives in `diagnostics.mjs`, outside this unit's writable set. Recorded
+    //  as INFO-g1 rather than taken.
     const linearStop = () =>
         CTOR("linear-stop", NUM(), REP(SCALE(1, 100, SEQ(WS1(), NUM(), TOK("%"))), 0, 2, null));
     const headLinear = () =>
