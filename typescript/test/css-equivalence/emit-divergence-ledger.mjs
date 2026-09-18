@@ -33,7 +33,13 @@
 //
 // AND F-e7 IS CURED AT THE GENERATOR: every prior emission dropped `.e`'s hand-written §6 block and
 // every prior seat re-appended it by hand. This program now lifts every `### §6.x` subsection out of
-// the file it is replacing and re-emits it verbatim. It still authors none of it.
+// the CANONICAL ledger — `lib/ledger.mjs`'s `CANONICAL_LEDGER_PATH`, not whatever `--out` names
+// (**F-y2**) — and re-emits it verbatim. It still authors none of it.
+//
+// AND F-y1 IS CURED AT THE GENERATOR: a capacity row's incumbent sentence and consumer direction are
+// now READ BACK from the row's own measured cells (`capacityMeasuredReading`) instead of asserted by
+// a template across all nine regions, because for three of them the template claimed an incumbent
+// verdict the row's own table denies.
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -42,12 +48,14 @@ import { readPin } from "../css-totality/lib/pin.mjs";
 import { loadPublicSurfaces, UNREALIZED_ENTRIES } from "../../src/css/entry.mjs";
 import { disposeOracle, loadOracle } from "./lib/oracle.mjs";
 import {
+    CANONICAL_LEDGER_PATH,
     CAPACITY_AUTHORITY,
     DISSENTS,
     FIXTURES,
     LABEL_ROW,
     SPEC_DIVERGENCES,
     adjudicatedRows,
+    capacityMeasuredReading,
     capacityRows,
     directionAudit,
     fixtureAnchorsPresent,
@@ -124,16 +132,24 @@ const main = async () => {
     // prior emission DROPPED it, and every prior seat re-appended it by hand (`.e` wrote the warning
     // into the block itself; `.g` obeyed it; `## Close — round 4` carries F-e7 as a standing
     // residual). A generator that destroys the one section it is forbidden to write is the defect.
-    // It is now CARRIED FORWARD VERBATIM: read off the file this run is about to replace, emitted
-    // unaltered under §6's own preamble. This program still authors not one byte of it.
+    // It is now CARRIED FORWARD VERBATIM: read off the CANONICAL ledger, emitted unaltered under
+    // §6's own preamble. This program still authors not one byte of it.
     //
     // The block is BOUNDED at both ends: it starts at the first `### §6.` and stops at the next
     // level-2 heading, because §7 and §8 follow it. An unbounded tail-slice is not idempotent — the
     // first double-run of this cure carried 47 lines, then 286, then 525, swallowing the families
     // below it on every pass. A generated document that grows when you regenerate it is a defect,
     // and the two-run check is what found this one.
+    //
+    // F-y2's cure: the carry reads the CANONICAL ledger, not `--out`. Lifting the block out of "the
+    // file this run replaces" made the carry PATH-DEPENDENT — an emission to a fresh path found
+    // nothing to carry and dropped `.e`'s block again, which is F-e7 returning through the door the
+    // cure left open. `.e`'s block lives in exactly one artefact; the carry now addresses that
+    // artefact by name and `--out` decides only where the bytes land. The canonical emission is
+    // unaffected (it IS the canonical path), and a fresh-path emission now reproduces it.
     const outPath = path.isAbsolute(out) ? out : path.resolve(process.cwd(), out);
-    const previous = existsSync(outPath) ? readFileSync(outPath, "utf8") : "";
+    const carryPath = CANONICAL_LEDGER_PATH;
+    const previous = existsSync(carryPath) ? readFileSync(carryPath, "utf8") : "";
     const carriedAt = previous.indexOf("\n### §6.");
     const tail = carriedAt < 0 ? "" : previous.slice(carriedAt + 1);
     const ends = ["\n## ", "\n---\n"].map((mark) => tail.indexOf(mark)).filter((i) => i >= 0);
@@ -364,7 +380,7 @@ const main = async () => {
     say("");
     if (carried.length > 0) {
         say("**`.e`'s block below is CARRIED, not regenerated** (F-e7, cured at the generator): this program reads");
-        say("the file it is about to replace, lifts every `### §6.x` subsection out of it verbatim, and emits it");
+        say("the canonical ledger — by name, not by `--out` (F-y2) — lifts every `### §6.x` subsection out of it, and emits it");
         say("here unaltered. It authors none of it and it no longer destroys it, so no seat has to remember to");
         say("re-append it. `.e`'s own warning — *\"If the emitter is re-run, it will drop this section\"* — is the");
         say("sentence this cure retires; it is left standing in the block because the block is `.e`'s and E-3");
@@ -401,6 +417,11 @@ const main = async () => {
     say("");
     for (const row of capacity) {
         const m = measureCapacityRow(row, oracle, surfaces);
+        // F-y1: the incumbent sentence and the consumer direction are READ BACK from `m`, the cells
+        // printed two lines below them, and are returned unchanged wherever the incumbent did
+        // return a value. A row that asserts across its own measurement is the self-authored answer
+        // key one level up, in the one field G-7 says the packets quote.
+        const reading = capacityMeasuredReading(row, m);
         say(`### ${row.id} — ${row.title}`);
         say("");
         say("| field | value |");
@@ -408,11 +429,11 @@ const main = async () => {
         say(`| **region / class** | ${code(row.region)} · class ${row.cls} · checked ${esc(row.when)} |`);
         say(`| **declared capacity Θ.${row.region}** | ${groupDigits(row.capacity)} ${esc(row.unit)}${row.capacity === row.layoutCap ? " (the layout CAP itself)" : ` (DERIVED; the layout CAP is ${groupDigits(row.layoutCap)})`} |`);
         say(`| **raw label → promoted production** | ${code(row.label)} → ${code(row.production)} |`);
-        say(`| **incumbent** | ${esc(row.incumbentPosture)} |`);
+        say(`| **incumbent** | ${esc(reading.incumbentPosture)} |`);
         say(`| **candidate** | ${esc(row.candidatePosture)} |`);
         say(`| **spec citation** | ${esc(row.specCitation)} |`);
         say(`| **adjudication** | ${esc(row.adjudication)} |`);
-        say(`| **consumer direction** | ${esc(row.consumerDirection)} |`);
+        say(`| **consumer direction** | ${esc(reading.consumerDirection)} |`);
         say(`| **witness family** | ${code(`witnessAtCapacity("${row.region}", n)`)} under ${code(row.witnessProduction)}, driven through ${code(m.entryName)} |`);
         say("");
         say("| witness | code units | incumbent (published 4.0.0, MEASURED) | candidate js (MEASURED) | candidate wasm (MEASURED) | js ≡ wasm |");

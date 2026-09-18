@@ -35,6 +35,7 @@ import { assertPin, crossCheckUnpacked, loadOracle, PIN } from "./lib/oracle.mjs
 import { loadCorpus } from "./lib/corpus.mjs";
 import { runFullSurface } from "./lib/differential.mjs";
 import {
+    CANONICAL_LEDGER_PATH,
     DISSENTS,
     FIXTURES,
     LABEL_ROW,
@@ -48,8 +49,8 @@ import {
 /** The pin the wave reads its universe at (`.a`'s, and this seat's — one universe, one commit). */
 const PINNED_VALUE_COMMIT = "6aca86020b6b2605e7d0f04fccb6601746e387f7";
 
-const LEDGER_PATH =
-    "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/DIVERGENCE-LEDGER.md";
+/** One canonical ledger, named once (F-y2): the emitter's carry and this suite read the same bytes. */
+const LEDGER_PATH = CANONICAL_LEDGER_PATH;
 const UNPACKED_400 =
     "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/cand-o/vendor/value-js-4.0.0";
 
@@ -139,6 +140,36 @@ describe("G-7 · DIVERGENCE-LEDGER.md", () => {
         expect(
             missing.map((r) => `${r.id} (${r.region})`),
             "a declared bound whose row or whose raw label is absent from the ledger is an unrowed consumer-visible narrowing; G-7 reads that exactly as it reads a defect",
+        ).toEqual([]);
+    });
+
+    it("F-y1 — no CAPACITY row claims an incumbent verdict its OWN measured table denies", () => {
+        const text = ledger();
+        const claiming: string[] = [];
+        for (const row of capacityRows()) {
+            const start = text.indexOf(`### ${row.id} —`);
+            expect(start, `${row.id} has no section in the ledger`).toBeGreaterThan(-1);
+            const rest = text.slice(start + 1);
+            const ends = ["\n### ", "\n## ", "\n---\n"].map((mark) => rest.indexOf(mark)).filter((i) => i >= 0);
+            const body = ends.length > 0 ? rest.slice(0, Math.min(...ends)) : rest;
+
+            // The incumbent column of the row's own witness table — cell 3 of `| witness | code
+            // units | incumbent | js | wasm | js ≡ wasm |`, read by position, never by search.
+            const measured = body
+                .split("\n")
+                .filter((l) => /^\| \*\*(AT|ONE PAST)/.test(l))
+                .map((l) => l.split("|")[3].trim());
+            expect(measured.length, `${row.id}: the row prints no witness line, so its prose answers to nothing`).toBeGreaterThan(0);
+
+            const prose = body.slice(0, body.indexOf("| witness |"));
+            if (/returns a value/.test(prose) && !measured.every((c) => c.startsWith("ok:true"))) claiming.push(row.id);
+        }
+        expect(
+            claiming,
+            "a capacity row whose prose says the incumbent 'returns a value' where its own MEASURED cells read `ok:false` is a " +
+                "self-authored answer key in the one field W3.md §6 G-7 says the KF and glass packets quote. The cure is " +
+                "`capacityMeasuredReading`, which reads the cell back; removing it fails here. Claiming rows: " +
+                claiming.join(" · "),
         ).toEqual([]);
     });
 

@@ -64,6 +64,15 @@ import { callOracle } from "./oracle.mjs";
 export const GATE_VERDICT_PATH =
     "/Users/mkbabb/Programming/value.js/docs/tranches/V/apotheosis/parser-proof/GATE-VERDICT.md";
 
+/**
+ * The ONE canonical `DIVERGENCE-LEDGER.md` — `W3.md` §4's own row, and the file G-7 reads. Held
+ * here so the emitter, the suite and any successor address the same bytes by one name: it was
+ * duplicated as a literal in `equivalence.test.ts` and in nothing else, and a second literal is how
+ * a carry starts reading a file that is not the artefact (**F-y2**).
+ */
+export const CANONICAL_LEDGER_PATH =
+    "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/DIVERGENCE-LEDGER.md";
+
 /* ── family B: the four preserved DISSENTS ─────────────────────────────────────────────────── */
 
 export const DISSENTS = [
@@ -432,6 +441,13 @@ const capacityOutcome = (res) => {
     return `ok:false · ${num(diagnostics.length)} diagnostic(s): ${named.slice(0, 2).join(" · ")}${named.length > 2 ? ` …(+${named.length - 2})` : ""}`;
 };
 
+/**
+ * Did this engine RETURN A VALUE for this witness? `ok:true` and nothing else — a throw and an
+ * `ok:false` are both "no". Read off the result object rather than off `capacityOutcome`'s prose,
+ * so the reading cannot drift with the wording.
+ */
+const accepted = (res) => !res.threw && res.value !== undefined && res.value !== null && res.value.ok === true;
+
 /** Does this answer name THIS region's production? The row's own promoted label, never a substring. */
 const namesRegion = (res, production) =>
     !res.threw &&
@@ -477,12 +493,14 @@ const largestFitting = (region) => {
 
 const capacityCell = (region, n, oracleFn, surfaces, entryName) => {
     const src = witnessAtCapacity(region, n);
+    const inc = callOracle(oracleFn, src);
     const cell = {
         n,
         length: src.length,
         witness: `witnessAtCapacity("${region}", ${num(n)})`,
         preview: `${src.slice(0, 20).replace(/\s+/g, " ")}…`,
-        incumbent: capacityOutcome(callOracle(oracleFn, src)),
+        incumbent: capacityOutcome(inc),
+        incumbentAccepted: accepted(inc),
     };
     for (const [kind, surface] of Object.entries(surfaces)) {
         const res = callOracle(surface[entryName], src);
@@ -513,6 +531,59 @@ export const measureCapacityRow = (row, oracle, surfaces) => {
     }
     const n = row.region === "expsnap" ? THETA.depthBound : largestFitting(row.region);
     return { kind: "window", entryName, coordinate: n, window: cell(n) };
+};
+
+/**
+ * **F-y1's cure, at the generator rather than at the two rows it was raised against.**
+ *
+ * `capacityRows()` writes the incumbent sentence and the class-1 consumer direction from ONE
+ * template across all nine regions, BEFORE anything is measured — and for three of them the
+ * template is contradicted by the row's own table two lines beneath it: published 4.0.0 REJECTS
+ * both `recoveries` and `D` witnesses (`ok:false css_syntax [0,1) "declaration"`) and the `expsnap`
+ * window witness (`color_context_required`), so *"on the inputs measured below it returns a value"*
+ * and *"a size published 4.0.0 parses and returns a value for"* are false there. `W3.md` §6 G-7
+ * makes the second one load-bearing — *"that field is what the KF and glass packets quote"* — so a
+ * packet quoting those rows would tell a consumer that 4.0.0 accepts inputs it in fact refuses.
+ *
+ * The generator ALREADY measures the incumbent cell. This reads it back and re-scopes the two
+ * sentences to what was measured. It cannot widen a claim: where every witness was accepted, both
+ * sentences are returned **unchanged, byte for byte**, and the eight rows whose reading was already
+ * true are untouched.
+ *
+ * The un-measured strings on the row object stay as they are and stay non-empty — `directionAudit`,
+ * `run-full-surface.mjs`'s census and `equivalence.test.ts` read them synchronously, without an
+ * oracle. The EMITTED file is the artefact G-7 grades and the packets quote, and it is the one that
+ * must agree with its own measurement.
+ */
+export const capacityMeasuredReading = (row, m) => {
+    const cells = m.kind === "pair" ? [m.at, m.past] : [m.window];
+    const refused = cells.filter((c) => !c.incumbentAccepted);
+    if (refused.length === 0) return { incumbentPosture: row.incumbentPosture, consumerDirection: row.consumerDirection };
+
+    const which =
+        m.kind !== "pair"
+            ? "the window witness measured below"
+            : refused.length === cells.length
+              ? "EITHER witness measured below"
+              : `the ${refused[0] === m.at ? "AT-the-bound" : "ONE-PAST-the-bound"} witness measured below`;
+    const incumbentPosture =
+        "published 4.0.0 declares NO capacity of any kind on this axis: it parses until it runs out of host memory. " +
+        `It does NOT, however, return a value for ${which} — it answers ${[...new Set(refused.map((c) => c.incumbent))].join(" · then ")} — ` +
+        "and it does so for its own reason, never for a capacity. MEASURED at this generation and generated from that " +
+        "measurement (**F-y1**): a row may not claim an incumbent verdict its own table denies.";
+
+    if (row.cls !== 1 || m.kind !== "pair" || m.past.incumbentAccepted) return { incumbentPosture, consumerDirection: row.consumerDirection };
+
+    const consumerDirection =
+        `NARROWS the declared shape — Θ.${row.region} = **${num(row.capacity)}** ${row.unit} is a bound published 4.0.0 does not declare — but on THIS row's own ` +
+        "witness family the narrowing is **not observable as a verdict change**: published 4.0.0 answers " +
+        `${m.past.incumbent} on the witness whose ${row.unit} exceed the bound, so a consumer at that size received \`ok:false\` from 4.0.0 and ` +
+        "receives `ok:false` here. What changes is the DIAGNOSTIC, not the verdict: the candidate spans the whole input and names the region " +
+        `(\`expected[0] = "${row.production} …"\`) where 4.0.0 named the first construct it could not parse. The consumer will not receive a ` +
+        "partial value and will not receive a throw. **Whether an input exists that published 4.0.0 ACCEPTS and this bound refuses is NOT " +
+        "established by these witnesses, and is not claimed here** — the class-1 rows that do establish it are the ones whose incumbent cell " +
+        "reads `ok:true` at the same coordinate.";
+    return { incumbentPosture, consumerDirection };
 };
 
 /** `GATE-VERDICT.md` is read so each fixture's anchor is proven present in its authority. */
