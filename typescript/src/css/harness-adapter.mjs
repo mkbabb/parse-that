@@ -45,7 +45,15 @@ export const meta = {
         wasm: at("build/ac1.wasm"),
     },
     build: {
-        jsArtifactReproduction: ["node experiments/w2/ac1-tagless/build.mjs"],
+        // R-i1 (X.P.W2 K.8, INFO; owner "W3's open seat"), re-pointed here. `.i` carried the
+        // candidate-location command UNALTERED on purpose — §11.2 permitted relative-*import*
+        // adjustments only, and a declared build command is not an import — and it stayed true at
+        // the candidate directory. At W3 the graduated tree is the tree of record, and the command a
+        // reader must run to reproduce THESE bytes is this one: X.P.W3.0 measured it regenerating
+        // `ac1.wasm`/`ac1.js`/`ac1.d.ts` at `<p2>` and re-running it byte-identically (K-9's
+        // reproduction leg; `wasm-audit.mjs` prints this string verbatim). Still `node` and nothing
+        // else — no non-JS toolchain is named or reached.
+        jsArtifactReproduction: ["node typescript/src/css/build.mjs"],
     },
 };
 
