@@ -30,7 +30,11 @@
 
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { pathToFileURL } from "node:url";
+import { dirname, isAbsolute, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+/** This root, derived from this file's own location — `<p2>/harness/bench/lib/engines.mjs`. */
+const P2_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
 const WORKSPACE =
     "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser";
@@ -135,7 +139,99 @@ export async function loadEngine(name) {
             doorNames: { json: "jsonParser.parse" },
         };
     }
+    if (name.startsWith(ADAPTER_ENGINE_PREFIX)) return loadAdapterEngine(name);
     throw new Error(`unknown engine ${name}`);
+}
+
+/* ── E-6 — THE ONE DECLARED EXTERNAL CELL ────────────────────────────────────────────────────
+ *
+ * COHESION.md §0n.4, verbatim: `harness/bench/lib/engines.mjs` "may gain an `--engine=<adapter>`
+ * registration path (a closed chain becomes a chain plus one declared external cell); landed by
+ * X.P.W3 under a dated E-3 addendum to W1's §Bounds, so G-7 has a subject." Landed by X.P.W3.0
+ * under `docs/tranches/X/parse-that/waves/W1-ADDENDA-2026-09-18.md` §B-1.
+ *
+ * WHAT IT IS, AND WHAT IT IS NOT. It is a chain plus ONE arm, and that arm is not a fifth hard-coded
+ * subject: it resolves an id the CALLER declares, against the SAME adapter contract every W2 probe
+ * already reaches a candidate through (`harness/w2/README.md` §2). A per-candidate bench cell was
+ * the thing `W2.md` §3 item 7 forbade; a per-candidate bench cell is still forbidden, and nothing
+ * below knows the name of any candidate. The four named engines above are untouched, `loadEngine`
+ * still throws on an id it cannot resolve, and no `argv` contract is changed in `bench.ts` (which is
+ * execute-no-write for X.P.W3): a caller passes the id, this file resolves it.
+ *
+ * THE ID: `adapter:<path-to-harness-adapter.mjs>#<js|wasm>`. The path is absolute or `<p2>`-relative;
+ * the fragment names which of the adapter's two lowerings is the cell, because §0n.4 requires the
+ * table "printed for both lowerings of the graduated seed" and a single id per row is what makes a
+ * row's arm-state and provenance unambiguous. The fragment is REQUIRED — defaulting it would let a
+ * table print a row whose lowering nobody declared.
+ *
+ * THE DOORS are the bench's own three, mapped onto the adapter's `entry(prod)` boundary (BND-1,
+ * ALGEBRA.md §5.8) — the same door shape the four engines above expose, so `classify()` below reads
+ * an adapter cell exactly as it reads the incumbent, throws counted and never swallowed.
+ */
+export const ADAPTER_ENGINE_PREFIX = "adapter:";
+
+/** The bench's three doors ← the algebra's three slice entries (`ALGEBRA.md` §10). */
+const ADAPTER_DOORS = { color: "P:color", easing: "P:timing-function", sheet: "P:stylesheet" };
+
+/**
+ * `--engine=<adapter>` read off an argv array, in the file the grant names. Returns the engine ids
+ * declared on the command line, in order, with no default and no discovery: a caller that passes
+ * nothing gets an empty list and prints no external cell.
+ */
+export function adapterEngineIds(argv) {
+    return argv
+        .filter((a) => a.startsWith("--engine="))
+        .map((a) => a.slice("--engine=".length))
+        .map((v) => (v.startsWith(ADAPTER_ENGINE_PREFIX) ? v : `${ADAPTER_ENGINE_PREFIX}${v}`));
+}
+
+function parseAdapterId(id) {
+    const body = id.slice(ADAPTER_ENGINE_PREFIX.length);
+    const hash = body.lastIndexOf("#");
+    if (hash < 0) {
+        throw new Error(
+            `HALT: engine id '${id}' names no lowering. The form is ${ADAPTER_ENGINE_PREFIX}<path-to-harness-adapter.mjs>#<js|wasm>`,
+        );
+    }
+    const file = body.slice(0, hash);
+    const lowering = body.slice(hash + 1);
+    if (lowering !== "js" && lowering !== "wasm") {
+        throw new Error(`HALT: engine id '${id}' names lowering '${lowering}'; the adapter contract has exactly js and wasm`);
+    }
+    return { file: isAbsolute(file) ? file : resolve(P2_ROOT, file), lowering };
+}
+
+async function loadAdapterEngine(id) {
+    const { file, lowering } = parseAdapterId(id);
+    if (!statSync(file, { throwIfNoEntry: false })) {
+        throw new Error(`HALT: adapter ABSENT at ${file} (engine id '${id}')`);
+    }
+    const m = await import(pathToFileURL(file).href);
+    const L = m.lowerings?.[lowering];
+    if (!L || typeof L.entry !== "function") {
+        throw new Error(`HALT: ${file} exports no lowerings.${lowering}.entry() — the adapter contract is harness/w2/README.md §2`);
+    }
+    const doors = {};
+    const doorNames = {};
+    for (const [door, prod] of Object.entries(ADAPTER_DOORS)) {
+        doors[door] = L.entry(prod);
+        doorNames[door] = `lowerings.${lowering}.entry("${prod}")`;
+    }
+    return {
+        name: id,
+        module: m,
+        doors,
+        doorNames,
+        /** Declared provenance, pinned like every other subject: the adapter and what it names built. */
+        pins: {
+            adapter: pin(file),
+            ...Object.fromEntries(
+                Object.entries(m.meta?.artifacts ?? {})
+                    .filter(([, p]) => typeof p === "string" && statSync(p, { throwIfNoEntry: false }))
+                    .map(([k, p]) => [k, pin(p)]),
+            ),
+        },
+    };
 }
 
 /**
