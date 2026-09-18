@@ -235,6 +235,20 @@ const collectLabels = () => {
         "<declaration-value>",
         "rule",
         "<string>", //                                      BND-1's one label, above the algebra (§5.8)
+        // X.P.W3.f — the nine capacity labels (COHESION §0q E-f1), appended AFTER "<string>" so no
+        // existing index moves (the Wasm DLAB indices are compile-time). Each names its declared
+        // bound in the `nesting <= 64` form; `bounds.mjs` asserts every value against the layout
+        // at load, so a re-sized region halts until the label names the new value. The input
+        // window is the ONE bound below its region's CAP: derived (`bounds.mjs` CLASS3_PROOF).
+        "input <= 65458",
+        "marks <= 32768",
+        "recoveries <= 4096",
+        "D <= 4096",
+        "C <= 65536",
+        "P <= 65536",
+        "vstack <= 65536",
+        "arena <= 7208960",
+        "expsnap <= 32",
     ])
         add(l);
     return seen;

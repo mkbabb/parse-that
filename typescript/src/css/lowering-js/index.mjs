@@ -15,10 +15,33 @@ import { reifiedDispatchTerms, reifiedGrammar } from "../reify/term-alg.mjs";
 // (`js-alg.mjs` already imports it and this file already imports `js-alg.mjs`): a second
 // `tsImport` of the same library would be a second `Parser` class, and `instanceof` across the two
 // would be false. COHESION §0n.5 / OP-7 — the fresh root's own `typescript/src/parse/**`.
-import { createParserContext, jsAlgebra, newSigma, Parser } from "./js-alg.mjs";
+import { INPUT_BOUND, capacityBreaches, capacityProduct } from "../bounds.mjs";
+import {
+    ARENA_CAP, C_CAP, D_CAP, EXPSNAP_CAP, MARK_CAP, P_CAP, REC_CAP, VSTACK_CAP,
+} from "../lowering-wasm/layout.mjs";
+import { createParserContext, jsAlgebra, newSigma, noteC, Parser } from "./js-alg.mjs";
 import { deepFreeze, NONE_OPT, UNIT } from "./values.mjs";
 
-const DEFAULT_THETA = Object.freeze({ depthBound: 64 });
+/**
+ * Θ, as this lowering carries it. `depthBound` is the one lazy back-edge's bound; the nine
+ * capacities (X.P.W3.f, COHESION §0p/§0q) are the fixed regions of the Wasm memory model, each
+ * VALUE read from the build's own layout constants — the JS lowering has no fixed regions of its
+ * own, and it carries the SAME bounds so that the two targets answer identically at every one of
+ * them. The input window is the one derived value (`bounds.mjs` CLASS3_PROOF). A caller's Θ may
+ * move `depthBound` only: a capacity is a property of the memory model, not an option.
+ */
+const DEFAULT_THETA = Object.freeze({
+    depthBound: 64,
+    input: INPUT_BOUND,
+    marks: MARK_CAP,
+    recoveries: REC_CAP,
+    D: D_CAP,
+    C: C_CAP,
+    P: P_CAP,
+    vstack: VSTACK_CAP,
+    arena: ARENA_CAP,
+    expsnap: EXPSNAP_CAP,
+});
 
 export function makeJsLowering() {
     const ctx = { terms: {}, dispatch: {} };
@@ -45,10 +68,15 @@ export function makeJsLowering() {
     for (const prod of Object.keys(g.entries)) roots[prod] = rootFor(prod, DEFAULT_THETA);
 
     function parse(prod, source, theta) {
+        //  the input window, BEFORE the run — the one capacity checked before any σ exists (class 1)
+        if (source.length > DEFAULT_THETA.input) return capacityProduct(["input"], source, { C: 0, P: 0 });
         const root = theta && theta.depthBound !== DEFAULT_THETA.depthBound ? rootFor(prod, theta) : roots[prod];
         const state = root.parseState(source);
         const sg = state.w2;
-        if (state.offset < source.length) sg.C.push([state.offset, source.length - state.offset, "residue"]);
+        if (state.offset < source.length) {
+            sg.C.push([state.offset, source.length - state.offset, "residue"]);
+            noteC(sg);
+        }
         if (state.isError) {
             const f = sg.far.f < 0 ? 0 : sg.far.f;
             const actual = source.slice(f);
@@ -60,6 +88,14 @@ export function makeJsLowering() {
                 actual: actual === "" ? null : actual,
             });
         }
+        //  the journals' bounds, AFTER the run and after Π — the same counters the Wasm result block
+        //  reports (class 1: monotone or never restored in this grammar) and the class-2 peaks,
+        //  against the same declared values, in the same naming order
+        const peaks = { C: sg.Chw, P: sg.Phw };
+        const breached = capacityBreaches({
+            marks: sg.marks.length, recoveries: sg.recoveries.length, D: sg.D.length, C: sg.Chw, P: sg.Phw,
+        });
+        if (breached.length > 0) return capacityProduct(breached, source, peaks);
         const ok = sg.D.length === 0;
         return {
             ok,
@@ -71,6 +107,7 @@ export function makeJsLowering() {
             sigma: { i: state.offset, depth: sg.depth, arena: 0 },
             marks: sg.marks,
             recoveries: sg.recoveries,
+            peaks,
         };
     }
 

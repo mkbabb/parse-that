@@ -16,18 +16,38 @@
 import { buildGrammar } from "../algebra/grammar.mjs";
 import { CODES, KINDS, registryRows } from "../algebra/ops.mjs";
 import { L, R_cls, R_kw, R_disp } from "../algebra/tables.mjs";
+import { INPUT_BOUND, capacityBreaches, capacityProduct } from "../bounds.mjs";
 import { reifiedGrammar } from "../reify/term-alg.mjs";
 import { I32, ModuleBuilder } from "./asm.mjs";
 import {
-    DLAB_BASE, DLAB_STRIDE, D_BASE, D_STRIDE, DataBuilder, FARLAB_BASE, INPUT_BASE, INPUT_CAP,
-    MARK_BASE, MARK_STRIDE, MEMORY_PAGES, P_BASE, P_STRIDE, REC_BASE, REC_STRIDE, T_ARR, T_FALSE,
+    ARENA_CAP, C_CAP, D_CAP, EXPSNAP_CAP,
+    DLAB_BASE, DLAB_STRIDE, D_BASE, D_STRIDE, DataBuilder, FARLAB_BASE, INPUT_BASE,
+    MARK_BASE, MARK_CAP, MARK_STRIDE, MEMORY_PAGES, P_BASE, P_CAP, P_STRIDE, REC_BASE, REC_CAP, REC_STRIDE, T_ARR, T_FALSE,
     T_LIST, T_NONE, T_NULL, T_NUM, T_REC, T_SPAN, T_STR, T_STRB, T_TRUE, T_TUPLE, T_UNIT,
-    C_BASE, C_STRIDE, STATIC_CAP, buildPow10Table, buildPow5Table, u32, u64,
+    C_BASE, C_STRIDE, STATIC_CAP, VSTACK_CAP, buildPow10Table, buildPow5Table, u32, u64,
 } from "./layout.mjs";
 import { RESULT, emitRuntime } from "./runtime.mjs";
 import { emitCtors, u32le, wasmAlgebra } from "./wasm-alg.mjs";
 
-const DEFAULT_THETA = Object.freeze({ depthBound: 64 });
+/**
+ * Θ, as this lowering carries it: `depthBound` and the nine capacities of its own memory model
+ * (X.P.W3.f, COHESION §0p/§0q), each VALUE the layout's own constant — except the input window,
+ * the one derived bound (`bounds.mjs` CLASS3_PROOF: the largest window under which the value
+ * stack, the arena and the snapshot stack cannot be reached, because this module never stops a run
+ * at an overflow and the arena's overflow is a trap). A caller's Θ may move `depthBound` only.
+ */
+const DEFAULT_THETA = Object.freeze({
+    depthBound: 64,
+    input: INPUT_BOUND,
+    marks: MARK_CAP,
+    recoveries: REC_CAP,
+    D: D_CAP,
+    C: C_CAP,
+    P: P_CAP,
+    vstack: VSTACK_CAP,
+    arena: ARENA_CAP,
+    expsnap: EXPSNAP_CAP,
+});
 
 /**
  * The result block's word indices, bound ONCE. Reading them as `RESULT[field]` inside `parse` is a
@@ -159,6 +179,11 @@ export function buildModule() {
     m.define(setTheta, (c) => c.get(0).gset(G.theta));
     const highWater = m.declare("highWater", [], [I32]);
     m.define(highWater, (c) => c.gget(G.high));
+    //  the class-2 peaks of the last run (X.P.W3.f): the C and P journals' high-water, per parse
+    const cHighWater = m.declare("cHighWater", [], [I32]);
+    m.define(cHighWater, (c) => c.gget(G.chigh));
+    const pHighWater = m.declare("pHighWater", [], [I32]);
+    m.define(pHighWater, (c) => c.gget(G.phigh));
     const resetHigh = m.declare("resetAll", [], []);
     m.define(resetHigh, (c) => {
         c.call(F.reset);
@@ -168,6 +193,8 @@ export function buildModule() {
     m.exportFunc("run", run);
     m.exportFunc("setTheta", setTheta);
     m.exportFunc("highWater", highWater);
+    m.exportFunc("cHighWater", cHighWater);
+    m.exportFunc("pHighWater", pHighWater);
     m.exportFunc("reset", resetHigh);
     m.exportMemory("memory");
 
@@ -263,7 +290,9 @@ export function makeWasmLowering() {
     function parse(prod, source, theta) {
         const k = prodIndex[prod];
         if (k === undefined) throw new Error(`HALT: '${prod}' is not an entry of the grammar map`);
-        if (source.length > INPUT_CAP) throw new Error(`HALT: the input exceeds the module's ${INPUT_CAP}-byte window`);
+        //  the input window, BEFORE the run — the one capacity checked before a byte is written
+        //  (class 1); Θ.input <= INPUT_CAP is asserted at load, so the window is never exceeded
+        if (source.length > DEFAULT_THETA.input) return capacityProduct(["input"], source, { C: 0, P: 0 });
         for (let j = 0; j < source.length; j++) {
             const cu = source.charCodeAt(j);
             u8[INPUT_BASE + j] = cu < 128 ? cu : 255;
@@ -271,7 +300,24 @@ export function makeWasmLowering() {
         const bound = theta && theta.depthBound !== undefined ? theta.depthBound : DEFAULT_THETA.depthBound;
         ex.setTheta(bound);
         ex.run(k, source.length);
-        if (i32v[W_OVF]) throw new Error("HALT: a journal, the value stack or the arena overflowed its fixed region");
+        //  the journals' bounds, AFTER the run: the overflow flag says SOME region refused an append;
+        //  the result block's monotone counters and the class-2 peaks say WHICH, against the same
+        //  declared values and in the same naming order as the JS lowering. A flag with no declared
+        //  region over its bound is a class-3 region reached under Θ.input — the load-time proof
+        //  (`bounds.mjs` CLASS3_PROOF) says that cannot happen, so it is a HALT, never a re-shape.
+        const peaks = { C: ex.cHighWater(), P: ex.pHighWater() };
+        if (i32v[W_OVF]) {
+            const breached = capacityBreaches({
+                marks: i32v[W_MARKN], recoveries: i32v[W_RECN], D: i32v[W_DLEN], C: peaks.C, P: peaks.P,
+            });
+            if (breached.length === 0) {
+                throw new Error(
+                    "HALT: the module's overflow flag is set with no declared region over its bound — the value stack, " +
+                        `the arena or the snapshot stack was reached under Θ.input=${DEFAULT_THETA.input}, which CLASS3_PROOF asserts unreachable`,
+                );
+            }
+            return capacityProduct(breached, source, peaks);
+        }
 
         const C = [];
         for (let j = 0; j < i32v[W_CLEN]; j++) {
@@ -327,6 +373,7 @@ export function makeWasmLowering() {
             sigma: { i: i32v[W_I], depth: i32v[W_DEPTH], arena: i32v[W_ARENA] },
             marks,
             recoveries,
+            peaks,
             ambiguous: i32v[W_AMB],
         };
     }

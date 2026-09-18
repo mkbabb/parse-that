@@ -37,9 +37,12 @@ export function emitRuntime(m, data) {
     const g = (name, init = 0) => {
         G[name] = m.global(I32, true, init);
     };
+    //  `chigh` / `phigh` — X.P.W3.f (COHESION §0q E-f2, class 2): the PEAK length of the C and P
+    //  journals within one parse. Both journals are truncated on every restore, so their final
+    //  count does not bound what the appender was asked to hold; the peak is the guarded quantity.
     for (const name of ["i", "srclen", "clen", "plen", "dlen", "depth", "farf", "farcode", "farn",
         "lastcode", "origin", "cut", "markn", "recn", "arena", "vsp", "ovf", "amb", "ndig", "q",
-        "trunc", "expsp", "high"]) {
+        "trunc", "expsp", "high", "chigh", "phigh"]) {
         g(name);
     }
     G.w = m.global(I64, true, 0);
@@ -217,6 +220,7 @@ export function emitRuntime(m, data) {
         fn(name, Array.from({ length: arity }, () => I32), [], (c) => {
             const p = c.local(I32);
             const lenG = { appendC: G.clen, appendP: G.plen, appendRec: G.recn }[name];
+            const highG = { appendC: G.chigh, appendP: G.phigh }[name];
             c.gget(lenG).i32(cap).x("i32.lt_u").if_("void",
                 (b) => {
                     b.gget(lenG).i32(stride).x("i32.mul").i32(base).x("i32.add").set(p);
@@ -224,6 +228,10 @@ export function emitRuntime(m, data) {
                 },
                 (b) => b.i32(1).gset(G.ovf));
             c.gget(lenG).i32(1).x("i32.add").gset(lenG);
+            //  the high-water: the length after THIS append, if it is the largest so far (class 2)
+            if (highG !== undefined) {
+                c.gget(lenG).gget(highG).x("i32.gt_u").if_("void", (b) => b.gget(lenG).gset(highG));
+            }
         });
     appender("appendC", C_BASE, C_CAP, C_STRIDE, 3);
     appender("appendP", P_BASE, P_CAP, P_STRIDE, 2);
@@ -617,7 +625,7 @@ export function emitRuntime(m, data) {
 
     fn("reset", [], [], (c) => {
         for (const name of ["i", "clen", "plen", "dlen", "depth", "farn", "origin", "cut", "markn",
-            "recn", "arena", "vsp", "ovf", "amb", "ndig", "q", "trunc", "expsp"]) {
+            "recn", "arena", "vsp", "ovf", "amb", "ndig", "q", "trunc", "expsp", "chigh", "phigh"]) {
             c.i32(0).gset(G[name]);
         }
         c.i32(-1).gset(G.farf);

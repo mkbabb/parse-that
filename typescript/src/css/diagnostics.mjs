@@ -110,6 +110,18 @@ export const PRODUCTION_LABELS = Object.freeze({
     "<declaration-value>": "<declaration-value>",
     rule: "<qualified-rule-recovery>",
     "<string>": "<string source>", //                        BND-1's one label (§5.8), cand-f/color.ts:609
+
+    /* the capacity bounds (X.P.W3.f, COHESION §0q E-f1) — the `nesting <= 64` row's own form, one
+       per fixed region of the Wasm memory model; both lowerings raise them at their boundary */
+    "input <= 65458": "<input-window> (at most 65458 code units)",
+    "marks <= 32768": "<mark-journal> (at most 32768 marks)",
+    "recoveries <= 4096": "<recovery-journal> (at most 4096 recoveries)",
+    "D <= 4096": "<diagnostic-journal> (at most 4096 diagnostics)",
+    "C <= 65536": "<complement-journal> (at most 65536 entries)",
+    "P <= 65536": "<provenance-journal> (at most 65536 entries)",
+    "vstack <= 65536": "<value-stack> (at most 65536 slots)",
+    "arena <= 7208960": "<arena> (at most 7208960 bytes)",
+    "expsnap <= 32": "<expectation-snapshots> (at most 32 frames)",
 });
 
 /** Both set-differences against `L`, injectivity, and the named-production predicate — at load. */

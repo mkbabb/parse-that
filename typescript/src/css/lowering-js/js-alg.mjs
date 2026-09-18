@@ -63,7 +63,17 @@ const newSigma = (src, theta) => ({
     recoveries: [],
     theta,
     arena: 0,
+    Chw: 0, //   X.P.W3.f (COHESION §0q E-f2, class 2): the PEAK length of C within this parse
+    Phw: 0, //   … and of P — the quantity the Wasm appender guards; `restore` never lowers them
 });
+
+/** The class-2 high-water, noted at every push site — the same quantity `runtime.mjs`'s appender keeps. */
+const noteC = (sg) => {
+    if (sg.C.length > sg.Chw) sg.Chw = sg.C.length;
+};
+const noteP = (sg) => {
+    if (sg.P.length > sg.Phw) sg.Phw = sg.P.length;
+};
 
 /** §5.6's merge rule, exactly: `x > f` replaces, `x = f` appends (code unchanged), `x < f` ignored. */
 function raise(sg, x, code, label) {
@@ -277,6 +287,7 @@ export function jsAlgebra(ctx) {
                     const end = scanNumberToken(sg.src, from, sg.src.length);
                     if (end < 0) return failWith(state, sg, from, "css_syntax", label);
                     sg.P.push([from, end]);
+                    noteP(sg);
                     state.offset = end;
                     state.value = Number(sg.src.slice(from, end));
                     state.isError = false;
@@ -303,6 +314,7 @@ export function jsAlgebra(ctx) {
                     }
                     if (j - from !== n) return failWith(state, sg, from, "css_syntax", label);
                     sg.P.push([from, j]);
+                    noteP(sg);
                     state.offset = j;
                     state.value = parseInt(sg.src.slice(from, j), radix);
                     state.isError = false;
@@ -325,6 +337,7 @@ export function jsAlgebra(ctx) {
                     const run = end - from;
                     if (run < min || run > max) return failWith(state, sg, from, "css_syntax", label);
                     sg.P.push([from, end]);
+                    noteP(sg);
                     state.offset = end;
                     state.value = sg.src.slice(from, end);
                     state.isError = false;
@@ -350,6 +363,7 @@ export function jsAlgebra(ctx) {
                     const row = kw.rows[key];
                     if (row === undefined) return failWith(state, sg, from, kw.code, label);
                     sg.P.push([from, end]);
+                    noteP(sg);
                     state.offset = end;
                     state.value = kw.kind === "rgb3" ? { rgb3: row } : kw.kind === "rgba4" ? { rgba4: row } : kw.kind === "none" ? "none" : row;
                     state.isError = false;
@@ -511,7 +525,10 @@ export function jsAlgebra(ctx) {
                     op.parser(state);
                     if (state.isError) return propagate(state);
                     const sp = state.value;
-                    if (sp.e > sp.s) sg.C.push([sp.s, sp.e - sp.s, kind]);
+                    if (sp.e > sp.s) {
+                        sg.C.push([sp.s, sp.e - sp.s, kind]);
+                        noteC(sg);
+                    }
                     state.value = UNIT;
                     return state;
                 },
@@ -535,6 +552,7 @@ export function jsAlgebra(ctx) {
                     const toName = disp.rows[key];
                     if (toName === undefined) return failWith(state, sg, from, disp.code, label);
                     sg.P.push([from, end]);
+                    noteP(sg);
                     state.offset = end;
                     ctx.dispatch[toName].parser(state);
                     if (state.isError) return propagate(state);
@@ -686,6 +704,7 @@ export function jsAlgebra(ctx) {
                         actual: sg.src.slice(m[0], end),
                     });
                     sg.C.push([m[0], end - m[0], "skipped"]);
+                    noteC(sg);
                     sg.recoveries.push({ at: m[0], skipped: [m[0], end - m[0]], code });
                     state.value = NONE_OPT;
                     state.isError = false;
@@ -720,4 +739,4 @@ export function jsAlgebra(ctx) {
     return A;
 }
 
-export { newSigma, raise, restore, mark, recordMark };
+export { newSigma, noteC, noteP, raise, restore, mark, recordMark };

@@ -70,7 +70,9 @@
 //   * It does not catch anything from the incumbent. Nothing in this file imports, wraps, or
 //     re-shapes `@mkbabb/value.js`.
 
-import { assertDepthBound, DEPTH_BOUND, DEPTH_CODE, DEPTH_PRODUCTION, THETA } from "./bounds.mjs";
+import {
+    assertCapacityBounds, assertDepthBound, CAPACITY, CAPACITY_LABELS, CLASS3_PROOF, DEPTH_BOUND, DEPTH_CODE, DEPTH_PRODUCTION, THETA,
+} from "./bounds.mjs";
 import { selectCode } from "./codes.mjs";
 import { boundaryIssue, PRODUCTION_LABELS } from "./diagnostics.mjs";
 import { makeRecoveryLowering } from "./lower.mjs";
@@ -163,9 +165,12 @@ const shieldIssue = (label, source) =>
 export function makePublicSurface(lowering) {
     const recovery = makeRecoveryLowering(lowering);
     const bound = assertDepthBound(lowering);
+    //  (4) THE CAPACITIES (X.P.W3.f, COHESION §0p/§0q): the nine fixed regions, each read back off
+    //  this lowering's Θ and off the label surface, and the class-3 proof — at construction, a HALT.
+    const capacity = assertCapacityBounds(lowering);
 
     const available = recovery.entries();
-    const surface = { kind: lowering.kind, bound, theta: THETA };
+    const surface = { kind: lowering.kind, bound, capacity, theta: THETA };
 
     for (const row of PUBLIC_ENTRIES) {
         if (!available.includes(row.production)) {
@@ -225,4 +230,4 @@ export const parseCssColor = js.parseCssColor;
 export const parseTimingFunction = js.parseTimingFunction;
 export const parseStylesheet = js.parseStylesheet;
 
-export { DEPTH_BOUND, DEPTH_CODE, DEPTH_PRODUCTION };
+export { CAPACITY, CAPACITY_LABELS, CLASS3_PROOF, DEPTH_BOUND, DEPTH_CODE, DEPTH_PRODUCTION };
