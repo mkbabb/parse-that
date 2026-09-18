@@ -81,8 +81,17 @@ export function buildGrammar(A) {
     const modernHsl = () => SEQ(hue(), WS(), pctCh(), WS(), pctCh(), alphaSlash());
     const legacyHsl = () => SEQ(hue(), sep(), pctOnly(), sep(), pctOnly(), OPT(SEQ(sep(), alpha()), 1));
 
+    // E-2 cure (3), ruled at COHESION §0n.3 and landed by `ALGEBRA-ADDENDA-2026-09-18.md`: the tail
+    // of an unknown function is **`skipped` opaque text**, not a `keyword`. π_keyword (§4.5) reads
+    // "an ASCII-folded literal that is NOT a leaf of `V`: `important`, a unit suffix `deg`" — and
+    // `var(--brand)`'s `--brand` is not a literal of that class, so COMP-1c (fidelity of kind) failed
+    // on every `var()` row. Re-kinding to `skipped` ("bytes a `RECOVER` consumed — any bytes", now
+    // read as its general form: bytes no leaf of `V` claims) is cure (3); widening `π_keyword` —
+    // cure (2) — is **REFUSED** by the ruling because it would admit non-identifiers as keywords, and
+    // a seventh kind `opaque` — cure (1) — is the fallback the ruling reserves for a cited OP-13
+    // break, which this seat measured does not occur.
     const balancedTail = () =>
-        REP(ALT(SEQ(TOK("("), REF("balanced-tail"), TOK(")")), DROP("keyword", SCAN("any-but-paren", 1, INF))), 0, INF, null);
+        REP(ALT(SEQ(TOK("("), REF("balanced-tail"), TOK(")")), DROP("skipped", SCAN("any-but-paren", 1, INF))), 0, INF, null);
 
     const headRgb = () => CTOR("rgb", SEQ(TOK("("), CUT(), WS(), ALT(modernRgb(), legacyRgb()), WS(), TOK(")")));
     const headHsl = () => CTOR("hsl", SEQ(TOK("("), CUT(), WS(), ALT(modernHsl(), legacyHsl()), WS(), TOK(")")));
@@ -154,10 +163,15 @@ export function buildGrammar(A) {
     // constructor then reads a value rather than a match, and `Declaration.important` is exact.
     const important = () => ALT(SEQ(WS(), TOK("!"), WS(), UNIT_KW("important"), PURE(true)), PURE(false));
 
+    // E-3, ruled at COHESION §0n.3 and landed by `ALGEBRA-ADDENDA-2026-09-18.md`: §10.3's two
+    // `CUT`s are STRUCK. §5.2 scopes a `CUT` to its nearest enclosing `ALT` arm "through
+    // `SEQ`/`CTOR`/`EXPECT`/`DROP` but not through `TRY`, `REP`, `RECOVER` or `REF` (those open a
+    // new scope; a `CUT` directly under them is a walk error)". This one stands directly under the
+    // `REP` of `qualified-rule`, so it commits nothing — `.f` measured both inert over 30,527 rows.
     const declaration = () =>
         CTOR(
             "declaration",
-            SEQ(WS(), TEXT("ident", 1, INF), WS(), TOK(":"), CUT(), WS(), REF("value-slice"), important(), WS()),
+            SEQ(WS(), TEXT("ident", 1, INF), WS(), TOK(":"), WS(), REF("value-slice"), important(), WS()),
         );
 
     const qualifiedRule = () =>
@@ -166,7 +180,9 @@ export function buildGrammar(A) {
             SEQ(
                 TEXT("any-but-brace-or-semi", 1, INF),
                 TOK("{"),
-                CUT(),
+                // E-3, the second struck `CUT`: this one stands directly under `RECOVER`'s body
+                // (`stylesheet`'s `RECOVER css_syntax rule sync-rule`), which §5.2 also names as a
+                // new scope. Struck by `ALGEBRA-ADDENDA-2026-09-18.md`; measured inert by `.f`.
                 REP(declaration(), 0, INF, SEQ(WS(), TOK(";"), WS())),
                 OPT(SEQ(WS(), TOK(";")), null),
                 WS(),
