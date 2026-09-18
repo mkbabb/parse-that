@@ -1,0 +1,269 @@
+{
+    "file": "assignability.generated.ts",
+    "rows": {
+        "AnimationRangeValue": {
+            "toFrozen": 11,
+            "toCandidate": 13,
+            "declares": [
+                10,
+                12
+            ]
+        },
+        "AnimationTimelineValue": {
+            "toFrozen": 17,
+            "toCandidate": 19,
+            "declares": [
+                16,
+                18
+            ]
+        },
+        "AnimationTriggerValue": {
+            "toFrozen": 23,
+            "toCandidate": 25,
+            "declares": [
+                22,
+                24
+            ]
+        },
+        "CSSAnimationOptions": {
+            "toFrozen": 29,
+            "toCandidate": 31,
+            "declares": [
+                28,
+                30
+            ]
+        },
+        "CSSPropertyDescriptor": {
+            "toFrozen": 35,
+            "toCandidate": 37,
+            "declares": [
+                34,
+                36
+            ]
+        },
+        "CSSTimelineOptions": {
+            "toFrozen": 41,
+            "toCandidate": 43,
+            "declares": [
+                40,
+                42
+            ]
+        },
+        "CollectedRule": {
+            "toFrozen": 47,
+            "toCandidate": 49,
+            "declares": [
+                46,
+                48
+            ]
+        },
+        "CssColor": {
+            "toFrozen": 53,
+            "toCandidate": 55,
+            "declares": [
+                52,
+                54
+            ]
+        },
+        "CssColorSpace": {
+            "toFrozen": 59,
+            "toCandidate": 61,
+            "declares": [
+                58,
+                60
+            ]
+        },
+        "CssLinearStop": {
+            "toFrozen": 65,
+            "toCandidate": 67,
+            "declares": [
+                64,
+                66
+            ]
+        },
+        "CssTimingFunction": {
+            "toFrozen": 71,
+            "toCandidate": 73,
+            "declares": [
+                70,
+                72
+            ]
+        },
+        "CustomFunctionDescriptor": {
+            "toFrozen": 77,
+            "toCandidate": 79,
+            "declares": [
+                76,
+                78
+            ]
+        },
+        "CustomFunctionParameter": {
+            "toFrozen": 83,
+            "toCandidate": 85,
+            "declares": [
+                82,
+                84
+            ]
+        },
+        "CustomFunctionRule": {
+            "toFrozen": 89,
+            "toCandidate": 91,
+            "declares": [
+                88,
+                90
+            ]
+        },
+        "Declaration": {
+            "toFrozen": 95,
+            "toCandidate": 97,
+            "declares": [
+                94,
+                96
+            ]
+        },
+        "KeyframeRule": {
+            "toFrozen": 101,
+            "toCandidate": 103,
+            "declares": [
+                100,
+                102
+            ]
+        },
+        "KeyframeSelector": {
+            "toFrozen": 107,
+            "toCandidate": 109,
+            "declares": [
+                106,
+                108
+            ]
+        },
+        "KeyframesBlock": {
+            "toFrozen": 113,
+            "toCandidate": 115,
+            "declares": [
+                112,
+                114
+            ]
+        },
+        "ParseIssue": {
+            "toFrozen": 119,
+            "toCandidate": 121,
+            "declares": [
+                118,
+                120
+            ]
+        },
+        "ParseResult": {
+            "toFrozen": 125,
+            "toCandidate": 127,
+            "declares": [
+                124,
+                126
+            ]
+        },
+        "PropertyRule": {
+            "toFrozen": 131,
+            "toCandidate": 133,
+            "declares": [
+                130,
+                132
+            ]
+        },
+        "RangeBoundary": {
+            "toFrozen": 137,
+            "toCandidate": 139,
+            "declares": [
+                136,
+                138
+            ]
+        },
+        "RangePhase": {
+            "toFrozen": 143,
+            "toCandidate": 145,
+            "declares": [
+                142,
+                144
+            ]
+        },
+        "ScrollTimelineDescriptor": {
+            "toFrozen": 149,
+            "toCandidate": 151,
+            "declares": [
+                148,
+                150
+            ]
+        },
+        "ScrollerKeyword": {
+            "toFrozen": 155,
+            "toCandidate": 157,
+            "declares": [
+                154,
+                156
+            ]
+        },
+        "StyleRule": {
+            "toFrozen": 161,
+            "toCandidate": 163,
+            "declares": [
+                160,
+                162
+            ]
+        },
+        "Stylesheet": {
+            "toFrozen": 167,
+            "toCandidate": 169,
+            "declares": [
+                166,
+                168
+            ]
+        },
+        "StylesheetItem": {
+            "toFrozen": 173,
+            "toCandidate": 175,
+            "declares": [
+                172,
+                174
+            ]
+        },
+        "TimelineAxis": {
+            "toFrozen": 179,
+            "toCandidate": 181,
+            "declares": [
+                178,
+                180
+            ]
+        },
+        "TimelineScopeValue": {
+            "toFrozen": 185,
+            "toCandidate": 187,
+            "declares": [
+                184,
+                186
+            ]
+        },
+        "TriggerType": {
+            "toFrozen": 191,
+            "toCandidate": 193,
+            "declares": [
+                190,
+                192
+            ]
+        },
+        "ViewInset": {
+            "toFrozen": 197,
+            "toCandidate": 199,
+            "declares": [
+                196,
+                198
+            ]
+        },
+        "ViewTimelineDescriptor": {
+            "toFrozen": 203,
+            "toCandidate": 205,
+            "declares": [
+                202,
+                204
+            ]
+        }
+    }
+}
