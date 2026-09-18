@@ -21,12 +21,32 @@
 // contract (P/V/K/W/X, X.P.W2.c's Q-B4 ratification) and the VERB from a re-run assay, and prints
 // the two in the same table so a verb without an assay is visible as a blank.
 
+// D-i2 (X.P.W2 K.6/K.8, MAJOR; cured by X.P.W3.0) — THIS FILE THREW WHENEVER A CANDIDATE WAS
+// ACTUALLY PRESENT, so G-6's survivor-verb half was unrunnable. Two bugs on one line, both read at
+// the bytes:
+//
+//   1. `meta.artifacts.dts` is a PATH STRING, and it was handed to `classify()` as if it were the
+//      declaration TEXT. Nothing ever read the file from disk, so the extractor ran over a path.
+//   2. The path was ALSO pre-applied to `readTypeDeclarations()` here, while `classify()`'s own
+//      `classifyTypes()` (`../totality/lib/classify.mjs:122`) applies it again — `classify()`'s
+//      parameter is text, by its own contract. The first application returned `{}` (no `export
+//      type` head in a path), and the second called `.matchAll` on that object:
+//      `TypeError: text.matchAll is not a function` at `../totality/lib/surface.mjs:202`.
+//
+// Latent since `.g` and merely made reachable by the graduation: it reproduces identically at the
+// candidate location, which `.i` never touched. The cure is to honour `classify()`'s contract — READ
+// the declared surface and pass its TEXT, applying the extractor exactly once, in the one module
+// that owns it. `harness/totality/**` stays execute + read, no write (`W2.md` §4 R-E): not a byte of
+// it is touched, and `readTypeDeclarations` is no longer imported here because this file no longer
+// parses anything.
+
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import { argv, contractMap, w1Manifest, P2_ROOT, sha256 } from "./lib/contract.mjs";
 import { loadCandidate } from "./lib/candidate.mjs";
 import { header, table, kv, verdict } from "./lib/report.mjs";
-import { deriveSurface, deriveVariants, readTypeDeclarations } from "../totality/lib/surface.mjs";
+import { deriveSurface, deriveVariants } from "../totality/lib/surface.mjs";
 import { classify } from "../totality/lib/classify.mjs";
 
 const a = argv();
@@ -67,22 +87,36 @@ async function main() {
         ["declared holes (W + X)", String((byClass.W ?? 0) + (byClass.X ?? 0))],
     ]);
 
+    /**
+     * The declared declaration surface, READ. `classify()`'s `declarationText` parameter is TEXT;
+     * an absent or undeclared surface is reported as UNREAD with the member named, never defaulted
+     * and never invented (`harness/w2/README.md` §2's rule for an absent member).
+     */
+    const readDeclarationSurface = (dts) => {
+        if (!dts) return { text: null, provenance: "UNREAD — meta.artifacts.dts not declared by the adapter" };
+        const abs = path.isAbsolute(dts) ? dts : path.join(P2_ROOT, dts);
+        if (!existsSync(abs)) return { text: null, provenance: `UNREAD — meta.artifacts.dts ABSENT at ${abs}` };
+        const text = readFileSync(abs, "utf8");
+        return { text, provenance: `${abs} — ${text.length} B, sha256 ${sha256(text).slice(0, 16)}` };
+    };
+
     // The subject whose verbs are assayed — a candidate, a location, or nothing at all.
-    let subject = { id: "p2-native", namespace: null, declarationText: null, reason: `no CSS surface exists under ${P2_ROOT}/typescript/src/css` };
+    const absent = (id, reason) => ({ id, namespace: null, declaration: { text: null, provenance: "UNREAD — no candidate" }, reason });
+    let subject = absent("p2-native", `no CSS surface exists under ${P2_ROOT}/typescript/src/css`);
     if (a.candidate) {
         const c = await loadCandidate(a.candidate, a.at ?? null);
         if (!c.present) {
-            subject = { id: a.candidate, namespace: null, declarationText: null, reason: c.reason };
+            subject = absent(a.candidate, c.reason);
         } else {
             const entryPath = c.meta.artifacts?.jsEntry;
             if (!entryPath) {
-                subject = { id: a.candidate, namespace: null, declarationText: null, reason: "meta.artifacts.jsEntry not declared by the adapter" };
+                subject = absent(a.candidate, "meta.artifacts.jsEntry not declared by the adapter");
             } else {
                 const abs = path.isAbsolute(entryPath) ? entryPath : path.join(P2_ROOT, entryPath);
                 subject = {
                     id: a.candidate,
                     namespace: await import(abs),
-                    declarationText: c.meta.artifacts?.dts ?? null,
+                    declaration: readDeclarationSurface(c.meta.artifacts?.dts ?? null),
                     reason: null,
                 };
             }
@@ -94,7 +128,7 @@ async function main() {
         variants,
         candidate: { id: subject.id, peers: {}, absentReason: subject.reason },
         namespace: subject.namespace,
-        declarationText: subject.declarationText ? readTypeDeclarations(subject.declarationText) : null,
+        declarationText: subject.declaration.text,
     });
 
     // W1's `classify()` returns every row under `rows` (runtime then types), each with its own
@@ -115,6 +149,7 @@ async function main() {
     console.log();
     kv([
         ["subject", subject.id + (subject.reason ? ` — ${subject.reason}` : "")],
+        ["declaration surface (read, not guessed)", subject.declaration.provenance],
         ["verbs, this run (W1's own assay, re-run — never hand-edited)", Object.entries(tally).map(([k, v]) => `${k}:${v}`).join(" · ") || "none"],
         ["aggregate (W1's tally)", JSON.stringify(classified.aggregate)],
         ["throws recorded by the assay", String(classified.throws)],
