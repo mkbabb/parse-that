@@ -19,20 +19,40 @@
 // the candidate's own `UNREALIZED_ENTRIES` against the pinned barrel. `.e` — a FRESH Fable
 // adjudicator — owns §6 and is the only seat that may adjudicate; this program leaves that section
 // empty and says so in it.
+//
+// TWO FAMILIES ADDED BY `## Repair 1 — round 4` (X.P.W3, the F-L1 / ESC-g1 cure):
+//
+//   F · CAPACITY       §7 — the nine declared capacity bounds `.f` landed on both lowerings,
+//                      generated from `bounds.mjs`'s own `CAPACITY_REGIONS` and measured either
+//                      side of a binary-searched coordinate. F-L1: they narrow the accepted
+//                      language on the shipped JS target and no row declared them.
+//   G · SPEC-DIVERGENCE §8 — the wave's own spec-cited divergences on entries the candidate DOES
+//                      realize; SP-1, the legacy-`hsl()` mis-accept `.e` found under L-14 and
+//                      returned as F-e2 "for a `.d`-emitted row". ESC-g1's wall was that the five
+//                      families were each closed to it; this is the sixth.
+//
+// AND F-e7 IS CURED AT THE GENERATOR: every prior emission dropped `.e`'s hand-written §6 block and
+// every prior seat re-appended it by hand. This program now lifts every `### §6.x` subsection out of
+// the file it is replacing and re-emits it verbatim. It still authors none of it.
 
-import { writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import { readPin } from "../css-totality/lib/pin.mjs";
 import { loadPublicSurfaces, UNREALIZED_ENTRIES } from "../../src/css/entry.mjs";
 import { disposeOracle, loadOracle } from "./lib/oracle.mjs";
 import {
+    CAPACITY_AUTHORITY,
     DISSENTS,
     FIXTURES,
     LABEL_ROW,
+    SPEC_DIVERGENCES,
     adjudicatedRows,
+    capacityRows,
     directionAudit,
     fixtureAnchorsPresent,
+    groupDigits,
+    measureCapacityRow,
     measureInput,
     narrowingRows,
 } from "./lib/ledger.mjs";
@@ -85,15 +105,40 @@ const main = async () => {
         realizedTypes: candidateTypeNames,
     });
 
+    const capacity = capacityRows();
+
     const allRows = [
         ...adjudications.map((r) => ({ id: r.id, consumerDirection: r.consumerDirection })),
         ...DISSENTS,
         ...FIXTURES,
         LABEL_ROW,
         ...narrowing,
+        ...capacity,
+        ...SPEC_DIVERGENCES,
     ];
     const empty = directionAudit(allRows);
     const anchors = fixtureAnchorsPresent();
+
+    // F-e7's cure, at the root rather than at the hand: `.e` — the FRESH Fable adjudicator — owns
+    // §6 by `W3.md` §4a, and its block is the one hand-written region of a generated file. Every
+    // prior emission DROPPED it, and every prior seat re-appended it by hand (`.e` wrote the warning
+    // into the block itself; `.g` obeyed it; `## Close — round 4` carries F-e7 as a standing
+    // residual). A generator that destroys the one section it is forbidden to write is the defect.
+    // It is now CARRIED FORWARD VERBATIM: read off the file this run is about to replace, emitted
+    // unaltered under §6's own preamble. This program still authors not one byte of it.
+    //
+    // The block is BOUNDED at both ends: it starts at the first `### §6.` and stops at the next
+    // level-2 heading, because §7 and §8 follow it. An unbounded tail-slice is not idempotent — the
+    // first double-run of this cure carried 47 lines, then 286, then 525, swallowing the families
+    // below it on every pass. A generated document that grows when you regenerate it is a defect,
+    // and the two-run check is what found this one.
+    const outPath = path.isAbsolute(out) ? out : path.resolve(process.cwd(), out);
+    const previous = existsSync(outPath) ? readFileSync(outPath, "utf8") : "";
+    const carriedAt = previous.indexOf("\n### §6.");
+    const tail = carriedAt < 0 ? "" : previous.slice(carriedAt + 1);
+    const ends = ["\n## ", "\n---\n"].map((mark) => tail.indexOf(mark)).filter((i) => i >= 0);
+    const block = ends.length > 0 ? tail.slice(0, Math.min(...ends)) : tail;
+    const carried = carriedAt < 0 ? [] : block.replace(/\s+$/, "").split("\n");
 
     const L = [];
     const say = (s = "") => L.push(s);
@@ -123,9 +168,11 @@ const main = async () => {
     say("**The adjudication and direction columns are CARRIED.** §1's sixteen are `.a`'s, out of");
     say("`registry/adjudicated/parser-band.md`; §2's four DISSENTS and §3's five fixtures come from their own");
     say("authorities; §4 is `.b`'s F-b4, routed to this seat inside the wave; §5 is generated from the");
-    say("candidate's own `UNREALIZED_ENTRIES` against the pinned barrel. **This seat adjudicates nothing.**");
-    say("§6 is reserved for `.e`, the fresh Fable adjudicator (M-23 §1) — *an author cannot adjudicate his own");
-    say("union* — and is deliberately left empty by this program.");
+    say("candidate's own `UNREALIZED_ENTRIES` against the pinned barrel; **§7** is generated from `bounds.mjs`'s");
+    say("own `CAPACITY_REGIONS` and carries §0p/§0q as its authority; **§8** carries css-color-4 §7.1 and the");
+    say("fields `.g` banked for it. **This seat adjudicates nothing.** §6 is reserved for `.e`, the fresh Fable");
+    say("adjudicator (M-23 §1) — *an author cannot adjudicate his own union* — is deliberately left empty by");
+    say("this program, and is now CARRIED VERBATIM across re-emissions instead of being destroyed by them.");
     say("");
     say("### §0.1 Provenance, measured");
     say("");
@@ -315,13 +362,111 @@ const main = async () => {
     say("shield is non-load-bearing. Its evidence is `.c`'s T-1/T-1b/T-2/T-3/T-4 and it is designed to be");
     say("refutable at the bytes.");
     say("");
+    if (carried.length > 0) {
+        say("**`.e`'s block below is CARRIED, not regenerated** (F-e7, cured at the generator): this program reads");
+        say("the file it is about to replace, lifts every `### §6.x` subsection out of it verbatim, and emits it");
+        say("here unaltered. It authors none of it and it no longer destroys it, so no seat has to remember to");
+        say("re-append it. `.e`'s own warning — *\"If the emitter is re-run, it will drop this section\"* — is the");
+        say("sentence this cure retires; it is left standing in the block because the block is `.e`'s and E-3");
+        say("makes it immutable. The block predates **§7** and **§8** below, which are therefore **NOT**");
+        say("adjudicated by it.");
+        say("");
+        for (const line of carried) say(line);
+        say("");
+    }
+
+    say("---");
+    say("");
+    say("## §7 The declared capacity bounds");
+    say("");
+    say("**Landed by this emission, after `.e`'s L-14 pass — so §6 does NOT adjudicate these rows.** They");
+    say("answer **F-L1**, raised against the round-4 close: X.P.W3.f gave both lowerings a set of capacity");
+    say("rejections that NARROW the accepted language relative to published 4.0.0, on the shipped JS target,");
+    say("and no row of this file declared them. G-7 does not grade intent — *\"an **unrowed** intentional");
+    say("difference … identical to a defect\"* — and CN-2 set the wave's own standard: *\"an absence nobody");
+    say("declared is exactly what G-7 treats as a defect. Rowed rather than left to be discovered.\"*");
+    say("");
+    say("**Not one byte of the candidate is wrong here, and nothing below asks for one to change.** The bounds");
+    say("are ordained and the labels promote; what was owed was the declaration. The rows are **generated from");
+    say(`\`bounds.mjs\`'s own \`CAPACITY_REGIONS\`** — ${capacity.length} regions, in the order the boundary names a breach — so they`);
+    say("cannot drift from Θ: a region added, renamed or re-capped moves these rows at the next emission.");
+    say("");
+    say(`**Authority.** ${CAPACITY_AUTHORITY}`);
+    say("");
+    say("**The witness coordinates are FOUND, not pinned.** For every class-1 region this program binary-searches");
+    say("the smallest witness that names the region's own promoted production (`.f`'s census method) and prints");
+    say("the pair either side of it; a moved bound therefore moves the pair instead of falsifying a fixture.");
+    say("Classes 2 and 3 have no such coordinate under the derived window — that absence *is* the claim — so");
+    say("they carry the densest declared family AT the window and record that it does not name them.");
+    say("");
+    for (const row of capacity) {
+        const m = measureCapacityRow(row, oracle, surfaces);
+        say(`### ${row.id} — ${row.title}`);
+        say("");
+        say("| field | value |");
+        say("|---|---|");
+        say(`| **region / class** | ${code(row.region)} · class ${row.cls} · checked ${esc(row.when)} |`);
+        say(`| **declared capacity Θ.${row.region}** | ${groupDigits(row.capacity)} ${esc(row.unit)}${row.capacity === row.layoutCap ? " (the layout CAP itself)" : ` (DERIVED; the layout CAP is ${groupDigits(row.layoutCap)})`} |`);
+        say(`| **raw label → promoted production** | ${code(row.label)} → ${code(row.production)} |`);
+        say(`| **incumbent** | ${esc(row.incumbentPosture)} |`);
+        say(`| **candidate** | ${esc(row.candidatePosture)} |`);
+        say(`| **spec citation** | ${esc(row.specCitation)} |`);
+        say(`| **adjudication** | ${esc(row.adjudication)} |`);
+        say(`| **consumer direction** | ${esc(row.consumerDirection)} |`);
+        say(`| **witness family** | ${code(`witnessAtCapacity("${row.region}", n)`)} under ${code(row.witnessProduction)}, driven through ${code(m.entryName)} |`);
+        say("");
+        say("| witness | code units | incumbent (published 4.0.0, MEASURED) | candidate js (MEASURED) | candidate wasm (MEASURED) | js ≡ wasm |");
+        say("|---|---|---|---|---|---|");
+        const cells = m.kind === "pair" ? [["AT the bound", m.at], ["ONE PAST the bound", m.past]] : [["AT the full window", m.window]];
+        for (const [what, c] of cells)
+            say(`| **${what}** — ${code(c.witness)} | ${groupDigits(c.length)} | ${esc(c.incumbent)} | ${esc(c.js)} | ${esc(c.wasm)} | ${c.identical ? "YES" : "**NO**"} |`);
+        say("");
+        if (m.kind === "pair")
+            say(`_Coordinate found by binary search at this generation: the region is first named at n = ${groupDigits(m.coordinate)}._`);
+        else
+            say(`_No coordinate exists under Θ.input: the densest declared family at the window (n = ${groupDigits(m.coordinate)}) names this region in neither lowering (js ${m.window.jsNamesRegion ? "NAMES" : "does not name"} it · wasm ${m.window.wasmNamesRegion ? "NAMES" : "does not name"} it), which is what "unreachable" means here._`);
+        say("");
+    }
+
+    say("---");
+    say("");
+    say("## §8 Spec-cited divergences on REALIZED entries");
+    say("");
+    say("**Landed by this emission, after `.e`'s L-14 pass — so §6 does NOT adjudicate these rows.** This is");
+    say("the family `.e` asked for and `.g` could not reach (**ESC-g1**): a difference on an entry the");
+    say("candidate DOES realize, where the specification's own text says the candidate is right and the");
+    say("incumbent is wrong. It is not §2 (`W3.md` §2c routes exactly four `parser-band.md` dissents there by");
+    say("name), not §3 (`GATE-VERDICT.md` carries no anchor for this subject), and not §5 (the entry is");
+    say("realized), which is why it needed a family of its own rather than a borrowed heading.");
+    say("");
+    say("`.e`'s instruction is honoured literally: *\"Returned as F-e2 for a `.d`-emitted row … not hand-added");
+    say("here\"* — the two result columns below are re-measured at every emission, never typed.");
+    say("");
+    for (const row of SPEC_DIVERGENCES) {
+        say(`### ${row.id} — ${row.title}`);
+        say("");
+        say("| field | value |");
+        say("|---|---|");
+        say(`| **input(s)** | ${row.inputs.map((i) => code(JSON.stringify(i))).join(" · ")} |`);
+        say(`| **entry** | ${code(row.parser)} |`);
+        say(`| **incumbent** | ${esc(row.incumbentPosture)} |`);
+        say(`| **candidate** | ${esc(row.candidatePosture)} |`);
+        say(`| **spec citation** | ${esc(row.specCitation)} |`);
+        say(`| **adjudication** | ${esc(row.adjudication)} |`);
+        say(`| **consumer direction** | ${esc(row.consumerDirection)} |`);
+        say("");
+        for (const line of measuredTable(row.inputs, oracle, surfaces, entryFor(row))) say(line);
+    }
 
     // One trailing newline and no blank line before it — `git diff --check` reads a blank line at
     // EOF as whitespace damage, and a generated document should land clean on the first try.
     while (L.length > 0 && L[L.length - 1] === "") L.pop();
     const text = `${L.join("\n")}\n`;
-    writeFileSync(path.isAbsolute(out) ? out : path.resolve(process.cwd(), out), text);
-    console.log(`wrote ${out} — ${Buffer.byteLength(text)} B · ${L.length} lines · ${allRows.length} rows · empty directions ${empty.length}`);
+    writeFileSync(outPath, text);
+    console.log(
+        `wrote ${out} — ${Buffer.byteLength(text)} B · ${L.length} lines · ${allRows.length} rows · empty directions ${empty.length} · ` +
+            `\`.e\`'s §6 block carried ${carried.length > 0 ? `${carried.length} lines` : "ABSENT (nothing to carry)"}`,
+    );
     disposeOracle();
     return empty.length === 0 ? 0 : 1;
 };

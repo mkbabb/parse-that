@@ -30,6 +30,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { readPin } from "../css-totality/lib/pin.mjs";
 import { ADJUDICATIONS } from "../css-totality/lib/adjudications.mjs";
 import { loadPublicSurfaces, UNREALIZED_ENTRIES } from "../../src/css/entry.mjs";
+import { CAPACITY_REGIONS } from "../../src/css/bounds.mjs";
 import { assertPin, crossCheckUnpacked, loadOracle, PIN } from "./lib/oracle.mjs";
 import { loadCorpus } from "./lib/corpus.mjs";
 import { runFullSurface } from "./lib/differential.mjs";
@@ -37,6 +38,8 @@ import {
     DISSENTS,
     FIXTURES,
     LABEL_ROW,
+    SPEC_DIVERGENCES,
+    capacityRows,
     directionAudit,
     fixtureAnchorsPresent,
     narrowingRows,
@@ -110,7 +113,7 @@ describe("G-7 · the graduated corpus", () => {
 describe("G-7 · DIVERGENCE-LEDGER.md", () => {
     const ledger = () => readFileSync(LEDGER_PATH, "utf8");
 
-    it("exists and carries all five families", () => {
+    it("exists and carries all seven row families", () => {
         const text = ledger();
         for (const heading of [
             "## §1 The adjudicated conflicts",
@@ -119,9 +122,47 @@ describe("G-7 · DIVERGENCE-LEDGER.md", () => {
             "## §4 The label surface",
             "## §5 The declared coverage narrowing",
             "## §6 Adjudication — RESERVED FOR `.e`",
+            "## §7 The declared capacity bounds",
+            "## §8 Spec-cited divergences on REALIZED entries",
         ]) {
             expect(text, `the ledger is missing the section: ${heading}`).toContain(heading);
         }
+    });
+
+    it("F-L1 — EVERY declared capacity region carries a row, generated from `bounds.mjs` rather than listed", () => {
+        const text = ledger();
+        const rows = capacityRows();
+        expect(rows.length, "a capacity family narrower than CAPACITY_REGIONS is exactly the undeclared narrowing F-L1 names").toBe(
+            CAPACITY_REGIONS.length,
+        );
+        const missing = rows.filter((r) => !text.includes(`### ${r.id} —`) || !text.includes(r.label));
+        expect(
+            missing.map((r) => `${r.id} (${r.region})`),
+            "a declared bound whose row or whose raw label is absent from the ledger is an unrowed consumer-visible narrowing; G-7 reads that exactly as it reads a defect",
+        ).toEqual([]);
+    });
+
+    it("ESC-g1 — the spec-cited divergences on REALIZED entries are rowed, by id AND by every input string", () => {
+        const text = ledger();
+        const missing: string[] = [];
+        for (const row of SPEC_DIVERGENCES) {
+            if (!text.includes(`### ${row.id} —`)) missing.push(`${row.id} (id absent)`);
+            for (const input of row.inputs) if (!text.includes(input)) missing.push(`${row.id} → ${JSON.stringify(input)} (input unrowed)`);
+        }
+        expect(missing, `unrowed: ${missing.join(" · ")}`).toEqual([]);
+    });
+
+    it("F-e7 — `.e`'s hand-written §6 block SURVIVES re-emission; the generator carries it instead of dropping it", () => {
+        const text = ledger();
+        expect(text, "the emitter dropped `.e`'s adjudication (F-e7); a generator that destroys the one section it may not write is the defect").toContain(
+            "### §6.1 — Adjudication, X.P.W3.e",
+        );
+        expect(text.indexOf("### §6.1"), "`.e`'s block must sit UNDER §6, not after the families that postdate it").toBeGreaterThan(
+            text.indexOf("## §6 Adjudication"),
+        );
+        expect(text.indexOf("### §6.1"), "§7 and §8 postdate `.e`'s pass and must follow it, so no reader takes them as adjudicated").toBeLessThan(
+            text.indexOf("## §7 The declared capacity bounds"),
+        );
     });
 
     it("carries every one of `.a`'s adjudicated conflicts — by id AND by every input string", () => {
@@ -167,6 +208,8 @@ describe("G-7 · DIVERGENCE-LEDGER.md", () => {
                 realizedEntries: surfaces.js.entries(),
                 realizedTypes: ["CssColor", "CssTimingFunction", "Stylesheet", "StyleRule", "Declaration"],
             }),
+            ...capacityRows(),
+            ...SPEC_DIVERGENCES,
         ];
         expect(directionAudit(rows)).toEqual([]);
     });

@@ -25,7 +25,16 @@ import { ADJUDICATIONS } from "../css-totality/lib/adjudications.mjs";
 import { loadPublicSurfaces, UNREALIZED_ENTRIES } from "../../src/css/entry.mjs";
 import { disposeOracle, crossCheckUnpacked, loadOracle } from "./lib/oracle.mjs";
 import { runFullSurface, RED_TRIGGERS } from "./lib/differential.mjs";
-import { DISSENTS, FIXTURES, LABEL_ROW, directionAudit, fixtureAnchorsPresent, narrowingRows } from "./lib/ledger.mjs";
+import {
+    DISSENTS,
+    FIXTURES,
+    LABEL_ROW,
+    SPEC_DIVERGENCES,
+    capacityRows,
+    directionAudit,
+    fixtureAnchorsPresent,
+    narrowingRows,
+} from "./lib/ledger.mjs";
 
 const UNPACKED_400 =
     "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/cand-o/vendor/value-js-4.0.0";
@@ -70,6 +79,8 @@ const main = async () => {
             realizedEntries,
             realizedTypes: candidateTypeNames,
         }).map((r) => ({ id: r.id, family: "NARROWING", consumerDirection: r.consumerDirection })),
+        ...capacityRows().map((r) => ({ id: r.id, family: "CAPACITY", consumerDirection: r.consumerDirection })),
+        ...SPEC_DIVERGENCES.map((r) => ({ id: r.id, family: "SPEC-DIVERGENCE", consumerDirection: r.consumerDirection })),
     ];
 
     const emptyDirections = directionAudit(ledgerRows);

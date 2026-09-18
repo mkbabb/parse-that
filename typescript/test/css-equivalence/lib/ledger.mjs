@@ -8,7 +8,8 @@
 // whose 'direction of behaviour change for a consumer' field is empty fails; that field is what the
 // KF and glass packets quote."
 //
-// FIVE FAMILIES, EACH WITH ITS AUTHORITY:
+// SEVEN FAMILIES, EACH WITH ITS AUTHORITY (F and G added by `## Repair 1 — round 4`, the F-L1 /
+// ESC-g1 cure; the five below it are unmoved):
 //
 //   A · ADJUDICATED    `.a`'s sixteen — `lib/adjudications.mjs`, out of `parser-band.md`. One
 //                      family with this seat by `X-P-W3.md` §P.1: "every conflict `.a` resolves
@@ -28,6 +29,15 @@
 //                      taxonomy makes COVERAGE_NARROWING a declared NON-defect *on condition that
 //                      it is declared*; this is the declaration, and it is generated from the
 //                      candidate's own `UNREALIZED_ENTRIES` and the pinned barrel, never listed.
+//   F · CAPACITY       the nine declared capacity bounds `.f` landed on BOTH lowerings under
+//                      COHESION §0p/§0q — a consumer-visible narrowing of the accepted language on
+//                      the shipped JS target that no row declared (**F-L1**). Generated from
+//                      `bounds.mjs`'s own `CAPACITY_REGIONS`, never listed, so it cannot drift
+//                      from Θ; the witness coordinates are binary-searched at generation.
+//   G · SPEC-DIVERGENCE the wave's own spec-cited divergences on entries the candidate DOES realize
+//                      — SP-1, the legacy-`hsl()` mis-accept `.e` found under L-14 and returned as
+//                      F-e2 "for a `.d`-emitted row". The five families above were each closed to
+//                      it by their own authority (**ESC-g1**); this is the sixth it needed.
 //
 // NOTHING HERE ADJUDICATES. `.e` is the fresh Fable adjudicator (M-23 §1) and holds the ledger's
 // §Adjudication section; an author cannot adjudicate his own union. This file states each row's
@@ -39,6 +49,16 @@ import { readFileSync } from "node:fs";
 
 import { ADJUDICATIONS } from "../../css-totality/lib/adjudications.mjs";
 import { UNREALIZED_ENTRIES } from "../../../src/css/entry.mjs";
+import {
+    CAPACITY,
+    CAPACITY_LABELS,
+    CAPACITY_REGIONS,
+    CLASS3_PROOF,
+    INPUT_BOUND,
+    THETA,
+    WITNESS_PRODUCTION,
+    witnessAtCapacity,
+} from "../../../src/css/bounds.mjs";
 import { callOracle } from "./oracle.mjs";
 
 export const GATE_VERDICT_PATH =
@@ -261,6 +281,106 @@ export const narrowingRows = ({ runtimeUniverse, typeUniverse, realizedEntries, 
     ];
 };
 
+/* ── family F: the declared capacity bounds ────────────────────────────────────────────────── */
+
+/**
+ * Thousands separators without `toLocaleString` — a generated document must not read differently
+ * under a different `LANG`.
+ */
+export const groupDigits = (v) => String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+const num = groupDigits;
+
+/**
+ * X.P.W3.f landed, on BOTH lowerings and therefore on the shipped JS target, a set of capacity
+ * rejections that NARROW the accepted language relative to published 4.0.0: a stylesheet above
+ * Θ.input code units that 4.0.0 parses is now `ok:false` by name. COHESION §0p/§0q ordain exactly
+ * that shape and not one byte of it is wrong — but G-7's falsifier does not grade intent: "an
+ * unrowed intentional difference — the gate treats 'we meant to do that' without a ledger row as
+ * identical to a defect", and CN-2's own sentence sets the standard, "an absence nobody declared is
+ * exactly what G-7 treats as a defect. Rowed rather than left to be discovered."
+ *
+ * GENERATED FROM `bounds.mjs`'s OWN `CAPACITY_REGIONS`, never hand-listed, so the family cannot
+ * drift from Θ: a region added, renamed or re-capped moves these rows at emission. The row's two
+ * result columns are MEASURED by `measureCapacityRow` against the sha-pinned oracle and both
+ * lowerings — this file states no engine's answer.
+ */
+export const CAPACITY_AUTHORITY =
+    'COHESION §0p — "both lowerings reject at the bound … with `css_syntax` and a label naming it" — and §0q\'s E-f2 per-class ruling (class 1 boundary-visible · class 2 peak-with-grant · class 3 unreachable-by-construction), carried into `W3.md`\'s two dated 2026-09-18 ADDENDA as unit `.f`. Every bound VALUE is read from the built module\'s own layout constants (`layout.mjs`), and `Θ.input` is DERIVED (`INPUT_BOUND`) rather than pinned; no CAP was moved by this wave.';
+
+const capacityPosture = (row) => {
+    const cap = CAPACITY[row.region];
+    const label = CAPACITY_LABELS[row.region];
+    if (row.cls === 1)
+        return {
+            candidatePosture: `REJECTS at the bound on the parse path, in BOTH lowerings, as an ordinary \`ok:false\` — \`css_syntax\` with \`expected[0]\` the promoted production \`${row.production}\` (raw label \`${label}\`, checked ${row.when}). Θ.${row.region} = ${num(cap)} ${row.unit}${cap === row.cap ? "" : ` of the region's layout CAP ${num(row.cap)}`}.`,
+            consumerDirection: `NARROWS acceptance, and it is consumer-visible on the shipped JS target. An input whose ${row.unit} exceed **${num(cap)}** — a size published 4.0.0 parses and returns a value for — is answered \`ok:false\` with \`expected[0] = "${row.production} …"\`. A consumer whose stylesheets can exceed that size must chunk its input or read the diagnostic; it will not receive a partial value and it will not receive a throw. The direction is strictly safer than the state it replaced (a Wasm trap on one target and an untyped acceptance on the other), and strictly narrower than 4.0.0.`,
+        };
+    if (row.cls === 2)
+        return {
+            candidatePosture: `DECLARED and ASSERTED (§0q class 2, peak-with-grant: the JS lowering keeps a high-water on the journal it already appends, the same quantity the module guards), and measured UNREACHABLE under the derived Θ.input — C ⊔ P tiles the consumed input, so C + P ≤ Θ.input = ${num(INPUT_BOUND)} < ${num(cap)}. The raw label \`${label}\` exists and promotes to \`${row.production}\`, so the bound is readable even though no input reaches it.`,
+            consumerDirection: `NO CHANGE TODAY. The bound is declared so that a consumer can read it and so that a later Θ.input restoration (R-f1) cannot make it silent, but no input under the present window breaches it — measured at the window on this family, below. Rowed rather than left undeclared: an unreachable bound that nobody declared is still an undeclared bound.`,
+        };
+    return {
+        candidatePosture: `UNREACHABLE BY CONSTRUCTION (§0q class 3). Θ declares the capacity from \`layout.mjs\` and \`bounds.mjs\` ASSERTS AT LOAD that \`cap₃ ≥ K × bound₁ + S\` — for this region ${CLASS3_PROOF[row.region] ? `K = ${num(CLASS3_PROOF[row.region].K)} ${CLASS3_PROOF[row.region].unit ?? ""}, S = ${num(CLASS3_PROOF[row.region].S)}, ceiling ${num(CLASS3_PROOF[row.region].ceiling)} ≤ cap ${num(CLASS3_PROOF[row.region].cap)}`.trim() : `derived at load`} — so a class-1 rejection always fires first and this region cannot be the one that answers.`,
+        consumerDirection: `NO CHANGE at this region, and the narrowing it CAUSES is rowed at CAP-1: Θ.input is **${num(INPUT_BOUND)}** rather than the layout's own ${num(CAPACITY_REGIONS[0].cap)} precisely because \`cap₃ ≥ K × Θ.input + S\` must hold for this region among the three. Restoring the full window is R-f1, owned by X.P.W4; it is a capacity question, never a correctness one.`,
+    };
+};
+
+export const capacityRows = () =>
+    CAPACITY_REGIONS.map((row, i) => {
+        const posture = capacityPosture(row);
+        return {
+            id: `CAP-${i + 1}`,
+            region: row.region,
+            cls: row.cls,
+            capacity: CAPACITY[row.region],
+            layoutCap: row.cap,
+            unit: row.unit,
+            when: row.when,
+            label: CAPACITY_LABELS[row.region],
+            production: row.production,
+            witnessProduction: WITNESS_PRODUCTION[row.region],
+            title: `the \`${row.region}\` region — Θ.${row.region} = ${num(CAPACITY[row.region])} ${row.unit} (class ${row.cls})`,
+            incumbentPosture:
+                "published 4.0.0 declares NO capacity of any kind on this axis: it parses until it runs out of host memory, and on the inputs measured below it returns a value.",
+            ...posture,
+            specCitation: CAPACITY_AUTHORITY,
+            adjudication: `DECLARED CAPACITY BOUND, rowed here for the first time (**F-L1**, raised by the round-4 \`## Check 1\`). The P-1 taxonomy's COVERAGE_NARROWING sentence — "C14 declines an input outside its **declared shape** that the live superset accepts is **not** a defect — \`status.json\` declares it" — is the governing one, and Θ **is** the declared shape; this row is that declaration for the \`${row.region}\` axis. Not discharged and not repaired here: the bound is correct and ordained, and what was owed was the declaration.`,
+        };
+    });
+
+/* ── family G: this wave's own spec-cited divergences on REALIZED entries ──────────────────── */
+
+/**
+ * The family `.e` asked for and `.g` could not land (ESC-g1). `.e` returned the row as **F-e2**
+ * "for a `.d`-emitted row at X.P.W4, **not hand-added here**" — so it is emitted, with both result
+ * columns measured at generation, exactly as that sentence requires. `.g` banked the six fields at
+ * `evidence/W3/legacy-hsl-divergence-row-2026-09-18.md`, including the id it proposed (`SP-1`), and
+ * they are carried here rather than re-derived.
+ *
+ * It is NOT a coverage narrowing (the entry is realized), NOT a preserved DISSENT (`W3.md` §2c
+ * routes exactly four `parser-band.md` dissents to §2 by name), and NOT a GATE-VERDICT fixture
+ * (that file carries no anchor for this subject). That is why it needs a family of its own.
+ */
+export const SPEC_DIVERGENCES = [
+    {
+        id: "SP-1",
+        parser: "parseCssColor",
+        title: "`<legacy-hsl-syntax>` admits no `<number>`: the incumbent mis-accepts `hsl(120, 50, 50)`",
+        inputs: ["hsl(120, 50, 50)", "hsl(120, 50%, 50)"],
+        incumbentPosture:
+            "ACCEPTS both. `hsl(120, 50, 50)` → `{space:\"hsl\", channels:[120,50,50], alpha:1}` — and the channels are UNSCALED, so this row carries the PB-03 100× defect a second time; `hsl(120, 50%, 50)` → `{hsl,[120,0.5,50]}`.",
+        candidatePosture:
+            "REJECTS both, identically in BOTH lowerings: `ok:false css_syntax [11,16) expected [\"<percent-sign>\"]` on the first, `[16,17)` on the second.",
+        specCitation:
+            "css-color-4 §7.1 — `<legacy-hsl-syntax> = hsl( <hue>, <percentage>, <percentage>, <alpha-value>? )`. The legacy COMMA form admits no `<number>` for saturation or lightness; only `<modern-hsl-syntax>` does (`[<percentage> | <number> | none]`). The candidate's rejection is spec-correct and the incumbent's acceptance is an R-class mis-accept.",
+        adjudication:
+            "SPEC-CORRECT, and the candidate is REQUIRED to differ. Discovered by `.e` under L-14 refutation (ledger §6.1, PB-03 attempt (b)), re-measured by `.g`, and NOT created by `.g`'s dimension-token cure — the pre-cure probe already read the identical rejection. `.e` routed it as **F-e2** for a `.d`-EMITTED row; this is that row, and both result columns above are re-measured at every emission rather than typed.",
+        consumerDirection:
+            "NARROWS acceptance. A consumer that fed `hsl(120, 50, 50)` received a colour — and a wrong one, whose saturation and lightness were 100× the spec's value — and now receives `ok:false`. That is the intended direction: the input is not valid CSS and the value it returned was not the value the string names. A consumer emitting unitless saturation/lightness in the COMMA form must be fixed, not accommodated; the same consumer's SPACE form (`hsl(120 50 50)`) keeps working and is adjudicated separately at PB-03.",
+    },
+];
+
 /* ── measuring the two halves ──────────────────────────────────────────────────────────────── */
 
 const shortJson = (v, n = 160) => {
@@ -291,6 +411,109 @@ export const measureInput = (input, oracleFn, surfaces, entryName) => {
 
 /** The sixteen, imported. Re-typing them here would break the `.a`/`.d` family `§P.1` declares. */
 export const adjudicatedRows = () => ADJUDICATIONS;
+
+/* ── measuring a capacity row ──────────────────────────────────────────────────────────────── */
+
+/**
+ * A capacity witness is up to Θ.input code units long, and `shortJson` would serialize a
+ * 16,382-rule stylesheet to ten megabytes before slicing 160 bytes off the front. This reads the
+ * SAME `ParseResult` in the only terms a capacity row is about: accepted-or-not, how much came
+ * back, and — when it did not — which productions the diagnostics name. `actual` is never printed:
+ * on a capacity rejection it is the whole input.
+ */
+const capacityOutcome = (res) => {
+    if (res.threw) return `THROWS ${res.error}: ${res.message}`;
+    const v = res.value;
+    if (v === undefined || v === null) return "undefined";
+    const diagnostics = Array.isArray(v.diagnostics) ? v.diagnostics : [];
+    if (v.ok)
+        return `ok:true · ${Array.isArray(v.value) ? `${num(v.value.length)} top-level item(s)` : "one value"} · ${diagnostics.length} diagnostic(s)`;
+    const named = diagnostics.map((d) => `${d.code} [${d.start},${d.end}) ${JSON.stringify(d.expected?.[0] ?? null)}`);
+    return `ok:false · ${num(diagnostics.length)} diagnostic(s): ${named.slice(0, 2).join(" · ")}${named.length > 2 ? ` …(+${named.length - 2})` : ""}`;
+};
+
+/** Does this answer name THIS region's production? The row's own promoted label, never a substring. */
+const namesRegion = (res, production) =>
+    !res.threw &&
+    res.value !== undefined &&
+    res.value !== null &&
+    res.value.ok === false &&
+    (Array.isArray(res.value.diagnostics) ? res.value.diagnostics : []).some(
+        (d) => typeof d.expected?.[0] === "string" && d.expected[0].startsWith(production),
+    );
+
+/** The smallest n at which `fires(n)`; binary-searched from 1 — `.f`'s census method, unchanged. */
+const firstFiring = (fires, ceiling) => {
+    let lo = 0;
+    let hi = 1;
+    while (hi < ceiling && !fires(hi)) {
+        lo = hi;
+        hi *= 2;
+    }
+    if (!fires(hi)) return null;
+    while (hi - lo > 1) {
+        const mid = (lo + hi) >> 1;
+        if (fires(mid)) hi = mid;
+        else lo = mid;
+    }
+    return hi;
+};
+
+/**
+ * The largest n whose witness still fits the declared window — arithmetic on the generator, never a
+ * parse. `Θ.input + 1` is the only ceiling worth searching: every family spends at least one code
+ * unit per unit of n, so no larger n can fit.
+ */
+const largestFitting = (region) => {
+    let lo = 1;
+    let hi = INPUT_BOUND + 1;
+    while (hi - lo > 1) {
+        const mid = (lo + hi) >> 1;
+        if (witnessAtCapacity(region, mid).length <= INPUT_BOUND) lo = mid;
+        else hi = mid;
+    }
+    return lo;
+};
+
+const capacityCell = (region, n, oracleFn, surfaces, entryName) => {
+    const src = witnessAtCapacity(region, n);
+    const cell = {
+        n,
+        length: src.length,
+        witness: `witnessAtCapacity("${region}", ${num(n)})`,
+        preview: `${src.slice(0, 20).replace(/\s+/g, " ")}…`,
+        incumbent: capacityOutcome(callOracle(oracleFn, src)),
+    };
+    for (const [kind, surface] of Object.entries(surfaces)) {
+        const res = callOracle(surface[entryName], src);
+        cell[kind] = capacityOutcome(res);
+        cell[`${kind}NamesRegion`] = namesRegion(res, CAPACITY_REGIONS.find((r) => r.region === region).production);
+    }
+    cell.identical = cell.js === cell.wasm;
+    return cell;
+};
+
+/**
+ * One capacity row's evidence, MEASURED. Class 1 regions get the census pair — the last witness that
+ * does NOT name the region and the first that does, found by binary search rather than pinned, so a
+ * moved bound moves the pair instead of falsifying it. Classes 2 and 3 have no such coordinate under
+ * the derived window, which is itself the claim, so they get the densest declared family AT the
+ * window and the row records that it does not name them.
+ */
+export const measureCapacityRow = (row, oracle, surfaces) => {
+    const entryName = { "P:stylesheet": "parseStylesheet", "P:timing-function": "parseTimingFunction", "P:color": "parseCssColor" }[
+        row.witnessProduction
+    ];
+    const oracleFn = oracle.module[entryName];
+    const cell = (n) => capacityCell(row.region, n, oracleFn, surfaces, entryName);
+    if (row.cls === 1) {
+        const n = firstFiring((k) => namesRegion(callOracle(surfaces.js[entryName], witnessAtCapacity(row.region, k)), row.production), row.layoutCap * 2);
+        if (n === null) throw new Error(`HALT: the '${row.region}' witness family never names its own production up to ${row.layoutCap * 2}; a class-1 bound that no input reaches is not class 1.`);
+        return { kind: "pair", entryName, coordinate: n, at: cell(n - 1), past: cell(n) };
+    }
+    const n = row.region === "expsnap" ? THETA.depthBound : largestFitting(row.region);
+    return { kind: "window", entryName, coordinate: n, window: cell(n) };
+};
 
 /** `GATE-VERDICT.md` is read so each fixture's anchor is proven present in its authority. */
 export const fixtureAnchorsPresent = () => {
