@@ -20,22 +20,32 @@
 // There is no module-level mutable binding in this file (O-8, §2.3) — `grep -nE "^(let|var) "`
 // returns 0 — and no operator reads `globalThis`, `process.env`, or any latch.
 
-import { pathToFileURL } from "node:url";
+import { tsImport } from "tsx/esm/api";
 
-import { PARSE_THAT_DIST } from "../../../../harness/bench/lib/engines.mjs";
 import { KINDS } from "../algebra/ops.mjs";
 import { JUMP_POSITIONS, L, R_cls, R_ctor, R_disp, R_kw, STEP_ALIASES, TIMING_KEYWORDS, labelIndex } from "../algebra/tables.mjs";
 import { asciiFold, clampValue, isTuple, list, NONE_OPT, scaleValue, splitSelectors, span, tuple, UNIT } from "./values.mjs";
 
 /**
- * The combinator library itself, at the dist W1's bench already addresses by absolute path (its
- * `engines.mjs` is execute + read here, never written). A bare specifier would resolve against a
- * `node_modules` this root does not carry, and the seat does not install one to make an import
- * look tidy.
+ * The combinator library itself — **this root's own `typescript/src/parse/**`** (COHESION §0n.5 /
+ * OP-7: *"W3 builds the 52 on `<p2>/typescript/src/parse/**` — the fresh root's own library — never
+ * on another repository's `node_modules`"*). X.P.W3.0 re-pointed it here; until then the specifier
+ * reached `harness/bench/lib/engines.mjs`'s `PARSE_THAT_DIST`, which addresses
+ * `…/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist`
+ * — a second repository's install directory, which is exactly what OP-7 forbids. That constant stays
+ * where it is: it is the BENCH's declared subject (the latch witness O-15 PT-03's `:678`/`:722`
+ * coordinates name), and a subject under measurement is not a substrate.
+ *
+ * The specifier is RELATIVE and stays inside the tree, so the lowering is location-independent by
+ * construction — the D-c1 class of defect (a depth-calibrated absolute-ish path) cannot recur here.
+ * The library is TypeScript source whose internal specifiers are TS-style (`./parser.js` naming
+ * `parser.ts`); Node 26 strips types but does not re-resolve those, so the root's own pinned `tsx`
+ * (§0l E-1, `tsx@4.23.13` in `<p2>/package.json`) loads it. `tsImport` scopes its hooks to this
+ * import graph rather than registering a process-wide loader.
  */
-const pt = await import(pathToFileURL(`${PARSE_THAT_DIST}/parse.js`).href);
-const Parser = pt.Parser;
-const createParserContext = pt.createParserContext;
+const pt = await tsImport("../../parse/index.ts", import.meta.url);
+export const Parser = pt.Parser;
+export const createParserContext = pt.createParserContext;
 
 /* ── σ ─────────────────────────────────────────────────────────────────────────────────────── */
 

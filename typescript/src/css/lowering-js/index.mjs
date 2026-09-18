@@ -7,17 +7,16 @@
 // project `(V, D)`. No `try/catch` exists in `ENTRY` (DM-4) — a throw escaping it is K-8 and the
 // probe is entitled to see it.
 
-import { pathToFileURL } from "node:url";
-
-import { PARSE_THAT_DIST } from "../../../../harness/bench/lib/engines.mjs";
 import { buildGrammar } from "../algebra/grammar.mjs";
 import { L, labelIndex } from "../algebra/tables.mjs";
 import { registryRows } from "../algebra/ops.mjs";
 import { reifiedDispatchTerms, reifiedGrammar } from "../reify/term-alg.mjs";
-import { jsAlgebra, newSigma } from "./js-alg.mjs";
+// One substrate load for the lowering, in the module that instantiates the signature over it
+// (`js-alg.mjs` already imports it and this file already imports `js-alg.mjs`): a second
+// `tsImport` of the same library would be a second `Parser` class, and `instanceof` across the two
+// would be false. COHESION §0n.5 / OP-7 — the fresh root's own `typescript/src/parse/**`.
+import { createParserContext, jsAlgebra, newSigma, Parser } from "./js-alg.mjs";
 import { deepFreeze, NONE_OPT, UNIT } from "./values.mjs";
-
-const pt = await import(pathToFileURL(`${PARSE_THAT_DIST}/parse.js`).href);
 
 const DEFAULT_THETA = Object.freeze({ depthBound: 64 });
 
@@ -32,13 +31,13 @@ export function makeJsLowering() {
     const rootFor = (prod, theta) => {
         const body = ctx.terms[g.entries[prod]];
         if (!body) throw new Error(`HALT: '${prod}' is not an entry of the grammar map`);
-        return new pt.Parser(
+        return new Parser(
             (state) => {
                 state.w2 = newSigma(state.src, theta);
                 body.parser(state);
                 return state;
             },
-            pt.createParserContext("ENTRY", body, [prod]),
+            createParserContext("ENTRY", body, [prod]),
         );
     };
 
