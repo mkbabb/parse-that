@@ -874,3 +874,28 @@ _Ratified 2026-09-17 by `X.P.W2.c` (served model `claude-fable-5-1`), the second
 `W2.md` §5; read-only against every tree but its two homes; `/Users/mkbabb/Programming/parse-that`,
 `~/.codex`, `~/Documents/Codex`, every frozen root, glass-ui, value.js `src/**`, W1's instruments and
 the two sealed author arms untouched. The blind drafts remain beside this file, unchanged._
+
+---
+
+## §Selected — the field after adjudication (appended 2026-09-17 by `X.P.W2.h`; FF-5's one lawful post-`.c` text change)
+
+The adjudication of record is `docs/tranches/X/parse-that/waves/W2-KILL-LEDGER.md`; this section
+records its outcome beside the ratified contract and changes no clause above.
+
+| id   | terminal verb         | rule · number                                                                                                                                                      |
+| ---- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| AC-1 | SURVIVES-TO-W3 (tied) | K-1..K-4, K-6..K-10 not hit; K-5 unevaluable (G-7 has no cell-registration surface in W1's bench)                                                                  |
+| AC-2 | SURVIVES-TO-W3 (tied) | as AC-1                                                                                                                                                            |
+| AC-3 | KILLED(K-3)           | 12 of 22 operators' control flow has one lowering (JS) for both targets; the parse structure was never lowered to Wasm — the posture §12 names "a weaker question" |
+| AC-4 | KILLED(K-2)           | carrier-analog: 7 of 65 slice decisions not expressible as §4.4 rows (Stage 0)                                                                                     |
+
+**Selected architecture: OWNER-OWED (E-1).** AC-1 and AC-2 are a measured tie on every kill rule
+this wave can evaluate; the owner names the survivor or orders Stage 4 so K-5 can. Until that word,
+`.i` does not open and §12's field stands as above.
+
+**Contract defects the ledger returns to this file's owner, as dated addenda-beside (E-3), before
+either survivor can read G-3 green:** E-2 §4.5 × §10.1 (`DROP keyword` over `balanced-tail`'s
+bytes — 2,035 rows / 2,047 COMP-1c occurrences in every lowering; three measured cures) · E-3 §5.2
+× §10.1–10.3 (`CUT` under `DISPATCH`/`REP`/`RECOVER`; the two §10.3 `CUT`s measured inert) · E-4
+§10.2 (`ALT` order makes `linear(…)` unreachable; `DISPATCH` arm first) · E-5 §2.2/§6 EQ-5 (the
+sixth coordinate) · E-8 §10.3 × §8 D-3 (`REF` count). No clause above is edited by this append.
