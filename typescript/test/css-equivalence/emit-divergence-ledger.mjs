@@ -316,6 +316,9 @@ const main = async () => {
     say("refutable at the bytes.");
     say("");
 
+    // One trailing newline and no blank line before it — `git diff --check` reads a blank line at
+    // EOF as whitespace damage, and a generated document should land clean on the first try.
+    while (L.length > 0 && L[L.length - 1] === "") L.pop();
     const text = `${L.join("\n")}\n`;
     writeFileSync(path.isAbsolute(out) ? out : path.resolve(process.cwd(), out), text);
     console.log(`wrote ${out} — ${Buffer.byteLength(text)} B · ${L.length} lines · ${allRows.length} rows · empty directions ${empty.length}`);
