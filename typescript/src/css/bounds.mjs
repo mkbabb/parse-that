@@ -245,6 +245,27 @@ const CTOR_ALLOC = Object.freeze({
     "value-args": { fixed: 15 + 4, rate: 4 }, //                    the items array: 4 B per item (first + rest), each >= 1 code unit
     "value-group": { fixed: 8 * 3 + 8 + 15 + 4, rate: 4 }, //       mkRec(3) + the items array: 4 B per item (first + rest), each >= 1 code unit
     "value-wrap": { fixed: 8 * 3 + 8 + 16, rate: 0 }, //            mkRec(3) + a one-item array, when the value is not a list
+    //  X.P.W3.i — the animation family, landed with `tables.mjs` R_ctor, `js-alg.mjs` CTORS and
+    //  `wasm-alg.mjs` emitCtors (E-h1); the same four name-sets, asserted equal below
+    "lp-text": { fixed: 16, rate: 0 }, //                           one mkStr over the token's own span
+    "lp-auto": { fixed: 0, rate: 0 }, //                            answers the TEXT leaf it was given
+    "range-phase": { fixed: 8 * 1 + 8, rate: 0 }, //                mkRec(1)
+    "range-phase-offset": { fixed: 8 * 2 + 8, rate: 0 }, //         mkRec(2)
+    "range-offset": { fixed: 8 * 1 + 8, rate: 0 }, //               mkRec(1)
+    "range-single": { fixed: 8 * 1 + 8, rate: 0 }, //               mkRec(1)
+    "range-pair": { fixed: 8 * 2 + 8, rate: 0 }, //                 mkRec(2)
+    "keyframe-word": { fixed: 8 * 2 + 8, rate: 0 }, //              mkRec(2)
+    "keyframe-percent": { fixed: 16 + 8 * 2 + 8, rate: 0 }, //      mkNum(v/100) + mkRec(2)
+    "keyframe-named": { fixed: 16 + 8 * 3 + 8, rate: 0 }, //        mkNum(offset) + mkRec(3)
+    "timeline-mode": { fixed: 8 * 1 + 8, rate: 0 }, //              mkRec(1)
+    "timeline-name": { fixed: 8 * 2 + 8, rate: 0 }, //              mkRec(2)
+    "timeline-scroll": { fixed: 8 * 3 + 8, rate: 0 }, //            mkRec(at most 3); the args are the REP's
+    "timeline-view": { fixed: 8 * 3 + 8 + 8 * 2 + 8, rate: 0 }, //  mkRec(at most 3) holding the inset mkRec(at most 2)
+    //  the kept-items array: 4 B per part. A BLANK part is zero-width, so a part is not worth a code
+    //  unit — but every part after the first is introduced by a comma, and the first pays the list's
+    //  own header, so 4 B per code unit plus one part's worth at zero width bounds it.
+    "animation-option": { fixed: 15, rate: 4 }, //                 the part's own token array, 4 B per token
+    "animation-option-list": { fixed: 15 + 4, rate: 4 },
 });
 
 /**
@@ -262,6 +283,13 @@ const CTOR_SCRATCH_CELLS = Object.freeze({
     //  operator / string 2 + 4 (the string's mkStr is a value, not a cell); call / list `rec(3)` 6
     hwb: 6, lab: 6, lch: 6, oklab: 6, xyz: 6, "srgb-linear": 6, "display-p3": 6, "a98-rgb": 6, "prophoto-rgb": 6, rec2020: 6,
     "xyz-d50": 6, "value-number": 8, "value-keyword": 6, "value-operator": 6, "value-string": 6, "value-call": 6, "value-args": 1, "value-group": 7, "value-wrap": 7,
+    //  X.P.W3.i: `rec(pairs)` holds 2·pairs cells over a reset base; `recDyn` holds at most its
+    //  maximum pair count; `timeline-view` nests the inset record inside the outer one (6 + 4); the
+    //  option list pushes ONE cell per kept part, which is charged to the input, not to the frame
+    "lp-text": 0, "lp-auto": 0, "range-phase": 2, "range-phase-offset": 4, "range-offset": 2,
+    "range-single": 2, "range-pair": 4, "keyframe-word": 4, "keyframe-percent": 4, "keyframe-named": 6,
+    "timeline-mode": 2, "timeline-name": 4, "timeline-scroll": 6, "timeline-view": 10,
+    "animation-option": 1, "animation-option-list": 1,
 });
 
 const pad8 = (n) => Math.ceil(n / 8) * 8;

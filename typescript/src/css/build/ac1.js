@@ -12,4 +12,10 @@ export {
     parseCssValues,
     coerceToSyntax,
     serializeCssColor,
+    parseKeyframeSelector,
+    parseAnimationTimeline,
+    parseAnimationRange,
+    serializeTimelineOptions,
+    collectAnimationOptions,
+    collectTimelineOptions,
 } from "../entry.mjs";

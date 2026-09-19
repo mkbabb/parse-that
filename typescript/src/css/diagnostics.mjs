@@ -142,6 +142,34 @@ export const PRODUCTION_LABELS = Object.freeze({
     "'\\'": "<backslash>",
     "'\"'": "<double-quote>",
     "'''": "<single-quote>",
+
+    /* X.P.W3.i — the animation family's labels (`algebra/grammar/animation.mjs`), in L's own
+       appended order: the six classes, the six keyword tables, the timeline dispatch, the
+       constructor guards, and the four entries' EXPECT / FAIL sites */
+    "<sign>": "<sign> ('+' or '-')",
+    "<decimal-point>": "<decimal-point> ('.')",
+    "<percent-unit>": "<percent-unit> ('%')",
+    "<unit-letters>": "<unit-letters> (one or more ASCII letters)",
+    "<comma-or-whitespace>": "<comma-or-whitespace> (a run of whitespace and commas)",
+    "<animation-item-text>": "<animation-item-text> (any character but ',')",
+    "<keyframe-keyword>": "<keyframe-keyword> ('from' or 'to')",
+    "<keyframe-phase>": "<keyframe-phase> ('entry', 'exit', 'cover' or 'contain')",
+    "<range-phase>": "<range-phase> (normal, cover, contain, entry, exit, entry-crossing or exit-crossing)",
+    "<timeline-keyword>": "<timeline-keyword> ('auto' or 'none')",
+    "<scroll-argument>": "<scroll-argument> (a scroller — nearest, root, self — or an axis)",
+    "<timeline-axis>": "<timeline-axis> ('block', 'inline', 'x' or 'y')",
+    "<timeline-function>": "<timeline-function> (scroll() or view())",
+    "<length-percentage>": "<length-percentage> (a number with an optional '%' or letter unit)",
+    "'auto'": "<auto-keyword> ('auto')",
+    "0%..100%": "<keyframe-offset> (0% to 100%)",
+    "<dashed-ident>": "<dashed-ident> (a custom identifier beginning '--')",
+    "<scroll-timeline>": "<scroll-timeline> (at most one scroller and at most one axis)",
+    "<view-timeline>": "<view-timeline> (at most one axis and at most two inset values)",
+    "nonempty animation list item": "<animation-list-item> (a non-empty item between top-level commas)",
+    "<keyframe-selector>": "<keyframe-selector>",
+    "<animation-timeline>": "<animation-timeline>",
+    "<animation-range>": "<animation-range>",
+    "<animation-option-list>": "<animation-option-list>",
 });
 
 /** Both set-differences against `L`, injectivity, and the named-production predicate — at load. */

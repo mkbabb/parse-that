@@ -37,6 +37,9 @@ const RUNTIME_EXPORTS = [
     "parseCssColor", "parseTimingFunction", "parseStylesheet",
     "parseCssScalar", "parseCssValue", "parseCssValues",
     "coerceToSyntax", "serializeCssColor",
+    // X.P.W3.i — the animation family: three grammar entries and three structured compositions
+    "parseKeyframeSelector", "parseAnimationTimeline", "parseAnimationRange",
+    "serializeTimelineOptions", "collectAnimationOptions", "collectTimelineOptions",
 ];
 
 writeFileSync(
@@ -54,10 +57,15 @@ ${RUNTIME_EXPORTS.map((name) => `    ${name},`).join("\n")}
 
 //  the relative specifier is computed for THIS location: re-run the build wherever the tree lands
 const rel = path.relative(OUT, VENDORED_CSS_DTS);
-/** The frozen type names the artifact re-exports — the slice's five and X.P.W3.h's four. */
+/** The frozen type names the artifact re-exports — the slice's five, X.P.W3.h's four, X.P.W3.i's fifteen. */
 const TYPE_EXPORTS = [
     "CssColor", "CssTimingFunction", "Stylesheet", "StyleRule", "Declaration",
     "CssColorSpace", "CssLinearStop", "ParseIssue", "ParseResult",
+    // X.P.W3.i — the fifteen animation / timeline / range / trigger / view types
+    "AnimationRangeValue", "AnimationTimelineValue", "AnimationTriggerValue",
+    "CSSAnimationOptions", "CSSTimelineOptions", "KeyframeSelector",
+    "RangeBoundary", "RangePhase", "ScrollTimelineDescriptor", "ScrollerKeyword",
+    "TimelineAxis", "TimelineScopeValue", "TriggerType", "ViewInset", "ViewTimelineDescriptor",
 ];
 writeFileSync(
     path.join(OUT, "ac1.d.ts"),

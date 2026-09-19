@@ -83,6 +83,7 @@
 //   * It does not catch anything from the incumbent. Nothing in this file imports, wraps, or
 //     re-shapes `@mkbabb/value.js`.
 
+import { JUMP_POSITIONS, R_kw, TIMING_KEYWORDS } from "./algebra/tables.mjs";
 import {
     assertCapacityBounds, assertDepthBound, CAPACITY, CAPACITY_LABELS, CLASS3_PROOF, DEPTH_BOUND, DEPTH_CODE, DEPTH_PRODUCTION, THETA,
 } from "./bounds.mjs";
@@ -106,19 +107,20 @@ export const PUBLIC_ENTRIES = Object.freeze([
     Object.freeze({ name: "parseCssScalar", production: "P:scalar", label: "<scalar>" }),
     Object.freeze({ name: "parseCssValue", production: "P:value", label: "<value>" }),
     Object.freeze({ name: "parseCssValues", production: "P:values", label: "<value-list>" }),
+    // X.P.W3.i — the animation family's three (`algebra/grammar/animation.mjs`)
+    Object.freeze({ name: "parseKeyframeSelector", production: "P:keyframe-selector", label: "<keyframe-selector>" }),
+    Object.freeze({ name: "parseAnimationTimeline", production: "P:animation-timeline", label: "<animation-timeline>" }),
+    Object.freeze({ name: "parseAnimationRange", production: "P:animation-range", label: "<animation-range>" }),
 ]);
 
 /**
- * The three frozen runtime parsers the candidate does NOT realize, named rather than omitted. An
- * absence a reader has to discover is the shape §11 guardrail 2 warns about — the universe quietly
- * narrowed to what the candidate happens to cover. (Six until X.P.W3.h landed `P:scalar`,
- * `P:value` and `P:values`.)
+ * The frozen runtime parsers the candidate does NOT realize, named rather than omitted. An absence a
+ * reader has to discover is the shape §11 guardrail 2 warns about — the universe quietly narrowed to
+ * what the candidate happens to cover. Six until X.P.W3.h landed `P:scalar`, `P:value` and
+ * `P:values`; three until X.P.W3.i landed the animation family; NONE now — all nine frozen parsers
+ * of `src/css/index.ts` are published above, over a production of the one authored grammar.
  */
-export const UNREALIZED_ENTRIES = Object.freeze([
-    "parseKeyframeSelector",
-    "parseAnimationTimeline",
-    "parseAnimationRange",
-]);
+export const UNREALIZED_ENTRIES = Object.freeze([]);
 
 /* ── the two compositions (X.P.W3.h, E-h3) — the incumbent's own tables, transcribed ───────── */
 
@@ -278,6 +280,469 @@ export function serializeCssColor(color) {
     }
 }
 
+/* ── X.P.W3.i — the animation family's three STRUCTURED exports ─────────────────────────────── */
+//
+// `collectAnimationOptions(declarations)`, `collectTimelineOptions(declarations)` and
+// `serializeTimelineOptions(options)` are the family's non-parsers: their argument is a VALUE, not
+// CSS text, and their answer is a `CSSAnimationOptions[]` / `CSSTimelineOptions` / a property
+// record. They are SURFACE COMPOSITIONS here for the reason `coerceToSyntax` and
+// `serializeCssColor` are (X.P.W3.h, COHESION §0s E-h3): a grammar for a non-language would be a
+// grammar for nothing. The two collectors read the incumbent's own vocabulary
+// (`src/css/rules.ts`, `src/css/stylesheet.ts` at pin `6aca8602`, and the sha-pinned 4.0.0
+// tarball's `$e` / `tt` / `ot`), transcribed rather than approximated, because a consumer reads
+// their output as data.
+//
+// TOTALITY OF SHAPE IS THE LAW HERE, not totality of parse (`W3.md` §2a, and G-1's structured
+// family): these do not return `ParseResult`, so a degenerate argument must produce a value OF THE
+// DECLARED SHAPE — an array, an object — and never a throw. The oracle throws on all seven declared
+// degenerate values (`undefined`, `null`, `42`, `{}`, `[]`, `true`, `NaN` reach `for (… of …)` and
+// `Object.keys`); this surface answers the empty array / the empty record, which is BND-1's posture
+// one layer up and not a caught throw: nothing below is entered.
+//
+// TWO DECLARED DIVERGENCES, named rather than discovered:
+//   SV-1  the oracle's value serializer THROWS a `TypeError` on a colour CSS cannot spell, and
+//         `collectTimelineOptions` calls it unguarded. Here it answers `undefined`, which the
+//         callers already treat as "no such declaration" — the R1 class refused at the boundary,
+//         exactly as `W3.md` §5 `.d` holds R1–R5 as spec-correct rather than bug-compatible.
+//   SV-2  the incumbent's `splitTopLevel` cuts at JS `/\s/` (Unicode whitespace); this transcription
+//         keeps that spelling, because it is a STRING function here and not a grammar — the WS-1
+//         class of `grammar/animation.mjs` is about the algebra's `ws` class and does not reach it.
+
+/** `grammar.ts` splitTopLevel, transcribed: top-level parts, trimmed, empties dropped. */
+const splitTopLevel = (source, separator) => {
+    const parts = [];
+    let depth = 0;
+    let quote = "";
+    let start = 0;
+    for (let i = 0; i < source.length; i++) {
+        const char = source.charAt(i);
+        if (quote) {
+            if (char === quote && source[i - 1] !== "\\") quote = "";
+            continue;
+        }
+        if (char === '"' || char === "'") {
+            quote = char;
+            continue;
+        }
+        if (char === "(") depth++;
+        else if (char === ")") depth--;
+        else if (depth === 0 && (separator === "space" ? /\s/.test(char) : char === separator)) {
+            const part = source.slice(start, i).trim();
+            if (part) parts.push(part);
+            if (separator === "space") while (/\s/.test(source[i + 1] ?? "")) i++;
+            start = i + 1;
+        }
+    }
+    const tail = source.slice(start).trim();
+    if (tail) parts.push(tail);
+    return parts;
+};
+
+const isRecord = (value) => value !== null && typeof value === "object";
+const commaItems = (value) => (value?.kind === "list" && value.separator === "comma" ? value.items : [value]);
+const spaceItems = (value) => (value?.kind === "list" && value.separator === "space" ? value.items : [value]);
+const scalarKeyword = (value) => (value?.kind === "scalar" && value.payload?.type === "keyword" ? value.payload.value : undefined);
+const scalarNumber = (value, units = [""]) => {
+    if (value?.kind !== "scalar" || value.payload?.type !== "number") return undefined;
+    const unit = String(value.payload.unit ?? "").toLowerCase();
+    if (!units.includes(unit)) return undefined;
+    return unit === "ms" ? value.payload.value / 1000 : value.payload.value;
+};
+const folded = (value) => (typeof value === "string" ? value.toLowerCase() : undefined);
+
+const DIRECTIONS = ["normal", "reverse", "alternate", "alternate-reverse"];
+const FILL_MODES = ["none", "forwards", "backwards", "both"];
+const PLAY_STATES = ["running", "paused"];
+const COMPOSITIONS = ["replace", "add", "accumulate"];
+const CSS_WIDE = ["initial", "inherit", "unset", "revert", "revert-layer"];
+const TIMELINE_AXES = ["block", "inline", "x", "y"];
+const SCROLLERS = ["nearest", "root", "self"];
+const TRIGGER_TYPES = ["once", "repeat", "alternate", "state"];
+const OPTION_PROPERTIES = [
+    "animation-name", "animation-duration", "animation-delay", "animation-iteration-count",
+    "animation-direction", "animation-fill-mode", "animation-play-state",
+    "animation-timing-function", "animation-composition",
+];
+const CASCADE_PROPERTIES = [...OPTION_PROPERTIES, "animation-timeline"];
+
+/** `rules.ts` timingFunctionValue — the four `CssTimingFunction` kinds, over the frozen tables. */
+function timingFunctionValue(value) {
+    const word = folded(scalarKeyword(value));
+    if (word && TIMING_KEYWORDS.includes(word)) return { kind: "keyword", name: word };
+    if (word === "step-start" || word === "step-end") {
+        return { kind: "steps", count: 1, position: word === "step-start" ? "jump-start" : "jump-end" };
+    }
+    if (value?.kind !== "call" || !Array.isArray(value.args)) return undefined;
+    const name = String(value.name ?? "").toLowerCase();
+    if (name === "cubic-bezier") {
+        const values = value.args.map((argument) => scalarNumber(argument));
+        if (values.length !== 4 || values.some((item) => item === undefined)) return undefined;
+        const [x1, y1, x2, y2] = values;
+        return x1 >= 0 && x1 <= 1 && x2 >= 0 && x2 <= 1 ? { kind: "cubic-bezier", x1, y1, x2, y2 } : undefined;
+    }
+    if (name === "steps") {
+        const [countArgument] = value.args;
+        if (countArgument === undefined || value.args.length > 2) return undefined;
+        const count = scalarNumber(countArgument);
+        const authored = folded(scalarKeyword(value.args[1]));
+        //  the row's OWN table, read by key — `Object.prototype` is unreachable (`np()` in tables.mjs)
+        const position = authored === undefined ? "jump-end" : JUMP_POSITIONS[R_kw["jump-position"].rows[authored]];
+        if (position === undefined) return undefined;
+        return count !== undefined && Number.isInteger(count) && count > 0 && !(position === "jump-none" && count < 2)
+            ? { kind: "steps", count, position }
+            : undefined;
+    }
+    if (name !== "linear" || value.args.length < 2) return undefined;
+    const stops = [];
+    for (const argument of value.args) {
+        const tokens = spaceItems(argument);
+        const [outputToken, ...rest] = tokens;
+        if (outputToken === undefined || tokens.length > 3) return undefined;
+        const output = scalarNumber(outputToken);
+        if (output === undefined) return undefined;
+        const input = [];
+        for (const token of rest) {
+            const position = scalarNumber(token, ["%"]);
+            if (position === undefined) return undefined;
+            input.push(position / 100);
+        }
+        stops.push({ output, input });
+    }
+    return { kind: "linear-function", stops };
+}
+
+const animationNameValue = (value) => {
+    const name = scalarKeyword(value);
+    if (!name) return undefined;
+    return CSS_WIDE.includes(name.toLowerCase()) ? undefined : name;
+};
+
+/** `rules.ts` timelineValue / timelineList — a timeline read off a PARSED value, not off text. */
+function timelineValue(value) {
+    const word = scalarKeyword(value);
+    const lower = folded(word);
+    if (lower === "auto" || lower === "none") return { kind: lower };
+    if (word?.startsWith("--")) return { kind: "name", name: word };
+    if (value?.kind !== "call" || !Array.isArray(value.args)) return undefined;
+    const name = String(value.name ?? "").toLowerCase();
+    const args = value.args.flatMap((argument) => spaceItems(argument));
+    if (name === "scroll") {
+        const result = { kind: "scroll" };
+        for (const argument of args) {
+            const token = folded(scalarKeyword(argument));
+            if (SCROLLERS.includes(token ?? "") && result.scroller === undefined) result.scroller = token;
+            else if (TIMELINE_AXES.includes(token ?? "") && result.axis === undefined) result.axis = token;
+            else return undefined;
+        }
+        return result;
+    }
+    if (name !== "view") return undefined;
+    const result = { kind: "view" };
+    const inset = [];
+    for (const argument of args) {
+        const token = folded(scalarKeyword(argument));
+        if (TIMELINE_AXES.includes(token ?? "") && result.axis === undefined) result.axis = token;
+        else if (argument?.kind === "scalar" && argument.payload?.type === "number" && argument.payload.unit) {
+            inset.push(`${argument.payload.value}${argument.payload.unit}`);
+        } else return undefined;
+    }
+    if (inset.length > 2) return undefined;
+    if (inset[0]) result.inset = inset[1] ? { start: inset[0], end: inset[1] } : { start: inset[0] };
+    return result;
+}
+const timelineList = (value) => {
+    const values = commaItems(value).map(timelineValue);
+    return values.every((item) => item !== undefined) ? values : undefined;
+};
+
+/** `rules.ts` animationArm / expandAnimationShorthand — the `animation` shorthand, component-wise. */
+const keywordValue = (value) => ({ kind: "scalar", payload: { type: "keyword", value } });
+const numberValue = (value, unit) => ({ kind: "scalar", payload: { type: "number", value, unit } });
+const listValue = (items) => (items.length === 1 && items[0] !== undefined ? items[0] : { kind: "list", separator: "comma", items: [...items] });
+
+function animationArm(value) {
+    const tokens = spaceItems(value);
+    if (tokens.length === 0 || (value?.kind === "list" && value.separator !== "space")) return undefined;
+    const arm = {};
+    for (const token of tokens) {
+        const time = scalarNumber(token, ["s", "ms"]);
+        if (time !== undefined) {
+            if (!arm.duration) {
+                if (time < 0) return undefined;
+                arm.duration = token;
+            } else if (!arm.delay) arm.delay = token;
+            else return undefined;
+            continue;
+        }
+        if (!arm.timing && timingFunctionValue(token)) {
+            arm.timing = token;
+            continue;
+        }
+        const word = folded(scalarKeyword(token));
+        const count = scalarNumber(token);
+        if (!arm.iteration && (word === "infinite" || (count !== undefined && count >= 0))) {
+            arm.iteration = token;
+            continue;
+        }
+        if (!arm.direction && DIRECTIONS.includes(word ?? "")) {
+            arm.direction = token;
+            continue;
+        }
+        if (!arm.fill && FILL_MODES.includes(word ?? "")) {
+            arm.fill = token;
+            continue;
+        }
+        if (!arm.playState && PLAY_STATES.includes(word ?? "")) {
+            arm.playState = token;
+            continue;
+        }
+        if (!arm.name && animationNameValue(token)) {
+            arm.name = token;
+            continue;
+        }
+        return undefined;
+    }
+    return {
+        name: arm.name ?? keywordValue("none"),
+        duration: arm.duration ?? numberValue(0, "s"),
+        delay: arm.delay ?? numberValue(0, "s"),
+        iteration: arm.iteration ?? numberValue(1, ""),
+        direction: arm.direction ?? keywordValue("normal"),
+        fill: arm.fill ?? keywordValue("none"),
+        playState: arm.playState ?? keywordValue("running"),
+        timing: arm.timing ?? keywordValue("ease"),
+    };
+}
+
+function expandAnimationShorthand(value) {
+    const arms = commaItems(value).map(animationArm);
+    if (arms.some((arm) => arm === undefined)) return undefined;
+    return new Map([
+        ["animation-name", listValue(arms.map((arm) => arm.name))],
+        ["animation-duration", listValue(arms.map((arm) => arm.duration))],
+        ["animation-delay", listValue(arms.map((arm) => arm.delay))],
+        ["animation-iteration-count", listValue(arms.map((arm) => arm.iteration))],
+        ["animation-direction", listValue(arms.map((arm) => arm.direction))],
+        ["animation-fill-mode", listValue(arms.map((arm) => arm.fill))],
+        ["animation-play-state", listValue(arms.map((arm) => arm.playState))],
+        ["animation-timing-function", listValue(arms.map((arm) => arm.timing))],
+        ["animation-composition", keywordValue("replace")],
+        ["animation-timeline", keywordValue("auto")],
+    ]);
+}
+
+/** The declaration list, as data — the ONE place a degenerate argument is turned away (BND-1). */
+const declarationsOf = (declarations) =>
+    (Array.isArray(declarations) ? declarations : []).filter((row) => isRecord(row) && typeof row.name === "string");
+
+/** `rules.ts` collectDeclarations — the last declaration wins unless an `!important` one stands. */
+function declarationCascade(declarations) {
+    const result = new Map();
+    for (const declaration of declarationsOf(declarations)) {
+        const current = result.get(declaration.name);
+        if (!current || declaration.important || !current.important) result.set(declaration.name, declaration);
+    }
+    return result;
+}
+
+/** `rules.ts` animationCascade — the same rule over the shorthand's expansion. */
+function animationCascade(declarations) {
+    const selected = new Map();
+    let hasOptions = false;
+    const offer = (name, value, important) => {
+        const current = selected.get(name);
+        if (!current || important || !current.important) selected.set(name, { value, important });
+    };
+    for (const declaration of declarationsOf(declarations)) {
+        if (declaration.name === "animation") {
+            hasOptions = true;
+            const expanded = expandAnimationShorthand(declaration.value);
+            if (expanded) for (const [name, value] of expanded) offer(name, value, declaration.important);
+        } else if (CASCADE_PROPERTIES.includes(declaration.name)) {
+            if (OPTION_PROPERTIES.includes(declaration.name)) hasOptions = true;
+            offer(declaration.name, declaration.value, declaration.important);
+        }
+    }
+    return { selected, hasOptions };
+}
+
+/**
+ * `serialize.ts` serializeCssValue, as the oracle's `F` computes it — except that a colour CSS
+ * cannot spell answers `undefined` instead of throwing (SV-1). Every caller below already treats
+ * `undefined` as "there is no such text", so the R1 class is refused rather than propagated.
+ */
+function serializeValue(value) {
+    if (value?.kind === "scalar") {
+        const payload = value.payload;
+        if (payload?.type === "number") return `${payload.value}${payload.unit}`;
+        if (payload?.type === "keyword") return payload.value;
+        const color = serializeCssColor(payload?.value);
+        return color.ok ? color.value : undefined;
+    }
+    if (!isRecord(value)) return undefined;
+    const items = value.kind === "call" ? value.args : value.items;
+    if (!Array.isArray(items)) return undefined;
+    const parts = [];
+    for (const item of items) {
+        const part = serializeValue(item);
+        if (part === undefined) return undefined;
+        parts.push(part);
+    }
+    if (value.kind === "call") return `${value.name}(${parts.join(", ")})`;
+    const separator = value.separator === "comma" ? ", " : value.separator === "slash" ? " / " : " ";
+    const joined = parts.join(separator);
+    return value.separator === "space" ? joined.replace(/\s+([:;])/g, "$1") : joined;
+}
+
+/** `rules.ts` parseTimelineScope — text, so it needs no lowering. */
+const parseTimelineScope = (source) => {
+    const input = source.trim();
+    if (input === "none" || input === "all") return { kind: input };
+    const names = splitTopLevel(input, ",");
+    return names.length > 0 && names.every((name) => /^--[-\w]+$/.test(name)) ? { kind: "names", names } : undefined;
+};
+
+/**
+ * `collectAnimationOptions` (`rules.ts`): the cascade, then one row per `animation-name` component,
+ * every other component REPEATED modulo its own length — the incumbent's `$(e, t)`.
+ */
+export function collectAnimationOptions(declarations) {
+    const { selected, hasOptions } = animationCascade(declarations);
+    if (!hasOptions) return Object.freeze([]);
+    const components = (name, read) => {
+        const source = selected.get(name)?.value;
+        if (!source) return undefined;
+        const values = commaItems(source).map(read);
+        return values.every((value) => value !== undefined) ? values : undefined;
+    };
+    const repeated = (values, index) => values?.[index % values.length];
+    const names = components("animation-name", animationNameValue);
+    const durations = components("animation-duration", (value) => scalarNumber(value, ["s", "ms"]));
+    const delays = components("animation-delay", (value) => scalarNumber(value, ["s", "ms"]));
+    const iterations = components("animation-iteration-count", (value) =>
+        (folded(scalarKeyword(value)) === "infinite" ? Infinity : scalarNumber(value)));
+    const keyword = (set) => (value) => {
+        const word = folded(scalarKeyword(value));
+        return set.includes(word ?? "") ? word : undefined;
+    };
+    const directions = components("animation-direction", keyword(DIRECTIONS));
+    const fills = components("animation-fill-mode", keyword(FILL_MODES));
+    const timings = components("animation-timing-function", timingFunctionValue);
+    const compositions = components("animation-composition", keyword(COMPOSITIONS));
+    const rows = Array.from({ length: names?.length ?? 1 }, (_unused, index) => {
+        const cells = [
+            ["name", repeated(names, index)],
+            ["duration", repeated(durations, index)],
+            ["delay", repeated(delays, index)],
+            ["iterationCount", repeated(iterations, index)],
+            ["direction", repeated(directions, index)],
+            ["fillMode", repeated(fills, index)],
+            ["timingFunction", repeated(timings, index)],
+            ["composition", repeated(compositions, index)],
+        ];
+        const row = {};
+        for (const [key, value] of cells) if (value !== undefined) row[key] = value;
+        return Object.freeze(row);
+    });
+    return Object.freeze(rows);
+}
+
+/**
+ * `collectTimelineOptions` (`stylesheet.ts`) — the ONE collector that reads a `CssValue` back
+ * through the serializer and re-parses it, three times (range, scope, trigger), which is why it is
+ * built over a SURFACE: `parseAnimationRange` and `parseAnimationTimeline` must be THIS lowering's.
+ */
+const collectorsOver = (parseRange, parseTimeline) => {
+    const rangeOf = (value) => {
+        if (!value) return undefined;
+        const text = serializeValue(value);
+        if (text === undefined) return undefined;
+        const parsed = parseRange(text);
+        return parsed.ok ? parsed.value : undefined;
+    };
+    /** `rules.ts` parseAnimationTrigger — a type keyword, a timeline, and whatever is left is a range. */
+    const triggerOf = (source) => {
+        const tokens = splitTopLevel(source.trim(), "space");
+        const result = {};
+        const range = [];
+        for (const token of tokens) {
+            const lower = token.toLowerCase();
+            if (TRIGGER_TYPES.includes(lower) && result.type === undefined) {
+                result.type = lower;
+                continue;
+            }
+            if (result.timeline === undefined && /^(?:auto|none|--|scroll\(|view\()/i.test(token)) {
+                const timeline = parseTimeline(token);
+                if (!timeline.ok) return undefined;
+                result.timeline = timeline.value;
+                continue;
+            }
+            range.push(token);
+        }
+        if (range.length > 0) {
+            const parsed = parseRange(range.join(" "));
+            if (!parsed.ok) return undefined;
+            result.range = parsed.value;
+        }
+        return Object.keys(result).length > 0 ? result : undefined;
+    };
+    return (declarations) => {
+        const selected = declarationCascade(declarations);
+        const timelineSource = animationCascade(declarations).selected.get("animation-timeline")?.value;
+        const timelines = timelineSource ? timelineList(timelineSource) : undefined;
+        const range = rangeOf(selected.get("animation-range")?.value);
+        const start = rangeOf(selected.get("animation-range-start")?.value)?.start;
+        const end = rangeOf(selected.get("animation-range-end")?.value)?.start;
+        const scopeText = selected.has("timeline-scope") ? serializeValue(selected.get("timeline-scope").value) : undefined;
+        const scope = scopeText === undefined ? undefined : parseTimelineScope(scopeText);
+        const triggerText = selected.has("animation-trigger") ? serializeValue(selected.get("animation-trigger").value) : undefined;
+        const trigger = triggerText === undefined ? undefined : triggerOf(triggerText);
+        const resolved = range ?? (start || end ? { start: start ?? { phase: "normal" }, ...(end ? { end } : {}) } : undefined);
+        return {
+            ...(timelines?.[0] ? { timeline: timelines[0] } : {}),
+            ...(timelines && timelines.length > 1 ? { timelines } : {}),
+            ...(resolved ? { range: resolved } : {}),
+            ...(scope ? { timelineScope: scope } : {}),
+            ...(trigger ? { trigger } : {}),
+        };
+    };
+};
+
+/**
+ * `serializeTimelineOptions` (`timeline.ts`) — `CSSTimelineOptions` back to the four properties it
+ * came from. A pure value transform: no lowering, no parse, and a degenerate argument is the empty
+ * record rather than a throw.
+ */
+const serializeTimeline = (value) => {
+    if (value?.kind === "auto" || value?.kind === "none") return value.kind;
+    if (value?.kind === "name") return value.name;
+    if (value?.kind === "scroll") return `scroll(${[value.scroller, value.axis].filter(Boolean).join(" ")})`;
+    if (value?.kind === "view") return `view(${[value.axis, value.inset?.start, value.inset?.end].filter(Boolean).join(" ")})`;
+    return undefined;
+};
+const serializeRange = (value) => {
+    const boundary = (item) => [item?.phase, item?.offset].filter(Boolean).join(" ");
+    return [boundary(value?.start), value?.end ? boundary(value.end) : ""].filter(Boolean).join(" ");
+};
+const serializeScope = (value) =>
+    (value?.kind === "names" ? (Array.isArray(value.names) ? value.names.join(", ") : "") : value?.kind);
+const serializeTrigger = (value) =>
+    [value?.type, value?.timeline ? serializeTimeline(value.timeline) : undefined, value?.range ? serializeRange(value.range) : undefined]
+        .filter(Boolean)
+        .join(" ");
+
+export function serializeTimelineOptions(options) {
+    if (!isRecord(options)) return {};
+    return {
+        ...(Array.isArray(options.timelines) && options.timelines.length
+            ? { "animation-timeline": options.timelines.map(serializeTimeline).join(", ") }
+            : options.timeline ? { "animation-timeline": serializeTimeline(options.timeline) } : {}),
+        ...(options.range ? { "animation-range": serializeRange(options.range) } : {}),
+        ...(options.timelineScope ? { "timeline-scope": serializeScope(options.timelineScope) } : {}),
+        ...(options.trigger ? { "animation-trigger": serializeTrigger(options.trigger) } : {}),
+    };
+}
+
 /* ── cure (2): the JS boundary, above the grammar ───────────────────────────────────────────── */
 
 /**
@@ -386,6 +851,14 @@ export function makePublicSurface(lowering) {
     surface.coerceToSyntax = coercerOver(surface.parseCssValue);
     surface.serializeCssColor = serializeCssColor;
 
+    // X.P.W3.i — the animation family's three structured exports. The two value transforms are
+    // lowering-independent and are the same function on both surfaces; `collectTimelineOptions`
+    // re-parses through THIS surface's `parseAnimationRange` / `parseAnimationTimeline`, so both
+    // targets answer through their own grammar and G-5's identity reaches it.
+    surface.collectAnimationOptions = collectAnimationOptions;
+    surface.serializeTimelineOptions = serializeTimelineOptions;
+    surface.collectTimelineOptions = collectorsOver(surface.parseAnimationRange, surface.parseAnimationTimeline);
+
     surface.entries = () => PUBLIC_ENTRIES.map((row) => row.name);
     surface.unrealized = () => UNREALIZED_ENTRIES.slice();
     surface.raw = (prod, source) => recovery.probe(prod, source);
@@ -412,5 +885,9 @@ export const parseCssScalar = js.parseCssScalar;
 export const parseCssValue = js.parseCssValue;
 export const parseCssValues = js.parseCssValues;
 export const coerceToSyntax = js.coerceToSyntax;
+export const parseKeyframeSelector = js.parseKeyframeSelector;
+export const parseAnimationTimeline = js.parseAnimationTimeline;
+export const parseAnimationRange = js.parseAnimationRange;
+export const collectTimelineOptions = js.collectTimelineOptions;
 
 export { CAPACITY, CAPACITY_LABELS, CLASS3_PROOF, DEPTH_BOUND, DEPTH_CODE, DEPTH_PRODUCTION };

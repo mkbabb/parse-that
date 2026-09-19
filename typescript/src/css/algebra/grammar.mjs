@@ -16,6 +16,7 @@
 // sites would make the reified term a DAG, and `.g`'s CL-1 walk reads a revisited object as a
 // cycle. Freshness is therefore load-bearing, not style.
 
+import { buildAnimationGrammar } from "./grammar/animation.mjs";
 import { VALUE_REF_TARGETS, buildValueGrammar } from "./grammar/value.mjs";
 import { R_disp } from "./tables.mjs";
 
@@ -361,6 +362,23 @@ export function buildGrammar(A) {
     }
     Object.assign(terms, valueGrammar.terms);
     Object.assign(entries, valueGrammar.entries);
+
+    /* ── X.P.W3.i — the animation family (`grammar/animation.mjs`), composed the same way: one more
+          source file, the same algebra `A`, the same notations, four more entries in the ONE grammar
+          map both lowerings instantiate, and two more dispatch terms for `scroll()` / `view()`. */
+    const animationGrammar = buildAnimationGrammar(
+        { SCAN, TEXT, KW, NUM, END, SEQ, ALT, CUT, REP, DROP, DISPATCH, FAIL, EXPECT, CTOR, REF },
+        { WS, WS1, TOK, OPT },
+    );
+    for (const name of Object.keys(animationGrammar.terms)) {
+        if (terms[name] !== undefined) throw new Error(`HALT: the animation grammar redefines production '${name}'`);
+    }
+    for (const name of Object.keys(animationGrammar.dispatchTerms)) {
+        if (dispatchTerms[name] !== undefined) throw new Error(`HALT: the animation grammar redefines dispatch term '${name}'`);
+    }
+    Object.assign(terms, animationGrammar.terms);
+    Object.assign(entries, animationGrammar.entries);
+    Object.assign(dispatchTerms, animationGrammar.dispatchTerms);
 
     for (const d of Object.values(R_disp)) {
         for (const target of Object.values(d.rows)) {

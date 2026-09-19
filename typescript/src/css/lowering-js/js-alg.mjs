@@ -24,7 +24,10 @@ import { tsImport } from "tsx/esm/api";
 
 import { ESCAPED_BACKSLASH, ESCAPED_QUOTE, OPERATORS, SEPARATORS } from "../algebra/grammar/value.mjs";
 import { KINDS } from "../algebra/ops.mjs";
-import { JUMP_POSITIONS, L, R_cls, R_ctor, R_disp, R_kw, STEP_ALIASES, TIMING_KEYWORDS, labelIndex } from "../algebra/tables.mjs";
+import {
+    JUMP_POSITIONS, KEYFRAME_PHASES, L, RANGE_PHASES, R_cls, R_ctor, R_disp, R_kw, SCROLLER_KEYWORDS,
+    STEP_ALIASES, TIMELINE_AXES, TIMELINE_MODES, TIMING_KEYWORDS, labelIndex,
+} from "../algebra/tables.mjs";
 import { asciiFold, clampValue, isTuple, list, NONE_OPT, scaleValue, splitSelectors, span, tuple, UNIT } from "./values.mjs";
 
 /**
@@ -281,6 +284,77 @@ const CTORS = {
     },
     /** `parseCssValues`: a list is itself, any other value a one-item space list. */
     "value-wrap": (a) => (a[0].kind === "list" ? a[0] : { kind: "list", separator: "space", items: [a[0]] }),
+
+    // ── X.P.W3.i — the ANIMATION family, landed as ONE commit with its rows (`tables.mjs` R_ctor),
+    //    the Wasm emitter (`wasm-alg.mjs` emitCtors) and the node table (`bounds.mjs`), E-h1.
+
+    /** One `LENGTH_PERCENTAGE` token, re-joined from its contiguous `TEXT` pieces (its own text). */
+    "lp-text": (a) => a.join(""),
+    /** `^auto$` under `/i`: the ident run folds to `auto`, and the AUTHORED spelling is kept. */
+    "lp-auto": (a) => (asciiFold(a[0]) === "auto" ? a[0] : GUARD),
+
+    /** `RangeBoundary`'s three inhabited shapes, one row each (`timeline.ts` rangeBoundary). */
+    "range-phase": (a) => ({ phase: RANGE_PHASES[a[0]] }),
+    "range-phase-offset": (a) => ({ phase: RANGE_PHASES[a[0]], offset: a[1] }),
+    "range-offset": (a) => ({ offset: a[0] }),
+    "range-single": (a) => ({ start: a[0] }),
+    "range-pair": (a) => ({ start: a[0], end: a[1] }),
+
+    /** `KeyframeSelector`. `from`/`to` carry their own percent; the other two guard the range. */
+    "keyframe-word": (a) => ({ kind: "percent", value: a[0] }),
+    "keyframe-percent": (a) => (a[0] >= 0 && a[0] <= 100 ? { kind: "percent", value: a[0] / 100 } : GUARD),
+    "keyframe-named": (a) => {
+        const name = KEYFRAME_PHASES[a[0]];
+        if (a.length === 1) return { kind: "named", name };
+        const offset = a[1] / 100;
+        return offset >= 0 && offset <= 1 ? { kind: "named", name, offset } : GUARD;
+    },
+
+    /** `AnimationTimelineValue`. The key ORDER is this candidate's own and is identical in Wasm. */
+    "timeline-mode": (a) => ({ kind: TIMELINE_MODES[a[0]] }),
+    "timeline-name": (a) => (a[0].startsWith("--") ? { kind: "name", name: a[0] } : GUARD),
+    "timeline-scroll": (a) => {
+        let scroller;
+        let axis;
+        for (const index of a[0].l) {
+            if (index < SCROLLER_KEYWORDS.length) {
+                if (scroller !== undefined) return GUARD;
+                scroller = SCROLLER_KEYWORDS[index];
+            } else {
+                if (axis !== undefined) return GUARD;
+                axis = TIMELINE_AXES[index - SCROLLER_KEYWORDS.length];
+            }
+        }
+        return {
+            kind: "scroll",
+            ...(scroller === undefined ? {} : { scroller }),
+            ...(axis === undefined ? {} : { axis }),
+        };
+    },
+    "timeline-view": (a) => {
+        let axis;
+        const inset = [];
+        for (const item of a[0].l) {
+            if (typeof item === "number") {
+                if (axis !== undefined) return GUARD;
+                axis = TIMELINE_AXES[item];
+            } else {
+                if (inset.length >= 2) return GUARD;
+                inset.push(item);
+            }
+        }
+        return {
+            kind: "view",
+            ...(axis === undefined ? {} : { axis }),
+            ...(inset.length === 0 ? {} : { inset: inset.length === 2 ? { start: inset[0], end: inset[1] } : { start: inset[0] } }),
+        };
+    },
+
+    /** One comma part: the space-separated run of value tokens `parseCssValue` reads there. */
+    "animation-option": (a) => a[0].l,
+    /** The animation declaration's comma list, as the bare array of its parts (the blank ones the
+     *  grammar already refused by name). It is the vocabulary `collectAnimationOptions` reads. */
+    "animation-option-list": (a) => [a[0], ...a[1].l],
 };
 
 /**

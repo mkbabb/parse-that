@@ -14,7 +14,10 @@
 
 import { OPERATORS, SEPARATORS } from "../algebra/grammar/value.mjs";
 import { CODES, KINDS } from "../algebra/ops.mjs";
-import { JUMP_POSITIONS, R_cls, R_ctor, R_disp, R_kw, STEP_ALIASES, TIMING_KEYWORDS, labelIndex } from "../algebra/tables.mjs";
+import {
+    JUMP_POSITIONS, KEYFRAME_PHASES, RANGE_PHASES, R_cls, R_ctor, R_disp, R_kw, SCROLLER_KEYWORDS,
+    STEP_ALIASES, TIMELINE_AXES, TIMELINE_MODES, TIMING_KEYWORDS, labelIndex,
+} from "../algebra/tables.mjs";
 import { F64, I32 } from "./asm.mjs";
 import {
     ARENA_BASE, DLAB_MAX, EXPSNAP_BASE, EXPSNAP_CAP, EXPSNAP_STRIDE, FARLAB_BASE, FARLAB_CAP,
@@ -1141,6 +1144,285 @@ export function emitCtors(env) {
             });
         });
         c.i32(T_ARR).get(abase).get(n).call(F.mkSeqNode).set(arr);
+        c.get(abase).gset(G.vsp);
+        c.get(arr);
+    });
+
+    /* ── X.P.W3.i — the animation shapes (`algebra/grammar/animation.mjs`), the same CTOR family as
+          the rows in `tables.mjs`, the JS functions in `js-alg.mjs` and the node table in
+          `bounds.mjs`. Every record below carries its pairs in the SAME ORDER the JS constructor
+          writes them, because G-5 compares the materialized value's JSON and key order is bytes. ── */
+
+    const RANGE_PHASE_TAB = strTable(RANGE_PHASES);
+    const KEYFRAME_PHASE_TAB = strTable(KEYFRAME_PHASES);
+    const TIMELINE_MODE_TAB = strTable(TIMELINE_MODES);
+    const SCROLLER_TAB = strTable(SCROLLER_KEYWORDS);
+    const AXIS_TAB = strTable(TIMELINE_AXES);
+    const AUTO_BLOB = nameBlob(["auto"]);
+
+    /** An i32 index already on the stack becomes the interned string node of a `strTable`. */
+    const fromTab = (c, tab) => c.i32(4).x("i32.mul").i32(tab).x("i32.add").load();
+
+    /**
+     * A record whose PAIR COUNT is decided at run time — `{kind:"scroll"}` and
+     * `{kind:"scroll",scroller,axis}` are one constructor with two to four pairs. `mkRec(base,pairs)`
+     * already takes its count as a value, so the only thing this adds over `rec` is a counter.
+     */
+    const recDyn = (c, emit) => {
+        const rbase = c.local(I32);
+        const np = c.local(I32);
+        c.gget(G.vsp).set(rbase);
+        c.i32(0).set(np);
+        const pair = (b, key, emitVal) => {
+            b.i32(KEY(key)).call(F.push);
+            emitVal(b);
+            b.call(F.push);
+            b.get(np).i32(1).x("i32.add").set(np);
+        };
+        emit(c, pair);
+        c.get(rbase).get(np).call(F.mkRec);
+        c.get(rbase).gset(G.vsp);
+    };
+
+    /**
+     * One `LENGTH_PERCENTAGE` token as its own source text. The leaves are the token's contiguous
+     * `TEXT` pieces (one to five, the count is the second parameter), so the span runs from the
+     * FIRST piece's start to the LAST piece's end and no piece is read — the `value-string` idiom,
+     * and the same bytes the JS constructor re-joins.
+     */
+    declare("lp-text", (c) => {
+        const first = c.local(I32);
+        const last = c.local(I32);
+        const s = c.local(I32);
+        arg(c, 0);
+        c.set(first);
+        c.get(0).get(1).x("i32.add").i32(1).x("i32.sub").call(F.slotGet).set(last);
+        c.get(first).load(4).set(s);
+        c.get(s);
+        c.get(last).load(4).get(last).load(8).x("i32.add").get(s).x("i32.sub");
+        c.call(F.mkStr);
+    });
+
+    /** `^auto$` under `/i` — the folded span against a one-name table; the text is kept as authored. */
+    declare("lp-auto", (c) => {
+        const p = c.local(I32);
+        const s = c.local(I32);
+        arg(c, 0);
+        c.set(p);
+        c.get(p).load(4).set(s);
+        c.i32(AUTO_BLOB).get(s).get(s).get(p).load(8).x("i32.add").call(F.kwLookup).i32(0).x("i32.lt_s")
+            .if_("void", (b) => b.i32(0).ret());
+        c.get(p);
+    });
+
+    /** `RangeBoundary`'s three shapes and `AnimationRangeValue`'s two — one row each, no branching. */
+    const phaseName = (b) => {
+        tokenIndex(b, 0);
+        fromTab(b, RANGE_PHASE_TAB);
+    };
+    declare("range-phase", (c) => rec(c, [["phase", phaseName]]));
+    declare("range-phase-offset", (c) => rec(c, [["phase", phaseName], ["offset", (b) => arg(b, 1)]]));
+    declare("range-offset", (c) => rec(c, [["offset", (b) => arg(b, 0)]]));
+    declare("range-single", (c) => rec(c, [["start", (b) => arg(b, 0)]]));
+    declare("range-pair", (c) => rec(c, [["start", (b) => arg(b, 0)], ["end", (b) => arg(b, 1)]]));
+
+    /** `KeyframeSelector`. `from`/`to` carry their own percent (0 and 1) as the table's own value. */
+    const PERCENT_KIND = data.stringNode("percent");
+    const NAMED_KIND = data.stringNode("named");
+    declare("keyframe-word", (c) =>
+        rec(c, [["kind", (b) => b.i32(PERCENT_KIND)], ["value", (b) => arg(b, 0)]]));
+
+    declare("keyframe-percent", (c) => {
+        const v = c.local(F64);
+        arg(c, 0);
+        c.loadf64(8).set(v);
+        //  `Number.isFinite(v) && v >= 0 && v <= 100`: NaN fails both comparisons and ±Infinity one
+        c.get(v).f64(0).x("f64.ge").get(v).f64(100).x("f64.le").x("i32.and").x("i32.eqz")
+            .if_("void", (b) => b.i32(0).ret());
+        rec(c, [
+            ["kind", (b) => b.i32(PERCENT_KIND)],
+            ["value", (b) => b.get(v).f64(100).x("f64.div").call(F.mkNum)],
+        ]);
+    });
+
+    const keyframeName = (b) => {
+        tokenIndex(b, 0);
+        fromTab(b, KEYFRAME_PHASE_TAB);
+    };
+    declare("keyframe-named", (c) => {
+        const o = c.local(F64);
+        c.get(1).i32(1).x("i32.eq").if_("void", (b) => {
+            rec(b, [["kind", (u) => u.i32(NAMED_KIND)], ["name", keyframeName]]);
+            b.ret();
+        });
+        arg(c, 1);
+        c.loadf64(8).f64(100).x("f64.div").set(o);
+        c.get(o).f64(0).x("f64.ge").get(o).f64(1).x("f64.le").x("i32.and").x("i32.eqz")
+            .if_("void", (b) => b.i32(0).ret());
+        rec(c, [
+            ["kind", (b) => b.i32(NAMED_KIND)],
+            ["name", keyframeName],
+            ["offset", (b) => b.get(o).call(F.mkNum)],
+        ]);
+    });
+
+    /** `AnimationTimelineValue`'s four rows. */
+    declare("timeline-mode", (c) =>
+        rec(c, [["kind", (b) => {
+            tokenIndex(b, 0);
+            fromTab(b, TIMELINE_MODE_TAB);
+        }]]));
+
+    declare("timeline-name", (c) => {
+        const p = c.local(I32);
+        const s = c.local(I32);
+        arg(c, 0);
+        c.set(p);
+        c.get(p).load(4).set(s);
+        //  `^--`: the grammar already guarantees at least three code units, so both reads are inside
+        c.get(s).i32(INPUT_BASE).x("i32.add").load8u().i32(45).x("i32.ne")
+            .get(s).i32(INPUT_BASE + 1).x("i32.add").load8u().i32(45).x("i32.ne").x("i32.or")
+            .if_("void", (b) => b.i32(0).ret());
+        rec(c, [["kind", (b) => b.i32(data.stringNode("name"))], ["name", (b) => b.get(p)]]);
+    });
+
+    /**
+     * `scroll()`: one table, rows 0..2 the scrollers and 3..6 the axes, so "is it a scroller" is an
+     * index comparison. A second scroller or a second axis is the incumbent's `else return failure`
+     * — the sets are disjoint, so a repeat has nowhere else to go.
+     */
+    const SCROLLERS_N = SCROLLER_KEYWORDS.length;
+    declare("timeline-scroll", (c) => {
+        const p = c.local(I32);
+        const n = c.local(I32);
+        const k = c.local(I32);
+        const item = c.local(I32);
+        const idx = c.local(I32);
+        const scroller = c.local(I32);
+        const axis = c.local(I32);
+        arg(c, 0);
+        c.set(p);
+        c.get(p).load(4).set(n);
+        c.i32(-1).set(scroller);
+        c.i32(-1).set(axis);
+        c.i32(0).set(k);
+        c.block("void", (blk) => {
+            blk.loop("void", (lp) => {
+                lp.get(k).get(n).x("i32.ge_u").brIf(1);
+                lp.get(p).get(k).i32(4).x("i32.mul").x("i32.add").load(8).set(item);
+                lp.get(item).loadf64(8).x("i32.trunc_f64_s").set(idx);
+                lp.get(idx).i32(SCROLLERS_N).x("i32.lt_s").if_("void",
+                    (b) => {
+                        b.get(scroller).i32(-1).x("i32.ne").if_("void", (t) => t.i32(0).ret());
+                        b.get(idx).set(scroller);
+                    },
+                    (b) => {
+                        b.get(axis).i32(-1).x("i32.ne").if_("void", (t) => t.i32(0).ret());
+                        b.get(idx).i32(SCROLLERS_N).x("i32.sub").set(axis);
+                    });
+                lp.get(k).i32(1).x("i32.add").set(k);
+                lp.br(0);
+            });
+        });
+        recDyn(c, (u, pair) => {
+            pair(u, "kind", (b) => b.i32(data.stringNode("scroll")));
+            u.get(scroller).i32(-1).x("i32.ne").if_("void", (b) => {
+                pair(b, "scroller", (t) => {
+                    t.get(scroller);
+                    fromTab(t, SCROLLER_TAB);
+                });
+            });
+            u.get(axis).i32(-1).x("i32.ne").if_("void", (b) => {
+                pair(b, "axis", (t) => {
+                    t.get(axis);
+                    fromTab(t, AXIS_TAB);
+                });
+            });
+        });
+    });
+
+    /**
+     * `view()`: an axis keyword (a `T_NUM` table index) or an inset token (a `T_STR` of the source),
+     * told apart by the leaf's OWN node tag — the two vocabularies are disjoint, which is why the
+     * incumbent's ordered `if/else if` and this type test reach the same verdict.
+     */
+    declare("timeline-view", (c) => {
+        const p = c.local(I32);
+        const n = c.local(I32);
+        const k = c.local(I32);
+        const item = c.local(I32);
+        const axis = c.local(I32);
+        const ins = c.local(I32);
+        const in0 = c.local(I32);
+        const in1 = c.local(I32);
+        arg(c, 0);
+        c.set(p);
+        c.get(p).load(4).set(n);
+        c.i32(-1).set(axis);
+        c.i32(0).set(ins);
+        c.i32(0).set(k);
+        c.block("void", (blk) => {
+            blk.loop("void", (lp) => {
+                lp.get(k).get(n).x("i32.ge_u").brIf(1);
+                lp.get(p).get(k).i32(4).x("i32.mul").x("i32.add").load(8).set(item);
+                lp.get(item).load().i32(T_NUM).x("i32.eq").if_("void",
+                    (b) => {
+                        b.get(axis).i32(-1).x("i32.ne").if_("void", (t) => t.i32(0).ret());
+                        b.get(item).loadf64(8).x("i32.trunc_f64_s").set(axis);
+                    },
+                    (b) => {
+                        b.get(ins).i32(2).x("i32.ge_s").if_("void", (t) => t.i32(0).ret());
+                        b.get(ins).x("i32.eqz").if_("void", (t) => t.get(item).set(in0), (t) => t.get(item).set(in1));
+                        b.get(ins).i32(1).x("i32.add").set(ins);
+                    });
+                lp.get(k).i32(1).x("i32.add").set(k);
+                lp.br(0);
+            });
+        });
+        recDyn(c, (u, pair) => {
+            pair(u, "kind", (b) => b.i32(data.stringNode("view")));
+            u.get(axis).i32(-1).x("i32.ne").if_("void", (b) => {
+                pair(b, "axis", (t) => {
+                    t.get(axis);
+                    fromTab(t, AXIS_TAB);
+                });
+            });
+            u.get(ins).i32(0).x("i32.gt_s").if_("void", (b) => {
+                pair(b, "inset", (t) => {
+                    t.get(ins).i32(2).x("i32.eq").if_(I32,
+                        (v) => rec(v, [["start", (w) => w.get(in0)], ["end", (w) => w.get(in1)]]),
+                        (v) => rec(v, [["start", (w) => w.get(in0)]]));
+                });
+            });
+        });
+    });
+
+    /** One comma part: the `T_LIST` of value tokens the part's `REP` produced, as a bare array. */
+    declare("animation-option", (c) => listToArr(c, (u) => arg(u, 0)));
+
+    /** The animation declaration's comma list, as the bare array of its parts: `first` then `rest`. */
+    declare("animation-option-list", (c) => {
+        const rest = c.local(I32);
+        const n = c.local(I32);
+        const k = c.local(I32);
+        const abase = c.local(I32);
+        const arr = c.local(I32);
+        arg(c, 1);
+        c.set(rest);
+        c.get(rest).load(4).set(n);
+        c.gget(G.vsp).set(abase);
+        arg(c, 0);
+        c.call(F.push);
+        c.i32(0).set(k);
+        c.block("void", (blk) => {
+            blk.loop("void", (lp) => {
+                lp.get(k).get(n).x("i32.ge_u").brIf(1);
+                lp.get(rest).get(k).i32(4).x("i32.mul").x("i32.add").load(8).call(F.push);
+                lp.get(k).i32(1).x("i32.add").set(k);
+                lp.br(0);
+            });
+        });
+        c.i32(T_ARR).get(abase).get(n).i32(1).x("i32.add").call(F.mkSeqNode).set(arr);
         c.get(abase).gset(G.vsp);
         c.get(arr);
     });

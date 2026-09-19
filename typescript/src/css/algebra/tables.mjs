@@ -77,6 +77,27 @@ export const R_cls = {
     squote: { label: "single quote", table: table256((b) => b === ch("'")), since: "X.P.W3.h" },
     "dq-plain": { label: "string text", table: table256((b) => b !== ch('"') && b !== ch("\\")), since: "X.P.W3.h" },
     "sq-plain": { label: "string text", table: table256((b) => b !== ch("'") && b !== ch("\\")), since: "X.P.W3.h" },
+    // X.P.W3.i — the animation family's classes (`algebra/grammar/animation.mjs`). Each is read by
+    // `TEXT` (so its bytes stay in the value and the incumbent's RAW token text is reconstructible)
+    // or by a `DROP`ped `SCAN` (a separator run). The four single-byte classes exist because the
+    // incumbent's `LENGTH_PERCENTAGE` keeps the token's TEXT, not its number — `/^auto$|^[+-]?(?:\d+
+    // \.?\d*|\.\d+)(?:%|[a-z]+)?$/i` — so `841fEd` must come back as `841fEd`, which an OP-03 `NUM`
+    // (a value, and one that also admits an exponent the regex does not) cannot give.
+    //
+    //   sign / dot / percent  read by `TEXT(cls, 1, 1)`: EXACTLY ONE, because `TEXT` takes a MAXIMAL
+    //                         run and `++5` / `1..5` / `5%%` are nothing to the regex either.
+    //   letter                the regex's `[a-z]+` under `/i` — ASCII letters, no digit, no `-`.
+    //   comma-gap             the separator run inside `scroll()` / `view()` and between the two
+    //                         parts of an `animation-range`: the incumbent replaces `,` with a space
+    //                         and splits on whitespace, dropping empty parts, so a run of whitespace
+    //                         and commas is ONE separator wherever it stands.
+    //   any-but-comma         one item of an animation declaration's comma list (`emptyComma`).
+    sign: { label: "<sign>", table: table256((b) => b === ch("+") || b === ch("-")), since: "X.P.W3.i" },
+    dot: { label: "<decimal-point>", table: table256((b) => b === ch(".")), since: "X.P.W3.i" },
+    percent: { label: "<percent-unit>", table: table256((b) => b === ch("%")), since: "X.P.W3.i" },
+    letter: { label: "<unit-letters>", table: table256(isAlpha), since: "X.P.W3.i" },
+    "comma-gap": { label: "<comma-or-whitespace>", table: table256((b) => isWs(b) || b === ch(",")), since: "X.P.W3.i" },
+    "any-but-comma": { label: "<animation-item-text>", table: table256((b) => b !== ch(",")), since: "X.P.W3.i" },
 };
 
 /**
@@ -185,7 +206,46 @@ export const R_kw = {
         rows: np({ "+": 0, "*": 1, "-": 2, "<=": 3, ">=": 4, "==": 5, "!=": 6, "<": 7, ">": 8, "=": 9 }),
         since: "X.P.W3.h",
     },
+    // ── X.P.W3.i — the animation family's keyword tables. Every row's value is an INDEX into one of
+    //    the canonical name lists below, so the constructor answers the incumbent's own spelling
+    //    (always the LOWER-CASE canonical one: `parseKeyframeSelector` writes `name.toLowerCase()`,
+    //    `rangeBoundary` writes `tokens[0].toLowerCase()`, `parseAnimationTimeline` writes the
+    //    folded token) rather than the authored one, and the ASCII fold is `KW`'s own.
+    "keyframe-word": { label: "<keyframe-keyword>", code: "keyframe_selector_invalid", kind: "token", rows: np({ from: 0, to: 1 }), since: "X.P.W3.i" },
+    "keyframe-phase": { label: "<keyframe-phase>", code: "keyframe_selector_invalid", kind: "token", rows: np({ entry: 0, exit: 1, cover: 2, contain: 3 }), since: "X.P.W3.i" },
+    "range-phase": {
+        label: "<range-phase>",
+        code: "timeline_option_invalid",
+        kind: "token",
+        rows: np({ normal: 0, cover: 1, contain: 2, entry: 3, exit: 4, "entry-crossing": 5, "exit-crossing": 6 }),
+        since: "X.P.W3.i",
+    },
+    "timeline-mode": { label: "<timeline-keyword>", code: "timeline_option_invalid", kind: "token", rows: np({ auto: 0, none: 1 }), since: "X.P.W3.i" },
+    //  ONE table for `scroll()`'s two vocabularies: 0..2 are the scrollers, 3..6 the axes. The
+    //  incumbent tests `SCROLLERS.has` first and `AXES.has` second over DISJOINT sets, so the split
+    //  is an index comparison in the constructor and never a second lookup.
+    "scroll-arg": {
+        label: "<scroll-argument>",
+        code: "timeline_option_invalid",
+        kind: "token",
+        rows: np({ nearest: 0, root: 1, self: 2, block: 3, inline: 4, x: 5, y: 6 }),
+        since: "X.P.W3.i",
+    },
+    "view-axis": { label: "<timeline-axis>", code: "timeline_option_invalid", kind: "token", rows: np({ block: 0, inline: 1, x: 2, y: 3 }), since: "X.P.W3.i" },
 };
+
+/* ── X.P.W3.i — the canonical spellings the animation constructors answer, by index ─────────── */
+
+/** `KeyframeSelector` `{kind:"percent"}`'s two keyword spellings: `from` → 0, `to` → 1. */
+export const KEYFRAME_PHASES = ["entry", "exit", "cover", "contain"];
+/** `RangePhase`, in `R_kw["range-phase"]`'s row order (`timeline.ts` RANGE_PHASES). */
+export const RANGE_PHASES = ["normal", "cover", "contain", "entry", "exit", "entry-crossing", "exit-crossing"];
+/** `AnimationTimelineValue`'s two keyword kinds. */
+export const TIMELINE_MODES = ["auto", "none"];
+/** `ScrollerKeyword`, the first three rows of `R_kw["scroll-arg"]`. */
+export const SCROLLER_KEYWORDS = ["nearest", "root", "self"];
+/** `TimelineAxis`, rows 3..6 of `R_kw["scroll-arg"]` and all four of `R_kw["view-axis"]`. */
+export const TIMELINE_AXES = ["block", "inline", "x", "y"];
 
 /** The four `JumpPosition` values, by id — the codomain of `R_kw.jump-position`. */
 export const JUMP_POSITIONS = ["jump-start", "jump-end", "jump-none", "jump-both"];
@@ -261,6 +321,16 @@ export const R_disp = {
             "xyz-d50": "space-xyz-d50",
         }),
         since: "X.P.W3.h",
+    },
+    // X.P.W3.i — `animation-timeline`'s two functional forms. The incumbent reaches them by
+    // `/^scroll\((.*)\)$/i` and `/^view\((.*)\)$/i`; a table is a registry row, not an `if`, and the
+    // ident run `DISPATCH` reads is maximal, so `scrolls(…)` resolves to nothing here exactly as the
+    // anchored regex refuses it there.
+    "timeline-head": {
+        label: "<timeline-function>",
+        code: "timeline_option_invalid",
+        rows: np({ scroll: "timeline-scroll", view: "timeline-view" }),
+        since: "X.P.W3.i",
     },
 };
 
@@ -360,25 +430,84 @@ export const R_ctor = {
     "value-args": { label: "<function-arguments>", code: "css_syntax", labels: ["<value-list>"], arity: 4, leafMap: ["lead", "first", "rest", "separator"], since: "X.P.W3.h" },
     "value-group": { label: "<value-list>", code: "css_syntax", labels: ["<value-list>"], arity: 4, leafMap: ["lead", "first", "rest", "separator"], since: "X.P.W3.h" },
     "value-wrap": { label: "<value-list>", code: "css_syntax", labels: ["<value-list>"], arity: 1, leafMap: ["value"], since: "X.P.W3.h" },
+
+    // ── X.P.W3.i — the ANIMATION family's CTOR rows, landed as ONE commit across the same four
+    //    realizations (COHESION §0s E-h1): the row here, `lowering-js/js-alg.mjs` CTORS, the Wasm
+    //    emitter `lowering-wasm/wasm-alg.mjs` emitCtors, and the node table `bounds.mjs`
+    //    CTOR_ALLOC / CTOR_SCRATCH_CELLS. `bounds.mjs` HALTs at load unless the four agree.
+    //
+    //    `lp-text` is the incumbent's `LENGTH_PERCENTAGE` token, answered as its OWN SOURCE TEXT:
+    //    the leaves are the contiguous `TEXT` pieces of one token (sign · integer · point ·
+    //    fraction · unit, one to five of them), the JS constructor re-joins them and the Wasm one
+    //    reads the span from the first piece's start to the last piece's end. No number is parsed,
+    //    because the frozen `RangeBoundary.offset` and `ViewInset.start` are STRINGS.
+    "lp-text": { label: "<length-percentage>", code: "timeline_option_invalid", labels: ["<length-percentage>"], arity: 5, leafMap: ["sign", "int", "point", "frac", "unit"], since: "X.P.W3.i" },
+    "lp-auto": { label: "'auto'", code: "timeline_option_invalid", labels: ["'auto'"], arity: 1, leafMap: ["text"], since: "X.P.W3.i" },
+
+    //    `RangeBoundary` has three inhabited shapes and each is its own row, so no constructor
+    //    branches on an absent field: `{phase}` · `{phase, offset}` · `{offset}`.
+    "range-phase": { label: "<range-boundary>", code: "timeline_option_invalid", labels: ["<animation-range>"], arity: 1, leafMap: ["phase"], since: "X.P.W3.i" },
+    "range-phase-offset": { label: "<range-boundary>", code: "timeline_option_invalid", labels: ["<animation-range>"], arity: 2, leafMap: ["phase", "offset"], since: "X.P.W3.i" },
+    "range-offset": { label: "<range-boundary>", code: "timeline_option_invalid", labels: ["<animation-range>"], arity: 1, leafMap: ["offset"], since: "X.P.W3.i" },
+    "range-single": { label: "<animation-range>", code: "timeline_option_invalid", labels: ["<animation-range>"], arity: 1, leafMap: ["start"], since: "X.P.W3.i" },
+    "range-pair": { label: "<animation-range>", code: "timeline_option_invalid", labels: ["<animation-range>"], arity: 2, leafMap: ["start", "end"], since: "X.P.W3.i" },
+
+    //    `KeyframeSelector`. `keyframe-word` carries the keyword's own value (`from` → 0, `to` → 1),
+    //    which IS the frozen percent; the other two guard the incumbent's range checks — `value` in
+    //    [0,100] before the divide, `offset` in [0,1] after it (`grammar.ts` parseKeyframeSelector).
+    "keyframe-word": { label: "<keyframe-selector>", code: "keyframe_selector_invalid", labels: ["<keyframe-selector>"], arity: 1, leafMap: ["value"], since: "X.P.W3.i" },
+    "keyframe-percent": { label: "<keyframe-selector>", code: "keyframe_selector_invalid", labels: ["0%..100%"], arity: 1, leafMap: ["value"], since: "X.P.W3.i" },
+    "keyframe-named": { label: "<keyframe-selector>", code: "keyframe_selector_invalid", labels: ["0%..100%"], arity: 2, leafMap: ["name", "offset"], since: "X.P.W3.i" },
+
+    //    `AnimationTimelineValue`'s five kinds over four rows (`auto` and `none` share one).
+    "timeline-mode": { label: "<animation-timeline>", code: "timeline_option_invalid", labels: ["<timeline-keyword>"], arity: 1, leafMap: ["mode"], since: "X.P.W3.i" },
+    "timeline-name": { label: "<animation-timeline>", code: "timeline_option_invalid", labels: ["<dashed-ident>"], arity: 1, leafMap: ["name"], since: "X.P.W3.i" },
+    "timeline-scroll": { label: "<animation-timeline>", code: "timeline_option_invalid", labels: ["<scroll-timeline>"], arity: 1, leafMap: ["args"], since: "X.P.W3.i" },
+    "timeline-view": { label: "<animation-timeline>", code: "timeline_option_invalid", labels: ["<view-timeline>"], arity: 1, leafMap: ["args"], since: "X.P.W3.i" },
+
+    //    `emptyComma`'s law (`rules.ts` parseDeclarations), in its positive form: an animation
+    //    declaration's value is a comma list of NON-BLANK items. The refusal is the GRAMMAR's — a
+    //    zero-width assertion and an OP-15 `FAIL` at the blank byte itself (`grammar/animation.mjs`)
+    //    — so this row builds and never guards, the `value-color` row's posture: its value is the
+    //    bare array of items, the `stylesheet` row's precedent.
+    "animation-option": { label: "<animation-option>", code: "animation_option_invalid", labels: ["<animation-option-list>"], arity: 1, leafMap: ["tokens"], since: "X.P.W3.i" },
+    "animation-option-list": {
+        label: "<animation-option-list>",
+        code: "animation_option_invalid",
+        labels: ["<animation-option-list>"],
+        arity: 2,
+        leafMap: ["first", "rest"],
+        since: "X.P.W3.i",
+    },
 };
 
 /* ── L: the label index (§4.4) — EQ-4 compares INDICES into this list ──────────────────────── */
 
 /**
- * TWO PASSES over the registries (X.P.W3.h). The first pass is the slice's own order, row for row,
- * and yields exactly the sixty labels L held before the value grammar landed; the second pass adds
- * the labels of every row tagged `since` (a row born AFTER the slice) and the value grammar's own
- * `EXPECT` labels, at the END. K-10: no existing index moves. A row born later still dedupes against
- * a label the slice already carries (`value-color-head` is `<color-function>`, `ident-start` is
- * `ident`), so only a genuinely new label takes a new index.
+ * ONE PASS PER UNIT, in LANDING ORDER (X.P.W3.h, generalized by X.P.W3.i). The first pass is the
+ * slice's own order, row for row, and yields exactly the sixty labels L held before the value
+ * grammar landed; then one pass per later unit — its rows (`since`), then its own `EXPECT`/`FAIL`
+ * labels — appended at the END. K-10: no existing index moves, and a unit landing after another
+ * cannot shift the labels of the one before it (which a single "every row tagged `since`" pass
+ * would have done the moment a second unit added an `R_cls` row). A row born later still dedupes
+ * against a label an earlier pass carries (`value-color-head` is `<color-function>`, `ident-start`
+ * is `ident`), so only a genuinely new label takes a new index.
  */
+const LATER_UNITS = ["X.P.W3.h", "X.P.W3.i"];
+
+/** The `EXPECT` / `FAIL` labels each later unit's grammar names, in that grammar's own order. */
+const UNIT_SITE_LABELS = {
+    "X.P.W3.h": ["<value>", "<value-list>", "<scalar>", "'\\'", "'\"'", "'''"],
+    "X.P.W3.i": ["<keyframe-selector>", "<animation-timeline>", "<animation-range>", "<animation-option-list>", "nonempty animation list item"],
+};
+
 const collectLabels = () => {
     const seen = [];
     const add = (l) => {
         if (typeof l === "string" && !seen.includes(l)) seen.push(l);
     };
     const slice = (rows) => Object.values(rows).filter((row) => row.since === undefined);
-    const later = (rows) => Object.values(rows).filter((row) => row.since !== undefined);
+    const born = (rows, unit) => Object.values(rows).filter((row) => row.since === unit);
     for (const cls of slice(R_cls)) add(cls.label);
     for (const kw of slice(R_kw)) add(kw.label);
     for (const disp of slice(R_disp)) add(disp.label);
@@ -425,13 +554,21 @@ const collectLabels = () => {
         "expsnap <= 32",
     ])
         add(l);
-    // ── the second pass: every row born after the slice, then the value grammar's EXPECT sites
-    //    (X.P.W3.h). Appended AFTER the nine capacity labels, so no index above moves (K-10).
-    for (const cls of later(R_cls)) add(cls.label);
-    for (const kw of later(R_kw)) add(kw.label);
-    for (const disp of later(R_disp)) add(disp.label);
-    for (const row of later(R_ctor)) for (const l of row.labels) add(l);
-    for (const l of ["<value>", "<value-list>", "<scalar>", "'\\'", "'\"'", "'''"]) add(l);
+    // ── one pass per later unit, in landing order: its rows, then the labels its own `EXPECT` and
+    //    `FAIL` sites name. Appended AFTER the nine capacity labels, so no index above moves (K-10),
+    //    and each unit's block stands after the previous unit's, so no index below moves either.
+    for (const unit of LATER_UNITS) {
+        for (const cls of born(R_cls, unit)) add(cls.label);
+        for (const kw of born(R_kw, unit)) add(kw.label);
+        for (const disp of born(R_disp, unit)) add(disp.label);
+        for (const row of born(R_ctor, unit)) for (const l of row.labels) add(l);
+        for (const l of UNIT_SITE_LABELS[unit]) add(l);
+    }
+    const orphan = Object.values(R_cls).concat(Object.values(R_kw), Object.values(R_disp), Object.values(R_ctor))
+        .filter((row) => row.since !== undefined && !LATER_UNITS.includes(row.since));
+    if (orphan.length > 0) {
+        throw new Error(`HALT: ${orphan.length} registry row(s) name a unit LATER_UNITS does not list — their labels would never reach L.`);
+    }
     return seen;
 };
 
