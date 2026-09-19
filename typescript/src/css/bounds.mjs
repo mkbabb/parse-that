@@ -221,7 +221,7 @@ const CTOR_ALLOC = Object.freeze({
     "linear-function": { fixed: 8 * 2 + 8 + 15, rate: 4 }, //    mkRec(2) + listToArr: 4 B per stop, each stop >= 1 code unit
     "linear-stop": { fixed: 8 * 2 + 8 + 4 * 2 + 15, rate: 0 }, // mkRec(2) + listToArr over at most 2 percents
     "style-rule": { fixed: 8 * 3 + 8 + 15 + 15, rate: 4 + 16 + 4 }, // mkRec(3) + declarations array (4 B/decl) + selectors: one part per top-level comma (4 B slot + 16 B mkStr per part), each part >= 1 code unit of the prelude
-    declaration: { fixed: 8 * 3 + 8 + 15, rate: 1 }, //          mkRec(3) + mkFold over the name's own bytes
+    declaration: { fixed: 8 * 3 + 8 + 15 + 16, rate: 1 }, //     mkRec(3) + X.P.W3.j's trimWs T_STR node + mkFold over the name's own bytes
     "value-color": { fixed: (8 * 2 + 8) * 2, rate: 0 }, //       mkRec(2) holding mkRec(2)
     stylesheet: { fixed: 15, rate: 4 }, //                        the surviving-items array, 4 B per rule
     //  X.P.W3.h — the CTOR family landed with `tables.mjs` R_ctor, `js-alg.mjs` CTORS and
@@ -266,6 +266,10 @@ const CTOR_ALLOC = Object.freeze({
     //  own header, so 4 B per code unit plus one part's worth at zero width bounds it.
     "animation-option": { fixed: 15, rate: 4 }, //                 the part's own token array, 4 B per token
     "animation-option-list": { fixed: 15 + 4, rate: 4 },
+    //  X.P.W3.j — the stylesheet family, landed with `tables.mjs` R_ctor, `js-alg.mjs` CTORS and
+    //  `wasm-alg.mjs` emitCtors (E-h1); the same four name-sets, asserted equal below. A comment
+    //  answers the STATIC `NONE` sentinel and allocates nothing at all.
+    "sheet-comment": { fixed: 0, rate: 0 },
 });
 
 /**
@@ -290,6 +294,8 @@ const CTOR_SCRATCH_CELLS = Object.freeze({
     "range-single": 2, "range-pair": 4, "keyframe-word": 4, "keyframe-percent": 4, "keyframe-named": 6,
     "timeline-mode": 2, "timeline-name": 4, "timeline-scroll": 6, "timeline-view": 10,
     "animation-option": 1, "animation-option-list": 1,
+    //  X.P.W3.j: the comment's constructor pushes nothing — its value is the static sentinel
+    "sheet-comment": 0,
 });
 
 const pad8 = (n) => Math.ceil(n / 8) * 8;

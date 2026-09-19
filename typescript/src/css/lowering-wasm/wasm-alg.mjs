@@ -894,17 +894,34 @@ export function emitCtors(env) {
             ["declarations", (b) => listToArr(b, (u) => arg(u, 1))],
         ]));
 
+    /**
+     * X.P.W3.j (J-2 / J-6): the name run reaches the constructor with its trailing whitespace
+     * still on it (space is a `decl-name` byte, because the incumbent trims a slice it has already
+     * cut at the colon), so the span is TRIMMED — `trimWs` answers a `T_STR` node, whose text the
+     * boundary reads back from the ORIGINAL string — and it is NOT folded here. `mkFold` would
+     * materialize folded bytes out of the input buffer, where a code unit >= 128 stands as the
+     * 0xFF marker, and would answer `ÿ` where the JS lowering answers the character: measured as
+     * a two-cell G-5 value divergence before this form was written. `.toLowerCase()` is the
+     * surface's (`entry.mjs` `sheetOver`), where it is the incumbent's own operation.
+     */
     declare("declaration", (c) =>
         rec(c, [
             ["name", (b) => {
                 const p = b.local(I32);
                 arg(b, 0);
                 b.set(p);
-                b.get(p).load(4).get(p).load(4).get(p).load(8).x("i32.add").call(F.mkFold);
+                b.get(p).load(4).get(p).load(4).get(p).load(8).x("i32.add").call(F.trimWs);
             }],
             ["value", (b) => arg(b, 1)],
             ["important", (b) => arg(b, 2)],
         ]));
+
+    /**
+     * X.P.W3.j (J-4): a comment is the RECOVERY SENTINEL — `stylesheet`'s own constructor filters
+     * `consts.NONE` out of the item list, so a comment leaves nothing in `V` and nothing in `D`,
+     * which is the incumbent's `cursor = end + 2`. The JS half is `() => NONE_OPT`.
+     */
+    declare("sheet-comment", (c) => c.i32(consts.NONE));
 
     declare("value-color", (c) =>
         rec(c, [

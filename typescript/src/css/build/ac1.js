@@ -18,4 +18,9 @@ export {
     serializeTimelineOptions,
     collectAnimationOptions,
     collectTimelineOptions,
+    collectDeclarations,
+    collectStyleRules,
+    collectKeyframes,
+    collectPropertyDescriptors,
+    collectCustomFunctions,
 } from "../entry.mjs";

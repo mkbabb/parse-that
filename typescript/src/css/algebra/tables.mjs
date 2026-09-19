@@ -65,9 +65,21 @@ export const R_cls = {
     //   op-char        the bytes the ten `KW`-read operators are spelled from (`+*-<>=!`).
     //   dquote/squote  the two quote characters; dq-plain/sq-plain the bytes a string's interior
     //                  admits outside an escape (everything but that quote and `\`, 0xFF included).
+    //  X.P.W3.j widens the exclusion set by the two BRACES. The incumbent never hands a value
+    //  containing one: `parseCssValue`'s source is a part `splitTopLevel(body, ";")` cut out of a
+    //  body `blocks()` already cut at the MATCHING brace, so a top-level `{` or `}` cannot stand
+    //  in it. Under the old set `}` was a token-char, so `NOT_TOKEN` refused `red` in
+    //  `a{color:red}` — the value token ran into the block's own closing brace. Widening moves no
+    //  verdict of `P:value` / `P:values` / `P:scalar`: a brace left over after the token still
+    //  meets those entries' `END` and still rejects (measured on both lowerings by the fixture's
+    //  `brace-edge` family); it moves only WHERE the token ends, which is the whole point.
     "token-char": {
         label: "token boundary",
-        table: table256((b) => !isWs(b) && b !== ch(",") && b !== ch("/") && b !== ch(":") && b !== ch(";") && b !== ch(")")),
+        table: table256(
+            (b) =>
+                !isWs(b) && b !== ch(",") && b !== ch("/") && b !== ch(":") && b !== ch(";") && b !== ch(")")
+                && b !== ch("{") && b !== ch("}"),
+        ),
         since: "X.P.W3.h",
     },
     "leading-digit": { label: "ident start", table: table256(isDigit), since: "X.P.W3.h" },
@@ -98,6 +110,33 @@ export const R_cls = {
     letter: { label: "<unit-letters>", table: table256(isAlpha), since: "X.P.W3.i" },
     "comma-gap": { label: "<comma-or-whitespace>", table: table256((b) => isWs(b) || b === ch(",")), since: "X.P.W3.i" },
     "any-but-comma": { label: "<animation-item-text>", table: table256((b) => b !== ch(",")), since: "X.P.W3.i" },
+    // X.P.W3.j — the stylesheet family's classes (`algebra/grammar/stylesheet.mjs`). Each mirrors
+    // one byte-level decision `stylesheet.ts` makes with a regex or an `indexOf`:
+    //
+    //   ws-or-semi   `while (/\s|;/.test(source[cursor])) cursor++` — `blocks()`'s leading trivia,
+    //                and, at J-5, the whole separator between two declarations (`splitTopLevel(body,
+    //                ";")` drops empty parts, so a run of any length is one separator).
+    //   prelude-char `blocks()` breaks only on a top-level `{` or `;`; a `}` is ordinary prelude
+    //                text (J-3). The slice's `any-but-brace-or-semi` excluded `}` and is kept —
+    //                removing a row would move every label index after it (K-10).
+    //   decl-name    `row.slice(0, row.indexOf(":"))` — every byte before the first colon (J-2).
+    //                `;` bounds the part, `{`/`}` bound the block, and the constructor trims.
+    //   any-but-star / slash — `source.indexOf("*/", cursor + 2)`, as a production (J-4). `slash`
+    //                is read ZERO-WIDTH only (`SCAN("slash", 0, 0)`: "no slash here"), and its
+    //                label is the existing `'/'`, which `collectLabels` dedupes — no index moves.
+    "ws-or-semi": { label: "<whitespace-or-semicolon>", table: table256((b) => isWs(b) || b === ch(";")), since: "X.P.W3.j" },
+    "prelude-char": { label: "rule-prelude", table: table256((b) => b !== ch("{") && b !== ch(";")), since: "X.P.W3.j" },
+    "decl-name": {
+        label: "declaration-name",
+        table: table256((b) => b !== ch(":") && b !== ch(";") && b !== ch("{") && b !== ch("}")),
+        since: "X.P.W3.j",
+    },
+    "any-but-star": { label: "comment-text", table: table256((b) => b !== ch("*")), since: "X.P.W3.j" },
+    slash: { label: "'/'", table: table256((b) => b === ch("/")), since: "X.P.W3.j" },
+    //   semi — `splitTopLevel(body, ";")`'s cut, as a zero-width assertion in front of a
+    //          DECLARATION's top-level value token (`grammar/value.mjs` `declaration-body`). Its
+    //          label is the existing `';'`, which `collectLabels` dedupes — no index moves.
+    semi: { label: "';'", table: table256((b) => b === ch(";")), since: "X.P.W3.j" },
 };
 
 /**
@@ -479,6 +518,18 @@ export const R_ctor = {
         leafMap: ["first", "rest"],
         since: "X.P.W3.i",
     },
+
+    // ── X.P.W3.j — the STYLESHEET family's one CTOR row, landed as ONE commit across the same
+    //    four realizations (COHESION §0s E-h1): the row here, `lowering-js/js-alg.mjs` CTORS, the
+    //    Wasm emitter `lowering-wasm/wasm-alg.mjs` emitCtors, and the node table `bounds.mjs`
+    //    CTOR_ALLOC / CTOR_SCRATCH_CELLS. `bounds.mjs` HALTs at load unless the four agree.
+    //
+    //    A comment is not an item and not an error: `blocks()` skips it before a block begins
+    //    (J-4). Its constructor answers the RECOVERY SENTINEL, which `stylesheet`'s own
+    //    constructor already filters out of the item list — so the comment leaves nothing behind
+    //    in `V` and nothing in `D`, which is precisely the incumbent's "cursor = end + 2". It
+    //    never guards (the `CUT` after `/*` and the closing `LIT` carry the refusal).
+    "sheet-comment": { label: "<comment>", code: "css_syntax", labels: ["<comment>"], arity: 1, leafMap: ["text"], since: "X.P.W3.j" },
 };
 
 /* ── L: the label index (§4.4) — EQ-4 compares INDICES into this list ──────────────────────── */
@@ -493,12 +544,14 @@ export const R_ctor = {
  * against a label an earlier pass carries (`value-color-head` is `<color-function>`, `ident-start`
  * is `ident`), so only a genuinely new label takes a new index.
  */
-const LATER_UNITS = ["X.P.W3.h", "X.P.W3.i"];
+const LATER_UNITS = ["X.P.W3.h", "X.P.W3.i", "X.P.W3.j"];
 
 /** The `EXPECT` / `FAIL` labels each later unit's grammar names, in that grammar's own order. */
 const UNIT_SITE_LABELS = {
     "X.P.W3.h": ["<value>", "<value-list>", "<scalar>", "'\\'", "'\"'", "'''"],
     "X.P.W3.i": ["<keyframe-selector>", "<animation-timeline>", "<animation-range>", "<animation-option-list>", "nonempty animation list item"],
+    //  the three `LIT`s the comment production reads (`LIT`'s own label form is `'<bytes>'`)
+    "X.P.W3.j": ["'/*'", "'*'", "'*/'"],
 };
 
 const collectLabels = () => {

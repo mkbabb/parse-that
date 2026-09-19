@@ -126,7 +126,7 @@ export const PRODUCTION_LABELS = Object.freeze({
     /* X.P.W3.h — the value grammar's labels (`algebra/grammar/value.mjs`), in L's own appended
        order: the classes, the operator table, `color()`'s space table, the constructor guards,
        the three entries' EXPECT sites and the three `LIT`s a quoted string's escape reads */
-    "token boundary": "<token-boundary> (whitespace, ',', '/', ':', ';', ')' or the end of input)",
+    "token boundary": "<token-boundary> (whitespace, ',', '/', ':', ';', ')', '{', '}' or the end of input)",
     "ident start": "<ident-start> (a letter, '_' or '-'; never a digit)",
     "<unit>": "<unit>",
     "<operator>": "<operator>",
@@ -170,6 +170,19 @@ export const PRODUCTION_LABELS = Object.freeze({
     "<animation-timeline>": "<animation-timeline>",
     "<animation-range>": "<animation-range>",
     "<animation-option-list>": "<animation-option-list>",
+
+    /* X.P.W3.j — the stylesheet family's labels (`algebra/grammar/stylesheet.mjs`), in L's own
+       appended order: the four new classes, the comment constructor, and the three `LIT`s the
+       comment production reads. The fifth class (`slash`) carries the existing `'/'` label, which
+       `collectLabels` dedupes, so it takes no new index and needs no row here (K-10). */
+    "<whitespace-or-semicolon>": "<whitespace-or-semicolon> (a run of whitespace and ';')",
+    "rule-prelude": "<qualified-rule-prelude> (any character but '{' or ';')",
+    "declaration-name": "<declaration-name> (any character but ':', ';', '{' or '}')",
+    "comment-text": "<comment-text> (any character but '*')",
+    "<comment>": "<comment>",
+    "'/*'": "<comment-open> ('/*')",
+    "'*'": "<asterisk>",
+    "'*/'": "<comment-close> ('*/')",
 });
 
 /** Both set-differences against `L`, injectivity, and the named-production predicate — at load. */

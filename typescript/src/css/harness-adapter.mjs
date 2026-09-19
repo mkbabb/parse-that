@@ -34,7 +34,8 @@ export const meta = {
     sources: {
         algebra: [
             at("algebra/ops.mjs"), at("algebra/tables.mjs"), at("algebra/grammar.mjs"),
-            at("algebra/grammar/value.mjs"), at("algebra/grammar/animation.mjs"), at("reify/term-alg.mjs"),
+            at("algebra/grammar/value.mjs"), at("algebra/grammar/animation.mjs"),
+            at("algebra/grammar/stylesheet.mjs"), at("reify/term-alg.mjs"),
         ],
         js: [at("lowering-js/js-alg.mjs"), at("lowering-js/values.mjs"), at("lowering-js/index.mjs")],
         wasm: [

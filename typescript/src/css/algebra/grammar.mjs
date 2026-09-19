@@ -17,6 +17,7 @@
 // cycle. Freshness is therefore load-bearing, not style.
 
 import { buildAnimationGrammar } from "./grammar/animation.mjs";
+import { buildStylesheetGrammar } from "./grammar/stylesheet.mjs";
 import { VALUE_REF_TARGETS, buildValueGrammar } from "./grammar/value.mjs";
 import { R_disp } from "./tables.mjs";
 
@@ -219,64 +220,17 @@ export function buildGrammar(A) {
             END(),
         );
 
-    /* ── §10.3 `P:stylesheet` — the malformed qualified rule ──────────────────────────────── */
-
-    // DECLARED DEVIATION (recorded, never silent): §10.3 writes `sync-rule`'s terminals as bare
-    // `SCAN`/`LIT`. INV-OWN (§2.4) requires every Span to be owned by a `DROP`, and `.g`'s
-    // structural walk enforces it statically. `sync` runs UNDER DISCARD — whatever it appends to
-    // `C` is truncated to the mark and the whole consumed span becomes ONE `skipped` entry — so the
-    // kinds below are unobservable by construction (no `C` entry written here ever reaches a
-    // product; COMP-1c is measured on every row and passes). The DROPs are therefore ownership
-    // bookkeeping, not a semantic change.
-    const syncRule = () =>
-        ALT(
-            SEQ(DROP("keyword", SCAN("any-but-semi-or-close", 1, INF)), OPT(ALT(TOK(";"), TOK("}")), null)),
-            TOK(";"),
-            TOK("}"),
-        );
-
-    // DECLARED DEVIATION: §10.3's `OPT(SEQ[WS, TOK "!", WS, UNIT "important"]) unit` cannot carry
-    // "whether the OPT arm matched" — both arms yield `unit` and are indistinguishable in the
-    // product. The expressible realization inside the twenty-two is `PURE true` / `PURE false`; the
-    // constructor then reads a value rather than a match, and `Declaration.important` is exact.
-    const important = () => ALT(SEQ(WS(), TOK("!"), WS(), UNIT_KW("important"), PURE(true)), PURE(false));
-
-    // E-3, ruled at COHESION §0n.3 and landed by `ALGEBRA-ADDENDA-2026-09-18.md`: §10.3's two
-    // `CUT`s are STRUCK. §5.2 scopes a `CUT` to its nearest enclosing `ALT` arm "through
-    // `SEQ`/`CTOR`/`EXPECT`/`DROP` but not through `TRY`, `REP`, `RECOVER` or `REF` (those open a
-    // new scope; a `CUT` directly under them is a walk error)". This one stands directly under the
-    // `REP` of `qualified-rule`, so it commits nothing — `.f` measured both inert over 30,527 rows.
-    const declaration = () =>
-        CTOR(
-            "declaration",
-            SEQ(WS(), TEXT("ident", 1, INF), WS(), TOK(":"), WS(), REF("value-slice"), important(), WS()),
-        );
-
-    const qualifiedRule = () =>
-        CTOR(
-            "style-rule",
-            SEQ(
-                TEXT("any-but-brace-or-semi", 1, INF),
-                TOK("{"),
-                // E-3, the second struck `CUT`: this one stands directly under `RECOVER`'s body
-                // (`stylesheet`'s `RECOVER css_syntax rule sync-rule`), which §5.2 also names as a
-                // new scope. Struck by `ALGEBRA-ADDENDA-2026-09-18.md`; measured inert by `.f`.
-                REP(declaration(), 0, INF, SEQ(WS(), TOK(";"), WS())),
-                OPT(SEQ(WS(), TOK(";")), null),
-                WS(),
-                TOK("}"),
-            ),
-        );
-
-    // DECLARED DEVIATION, and a CONTRACT TENSION recorded rather than resolved silently: §10.3
-    // writes `value-slice := CTOR value-color [REF color-body]`, while §8 D-3 states the slice has
-    // "exactly two `REF` sites (`balanced-tail`, `value-slice`)". Both cannot hold — a `REF
-    // color-body` is a third site, and `REF` is the operator that counts `depth` against
-    // `Θ.depthBound`. The realization takes the DEBT CLAUSE (§8 D-3 binds every candidate) and
-    // inlines `color-body`, leaving exactly the two back-edges D-3 names. Reported to `.h`.
-    const valueSlice = () => CTOR("value-color", colorBody());
-    const stylesheet = () =>
-        CTOR("stylesheet", SEQ(REP(SEQ(WS(), RECOVER("css_syntax", qualifiedRule(), syncRule())), 0, INF, null), WS(), END()));
+    /* ── §10.3 `P:stylesheet` — X.P.W3.j: the whole family moved to `grammar/stylesheet.mjs` ── */
+    //
+    // The slice's four productions (`stylesheet` · `qualified-rule` · `declaration` ·
+    // `value-slice`) stood here and read a stylesheet as a list of qualified rules whose every
+    // declaration value is a COLOUR (`value-slice := CTOR value-color [REF color-body]`). That was
+    // §10.3's own text and it was honest at W2 — the value grammar did not exist yet. X.P.W3.h
+    // landed it and published `value-body` as a `REF` target, so the CONTRACT TENSION recorded
+    // here ("§10.3 writes `value-slice := CTOR value-color [REF color-body]`, while §8 D-3 states
+    // the slice has exactly two `REF` sites … Reported to `.h`") is discharged at the far end: a
+    // declaration's value is now `REF("value-body")`, which is what `parseDeclarations` calls, and
+    // `value-slice` has no reader left. The family's new home states each move and its reason.
 
     /* ── the grammar map ──────────────────────────────────────────────────────────────────── */
 
@@ -304,12 +258,6 @@ export function buildGrammar(A) {
         "balanced-tail": balancedTail(),
         timing: timing(),
         "linear-stop": linearStop(),
-        stylesheet: stylesheet(),
-        rule: qualifiedRule(),
-        "qualified-rule": qualifiedRule(),
-        declaration: declaration(),
-        "value-slice": valueSlice(),
-        "sync-rule": syncRule(),
     };
 
     // The dispatch rows' terms. `ALGEBRA.md` §4.4 gives `R_disp` the row shape `{key → term}`, so
@@ -344,7 +292,6 @@ export function buildGrammar(A) {
     const entries = {
         "P:color": "color",
         "P:timing-function": "timing",
-        "P:stylesheet": "stylesheet",
     };
 
     /* ── X.P.W3.h — the value grammar (`grammar/value.mjs`), composed: one more source file, the
@@ -380,6 +327,19 @@ export function buildGrammar(A) {
     Object.assign(entries, animationGrammar.entries);
     Object.assign(dispatchTerms, animationGrammar.dispatchTerms);
 
+    /* ── X.P.W3.j — the stylesheet family (`grammar/stylesheet.mjs`), composed the same way: the
+          same algebra `A`, the same notations, and `P:stylesheet` over the productions that now
+          read a declaration's value through `REF("value-body")` — X.P.W3.h's own back-edge. */
+    const stylesheetGrammar = buildStylesheetGrammar(
+        { SCAN, LIT, TEXT, END, SEQ, ALT, CUT, PURE, REP, DROP, CTOR, RECOVER, REF },
+        { WS, TOK, UNIT_KW, OPT },
+    );
+    for (const name of Object.keys(stylesheetGrammar.terms)) {
+        if (terms[name] !== undefined) throw new Error(`HALT: the stylesheet grammar redefines production '${name}'`);
+    }
+    Object.assign(terms, stylesheetGrammar.terms);
+    Object.assign(entries, stylesheetGrammar.entries);
+
     for (const d of Object.values(R_disp)) {
         for (const target of Object.values(d.rows)) {
             if (!dispatchTerms[target]) throw new Error(`HALT: R_disp names '${target}', which the grammar does not define`);
@@ -390,8 +350,11 @@ export function buildGrammar(A) {
 }
 
 /**
- * The REF targets the grammar uses — §8 D-3's two back-edges and the value grammar's one
- * (X.P.W3.h, `value-item`: a call's argument list), and no others. The grammar map is finite and
- * closed (OP-22); a lowering resolves a back-edge by name against `terms`, never by search.
+ * The REF targets the grammar uses — §8 D-3's `balanced-tail` and the value grammar's two
+ * (X.P.W3.h). D-3's second back-edge was `value-slice`, the slice's colour-only declaration value;
+ * X.P.W3.j retires it — a declaration's value is `REF("value-body")`, so the site is the SAME site
+ * under the name the value grammar publishes it under, and the count of back-edges the grammar
+ * uses is unchanged. The grammar map is finite and closed (OP-22); a lowering resolves a back-edge
+ * by name against `terms`, never by search.
  */
-export const REF_TARGETS = ["balanced-tail", "value-slice", ...VALUE_REF_TARGETS];
+export const REF_TARGETS = ["balanced-tail", ...VALUE_REF_TARGETS];

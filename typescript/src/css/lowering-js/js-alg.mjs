@@ -28,7 +28,7 @@ import {
     JUMP_POSITIONS, KEYFRAME_PHASES, L, RANGE_PHASES, R_cls, R_ctor, R_disp, R_kw, SCROLLER_KEYWORDS,
     STEP_ALIASES, TIMELINE_AXES, TIMELINE_MODES, TIMING_KEYWORDS, labelIndex,
 } from "../algebra/tables.mjs";
-import { asciiFold, clampValue, isTuple, list, NONE_OPT, scaleValue, splitSelectors, span, tuple, UNIT } from "./values.mjs";
+import { asciiFold, clampValue, isTuple, list, NONE_OPT, scaleValue, splitSelectors, span, trimWs, tuple, UNIT } from "./values.mjs";
 
 /**
  * The combinator library itself — **this root's own `typescript/src/parse/**`** (COHESION §0n.5 /
@@ -223,7 +223,18 @@ const CTORS = {
     "linear-function": (a) => ({ kind: "linear-function", stops: a[0].l }),
     "linear-stop": (a) => ({ output: a[0], input: a[1].l }),
     "style-rule": (a) => ({ kind: "style", selectors: splitSelectors(a[0]), declarations: a[1].l }),
-    declaration: (a) => ({ name: asciiFold(a[0]), value: a[1], important: a[2] }),
+    /**
+     * X.P.W3.j (J-2 / J-6): the name is the TRIMMED span, and nothing else. `.toLowerCase()` is
+     * the surface's (`entry.mjs` `sheetOver`) — MEASURED, not preferred: a fold inside a
+     * constructor has to MATERIALIZE folded bytes, and the Wasm arena's only materializer,
+     * `mkFold`, reads the input buffer, where a code unit >= 128 was written as the `any-but-*`
+     * marker 0xFF (the adapter's declared `spans` posture). Folding here therefore answered `ÿ`
+     * for `≡` in the Wasm target and `≡` in the JS one — a G-5 value divergence on two corpus
+     * rows, measured before this form was written. A span is read back from the ORIGINAL string
+     * in both targets, so the trimmed name is byte-identical across them, and the surface's
+     * `.toLowerCase()` is the incumbent's own operation rather than an ASCII approximation of it.
+     */
+    declaration: (a) => ({ name: trimWs(a[0]), value: a[1], important: a[2] }),
     "value-color": (a) => ({ kind: "scalar", payload: { type: "color", value: a[0] } }),
     stylesheet: (a) => a[0].l.filter((item) => item !== NONE_OPT),
 
@@ -355,6 +366,12 @@ const CTORS = {
     /** The animation declaration's comma list, as the bare array of its parts (the blank ones the
      *  grammar already refused by name). It is the vocabulary `collectAnimationOptions` reads. */
     "animation-option-list": (a) => [a[0], ...a[1].l],
+
+    // ── X.P.W3.j — the STYLESHEET family, landed as ONE commit with its row (`tables.mjs`
+    //    R_ctor), the Wasm emitter (`wasm-alg.mjs` emitCtors) and the node table (`bounds.mjs`).
+
+    /** A comment is the recovery sentinel: `stylesheet`'s own constructor filters it out (J-4). */
+    "sheet-comment": () => NONE_OPT,
 };
 
 /**

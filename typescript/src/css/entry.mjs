@@ -535,8 +535,15 @@ function expandAnimationShorthand(value) {
 const declarationsOf = (declarations) =>
     (Array.isArray(declarations) ? declarations : []).filter((row) => isRecord(row) && typeof row.name === "string");
 
-/** `rules.ts` collectDeclarations — the last declaration wins unless an `!important` one stands. */
-function declarationCascade(declarations) {
+/**
+ * `stylesheet.ts` collectDeclarations — the last declaration wins unless an `!important` one
+ * stands. X.P.W3.j publishes it under its FROZEN BARREL NAME: it was already the cascade
+ * `collectAnimationOptions` and `collectTimelineOptions` read (X.P.W3.i authored it as
+ * `declarationCascade`), and a second transcription of the same four lines would be the OR05 shape
+ * at one remove — two lists that can drift. One function, two names, and `collectDeclarations` is
+ * the frozen one.
+ */
+export function collectDeclarations(declarations) {
     const result = new Map();
     for (const declaration of declarationsOf(declarations)) {
         const current = result.get(declaration.name);
@@ -544,6 +551,84 @@ function declarationCascade(declarations) {
     }
     return result;
 }
+const declarationCascade = collectDeclarations;
+
+/* ── X.P.W3.j — the four rule collectors, over the FROZEN `Stylesheet` (`stylesheet.ts`) ────── */
+
+/**
+ * `stylesheet.ts` `collect(stylesheet, predicate)`: a pre-order walk that records `{rule, path}`
+ * for every item the predicate admits and descends into `children` wherever an item has them.
+ * The four exported collectors are this walk under four `item.kind` tests, and they are SURFACE
+ * COMPOSITIONS for the reason E-h3 gives and `entry.mjs` already states for `serializeCssColor`:
+ * their argument is a PARSED STYLESHEET, not CSS text, so there is no source for a production to
+ * consume and a grammar for a non-language would be a grammar for nothing. They are also
+ * LOWERING-INDEPENDENT — the same function stands on both surfaces — so G-5's identity reaches
+ * them through the tree `parseStylesheet` answered, which is where a difference could exist.
+ *
+ * BND-1 at this boundary: a degenerate argument is the EMPTY result, never a throw. The walk
+ * guards each level with `Array.isArray` and each item with `isRecord`, so `collectStyleRules(42)`
+ * and `collectKeyframes({children: 7})` are `[]` rather than a `TypeError` — `W3.md` §2a's
+ * criterion applied to an export whose declared return is an array.
+ */
+const collectRules = (stylesheet, kind) => {
+    const out = [];
+    const visit = (items, parent) => {
+        if (!Array.isArray(items)) return;
+        items.forEach((item, index) => {
+            if (!isRecord(item)) return;
+            const path = [...parent, index];
+            if (item.kind === kind) out.push({ rule: item, path });
+            if (Array.isArray(item.children)) visit(item.children, path);
+        });
+    };
+    visit(stylesheet, []);
+    return out;
+};
+
+/**
+ * X.P.W3.j (J-6) — the stylesheet surface pass: `parseDeclarations`'s `.toLowerCase()`.
+ *
+ * The grammar answers each declaration's name as the TRIMMED SPAN of the source, because a span
+ * is read back from the original string in BOTH targets while a folded string has to be
+ * materialized, and the Wasm arena's materializer reads the input buffer, where a code unit >= 128
+ * stands as the 0xFF marker (the adapter's declared `spans` posture). Folding inside the
+ * constructor therefore answered `ÿ` for `≡` in one target and `≡` in the other — measured as two
+ * differing cells of G-5's 26,551-row `parseStylesheet` band before this pass existed.
+ *
+ * Here the fold is `.toLowerCase()`, which is the incumbent's OWN operation (`stylesheet.ts:391`)
+ * rather than an ASCII approximation of it, and it is one function on both surfaces, so the two
+ * targets stay identical by construction. It rebuilds only what it changes: the declaration
+ * records and the arrays holding them, frozen as `ENTRY` froze the tree it was handed.
+ */
+const foldedDeclaration = (declaration) =>
+    isRecord(declaration) && typeof declaration.name === "string"
+        ? Object.freeze({ ...declaration, name: declaration.name.toLowerCase() })
+        : declaration;
+
+const foldedItem = (item) => {
+    if (!isRecord(item)) return item;
+    const declarations = Array.isArray(item.declarations)
+        ? Object.freeze(item.declarations.map(foldedDeclaration))
+        : undefined;
+    const children = Array.isArray(item.children) ? Object.freeze(item.children.map(foldedItem)) : undefined;
+    if (declarations === undefined && children === undefined) return item;
+    return Object.freeze({
+        ...item,
+        ...(declarations === undefined ? {} : { declarations }),
+        ...(children === undefined ? {} : { children }),
+    });
+};
+
+const sheetOver = (parseSheet) => (source) => {
+    const result = parseSheet(source);
+    if (result.ok !== true || !Array.isArray(result.value)) return result;
+    return Object.freeze({ ok: true, value: Object.freeze(result.value.map(foldedItem)), diagnostics: result.diagnostics });
+};
+
+export const collectStyleRules = (stylesheet) => collectRules(stylesheet, "style");
+export const collectKeyframes = (stylesheet) => collectRules(stylesheet, "keyframes");
+export const collectPropertyDescriptors = (stylesheet) => collectRules(stylesheet, "property");
+export const collectCustomFunctions = (stylesheet) => collectRules(stylesheet, "function");
 
 /** `rules.ts` animationCascade — the same rule over the shorthand's expansion. */
 function animationCascade(declarations) {
@@ -858,6 +943,16 @@ export function makePublicSurface(lowering) {
     surface.collectAnimationOptions = collectAnimationOptions;
     surface.serializeTimelineOptions = serializeTimelineOptions;
     surface.collectTimelineOptions = collectorsOver(surface.parseAnimationRange, surface.parseAnimationTimeline);
+
+    // X.P.W3.j — the five stylesheet collectors. All five read an already-parsed product, so all
+    // five are lowering-independent and are the same function on both surfaces (the `.i` posture
+    // for `collectAnimationOptions` / `serializeTimelineOptions`, for the same reason).
+    surface.parseStylesheet = sheetOver(surface.parseStylesheet);
+    surface.collectDeclarations = collectDeclarations;
+    surface.collectStyleRules = collectStyleRules;
+    surface.collectKeyframes = collectKeyframes;
+    surface.collectPropertyDescriptors = collectPropertyDescriptors;
+    surface.collectCustomFunctions = collectCustomFunctions;
 
     surface.entries = () => PUBLIC_ENTRIES.map((row) => row.name);
     surface.unrealized = () => UNREALIZED_ENTRIES.slice();

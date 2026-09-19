@@ -274,6 +274,28 @@ export function buildValueGrammar(A, N) {
 
     /* ── the three entries ───────────────────────────────────────────────────────────────── */
 
+    /* ── X.P.W3.j — the DECLARATION's body: the same token language, bounded at a top-level `;` ──
+     *
+     * `parseCssValue("a;b")` ACCEPTS at the incumbent (measured against the pinned 4.0.0 oracle),
+     * which is why `;` is one of this grammar's operator tokens. Inside a STYLESHEET it never
+     * arrives: `parseDeclarations` reads `splitTopLevel(body, ";")` FIRST, so a `;` at paren depth
+     * zero has already cut the part before `parseCssValue` sees it — `a{c:1;d:2}` is two
+     * declarations there, and `a{c:url(a;b)}` is one, because the splitter counts parens.
+     *
+     * The bound is therefore a guard on the TOP-LEVEL item and nowhere else: one zero-width
+     * assertion (`SCAN("semi", 0, 0)` — "no semicolon here", the `.g` idiom) in front of the SAME
+     * `REF("value-single")` every other item position reads. There is no second token language and
+     * no second spelling of a value — a call's arguments go through the UNGUARDED group, which is
+     * exactly the splitter's paren rule, and every arm, every constructor and every label below is
+     * the one this grammar already had.
+     */
+    const NOT_SEMI = () => DROP("keyword", SCAN("semi", 0, 0));
+    const declSingle = () => SEQ(NOT_SEMI(), REF("value-single"));
+    const declSpaceGroup = () =>
+        CTOR("value-group", REP(WS(), 0, INF, null), declSingle(), REP(SEQ(WS(), declSingle()), 0, INF, null), PURE(SEPARATORS.indexOf("space")));
+    const declSlashGroup = () => separated("value-group", "slash", declSpaceGroup, slashSep);
+    const declBody = () => separated("value-group", "comma", declSlashGroup, commaSep);
+
     const value = () => SEQ(WS(), EXPECT(REF("value-body"), "<value>"), WS(), END());
     /** `parseCssValues`: the same body, a lone token wrapped as a one-item space list (`value-wrap`). */
     const values = () => SEQ(WS(), EXPECT(CTOR("value-wrap", REF("value-body")), "<value-list>"), WS(), END());
@@ -288,9 +310,11 @@ export function buildValueGrammar(A, N) {
             /** The two `REF` targets: the body every entry reads, the token every item is. */
             "value-body": commaGroup(),
             "value-single": single(),
+            /** X.P.W3.j's third: the same body with a top-level `;` refused (the splitter's cut). */
+            "declaration-body": declBody(),
         },
     };
 }
 
-/** The value grammar's two `REF` targets, beside the slice's two (`grammar.mjs` REF_TARGETS). */
-export const VALUE_REF_TARGETS = Object.freeze(["value-body", "value-single"]);
+/** The value grammar's `REF` targets, beside the slice's one (`grammar.mjs` REF_TARGETS). */
+export const VALUE_REF_TARGETS = Object.freeze(["value-body", "value-single", "declaration-body"]);

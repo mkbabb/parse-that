@@ -40,6 +40,10 @@ const RUNTIME_EXPORTS = [
     // X.P.W3.i — the animation family: three grammar entries and three structured compositions
     "parseKeyframeSelector", "parseAnimationTimeline", "parseAnimationRange",
     "serializeTimelineOptions", "collectAnimationOptions", "collectTimelineOptions",
+    // X.P.W3.j — the five stylesheet collectors; with these the artifact names all NINETEEN
+    // frozen runtime exports of `src/css/index.ts`, and the barrel's runtime half is closed.
+    "collectDeclarations", "collectStyleRules", "collectKeyframes",
+    "collectPropertyDescriptors", "collectCustomFunctions",
 ];
 
 writeFileSync(
@@ -66,6 +70,10 @@ const TYPE_EXPORTS = [
     "CSSAnimationOptions", "CSSTimelineOptions", "KeyframeSelector",
     "RangeBoundary", "RangePhase", "ScrollTimelineDescriptor", "ScrollerKeyword",
     "TimelineAxis", "TimelineScopeValue", "TriggerType", "ViewInset", "ViewTimelineDescriptor",
+    // X.P.W3.j — the nine stylesheet types; with these the artifact re-exports all THIRTY-THREE
+    // frozen type names, and the barrel's type half is closed.
+    "CollectedRule", "KeyframeRule", "KeyframesBlock", "PropertyRule", "StylesheetItem",
+    "CSSPropertyDescriptor", "CustomFunctionDescriptor", "CustomFunctionParameter", "CustomFunctionRule",
 ];
 writeFileSync(
     path.join(OUT, "ac1.d.ts"),
