@@ -511,6 +511,81 @@ export const INCUMBENT_DEFECTS = [
         consumerDirection:
             "NARROWS acceptance. A consumer that handed `parseStylesheet` a non-string — a `null` from a failed file read, a parsed JSON object, a number — received `ok:true` with an empty sheet and proceeded as though the stylesheet were empty. It now receives `ok:false` and learns at the call that it never had a source. No consumer that passed a string is affected.",
     },
+    {
+        id: "ID-1b",
+        parser: "parseStylesheet",
+        title: "the incumbent reads a NON-IDENT run as a declaration NAME — `col!r`, and a nested at-rule",
+        inputs: [
+            "b { col!r: rgb(9. none -76 / 0.) }",
+            "b { background-color: var(--brand) -!important }",
+            "h1 { img { @container (width > 400px) { nav { margin: 0 auto } } transition: opacity 200ms } }",
+        ],
+        incumbentPosture:
+            "ACCEPTS all three, and the NAME it returns is the defect: `col!r` comes back as a declaration named `col!r`; `-!important` is folded into the value as a keyword; and the third's first declaration is named `@container (width > 400px) { nav { margin` with value `0 auto`. The mechanism is one line — `parseDeclarations` takes `row.slice(0, row.indexOf(\":\"))` over a part of `splitTopLevel(body, \";\")`, which is paren-aware and BRACE-BLIND, so any bytes at all become the name and a name may cross an inner `{`.",
+        candidatePosture:
+            "REJECTS the first two in BOTH lowerings (`css_syntax`, the span covering the rule), and reads the third's nested `@container` as an at-rule CHILD — css-syntax-3 §5.4.4's own answer — which is a DIVERGENT_VALUE against the incumbent's mangled declaration list rather than a rejection.",
+        specCitation:
+            "css-syntax-3 §5.4.4 — a declaration's name is an `<ident-token>` (§4.3.11), and an `<at-keyword-token>` in a style block's contents starts an AT-RULE; §5.4.10 — `!important` follows a component value, so a run with no token boundary before the `!` is not one token.",
+        adjudication:
+            "**UNADJUDICATED — routed to X.P.W4's fresh adjudicator**, for the reason ID-1 gives (M-23 §1). §0w defines ID-1b as \"ID-1's mechanism one production up\" and names the first two inputs; the THIRD is X.P.W3.n's own finding. `.m` filed it as **E-j1** (\"2× `@container` nested inside a style rule\") and §0w carried that reading as a candidate gap to be cured here. Measured at this seat by replaying the incumbent's own `blocks()` and `;` split, it is not a candidate gap: the candidate's reading is the specification's, and what differs is the incumbent's lax NAME production. The predicate in `adjudications.mjs` is that replay, so the attribution is mechanical and its census is printed beside its population on every run. The candidate's own disposition on the first two — refusing the whole sheet where §5.4.4 drops the invalid declaration and keeps the rule — is also unadjudicated and goes to the same seat.",
+        consumerDirection:
+            "NARROWS acceptance on the first two and CHANGES VALUE on the third. A consumer that fed `b { col!r: … }` received a declaration whose name is not a CSS property and could never match one; it now receives `ok:false`. A consumer that fed a nested at-rule received a declaration list with a name eighty characters long and no `children`; it now receives the at-rule as a child, which is what the stylesheet says. Both directions remove a value the string does not name.",
+    },
+    {
+        id: "ID-4",
+        parser: "parseStylesheet",
+        title: "`blocks()`'s SIGNED paren counter goes negative and the rule's own `{` becomes invisible",
+        inputs: [
+            ".c ){ color: #28cA }",
+            "#d ){ background-color: var(--a, rebeccapurple) }",
+            ".c { background-color: rgb(-0 .504 6e-128 / 9e-415) } GARBAGE ) ;(#d { background-color: #eFEbC78B }",
+        ],
+        incumbentPosture:
+            "REJECTS all three, and rejects them for the counter rather than for the CSS: `blocks()`'s prelude scan does `else if (char === \")\") parens--` with no floor, so a `)` that closes nothing leaves `parens === -1` and every later `{` or `;` fails the `parens === 0` test. The scan runs off the end, `boundary < 0`, and the answer is `failure(…, [\"rule\"])`.",
+        candidatePosture:
+            "ACCEPTS all three in BOTH lowerings, reading the stray `)` as ordinary prelude text: `.c )` and `#d )` are the selectors, and the third's second rule is the one its braces describe.",
+        specCitation:
+            "css-syntax-3 §5.4.9 — a simple block is consumed to its MATCHING closer, so the parser holds a STACK; §4.3.1/§5.4.2 — a `)` with nothing open is a stray token and a parse error at most, never a depth of −1 that hides the next block.",
+        adjudication:
+            "**UNADJUDICATED — routed to X.P.W4's fresh adjudicator**, for the reason ID-1 gives (M-23 §1). `.j` escalated the family as **SH-1** and reported rather than cured it; §0w rules it **ID-4**, \"class predicate; candidate correct\". X.P.W3.n narrows the family by MEASUREMENT: the predicate is the one byte-level disagreement between the two readings — a `)` that closes nothing — and the cells where the incumbent's `(` was never closed (`( { border-color: #26FA }`, `b ({ …`) are NOT this row's, because the candidate's own prelude now consumes a simple block to its matching `)` and refuses those sheets exactly as the incumbent does (X.P.W3.n's E-j1 cure). SH-1's eleven are therefore five here and six cured.",
+        consumerDirection:
+            "WIDENS acceptance. A consumer that fed `.c ){ … }` received `ok:false` with `expected [\"rule\"]` — a diagnostic naming nothing in the source — and now receives the rule the braces describe, with the stray `)` inside the selector text where the author wrote it. A consumer that relied on the rejection loses it; none that relied on acceptance is affected.",
+    },
+    {
+        id: "ID-5",
+        parser: "parseCssColor",
+        title: "the incumbent accepts a legacy comma form that mixes `<number>` with `<percentage>`, or spells `none`",
+        inputs: [
+            "rgb(24.745, 171.2787213968113, 41%)",
+            "rgb(+12, none, 40.121382917277515, 46.14)",
+            "rgb(none, 8e144, 80%, .86)",
+        ],
+        incumbentPosture:
+            "ACCEPTS all three. It rewrites the commas to spaces before reading the channels, so the LEGACY form is parsed by the MODERN grammar, where every channel is `[<percentage> | <number> | none]` — the separator structure that distinguishes the two forms has been erased by the time the channels are read.",
+        candidatePosture:
+            "REJECTS all three in BOTH lowerings since X.P.W3.n: `legacy-rgb` is two homogeneous three-channel arms (`<percentage>#{3}` and `<number>#{3}`) and neither admits `none`. `<alpha-value>` is untouched, so `rgb(1, 2, 3, none)` still parses.",
+        specCitation:
+            "css-color-4 §8.1 — `<legacy-rgb-syntax> = rgb( <percentage>#{3} , <alpha-value>? ) | rgb( <number>#{3} , <alpha-value>? )`: the three channels are ONE type throughout, and `none` is admitted by the modern grammar alone. §7.1 says the same of `<legacy-hsl-syntax>`, whose saturation and lightness are `<percentage>`.",
+        adjudication:
+            "**RULED at COHESION §0w — incumbent defect ID-5**, and the candidate's cure landed at X.P.W3.n WITH this row's class predicate, in one commit. `.k` measured the family as F-k2 and could not cure it (`src/css/**` was outside that unit's bounds); `.l` landed the cure twice and WITHDREW it both times, because a cure with no adjudication turns the 575 cells the oracle accepts into FALSE_REJECTs. The class predicate is what makes them declared divergences instead: 1,506 corpus rows match it and 1,487 cells are governed at the widest entry, both printed by `css-universe.mjs --check` on every run.",
+        consumerDirection:
+            "NARROWS acceptance. `rgb(24.745, 171.28, 41%)` and `rgb(none, 8e144, 80%, .86)` parsed and now return `ok:false` with a located diagnostic. A consumer emitting a mixed legacy form received a colour the string does not name — the incumbent read `41%` and `171.28` as the same kind of channel — and must emit either the all-`<number>` form, the all-`<percentage>` form, or the space-separated modern form, all three unaffected.",
+    },
+    {
+        id: "PB-11 (F-l3)",
+        parser: "parseCssColor",
+        title: "the ORACLE ACCEPTS `hwb(10, 10%, 10%)`, which PB-11's own prose says it rejects",
+        inputs: ["hwb(10, 10%, 10%)", "hwb(120, 30%, 40%)"],
+        incumbentPosture:
+            "MEASURED at this emission, and the two do not agree with each other: this is the whole of the observation. `parser-band.md` rows `hwb(120, 30%, 40%)` as an unsound ACCEPT and PB-11 rules it REJECT; `.l` then measured `hwb(10, 10%, 10%)` accepted by the same oracle. The comma form has no legacy syntax on this head either way.",
+        candidatePosture: "REJECTS both in BOTH lowerings — PB-11's ruling, honoured, and asserted as G-6 row (k).",
+        specCitation:
+            "css-color-4 §8.3 — `hwb() = hwb( [<hue> | none] [<percentage> | <number> | none] [<percentage> | <number> | none] [ / [<alpha-value> | none] ]? )`: space-separated components only. §8 and §9 give hwb(), lab(), lch(), oklab(), oklch() and color() no legacy comma form at all.",
+        adjudication:
+            "**OBSERVATION, rowed and not ruled here** (COHESION §0w: \"rowed as an incumbent-defect observation under PB-11; adjudicated at W4\"). `.l` raised it as **F-l3** — the oracle accepts what PB-11's prose says it rejects — and the disposition of the two cells is X.P.W4's fresh adjudicator's, not this wave's. PB-11 itself is unmoved: the candidate rejects both, which is what the ruling requires, and the class predicate's population over the 27,021-row corpus is **1**, printed beside the census on every run.",
+        consumerDirection:
+            "NARROWS acceptance. A consumer that fed `hwb(10, 10%, 10%)` received a colour from published 4.0.0 and now receives `ok:false`. The space-separated spelling `hwb(10 10% 10%)` is the same colour and is unaffected; that is the whole of the migration.",
+    },
 ];
 
 /* ── measuring the two halves ──────────────────────────────────────────────────────────────── */

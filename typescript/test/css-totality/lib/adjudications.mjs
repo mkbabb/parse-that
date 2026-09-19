@@ -427,7 +427,23 @@ const colourCalls = (src) => (typeof src === "string" ? callsOf(src, COLOUR_HEAD
  * decides, so these rows land in the honest remainder under their own ids rather than being scored
  * against a ruling that was never about them.
  */
-const UNRULED_SHEET = /@|\{[^{}]*\{|(?:^|[;}])\s*\{|[^\s,/(]![A-Za-z]/;
+/**
+ * X.P.W3.n — THREE OF THE FOUR CLAUSES ARE RETIRED, because the constructs they named are no longer
+ * unruled (COHESION §0v/§0w). `.l` landed the ten at-rule shapes and nested style bodies, and was
+ * GRANTED E-j2 (`splitSelectors` drops an empty part, both lowerings); `.n` landed the
+ * component-value prelude. A guard that still withheld every ruling from a sheet naming `@`, or
+ * nesting a block, or opening with `{`, was withholding it for a reason that had been cured —
+ * MEASURED at this seat: ten of `parseStylesheet`'s twenty-one residual cells were a RULED class's
+ * own subject (PB-12's trailing-dot number, PB-04/05's alpha clamp, ID-5's legacy comma form) held
+ * out of reach by a stale clause, and counted as misses for a construct the candidate now reads.
+ *
+ * THE ONE CLAUSE THAT STANDS is `x!imp`: `!important` — or a declaration NAME — with no token
+ * boundary before the `!`. That is **ID-1b**'s own subject (§0w: "the incumbent accepts `col!r` as a
+ * declaration NAME and `-!important` as a keyword"), it is UNADJUDICATED, and withholding the other
+ * rulings from those sheets is what keeps its cells in the honest remainder under ITS id instead of
+ * being scored against a ruling that was never about them.
+ */
+const UNRULED_SHEET = /[^\s,/(]![A-Za-z]/;
 const outsideEveryClass = (src) => typeof src !== "string" || UNRULED_SHEET.test(src);
 
 /* ── the ten class predicates, one per ruling id, in RESOLUTION ORDER ───────────────────────── */
@@ -461,7 +477,7 @@ export const CLASSES = [
         kind: "reject",
         title: "the comma→space rewrite makes an invalid separator structure invisible",
         expect: "reject",
-        population: 2270, //  MEASURED at 27,021 rows (X.P.W3.n); 2,220 at `.k`'s 26,604 — the corpus moved, not the predicate.
+        population: 2272, //  MEASURED at 27,021 rows (X.P.W3.n); 2,220 at `.k`'s 26,604 — the corpus moved, then the GUARD did.
         specCitation:
             "css-color-4 §8.1 / §7.1 — the legacy form is comma-separated THROUGHOUT and the modern form is space-separated throughout, with at most one solidus before <alpha-value>; css-syntax-3 §5.4.1 — an empty component value is not a value",
         why: "a colour call whose top-level separators are mixed, doubled, leading, trailing or empty",
@@ -475,7 +491,7 @@ export const CLASSES = [
         kind: "reject",
         title: "the css-color-4 functions have no comma form",
         expect: "reject",
-        population: 0,
+        population: 1, //  MEASURED (X.P.W3.n): the guard no longer hides `hwb(10, 10%, 10%)` — F-l3's own cell.
         specCitation: "css-color-4 §8 / §9 — hwb(), lab(), lch(), oklab(), oklch() and color() take space-separated components only; there is no legacy comma form",
         why: "a comma-separated call on a head css-color-4 gives no legacy form",
         consumerDirection: "NARROWS acceptance: `hwb(120, 30%, 40%)` and its siblings no longer parse. The space-separated spelling of the same colour is unaffected.",
@@ -510,7 +526,7 @@ export const CLASSES = [
         kind: "reject",
         title: "the legacy comma form takes THREE arguments of ONE type and no `none`",
         expect: "reject",
-        population: 1477, //  MEASURED at 27,021 rows (X.P.W3.n) — the class is new at this unit.
+        population: 1501, //  MEASURED at 27,021 rows (X.P.W3.n) — the class is new at this unit; re-read after the guard retired three clauses.
         specCitation:
             "css-color-4 §8.1 — `<legacy-rgb-syntax> = rgb( <percentage>#{3} , <alpha-value>? ) | rgb( <number>#{3} , <alpha-value>? )`: the three channels are one type throughout and `none` is admitted only by the modern grammar; §7.1 — `<legacy-hsl-syntax> = hsl( <hue>, <percentage>, <percentage>, <alpha-value>? )`, which admits no `none` either. §4.2's `<alpha-value>` is untouched: `none` as the FOURTH argument stays lawful.",
         why: "a comma-separated rgb()/rgba()/hsl()/hsla() whose first three arguments mix `<number>` with `<percentage>`, or spell `none`",
@@ -542,7 +558,7 @@ export const CLASSES = [
         kind: "reject",
         title: "`1.` is not a CSS number",
         expect: "reject",
-        population: 5391,
+        population: 5428, //  X.P.W3.n: +37, the guard's three retired clauses
         specCitation: "css-syntax-3 §4.3.12 — a number's decimal point must be followed by at least one digit; the incumbent's `\\d+\\.?\\d*` admits the trailing dot in every numeric position",
         why: "any numeric token spelled with a trailing decimal point",
         consumerDirection: "NARROWS acceptance wherever a number is read — colours, values, timing functions alike. `steps(7., jump-start)` and `rgb(1. 2 3)` are now `ok:false`.",
@@ -556,7 +572,7 @@ export const CLASSES = [
         kind: "repair",
         title: "token juxtaposition is accepted",
         expect: "accept",
-        population: 990,
+        population: 995, //   X.P.W3.n: +5, the guard's three retired clauses
         specCitation:
             "css-syntax-3 §4 — tokenization is maximal-munch over the code-point stream, so `50%20%30%` is three tokens and whitespace between tokens that cannot merge is not required. §4.3.3 is the same rule's other edge and is X.P.W3.g's subject: a number followed by an ident-start is ONE dimension token, and this class cannot reach it.",
         why: "two operand tokens run together with nothing between them; the repair inserts the whitespace the tokenizer does not require",
@@ -571,7 +587,7 @@ export const CLASSES = [
         kind: "repair",
         title: "non-finite numerals — clamp where a clamp exists, reject where none does",
         expect: "accept",
-        population: 630,
+        population: 635, //   X.P.W3.n: +5, the guard's three retired clauses
         specCitation:
             "css-values-4 §10.9 — a value outside the implementation's supported range is clamped to that range; css-color-4 §8.1/§4.2 — rgb() channels and <alpha-value> are clamped. Where no clamp exists the numeral is not a <number> and the colour is invalid.",
         why: "a non-finite numeral sitting in a CLAMPED colour channel or in alpha; the repair spells it at the bound. One in an UNCLAMPED channel is not repaired, so the incumbent's rejection stands and the candidate is held to it",
@@ -586,7 +602,7 @@ export const CLASSES = [
         kind: "repair",
         title: "out-of-range channels and alphas CLAMP rather than passing through or rejecting",
         expect: "accept",
-        population: 7939,
+        population: 8002, //  X.P.W3.n: +63, the guard's three retired clauses
         specCitation: "css-color-4 §8.1 and §12 — channel values are clamped to their range; §4.2 — an <alpha-value> outside [0,1] is clamped, not invalid",
         why: "a colour argument outside the range css-color-4 declares for its slot; the repair spells it AT the bound, which is what a clamp means",
         consumerDirection:
@@ -605,7 +621,7 @@ export const CLASSES = [
         kind: "repair",
         title: "the legacy four-argument rgba()/hsla() forms parse",
         expect: "accept",
-        population: 1110,
+        population: 1122, //  X.P.W3.n: +12, the guard's three retired clauses
         specCitation: "css-color-4 §8.1 and §7.1 — `rgb()`/`rgba()` and `hsl()`/`hsla()` each admit a four-argument comma form ending in <alpha-value>",
         why: "a four-argument comma form on a head that HAS a legacy syntax; the repair drops the fourth argument, which is the only part the incumbent refuses",
         consumerDirection: "WIDENS acceptance: the most-deployed colour syntax on the web parses. No consumer that relied on acceptance is affected; one that read the rejection as a signal loses it.",
@@ -620,7 +636,7 @@ export const CLASSES = [
         kind: "value",
         title: "the two spec-identical hsl spellings agree — a bare number IS a percentage there",
         expect: null,
-        population: 2991,
+        population: 3022, //  X.P.W3.n: +31, the guard's three retired clauses
         specCitation: "css-color-4 §7 — in the modern hsl() form saturation and lightness are `[<percentage> | <number> | none]` and the two spellings name the same value; the incumbent scales only the percentage",
         why: "a space-separated hsl() whose saturation or lightness is a bare number; `ruledValue` scales it, and the candidate must answer with exactly that",
         consumerDirection:
@@ -907,26 +923,266 @@ export const classPopulations = (rows) => {
  * measured from the input, never guessed. `unattributed` is a real answer and is printed as one —
  * a remainder that cannot be named is the finding, not a rounding error.
  */
+/* ══════════════════════════════════════════════════════════════════════════════════════════════
+   X.P.W3.n — THE RESIDUAL CLASSES (COHESION §0w), one predicate per RULED id.
+
+   `.m` left the remainder as a first-match cascade of prose tags, and said so: "`remainderId` is a
+   first-match cascade, so its printed tag is the first rule that fires, not always the mechanism".
+   §0w rules every residual class and fixes the id-set X.P.W4's OP-2 biconditional is checked
+   against — `{GROUND-C · ID-1/ID-1b · ID-2 · ID-3 · ID-4 · ID-5 · PB-11 · R-f1 · E-k2}` — so the
+   cascade becomes a TABLE: one row per ruling, each with the ruling's own predicate over the INPUT,
+   its measured population, and a census the gate prints and asserts `≤` it. A tag that is not a
+   ruled class is not a member (§0w), so BND-1, SH-1, F-k1, F-k2, F-k4 and F-m1 do not appear here:
+   each was either cured at this unit or promoted to the ruling that owns its mechanism.
+
+   TWO OF THE NINE ARE NOT THE MATRIX'S. **R-f1** (which bound fires first at the depth suites) and
+   **E-k2** (the un-measurable class-1 capacity bounds) are read by G-9, never by a G-1 cell, and
+   are named here so the id-set is one list rather than two.
+
+   ORDER IS MEANING, as it is in `CLASSES`: a cell whose source carries TWO ruled constructs is
+   attributed to the one that explains the VERDICT, so the incumbent's lax NAME read is read before
+   the numerals inside the value it names, and the paren scan before the component read.
+   ══════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * **ID-4's predicate, in the ruling's own terms.** §0w: "the incumbent's `blocks()` signed paren
+ * counter mis-tracks nesting; css-syntax-3 consumes blocks with a stack". The two readings differ at
+ * exactly one place: a `)` that closes NOTHING. `blocks()` does `else if (char === ")") parens--`,
+ * so the counter goes NEGATIVE and every later `{` or `;` is invisible to it (the prelude runs to
+ * the end and the rule is refused); css-syntax-3 §5.4.9 has nothing on the stack to pop, the `)` is
+ * a stray token, and the next `{` opens the block. Quote handling is the incumbent's own
+ * (`stylesheet.ts` `blocks()`: a quote opens a string, a backslash escapes the closer).
+ */
+export const unmatchedCloseParen = (src) => {
+    if (typeof src !== "string") return false;
+    let depth = 0;
+    let quote = "";
+    for (let i = 0; i < src.length; i += 1) {
+        const c = src[i];
+        if (quote) {
+            if (c === quote && src[i - 1] !== "\\") quote = "";
+            continue;
+        }
+        if (c === '"' || c === "'") quote = c;
+        else if (c === "(") depth += 1;
+        else if (c === ")") {
+            if (depth === 0) return true; //  the counter goes NEGATIVE here; the stack does not
+            depth -= 1;
+        }
+    }
+    return false;
+};
+
+/**
+ * **ID-1b's predicate.** §0w: "the incumbent accepts `col!r` as a declaration NAME and `-!important`
+ * as a keyword — ID-1's mechanism one production up". `parseDeclarations` takes
+ * `row.slice(0, row.indexOf(":"))` as the NAME whatever bytes stand in it, and `/!important\s*$/i`
+ * matches with no token boundary in front of the `!`; css-syntax-3 §5.4.4 reads a declaration's
+ * name as an <ident-token> and §5.4.10's `!important` follows a component value, so neither run is
+ * one token. The predicate is the byte shape both readings turn on: a `!` with no boundary before
+ * it and an ident start after it.
+ */
+export const unanchoredBangRead = (src) => typeof src === "string" && /[^\s,/(]![A-Za-z]/.test(src);
+
+/**
+ * **ID-1b's OTHER shape, measured by replaying the incumbent's own two functions.** The `!` byte
+ * shape above is what `.m` could see from outside; the RULING is about the production. The
+ * incumbent takes a declaration's name as `row.slice(0, row.indexOf(":"))` over a part of
+ * `splitTopLevel(body, ";")`, and that split is PAREN-aware and BRACE-BLIND — so a name may cross
+ * an inner `{`. Replayed here (`blocks()`'s scanner and the `;` split, byte for byte from
+ * `stylesheet.ts` at the pin), the predicate fires exactly when the incumbent reads, as a NAME,
+ * a run that css-syntax-3 §4.3.11 does not admit as an `<ident-token>`.
+ *
+ * THIS IS WHERE `.m`'s LAST TWO E-j1 CELLS GO, and the re-characterization is X.P.W3.n's finding,
+ * not a fold: `@property --ratio { … } h1, h2 { <comment> img { @container (width > 400px) { nav {
+ * margin: 0 auto; … } } transition: opacity 200ms } … }` is a DIVERGENT_VALUE because the incumbent
+ * reads `@container (width > 400px) { nav { margin` as a declaration NAME (measured: that string is
+ * the `name` field of its first declaration) where css-syntax-3 §5.4.4 starts an AT-RULE on an
+ * `<at-keyword-token>`. The candidate reads the nested at-rule, which is the spec's answer; the
+ * difference is the incumbent's lax name production — ID-1's mechanism one production up, which is
+ * what §0w defines ID-1b to be — and NOT a candidate gap.
+ */
+const IDENT_TOKEN = /^--?[-_a-zA-Z0-9\u0080-￿]*$|^[-_a-zA-Z\u0080-￿][-_a-zA-Z0-9\u0080-￿]*$/;
+
+/** `splitTopLevel(src, ";")` — `grammar.ts` at the pin: paren-depth and quote aware, empty parts dropped. */
+const semiParts = (src) => {
+    const parts = [];
+    let depth = 0;
+    let quote = "";
+    let start = 0;
+    for (let i = 0; i < src.length; i += 1) {
+        const c = src[i];
+        if (quote) {
+            if (c === quote && src[i - 1] !== "\\") quote = "";
+            continue;
+        }
+        if (c === '"' || c === "'") { quote = c; continue; }
+        if (c === "(") depth += 1;
+        else if (c === ")") depth -= 1;
+        else if (depth === 0 && c === ";") {
+            const part = src.slice(start, i).trim();
+            if (part) parts.push(part);
+            start = i + 1;
+        }
+    }
+    const tail = src.slice(start).trim();
+    if (tail) parts.push(tail);
+    return parts;
+};
+
+/** `blocks()` — `stylesheet.ts` at the pin, its bodies alone (the preludes are ID-4's subject). */
+const blockBodies = (src) => {
+    const out = [];
+    let cursor = 0;
+    while (cursor < src.length) {
+        while (cursor < src.length) {
+            while (/\s|;/.test(src[cursor] ?? "")) cursor += 1;
+            if (!src.startsWith("/*", cursor)) break;
+            const end = src.indexOf("*/", cursor + 2);
+            if (end < 0) return out;
+            cursor = end + 2;
+        }
+        if (cursor >= src.length) break;
+        let quote = "";
+        let parens = 0;
+        let boundary = -1;
+        for (let i = cursor; i < src.length; i += 1) {
+            const c = src[i];
+            if (quote) {
+                if (c === quote && src[i - 1] !== "\\") quote = "";
+                continue;
+            }
+            if (c === '"' || c === "'") quote = c;
+            else if (c === "(") parens += 1;
+            else if (c === ")") parens -= 1;
+            else if (parens === 0 && (c === "{" || c === ";")) { boundary = i; break; }
+        }
+        if (boundary < 0) return out;
+        if (src[boundary] === ";") { cursor = boundary + 1; continue; }
+        let depth = 1;
+        quote = "";
+        let end = boundary + 1;
+        for (; end < src.length && depth > 0; end += 1) {
+            const c = src[end];
+            if (quote) {
+                if (c === quote && src[end - 1] !== "\\") quote = "";
+                continue;
+            }
+            if (c === '"' || c === "'") quote = c;
+            else if (c === "{") depth += 1;
+            else if (c === "}") depth -= 1;
+        }
+        if (depth !== 0) return out;
+        out.push(src.slice(boundary + 1, end - 1));
+        cursor = end;
+    }
+    return out;
+};
+
+export const nonIdentDeclarationName = (src, depth = 0) => {
+    if (typeof src !== "string" || depth > 8) return false;
+    for (const body of blockBodies(src)) {
+        for (const part of semiParts(body)) {
+            const colon = part.indexOf(":");
+            if (colon > 0 && !IDENT_TOKEN.test(part.slice(0, colon).trim())) return true;
+        }
+        if (nonIdentDeclarationName(body, depth + 1)) return true;
+    }
+    return false;
+};
+
+/** **ID-2's predicate**: an EMPTY part in a comma-separated argument list (`steps(1e43,, start)`). */
+export const emptyCommaPart = (src) => typeof src === "string" && /\(\s*[^()]*,\s*,/.test(src);
+
+export const RESIDUAL_CLASSES = [
+    {
+        id: "ID-3",
+        title: "the incumbent accepts a NON-STRING as an empty stylesheet",
+        population: 0, //  MEASURED: a non-string is not a union ROW; ID-3's subjects are the seven declared boundary cases beside them.
+        specCitation: "css-syntax-3 §3 — parsing operates on a stream of code points; a non-string has no parse, so `[]` is not the answer.",
+        ruling: "INCUMBENT DEFECT, UNADJUDICATED → X.P.W4 (DIVERGENCE-LEDGER §9 ID-3)",
+        matches: (src) => typeof src !== "string",
+    },
+    {
+        id: "ID-1b",
+        title: "the incumbent reads `col!r` as a declaration NAME and `-!important` as a keyword",
+        population: 534, //  MEASURED at 27,021 rows (X.P.W3.n) — the `!` byte shape alone matches 146; the incumbent's own name read adds the rest
+        specCitation: "css-syntax-3 §5.4.4 — a declaration's name is an <ident-token>; §5.4.10 — `!important` follows a component value. A run with no token boundary before the `!` is neither.",
+        ruling: "INCUMBENT DEFECT, UNADJUDICATED → X.P.W4's fresh adjudicator (§0w: ID-1's predicate extended)",
+        matches: (src) => unanchoredBangRead(src) || nonIdentDeclarationName(src),
+    },
+    {
+        id: "ID-4",
+        title: "`blocks()`'s SIGNED paren counter goes negative where css-syntax-3's stack does not",
+        population: 1172, // MEASURED at 27,021 rows (X.P.W3.n)
+        specCitation: "css-syntax-3 §5.4.9 — a simple block is consumed to its MATCHING closer; a `)` with nothing open is a stray token, not a depth of −1.",
+        ruling: "INCUMBENT DEFECT, UNADJUDICATED → X.P.W4 (DIVERGENCE-LEDGER §9 ID-4)",
+        matches: unmatchedCloseParen,
+    },
+    {
+        id: "ID-5",
+        title: "the legacy comma form mixes `<number>` with `<percentage>`, or spells `none`",
+        population: 1506, //  MEASURED at 27,021 rows (X.P.W3.n) — the same predicate `CLASSES`'s ID-5 row carries, read WITHOUT that table's ID-1b guard (1,501 there)
+        specCitation: "css-color-4 §8.1 / §7.1 — three arguments of ONE type, and `none` only in the modern grammar.",
+        ruling: "INCUMBENT DEFECT (DIVERGENCE-LEDGER §9 ID-5); the candidate's §8.1 cure landed at X.P.W3.n",
+        matches: (src) => legacyFormMisaccept(src),
+    },
+    {
+        id: "GROUND-C",
+        title: "a numeral that overflows to ±Infinity",
+        population: 1069, // MEASURED at 27,021 rows (X.P.W3.n)
+        specCitation: "css-syntax-3 §4.3.13 — the conversion yields ±Infinity and that is not a syntax error; css-values-4 §5.1 — range support and clamping are the consumer's.",
+        ruling: "RULED at COHESION §0v: per-cell adjudication at X.P.W4's fresh adjudicator; `<finite-number>` as a rejection label REFUSED",
+        matches: (src) => nonFiniteNumerics(src).length > 0,
+    },
+    {
+        id: "ID-2",
+        title: "the incumbent accepts an EMPTY argument in a comma-separated list",
+        population: 45, //   MEASURED at 27,021 rows (X.P.W3.n)
+        specCitation: "css-syntax-3 §5.4.1 / css-values-4 §2.1 — the parts of a comma-separated list are component values; an EMPTY part is not one.",
+        ruling: "INCUMBENT DEFECT, UNADJUDICATED → X.P.W4 (DIVERGENCE-LEDGER §9 ID-2)",
+        matches: emptyCommaPart,
+    },
+    {
+        id: "ID-1",
+        title: "the incumbent's UNANCHORED component read — a component value with trailing garbage",
+        population: 7076, // MEASURED at 27,021 rows (X.P.W3.n)
+        specCitation: "css-syntax-3 §5.4.7 — a component value is consumed WHOLE; §5.4.4's trailing-input condition makes the declaration invalid.",
+        ruling: "INCUMBENT DEFECT, UNADJUDICATED → X.P.W4 (DIVERGENCE-LEDGER §9 ID-1)",
+        matches: (src) => unanchoredComponentRead(src),
+    },
+    {
+        id: "PB-11",
+        title: "the ORACLE ACCEPTS a comma form on a head css-color-4 gives no legacy syntax (F-l3)",
+        population: 1, //  MEASURED at 27,021 rows (X.P.W3.n) — `hwb(10, 10%, 10%)`, F-l3's own witness
+        specCitation: "css-color-4 §8 / §9 — hwb(), lab(), lch(), oklab(), oklch() and color() take space-separated components only.",
+        ruling: "INCUMBENT-DEFECT OBSERVATION under PB-11 (§0w); adjudicated at X.P.W4",
+        matches: (src) => colourCalls(src).some((call) => separatorShape(call) === "legacy" && !LEGACY_HEADS.has(call.head)),
+    },
+];
+
+/** The §0w id-set, as one list — the two G-9 members included, so the biconditional reads from here. */
+export const RULING_IDS = Object.freeze([...RESIDUAL_CLASSES.map((k) => k.id), "R-f1", "E-k2"]);
+
+/**
+ * THE HONEST REMAINDER, BY ID (`W3.md` §6 G-1: "52/52 **or the honest remainder, by id**").
+ * A miss no class GOVERNS is attributed to the RULING that owns its mechanism, measured from the
+ * input and never guessed. `unattributed` is a real answer and is printed as one — a remainder that
+ * cannot be named is the finding, not a rounding error, and X.P.W4's OP-2 biconditional is exactly
+ * "no cell reads `unattributed`".
+ */
 export const remainderId = (src) => {
-    // X.P.W3.n — **ID-3**, not BND-1. BND-1 was two defects under one tag: the INSTRUMENT feeding
-    // `{id, src}` pairs (cured at `lib/corpus.mjs`, so no union row reaches here as a non-string any
-    // more) and the INCUMBENT accepting a non-string as an empty sheet, which is now a ruled class
-    // with a §9 ledger row of its own (COHESION §0w).
-    if (typeof src !== "string") return "ID-3";
-    if (/@[A-Za-z-]+/.test(src)) return "E-j1 at-rule family (unauthored, escalated by .j)";
-    if (/\{[^{}]*\{/.test(src)) return "E-j1 nested style body (unauthored, escalated by .j)";
-    if (/\/\*/.test(src)) return "F-k3 a comment inside a declaration block is read as the declaration NAME (candidate defect; src/css/** is outside this unit's writable set)";
-    if (legacyFormMisaccept(src)) return "F-k2 the candidate ACCEPTS a legacy comma form the spec forbids — mixed <number>/<percentage> arguments, or `none` (css-color-4 §8.1); the cure is in src/css/**, outside this unit's writable set";
-    if (nonFiniteNumerics(src).length > 0)
-        return "GROUND-C ±Infinity (owner-owed; W3.md §10 'not opened here')";
-    if (/\(\s*[^()]*,\s*,/.test(src))
-        return "F-k4 the incumbent accepts an EMPTY argument (`steps(1e43,, start)`); css-syntax-3 §5.4.1 gives a comma-separated list no empty part — UNADJUDICATED, M-23 §1";
-    if (unanchoredComponentRead(src))
-        return "F-k1 the incumbent's UNANCHORED component read (trailing garbage inside a component value); UNADJUDICATED — a fresh-adjudicator act, M-23 §1";
-    if (/^\s*,|,\s*[{)]|,\s*$/.test(src)) return "E-j2 splitSelectors keeps the empty part (escalated by .j)";
-    if (/\)[^(]*\{|\([^)]*\{/.test(src)) return "SH-1 blocks()'s signed paren counter (escalated by .j)";
+    for (const klass of RESIDUAL_CLASSES) if (klass.matches(src)) return klass.id;
     return "unattributed";
 };
+
+/** The per-class POPULATION over a corpus — `classPopulations`' twin, for the residual table. */
+export const residualPopulations = (rows) =>
+    RESIDUAL_CLASSES.map((klass) => {
+        let matched = 0;
+        for (const row of rows) if (klass.matches(row.s)) matched += 1;
+        return { id: klass.id, title: klass.title, ruling: klass.ruling, pinned: klass.population, measured: matched, agrees: matched === klass.population };
+    });
 
 /**
  * ADJ-2's SUBJECT, and only it: a juxtaposition INSIDE A COLOUR CALL's arguments.

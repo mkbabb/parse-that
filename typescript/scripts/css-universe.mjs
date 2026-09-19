@@ -34,7 +34,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import { P2_ROOT, VALUE_JS_ROOT, sha256 } from "../test/css-totality/lib/pin.mjs";
-import { ADJUDICATIONS } from "../test/css-totality/lib/adjudications.mjs";
+import { ADJUDICATIONS, RESIDUAL_CLASSES, RULING_IDS, residualPopulations } from "../test/css-totality/lib/adjudications.mjs";
 import { ABSENT, PARTIAL, TOTAL } from "../test/css-totality/lib/matrix.mjs";
 import { CORPUS_JSON, assemble } from "../test/css-totality/lib/universe.mjs";
 
@@ -290,6 +290,54 @@ const main = async () => {
                     .slice(0, 110),
             ]),
         );
+    }
+
+    // ── X.P.W3.n — THE RESIDUAL CLASSES, EACH WITH A CENSUS ≤ ITS RULING'S POPULATION ──────────
+    //    COHESION §0w rules every residual class and fixes the id-set X.P.W4's OP-2 biconditional
+    //    is checked against. The census here is the count of NON-TOTAL CELLS the ruling was
+    //    attributed, per entry — `classPopulations`' twin on the other side of the matrix — and the
+    //    unattributed count is the biconditional itself, printed as a number rather than argued.
+    const residuals = residualPopulations(corpus.rows);
+    const residualCensus = {};
+    for (const row of partialRows) {
+        for (const [id, n] of Object.entries(row.remainder ?? {})) {
+            residualCensus[id] ??= {};
+            residualCensus[id][row.name] = n;
+        }
+    }
+    console.log(`\nresidual CLASS predicates (COHESION §0w — one per RULED id; census ≤ the ruling's measured population)`);
+    const residualRows = residuals.map((klass) => {
+        const perEntry = Object.entries(residualCensus[klass.id] ?? {}).sort((a, b) => b[1] - a[1]);
+        const widest = perEntry.length > 0 ? perEntry[0][1] : 0;
+        const cells = perEntry.reduce((n, [, k]) => n + k, 0);
+        return { ...klass, perEntry, widest, cells, within: widest <= klass.pinned };
+    });
+    table(
+        ["ruling", "population (pinned)", "population (measured)", "cells carried", "census — widest entry", "≤ pin", "carried, by entry"],
+        residualRows.map((r) => [
+            r.id,
+            r.pinned,
+            `${r.measured}${r.agrees ? "" : "  DRIFTED"}`,
+            r.cells,
+            r.widest,
+            r.within ? "YES" : "**NO**",
+            r.perEntry.map(([entry, n]) => `${entry} ${n}`).join(" · ").slice(0, 60),
+        ]),
+    );
+    const unattributed = Object.entries(residualCensus).filter(([id]) => !RULING_IDS.includes(id));
+    const residualOver = residualRows.filter((r) => !r.within);
+    const residualDrift = residualRows.filter((r) => !r.agrees);
+    const carriedTotal = residualRows.reduce((n, r) => n + r.cells, 0);
+    const unattributedTotal = unattributed.reduce((n, [, byEntry]) => n + Object.values(byEntry).reduce((m, k) => m + k, 0), 0);
+    console.log(
+        `  ${RESIDUAL_CLASSES.length} residual predicates · id-set {${RULING_IDS.join(" · ")}} · ${carriedTotal} cells carried BY ID · ` +
+            `${unattributedTotal} cells NOT attributed to a ruling id · ${residualOver.length} census OVER its pinned population · ` +
+            `${residualDrift.length} population drifted from its pin`,
+    );
+    for (const r of residualOver) console.log(`  OVER-REACHING  ${r.id} — census ${r.widest} > pinned population ${r.pinned}`);
+    for (const r of residualDrift) console.log(`  DRIFTED        ${r.id} — pinned ${r.pinned}, measured ${r.measured}`);
+    for (const [id, byEntry] of unattributed) {
+        console.log(`  NOT IN THE ID-SET  ${id} — ${Object.entries(byEntry).map(([e, n]) => `${e} ${n}`).join(" · ")} (X.P.W4 OP-2: every non-TOTAL cell carries a §0w id)`);
     }
 
     const unhonoured = matrix.declaredObservations.filter((o) => o.honoured === false);
