@@ -1644,6 +1644,56 @@ export function emitCtors(env) {
     });
 
     /**
+     * X.P.W3.n — a SIMPLE BLOCK inside a prelude (css-syntax-3 §5.4.9). Its three leaves are always
+     * present and contiguous — `TEXT("lparen",1,1)` · the inner `raw-text` run · `TEXT("rparen",1,1)`
+     * — so the block is the SPAN from the opening paren's start to the closing paren's end, which is
+     * byte for byte the JS lowering's `a[0] + a[1] + a[2]`. `value-string`'s own reading, without
+     * that row's scalar wrapper.
+     */
+    declare("paren-block", (c) => {
+        const k = c.local(I32);
+        const item = c.local(I32);
+        const open = c.local(I32);
+        const list = c.local(I32);
+        const close = c.local(I32);
+        const n = c.local(I32);
+        const start = c.local(I32);
+        const end = c.local(I32);
+        const last = c.local(I32);
+        c.block("void", (blk) => {
+            blk.loop("void", (lp) => {
+                lp.get(k).get(1).x("i32.ge_u").brIf(1);
+                lp.get(0).get(k).x("i32.add").call(F.slotGet).set(item); //  the k-th leaf, k a LOCAL
+                lp.get(item).load().i32(T_LIST).x("i32.eq").if_("void",
+                    (b) => b.get(item).set(list),
+                    (b) => b.get(list).x("i32.eqz").if_("void", (t) => t.get(item).set(open), (t) => t.get(item).set(close)));
+                lp.get(k).i32(1).x("i32.add").set(k);
+                lp.br(0);
+            });
+        });
+        c.get(list).load(4).set(n);
+        //  start: the opening brace's own start, else one before the first piece (else one before the closing brace)
+        c.get(open).if_(I32,
+            (t) => t.get(open).load(4),
+            (e) => e.get(n).if_(I32,
+                (t) => t.get(list).load(8).load(4).i32(1).x("i32.sub"),
+                (u) => u.get(close).if_(I32, (t) => t.get(close).load(4).i32(1).x("i32.sub"), (v) => v.i32(0))));
+        c.set(start);
+        //  end: the closing brace's own end, else one after the last piece, else two after the start
+        c.get(close).if_(I32,
+            (t) => strEnd(t, close),
+            (e) => e.get(n).if_(I32,
+                (t) => {
+                    t.get(list).get(n).i32(1).x("i32.sub").i32(4).x("i32.mul").x("i32.add").load(8).set(last);
+                    strEnd(t, last);
+                    t.i32(1).x("i32.add");
+                },
+                (u) => u.get(start).i32(2).x("i32.add")));
+        c.set(end);
+        c.get(start).get(end).get(start).x("i32.sub").call(F.mkStr);
+    });
+
+    /**
      * L-6: the trimmed name when it is `animation` or `animation-*` (ASCII-folded — `kwLookup`
      * folds the span it compares), else 0, the row's labelled zero-width failure. The `T_STR` the
      * runtime's `trimWs` answers is the same node the `declaration` constructor then trims again

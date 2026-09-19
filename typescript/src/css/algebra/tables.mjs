@@ -163,6 +163,36 @@ export const R_cls = {
         table: table256((b) => b !== ch(",") && b !== ch(";") && b !== ch("}") && b !== ch("!")),
         since: "X.P.W3.l",
     },
+    // X.P.W3.n — E-j1's residual: the `url()` token inside an at-rule prelude (COHESION §0w).
+    //
+    //   `blocks()`'s prelude scan is PAREN-AWARE — it breaks on a top-level `{` or `;` and carries a
+    //   paren counter, so `@namespace svg url(http://www.w;.org/2000/svg);` keeps its `;` inside the
+    //   token. `prelude-char` is a BYTE class and knows no such thing, so the candidate cut the
+    //   prelude inside the url token and refused the sheet (MEASURED: 3 of E-j1's 5 residual cells).
+    //   css-syntax-3 §5.4.3 reads an at-rule's prelude as COMPONENT VALUES, and §5.4.9 consumes a
+    //   `(`-token as a SIMPLE BLOCK up to its matching `)` — whatever is inside it, `;` and `{`
+    //   alike. The prelude is therefore a RUN of pieces: a paren block (recursive, a STACK — never
+    //   the incumbent's signed counter, which is ID-4's own defect) or a byte run that stops at `(`
+    //   as well as at the two boundaries.
+    //
+    //   prelude-no-paren  the top-level run: `blocks()`'s two boundaries, plus `(` so the paren arm
+    //                     gets its turn. A `)` with nothing open is ORDINARY prelude text — the
+    //                     stack reading, and the one place the incumbent's SIGNED counter differs.
+    //   nested-no-paren   the same inside a body, where a `}` also closes (the slice's own reading).
+    //   lparen / rparen   read `TEXT(cls, 1, 1)` so the block's span is exact. Their labels are the
+    //                     existing `'('` / `')'`, which `collectLabels` dedupes — no index moves.
+    "prelude-no-paren": {
+        label: "rule-prelude",
+        table: table256((b) => b !== ch("{") && b !== ch(";") && b !== ch("(")),
+        since: "X.P.W3.n",
+    },
+    "nested-no-paren": {
+        label: "any-but-brace-or-semi",
+        table: table256((b) => b !== ch("{") && b !== ch(";") && b !== ch("}") && b !== ch("(")),
+        since: "X.P.W3.n",
+    },
+    lparen: { label: "'('", table: table256((b) => b === ch("(")), since: "X.P.W3.n" },
+    rparen: { label: "')'", table: table256((b) => b === ch(")")), since: "X.P.W3.n" },
 };
 
 /**
@@ -620,6 +650,13 @@ export const R_ctor = {
     //    non-ASCII byte inside an unknown at-rule's body is never re-encoded (the J-6 posture).
     "raw-text": { label: "<at-rule-body>", code: "css_syntax", labels: ["<at-rule-body>"], arity: 1, leafMap: ["pieces"], since: "X.P.W3.l" },
     "raw-block": { label: "<at-rule-body>", code: "css_syntax", labels: ["<at-rule-body>"], arity: 3, leafMap: ["open", "pieces", "close"], since: "X.P.W3.l" },
+    //    X.P.W3.n — the SIMPLE BLOCK inside a prelude (css-syntax-3 §5.4.9), the fifth realization of
+    //    the CTOR family (`tables.mjs` here · `lowering-js/js-alg.mjs` CTORS · `lowering-wasm/
+    //    wasm-alg.mjs` emitCtors · `bounds.mjs` CTOR_ALLOC / CTOR_SCRATCH_CELLS, whose four name-sets
+    //    `bounds.mjs` asserts equal at load). It answers the SOURCE SPAN from its opening paren to
+    //    its closing one — `value-string`'s own reading, without that row's scalar wrapper — so a
+    //    prelude carrying a `url()` token is one run of text again in BOTH lowerings.
+    "paren-block": { label: "<simple-block>", code: "css_syntax", labels: ["<simple-block>"], arity: 3, leafMap: ["open", "inner", "close"], since: "X.P.W3.n" },
     //    `parseDeclarations`' `name === "animation" || name.startsWith("animation-")` — the ONE guard
     //    of this family: the declaration name (trimmed, ASCII-folded) is `animation` or begins
     //    `animation-`, and the row answers the TRIMMED span; any other name is the guard's failure,
@@ -640,7 +677,7 @@ export const R_ctor = {
  * against a label an earlier pass carries (`value-color-head` is `<color-function>`, `ident-start`
  * is `ident`), so only a genuinely new label takes a new index.
  */
-const LATER_UNITS = ["X.P.W3.h", "X.P.W3.i", "X.P.W3.j", "X.P.W3.l"];
+const LATER_UNITS = ["X.P.W3.h", "X.P.W3.i", "X.P.W3.j", "X.P.W3.l", "X.P.W3.n"];
 
 /** The `EXPECT` / `FAIL` labels each later unit's grammar names, in that grammar's own order. */
 const UNIT_SITE_LABELS = {
@@ -652,6 +689,11 @@ const UNIT_SITE_LABELS = {
     //  and the one `FAIL` it names (`@starting-style` with no body). The braces' `'{'` / `'}'`
     //  already stand in L, so the dropped exact-width `LIT`s of `raw-block` add no index.
     "X.P.W3.l": ["'@'", "'keyframes'", "'scope'", "'starting-style'", "<starting-style-body>"],
+    //  X.P.W3.n's prelude run names no new EXPECT/FAIL site: its two boundary classes reuse
+    //  `prelude-char`'s and `any-but-brace-or-semi`'s labels, and `lparen`/`rparen` reuse the `'('`
+    //  and `')'` the value grammar's `TOK` already put in L — all four dedupe, so only the
+    //  `paren-block` constructor's own `<simple-block>` is appended, at the END (K-10).
+    "X.P.W3.n": [],
 };
 
 const collectLabels = () => {

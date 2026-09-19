@@ -403,6 +403,13 @@ const CTORS = {
     /** The raw body between the at-rule's braces: its pieces, concatenated — the source span. */
     "raw-text": (a) => a[0].l.join(""),
     /**
+     * X.P.W3.n — a SIMPLE BLOCK inside a prelude (css-syntax-3 §5.4.9): its opening paren, whatever
+     * stood between, and its closing paren, as ONE run of source text. The three leaves are always
+     * present (`TEXT(lparen,1,1)` · the inner run · `TEXT(rparen,1,1)`) and contiguous, so the JS
+     * join and the Wasm span (open.start .. close.end) are the same bytes.
+     */
+    "paren-block": (a) => `(${a.find(isList).l.join("")})`,
+    /**
      * A nested `{ … }` inside a raw body, braces included. The braces are leaves when `TEXT` read
      * them and absent when a doubled brace fell to the dropped `LIT` arm (L-3), so the block is
      * rebuilt around the one leaf that is always present: the pieces list.

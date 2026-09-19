@@ -265,8 +265,49 @@ export function buildStylesheetGrammar(A, N) {
      * read `}\n@keyframes s` as a nested rule's selector and the parent lost its closing brace.
      * Every rule production below takes the prelude it is built over.
      */
-    const topPrelude = () => TEXT("prelude-char", 1, INF);
-    const nestedPrelude = () => TEXT("any-but-brace-or-semi", 1, INF);
+    /**
+     * X.P.W3.n — E-j1's residual, and the whole of the cure (COHESION §0w: "the `url()` token inside
+     * at-rule preludes (`@namespace`)").
+     *
+     * A prelude is not a byte run: css-syntax-3 §5.4.3 reads it as COMPONENT VALUES, and §5.4.9
+     * consumes a `(`-token as a SIMPLE BLOCK up to its MATCHING `)` — so a `;` or a `{` inside
+     * `url(http://www.w;.org/2000/svg)` is part of that token and ends nothing. The incumbent knows
+     * this too, by a paren counter in `blocks()`; `prelude-char` knew nothing of it and cut the
+     * prelude inside the url token, which is three of E-j1's five residual cells, measured.
+     *
+     * THE MATCH IS A STACK, NEVER A SIGNED COUNTER. `paren-block` is recursive and fails when its
+     * `)` is missing, so `( { border-color: #26FA }` has no top-level `{` at all and the rule is
+     * refused — §5.4.2's "this is a parse error, return nothing", and what the ORACLE answers too. A
+     * `)` with nothing open is ORDINARY prelude text (`prelude-no-paren` admits it), so `.c ){ … }`
+     * still reads `.c )` as a selector. That pair is exactly the difference between the stack and
+     * the incumbent's SIGNED counter — **ID-4**'s own subject — and it is measured per cell, not
+     * asserted: this production cures neither the cells where the incumbent goes NEGATIVE nor any
+     * cell it is not about.
+     *
+     * The run answers ONE span in both lowerings: the pieces are contiguous, so the JS join and the
+     * Wasm first-start..last-end are the same bytes the old single `TEXT` gave.
+     *
+     * THE BRACE IDIOM, TRANSPOSED. A piece is a maximal run, so `((b))` reads `((` as a run of TWO
+     * and an exact-width `TEXT(cls, 1, 1)` refuses it — the same edge `raw-block` (L-3) already
+     * answers: a paren is a `TEXT` leaf when it stands alone and a DROPPED `LIT` when it is doubled,
+     * and the constructor rebuilds the block around the one leaf that is always present, the pieces
+     * list. MEASURED before this note was written: without it `.a(b(c))` and `.a(())` were refused
+     * and `.pane-wrapper:not(:has(> .glass-resting))` — a real selector out of the P-1 corpus — went
+     * from ACCEPT to a FALSE_REJECT.
+     */
+    const parenPieces = () => REP(ALT(REF("paren-block"), TEXT("any-but-paren", 1, INF)), 0, INF, null);
+    const parenClose = () => ALT(TEXT("rparen", 1, 1), DROP("punct", LIT(")")));
+    const parenBlock = () =>
+        CTOR(
+            "paren-block",
+            ALT(
+                SEQ(TEXT("lparen", 1, 1), parenPieces(), parenClose()),
+                SEQ(DROP("punct", LIT("(")), parenPieces(), parenClose()),
+            ),
+        );
+    const preludeRun = (cls) => CTOR("raw-text", REP(ALT(REF("paren-block"), TEXT(cls, 1, INF)), 1, INF, null));
+    const topPrelude = () => preludeRun("prelude-no-paren");
+    const nestedPrelude = () => preludeRun("nested-no-paren");
 
     /** `parseDeclarations(body)` succeeded: the first reading. The prelude may be empty (`{ … }`). */
     const styleRule = (prelude) =>
@@ -433,6 +474,7 @@ export function buildStylesheetGrammar(A, N) {
             "qualified-rule": styleRules(topPrelude),
             "at-rule": atRule(topPrelude),
             "raw-block": rawBlock(),
+            "paren-block": parenBlock(),
             declaration: declaration(),
             "sync-rule": syncRule(),
             comment: comment(),

@@ -285,6 +285,7 @@ const CTOR_ALLOC = Object.freeze({
     "at-unknown-stmt": { fixed: 8 * 3 + 8, rate: 0 },
     "raw-text": { fixed: 16, rate: 0 },
     "raw-block": { fixed: 16, rate: 0 },
+    "paren-block": { fixed: 16, rate: 0 }, //                     X.P.W3.n — one mkStr over the source span
     "animation-property": { fixed: 16, rate: 0 }, //                the trimmed span's own mkStr
 });
 
@@ -316,6 +317,7 @@ const CTOR_SCRATCH_CELLS = Object.freeze({
     //  push nothing (their value is one `mkStr`); a list copied to an array is charged to the input
     "style-rule-mixed": 6, "at-keyframes": 6, "keyframe-rule": 4, "at-declarations": 6, "at-scope": 6,
     "at-starting-style": 4, "at-unknown-block": 6, "at-unknown-stmt": 6, "raw-text": 0, "raw-block": 0,
+    "paren-block": 0,
     "animation-property": 0,
 });
 

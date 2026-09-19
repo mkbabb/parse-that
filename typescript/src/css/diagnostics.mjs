@@ -206,6 +206,12 @@ export const PRODUCTION_LABELS = Object.freeze({
     "'starting-style'": "<at-rule-name> ('starting-style')",
     "'@'": "<at-rule> ('@')",
     "<starting-style-body>": "<starting-style-body> (a '{ … }' block; ';' is not one)",
+
+    /* X.P.W3.n — the prelude's simple block (css-syntax-3 §5.4.9; COHESION §0w, E-j1's `url()`
+       residual). Its two boundary classes reuse `rule-prelude` and `any-but-brace-or-semi`, and
+       `lparen`/`rparen` reuse the `'('` / `')'` the value grammar already put in L, so this is the
+       one row the unit appends. */
+    "<simple-block>": "<simple-block> (a '( … )' block, closed)",
 });
 
 /** Both set-differences against `L`, injectivity, and the named-production predicate — at load. */
