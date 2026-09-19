@@ -815,25 +815,36 @@ export const PACKRAT_LATCH_SITES = Object.freeze({
 });
 
 /**
- * The library, loaded through the root's own pinned `tsx` — the same mechanism `js-alg.mjs:48`
- * uses, because the library is TypeScript source whose internal specifiers are TS-style.
+ * The library, reached through THIS PACKAGE'S OWN EXPORT MAP — the same self-reference
+ * `js-alg.mjs:23` uses. `@mkbabb/parse-that/packrat` resolves to `./dist/packrat.js` and
+ * `@mkbabb/parse-that` to `./dist/parse.js`.
  *
- * DECLARED, because it decides what the reading below MEANS: `tsImport` does NOT dedupe. Two calls
- * with the same specifier and the same parent yield two module namespaces with two distinct
- * `PACKRAT_ARMED` bindings (measured by this seat: `ns_a === ns_b` is false, and
- * `ns_a.resetPackrat === ns_b.resetPackrat` is false). So this instrument reads THE LATCH IN ITS
- * OWN LIBRARY INSTANCE, and says so; it does not claim to read the instance the lowerings' parse
- * path holds, because that instance is reachable from no module in this seat's bounds. Both facts
- * are part of the finding, not around it.
+ * X.P.W4.e2 / E-w4e-2 cure (a) (COHESION §0aa). Until this landed these two lines read
+ * `require_("tsx/esm/api")` and `tsImport("../parse/packrat.ts", …)`: the library's TypeScript
+ * SOURCES, loaded through a loader. `src/css/**` is shipped and `src/parse/**` is not, and `tsx` is
+ * this package's dependency in no manifest, so those bytes carried a runtime import of a TypeScript
+ * loader into every consumer tarball (R-3). The cure is the one the ruling names and NOT a
+ * module-local "have we armed" flag — a flag would ANSWER the very question `latch.test.ts` L-3
+ * exists to MEASURE, turning a measured red into an asserted one, which §6 G-3's own words refuse.
+ * `packrat-entry.ts` now re-exports `packratEnter`/`packratExit`, so the readback below is on the
+ * subpath rather than behind a loader; nothing in `packrat.ts` changed.
+ *
+ * DECLARED, because it decides what the reading below MEANS, and the meaning is now STRONGER than
+ * it was. `tsImport` did not dedupe: each call yielded its own module namespace with its own
+ * `PACKRAT_ARMED` binding, so the instrument read A latch — its own — and could not claim to read
+ * the one the lowerings' parse path holds. The built entries share one chunk
+ * (`dist/parse.js` and `dist/packrat.js` both import `./packrat-entry-*.js`, and
+ * `import('@mkbabb/parse-that').memoize === import('@mkbabb/parse-that/packrat').memoize` is
+ * `true`), and `js-alg.mjs` addresses the library through that same map — so this instrument now
+ * reads THE LATCH THE JS LOWERING ITSELF HOLDS. The "parsing does not arm the latch" leg therefore
+ * became a live assertion about the candidate's own instance instead of a statement about a
+ * disjoint one, and it still reads `false` (measured by this seat, before and after the cure).
  */
 let instrument = null;
 export async function loadPackratInstrument() {
     if (instrument !== null) return instrument;
-    const { createRequire } = await import("node:module");
-    const require_ = createRequire(import.meta.url);
-    const { tsImport } = require_("tsx/esm/api");
-    const packrat = await tsImport("../parse/packrat.ts", import.meta.url);
-    const parser = await tsImport("../parse/parser.ts", import.meta.url);
+    const packrat = await import("@mkbabb/parse-that/packrat");
+    const parser = await import("@mkbabb/parse-that");
     instrument = Object.freeze({ packrat, parser });
     return instrument;
 }
