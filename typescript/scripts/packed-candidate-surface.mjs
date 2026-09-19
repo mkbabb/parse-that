@@ -47,7 +47,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSyn
 import { mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_PACKAGE = path.resolve(HERE, "..");
@@ -204,6 +204,117 @@ const walk = (dir, base = dir) => {
         else found.push(path.relative(base, full));
     }
     return found.sort();
+};
+
+/**
+ * THE CHECK LINE'S ARITY, READ FROM THE INSTALLED DECLARATION — X.P.W4.e2, curing E-w4e-1
+ * (COHESION §0aa).
+ *
+ * WHAT WAS WRONG. L4's types leg emitted one bare `export type __check_<N> = <N>;` per frozen name.
+ * `ParseResult` is declared `export declare type ParseResult<T>` — one required parameter, no
+ * default — so that line was `TS2314: Generic type 'ParseResult' requires 1 type argument(s)`, and
+ * `resolved:`'s `diagnostics.length === 0` conjunct turned that ONE diagnostic into 33 unresolved
+ * rows. The tarball was innocent: the same 33 names compiled at exit 0 from the same installed
+ * bytes in the positive control. It was the ASSERTION FORM, and it would have failed for any
+ * candidate whose surface carries a generic — `@mkbabb/value.js@4.0.0` included.
+ *
+ * THE CURE, and why it is the general one rather than the one-token one. The generator asks the
+ * INSTALLED declaration how many type arguments each name needs and supplies exactly that many
+ * `unknown`s. Hard-coding `ParseResult<unknown>` would fix this surface and break at the next
+ * generic; reading the arity is valid for every generic on any surface.
+ *
+ * REQUIRED, not total — and this is measured, not preferred. A parameter carrying a `= default` is
+ * optional, and instantiating it anyway is not neutral: the surface's other generic is
+ * `CollectedRule<R extends StylesheetItem = StylesheetItem>`, so a blind `CollectedRule<unknown>`
+ * would newly fail `TS2344` on a row that passes today. §0aa's acceptance criterion is "a check
+ * line that is VALID FOR EVERY GENERIC ON THE SURFACE"; the required-arity reading is the one that
+ * satisfies it. `constrainedRequired` is recorded per row for the same reason — `unknown` satisfies
+ * an unconstrained parameter and may not satisfy a constrained one, so the report prints whether
+ * any such parameter exists rather than leaving the claim to be assumed.
+ *
+ * WHY THE COMPILER AND NOT A REGEX. The seam's declared `types` entry re-exports its names from a
+ * second in-package file; a grep would have to re-implement export-map resolution and re-export
+ * following, and would then be measuring its own reimplementation. `resolveModuleName` +
+ * `getExportsOfModule` read the surface through the SAME resolver the consumer compile uses, from
+ * the consumer's own `node_modules`.
+ *
+ * THE NEGATIVE CONTROL STILL FIRES. A name absent from the installed declaration has no arity row,
+ * so it is emitted in the bare form, `tsc` reports `TS2305: has no exported member '<N>'`, and
+ * `named(name)` marks exactly that row unresolved. The reader cannot manufacture a green: it only
+ * ever decides how many `unknown`s a line carries.
+ */
+const readInstalledTypeArity = async ({ tsc, workspace, seamSpecifier }) => {
+    const result = {
+        ok: false,
+        ran: false,
+        reason: null,
+        compilerApi: null,
+        resolvedDeclaration: null,
+        generics: [],
+        // Null-prototype: a frozen name that collides with an `Object.prototype` member must read
+        // as "no arity row", never as an inherited one.
+        rows: Object.create(null),
+    };
+    const lib = path.resolve(path.dirname(tsc), "..", "lib", "typescript.js");
+    if (!existsSync(lib)) {
+        result.reason = `the TypeScript compiler API was not found beside the named tsc (${lib})`;
+        return result;
+    }
+    const namespace = await import(pathToFileURL(lib).href);
+    const ts = namespace.default ?? namespace;
+    result.compilerApi = { path: lib, version: ts.version ?? null };
+
+    const probe = path.join(workspace, "arity-probe.ts");
+    writeFileSync(probe, `import type * as seam from ${JSON.stringify(seamSpecifier)};\nexport type __seam = keyof typeof seam;\n`);
+    const compilerOptions = {
+        module: ts.ModuleKind.NodeNext,
+        moduleResolution: ts.ModuleResolutionKind.NodeNext,
+        noEmit: true,
+        skipLibCheck: false,
+        strict: true,
+        target: ts.ScriptTarget.ES2022,
+    };
+    const resolution = ts.resolveModuleName(seamSpecifier, probe, compilerOptions, ts.sys);
+    result.resolvedDeclaration = resolution.resolvedModule?.resolvedFileName ?? null;
+    if (result.resolvedDeclaration === null) {
+        result.reason = `NodeNext resolution of "${seamSpecifier}" from the consumer found no declaration`;
+        return result;
+    }
+    const program = ts.createProgram([probe], compilerOptions);
+    const checker = program.getTypeChecker();
+    const moduleSource = program.getSourceFile(result.resolvedDeclaration);
+    const moduleSymbol = moduleSource === undefined ? undefined : checker.getSymbolAtLocation(moduleSource);
+    if (moduleSymbol === undefined) {
+        result.reason = `the installed declaration ${result.resolvedDeclaration} carries no module symbol`;
+        return result;
+    }
+    for (const exported of checker.getExportsOfModule(moduleSymbol)) {
+        const target = (exported.flags & ts.SymbolFlags.Alias) !== 0
+            ? checker.getAliasedSymbol(exported)
+            : exported;
+        // A row is written for EVERY export the installed declaration carries, generic or not, so
+        // that "no row" means one thing only: the declaration does not export this name. That is
+        // what makes the bare-form fallback the negative control rather than a hiding place.
+        const declarations = target.declarations ?? [];
+        if (declarations.length === 0) continue;
+        const parameters = declarations.find((declaration) => declaration.typeParameters !== undefined)
+            ?.typeParameters ?? [];
+        result.rows[exported.name] = {
+            total: parameters.length,
+            required: parameters.filter((parameter) => parameter.default === undefined).length,
+            constrainedRequired: parameters
+                .filter((parameter) => parameter.default === undefined && parameter.constraint !== undefined)
+                .map((parameter) => String(parameter.name.escapedText)),
+            declaredIn: declarations[0].getSourceFile()?.fileName ?? null,
+        };
+    }
+    result.generics = Object.entries(result.rows)
+        .filter(([, row]) => row.total > 0)
+        .map(([name, row]) => `${name}: ${row.required} required of ${row.total}`)
+        .sort();
+    result.ran = true;
+    result.ok = true;
+    return result;
 };
 
 const options = parseArgv(process.argv.slice(2));
@@ -394,10 +505,19 @@ process.stdout.write(JSON.stringify({ names, error }) + "\\n");
         typeRows = typeNames.map((name) => ({ name, kind: "types", resolved: false, reason }));
         report.legs.types = { ok: false, ran: false, reason, tsc: null };
     } else {
+        // X.P.W4.e2 / E-w4e-1: the check line is INSTANTIATED to the arity the installed
+        // declaration declares. A name with no arity row — one the declaration does not export —
+        // keeps the bare form, so the negative control still reaches `tsc` as `TS2305`.
+        const arity = await readInstalledTypeArity({ tsc, workspace, seamSpecifier });
+        const checkLine = (name) => {
+            const required = arity.rows[name]?.required ?? 0;
+            const args = required === 0 ? "" : `<${Array.from({ length: required }, () => "unknown").join(", ")}>`;
+            return `export type __check_${name} = ${name}${args};`;
+        };
         writeFileSync(
             path.join(workspace, "consumer.ts"),
             `import type {\n${typeNames.map((name) => `    ${name},`).join("\n")}\n} from ${JSON.stringify(seamSpecifier)};\n`
-            + typeNames.map((name) => `export type __check_${name} = ${name};`).join("\n")
+            + typeNames.map(checkLine).join("\n")
             + "\n",
         );
         writeFileSync(path.join(workspace, "tsconfig.json"), JSON.stringify({
@@ -424,6 +544,8 @@ process.stdout.write(JSON.stringify({ names, error }) + "\\n");
             ok: compile.status === 0,
             ran: true,
             tsc,
+            arity,
+            consumer: readFileSync(path.join(workspace, "consumer.ts"), "utf8"),
             status: compile.status,
             diagnostics: diagnostics.slice(0, 40),
         };
