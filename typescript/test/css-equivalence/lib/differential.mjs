@@ -52,7 +52,20 @@ import {
     checkTaxonomyUnmoved,
 } from "../../../../harness/equivalence/taxonomy.ts";
 
-import { ADJUDICATIONS, adjudicator, ruledValue } from "../../css-totality/lib/adjudications.mjs";
+import { ADJUDICATIONS, RULING_IDS, adjudicator, remainderId, ruledValue } from "../../css-totality/lib/adjudications.mjs";
+
+/**
+ * X.P.W3.n — **F-z2's lineage, made machine-checkable.** X.P.W4's OP-2 addendum (COHESION §0w) is a
+ * BICONDITIONAL — "every miss entry of `equivalence-full-surface.json` carries a `rulingId` from the
+ * set" — and a biconditional a reader has to check by eye is not one. Every miss the differential
+ * emits therefore carries the ruling that owns its mechanism, attributed by `remainderId`, which is
+ * the SAME resolver `css-universe.mjs` reads: G-1 and G-7 cannot drift apart on the same input.
+ * `inSet` is the assertion itself, printed rather than argued.
+ */
+const ruledMiss = (row) => {
+    const id = remainderId(row.input);
+    return { ...row, rulingId: id, rulingInSet: RULING_IDS.includes(id) };
+};
 import { STRUCTURED, structuredInputs, syntaxVocabulary } from "../../css-totality/lib/matrix.mjs";
 import { callOracle, loadOracle } from "./oracle.mjs";
 import { distinctSources, loadCorpus } from "./corpus.mjs";
@@ -253,7 +266,7 @@ const runEntryRow = ({ name, oracleFn, candidateFn, family, sources, resolve }) 
                 samples[cell.verdict].push({ input: row.src, why: cell.why, bands: row.bands });
             }
             if (RED_TRIGGERS.includes(cell.verdict)) {
-                misses.push({ input: row.src, verdict: cell.verdict, why: cell.why, specUndecided: cell.specUndecided, bands: row.bands });
+                misses.push(ruledMiss({ input: row.src, verdict: cell.verdict, why: cell.why, specUndecided: cell.specUndecided, bands: row.bands }));
             }
         }
     }
@@ -312,7 +325,11 @@ const runCoercerRow = ({ oracleFn, candidateFn, sources, vocabulary, resolve }) 
         if (cell.verdict !== CELL.AGREE) {
             samples[cell.verdict] ??= [];
             if (samples[cell.verdict].length < SAMPLE) samples[cell.verdict].push({ input: `${row.src} @ ${syntax}`, why: cell.why, bands: row.bands });
-            if (RED_TRIGGERS.includes(cell.verdict)) misses.push({ input: `${row.src} @ ${syntax}`, verdict: cell.verdict, why: cell.why, specUndecided: cell.specUndecided, bands: row.bands });
+            if (RED_TRIGGERS.includes(cell.verdict)) {
+                //  the coercer's input is `<source> @ <syntax>`; the RULING is about the SOURCE, so
+                //  the attribution reads `row.src` and the entry keeps its own two-argument label.
+                misses.push({ ...ruledMiss({ input: row.src, verdict: cell.verdict, why: cell.why, specUndecided: cell.specUndecided, bands: row.bands }), input: `${row.src} @ ${syntax}` });
+            }
         }
     });
     const mirrorDefects = RED_TRIGGERS.reduce((n, k) => n + tally[k], 0);
@@ -357,7 +374,8 @@ const runStructuredRow = ({ oracleFn, candidateFn, inputs }) => {
         if (verdict !== CELL.AGREE) {
             samples[verdict] ??= [];
             if (samples[verdict].length < SAMPLE) samples[verdict].push({ input: input.label, why, bands: null });
-            misses.push({ input: input.label, verdict, why, specUndecided: false, bands: null });
+            //  the boundary leg's inputs are the seven DECLARED NON-STRINGS, which is ID-3 itself.
+            misses.push({ ...ruledMiss({ input: input.value, verdict, why, specUndecided: false, bands: null }), input: input.label });
         }
     }
     const mirrorDefects = RED_TRIGGERS.reduce((n, k) => n + tally[k], 0);
@@ -436,6 +454,22 @@ export const runFullSurface = async ({ universe, surfaces, unrealizedEntries, ca
                 Object.entries(lowerings).map(([k, v]) => [k, { cellsRun: v.cellsRun, tally: v.tally, samples: v.samples, mirrorDefects: v.mirrorDefects, specUndecided: v.specUndecided }]),
             ),
             misses: Object.fromEntries(Object.entries(lowerings).map(([k, v]) => [k, v.misses.slice(0, 200)])),
+            //  X.P.W3.n — the biconditional, counted over EVERY miss, not the 200 the file carries.
+            rulingAttribution: Object.fromEntries(
+                Object.entries(lowerings).map(([k, v]) => [
+                    k,
+                    {
+                        misses: v.misses.length,
+                        inSet: v.misses.filter((m) => m.rulingInSet).length,
+                        notInSet: v.misses.filter((m) => !m.rulingInSet).length,
+                        byId: Object.fromEntries(
+                            Object.entries(
+                                v.misses.reduce((acc, m) => ({ ...acc, [m.rulingId]: (acc[m.rulingId] ?? 0) + 1 }), {}),
+                            ).sort((x, y) => y[1] - x[1]),
+                        ),
+                    },
+                ]),
+            ),
             cellsRun: Object.values(lowerings).reduce((n, l) => n + l.cellsRun, 0),
             mirrorDefects,
             lowerAgree: Object.values(lowerings).every(
@@ -505,6 +539,14 @@ export const runFullSurface = async ({ universe, surfaces, unrealizedEntries, ca
         },
         shape: shapeDeclaration(),
         universe: { runtime: universe.runtime.length, types: universe.types.length, total: universe.runtime.length + universe.types.length },
+        //  X.P.W3.n — OP-2's biconditional, as one number: `notInSet` is the count of miss entries
+        //  whose `rulingId` is not a member of COHESION §0w's set. Zero is the condition.
+        rulingAttribution: {
+            idSet: RULING_IDS,
+            misses: rows.reduce((n, r) => n + Object.values(r.rulingAttribution ?? {}).reduce((m, a) => Math.max(m, a.misses), 0), 0),
+            inSet: rows.reduce((n, r) => n + Object.values(r.rulingAttribution ?? {}).reduce((m, a) => Math.max(m, a.inSet), 0), 0),
+            notInSet: rows.reduce((n, r) => n + Object.values(r.rulingAttribution ?? {}).reduce((m, a) => Math.max(m, a.notInSet), 0), 0),
+        },
         tally: {
             rows: rows.length,
             compared: compared.length,

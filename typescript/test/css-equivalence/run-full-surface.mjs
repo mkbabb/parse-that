@@ -165,6 +165,18 @@ const main = async () => {
     console.log(`           empty consumer-direction fields: ${emptyDirections.length === 0 ? "0" : emptyDirections.join(", ")}`);
     console.log(`           GATE-VERDICT anchors present: ${anchors.filter((a) => a.present).length}/${anchors.length}`);
     console.log(`MIRROR-DEFECTS  ${result.tally.mirrorDefects}   (of which spec-undecided ${result.tally.specUndecided})`);
+    //  X.P.W3.n — X.P.W4's OP-2 biconditional, printed as a number: every miss entry carries a
+    //  `rulingId`, and `notInSet` counts the ones whose id is not a member of COHESION §0w's set.
+    const attribution = result.rulingAttribution;
+    console.log(
+        `RULING-ID       ${attribution.inSet} of ${attribution.misses} miss entries carry a rulingId from ` +
+            `{${attribution.idSet.join(" · ")}} · NOT IN THE SET ${attribution.notInSet}`,
+    );
+    for (const row of result.rows) {
+        const byId = row.rulingAttribution?.js?.byId;
+        if (!byId || Object.keys(byId).length === 0) continue;
+        console.log(`  ${row.name.padEnd(24)} ${Object.entries(byId).map(([id, n]) => `${n}× ${id}`).join(" · ")}`);
+    }
 
     const red = result.tally.mirrorDefects > 0 || emptyDirections.length > 0;
     console.log(
