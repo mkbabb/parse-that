@@ -56,6 +56,17 @@
 // measurement and not a promise. This is COHESION §0p's scratch-mirror idiom, applied to a probe
 // instead of a harvester.
 //
+// THE V-TARBALL ARM (conjunct 3 — X.P.W4.f, COHESION §0y Q-RC-1, 2026-09-19). §6a binds conjunct 3 to
+// V; the CLI harness (`test/css-equivalence/run-full-surface.mjs`) binds its candidate side to
+// `<p2>/typescript/src/css/**` at the pin, which is the CANDIDATE and not V. So conjunct 3 now runs the
+// harness's own differential library (`lib/differential.mjs`, the module that CLI is a front for) IN THIS
+// PROCESS with the candidate side bound to V's INSTALLED `/css` subpath — the registry tarball whose
+// sha1 conjunct 1 proved equal to `dist.shasum` — against the same sha-pinned 4.0.0 oracle, the same
+// pinned universe and the same full corpus, with no limit. ONLY that arm's 0-MIRROR-DEFECT reading is
+// the conjunct's VALUE ("only that arm's 0-MIRROR-DEFECT reading is RC-P's"). The candidate-side CLI
+// still runs and is RECORDED beside it as an instrument reading, never read as V's. A document declaring
+// "the candidate is what V ships" is a status word and is not consulted.
+//
 // WHAT THIS PROGRAM DOES NOT DO. It does not write, move or delete one byte of either repository; its
 // only write is the optional `--out` JSON. It asserts no bench bar of any kind (OC-1 is ruled
 // RECORDED-NOT-GATING at COHESION §0j.E and conjunct 5 reads that ruling, which is all §6a permits).
@@ -76,7 +87,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
@@ -286,59 +297,176 @@ const main = async () => {
             },
         });
 
-        // ── 3 · EQUIVALENCE(V) ────────────────────────────────────────────────────────────────────
-        // §6a: X.P.W3's full-surface differential harness, V vs the sha-pinned 4.0.0 tarball.
-        // TRUE when 0 MIRROR-DEFECTs and every difference is rowed with a non-empty consumer
-        // direction — which is exactly the harness's own exit code (it "EXITS NON-ZERO while any
-        // mirror-defect stands or any adjudicated conflict is unrowed").
-        const harness = path.join(P2_ROOT, "typescript/test/css-equivalence/run-full-surface.mjs");
-        const c3cmds = [];
-        let mirrorDefects = null;
-        if (existsSync(harness)) {
-            const r = run("node", [harness, "--pinned-value-commit", pin], {
-                cwd: path.join(P2_ROOT, "typescript"),
-            });
-            c3cmds.push(r);
-            const m = /MIRROR-DEFECTS\s+(\d+)/.exec(r.stdout);
-            if (m) mirrorDefects = Number(m[1]);
-        }
-        const c3run = c3cmds[0] ?? null;
-        record(3, "EQUIVALENCE(V)", {
-            measured: c3run !== null,
-            pass: c3run?.exit === 0 && mirrorDefects === 0,
-            reason: !c3run
-                ? `the full-surface harness is absent at ${harness}`
-                : c3run.exit !== 0
-                  ? `the harness exited ${c3run.exit} with ${mirrorDefects ?? "an unparsed number of"} mirror-defects`
-                  : null,
-            commands: c3cmds,
-            extra: {
-                mirrorDefects,
-                instrumentNote:
-                    "DECLARED, and it does not soften this reading: the harness's subject side is the CANDIDATE's " +
-                    "`<p2>/typescript/src/css/**` lowering read at pin " + pin + ", not V's packed bytes. The two " +
-                    "coincide only once an adoption wave lands the candidate in V (OP-4/G-9). Until then a GREEN " +
-                    "here would prove equivalence of the candidate, not of V, and whether that suffices for " +
-                    "conjunct 3 is an OWNER RULING this evaluator does not presume. Recorded, never inferred.",
-            },
-        });
-
-        // ── 4 · ADMITTED(V) ───────────────────────────────────────────────────────────────────────
-        // §6a: `node scripts/wasm-admission.mjs <artifact>` — 0 function-kind imports, empty-import
-        // instantiation succeeds, full import list printed and accounted. The artifact is V's.
-        const admission = path.join(P2_ROOT, "typescript/scripts/wasm-admission.mjs");
-        const c4cmds = [];
-        let artifacts = [];
+        // ── the clean consumer install of V — the SUBJECT of conjuncts 3 (arm V) and 4 ──────────
+        // One consumer, `npm i <registry-identical tarball>`, so both conjuncts read the bytes a
+        // consumer receives and never a repository's dist/ (L-12; the X-W11 idiom).
+        const installCmds = [];
         let installRoot = null;
         if (registryTarball) {
             const consumer = path.join(workspace, "consumer");
             mkdirSync(consumer, { recursive: true });
             writeFileSync(path.join(consumer, "package.json"), '{"name":"rc-p-consumer","type":"module","private":true}\n');
             const install = run("npm", ["i", "--silent", "--no-audit", "--no-fund", registryTarball], { cwd: consumer });
-            c4cmds.push(install);
-            installRoot = path.join(consumer, "node_modules", PACKAGE);
-            if (install.exit === 0 && existsSync(installRoot)) artifacts = findByExtension(installRoot, ".wasm");
+            installCmds.push(install);
+            const root = path.join(consumer, "node_modules", PACKAGE);
+            if (install.exit === 0 && existsSync(root)) installRoot = root;
         }
+
+        // ── 3 · EQUIVALENCE(V) — two arms, ONE reading ────────────────────────────────────────────
+        // §6a: X.P.W3's full-surface differential harness, V vs the sha-pinned 4.0.0 tarball.
+        // TRUE when 0 MIRROR-DEFECTs and every difference is rowed with a non-empty consumer
+        // direction.
+        //
+        // ARM V (the VALUE — COHESION §0y Q-RC-1): the differential library, candidate side = V's
+        // installed `/css` subpath, oracle = the sha-pinned 4.0.0, universe = the pin, corpus = whole.
+        // ARM C (RECORDED, never the value): the CLI as X.P.W4.c bound it — candidate side =
+        // `<p2>/typescript/src/css/**` at the pin. It measures the candidate, not V.
+        const harness = path.join(P2_ROOT, "typescript/test/css-equivalence/run-full-surface.mjs");
+        const c3cmds = [...installCmds];
+        let armC = { ran: false, exit: null, mirrorDefects: null };
+        if (existsSync(harness)) {
+            const r = run("node", [harness, "--pinned-value-commit", pin], {
+                cwd: path.join(P2_ROOT, "typescript"),
+            });
+            c3cmds.push(r);
+            const m = /MIRROR-DEFECTS\s+(\d+)/.exec(r.stdout);
+            armC = { ran: true, exit: r.exit, mirrorDefects: m ? Number(m[1]) : null };
+        }
+
+        let armV = { measured: false, mirrorDefects: null, reason: null };
+        if (!installRoot) {
+            armV.reason = registryTarball
+                ? "V's registry tarball did not install into the clean consumer"
+                : "no registry-identical tarball for V — conjunct 1 did not produce one, so the arm has no subject";
+        } else {
+            try {
+                const vPkg = JSON.parse(readFileSync(path.join(installRoot, "package.json"), "utf8"));
+                const cssExport = vPkg.exports?.["./css"];
+                const cssEntry =
+                    typeof cssExport === "string" ? cssExport : (cssExport?.import ?? cssExport?.default ?? null);
+                const cssTypes = cssExport && typeof cssExport === "object" ? (cssExport.types ?? null) : null;
+                if (!cssEntry) {
+                    armV.reason = 'V\'s manifest declares no exports["./css"] — the seam subpath is absent from V';
+                } else {
+                    const lib = path.join(P2_ROOT, "typescript/test/css-equivalence/lib");
+                    const { runFullSurface } = await import(pathToFileURL(path.join(lib, "differential.mjs")).href);
+                    const ledger = await import(pathToFileURL(path.join(lib, "ledger.mjs")).href);
+                    const { ADJUDICATIONS } = await import(
+                        pathToFileURL(path.join(P2_ROOT, "typescript/test/css-totality/lib/adjudications.mjs")).href,
+                    );
+                    const { readPin } = await import(
+                        pathToFileURL(path.join(P2_ROOT, "typescript/test/css-totality/lib/pin.mjs")).href,
+                    );
+                    const { readTypeDeclarations } = await import(
+                        pathToFileURL(path.join(P2_ROOT, "harness/totality/lib/surface.mjs")).href,
+                    );
+                    const pinned = await readPin(pin);
+                    const entryPath = path.join(installRoot, cssEntry);
+                    const vCss = await import(pathToFileURL(entryPath).href);
+                    const typesPath = cssTypes ? path.join(installRoot, cssTypes) : null;
+                    const vTypeNames =
+                        typesPath && existsSync(typesPath)
+                            ? Object.keys(readTypeDeclarations(readFileSync(typesPath, "utf8")))
+                            : [];
+                    const realizedEntries = pinned.universe.runtime.filter((n) => typeof vCss[n] === "function");
+                    const started = Date.now();
+                    const result = await runFullSurface({
+                        universe: pinned.universe,
+                        surfaces: { V: vCss },
+                        unrealizedEntries: [],
+                        candidateTypeNames: vTypeNames,
+                        limit: null,
+                    });
+                    // §6a's second half — every ledger row carries a consumer direction — read from the
+                    // ledger's own SOURCE module, assembled exactly as the CLI assembles it.
+                    const row = (r) => ({ id: r.id, consumerDirection: r.consumerDirection });
+                    const ledgerRows = [
+                        ...ADJUDICATIONS.map(row),
+                        ...ledger.DISSENTS.map(row),
+                        ...ledger.FIXTURES.map(row),
+                        row(ledger.LABEL_ROW),
+                        ...ledger
+                            .narrowingRows({
+                                runtimeUniverse: pinned.universe.runtime,
+                                typeUniverse: pinned.universe.types,
+                                realizedEntries,
+                                realizedTypes: vTypeNames,
+                            })
+                            .map(row),
+                        ...ledger.capacityRows().map(row),
+                        ...ledger.SPEC_DIVERGENCES.map(row),
+                    ];
+                    const emptyConsumerDirections = ledger.directionAudit(ledgerRows);
+                    armV = {
+                        measured: true,
+                        ms: Date.now() - started,
+                        mirrorDefects: result.tally.mirrorDefects,
+                        tally: result.tally,
+                        rulingAttribution: result.rulingAttribution,
+                        emptyConsumerDirections,
+                        subject: {
+                            what: "V's INSTALLED /css subpath, from the registry-identical tarball — never a repository tree",
+                            installRoot: path.relative(workspace, installRoot),
+                            cssEntry,
+                            cssEntrySha256: sha256(entryPath),
+                            cssTypes,
+                            typeNamesDeclared: vTypeNames.length,
+                            realizedEntries: realizedEntries.length,
+                            tarballSha1: identity?.sha1 ?? null,
+                            registryShasum,
+                            registryIdentical: identity?.identical ?? null,
+                        },
+                        oracle: result.oracle,
+                        universe: result.universe,
+                        corpus: { rows: result.corpus.rows, distinct: result.corpus.distinct, run: result.corpus.run },
+                        rows: result.rows.map((r) => ({
+                            name: r.name,
+                            kind: r.kind,
+                            status: r.status,
+                            mirrorDefects: r.mirrorDefects,
+                            tally: r.lowerings?.V?.tally ?? null,
+                        })),
+                        reason: null,
+                    };
+                    const { disposeOracle } = await import(pathToFileURL(path.join(lib, "oracle.mjs")).href);
+                    disposeOracle();
+                }
+            } catch (e) {
+                armV = { measured: false, mirrorDefects: null, reason: `arm V threw: ${String(e?.message ?? e)}` };
+            }
+        }
+        record(3, "EQUIVALENCE(V)", {
+            measured: armV.measured,
+            pass: armV.measured && armV.mirrorDefects === 0 && (armV.emptyConsumerDirections?.length ?? 1) === 0,
+            reason: !armV.measured
+                ? `arm V (V's installed /css vs the sha-pinned 4.0.0 oracle) did not run — ${armV.reason}`
+                : armV.mirrorDefects !== 0
+                  ? `arm V read ${armV.mirrorDefects} mirror-defects over V's installed /css (full corpus, no limit)`
+                  : armV.emptyConsumerDirections.length
+                    ? `a ledger row has an empty consumer-direction field: ${armV.emptyConsumerDirections.join(", ")}`
+                    : null,
+            commands: c3cmds,
+            extra: {
+                armV,
+                armC: {
+                    ...armC,
+                    instrumentNote:
+                        "RECORDED, NEVER THE VALUE: the CLI's candidate side is `<p2>/typescript/src/css/**` read at " +
+                        "pin " + pin + " — the candidate, not V. It sits beside arm V so the two readings can be " +
+                        "compared; it coincides with arm V only once an adoption wave lands the candidate in V " +
+                        "(OP-4/G-9), and even then arm V is the one RC-P reads (COHESION §0y Q-RC-1).",
+                },
+            },
+        });
+
+        // ── 4 · ADMITTED(V) ───────────────────────────────────────────────────────────────────────
+        // §6a: `node scripts/wasm-admission.mjs <artifact>` — 0 function-kind imports, empty-import
+        // instantiation succeeds, full import list printed and accounted. The artifact is V's — read
+        // from the same clean consumer install as arm V.
+        const admission = path.join(P2_ROOT, "typescript/scripts/wasm-admission.mjs");
+        const c4cmds = [...installCmds];
+        let artifacts = [];
+        if (installRoot) artifacts = findByExtension(installRoot, ".wasm");
         if (artifacts.length && existsSync(admission)) {
             c4cmds.push(run("node", [admission, ...artifacts], { cwd: path.join(P2_ROOT, "typescript") }));
         }
