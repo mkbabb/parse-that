@@ -10,6 +10,10 @@
             "import": "./dist/parse.js",
             "require": "./dist/parse.cjs"
         },
+        "./css": {
+            "types": "./src/css/build/ac1.d.ts",
+            "import": "./src/css/build/ac1.js"
+        },
         "./core": {
             "types": "./dist/core.d.ts",
             "import": "./dist/core.js",
@@ -49,7 +53,8 @@
         "proof:all": "npm run proof:manifest && npm run proof:no-css-surface && npm run proof:subpath && npm run proof:packrat-cross-input && npm run proof:packrat-reentrant && npm run proof:packrat-large-offset && npm run proof:packrat-armed && npm run proof:no-span-surface && npm run proof:no-dead-combinator && npm run proof:perf"
     },
     "files": [
-        "./dist"
+        "./dist",
+        "./src/css"
     ],
     "devDependencies": {
         "@types/node": "^22.0.0",

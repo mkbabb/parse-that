@@ -20,7 +20,7 @@
 // There is no module-level mutable binding in this file (O-8, §2.3) — `grep -nE "^(let|var) "`
 // returns 0 — and no operator reads `globalThis`, `process.env`, or any latch.
 
-import { tsImport } from "tsx/esm/api";
+import { Parser, createParserContext } from "@mkbabb/parse-that";
 
 import { ESCAPED_BACKSLASH, ESCAPED_QUOTE, OPERATORS, SEPARATORS } from "../algebra/grammar/value.mjs";
 import { KINDS } from "../algebra/ops.mjs";
@@ -31,25 +31,35 @@ import {
 import { asciiFold, clampValue, isList, isTuple, list, NONE_OPT, scaleValue, splitSelectors, span, trimWs, tuple, UNIT } from "./values.mjs";
 
 /**
- * The combinator library itself — **this root's own `typescript/src/parse/**`** (COHESION §0n.5 /
- * OP-7: *"W3 builds the 52 on `<p2>/typescript/src/parse/**` — the fresh root's own library — never
- * on another repository's `node_modules`"*). X.P.W3.0 re-pointed it here; until then the specifier
- * reached `harness/bench/lib/engines.mjs`'s `PARSE_THAT_DIST`, which addresses
- * `…/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist`
- * — a second repository's install directory, which is exactly what OP-7 forbids. That constant stays
- * where it is: it is the BENCH's declared subject (the latch witness O-15 PT-03's `:678`/`:722`
- * coordinates name), and a subject under measurement is not a substrate.
+ * The combinator library itself — **this package's OWN BUILT ENTRY**, reached by the SELF-REFERENCE
+ * `@mkbabb/parse-that`, which `package.json`'s own `exports["."]` resolves to `./dist/parse.js`.
  *
- * The specifier is RELATIVE and stays inside the tree, so the lowering is location-independent by
- * construction — the D-c1 class of defect (a depth-calibrated absolute-ish path) cannot recur here.
- * The library is TypeScript source whose internal specifiers are TS-style (`./parser.js` naming
- * `parser.ts`); Node 26 strips types but does not re-resolve those, so the root's own pinned `tsx`
- * (§0l E-1, `tsx@4.23.13` in `<p2>/package.json`) loads it. `tsImport` scopes its hooks to this
- * import graph rather than registering a process-wide loader.
+ * X.P.W4.e / C2 (COHESION §0y F-w4b-3). Until this landed, line 23 read
+ * `import { tsImport } from "tsx/esm/api"` and this line read
+ * `await tsImport("../../parse/index.ts", import.meta.url)` — the library's TYPESCRIPT SOURCES,
+ * loaded through a loader, because the library's internal specifiers are TS-style (`./parser.js`
+ * naming `parser.ts`) and Node strips types without re-resolving those. Inside this repository that
+ * works. Inside a consumer it cannot: `src/parse/**` is not shipped and `tsx` is not a dependency of
+ * this package (it is the fresh root's devDependency, reached by npm's up-walk from this tree), so
+ * `import("@mkbabb/parse-that/css")` from an installed tarball died on the loader before a single
+ * seam symbol could resolve — G-3 read `resolved 0 of 52` against exactly this line. Declaring `tsx`
+ * a runtime `dependency` is REFUSED by the ruling: it makes a consumer install a TypeScript loader
+ * to run a built package, which is a workaround wearing a manifest's clothes.
+ *
+ * The SUBJECT is unchanged — `dist/parse.js` is built by this root's own `vite build` from this
+ * root's own `typescript/src/parse/**` (COHESION §0n.5 / OP-7: *"the fresh root's own library —
+ * never on another repository's `node_modules`"*). What changed is that the lowering now addresses
+ * that library the way a consumer does: through the package's export map. `harness/bench/lib/
+ * engines.mjs`'s `PARSE_THAT_DIST` stays where it is — it is the BENCH's declared subject (the latch
+ * witness O-15 PT-03's `:678`/`:722` coordinates name), and a subject under measurement is not a
+ * substrate.
+ *
+ * A self-reference is location-independent by construction: it resolves through the nearest
+ * `package.json` carrying this `name` and `exports`, which is this file's own package in the source
+ * tree and the installed copy under a consumer's `node_modules` — so the D-c1 class of defect (a
+ * depth-calibrated path) cannot recur here, and no specifier escapes the package root.
  */
-const pt = await tsImport("../../parse/index.ts", import.meta.url);
-export const Parser = pt.Parser;
-export const createParserContext = pt.createParserContext;
+export { Parser, createParserContext };
 
 /* ── σ ─────────────────────────────────────────────────────────────────────────────────────── */
 
