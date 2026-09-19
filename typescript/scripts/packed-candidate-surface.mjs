@@ -127,17 +127,24 @@ const readSymbols = (options) => {
             }
         } else {
             const text = readFileSync(options.seam, "utf8");
-            // One row per frozen `/css` export: `| name | kind | signature | provider | … |`.
+            // One row per frozen `/css` export. The contract's row carries an ordinal before the
+            // name (`| 1 | \`parseCssColor\` | runtime | signature | provider | … |`), so the name
+            // is LOCATED rather than assumed at a column index: the first adjacent (identifier,
+            // kind) pair in the row is the row's subject. Assuming column 0 reads the ordinal as
+            // the name and yields zero rows — which this script then throws on rather than
+            // resolving an empty universe, but locating the pair is the cure, not the throw.
             const rows = [];
             for (const line of text.split("\n")) {
                 if (!line.startsWith("|")) continue;
-                const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
-                if (cells.length < 2) continue;
-                const name = cells[0].replace(/[`*]/g, "").trim();
-                const kind = normalizeKind(cells[1].replace(/[`*]/g, ""));
-                if (!/^[A-Za-z_$][\w$]*$/.test(name)) continue;
-                if (kind === null) continue;
-                rows.push({ name, kind });
+                const cells = line.split("|").slice(1, -1)
+                    .map((cell) => cell.replace(/[`*]/g, "").trim());
+                for (let index = 0; index + 1 < cells.length; index += 1) {
+                    if (!/^[A-Za-z_$][\w$]*$/.test(cells[index])) continue;
+                    const kind = normalizeKind(cells[index + 1]);
+                    if (kind === null) continue;
+                    rows.push({ name: cells[index], kind });
+                    break;
+                }
             }
             if (rows.length === 0) {
                 throw new Error(`--seam ${options.seam} yielded no name/kind rows`);
@@ -201,6 +208,30 @@ const walk = (dir, base = dir) => {
 
 const options = parseArgv(process.argv.slice(2));
 const { source: symbolSource, symbols } = readSymbols(options);
+
+/**
+ * When BOTH sources are named, the contract's row set is checked against the universe it is
+ * generated from, in both directions. This is not G-1 (that is `.a`'s own checker, over its own
+ * file); it is this gate refusing to resolve a symbol set it has not seen agree with the artefact
+ * of record — a resolution table is only as honest as its denominator.
+ */
+let symbolCrossCheck = null;
+if (symbolSource.kind === "seam-contract" && options.universe) {
+    const universe = JSON.parse(readFileSync(options.universe, "utf8"));
+    const key = (row) => `${row.name}:${normalizeKind(row.kind)}`;
+    const seamSet = new Set(symbols.map(key));
+    const universeSet = new Set(universe.rows.map(key));
+    symbolCrossCheck = {
+        against: path.resolve(options.universe),
+        seamRows: seamSet.size,
+        universeRows: universeSet.size,
+        inSeamNotUniverse: [...seamSet].filter((row) => !universeSet.has(row)).sort(),
+        inUniverseNotSeam: [...universeSet].filter((row) => !seamSet.has(row)).sort(),
+    };
+    symbolCrossCheck.agree =
+        symbolCrossCheck.inSeamNotUniverse.length === 0
+        && symbolCrossCheck.inUniverseNotSeam.length === 0;
+}
 const runtimeNames = symbols.filter((s) => s.kind === "runtime").map((s) => s.name).sort();
 const typeNames = symbols.filter((s) => s.kind === "types").map((s) => s.name).sort();
 
@@ -232,6 +263,7 @@ const report = {
     },
     symbolSource,
     symbolCounts: { runtime: runtimeNames.length, types: typeNames.length, total: symbols.length },
+    symbolCrossCheck,
     legs: {},
 };
 
@@ -480,6 +512,8 @@ process.stdout.write(`${JSON.stringify({
     tarballSha256: report.legs.pack?.sha256 ?? null,
     entryCount: report.legs.pack?.entryCount ?? null,
     symbolSource: report.symbolSource.kind,
+    symbolCounts: report.symbolCounts,
+    symbolCrossCheck: report.symbolCrossCheck === null ? null : report.symbolCrossCheck.agree,
     seamSubpathDeclared: report.legs.resolve?.seamSubpathDeclared ?? null,
     resolved: `${report.legs.resolve?.resolved ?? 0} of ${report.legs.resolve?.of ?? 0}`,
     refusals: report.legs.refusals?.rows?.filter((row) => row.refused).length ?? 0,
