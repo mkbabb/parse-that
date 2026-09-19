@@ -53,7 +53,41 @@ export const R_cls = {
     // not move (K-10: no Wasm DLAB index changes) and `diagnostics.mjs` already promotes it to
     // `<ident>` without a new row.
     "ident-start": { label: "ident", table: table256((b) => isAlpha(b) || b === ch("_") || b === 0xff) },
+    // X.P.W3.h — the value grammar's classes (`algebra/grammar/value.mjs`). Each row is tagged
+    // `since` so `collectLabels` appends its NEW label at the END of L (K-10: no existing index
+    // moves; the Wasm DLAB indices are compile-time). A row whose label already exists dedupes.
+    //
+    //   token-char     every byte the incumbent's splitters keep INSIDE a token — all but the five
+    //                  whitespace code points, `,`, `/`, `:`, `;` and `)`. Read ONLY zero-width
+    //                  (`SCAN(…, 0, 0)`: "the token ends here"), so its label names the boundary.
+    //   leading-digit  a digit — read zero-width before an ident or a function name (`[-_a-z]` first).
+    //   unit-char      the incumbent's unit class `[%a-z-]` (case-insensitive) after a number.
+    //   op-char        the bytes the ten `KW`-read operators are spelled from (`+*-<>=!`).
+    //   dquote/squote  the two quote characters; dq-plain/sq-plain the bytes a string's interior
+    //                  admits outside an escape (everything but that quote and `\`, 0xFF included).
+    "token-char": {
+        label: "token boundary",
+        table: table256((b) => !isWs(b) && b !== ch(",") && b !== ch("/") && b !== ch(":") && b !== ch(";") && b !== ch(")")),
+        since: "X.P.W3.h",
+    },
+    "leading-digit": { label: "ident start", table: table256(isDigit), since: "X.P.W3.h" },
+    "unit-char": { label: "<unit>", table: table256((b) => isAlpha(b) || b === ch("%") || b === ch("-")), since: "X.P.W3.h" },
+    "op-char": { label: "<operator>", table: table256((b) => "+*-<>=!".includes(String.fromCharCode(b))), since: "X.P.W3.h" },
+    dquote: { label: "double quote", table: table256((b) => b === ch('"')), since: "X.P.W3.h" },
+    squote: { label: "single quote", table: table256((b) => b === ch("'")), since: "X.P.W3.h" },
+    "dq-plain": { label: "string text", table: table256((b) => b !== ch('"') && b !== ch("\\")), since: "X.P.W3.h" },
+    "sq-plain": { label: "string text", table: table256((b) => b !== ch("'") && b !== ch("\\")), since: "X.P.W3.h" },
 };
+
+/**
+ * X.P.W3.h — every keyword and dispatch table is NULL-PROTOTYPE. Measured before this landed (the
+ * `.h` receipt, INFO-h5): `kw.rows[key]` / `disp.rows[key]` over a plain object literal reached
+ * `Object.prototype` — `parseCssColor("constructor")` answered `ok` with three `null` channels in the
+ * JS lowering and `css_syntax` in Wasm (a G-5 divergence), and `parseTimingFunction("constructor")`
+ * THREW on the raw JS path (`SHIELD.caught` 2). A table whose misses are unreachable by construction
+ * is `codes.mjs`'s own discipline for `selectCode`, applied here to every row.
+ */
+const np = (rows) => Object.assign(Object.create(null), rows);
 
 /* ── R_kw: keyword → value (§4.4, seven tables) ────────────────────────────────────────────── */
 
@@ -124,22 +158,32 @@ const contextRows = () => {
 
 export const R_kw = {
     "named-color": { label: "<named-color>", code: "css_syntax", kind: "rgb3", rows: namedRows() },
-    transparent: { label: "'transparent'", code: "css_syntax", kind: "rgba4", rows: { transparent: [0, 0, 0, 0] } },
+    transparent: { label: "'transparent'", code: "css_syntax", kind: "rgba4", rows: np({ transparent: [0, 0, 0, 0] }) },
     "context-color": { label: "<context-color>", code: "css_syntax", kind: "token", rows: contextRows() },
-    none: { label: "'none'", code: "css_syntax", kind: "none", rows: { none: 0 } },
+    none: { label: "'none'", code: "css_syntax", kind: "none", rows: np({ none: 0 }) },
     "timing-keyword": {
         label: "<timing-keyword>",
         code: "css_syntax",
         kind: "token",
-        rows: { linear: 0, ease: 1, "ease-in": 2, "ease-out": 3, "ease-in-out": 4 },
+        rows: np({ linear: 0, ease: 1, "ease-in": 2, "ease-out": 3, "ease-in-out": 4 }),
     },
-    "step-alias": { label: "<step-alias>", code: "css_syntax", kind: "token", rows: { "step-start": 0, "step-end": 1 } },
+    "step-alias": { label: "<step-alias>", code: "css_syntax", kind: "token", rows: np({ "step-start": 0, "step-end": 1 }) },
     "jump-position": {
         label: "<jump-position>",
         code: "css_syntax",
         kind: "token",
         // six spellings -> four values (`grammar.ts:457-460`): start/end alias jump-start/jump-end
-        rows: { "jump-start": 0, "jump-end": 1, "jump-none": 2, "jump-both": 3, start: 0, end: 1 },
+        rows: np({ "jump-start": 0, "jump-end": 1, "jump-none": 2, "jump-both": 3, start: 0, end: 1 }),
+    },
+    // X.P.W3.h — the ten operator spellings `KW` reads over the `op-char` class, numbered by their
+    // index in `grammar/value.mjs` OPERATORS (the `value-operator` constructor's codomain); `:` and
+    // `;` are OPERATORS[10..11], read by `LIT` because the incumbent's splitter cuts them out alone.
+    operator: {
+        label: "<operator>",
+        code: "css_syntax",
+        kind: "token",
+        rows: np({ "+": 0, "*": 1, "-": 2, "<=": 3, ">=": 4, "==": 5, "!=": 6, "<": 7, ">": 8, "=": 9 }),
+        since: "X.P.W3.h",
     },
 };
 
@@ -159,23 +203,64 @@ export const STEP_ALIASES = [
 // A name rather than a nested term because a term reached only through a registry is a term the
 // structural walk cannot see, and because both lowerings then compile exactly one copy.
 
+/**
+ * The ten colour heads of css-color-4 the incumbent's `parseFunctionalColor` names, each to its
+ * production. X.P.W3.h widened the slice's three (`rgb`/`hsl`/`oklch`) to the whole family so
+ * `parseCssColor` is TOTAL over every ORACLE head (COHESION §0s E-h1: the 84 unrealized-head cells —
+ * lab 55 · color() 26 · hwb/lch/oklab 1 each).
+ */
+const COLOR_HEADS = {
+    rgb: "head-rgb",
+    rgba: "head-rgb",
+    hsl: "head-hsl",
+    hsla: "head-hsl",
+    hwb: "head-hwb",
+    lab: "head-lab",
+    lch: "head-lch",
+    oklab: "head-oklab",
+    oklch: "head-oklch",
+    color: "head-color",
+};
+
 export const R_disp = {
     "color-head": {
         label: "<color-function>",
         code: "css_syntax",
-        rows: {
-            rgb: "head-rgb",
-            rgba: "head-rgb",
-            hsl: "head-hsl",
-            hsla: "head-hsl",
-            oklch: "head-oklch",
-            var: "head-var",
-        },
+        rows: np({ ...COLOR_HEADS, var: "head-var" }),
     },
     "timing-head": {
         label: "<timing-function>",
         code: "css_syntax",
-        rows: { "cubic-bezier": "head-cubic-bezier", steps: "head-steps", linear: "head-linear" },
+        rows: np({ "cubic-bezier": "head-cubic-bezier", steps: "head-steps", linear: "head-linear" }),
+    },
+    // X.P.W3.h — the colour heads as a VALUE sees them: the ten, and NOT `var` — in a value,
+    // `var(--x)` is a call (`grammar.ts` parseValueInternal's call arm; `color_context_required` is
+    // `parseCssColor`'s verdict alone). The label is `color-head`'s own, so L does not move.
+    "value-color-head": {
+        label: "<color-function>",
+        code: "css_syntax",
+        rows: np({ ...COLOR_HEADS }),
+        since: "X.P.W3.h",
+    },
+    // X.P.W3.h — `color()`'s predefined spaces (css-color-4 §10.1), each to the production that
+    // reads its three channels: `xyz` and `xyz-d65` are one space in the frozen `CssColorSpace`
+    // (both → `xyz`), `xyz-d50` is adapted to D65 by its own constructor, `srgb` is scaled to the
+    // frozen `rgb` shape (×255) — all three as the incumbent's `parseFunctionalColor` does it.
+    "color-space": {
+        label: "<color-space>",
+        code: "css_syntax",
+        rows: np({
+            srgb: "space-srgb",
+            "srgb-linear": "space-srgb-linear",
+            "display-p3": "space-display-p3",
+            "a98-rgb": "space-a98-rgb",
+            "prophoto-rgb": "space-prophoto-rgb",
+            rec2020: "space-rec2020",
+            xyz: "space-xyz",
+            "xyz-d65": "space-xyz",
+            "xyz-d50": "space-xyz-d50",
+        }),
+        since: "X.P.W3.h",
     },
 };
 
@@ -206,19 +291,98 @@ export const R_ctor = {
     declaration: { label: "<declaration>", code: "css_syntax", labels: ["<declaration>"], arity: 3, leafMap: ["name", "value", "important"] },
     "value-color": { label: "<colour value>", code: "css_syntax", labels: ["<color>"], arity: 1, leafMap: ["color"] },
     stylesheet: { label: "<stylesheet>", code: "css_syntax", labels: ["<stylesheet>"], arity: 1, leafMap: ["items"] },
+
+    // ── X.P.W3.h — the CTOR family this unit lands as ONE commit across the four realizations
+    //    (COHESION §0s E-h1): the row here, the JS function in `lowering-js/js-alg.mjs` CTORS, the
+    //    Wasm emitter in `lowering-wasm/wasm-alg.mjs` emitCtors, and the node table in `bounds.mjs`
+    //    CTOR_ALLOC / CTOR_SCRATCH_CELLS. `bounds.mjs` HALTs at load unless the four name-sets agree.
+    //
+    //    The seven remaining colour heads and `color()`'s spaces: `{space, channels, alpha}` over
+    //    finite channels, exactly the three-row `rgb`/`hsl`/`oklch` shape.
+    hwb: { label: "hwb()", code: "css_syntax", labels: ["<finite-number>"], arity: 4, leafMap: ["c1", "c2", "c3", "alpha"], space: "hwb", since: "X.P.W3.h" },
+    lab: { label: "lab()", code: "css_syntax", labels: ["<finite-number>"], arity: 4, leafMap: ["c1", "c2", "c3", "alpha"], space: "lab", since: "X.P.W3.h" },
+    lch: { label: "lch()", code: "css_syntax", labels: ["<finite-number>"], arity: 4, leafMap: ["c1", "c2", "c3", "alpha"], space: "lch", since: "X.P.W3.h" },
+    oklab: { label: "oklab()", code: "css_syntax", labels: ["<finite-number>"], arity: 4, leafMap: ["c1", "c2", "c3", "alpha"], space: "oklab", since: "X.P.W3.h" },
+    xyz: { label: "color(xyz)", code: "css_syntax", labels: ["<finite-number>"], arity: 4, leafMap: ["c1", "c2", "c3", "alpha"], space: "xyz", since: "X.P.W3.h" },
+    "srgb-linear": { label: "color(srgb-linear)", code: "css_syntax", labels: ["<finite-number>"], arity: 4, leafMap: ["c1", "c2", "c3", "alpha"], space: "srgb-linear", since: "X.P.W3.h" },
+    "display-p3": { label: "color(display-p3)", code: "css_syntax", labels: ["<finite-number>"], arity: 4, leafMap: ["c1", "c2", "c3", "alpha"], space: "display-p3", since: "X.P.W3.h" },
+    "a98-rgb": { label: "color(a98-rgb)", code: "css_syntax", labels: ["<finite-number>"], arity: 4, leafMap: ["c1", "c2", "c3", "alpha"], space: "a98-rgb", since: "X.P.W3.h" },
+    "prophoto-rgb": { label: "color(prophoto-rgb)", code: "css_syntax", labels: ["<finite-number>"], arity: 4, leafMap: ["c1", "c2", "c3", "alpha"], space: "prophoto-rgb", since: "X.P.W3.h" },
+    rec2020: { label: "color(rec2020)", code: "css_syntax", labels: ["<finite-number>"], arity: 4, leafMap: ["c1", "c2", "c3", "alpha"], space: "rec2020", since: "X.P.W3.h" },
+    //    `color(xyz-d50 …)`: the frozen `CssColorSpace` has no `xyz-d50`, so the incumbent adapts the
+    //    three channels to D65 (`src/color/anchors.ts` adaptXyzD50ToD65, the Bradford matrix below,
+    //    `m[0]*x + m[1]*y + m[2]*z` per row) and answers `xyz`. `none` cannot be adapted: the
+    //    incumbent rejects it ("concrete xyz-d50"), and so does this row's guard. The channels and
+    //    the adapted results must all be finite (the incumbent's `xyz()` factory checks the results).
+    "xyz-d50": {
+        label: "color(xyz-d50)",
+        code: "css_syntax",
+        labels: ["<finite-number>", "concrete xyz-d50"],
+        arity: 4,
+        leafMap: ["c1", "c2", "c3", "alpha"],
+        space: "xyz",
+        matrix: Object.freeze([
+            0.95547342148807501, -0.023098454948764641, 0.063259243200570692,
+            -0.028369709333863888, 1.0099953980813041, 0.021041441191917334,
+            0.012314014864481979, -0.020507649298898967, 1.3303659262421239,
+        ]),
+        since: "X.P.W3.h",
+    },
+    //    The value shapes (`grammar/value.mjs`). `value-number` takes ONE leaf (a bare number) or
+    //    TWO (number, unit); `value-string` ONE (an empty string's own two quotes) or THREE (open,
+    //    pieces, close); `arity` names the maximum.
+    "value-number": { label: "<number-value>", code: "css_syntax", labels: ["<finite-number>"], arity: 2, leafMap: ["value", "unit"], since: "X.P.W3.h" },
+    "value-keyword": { label: "<keyword-value>", code: "css_syntax", labels: ["ident"], arity: 1, leafMap: ["text"], since: "X.P.W3.h" },
+    "value-operator": { label: "<operator-value>", code: "css_syntax", labels: ["<operator>"], arity: 1, leafMap: ["index"], since: "X.P.W3.h" },
+    "value-string": { label: "<string-value>", code: "css_syntax", labels: ["string text"], arity: 3, leafMap: ["open", "pieces", "close"], since: "X.P.W3.h" },
+    //    `value-call`'s name rules (`grammar.ts` parseValueInternal): `zeroArg` names take NO
+    //    argument; `emptyOk` names and `--*` names MAY take none; every other name takes >= 1. The
+    //    `args` leaf is ABSENT for an empty body (one leaf) and the `value-args` array otherwise.
+    "value-call": {
+        label: "<function-call>",
+        code: "css_syntax",
+        labels: ["<function-arguments>"],
+        arity: 2,
+        leafMap: ["name", "args"],
+        zeroArg: Object.freeze(["sibling-index", "sibling-count"]),
+        emptyOk: Object.freeze(["scroll", "view"]),
+        since: "X.P.W3.h",
+    },
+    //    The two group rows share one shape — `lead` (a list of the leading separators, each a
+    //    UNIT), `first`, `rest` (a list of items, a UNIT where a separator was followed by
+    //    nothing), `separator` (an index into `grammar/value.mjs` SEPARATORS) — and one guard: a
+    //    comma or slash separator before the first item or after the last, with fewer than two
+    //    items, is the incumbent's "one part, separators still in the text" failure. `value-args`
+    //    answers the BARE ARRAY of items (the `stylesheet` row's precedent: a value that is its
+    //    own projection); `value-group` answers `first` itself when it is the only item and the
+    //    `{kind:"list", separator, items}` record otherwise; `value-wrap` (`P:values`) answers a
+    //    list as it is and any other value as a one-item space list.
+    "value-args": { label: "<function-arguments>", code: "css_syntax", labels: ["<value-list>"], arity: 4, leafMap: ["lead", "first", "rest", "separator"], since: "X.P.W3.h" },
+    "value-group": { label: "<value-list>", code: "css_syntax", labels: ["<value-list>"], arity: 4, leafMap: ["lead", "first", "rest", "separator"], since: "X.P.W3.h" },
+    "value-wrap": { label: "<value-list>", code: "css_syntax", labels: ["<value-list>"], arity: 1, leafMap: ["value"], since: "X.P.W3.h" },
 };
 
 /* ── L: the label index (§4.4) — EQ-4 compares INDICES into this list ──────────────────────── */
 
+/**
+ * TWO PASSES over the registries (X.P.W3.h). The first pass is the slice's own order, row for row,
+ * and yields exactly the sixty labels L held before the value grammar landed; the second pass adds
+ * the labels of every row tagged `since` (a row born AFTER the slice) and the value grammar's own
+ * `EXPECT` labels, at the END. K-10: no existing index moves. A row born later still dedupes against
+ * a label the slice already carries (`value-color-head` is `<color-function>`, `ident-start` is
+ * `ident`), so only a genuinely new label takes a new index.
+ */
 const collectLabels = () => {
     const seen = [];
     const add = (l) => {
         if (typeof l === "string" && !seen.includes(l)) seen.push(l);
     };
-    for (const cls of Object.values(R_cls)) add(cls.label);
-    for (const kw of Object.values(R_kw)) add(kw.label);
-    for (const disp of Object.values(R_disp)) add(disp.label);
-    for (const row of Object.values(R_ctor)) for (const l of row.labels) add(l);
+    const slice = (rows) => Object.values(rows).filter((row) => row.since === undefined);
+    const later = (rows) => Object.values(rows).filter((row) => row.since !== undefined);
+    for (const cls of slice(R_cls)) add(cls.label);
+    for (const kw of slice(R_kw)) add(kw.label);
+    for (const disp of slice(R_disp)) add(disp.label);
+    for (const row of slice(R_ctor)) for (const l of row.labels) add(l);
     // the labels the slice's FAIL/EXPECT/END sites name, in grammar order
     for (const l of [
         "<color>",
@@ -250,7 +414,7 @@ const collectLabels = () => {
         // bound in the `nesting <= 64` form; `bounds.mjs` asserts every value against the layout
         // at load, so a re-sized region halts until the label names the new value. The input
         // window is the ONE bound below its region's CAP: derived (`bounds.mjs` CLASS3_PROOF).
-        "input <= 65458",
+        "input <= 14107", //     X.P.W3.h re-derived: the value grammar's walked arena rate 511 B/code unit (was 65458; E-h5)
         "marks <= 32768",
         "recoveries <= 4096",
         "D <= 4096",
@@ -261,6 +425,13 @@ const collectLabels = () => {
         "expsnap <= 32",
     ])
         add(l);
+    // ── the second pass: every row born after the slice, then the value grammar's EXPECT sites
+    //    (X.P.W3.h). Appended AFTER the nine capacity labels, so no index above moves (K-10).
+    for (const cls of later(R_cls)) add(cls.label);
+    for (const kw of later(R_kw)) add(kw.label);
+    for (const disp of later(R_disp)) add(disp.label);
+    for (const row of later(R_ctor)) for (const l of row.labels) add(l);
+    for (const l of ["<value>", "<value-list>", "<scalar>", "'\\'", "'\"'", "'''"]) add(l);
     return seen;
 };
 

@@ -59,12 +59,25 @@
 //
 // ── WHAT THIS MODULE DOES NOT DO ───────────────────────────────────────────────────────────────
 //
-//   * It does not stub the six public entries the grammar does not carry. The candidate realizes
-//     `P:color`, `P:timing-function` and `P:stylesheet`; `parseCssScalar`, `parseCssValue`,
-//     `parseCssValues`, `parseKeyframeSelector`, `parseAnimationTimeline` and `parseAnimationRange`
+//   * It does not stub the public entries the grammar does not carry. The candidate realizes
+//     `P:color`, `P:timing-function`, `P:stylesheet` and — since X.P.W3.h — `P:scalar`, `P:value`
+//     and `P:values`; `parseKeyframeSelector`, `parseAnimationTimeline` and `parseAnimationRange`
 //     have no production. Answering them with a stub rejection would emit codes no grammar raises
 //     and would be the masking fallback `.b` refused for the same reason (`X-P-W3.md` b.5 E-1).
 //     The gap is a wave-level row (`.a`'s F-a.6), not a hole to paper here.
+//
+// ── THE TWO COMPOSITIONS (X.P.W3.h · COHESION §0s E-h3) ────────────────────────────────────────
+//
+//   `coerceToSyntax(source, syntax)` and `serializeCssColor(color)` are the two frozen runtime
+//   exports that are not parsers. Both are SURFACE COMPOSITIONS here — over `parseCssValue` for the
+//   first, over a `CssColor` for the second — and neither reaches a lowering on its own: a
+//   descriptor is not CSS text and a colour is not a source, so neither has a production, and a
+//   production for either would be a grammar for a non-language. The two codes the coercer emits,
+//   `syntax_descriptor_invalid` and `syntax_mismatch`, are members of the frozen eight (§3a: never
+//   a ninth), selected through `codes.mjs`; the descriptor's own alternatives are its `expected`
+//   list — dynamic, and lawful by the ruling. The descriptor vocabulary and the serializer's
+//   arithmetic are the incumbent's own (`src/css/syntax.ts`, `src/css/grammar.ts` at the pin),
+//   transcribed rather than approximated, because a consumer reads their output as text.
 //   * It does not widen the `ParseIssue` union. Every code below is `selectCode`'d out of `.b`'s
 //     frozen eight; a ninth is a contract change that halts the wave (`W3.md` §3a).
 //   * It does not catch anything from the incumbent. Nothing in this file imports, wraps, or
@@ -89,21 +102,181 @@ export const PUBLIC_ENTRIES = Object.freeze([
     Object.freeze({ name: "parseCssColor", production: "P:color", label: "<color>" }),
     Object.freeze({ name: "parseTimingFunction", production: "P:timing-function", label: "<timing-function>" }),
     Object.freeze({ name: "parseStylesheet", production: "P:stylesheet", label: "<stylesheet>" }),
+    // X.P.W3.h — the value grammar's three (`algebra/grammar/value.mjs`)
+    Object.freeze({ name: "parseCssScalar", production: "P:scalar", label: "<scalar>" }),
+    Object.freeze({ name: "parseCssValue", production: "P:value", label: "<value>" }),
+    Object.freeze({ name: "parseCssValues", production: "P:values", label: "<value-list>" }),
 ]);
 
 /**
- * The six frozen runtime exports the candidate does NOT realize, named rather than omitted. An
+ * The three frozen runtime parsers the candidate does NOT realize, named rather than omitted. An
  * absence a reader has to discover is the shape §11 guardrail 2 warns about — the universe quietly
- * narrowed to what the candidate happens to cover.
+ * narrowed to what the candidate happens to cover. (Six until X.P.W3.h landed `P:scalar`,
+ * `P:value` and `P:values`.)
  */
 export const UNREALIZED_ENTRIES = Object.freeze([
-    "parseCssScalar",
-    "parseCssValue",
-    "parseCssValues",
     "parseKeyframeSelector",
     "parseAnimationTimeline",
     "parseAnimationRange",
 ]);
+
+/* ── the two compositions (X.P.W3.h, E-h3) — the incumbent's own tables, transcribed ───────── */
+
+/** `syntax.ts` SYNTAX_COMPONENTS — the thirteen `<production>` components a descriptor may name. */
+const SYNTAX_COMPONENTS = Object.freeze([
+    "<angle>", "<color>", "<custom-ident>", "<flex>", "<integer>", "<length>", "<length-percentage>",
+    "<number>", "<percentage>", "<resolution>", "<time>", "<transform-function>", "<transform-list>",
+]);
+/** `syntax.ts` LENGTH_UNITS — the forty-nine. */
+const LENGTH_UNITS = Object.freeze([
+    "cap", "ch", "cm", "cqb", "cqh", "cqi", "cqmax", "cqmin", "cqw",
+    "dvb", "dvh", "dvi", "dvmax", "dvmin", "dvw", "em", "ex", "ic", "in",
+    "lh", "lvb", "lvh", "lvi", "lvmax", "lvmin", "lvw", "mm", "pc", "pt",
+    "px", "q", "rcap", "rch", "rem", "rex", "ric", "rlh", "svb", "svh",
+    "svi", "svmax", "svmin", "svw", "vb", "vh", "vi", "vmax", "vmin", "vw",
+]);
+/** `syntax.ts` TRANSFORM_FUNCTIONS — the twenty-one. */
+const TRANSFORM_FUNCTIONS = Object.freeze([
+    "matrix", "matrix3d", "perspective", "rotate", "rotate3d", "rotatex",
+    "rotatey", "rotatez", "scale", "scale3d", "scalex", "scaley", "scalez",
+    "skew", "skewx", "skewy", "translate", "translate3d", "translatex",
+    "translatey", "translatez",
+]);
+const ANGLE_UNITS = Object.freeze(["deg", "grad", "rad", "turn"]);
+const RESOLUTION_UNITS = Object.freeze(["dpi", "dpcm", "dppx", "x"]);
+/** `syntax.ts` `<custom-ident>`'s exclusions — the CSS-wide keywords, matched case-insensitively. */
+const CSS_WIDE_KEYWORDS = /^(?:initial|inherit|unset|revert|revert-layer|default)$/i;
+
+/** The named production a rejected DESCRIPTOR names — the composition's own, above the algebra. */
+export const SYNTAX_DESCRIPTOR_PRODUCTION = "<syntax-descriptor> (a '|'-separated list of '*' and supported <production> components)";
+
+/** `syntax.ts` syntaxAlternatives: the `|`-split, trimmed alternatives, or null. */
+const syntaxAlternatives = (syntax) => {
+    if (typeof syntax !== "string") return null;
+    const alternatives = syntax.split("|").map((part) => part.trim());
+    return alternatives.length > 0 && alternatives.every((part) => part === "*" || SYNTAX_COMPONENTS.includes(part))
+        ? alternatives
+        : null;
+};
+
+const numericOf = (value) => (value.kind === "scalar" && value.payload.type === "number" ? value.payload : null);
+const isTransformCall = (value) => value.kind === "call" && TRANSFORM_FUNCTIONS.includes(value.name.toLowerCase());
+
+/** `syntax.ts` matchesSyntax, component by component. */
+function matchesSyntax(value, component) {
+    if (component === "*") return true;
+    if (component === "<color>") return value.kind === "scalar" && value.payload.type === "color";
+    if (component === "<custom-ident>") {
+        return value.kind === "scalar" && value.payload.type === "keyword" && !CSS_WIDE_KEYWORDS.test(value.payload.value);
+    }
+    if (component === "<transform-function>") return isTransformCall(value);
+    if (component === "<transform-list>") {
+        return isTransformCall(value)
+            || (value.kind === "list" && value.separator === "space" && value.items.length > 0 && value.items.every(isTransformCall));
+    }
+    const token = numericOf(value);
+    if (!token) return false;
+    const unit = token.unit.toLowerCase();
+    switch (component) {
+        case "<number>": return unit === "";
+        case "<integer>": return unit === "" && Number.isInteger(token.value);
+        case "<percentage>": return unit === "%";
+        case "<length>": return LENGTH_UNITS.includes(unit);
+        case "<length-percentage>": return unit === "%" || LENGTH_UNITS.includes(unit);
+        case "<angle>": return ANGLE_UNITS.includes(unit);
+        case "<time>": return unit === "s" || unit === "ms";
+        case "<resolution>": return RESOLUTION_UNITS.includes(unit);
+        case "<flex>": return unit === "fr";
+        default: return false;
+    }
+}
+
+/**
+ * A rejection SPANNING THE SOURCE with a frozen code and a named expectation list — the shape the
+ * incumbent's `failure(source, code, expected)` answers. `actual` is the Π idiom: the source, or
+ * `null` when it is empty. Every code goes through `selectCode`; a non-member is `undefined` and
+ * the diagnostic below would fail `.b`'s shape predicate, which is the proof there is no ninth.
+ */
+const sourceIssue = (source, code, expected) =>
+    Object.freeze({
+        code: selectCode(code),
+        start: 0,
+        end: source.length,
+        expected: Object.freeze(expected.slice()),
+        actual: source === "" ? null : source,
+    });
+
+/**
+ * `coerceToSyntax(source, syntax)` over ONE `parseCssValue`: the descriptor first (an invalid one is
+ * `syntax_descriptor_invalid` over the whole source — the source is what the caller handed in and
+ * the descriptor is not CSS text, so it has no span of its own), then the parse (its own
+ * rejection, untouched), then the match (a value no alternative admits is `syntax_mismatch`, and
+ * its `expected` is the descriptor's own alternatives — the incumbent's, and E-h3's).
+ */
+const coercerOver = (parseValue) => (source, syntax) => {
+    if (!isSource(source)) return BOUNDARY_RESULT;
+    const alternatives = syntaxAlternatives(syntax);
+    if (alternatives === null) {
+        return Object.freeze({ ok: false, diagnostics: Object.freeze([sourceIssue(source, "syntax_descriptor_invalid", [SYNTAX_DESCRIPTOR_PRODUCTION])]) });
+    }
+    const value = parseValue(source);
+    if (!value.ok) return value;
+    return alternatives.some((alternative) => matchesSyntax(value.value, alternative))
+        ? value
+        : Object.freeze({ ok: false, diagnostics: Object.freeze([sourceIssue(source, "syntax_mismatch", alternatives)]) });
+};
+
+/** The thirteen frozen `CssColorSpace` members (`types.ts`), the serializer's domain. */
+const CSS_COLOR_SPACES = Object.freeze([
+    "rgb", "hsl", "hwb", "lab", "lch", "oklab", "oklch", "xyz",
+    "srgb-linear", "display-p3", "a98-rgb", "prophoto-rgb", "rec2020",
+]);
+
+/** `model.ts` isAnyColor, restricted to the thirteen: three channels, each a number or `none`. */
+const isCssColor = (value) => {
+    if (!value || typeof value !== "object") return false;
+    if (typeof value.space !== "string" || !CSS_COLOR_SPACES.includes(value.space)) return false;
+    if (!Array.isArray(value.channels) || value.channels.length !== 3) return false;
+    if (value.alpha !== "none" && typeof value.alpha !== "number") return false;
+    return value.channels.every((channel) => channel === "none" || typeof channel === "number");
+};
+
+/** `grammar.ts` format / angle / alphaSuffix — the incumbent's own text, digit for digit. */
+const format = (value) => (value === "none" ? value : Number(value.toFixed(12)).toString());
+const angle = (value) => (value === "none" ? value : `${format(value)}deg`);
+const percent = (value) => (value === "none" ? value : `${format(value * 100)}%`);
+const alphaSuffix = (alpha) => (alpha === 1 ? "" : ` / ${alpha === "none" ? "none" : `${format(alpha * 100)}%`}`);
+const colorErr = (code) => Object.freeze({ ok: false, error: Object.freeze({ code }) });
+
+/**
+ * `serializeCssColor(color)` — `Result<string, ColorIssue>` (`ok`/`err`, not `ParseResult`): a
+ * value that is not one of the thirteen frozen colours is `color_invalid_input`, a non-finite
+ * channel or alpha `color_non_finite`, an alpha outside [0, 1] `color_out_of_range`; otherwise the
+ * incumbent's own serialization (`grammar.ts` serializeCssColor at the pin). The `ColorIssue` codes
+ * are the incumbent's `Result` vocabulary, not `ParseIssue`'s — this function's declared type.
+ */
+export function serializeCssColor(color) {
+    if (!isCssColor(color)) return colorErr("color_invalid_input");
+    if (color.channels.some((channel) => channel !== "none" && !Number.isFinite(channel))
+        || (color.alpha !== "none" && !Number.isFinite(color.alpha))) {
+        return colorErr("color_non_finite");
+    }
+    if (color.alpha !== "none" && (color.alpha < 0 || color.alpha > 1)) return colorErr("color_out_of_range");
+    const [a, b, c] = color.channels;
+    const alpha = alphaSuffix(color.alpha);
+    const ok = (value) => Object.freeze({ ok: true, value });
+    switch (color.space) {
+        case "rgb": return ok(`rgb(${format(a)} ${format(b)} ${format(c)}${alpha})`);
+        case "hsl": return ok(`hsl(${angle(a)} ${percent(b)} ${percent(c)}${alpha})`);
+        case "hwb": return ok(`hwb(${angle(a)} ${percent(b)} ${percent(c)}${alpha})`);
+        case "lab": return ok(`lab(${a === "none" ? a : `${format(a)}%`} ${format(b)} ${format(c)}${alpha})`);
+        case "lch": return ok(`lch(${a === "none" ? a : `${format(a)}%`} ${format(b)} ${angle(c)}${alpha})`);
+        case "oklab": return ok(`oklab(${percent(a)} ${format(b)} ${format(c)}${alpha})`);
+        case "oklch": return ok(`oklch(${percent(a)} ${format(b)} ${angle(c)}${alpha})`);
+        case "xyz": return ok(`color(xyz ${format(a)} ${format(b)} ${format(c)}${alpha})`);
+        default: return ok(`color(${color.space} ${format(a)} ${format(b)} ${format(c)}${alpha})`);
+    }
+}
 
 /* ── cure (2): the JS boundary, above the grammar ───────────────────────────────────────────── */
 
@@ -207,6 +380,12 @@ export function makePublicSurface(lowering) {
         };
     }
 
+    // X.P.W3.h — the two compositions, on the surface: the coercer over THIS lowering's
+    // `parseCssValue` (so both targets answer through their own value grammar), the serializer as
+    // the one lowering-independent function it is.
+    surface.coerceToSyntax = coercerOver(surface.parseCssValue);
+    surface.serializeCssColor = serializeCssColor;
+
     surface.entries = () => PUBLIC_ENTRIES.map((row) => row.name);
     surface.unrealized = () => UNREALIZED_ENTRIES.slice();
     surface.raw = (prod, source) => recovery.probe(prod, source);
@@ -229,5 +408,9 @@ export const js = makePublicSurface(makeJsLowering());
 export const parseCssColor = js.parseCssColor;
 export const parseTimingFunction = js.parseTimingFunction;
 export const parseStylesheet = js.parseStylesheet;
+export const parseCssScalar = js.parseCssScalar;
+export const parseCssValue = js.parseCssValue;
+export const parseCssValues = js.parseCssValues;
+export const coerceToSyntax = js.coerceToSyntax;
 
 export { CAPACITY, CAPACITY_LABELS, CLASS3_PROOF, DEPTH_BOUND, DEPTH_CODE, DEPTH_PRODUCTION };

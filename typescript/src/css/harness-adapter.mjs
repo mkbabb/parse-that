@@ -32,7 +32,7 @@ export const meta = {
         grammar: "`grammar()` is the TERM instantiation of the same authored grammar in both lowerings — one grammar file, three instantiations (terms, JS, Wasm)",
     },
     sources: {
-        algebra: [at("algebra/ops.mjs"), at("algebra/tables.mjs"), at("algebra/grammar.mjs"), at("reify/term-alg.mjs")],
+        algebra: [at("algebra/ops.mjs"), at("algebra/tables.mjs"), at("algebra/grammar.mjs"), at("algebra/grammar/value.mjs"), at("reify/term-alg.mjs")],
         js: [at("lowering-js/js-alg.mjs"), at("lowering-js/values.mjs"), at("lowering-js/index.mjs")],
         wasm: [
             at("lowering-wasm/asm.mjs"), at("lowering-wasm/layout.mjs"), at("lowering-wasm/runtime.mjs"),

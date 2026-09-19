@@ -12,6 +12,7 @@
 // onto the value stack, 0 for failure with the stack left where it was. σ is the module's globals;
 // `far` is the only thing a failure leaves behind (§5.6).
 
+import { OPERATORS, SEPARATORS } from "../algebra/grammar/value.mjs";
 import { CODES, KINDS } from "../algebra/ops.mjs";
 import { JUMP_POSITIONS, R_cls, R_ctor, R_disp, R_kw, STEP_ALIASES, TIMING_KEYWORDS, labelIndex } from "../algebra/tables.mjs";
 import { F64, I32 } from "./asm.mjs";
@@ -680,13 +681,56 @@ export function emitCtors(env) {
         c.call(F.push);
     };
 
-    for (const rowName of ["rgb", "hsl", "oklch"]) {
+    //  X.P.W3.h: the slice's three heads and the ten the value grammar's landing added (E-h1) — one
+    //  shape, `{space, channels, alpha}` over finite leaves, the row's own `space`
+    for (const rowName of ["rgb", "hsl", "oklch", "hwb", "lab", "lch", "oklab", "xyz", "srgb-linear", "display-p3", "a98-rgb", "prophoto-rgb", "rec2020"]) {
         const space = R_ctor[rowName].space;
         declare(rowName, (c) => {
             finiteGuard(c, 4);
             colorOf(c, space, channels3, (b) => arg(b, 3));
         });
     }
+
+    /**
+     * `color(xyz-d50 …)` → `xyz` (X.P.W3.h): the row's Bradford matrix over three NUMBER leaves
+     * (`none` is a `T_STRB` and fails the guard, as the incumbent's "concrete xyz-d50" does), each
+     * result `m[0]*x + m[1]*y + m[2]*z` in the incumbent's own operation order — two products
+     * added, then the third product added — and every result finite (the incumbent's `xyz()`
+     * factory checks the ADAPTED channels). No fused multiply-add exists in the instruction set,
+     * so the f64 arithmetic is the JS engine's, operation for operation.
+     */
+    declare("xyz-d50", (c) => {
+        const M = R_ctor["xyz-d50"].matrix;
+        const p = c.local(I32);
+        const x = c.local(F64);
+        const y = c.local(F64);
+        const z = c.local(F64);
+        const out = [c.local(F64), c.local(F64), c.local(F64)];
+        for (let k = 0; k < 3; k++) {
+            arg(c, k);
+            c.set(p);
+            c.get(p).load().i32(T_NUM).x("i32.ne").if_("void", (b) => b.i32(0).ret());
+        }
+        finiteGuard(c, 4);
+        arg(c, 0);
+        c.loadf64(8).set(x);
+        arg(c, 1);
+        c.loadf64(8).set(y);
+        arg(c, 2);
+        c.loadf64(8).set(z);
+        for (let r = 0; r < 3; r++) {
+            c.f64(M[r * 3]).get(x).x("f64.mul")
+                .f64(M[r * 3 + 1]).get(y).x("f64.mul").x("f64.add")
+                .f64(M[r * 3 + 2]).get(z).x("f64.mul").x("f64.add")
+                .set(out[r]);
+            //  Number.isFinite over the adapted channel: equal to itself and not ±Infinity
+            c.get(out[r]).get(out[r]).x("f64.eq").get(out[r]).x("f64.abs").f64(Infinity).x("f64.ne").x("i32.and")
+                .x("i32.eqz").if_("void", (b) => b.i32(0).ret());
+        }
+        colorOf(c, "xyz", (b) => {
+            for (let r = 0; r < 3; r++) b.get(out[r]).call(F.mkNum).call(F.push);
+        }, (b) => arg(b, 3));
+    });
     declare("hex8", (c) => colorOf(c, "rgb", channels3, (b) => arg(b, 3)));
     declare("hex6", (c) => colorOf(c, "rgb", channels3, (b) => b.i32(data.numNode(1))));
     declare("hex4", (c) => colorOf(c, "rgb", channels3, (b) => arg(b, 3)));
@@ -868,6 +912,210 @@ export function emitCtors(env) {
                     ["value", (u) => arg(u, 0)],
                 ])],
         ]));
+
+    /* ── X.P.W3.h — the value shapes (`algebra/grammar/value.mjs`), the same CTOR family as the
+          rows in `tables.mjs`, the JS functions in `js-alg.mjs` and the node table in `bounds.mjs` ── */
+
+    /** `{kind:"scalar", payload:{type, …}}` — the one nesting every scalar shape shares. */
+    const scalarRec = (c, type, pairs) =>
+        rec(c, [
+            ["kind", (b) => b.i32(data.stringNode("scalar"))],
+            ["payload", (b) => rec(b, [["type", (u) => u.i32(data.stringNode(type))], ...pairs])],
+        ]);
+
+    /** `[number, unit?]` — the unit leaf is absent for a bare number; the count is the second parameter. */
+    declare("value-number", (c) => {
+        finiteGuard(c, 1);
+        scalarRec(c, "number", [
+            ["value", (b) => arg(b, 0)],
+            ["unit", (b) => {
+                b.get(1).i32(2).x("i32.eq").if_(I32, (t) => arg(t, 1), (t) => t.i32(data.stringNode("")));
+            }],
+        ]);
+    });
+
+    declare("value-keyword", (c) => scalarRec(c, "keyword", [["value", (b) => arg(b, 0)]]));
+
+    const OPERATOR_TAB = strTable(OPERATORS);
+    declare("value-operator", (c) =>
+        scalarRec(c, "keyword", [
+            ["value", (b) => {
+                tokenIndex(b, 0);
+                b.i32(4).x("i32.mul").i32(OPERATOR_TAB).x("i32.add").load();
+            }],
+        ]));
+
+    /**
+     * One leaf is an empty string's own two quotes (a `T_STR`, used as is); three are open, the
+     * interior pieces, close — all `T_STR` spans of the SOURCE, contiguous by construction, so the
+     * value is the span from the opening quote's start to the closing quote's end and no piece is
+     * read (the JS constructor re-joins the pieces; the bytes are the same bytes).
+     */
+    declare("value-string", (c) => {
+        const open = c.local(I32);
+        const close = c.local(I32);
+        const s = c.local(I32);
+        const e = c.local(I32);
+        c.get(1).i32(1).x("i32.eq").if_("void", (b) => {
+            scalarRec(b, "keyword", [["value", (u) => arg(u, 0)]]);
+            b.ret();
+        });
+        arg(c, 0);
+        c.set(open);
+        arg(c, 2);
+        c.set(close);
+        c.get(open).load(4).set(s);
+        c.get(close).load(4).get(close).load(8).x("i32.add").set(e);
+        scalarRec(c, "keyword", [["value", (u) => u.get(s).get(e).get(s).x("i32.sub").call(F.mkStr)]]);
+    });
+
+    /**
+     * A closed name list as a `kwLookup` blob: `[u32 count]` then `[u8 keyLen][key…][u8 1][u8 0]`,
+     * so `F.kwLookup(blob, s, e)` answers >= 0 exactly when the folded span is one of the names.
+     */
+    const nameBlob = (names) =>
+        data.blob(`names:${names.join(",")}`, [...u32le(names.length), ...names.flatMap((n) => [n.length, ...[...n].map((ch) => ch.charCodeAt(0)), 1, 0])], 4);
+
+    /**
+     * The group rows' shared reading (`js-alg.mjs` groupItems): the items array — `first` (leaf 1)
+     * then every non-UNIT element of the `T_LIST` `rest` (leaf 2), a UNIT being a separator
+     * followed by nothing — as a `T_ARR`, or 0 when a leading (leaf 0 non-empty) or trailing
+     * (last of `rest` UNIT) comma/slash separator (leaf 3, the separator index, not `space`)
+     * stands with fewer than two items. Answers the array pointer, or returns 0 from the caller.
+     */
+    const SPACE_INDEX = SEPARATORS.indexOf("space");
+    const groupItems = (c) => {
+        const rest = c.local(I32);
+        const abase = c.local(I32);
+        const k = c.local(I32);
+        const n = c.local(I32);
+        const item = c.local(I32);
+        const count = c.local(I32);
+        const edge = c.local(I32);
+        const arr = c.local(I32);
+        arg(c, 2);
+        c.set(rest);
+        c.get(rest).load(4).set(n);
+        c.gget(G.vsp).set(abase);
+        arg(c, 1);
+        c.call(F.push);
+        c.i32(1).set(count);
+        c.i32(0).set(k);
+        c.block("void", (blk) => {
+            blk.loop("void", (lp) => {
+                lp.get(k).get(n).x("i32.ge_u").brIf(1);
+                lp.get(rest).get(k).i32(4).x("i32.mul").x("i32.add").load(8).set(item);
+                lp.get(item).i32(consts.UNIT).x("i32.ne").if_("void", (b) => {
+                    b.get(item).call(F.push);
+                    b.get(count).i32(1).x("i32.add").set(count);
+                });
+                lp.get(k).i32(1).x("i32.add").set(k);
+                lp.br(0);
+            });
+        });
+        //  a leading separator run (leaf 0 non-empty) or a trailing one (the last of `rest` a UNIT)
+        arg(c, 0);
+        c.load(4).i32(0).x("i32.gt_u").set(edge);
+        c.get(n).i32(0).x("i32.gt_u").if_("void", (b) => {
+            b.get(rest).get(n).i32(1).x("i32.sub").i32(4).x("i32.mul").x("i32.add").load(8).i32(consts.UNIT).x("i32.eq")
+                .get(edge).x("i32.or").set(edge);
+        });
+        tokenIndex(c, 3);
+        c.i32(SPACE_INDEX).x("i32.ne").get(edge).x("i32.and").get(count).i32(2).x("i32.lt_u").x("i32.and").if_("void", (b) => {
+            b.get(abase).gset(G.vsp);
+            b.i32(0).ret();
+        });
+        c.i32(T_ARR).get(abase).get(count).call(F.mkSeqNode).set(arr);
+        c.get(abase).gset(G.vsp);
+        c.get(arr);
+    };
+
+    /** The argument array, bare (the `stylesheet` row's precedent), or the group guard's failure. */
+    declare("value-args", (c) => groupItems(c));
+
+    /** The incumbent's three name rules, over the row's own lists (`grammar.ts` parseValueInternal). */
+    declare("value-call", (c) => {
+        const row = R_ctor["value-call"];
+        const ZERO_ARG = nameBlob(row.zeroArg);
+        const EMPTY_OK = nameBlob(row.emptyOk);
+        const name = c.local(I32);
+        const s = c.local(I32);
+        const e = c.local(I32);
+        const n = c.local(I32);
+        const args = c.local(I32);
+        arg(c, 0);
+        c.set(name);
+        c.get(name).load(4).set(s);
+        c.get(s).get(name).load(8).x("i32.add").set(e);
+        //  the array leaf is present for a non-empty body (two leaves); an empty body is the empty array
+        c.get(1).i32(2).x("i32.eq").if_("void",
+            (b) => {
+                arg(b, 1);
+                b.set(args);
+            },
+            (b) => b.i32(T_ARR).gget(G.vsp).i32(0).call(F.mkSeqNode).set(args));
+        c.get(args).load(4).set(n);
+        c.i32(ZERO_ARG).get(s).get(e).call(F.kwLookup).i32(0).x("i32.ge_s").if_("void", (b) => {
+            //  sibling-index() / sibling-count() take nothing
+            b.get(n).i32(0).x("i32.ne").if_("void", (t) => t.i32(0).ret());
+        }, (b) => {
+            b.get(n).x("i32.eqz").if_("void", (t) => {
+                //  an empty body is lawful only for scroll(), view() and a `--*` name
+                t.i32(EMPTY_OK).get(s).get(e).call(F.kwLookup).i32(0).x("i32.lt_s").if_("void", (u) => {
+                    u.get(e).get(s).x("i32.sub").i32(2).x("i32.lt_u")
+                        .get(s).i32(INPUT_BASE).x("i32.add").load8u().i32(45).x("i32.ne").x("i32.or")
+                        .get(s).i32(INPUT_BASE + 1).x("i32.add").load8u().i32(45).x("i32.ne").x("i32.or")
+                        .if_("void", (v) => v.i32(0).ret());
+                });
+            });
+        });
+        rec(c, [
+            ["kind", (b) => b.i32(data.stringNode("call"))],
+            ["name", (b) => b.get(name)],
+            ["args", (b) => b.get(args)],
+        ]);
+    });
+
+    /** `first` alone when it is the only item, else the list over the items. */
+    const SEPARATOR_TAB = strTable(SEPARATORS);
+    const LIST_KIND = data.stringNode("list");
+    declare("value-group", (c) => {
+        const arr = c.local(I32);
+        groupItems(c);
+        c.set(arr);
+        c.get(arr).x("i32.eqz").if_("void", (b) => b.i32(0).ret());
+        c.get(arr).load(4).i32(1).x("i32.eq").if_("void", (b) => b.get(arr).load(8).ret());
+        rec(c, [
+            ["kind", (b) => b.i32(LIST_KIND)],
+            ["separator", (b) => {
+                tokenIndex(b, 3);
+                b.i32(4).x("i32.mul").i32(SEPARATOR_TAB).x("i32.add").load();
+            }],
+            ["items", (b) => b.get(arr)],
+        ]);
+    });
+
+    /**
+     * `parseCssValues`: a list is itself (its `kind` value is the interned `"list"` node, compared
+     * by pointer), any other value a one-item space list.
+     */
+    declare("value-wrap", (c) => {
+        const v = c.local(I32);
+        const abase = c.local(I32);
+        const arr = c.local(I32);
+        arg(c, 0);
+        c.set(v);
+        c.get(v).load(12).i32(LIST_KIND).x("i32.eq").if_("void", (b) => b.get(v).ret());
+        c.gget(G.vsp).set(abase);
+        c.get(v).call(F.push);
+        c.i32(T_ARR).get(abase).i32(1).call(F.mkSeqNode).set(arr);
+        c.get(abase).gset(G.vsp);
+        rec(c, [
+            ["kind", (b) => b.i32(LIST_KIND)],
+            ["separator", (b) => b.i32(data.stringNode("space"))],
+            ["items", (b) => b.get(arr)],
+        ]);
+    });
 
     /** `stylesheet` is the one row whose value IS the projection: the list minus every recovered hole. */
     declare("stylesheet", (c) => {

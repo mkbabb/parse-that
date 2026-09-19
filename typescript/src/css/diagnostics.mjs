@@ -113,7 +113,7 @@ export const PRODUCTION_LABELS = Object.freeze({
 
     /* the capacity bounds (X.P.W3.f, COHESION §0q E-f1) — the `nesting <= 64` row's own form, one
        per fixed region of the Wasm memory model; both lowerings raise them at their boundary */
-    "input <= 65458": "<input-window> (at most 65458 code units)",
+    "input <= 14107": "<input-window> (at most 14107 code units)",
     "marks <= 32768": "<mark-journal> (at most 32768 marks)",
     "recoveries <= 4096": "<recovery-journal> (at most 4096 recoveries)",
     "D <= 4096": "<diagnostic-journal> (at most 4096 diagnostics)",
@@ -122,6 +122,26 @@ export const PRODUCTION_LABELS = Object.freeze({
     "vstack <= 65536": "<value-stack> (at most 65536 slots)",
     "arena <= 7208960": "<arena> (at most 7208960 bytes)",
     "expsnap <= 32": "<expectation-snapshots> (at most 32 frames)",
+
+    /* X.P.W3.h — the value grammar's labels (`algebra/grammar/value.mjs`), in L's own appended
+       order: the classes, the operator table, `color()`'s space table, the constructor guards,
+       the three entries' EXPECT sites and the three `LIT`s a quoted string's escape reads */
+    "token boundary": "<token-boundary> (whitespace, ',', '/', ':', ';', ')' or the end of input)",
+    "ident start": "<ident-start> (a letter, '_' or '-'; never a digit)",
+    "<unit>": "<unit>",
+    "<operator>": "<operator>",
+    "double quote": "<double-quote> ('\"')",
+    "single quote": "<single-quote> (\"'\")",
+    "string text": "<string-text> (any character but the closing quote or '\\')",
+    "<color-space>": "<color-space> (srgb, srgb-linear, display-p3, a98-rgb, prophoto-rgb, rec2020, xyz, xyz-d50 or xyz-d65)",
+    "concrete xyz-d50": "<xyz-d50-channel> (a number; 'none' cannot be adapted to D65)",
+    "<function-arguments>": "<function-arguments> (none for sibling-index()/sibling-count(); at least one otherwise, except --*, scroll() and view())",
+    "<value-list>": "<value-list>",
+    "<value>": "<value>",
+    "<scalar>": "<scalar>",
+    "'\\'": "<backslash>",
+    "'\"'": "<double-quote>",
+    "'''": "<single-quote>",
 });
 
 /** Both set-differences against `L`, injectivity, and the named-production predicate — at load. */

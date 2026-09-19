@@ -224,6 +224,27 @@ const CTOR_ALLOC = Object.freeze({
     declaration: { fixed: 8 * 3 + 8 + 15, rate: 1 }, //          mkRec(3) + mkFold over the name's own bytes
     "value-color": { fixed: (8 * 2 + 8) * 2, rate: 0 }, //       mkRec(2) holding mkRec(2)
     stylesheet: { fixed: 15, rate: 4 }, //                        the surviving-items array, 4 B per rule
+    //  X.P.W3.h — the CTOR family landed with `tables.mjs` R_ctor, `js-alg.mjs` CTORS and
+    //  `wasm-alg.mjs` emitCtors (E-h1); the same four name-sets, asserted equal below
+    hwb: { fixed: 24 + 32, rate: 0 }, //                          colorOf, as rgb
+    lab: { fixed: 24 + 32, rate: 0 },
+    lch: { fixed: 24 + 32, rate: 0 },
+    oklab: { fixed: 24 + 32, rate: 0 },
+    xyz: { fixed: 24 + 32, rate: 0 },
+    "srgb-linear": { fixed: 24 + 32, rate: 0 },
+    "display-p3": { fixed: 24 + 32, rate: 0 },
+    "a98-rgb": { fixed: 24 + 32, rate: 0 },
+    "prophoto-rgb": { fixed: 24 + 32, rate: 0 },
+    rec2020: { fixed: 24 + 32, rate: 0 },
+    "xyz-d50": { fixed: 16 * 3 + 24 + 32, rate: 0 }, //            three adapted mkNum + colorOf
+    "value-number": { fixed: (8 * 2 + 8) + (8 * 3 + 8), rate: 0 }, // mkRec(2) holding mkRec(3); the empty unit is static
+    "value-keyword": { fixed: (8 * 2 + 8) * 2, rate: 0 }, //       mkRec(2) holding mkRec(2)
+    "value-operator": { fixed: (8 * 2 + 8) * 2, rate: 0 }, //      mkRec(2) holding mkRec(2); the spelling is static
+    "value-string": { fixed: 16 + (8 * 2 + 8) * 2, rate: 0 }, //   one mkStr over the source span + mkRec(2) holding mkRec(2)
+    "value-call": { fixed: 8 * 3 + 8 + 8, rate: 0 }, //             mkRec(3) + the empty argument array (the array is `value-args`'s)
+    "value-args": { fixed: 15 + 4, rate: 4 }, //                    the items array: 4 B per item (first + rest), each >= 1 code unit
+    "value-group": { fixed: 8 * 3 + 8 + 15 + 4, rate: 4 }, //       mkRec(3) + the items array: 4 B per item (first + rest), each >= 1 code unit
+    "value-wrap": { fixed: 8 * 3 + 8 + 16, rate: 0 }, //            mkRec(3) + a one-item array, when the value is not a list
 });
 
 /**
@@ -237,6 +258,10 @@ const CTOR_SCRATCH_CELLS = Object.freeze({
     rgb: 6, hsl: 6, oklch: 6, hex8: 6, hex6: 6, hex4: 6, hex3: 6, context: 0, "named-color": 6, transparent: 6,
     "timing-keyword": 4, "step-alias": 6, "cubic-bezier": 10, steps: 6, "linear-function": 4, "linear-stop": 4,
     "style-rule": 6, declaration: 6, "value-color": 6, stylesheet: 0,
+    //  X.P.W3.h: colorOf rows 6; `scalarRec` nests 2 + (2·pairs) cells — number 2 + 6, keyword /
+    //  operator / string 2 + 4 (the string's mkStr is a value, not a cell); call / list `rec(3)` 6
+    hwb: 6, lab: 6, lch: 6, oklab: 6, xyz: 6, "srgb-linear": 6, "display-p3": 6, "a98-rgb": 6, "prophoto-rgb": 6, rec2020: 6,
+    "xyz-d50": 6, "value-number": 8, "value-keyword": 6, "value-operator": 6, "value-string": 6, "value-call": 6, "value-args": 1, "value-group": 7, "value-wrap": 7,
 });
 
 const pad8 = (n) => Math.ceil(n / 8) * 8;

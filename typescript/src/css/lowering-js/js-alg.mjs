@@ -22,6 +22,7 @@
 
 import { tsImport } from "tsx/esm/api";
 
+import { ESCAPED_BACKSLASH, ESCAPED_QUOTE, OPERATORS, SEPARATORS } from "../algebra/grammar/value.mjs";
 import { KINDS } from "../algebra/ops.mjs";
 import { JUMP_POSITIONS, L, R_cls, R_ctor, R_disp, R_kw, STEP_ALIASES, TIMING_KEYWORDS, labelIndex } from "../algebra/tables.mjs";
 import { asciiFold, clampValue, isTuple, list, NONE_OPT, scaleValue, splitSelectors, span, tuple, UNIT } from "./values.mjs";
@@ -222,7 +223,81 @@ const CTORS = {
     declaration: (a) => ({ name: asciiFold(a[0]), value: a[1], important: a[2] }),
     "value-color": (a) => ({ kind: "scalar", payload: { type: "color", value: a[0] } }),
     stylesheet: (a) => a[0].l.filter((item) => item !== NONE_OPT),
+
+    // ── X.P.W3.h — the CTOR family landed as ONE commit with its rows (`tables.mjs` R_ctor), the
+    //    Wasm emitter (`wasm-alg.mjs` emitCtors) and the node table (`bounds.mjs`), E-h1.
+    hwb: (a) => (a.every(finite) ? colorOf("hwb", a[0], a[1], a[2], a[3]) : GUARD),
+    lab: (a) => (a.every(finite) ? colorOf("lab", a[0], a[1], a[2], a[3]) : GUARD),
+    lch: (a) => (a.every(finite) ? colorOf("lch", a[0], a[1], a[2], a[3]) : GUARD),
+    oklab: (a) => (a.every(finite) ? colorOf("oklab", a[0], a[1], a[2], a[3]) : GUARD),
+    xyz: (a) => (a.every(finite) ? colorOf("xyz", a[0], a[1], a[2], a[3]) : GUARD),
+    "srgb-linear": (a) => (a.every(finite) ? colorOf("srgb-linear", a[0], a[1], a[2], a[3]) : GUARD),
+    "display-p3": (a) => (a.every(finite) ? colorOf("display-p3", a[0], a[1], a[2], a[3]) : GUARD),
+    "a98-rgb": (a) => (a.every(finite) ? colorOf("a98-rgb", a[0], a[1], a[2], a[3]) : GUARD),
+    "prophoto-rgb": (a) => (a.every(finite) ? colorOf("prophoto-rgb", a[0], a[1], a[2], a[3]) : GUARD),
+    rec2020: (a) => (a.every(finite) ? colorOf("rec2020", a[0], a[1], a[2], a[3]) : GUARD),
+    /** `color(xyz-d50 …)` → `xyz`: the row's Bradford matrix, `m[0]*x + m[1]*y + m[2]*z` per row. */
+    "xyz-d50": (a) => {
+        if (typeof a[0] !== "number" || typeof a[1] !== "number" || typeof a[2] !== "number") return GUARD;
+        if (!a.every(finite)) return GUARD;
+        const m = R_ctor["xyz-d50"].matrix;
+        const x = m[0] * a[0] + m[1] * a[1] + m[2] * a[2];
+        const y = m[3] * a[0] + m[4] * a[1] + m[5] * a[2];
+        const z = m[6] * a[0] + m[7] * a[1] + m[8] * a[2];
+        return Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z) ? colorOf("xyz", x, y, z, a[3]) : GUARD;
+    },
+    /** `[number, unit?]` — the unit leaf is absent for a bare number (`OPT(o, null)`). */
+    "value-number": (a) => (finite(a[0]) ? { kind: "scalar", payload: { type: "number", value: a[0], unit: a.length === 2 ? a[1] : "" } } : GUARD),
+    "value-keyword": (a) => ({ kind: "scalar", payload: { type: "keyword", value: a[0] } }),
+    "value-operator": (a) => ({ kind: "scalar", payload: { type: "keyword", value: OPERATORS[a[0]] } }),
+    /** One leaf is an empty string's own two quotes; three are open, the interior pieces, close. */
+    "value-string": (a) => {
+        if (a.length === 1) return { kind: "scalar", payload: { type: "keyword", value: a[0] } };
+        const quote = a[0];
+        const piece = (p) =>
+            typeof p === "string" ? p
+                : p.t[0] === ESCAPED_QUOTE ? `\\${quote}`
+                    : p.t[0] === ESCAPED_BACKSLASH ? "\\\\"
+                        : `\\${p.t[0]}`;
+        return { kind: "scalar", payload: { type: "keyword", value: quote + a[1].l.map(piece).join("") + a[2] } };
+    },
+    /** The incumbent's three name rules, over the row's own lists (`grammar.ts` parseValueInternal). */
+    "value-call": (a) => {
+        const row = R_ctor["value-call"];
+        const name = a[0];
+        const args = a.length === 2 ? a[1] : [];
+        const folded = asciiFold(name);
+        if (row.zeroArg.includes(folded)) return args.length === 0 ? { kind: "call", name, args } : GUARD;
+        if (args.length === 0 && !(row.emptyOk.includes(folded) || name.startsWith("--"))) return GUARD;
+        return { kind: "call", name, args };
+    },
+    /** The argument array, bare (the `stylesheet` row's precedent), or the group guard's failure. */
+    "value-args": (a) => groupItems(a) ?? GUARD,
+    /** `first` alone when it is the only item, else the list. */
+    "value-group": (a) => {
+        const items = groupItems(a);
+        if (items === null) return GUARD;
+        return items.length > 1 ? { kind: "list", separator: SEPARATORS[a[3]], items } : items[0];
+    },
+    /** `parseCssValues`: a list is itself, any other value a one-item space list. */
+    "value-wrap": (a) => (a[0].kind === "list" ? a[0] : { kind: "list", separator: "space", items: [a[0]] }),
 };
+
+/**
+ * The group rows' shared reading (`tables.mjs` R_ctor `value-args` / `value-group`): the items are
+ * `first` and every non-UNIT of `rest` (a UNIT is a separator followed by nothing); a leading or a
+ * trailing comma/slash separator needs at least two items, or the group is the incumbent's
+ * "one part, separators still in the text" failure (`null` here, the row's labelled GUARD above).
+ */
+function groupItems(a) {
+    const rest = a[2].l;
+    const items = [a[1]];
+    for (const v of rest) if (v !== UNIT) items.push(v);
+    const leading = a[0].l.length > 0;
+    const trailing = rest.length > 0 && rest[rest.length - 1] === UNIT;
+    if (a[3] !== SEPARATORS.indexOf("space") && (leading || trailing) && items.length < 2) return null;
+    return items;
+}
 
 /* ── the instantiation ─────────────────────────────────────────────────────────────────────── */
 

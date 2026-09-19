@@ -16,6 +16,7 @@
 // sites would make the reified term a DAG, and `.g`'s CL-1 walk reads a revisited object as a
 // cycle. Freshness is therefore load-bearing, not style.
 
+import { VALUE_REF_TARGETS, buildValueGrammar } from "./grammar/value.mjs";
 import { R_disp } from "./tables.mjs";
 
 const INF = Infinity;
@@ -128,6 +129,40 @@ export function buildGrammar(A) {
     const headOklch = () =>
         CTOR("oklch", SEQ(TOK("("), CUT(), WS(), okL(), WS(), okC(), WS(), hue(), alphaSlash(), WS(), TOK(")")));
     const headVar = () => CTOR("context", SEQ(TOK("("), CUT(), REF("balanced-tail"), TOK(")")));
+
+    /* ── X.P.W3.h — the seven remaining css-color-4 heads, so `P:color` is TOTAL over every ORACLE
+          head (COHESION §0s E-h1). Each channel's scale is the incumbent's `channelToken(part, k)`
+          (`grammar.ts` parseFunctionalColor: a percent is `v * k / 100`, a bare number is `v`) and
+          each clamp is css-color-4's parsed-value clamp where the spec names one — the same
+          PB-03/PB-04 posture the slice's `hsl`/`rgb` channels already carry:
+            hwb   §8.1  hue · whiteness/blackness as `pct-ch` (0..100% → 0..1, bare number /100, clamped)
+            lab   §9.1  L 0..100 (100% = 100, clamped 0..100) · a, b (100% = 125, unclamped)
+            lch   §9.2  L as lab · C (100% = 150, clamped >= 0) · hue
+            oklab §9.3  L as `ok-l` (100% = 1, clamped 0..1) · a, b (100% = 0.4, unclamped)
+            color §10   a predefined space, then three `<number>|<percentage>|none` (100% = 1,
+                        unclamped — §10.1 forbids clamping in color()), `srgb` scaled ×255 onto the
+                        frozen `rgb` shape, `xyz`/`xyz-d65` one space, `xyz-d50` adapted by its row.
+          No legacy comma form exists for any of these (PB-11: `hwb(120, 30%, 40%)` is rejected). */
+    const labL = () => CLAMP(0, 100, ALT(pctOf(100, 100), NUMT(), none()));
+    const labAB = () => ALT(pctOf(125, 100), NUMT(), none());
+    const lchC = () => CLAMP(0, INF, ALT(pctOf(150, 100), NUMT(), none()));
+    const okAB = () => ALT(pctOf(0.4, 100), NUMT(), none());
+    const cch = () => ALT(pctOf(1, 100), NUMT(), none());
+
+    const headHwb = () =>
+        CTOR("hwb", SEQ(TOK("("), CUT(), WS(), hue(), WS(), pctCh(), WS(), pctCh(), alphaSlash(), WS(), TOK(")")));
+    const headLab = () =>
+        CTOR("lab", SEQ(TOK("("), CUT(), WS(), labL(), WS(), labAB(), WS(), labAB(), alphaSlash(), WS(), TOK(")")));
+    const headLch = () =>
+        CTOR("lch", SEQ(TOK("("), CUT(), WS(), labL(), WS(), lchC(), WS(), hue(), alphaSlash(), WS(), TOK(")")));
+    const headOklab = () =>
+        CTOR("oklab", SEQ(TOK("("), CUT(), WS(), okL(), WS(), okAB(), WS(), okAB(), alphaSlash(), WS(), TOK(")")));
+    //  `color(<space> c c c [/ a])`: the space ident is maximal, so `WS1` before the first channel
+    //  is what makes `color(srgb.5 0 0)` nothing rather than `srgb` and `.5` (the incumbent splits
+    //  the body on whitespace and finds three parts, not four).
+    const headColor = () => SEQ(TOK("("), CUT(), WS(), DISPATCH("ident", "color-space"), WS(), TOK(")"));
+    const space = (row, ch) => () => CTOR(row, SEQ(WS1(), ch(), WS(), ch(), WS(), ch(), alphaSlash()));
+    const spaceSrgb = space("rgb", () => SCALE(255, 1, cch()));
 
     const colorBody = () => EXPECT(ALT(hex(), named(), transparent(), context(), functional()), "<color>");
     const color = () => SEQ(WS(), colorBody(), WS(), END());
@@ -289,6 +324,20 @@ export function buildGrammar(A) {
         "head-cubic-bezier": headCubic(),
         "head-steps": headSteps(),
         "head-linear": headLinear(),
+        // X.P.W3.h — the seven heads and `color()`'s eight space productions
+        "head-hwb": headHwb(),
+        "head-lab": headLab(),
+        "head-lch": headLch(),
+        "head-oklab": headOklab(),
+        "head-color": headColor(),
+        "space-srgb": spaceSrgb(),
+        "space-srgb-linear": space("srgb-linear", cch)(),
+        "space-display-p3": space("display-p3", cch)(),
+        "space-a98-rgb": space("a98-rgb", cch)(),
+        "space-prophoto-rgb": space("prophoto-rgb", cch)(),
+        "space-rec2020": space("rec2020", cch)(),
+        "space-xyz": space("xyz", cch)(),
+        "space-xyz-d50": space("xyz-d50", cch)(),
     };
 
     const entries = {
@@ -296,6 +345,22 @@ export function buildGrammar(A) {
         "P:timing-function": "timing",
         "P:stylesheet": "stylesheet",
     };
+
+    /* ── X.P.W3.h — the value grammar (`grammar/value.mjs`), composed: one more source file, the
+          same algebra `A`, the same notations, and three more entries in the ONE grammar map both
+          lowerings instantiate. Its terms re-use `hex`/`named`/`transparent` byte for byte. */
+    //  The operations are handed over as the locals destructured ONCE above, never as `A` itself:
+    //  `lower.mjs` proves the closed operator set by recording every read of `A`, and a second
+    //  destructure would read the twenty-two twice (a duplicate is a HALT there, by design).
+    const valueGrammar = buildValueGrammar(
+        { SCAN, LIT, NUM, TEXT, KW, END, SEQ, ALT, CUT, PURE, REP, DROP, DISPATCH, EXPECT, CTOR, REF },
+        { WS, TOK, hex, named, transparent },
+    );
+    for (const name of Object.keys(valueGrammar.terms)) {
+        if (terms[name] !== undefined) throw new Error(`HALT: the value grammar redefines production '${name}'`);
+    }
+    Object.assign(terms, valueGrammar.terms);
+    Object.assign(entries, valueGrammar.entries);
 
     for (const d of Object.values(R_disp)) {
         for (const target of Object.values(d.rows)) {
@@ -307,7 +372,8 @@ export function buildGrammar(A) {
 }
 
 /**
- * The REF targets the slice uses — §8 D-3's two back-edges and no others. The grammar map is finite
- * and closed (OP-22); a lowering resolves a back-edge by name against `terms`, never by search.
+ * The REF targets the grammar uses — §8 D-3's two back-edges and the value grammar's one
+ * (X.P.W3.h, `value-item`: a call's argument list), and no others. The grammar map is finite and
+ * closed (OP-22); a lowering resolves a back-edge by name against `terms`, never by search.
  */
-export const REF_TARGETS = ["balanced-tail", "value-slice"];
+export const REF_TARGETS = ["balanced-tail", "value-slice", ...VALUE_REF_TARGETS];
