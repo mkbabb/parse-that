@@ -140,8 +140,59 @@ export function buildGrammar(A) {
     // §0v refuses (`<finite-number>` as a rejection label REFUSED). `.k`'s `legacyFormMisaccept`
     // characterized the cells by their neighbours' spelling rather than by the byte that fails;
     // the id stands in the remainder and the re-characterization is the unit's finding (F-l1).
-    const legacyRgb = () => SEQ(rgbCh(), sep(), rgbCh(), sep(), rgbCh(), OPT(SEQ(sep(), alpha()), 1));
-    const legacyHsl = () => SEQ(hue(), sep(), pctOnly(), sep(), pctOnly(), OPT(SEQ(sep(), alpha()), 1));
+    //
+    // ── X.P.W3.n — THE §8.1 CURE, RE-LANDED, THIS TIME WITH ITS ADJUDICATION ─────────────────
+    //
+    // COHESION §0w rules the residue: "**incumbent defect ID-5.** `.n` lands the §8.1 cure
+    // (candidate REJECTS) together with the ID-5 class predicate so the exposed cells are
+    // adjudicated, not counted — **the two withdrawn cures failed only because the predicate did
+    // not exist**." Cure (1) above is therefore restored BYTE FOR BYTE as its own note describes
+    // it, and `adjudications.mjs`'s **ID-5** class carries the 575 cells it exposes: a legacy comma
+    // form the ORACLE accepts and css-color-4 forbids is now a DECLARED divergence with `expect:
+    // "reject"`, not a FALSE_REJECT. The two land in ONE commit, because either alone is a defect.
+    //
+    // WHAT THE SPECIFICATION SAYS, and the whole of what these two productions encode:
+    //   css-color-4 §8.1  `<legacy-rgb-syntax> = rgb( <percentage>#{3} , <alpha-value>? ) |
+    //                      rgb( <number>#{3} , <alpha-value>? )` — the three channels are ONE type
+    //                      throughout (a `#{3}` over a single production, not a choice per slot),
+    //                      and `none` is admitted by the MODERN grammar alone.
+    //   css-color-4 §7.1  `<legacy-hsl-syntax> = hsl( <hue>, <percentage>, <percentage>,
+    //                      <alpha-value>? )` — the hue is `<number>|<angle>` (never `none` here),
+    //                      and saturation/lightness are `<percentage>` (never a bare number — that
+    //                      is SP-1's own row — and never `none`).
+    //   css-color-4 §4.2  `<alpha-value> = <number> | <percentage> | none` — UNCHANGED. `none` as
+    //                      the FOURTH argument stays lawful, which is what PB-01/02's own cell
+    //                      `rgb(58%, 14%, .816, none)` requires, and `alpha()` is untouched below.
+    //
+    // The nine cells F-l1 re-characterized are NOT keyed on finiteness here and nothing about
+    // GROUND-C moves: `rgb(.843, -0, +54, 5e498)` — three bare numbers, a non-finite alpha — is
+    // still admitted by this grammar and still stands in the remainder under GROUND-C. Every cell
+    // this cure turns is turned by the CHANNEL TYPES, which is the only thing §8.1 is about.
+    //
+    // THE ARMS ARE FLAT, and that is load-bearing: `CTOR("rgb", …)` reads its channels off the
+    // SEQ's own tuple, so an `ALT` of two three-channel SEQs UNDER one outer SEQ answers
+    // `[[r,g,b], alpha]` — measured here before this note was written: `rgb(1, 2, 3)` came back
+    // `channels:[{t:[1,2,3]}, 1, null]` in the JS lowering. The alpha tail is therefore spelled
+    // once per arm rather than shared.
+    const rgbPct = () => CLAMP(0, 255, pctOf(255, 100));
+    const rgbNum = () => CLAMP(0, 255, NUMT());
+    const legacyRgb = () =>
+        ALT(
+            SEQ(rgbPct(), sep(), rgbPct(), sep(), rgbPct(), OPT(SEQ(sep(), alpha()), 1)),
+            SEQ(rgbNum(), sep(), rgbNum(), sep(), rgbNum(), OPT(SEQ(sep(), alpha()), 1)),
+        );
+    /** `<hue>` in the LEGACY form: `<number> | <angle>`, and no `none` (§7.1 admits it only modern). */
+    const legacyHue = () =>
+        ALT(
+            SCALE(1, 1, DIM("deg")),
+            SCALE(0.9, 1, DIM("grad")),
+            SCALE(180, PI, DIM("rad")),
+            SCALE(360, 1, DIM("turn")),
+            NUMT(),
+        );
+    /** `<percentage>` in the LEGACY form: a percentage and nothing else (§7.1). */
+    const legacyPct = () => CLAMP(0, 1, pctOf(1, 100));
+    const legacyHsl = () => SEQ(legacyHue(), sep(), legacyPct(), sep(), legacyPct(), OPT(SEQ(sep(), alpha()), 1));
 
     // E-2 cure (3), ruled at COHESION §0n.3 and landed by `ALGEBRA-ADDENDA-2026-09-18.md`: the tail
     // of an unknown function is **`skipped` opaque text**, not a `keyword`. π_keyword (§4.5) reads

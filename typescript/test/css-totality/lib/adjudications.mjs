@@ -505,6 +505,20 @@ export const CLASSES = [
             }),
     },
     {
+        id: "ID-5",
+        carries: ["ID-5"],
+        kind: "reject",
+        title: "the legacy comma form takes THREE arguments of ONE type and no `none`",
+        expect: "reject",
+        population: 1477, //  MEASURED at 27,021 rows (X.P.W3.n) — the class is new at this unit.
+        specCitation:
+            "css-color-4 §8.1 — `<legacy-rgb-syntax> = rgb( <percentage>#{3} , <alpha-value>? ) | rgb( <number>#{3} , <alpha-value>? )`: the three channels are one type throughout and `none` is admitted only by the modern grammar; §7.1 — `<legacy-hsl-syntax> = hsl( <hue>, <percentage>, <percentage>, <alpha-value>? )`, which admits no `none` either. §4.2's `<alpha-value>` is untouched: `none` as the FOURTH argument stays lawful.",
+        why: "a comma-separated rgb()/rgba()/hsl()/hsla() whose first three arguments mix `<number>` with `<percentage>`, or spell `none`",
+        consumerDirection:
+            "NARROWS acceptance. `rgb(24.745, 171.2787213968113, 41%)`, `rgb(+12, none, 40.12, 46.14)` and `rgb(none, 8e144, 80%, .86)` parsed before and are now `ok:false` with a located diagnostic. The incumbent accepts them because it rewrites the commas to spaces and reads every channel as `<number>|<percentage>|none` — the MODERN grammar — so a consumer that fed a mixed legacy form received a colour the string does not name. The space-separated spelling of the same colour is unaffected, and so is `none` in the alpha slot.",
+        matches: (src) => legacyFormMisaccept(src),
+    },
+    {
         id: "PB-09/10",
         carries: ["PB-09", "PB-10"],
         kind: "reject",
@@ -937,24 +951,50 @@ const colourJuxtapositions = (src) => {
 };
 
 /**
- * **F-k2**, measured here and NOT adjudicated here: css-color-4 §8.1 gives the legacy comma form
- * THREE arguments of ONE type — all `<number>` or all `<percentage>` — and no `none`. The candidate
- * accepts `rgb(0, 0, 27%, 1)` and `rgb(none, 0, 0, 1)` all the same; the incumbent refuses both,
- * though it refuses `rgb(0, 0, 0, 1)` too, which is PB-01/02's own ruling. So PB-01/02's repair —
- * drop the fourth argument — leaves an input the ORACLE still rejects, the class cannot fire, and
- * the cell is a MIS_ACCEPT of the candidate's: the ruling covers the fourth argument, never the
- * three before it. Naming it is this seat's act; curing it is not, because the cure is a change to
- * `src/css/**`, which this unit may not write.
+ * **ID-5's SUBJECT** (X.P.W3.n; COHESION §0w) — the legacy comma form css-color-4 forbids.
+ *
+ * `.k` named it F-k2 and could not cure it (`src/css/**` was outside that unit's bounds); `.l`
+ * landed the §8.1 cure TWICE and withdrew it both times, because a cure with no adjudication turns
+ * 575 oracle-accepted cells into FALSE_REJECTs. §0w rules the residue **incumbent defect ID-5** and
+ * orders the two to land together. This predicate is the adjudication's half.
+ *
+ * WHAT IT SAYS, in the specification's own terms and over the INPUT alone (law 1):
+ *   §8.1  `<legacy-rgb-syntax> = rgb( <percentage>#{3} , <alpha-value>? ) |
+ *          rgb( <number>#{3} , <alpha-value>? )` — the three channels are ONE type, and `none`
+ *          belongs to the modern grammar alone.
+ *   §7.1  `<legacy-hsl-syntax> = hsl( <hue>, <percentage>, <percentage>, <alpha-value>? )` — the
+ *          hue is `<number>|<angle>` and saturation/lightness are `<percentage>`; `none` is
+ *          nowhere in it.
+ *   §4.2  `<alpha-value> = <number> | <percentage> | none` — so the FOURTH argument is NOT this
+ *          predicate's business, and `rgb(58%, 14%, .816, none)`'s `none` is lawful there.
+ *
+ * TWO THINGS IT DELIBERATELY DOES NOT CLAIM, each measured:
+ *   `hsl(120, 50%, 50%)` — the hue is a `<number>` and the other two are `<percentage>`, which is
+ *   the §7.1 form ITSELF. `.k`'s version read the three arguments of EVERY legacy head as one
+ *   homogeneous list and so fired on this input (measured at this seat before the rewrite); as a
+ *   remainder tag that was invisible, as a REJECT class it would have declared the most-deployed
+ *   legacy spelling on the web invalid. The hsl arm is therefore read per SLOT.
+ *   `hsl(120, 50, 50)` — a bare number where §7.1 writes `<percentage>`. That is **SP-1**, which is
+ *   already a ruled class and resolves BEFORE this one; one meaning, one row.
  */
+const legacyArgumentKind = (arg) => {
+    const numeric = soleNumeric(arg);
+    if (numeric !== null) return numeric.unit === "%" ? "percentage" : numeric.unit === "" ? "number" : "other";
+    const ident = soleIdent(arg);
+    if (ident !== null) return ident.text.toLowerCase() === "none" ? "none" : "other";
+    return "other";
+};
+
 export const legacyFormMisaccept = (src) => {
     if (typeof src !== "string") return false;
     for (const call of colourCalls(src)) {
         if (separatorShape(call) !== "legacy" || !LEGACY_HEADS.has(call.head)) continue;
         const three = call.args.slice(0, 3);
         if (three.length < 3) continue;
-        if (three.some((arg) => soleIdent(arg) !== null)) return true; // `none` in a legacy form
-        const percent = three.map((arg) => soleNumeric(arg)).map((n) => (n === null ? null : n.unit === "%"));
-        if (percent.includes(true) && percent.includes(false)) return true; // <number> mixed with <percentage>
+        const kinds = three.map(legacyArgumentKind);
+        if (kinds.includes("none")) return true; //                          `none` — §8.1 / §7.1
+        if (call.head === "hsl" || call.head === "hsla") continue; //        the rest is SP-1's slot reading
+        if (kinds.includes("percentage") && kinds.includes("number")) return true; // mixed — §8.1
     }
     return false;
 };
