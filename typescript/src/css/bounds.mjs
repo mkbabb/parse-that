@@ -270,6 +270,22 @@ const CTOR_ALLOC = Object.freeze({
     //  `wasm-alg.mjs` emitCtors (E-h1); the same four name-sets, asserted equal below. A comment
     //  answers the STATIC `NONE` sentinel and allocates nothing at all.
     "sheet-comment": { fixed: 0, rate: 0 },
+    //  X.P.W3.l — the at-rule and nesting families, landed with the same four name-sets. A record
+    //  is `mkRec(pairs)` (8 B a pair + 8 header); a bare array copied out of a list is 4 B a
+    //  pointer (charged to the input at one element per code unit, as `style-rule`'s is); the
+    //  empty `selectors` / `prelude` are the static empty array (15 B) / interned string (0 B);
+    //  the raw-body rows answer ONE `mkStr` (16 B) over the source span and copy nothing.
+    "style-rule-mixed": { fixed: 8 * 3 + 8 + 15 + 15, rate: 4 + 16 + 4 },
+    "at-keyframes": { fixed: 8 * 3 + 8 + 15, rate: 4 },
+    "keyframe-rule": { fixed: 8 * 2 + 8 + 15, rate: 4 },
+    "at-declarations": { fixed: 8 * 3 + 8 + 15, rate: 4 },
+    "at-scope": { fixed: 8 * 3 + 8 + 15, rate: 4 },
+    "at-starting-style": { fixed: 8 * 2 + 8 + 15, rate: 4 },
+    "at-unknown-block": { fixed: 8 * 3 + 8, rate: 0 },
+    "at-unknown-stmt": { fixed: 8 * 3 + 8, rate: 0 },
+    "raw-text": { fixed: 16, rate: 0 },
+    "raw-block": { fixed: 16, rate: 0 },
+    "animation-property": { fixed: 16, rate: 0 }, //                the trimmed span's own mkStr
 });
 
 /**
@@ -296,6 +312,11 @@ const CTOR_SCRATCH_CELLS = Object.freeze({
     "animation-option": 1, "animation-option-list": 1,
     //  X.P.W3.j: the comment's constructor pushes nothing — its value is the static sentinel
     "sheet-comment": 0,
+    //  X.P.W3.l: `rec(pairs)` holds 2·pairs cells over a reset base; the raw-body and name rows
+    //  push nothing (their value is one `mkStr`); a list copied to an array is charged to the input
+    "style-rule-mixed": 6, "at-keyframes": 6, "keyframe-rule": 4, "at-declarations": 6, "at-scope": 6,
+    "at-starting-style": 4, "at-unknown-block": 6, "at-unknown-stmt": 6, "raw-text": 0, "raw-block": 0,
+    "animation-property": 0,
 });
 
 const pad8 = (n) => Math.ceil(n / 8) * 8;

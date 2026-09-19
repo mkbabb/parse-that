@@ -12,6 +12,7 @@
 // onto the value stack, 0 for failure with the stack left where it was. σ is the module's globals;
 // `far` is the only thing a failure leaves behind (§5.6).
 
+import { AT_DECLARATION_KINDS } from "../algebra/tables.mjs";
 import { OPERATORS, SEPARATORS } from "../algebra/grammar/value.mjs";
 import { CODES, KINDS } from "../algebra/ops.mjs";
 import {
@@ -884,15 +885,30 @@ export function emitCtors(env) {
             ["input", (b) => listToArr(b, (u) => arg(u, 1))],
         ]));
 
-    declare("style-rule", (c) =>
-        rec(c, [
-            ["kind", (b) => b.i32(data.stringNode("style"))],
-            ["selectors", (b) => {
-                arg(b, 0);
-                b.call(F.splitSelectors);
-            }],
-            ["declarations", (b) => listToArr(b, (u) => arg(u, 1))],
-        ]));
+    /** An empty bare array — `selectors: []` for a rule whose prelude is absent (`{ … }`). */
+    const emptyArr = (c) => c.i32(T_ARR).gget(G.vsp).i32(0).call(F.mkSeqNode);
+
+    /**
+     * X.P.W3.l: the prelude leaf is OPTIONAL (`{ color: red }` is a rule with `selectors: []` at
+     * the incumbent — `splitTopLevel("", ",")` is `[]`), so the constructor branches on its leaf
+     * COUNT (`c.get(1)`, the `value-call` idiom): two leaves are prelude + list, one is the list.
+     */
+    declare("style-rule", (c) => {
+        c.get(1).i32(2).x("i32.eq").if_(I32,
+            (t) => rec(t, [
+                ["kind", (b) => b.i32(data.stringNode("style"))],
+                ["selectors", (b) => {
+                    arg(b, 0);
+                    b.call(F.splitSelectors);
+                }],
+                ["declarations", (b) => listToArr(b, (u) => arg(u, 1))],
+            ]),
+            (e) => rec(e, [
+                ["kind", (b) => b.i32(data.stringNode("style"))],
+                ["selectors", (b) => emptyArr(b)],
+                ["declarations", (b) => listToArr(b, (u) => arg(u, 0))],
+            ]));
+    });
 
     /**
      * X.P.W3.j (J-2 / J-6): the name run reaches the constructor with its trailing whitespace
@@ -1442,6 +1458,214 @@ export function emitCtors(env) {
         c.i32(T_ARR).get(abase).get(n).i32(1).x("i32.add").call(F.mkSeqNode).set(arr);
         c.get(abase).gset(G.vsp);
         c.get(arr);
+    });
+
+    /* ── X.P.W3.l — the at-rule and nesting families (`algebra/grammar/stylesheet.mjs` L-1…L-6),
+          the same CTOR family as the rows in `tables.mjs`, the JS functions in `js-alg.mjs` and the
+          node table in `bounds.mjs`. Every record's pairs are in the JS constructor's order (G-5
+          compares JSON bytes); every leaf an `OPT` may leave out is read by COUNT (`c.get(1)`);
+          every string answered is a SPAN of the source (`T_STR`, the J-6 posture), never bytes
+          materialized out of the input buffer. ── */
+
+    const AT_KIND_TAB = strTable(AT_DECLARATION_KINDS);
+    const ANIMATION_BLOB = nameBlob(["animation"]);
+    const EMPTY_STR = data.stringNode("");
+    /** A `T_STR`'s start and end (`start + len`) as two i32s on the stack. */
+    const strEnd = (c, p) => c.get(p).load(4).get(p).load(8).x("i32.add");
+
+    /** L-4: the mixed reading — the prelude (optional) and the items, comment holes included. */
+    declare("style-rule-mixed", (c) => {
+        c.get(1).i32(2).x("i32.eq").if_(I32,
+            (t) => rec(t, [
+                ["kind", (b) => b.i32(data.stringNode("style"))],
+                ["selectors", (b) => {
+                    arg(b, 0);
+                    b.call(F.splitSelectors);
+                }],
+                ["items", (b) => listToArr(b, (u) => arg(u, 1))],
+            ]),
+            (e) => rec(e, [
+                ["kind", (b) => b.i32(data.stringNode("style"))],
+                ["selectors", (b) => emptyArr(b)],
+                ["items", (b) => listToArr(b, (u) => arg(u, 0))],
+            ]));
+    });
+
+    declare("at-keyframes", (c) =>
+        rec(c, [
+            ["kind", (b) => b.i32(data.stringNode("keyframes"))],
+            ["name", (b) => arg(b, 0)],
+            ["rules", (b) => listToArr(b, (u) => arg(u, 1))],
+        ]));
+
+    declare("keyframe-rule", (c) => {
+        c.get(1).i32(2).x("i32.eq").if_(I32,
+            (t) => rec(t, [
+                ["prelude", (b) => arg(b, 0)],
+                ["declarations", (b) => listToArr(b, (u) => arg(u, 1))],
+            ]),
+            (e) => rec(e, [
+                ["prelude", (b) => b.i32(EMPTY_STR)],
+                ["declarations", (b) => listToArr(b, (u) => arg(u, 0))],
+            ]));
+    });
+
+    /** The head's `at-rule-name` row index (a `T_NUM` leaf) names the kind, off the closed table. */
+    declare("at-declarations", (c) =>
+        rec(c, [
+            ["kind", (b) => {
+                tokenIndex(b, 0);
+                fromTab(b, AT_KIND_TAB);
+            }],
+            ["prelude", (b) => arg(b, 1)],
+            ["declarations", (b) => listToArr(b, (u) => arg(u, 2))],
+        ]));
+
+    declare("at-scope", (c) => {
+        c.get(1).i32(2).x("i32.eq").if_(I32,
+            (t) => rec(t, [
+                ["kind", (b) => b.i32(data.stringNode("scope"))],
+                ["prelude", (b) => arg(b, 0)],
+                ["children", (b) => listToArr(b, (u) => arg(u, 1))],
+            ]),
+            (e) => rec(e, [
+                ["kind", (b) => b.i32(data.stringNode("scope"))],
+                ["prelude", (b) => b.i32(EMPTY_STR)],
+                ["children", (b) => listToArr(b, (u) => arg(u, 0))],
+            ]));
+    });
+
+    declare("at-starting-style", (c) =>
+        rec(c, [
+            ["kind", (b) => b.i32(data.stringNode("starting-style"))],
+            ["children", (b) => listToArr(b, (u) => arg(u, 0))],
+        ]));
+
+    declare("at-unknown-block", (c) => {
+        c.get(1).i32(2).x("i32.eq").if_(I32,
+            (t) => rec(t, [
+                ["kind", (b) => b.i32(data.stringNode("unknown"))],
+                ["prelude", (b) => arg(b, 0)],
+                ["body", (b) => arg(b, 1)],
+            ]),
+            (e) => rec(e, [
+                ["kind", (b) => b.i32(data.stringNode("unknown"))],
+                ["prelude", (b) => b.i32(EMPTY_STR)],
+                ["body", (b) => arg(b, 0)],
+            ]));
+    });
+
+    declare("at-unknown-stmt", (c) =>
+        rec(c, [
+            ["kind", (b) => b.i32(data.stringNode("unknown"))],
+            ["prelude", (b) => {
+                b.get(1).i32(1).x("i32.eq").if_(I32, (t) => arg(t, 0), (e) => e.i32(EMPTY_STR));
+            }],
+            ["body", (b) => b.i32(consts.NULL)],
+        ]));
+
+    /**
+     * L-3: the raw body is the SPAN from its first piece's start to its last piece's end — every
+     * piece is a `T_STR` span (a text run, or a nested block already answered as one), and the
+     * pieces are contiguous by construction (the `REP` consumes them back to back), so the span
+     * is exactly the JS `join("")`. No pieces is the empty string.
+     */
+    declare("raw-text", (c) => {
+        const p = c.local(I32);
+        const n = c.local(I32);
+        const first = c.local(I32);
+        const last = c.local(I32);
+        const s = c.local(I32);
+        arg(c, 0);
+        c.set(p);
+        c.get(p).load(4).set(n);
+        c.get(n).x("i32.eqz").if_(I32,
+            (t) => t.i32(0).i32(0).call(F.mkStr),
+            (e) => {
+                e.get(p).load(8).set(first);
+                e.get(p).get(n).i32(1).x("i32.sub").i32(4).x("i32.mul").x("i32.add").load(8).set(last);
+                e.get(first).load(4).set(s);
+                e.get(s);
+                strEnd(e, last);
+                e.get(s).x("i32.sub").call(F.mkStr);
+            });
+    });
+
+    /**
+     * L-3: a nested block, braces included. Its leaves are the pieces list (always) and the two
+     * braces when `TEXT` read them (each is absent when the doubled-brace `LIT` arm dropped it);
+     * the leaves are told apart by TAG (`T_LIST` against `T_STR`) and by ORDER (the first string
+     * is the opening brace). An absent brace stands one code unit outside its neighbour: the
+     * opening brace ends where the first piece starts, the closing one starts where the last
+     * piece ends — and with no pieces at all, two code units from the opening brace. Both
+     * lowerings compute the same offsets, so the materialized text is the same bytes.
+     */
+    declare("raw-block", (c) => {
+        const k = c.local(I32);
+        const item = c.local(I32);
+        const open = c.local(I32);
+        const list = c.local(I32);
+        const close = c.local(I32);
+        const n = c.local(I32);
+        const start = c.local(I32);
+        const end = c.local(I32);
+        const last = c.local(I32);
+        c.block("void", (blk) => {
+            blk.loop("void", (lp) => {
+                lp.get(k).get(1).x("i32.ge_u").brIf(1);
+                lp.get(0).get(k).x("i32.add").call(F.slotGet).set(item); //  the k-th leaf, k a LOCAL
+                lp.get(item).load().i32(T_LIST).x("i32.eq").if_("void",
+                    (b) => b.get(item).set(list),
+                    (b) => b.get(list).x("i32.eqz").if_("void", (t) => t.get(item).set(open), (t) => t.get(item).set(close)));
+                lp.get(k).i32(1).x("i32.add").set(k);
+                lp.br(0);
+            });
+        });
+        c.get(list).load(4).set(n);
+        //  start: the opening brace's own start, else one before the first piece (else one before the closing brace)
+        c.get(open).if_(I32,
+            (t) => t.get(open).load(4),
+            (e) => e.get(n).if_(I32,
+                (t) => t.get(list).load(8).load(4).i32(1).x("i32.sub"),
+                (u) => u.get(close).if_(I32, (t) => t.get(close).load(4).i32(1).x("i32.sub"), (v) => v.i32(0))));
+        c.set(start);
+        //  end: the closing brace's own end, else one after the last piece, else two after the start
+        c.get(close).if_(I32,
+            (t) => strEnd(t, close),
+            (e) => e.get(n).if_(I32,
+                (t) => {
+                    t.get(list).get(n).i32(1).x("i32.sub").i32(4).x("i32.mul").x("i32.add").load(8).set(last);
+                    strEnd(t, last);
+                    t.i32(1).x("i32.add");
+                },
+                (u) => u.get(start).i32(2).x("i32.add")));
+        c.set(end);
+        c.get(start).get(end).get(start).x("i32.sub").call(F.mkStr);
+    });
+
+    /**
+     * L-6: the trimmed name when it is `animation` or `animation-*` (ASCII-folded — `kwLookup`
+     * folds the span it compares), else 0, the row's labelled zero-width failure. The `T_STR` the
+     * runtime's `trimWs` answers is the same node the `declaration` constructor then trims again
+     * (idempotent), so the name is the same span in both arms.
+     */
+    declare("animation-property", (c) => {
+        const p = c.local(I32);
+        const t = c.local(I32);
+        const a = c.local(I32);
+        const n = c.local(I32);
+        arg(c, 0);
+        c.set(p);
+        c.get(p).load(4);
+        strEnd(c, p);
+        c.call(F.trimWs).set(t);
+        c.get(t).load(4).set(a);
+        c.get(t).load(8).set(n);
+        c.get(n).i32(9).x("i32.lt_u").if_("void", (b) => b.i32(0).ret());
+        c.i32(ANIMATION_BLOB).get(a).get(a).i32(9).x("i32.add").call(F.kwLookup).i32(0).x("i32.lt_s").if_("void", (b) => b.i32(0).ret());
+        c.get(n).i32(9).x("i32.eq").if_("void", (b) => b.get(t).ret());
+        c.get(a).i32(9).x("i32.add").i32(INPUT_BASE).x("i32.add").load8u().i32(45).x("i32.ne").if_("void", (b) => b.i32(0).ret());
+        c.get(t);
     });
 
     return out;

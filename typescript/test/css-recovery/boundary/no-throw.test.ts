@@ -178,7 +178,9 @@ describe("T-1b — the entry module's whole `throw` census is construction-time 
 
 describe("the corpus union, as the two sweeps read it", () => {
     it("is derived from both generated corpora, with the normalization published", () => {
-        expect(corpus.counts.totalityRows).toBe(26604);
+        //  X.P.W3.l: the union grew by the stylesheet band (`test/css-totality/lib/stylesheet-band.mjs`,
+        //  470 rows, W3.md `.l` L726) — 26,604 + 470; the pin moves with the seventh arm, nothing else did
+        expect(corpus.counts.totalityRows).toBe(27074);
         expect(corpus.counts.recoveryRows).toBe(685);
         expect(corpus.counts.unwrapped).toBe(172);
         expect(corpus.sources.length).toBe(corpus.counts.distinct);

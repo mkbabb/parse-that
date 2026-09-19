@@ -25,10 +25,10 @@ import { tsImport } from "tsx/esm/api";
 import { ESCAPED_BACKSLASH, ESCAPED_QUOTE, OPERATORS, SEPARATORS } from "../algebra/grammar/value.mjs";
 import { KINDS } from "../algebra/ops.mjs";
 import {
-    JUMP_POSITIONS, KEYFRAME_PHASES, L, RANGE_PHASES, R_cls, R_ctor, R_disp, R_kw, SCROLLER_KEYWORDS,
+    AT_DECLARATION_KINDS, JUMP_POSITIONS, KEYFRAME_PHASES, L, RANGE_PHASES, R_cls, R_ctor, R_disp, R_kw, SCROLLER_KEYWORDS,
     STEP_ALIASES, TIMELINE_AXES, TIMELINE_MODES, TIMING_KEYWORDS, labelIndex,
 } from "../algebra/tables.mjs";
-import { asciiFold, clampValue, isTuple, list, NONE_OPT, scaleValue, splitSelectors, span, trimWs, tuple, UNIT } from "./values.mjs";
+import { asciiFold, clampValue, isList, isTuple, list, NONE_OPT, scaleValue, splitSelectors, span, trimWs, tuple, UNIT } from "./values.mjs";
 
 /**
  * The combinator library itself — **this root's own `typescript/src/parse/**`** (COHESION §0n.5 /
@@ -222,7 +222,11 @@ const CTORS = {
     },
     "linear-function": (a) => ({ kind: "linear-function", stops: a[0].l }),
     "linear-stop": (a) => ({ output: a[0], input: a[1].l }),
-    "style-rule": (a) => ({ kind: "style", selectors: splitSelectors(a[0]), declarations: a[1].l }),
+    //  X.P.W3.l: the prelude leaf is OPTIONAL (`{ color: red }` → `selectors: []`, the splitter's own reading)
+    "style-rule": (a) =>
+        (a.length === 2
+            ? { kind: "style", selectors: splitSelectors(a[0]), declarations: a[1].l }
+            : { kind: "style", selectors: [], declarations: a[0].l }),
     /**
      * X.P.W3.j (J-2 / J-6): the name is the TRIMMED span, and nothing else. `.toLowerCase()` is
      * the surface's (`entry.mjs` `sheetOver`) — MEASURED, not preferred: a fold inside a
@@ -372,6 +376,49 @@ const CTORS = {
 
     /** A comment is the recovery sentinel: `stylesheet`'s own constructor filters it out (J-4). */
     "sheet-comment": () => NONE_OPT,
+
+    /* ── X.P.W3.l — the at-rule and nesting families (`algebra/grammar/stylesheet.mjs` L-1…L-6).
+          Every record carries its keys in the incumbent's own order; a leaf an `OPT` left out is
+          read by COUNT (`value-call`'s idiom), never by a sentinel. The raw items these answer are
+          the grammar's — `entry.mjs` `completerOver` finishes them into the frozen `Stylesheet`. ── */
+
+    /** The mixed reading (L-4): the prelude (optional) and the items — declarations, rules, comment holes. */
+    "style-rule-mixed": (a) =>
+        (a.length === 2
+            ? { kind: "style", selectors: splitSelectors(a[0]), items: a[1].l }
+            : { kind: "style", selectors: [], items: a[0].l }),
+    /** `@keyframes <name> { … }`: the name is the prelude run (trimmed by the completion, as `slice(11).trim()`). */
+    "at-keyframes": (a) => ({ kind: "keyframes", name: a[0], rules: a[1].l }),
+    /** One keyframe block: its prelude (optional — `{ }` is the empty selector list) and `parseDeclarations`. */
+    "keyframe-rule": (a) => (a.length === 2 ? { prelude: a[0], declarations: a[1].l } : { prelude: "", declarations: a[0].l }),
+    /** `@property` · `@function` · `@scroll-timeline` · `@view-timeline`: the head's row index names the kind. */
+    "at-declarations": (a) => ({ kind: AT_DECLARATION_KINDS[a[0]], prelude: a[1], declarations: a[2].l }),
+    /** `@scope<prelude> { … }`: the prelude is the text after the head (the incumbent's `t.slice(6)`). */
+    "at-scope": (a) => (a.length === 2 ? { kind: "scope", prelude: a[0], children: a[1].l } : { kind: "scope", prelude: "", children: a[0].l }),
+    "at-starting-style": (a) => ({ kind: "starting-style", children: a[0].l }),
+    /** The unknown at-rule with a block: the prelude after `@` (optional) and the raw body text. */
+    "at-unknown-block": (a) => (a.length === 2 ? { kind: "unknown", prelude: a[0], body: a[1] } : { kind: "unknown", prelude: "", body: a[0] }),
+    /** The unknown at-rule statement (`@import …;`): `body: null`, exactly as `blocks()` records it. */
+    "at-unknown-stmt": (a) => ({ kind: "unknown", prelude: a.length === 1 ? a[0] : "", body: null }),
+    /** The raw body between the at-rule's braces: its pieces, concatenated — the source span. */
+    "raw-text": (a) => a[0].l.join(""),
+    /**
+     * A nested `{ … }` inside a raw body, braces included. The braces are leaves when `TEXT` read
+     * them and absent when a doubled brace fell to the dropped `LIT` arm (L-3), so the block is
+     * rebuilt around the one leaf that is always present: the pieces list.
+     */
+    "raw-block": (a) => `{${a.find(isList).l.join("")}}`,
+    /**
+     * L-6: the name of a declaration `parseDeclarations` runs `emptyComma` on — `animation` or
+     * `animation-*` after `.trim().toLowerCase()` — or the row's labelled zero-width failure.
+     * Answers the TRIMMED span (the fold is the surface's, J-6), so the `declaration` constructor
+     * sees the same leaf it sees from the plain arm.
+     */
+    "animation-property": (a) => {
+        const name = trimWs(a[0]);
+        const lower = asciiFold(name);
+        return lower === "animation" || lower.startsWith("animation-") ? name : GUARD;
+    },
 };
 
 /**

@@ -96,7 +96,7 @@ export const ESCAPED_BACKSLASH = 2;
  *            (`WS`, `TOK`, `hex`, `named`, `transparent`)
  */
 export function buildValueGrammar(A, N) {
-    const { SCAN, LIT, NUM, TEXT, KW, END, SEQ, ALT, CUT, PURE, REP, DROP, DISPATCH, EXPECT, CTOR, REF } = A;
+    const { SCAN, LIT, NUM, TEXT, KW, END, SEQ, ALT, CUT, PURE, REP, DROP, DISPATCH, FAIL, EXPECT, CTOR, REF } = A;
     const { WS, TOK, hex, named, transparent } = N;
 
     /* ── the two zero-width assertions (the `.g` idiom, OP-01 alone) ─────────────────────── */
@@ -296,6 +296,37 @@ export function buildValueGrammar(A, N) {
     const declSlashGroup = () => separated("value-group", "slash", declSpaceGroup, slashSep);
     const declBody = () => separated("value-group", "comma", declSlashGroup, commaSep);
 
+    /* ── X.P.W3.l — an ANIMATION declaration's body: the same comma list, a blank part REFUSED ──
+     *
+     * `parseDeclarations` (`stylesheet.ts`) runs `emptyComma(source)` BEFORE `parseCssValue` on a
+     * declaration named `animation` or `animation-*`: a blank part between two top-level commas, or
+     * before the first, or after the last, is `animation_option_invalid` — `x: a,,b` is a two-item
+     * list and `animation-name: a,,b` is a rejection. The comma group above DROPS its blank parts
+     * (`groupItems`, the incumbent's `splitTopLevel` reading), so once the value is built the blank
+     * is gone; the law has to hold at the byte, in the grammar, and this is the body that holds it.
+     *
+     * The blank assertion is written FIRST at every item position and as the `.g` zero-width idiom
+     * over `decl-item-char` — the run is empty exactly when the next byte is `,` `;` `}` `!` or the
+     * end, i.e. exactly when `emptyComma` would find nothing but whitespace before the next
+     * top-level comma or the end of the (`!important`-stripped) source — followed by OP-15 `FAIL`,
+     * which is `.i`'s own `optionItem` order and is load-bearing for the same reason it was there:
+     * §5.6 keeps the FIRST code raised at an offset, so the eighth frozen code is the code AT the
+     * blank byte and the token arm's later refusal only adds its label. Leading separators are the
+     * empty `REP` (a blank first part is refused by the first item's own assertion), and every
+     * non-blank part is `declaration-body`'s own slash group, one token language.
+     */
+    const NOT_ITEM = () => DROP("keyword", SCAN("decl-item-char", 0, 0));
+    const blankItem = () => SEQ(NOT_ITEM(), FAIL("animation_option_invalid", "nonempty animation list item"));
+    const animationItem = () => ALT(blankItem(), declSlashGroup());
+    const animationDeclBody = () =>
+        CTOR(
+            "value-group",
+            REP(commaSep(), 0, 0, null),
+            animationItem(),
+            REP(SEQ(commaSep(), animationItem()), 0, INF, null),
+            PURE(SEPARATORS.indexOf("comma")),
+        );
+
     const value = () => SEQ(WS(), EXPECT(REF("value-body"), "<value>"), WS(), END());
     /** `parseCssValues`: the same body, a lone token wrapped as a one-item space list (`value-wrap`). */
     const values = () => SEQ(WS(), EXPECT(CTOR("value-wrap", REF("value-body")), "<value-list>"), WS(), END());
@@ -312,9 +343,11 @@ export function buildValueGrammar(A, N) {
             "value-single": single(),
             /** X.P.W3.j's third: the same body with a top-level `;` refused (the splitter's cut). */
             "declaration-body": declBody(),
+            /** X.P.W3.l's fourth: the same body, a blank comma part refused by name (`emptyComma`). */
+            "animation-declaration-body": animationDeclBody(),
         },
     };
 }
 
 /** The value grammar's `REF` targets, beside the slice's one (`grammar.mjs` REF_TARGETS). */
-export const VALUE_REF_TARGETS = Object.freeze(["value-body", "value-single", "declaration-body"]);
+export const VALUE_REF_TARGETS = Object.freeze(["value-body", "value-single", "declaration-body", "animation-declaration-body"]);

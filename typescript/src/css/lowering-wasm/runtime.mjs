@@ -588,6 +588,7 @@ export function emitRuntime(m, data) {
         const abase = c.local(I32);
         const ch = c.local(I32);
         const arr = c.local(I32);
+        const part = c.local(I32);
         c.get(0).load(4).set(s);
         c.get(0).load(8).set(n);
         c.gget(G.vsp).set(abase);
@@ -604,8 +605,14 @@ export function emitRuntime(m, data) {
                             },
                             (t) => {
                                 t.get(ch).i32(44).x("i32.eq").get(depth).x("i32.eqz").x("i32.and").if_("void", (u) => {
-                                    u.get(s).get(start).x("i32.add").get(s).get(k).x("i32.add").call(F.trimWs).call(F.push);
-                                    u.get(count).i32(1).x("i32.add").set(count);
+                                    //  X.P.W3.l (E-j2, granted): an EMPTY trimmed part is dropped,
+                                    //  as `splitTopLevel` drops it — the JS twin (`values.mjs`) tests
+                                    //  the same trimmed length
+                                    u.get(s).get(start).x("i32.add").get(s).get(k).x("i32.add").call(F.trimWs).set(part);
+                                    u.get(part).load(8).if_("void", (v) => {
+                                        v.get(part).call(F.push);
+                                        v.get(count).i32(1).x("i32.add").set(count);
+                                    });
                                     u.get(k).i32(1).x("i32.add").set(start);
                                 });
                             });
@@ -614,8 +621,11 @@ export function emitRuntime(m, data) {
                 lp.br(0);
             });
         });
-        c.get(s).get(start).x("i32.add").get(s).get(n).x("i32.add").call(F.trimWs).call(F.push);
-        c.get(count).i32(1).x("i32.add").set(count);
+        c.get(s).get(start).x("i32.add").get(s).get(n).x("i32.add").call(F.trimWs).set(part);
+        c.get(part).load(8).if_("void", (v) => {
+            v.get(part).call(F.push);
+            v.get(count).i32(1).x("i32.add").set(count);
+        });
         c.i32(T_ARR).get(abase).get(count).call(F.mkSeqNode).set(arr);
         c.get(abase).gset(G.vsp);
         c.get(arr);

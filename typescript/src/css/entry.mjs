@@ -87,7 +87,7 @@ import { JUMP_POSITIONS, R_kw, TIMING_KEYWORDS } from "./algebra/tables.mjs";
 import {
     assertCapacityBounds, assertDepthBound, CAPACITY, CAPACITY_LABELS, CLASS3_PROOF, DEPTH_BOUND, DEPTH_CODE, DEPTH_PRODUCTION, THETA,
 } from "./bounds.mjs";
-import { selectCode } from "./codes.mjs";
+import { isFrozenCode, selectCode } from "./codes.mjs";
 import { boundaryIssue, PRODUCTION_LABELS } from "./diagnostics.mjs";
 import { makeRecoveryLowering } from "./lower.mjs";
 
@@ -600,29 +600,402 @@ const collectRules = (stylesheet, kind) => {
  * targets stay identical by construction. It rebuilds only what it changes: the declaration
  * records and the arrays holding them, frozen as `ENTRY` froze the tree it was handed.
  */
-const foldedDeclaration = (declaration) =>
-    isRecord(declaration) && typeof declaration.name === "string"
-        ? Object.freeze({ ...declaration, name: declaration.name.toLowerCase() })
-        : declaration;
+/*
+ * X.P.W3.l — THE COMPLETION: the grammar's RAW ITEM TREE becomes the frozen `Stylesheet`.
+ *
+ * The grammar (`algebra/grammar/stylesheet.mjs`) answers what `blocks()` and the dispatch of
+ * `parseItems()` see — which family each item is, its prelude text, its raw or structured body,
+ * every declaration's value already read by the value grammar. Everything the incumbent does
+ * AFTER that dispatch is a computation over PARSED PRODUCTS and text it has already cut, never a
+ * consumption of new source: `parseKeyframeSelector` over each comma part of a keyframe prelude,
+ * `parseTimingFunction(serializeCssValue(value))`, `isSupportedSyntaxDescriptor` and
+ * `coerceToSyntax` over the `@property` descriptors, the `@function` signature's regular
+ * expressions, `parseScopePrelude`, the unknown at-rule's name split and its body's re-read, and
+ * `parseDeclarations`'s own option / range / scope / trigger checks. Those are E-h3 SURFACE
+ * COMPOSITIONS (the `coerceToSyntax` / `collectTimelineOptions` posture): they run over THIS
+ * lowering's surface, so both targets answer through their own grammar and G-5's identity reaches
+ * every one of them through the tree `parseStylesheet` answered.
+ *
+ * Every refusal here is `sourceIssue` over the whole sheet with a frozen code and a NAMED
+ * production — the shape the incumbent's `failure(source, code, expected)` answers — and every
+ * path is TOTAL by construction: a `Refusal` is a value threaded back up, never a throw, so the
+ * shield above stays dead. The one operation the incumbent performs that CAN throw
+ * (`serializeCssValue` over a colour it cannot spell, R1 / SV-1) is `serializeValue`'s
+ * `undefined` here and is refused by name.
+ *
+ * Declared, by class, counted in the receipt:
+ *   SV-3  the range / scope / trigger checks read the RE-SERIALIZED value (the incumbent reads the
+ *         declaration's raw text); the serializer is the incumbent's own, so the text agrees
+ *         wherever the value round-trips.
+ *   WS-1  `trim()` here is the incumbent's own (Unicode); the grammar's `WS` is css-syntax-3's five.
+ */
 
-const foldedItem = (item) => {
-    if (!isRecord(item)) return item;
-    const declarations = Array.isArray(item.declarations)
-        ? Object.freeze(item.declarations.map(foldedDeclaration))
-        : undefined;
-    const children = Array.isArray(item.children) ? Object.freeze(item.children.map(foldedItem)) : undefined;
-    if (declarations === undefined && children === undefined) return item;
-    return Object.freeze({
-        ...item,
-        ...(declarations === undefined ? {} : { declarations }),
-        ...(children === undefined ? {} : { children }),
-    });
+/** A refusal threaded up through the completion — a value, never an exception. */
+class Refusal {
+    constructor(code, expected) {
+        this.code = code;
+        this.expected = expected;
+    }
+}
+const refuse = (code, expected) => new Refusal(code, expected);
+/** An inner surface result's refusal, re-spanned over the sheet: its own code and productions. */
+const refuseAs = (result, fallback) => {
+    const issue = Array.isArray(result?.diagnostics) ? result.diagnostics[0] : undefined;
+    return issue && isFrozenCode(issue.code) && Array.isArray(issue.expected)
+        ? refuse(issue.code, issue.expected)
+        : refuse("css_syntax", [fallback]);
+};
+const isRefusal = (value) => value instanceof Refusal;
+
+const CUSTOM_PROPERTY_NAME = /^--[-_a-z][-_a-z\d]*$/i;
+const FUNCTION_SIGNATURE = /^(--[-\w]+)\s*\(([\s\S]*)\)$/;
+const FUNCTION_PARAMETER = /^(--[-\w]+)(?:\s+(.+))?$/;
+const TIMELINE_TOKEN = /^(?:auto|none|--|scroll\(|view\()/i;
+
+/** `stylesheet.ts` topLevelColon — the first `:` outside parens and quotes, or -1. */
+const topLevelColon = (source) => {
+    let depth = 0;
+    let quote = "";
+    for (let i = 0; i < source.length; i++) {
+        const char = source[i];
+        if (quote) {
+            if (char === quote && source[i - 1] !== "\\") quote = "";
+        } else if (char === '"' || char === "'") quote = char;
+        else if (char === "(") depth++;
+        else if (char === ")") depth--;
+        else if (depth === 0 && char === ":") return i;
+    }
+    return -1;
 };
 
-const sheetOver = (parseSheet) => (source) => {
-    const result = parseSheet(source);
-    if (result.ok !== true || !Array.isArray(result.value)) return result;
-    return Object.freeze({ ok: true, value: Object.freeze(result.value.map(foldedItem)), diagnostics: result.diagnostics });
+/** `stylesheet.ts` parseScopePrelude — `(root)` and an optional `to (limit)`, or null. */
+const parseScopePrelude = (source) => {
+    const text = source.trim();
+    if (!text) return {};
+    const groups = [];
+    let i = 0;
+    while (i < text.length) {
+        while (/\s/.test(text[i] ?? "")) i++;
+        if (groups.length === 1) {
+            if (text.slice(i, i + 2).toLowerCase() !== "to") return null;
+            i += 2;
+            while (/\s/.test(text[i] ?? "")) i++;
+        }
+        if (text[i] !== "(") return null;
+        let depth = 1;
+        let quote = "";
+        const start = ++i;
+        for (; i < text.length && depth > 0; i++) {
+            const char = text[i];
+            if (quote) {
+                if (char === quote && text[i - 1] !== "\\") quote = "";
+            } else if (char === '"' || char === "'") quote = char;
+            else if (char === "(") depth++;
+            else if (char === ")") depth--;
+        }
+        if (depth !== 0) return null;
+        groups.push(text.slice(start, i - 1));
+        if (groups.length > 2) return null;
+    }
+    if (groups.length === 0) return null;
+    return { root: splitTopLevel(groups[0], ","), ...(groups[1] === undefined ? {} : { limit: splitTopLevel(groups[1], ",") }) };
+};
+
+/** `rules.ts` parseAnimationTrigger over ONE surface: a type keyword, a timeline, the rest a range. */
+const triggerOver = (parseRange, parseTimeline) => (source) => {
+    const tokens = splitTopLevel(source.trim(), "space");
+    const result = {};
+    const range = [];
+    for (const token of tokens) {
+        const lower = token.toLowerCase();
+        if (TRIGGER_TYPES.includes(lower) && result.type === undefined) {
+            result.type = lower;
+            continue;
+        }
+        if (result.timeline === undefined && TIMELINE_TOKEN.test(token)) {
+            const timeline = parseTimeline(token);
+            if (!timeline.ok) return undefined;
+            result.timeline = timeline.value;
+            continue;
+        }
+        range.push(token);
+    }
+    if (range.length > 0) {
+        const parsed = parseRange(range.join(" "));
+        if (!parsed.ok) return undefined;
+        result.range = parsed.value;
+    }
+    return Object.keys(result).length > 0 ? result : undefined;
+};
+
+/** `rules.ts` optionDeclarationValid — the animation family's per-property admissibility, over a PARSED value. */
+function optionDeclarationValid(name, value) {
+    const items = commaItems(value);
+    if (items.length === 0) return false;
+    const word = (item) => folded(scalarKeyword(item)) ?? "";
+    switch (name) {
+        case "animation": return expandAnimationShorthand(value) !== undefined;
+        case "animation-name": return items.every((item) => animationNameValue(item) !== undefined);
+        case "animation-duration": return items.every((item) => (scalarNumber(item, ["s", "ms"]) ?? -1) >= 0);
+        case "animation-delay": return items.every((item) => scalarNumber(item, ["s", "ms"]) !== undefined);
+        case "animation-iteration-count":
+            return items.every((item) => {
+                const count = scalarNumber(item);
+                return word(item) === "infinite" || (count !== undefined && count >= 0);
+            });
+        case "animation-direction": return items.every((item) => DIRECTIONS.includes(word(item)));
+        case "animation-fill-mode": return items.every((item) => FILL_MODES.includes(word(item)));
+        case "animation-play-state": return items.every((item) => PLAY_STATES.includes(word(item)));
+        case "animation-composition": return items.every((item) => COMPOSITIONS.includes(word(item)));
+        case "animation-timing-function": return items.every((item) => timingFunctionValue(item) !== undefined);
+        case "animation-timeline": return timelineList(value) !== undefined;
+        default: return true;
+    }
+}
+
+/** The named production a refused option declaration names (the incumbent's `expected` cell, as a production). */
+const optionProduction = (name, value) => {
+    if (name === "animation-timeline") {
+        const call = value?.kind === "call" ? String(value.name ?? "").toLowerCase() : "";
+        return call === "view" ? "<view-timeline>" : call === "scroll" ? "<scroll-timeline>" : "<animation-timeline>";
+    }
+    return name === "animation" ? "<animation-shorthand>" : `<${name}>`;
+};
+
+/** `parseStylesheet` over ONE surface: the raw parse, then the completion of every item. */
+const completerOver = (surface) => {
+    const parseRaw = surface.parseStylesheet;
+    const triggerOf = triggerOver(surface.parseAnimationRange, surface.parseAnimationTimeline);
+
+    /** `parseDeclarations`'s checks AFTER the value parse, over the folded name and the parsed value. */
+    const checkDeclaration = (name, value) => {
+        if (!optionDeclarationValid(name, value)) {
+            return refuse(name === "animation-timeline" ? "timeline_option_invalid" : "animation_option_invalid", [optionProduction(name, value)]);
+        }
+        if (name === "animation-range" || name === "animation-range-start" || name === "animation-range-end") {
+            const text = serializeValue(value);
+            if (text === undefined) return refuse("css_syntax", [`<${name}>`]);
+            const range = surface.parseAnimationRange(text);
+            if (!range.ok) return refuseAs(range, `<${name}>`);
+            if (name !== "animation-range" && range.value.end !== undefined) return refuse("timeline_option_invalid", ["<animation-range-boundary>"]);
+        }
+        if (name === "timeline-scope") {
+            const text = serializeValue(value);
+            if (text === undefined || parseTimelineScope(text) === undefined) return refuse("timeline_option_invalid", ["<timeline-scope>"]);
+        }
+        if (name === "animation-trigger") {
+            const text = serializeValue(value);
+            if (text === undefined || triggerOf(text) === undefined) return refuse("timeline_option_invalid", ["<animation-trigger>"]);
+        }
+        return undefined;
+    };
+
+    /** The declaration list: `.toLowerCase()` on the name (J-6), then the checks, frozen. */
+    const completeDeclarations = (declarations) => {
+        const out = [];
+        for (const declaration of declarations) {
+            if (!isRecord(declaration)) continue; //                 a comment hole in a mixed body
+            const name = String(declaration.name).toLowerCase();
+            const refused = checkDeclaration(name, declaration.value);
+            if (refused) return refused;
+            out.push(Object.freeze({ name, value: declaration.value, important: declaration.important }));
+        }
+        return Object.freeze(out);
+    };
+
+    const completeItems = (items) => {
+        const out = [];
+        for (const item of items) {
+            if (!isRecord(item)) continue; //                        a comment hole
+            const completed = completeItem(item);
+            if (isRefusal(completed)) return completed;
+            out.push(completed);
+        }
+        return Object.freeze(out);
+    };
+
+    /** One raw item, by family. */
+    const completeItem = (item) => {
+        switch (item.kind) {
+            case "style": return completeStyle(item);
+            case "keyframes": return completeKeyframes(item);
+            case "property": return completeProperty(item);
+            case "function": return completeFunction(item);
+            case "scroll-timeline":
+            case "view-timeline": return completeTimeline(item);
+            case "scope": return completeScope(item);
+            case "starting-style": return completeStartingStyle(item);
+            default: return completeUnknown(item);
+        }
+    };
+
+    /** `parseStyleBody`: the declarations-only reading, or the mixed one (declarations, then `children` when any). */
+    const completeStyle = (item) => {
+        if (Array.isArray(item.items)) {
+            const declarations = completeDeclarations(item.items.filter((row) => isRecord(row) && row.kind === undefined));
+            if (isRefusal(declarations)) return declarations;
+            const children = completeItems(item.items.filter((row) => isRecord(row) && row.kind !== undefined));
+            if (isRefusal(children)) return children;
+            return Object.freeze({ kind: "style", selectors: item.selectors, declarations, ...(children.length === 0 ? {} : { children }) });
+        }
+        const declarations = completeDeclarations(item.declarations);
+        if (isRefusal(declarations)) return declarations;
+        return Object.freeze({ kind: "style", selectors: item.selectors, declarations });
+    };
+
+    /** `parseKeyframesRule(name, body)`: each block's selectors, declarations, timing and composition. */
+    const completeKeyframes = (item) => {
+        const rules = [];
+        for (const raw of item.rules) {
+            if (!isRecord(raw)) continue; //                          a comment hole
+            const selectors = [];
+            for (const part of splitTopLevel(raw.prelude, ",")) {
+                const selector = surface.parseKeyframeSelector(part);
+                if (!selector.ok) return refuseAs(selector, "<keyframe-selector>");
+                selectors.push(selector.value);
+            }
+            const declarations = completeDeclarations(raw.declarations);
+            if (isRefusal(declarations)) return declarations;
+            const map = collectDeclarations(declarations);
+            const rule = { selectors: Object.freeze(selectors), declarations };
+            const timing = map.get("animation-timing-function");
+            if (timing) {
+                const text = serializeValue(timing.value);
+                if (text === undefined) return refuse("css_syntax", ["<timing-function>"]);
+                const parsed = surface.parseTimingFunction(text);
+                if (!parsed.ok) return refuseAs(parsed, "<timing-function>");
+                rule.timingFunction = parsed.value;
+            }
+            const composition = map.get("animation-composition");
+            const word = composition ? folded(serializeValue(composition.value)) : undefined;
+            if (word !== undefined && COMPOSITIONS.includes(word)) rule.composition = word;
+            rules.push(Object.freeze(rule));
+        }
+        return Object.freeze({ kind: "keyframes", name: item.name.trim(), rules: Object.freeze(rules) });
+    };
+
+    /** `@property <name> { syntax; inherits; initial-value? }` — the descriptor checks, in the incumbent's order. */
+    const completeProperty = (item) => {
+        const declarations = completeDeclarations(item.declarations);
+        if (isRefusal(declarations)) return declarations;
+        const name = item.prelude.trim();
+        if (!CUSTOM_PROPERTY_NAME.test(name)) return refuse("css_syntax", ["<custom-property-name>"]);
+        const map = collectDeclarations(declarations);
+        const syntax = map.get("syntax");
+        const inherits = map.get("inherits");
+        const initial = map.get("initial-value");
+        if (!syntax || !inherits) return refuse("css_syntax", ["<property-descriptors> ('syntax' and 'inherits')"]);
+        const syntaxText = serializeValue(syntax.value);
+        if (syntaxText === undefined) return refuse("css_syntax", ["<syntax-descriptor>"]);
+        const descriptor = syntaxText.replace(/^['"]|['"]$/g, "");
+        if (syntaxAlternatives(descriptor) === null) return refuse("syntax_descriptor_invalid", [SYNTAX_DESCRIPTOR_PRODUCTION]);
+        const inheritsText = folded(serializeValue(inherits.value));
+        if (inheritsText !== "true" && inheritsText !== "false") return refuse("css_syntax", ["<inherits-descriptor> ('true' or 'false')"]);
+        if (!initial && descriptor !== "*") return refuse("css_syntax", ["<initial-value-descriptor>"]);
+        if (initial) {
+            const initialText = serializeValue(initial.value);
+            if (initialText === undefined) return refuse("css_syntax", ["<initial-value-descriptor>"]);
+            const coerced = surface.coerceToSyntax(initialText, descriptor);
+            if (!coerced.ok) return refuseAs(coerced, "<initial-value-descriptor>");
+        }
+        return Object.freeze({
+            kind: "property",
+            name,
+            descriptor: Object.freeze({ syntax: descriptor, inherits: inheritsText === "true", ...(initial ? { initialValue: initial.value } : {}) }),
+        });
+    };
+
+    /** `@function <name>(<parameters>) { … }` — `parseFunctionPrelude`, then the body's `result`. */
+    const completeFunction = (item) => {
+        const signature = item.prelude.trim().match(FUNCTION_SIGNATURE);
+        if (!signature) return refuse("css_syntax", ["<custom-function-signature>"]);
+        const parameters = [];
+        const inner = signature[2].trim();
+        for (const part of inner ? splitTopLevel(inner, ",") : []) {
+            const colon = topLevelColon(part);
+            const head = part.slice(0, colon < 0 ? undefined : colon).trim().match(FUNCTION_PARAMETER);
+            if (!head) return refuse("css_syntax", ["<custom-function-parameter>"]);
+            const defaultText = colon < 0 ? undefined : part.slice(colon + 1).trim();
+            if (defaultText === "") return refuse("css_syntax", ["<parameter-default>"]);
+            const parsed = defaultText === undefined ? undefined : surface.parseCssValue(defaultText);
+            if (parsed && !parsed.ok) return refuseAs(parsed, "<parameter-default>");
+            parameters.push(Object.freeze({
+                name: head[1],
+                ...(head[2] ? { syntax: head[2].trim() } : {}),
+                ...(parsed?.ok ? { default: parsed.value } : {}),
+            }));
+        }
+        const declarations = completeDeclarations(item.declarations);
+        if (isRefusal(declarations)) return declarations;
+        const result = collectDeclarations(declarations).get("result");
+        return Object.freeze({
+            kind: "function",
+            name: signature[1],
+            descriptor: Object.freeze({
+                ...(parameters.length > 0 ? { parameters: Object.freeze(parameters) } : {}),
+                ...(result ? { result: result.value } : {}),
+                declarations,
+            }),
+        });
+    };
+
+    /** `@scroll-timeline` / `@view-timeline <name> { … }` — the named descriptors, serialized. */
+    const completeTimeline = (item) => {
+        const declarations = completeDeclarations(item.declarations);
+        if (isRefusal(declarations)) return declarations;
+        const map = collectDeclarations(declarations);
+        const keys = item.kind === "scroll-timeline" ? ["source", "orientation"] : ["subject", "axis", "inset"];
+        const descriptor = {};
+        for (const key of keys) {
+            const declaration = map.get(key);
+            if (!declaration) continue;
+            const text = serializeValue(declaration.value);
+            if (text === undefined) return refuse("css_syntax", [`<${key}-descriptor>`]);
+            descriptor[key] = text;
+        }
+        return Object.freeze({ kind: item.kind, name: item.prelude.trim(), descriptor: Object.freeze(descriptor) });
+    };
+
+    /** `@scope<prelude> { … }` — the prelude's `(root)` / `to (limit)`, then the nested items. */
+    const completeScope = (item) => {
+        const children = completeItems(item.children);
+        if (isRefusal(children)) return children;
+        const prelude = parseScopePrelude(item.prelude);
+        if (prelude === null) return refuse("css_syntax", ["<scope-prelude>"]);
+        return Object.freeze({ kind: "scope", ...prelude, children });
+    };
+
+    const completeStartingStyle = (item) => {
+        const children = completeItems(item.children);
+        if (isRefusal(children)) return children;
+        return Object.freeze({ kind: "starting-style", children });
+    };
+
+    /** The unknown at-rule: `atName` up to the first U+0020 of the trimmed `@…` prelude, the rest as is. */
+    const completeUnknown = (item) => {
+        const text = `@${item.prelude}`.trim();
+        const space = text.indexOf(" ");
+        const body = item.body;
+        const children = body === null ? undefined : parse(body);
+        return Object.freeze({
+            kind: "unknown",
+            atName: text.slice(1, space < 0 ? undefined : space),
+            prelude: space < 0 ? "" : text.slice(space + 1),
+            body,
+            ...(children?.ok ? { children: children.value } : {}),
+        });
+    };
+
+    const parse = (source) => {
+        const result = parseRaw(source);
+        if (result.ok !== true || !Array.isArray(result.value)) return result;
+        const items = completeItems(result.value);
+        if (isRefusal(items)) {
+            return Object.freeze({ ok: false, diagnostics: Object.freeze([sourceIssue(source, items.code, items.expected)]) });
+        }
+        return Object.freeze({ ok: true, value: items, diagnostics: result.diagnostics });
+    };
+    return parse;
 };
 
 export const collectStyleRules = (stylesheet) => collectRules(stylesheet, "style");
@@ -745,32 +1118,8 @@ const collectorsOver = (parseRange, parseTimeline) => {
         const parsed = parseRange(text);
         return parsed.ok ? parsed.value : undefined;
     };
-    /** `rules.ts` parseAnimationTrigger — a type keyword, a timeline, and whatever is left is a range. */
-    const triggerOf = (source) => {
-        const tokens = splitTopLevel(source.trim(), "space");
-        const result = {};
-        const range = [];
-        for (const token of tokens) {
-            const lower = token.toLowerCase();
-            if (TRIGGER_TYPES.includes(lower) && result.type === undefined) {
-                result.type = lower;
-                continue;
-            }
-            if (result.timeline === undefined && /^(?:auto|none|--|scroll\(|view\()/i.test(token)) {
-                const timeline = parseTimeline(token);
-                if (!timeline.ok) return undefined;
-                result.timeline = timeline.value;
-                continue;
-            }
-            range.push(token);
-        }
-        if (range.length > 0) {
-            const parsed = parseRange(range.join(" "));
-            if (!parsed.ok) return undefined;
-            result.range = parsed.value;
-        }
-        return Object.keys(result).length > 0 ? result : undefined;
-    };
+    /** `rules.ts` parseAnimationTrigger — a type keyword, a timeline, and whatever is left is a range (X.P.W3.l: `triggerOver`, shared with the completion). */
+    const triggerOf = triggerOver(parseRange, parseTimeline);
     return (declarations) => {
         const selected = declarationCascade(declarations);
         const timelineSource = animationCascade(declarations).selected.get("animation-timeline")?.value;
@@ -947,7 +1296,9 @@ export function makePublicSurface(lowering) {
     // X.P.W3.j — the five stylesheet collectors. All five read an already-parsed product, so all
     // five are lowering-independent and are the same function on both surfaces (the `.i` posture
     // for `collectAnimationOptions` / `serializeTimelineOptions`, for the same reason).
-    surface.parseStylesheet = sheetOver(surface.parseStylesheet);
+    //  X.P.W3.l — the completion over THIS surface (E-h3): the raw item tree the grammar answers
+    //  becomes the frozen `Stylesheet`, every check through this lowering's own entries.
+    surface.parseStylesheet = completerOver(surface);
     surface.collectDeclarations = collectDeclarations;
     surface.collectStyleRules = collectStyleRules;
     surface.collectKeyframes = collectKeyframes;

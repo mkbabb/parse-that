@@ -137,6 +137,32 @@ export const R_cls = {
     //          DECLARATION's top-level value token (`grammar/value.mjs` `declaration-body`). Its
     //          label is the existing `';'`, which `collectLabels` dedupes — no index moves.
     semi: { label: "';'", table: table256((b) => b === ch(";")), since: "X.P.W3.j" },
+    // X.P.W3.l — the at-rule and nesting families (`algebra/grammar/stylesheet.mjs`, E-j1). Each
+    // mirrors one byte-level decision `stylesheet.ts` `parseItems` / `blocks()` / `parseDeclarations`
+    // makes with `startsWith`, `indexOf` or a depth counter:
+    //
+    //   space          `lower.startsWith("@keyframes ")` — the ONE byte that separates a known
+    //                  at-rule's name from its prelude is U+0020, never any other whitespace.
+    //   at-rule-text   `blocks()`'s brace-depth scan over an UNKNOWN at-rule's body: every byte but
+    //                  the two braces is body text (the incumbent keeps that body as raw text).
+    //   lbrace/rbrace  read `TEXT(cls, 1, 1)` — ONE brace when it stands alone — so a block's span
+    //                  is exact; a run of braces falls to the dropped `LIT`, which is exact-width.
+    //                  Their labels are the existing `'{'` / `'}'`, deduped — no index moves.
+    //   any-but-semi   read ZERO-WIDTH only ("';' or the end of input is next"): `@starting-style`
+    //                  with no body is `failure(…, "nested body")` there, never an unknown at-rule.
+    //   decl-item-char read ZERO-WIDTH only: the byte AFTER a top-level comma in an animation
+    //                  declaration is one of `,` `;` `}` `!` (or the end) exactly when `emptyComma`
+    //                  would find a blank part — the assertion that names the eighth code there.
+    space: { label: "<space>", table: table256((b) => b === 0x20), since: "X.P.W3.l" },
+    "at-rule-text": { label: "at-rule body text", table: table256((b) => b !== ch("{") && b !== ch("}")), since: "X.P.W3.l" },
+    lbrace: { label: "'{'", table: table256((b) => b === ch("{")), since: "X.P.W3.l" },
+    rbrace: { label: "'}'", table: table256((b) => b === ch("}")), since: "X.P.W3.l" },
+    "any-but-semi": { label: "at-rule end", table: table256((b) => b !== ch(";")), since: "X.P.W3.l" },
+    "decl-item-char": {
+        label: "animation list item",
+        table: table256((b) => b !== ch(",") && b !== ch(";") && b !== ch("}") && b !== ch("!")),
+        since: "X.P.W3.l",
+    },
 };
 
 /**
@@ -271,7 +297,24 @@ export const R_kw = {
         since: "X.P.W3.i",
     },
     "view-axis": { label: "<timeline-axis>", code: "timeline_option_invalid", kind: "token", rows: np({ block: 0, inline: 1, x: 2, y: 3 }), since: "X.P.W3.i" },
+    // X.P.W3.l — the four at-rules whose body is a DECLARATION LIST (`parseItems`: `@property ` ·
+    // `@function ` · `@scroll-timeline ` · `@view-timeline `, each matched on the folded prelude
+    // and each followed by ONE space). `KW` reads the maximal ident run, so `@property-x` is an
+    // unknown at-rule here exactly as `"@property-x".startsWith("@property ")` is false there. The
+    // value indexes `AT_DECLARATION_KINDS`, which is the frozen `StylesheetItem.kind` the
+    // constructor answers. `@keyframes` (a rule list), `@scope` (a PREFIX match) and
+    // `@starting-style` (an EXACT match) are read by `LIT` in the grammar, never by this table.
+    "at-rule-name": {
+        label: "<at-rule-name>",
+        code: "css_syntax",
+        kind: "token",
+        rows: np({ property: 0, function: 1, "scroll-timeline": 2, "view-timeline": 3 }),
+        since: "X.P.W3.l",
+    },
 };
+
+/** X.P.W3.l — the frozen `StylesheetItem.kind` of each `R_kw["at-rule-name"]` row, by id. */
+export const AT_DECLARATION_KINDS = ["property", "function", "scroll-timeline", "view-timeline"];
 
 /* ── X.P.W3.i — the canonical spellings the animation constructors answer, by index ─────────── */
 
@@ -396,7 +439,7 @@ export const R_ctor = {
     steps: { label: "steps()", code: "css_syntax", labels: ["<integer> >= 1", "jump-none needs >= 2"], arity: 2, leafMap: ["count", "position"] },
     "linear-function": { label: "linear()", code: "css_syntax", labels: ["<linear-stop-list>"], arity: 1, leafMap: ["stops"] },
     "linear-stop": { label: "<linear-stop>", code: "css_syntax", labels: ["<linear-stop>"], arity: 2, leafMap: ["output", "input"] },
-    "style-rule": { label: "<qualified-rule>", code: "css_syntax", labels: ["<qualified-rule>"], arity: 2, leafMap: ["prelude", "declarations"] },
+    "style-rule": { label: "<qualified-rule>", code: "css_syntax", labels: ["<qualified-rule>"], arity: 2, leafMap: ["prelude", "declarations"] }, // X.P.W3.l: the prelude leaf is OPTIONAL (`{ … }` is a rule with no selector there)
     declaration: { label: "<declaration>", code: "css_syntax", labels: ["<declaration>"], arity: 3, leafMap: ["name", "value", "important"] },
     "value-color": { label: "<colour value>", code: "css_syntax", labels: ["<color>"], arity: 1, leafMap: ["color"] },
     stylesheet: { label: "<stylesheet>", code: "css_syntax", labels: ["<stylesheet>"], arity: 1, leafMap: ["items"] },
@@ -530,6 +573,59 @@ export const R_ctor = {
     //    in `V` and nothing in `D`, which is precisely the incumbent's "cursor = end + 2". It
     //    never guards (the `CUT` after `/*` and the closing `LIT` carry the refusal).
     "sheet-comment": { label: "<comment>", code: "css_syntax", labels: ["<comment>"], arity: 1, leafMap: ["text"], since: "X.P.W3.j" },
+
+    // ── X.P.W3.l — the AT-RULE and NESTING families' CTOR rows (E-j1), landed as ONE commit
+    //    across the same four realizations (COHESION §0s E-h1): the rows here, `lowering-js/js-alg.mjs`
+    //    CTORS, the Wasm emitter `lowering-wasm/wasm-alg.mjs` emitCtors, and the node table
+    //    `bounds.mjs` CTOR_ALLOC / CTOR_SCRATCH_CELLS. `bounds.mjs` HALTs at load unless the four agree.
+    //
+    //    EVERY ROW ANSWERS A RAW ITEM (COHESION §0v: "the grammar answers the RAW item tree … and
+    //    `entry.mjs` completes and validates it into the frozen `Stylesheet`"): the leaves are the
+    //    SPANS the grammar read and the lists it collected, untrimmed and unfolded, so that the two
+    //    lowerings answer byte-identical records (the J-6 posture) and every trim, fold, split,
+    //    regex and check-over-a-parsed-value is ONE function on the surface. None of these rows
+    //    guards except `animation-property`; a raw record is not a verdict.
+    //
+    //    `style-rule` keeps `.j`'s declarations-only shape (the incumbent's FIRST reading of a style
+    //    body, `parseDeclarations(body)`), now with the prelude OPTIONAL (`{ color: red }` is a rule
+    //    with no selector there). `style-rule-mixed` is its SECOND reading (`blocks(body + ";")`):
+    //    declarations and nested rules interleaved, in source order, which the surface partitions.
+    "style-rule-mixed": { label: "<qualified-rule>", code: "css_syntax", labels: ["<qualified-rule>"], arity: 2, leafMap: ["prelude", "items"], since: "X.P.W3.l" },
+    //    `@keyframes NAME { (PRELUDE { declarations })* }` — the name is the prelude text after the
+    //    space, untrimmed; each rule's prelude is optional (`{ color: red }` is a rule whose
+    //    selector list is EMPTY there: `splitTopLevel("", ",")` is `[]`).
+    "at-keyframes": { label: "<keyframes-rule>", code: "css_syntax", labels: ["<keyframes-rule>"], arity: 2, leafMap: ["name", "rules"], since: "X.P.W3.l" },
+    "keyframe-rule": { label: "<keyframe-rule>", code: "css_syntax", labels: ["<keyframe-rule>"], arity: 2, leafMap: ["prelude", "declarations"], since: "X.P.W3.l" },
+    //    `@property` · `@function` · `@scroll-timeline` · `@view-timeline`: ONE row whose first leaf
+    //    is the `R_kw["at-rule-name"]` index, answered as the frozen `kind` through
+    //    `AT_DECLARATION_KINDS` (the `timing-keyword` row's own idiom); the prelude text after the
+    //    space and the body's declaration list are the other two.
+    "at-declarations": { label: "<at-rule-declarations>", code: "css_syntax", labels: ["<at-rule-declarations>"], arity: 3, leafMap: ["kind", "prelude", "declarations"], since: "X.P.W3.l" },
+    //    `@scope PRELUDE? { items }` and `@starting-style { items }`: a nested ITEM list (rules and
+    //    at-rules, never a bare declaration — `parseItems` refuses a body-less block there).
+    "at-scope": { label: "<scope-rule>", code: "css_syntax", labels: ["<scope-rule>"], arity: 2, leafMap: ["prelude", "children"], since: "X.P.W3.l" },
+    "at-starting-style": { label: "<starting-style-rule>", code: "css_syntax", labels: ["<starting-style-rule>"], arity: 1, leafMap: ["children"], since: "X.P.W3.l" },
+    //    The unknown at-rule, in its two shapes: `@… { body }` and `@… ;`. The prelude leaf is the
+    //    whole text after `@` (optional: `@{}` is lawful there), and the block form's body is the
+    //    RAW brace-balanced text `blocks()` slices out — the incumbent keeps it as a string.
+    "at-unknown-block": { label: "<at-rule>", code: "css_syntax", labels: ["<at-rule>"], arity: 2, leafMap: ["prelude", "body"], since: "X.P.W3.l" },
+    "at-unknown-stmt": { label: "<at-rule>", code: "css_syntax", labels: ["<at-rule>"], arity: 1, leafMap: ["prelude"], since: "X.P.W3.l" },
+    //    The raw body as ONE SPAN of the source. `raw-text` is the pieces between an at-rule's own
+    //    braces (its span runs from the first piece's start to the last piece's end, "" when there
+    //    is none); `raw-block` is one nested `{ … }` — its braces are read `TEXT(cls, 1, 1)` when
+    //    they stand alone and by a dropped exact-width `LIT` inside a run, so the leaves are one to
+    //    three (the pieces list, with the open and/or close brace beside it) and the span is
+    //    recovered from whichever stand: a dropped brace is exactly one code unit outside the
+    //    pieces it encloses. Both lowerings read the span back from the ORIGINAL string, so a
+    //    non-ASCII byte inside an unknown at-rule's body is never re-encoded (the J-6 posture).
+    "raw-text": { label: "<at-rule-body>", code: "css_syntax", labels: ["<at-rule-body>"], arity: 1, leafMap: ["pieces"], since: "X.P.W3.l" },
+    "raw-block": { label: "<at-rule-body>", code: "css_syntax", labels: ["<at-rule-body>"], arity: 3, leafMap: ["open", "pieces", "close"], since: "X.P.W3.l" },
+    //    `parseDeclarations`' `name === "animation" || name.startsWith("animation-")` — the ONE guard
+    //    of this family: the declaration name (trimmed, ASCII-folded) is `animation` or begins
+    //    `animation-`, and the row answers the TRIMMED span; any other name is the guard's failure,
+    //    which sends the declaration to its plain arm. It is what routes an animation declaration's
+    //    value through the body that names a blank comma part (`emptyComma`'s law).
+    "animation-property": { label: "<animation-property>", code: "css_syntax", labels: ["<animation-property> (animation or animation-*)"], arity: 1, leafMap: ["name"], since: "X.P.W3.l" },
 };
 
 /* ── L: the label index (§4.4) — EQ-4 compares INDICES into this list ──────────────────────── */
@@ -544,7 +640,7 @@ export const R_ctor = {
  * against a label an earlier pass carries (`value-color-head` is `<color-function>`, `ident-start`
  * is `ident`), so only a genuinely new label takes a new index.
  */
-const LATER_UNITS = ["X.P.W3.h", "X.P.W3.i", "X.P.W3.j"];
+const LATER_UNITS = ["X.P.W3.h", "X.P.W3.i", "X.P.W3.j", "X.P.W3.l"];
 
 /** The `EXPECT` / `FAIL` labels each later unit's grammar names, in that grammar's own order. */
 const UNIT_SITE_LABELS = {
@@ -552,6 +648,10 @@ const UNIT_SITE_LABELS = {
     "X.P.W3.i": ["<keyframe-selector>", "<animation-timeline>", "<animation-range>", "<animation-option-list>", "nonempty animation list item"],
     //  the three `LIT`s the comment production reads (`LIT`'s own label form is `'<bytes>'`)
     "X.P.W3.j": ["'/*'", "'*'", "'*/'"],
+    //  the three at-rule heads the grammar reads by `LIT` (`'keyframes'` · `'scope'` · `'starting-style'`)
+    //  and the one `FAIL` it names (`@starting-style` with no body). The braces' `'{'` / `'}'`
+    //  already stand in L, so the dropped exact-width `LIT`s of `raw-block` add no index.
+    "X.P.W3.l": ["'@'", "'keyframes'", "'scope'", "'starting-style'", "<starting-style-body>"],
 };
 
 const collectLabels = () => {

@@ -17,7 +17,7 @@
 // cycle. Freshness is therefore load-bearing, not style.
 
 import { buildAnimationGrammar } from "./grammar/animation.mjs";
-import { buildStylesheetGrammar } from "./grammar/stylesheet.mjs";
+import { STYLESHEET_REF_TARGETS, buildStylesheetGrammar } from "./grammar/stylesheet.mjs";
 import { VALUE_REF_TARGETS, buildValueGrammar } from "./grammar/value.mjs";
 import { R_disp } from "./tables.mjs";
 
@@ -110,8 +110,37 @@ export function buildGrammar(A) {
     // adopts ("the slice adopts the band's reading (`WS`)"); `WS1` is the strict reading and one
     // notation away. The dissent is preserved, never settled here.
     const modernRgb = () => SEQ(rgbCh(), WS(), rgbCh(), WS(), rgbCh(), alphaSlash());
-    const legacyRgb = () => SEQ(rgbCh(), sep(), rgbCh(), sep(), rgbCh(), OPT(SEQ(sep(), alpha()), 1));
     const modernHsl = () => SEQ(hue(), WS(), pctCh(), WS(), pctCh(), alphaSlash());
+
+    // X.P.W3.l — F-k2, ORDERED CURED (COHESION §0v: "the candidate accepts forbidden legacy comma
+    // forms — mixed `<number>`/`<percentage>` or `none`, css-color-4 §8.1"), MEASURED, and the cure
+    // WITHDRAWN — the legacy forms below are X.P.W3.h's, byte for byte. Two cures were landed and
+    // measured at G-1 before this note was written:
+    //
+    //   (1) §8.1 as ruled — two homogeneous three-channel arms, no `none`, a well-formed
+    //       `, <alpha-value>`. The nine F-k2 cells rejected as ordered, and 575 NEW misses opened on
+    //       each colour/value row (593 from 10; `coerceToSyntax` lost its TOTAL, 58 cells): every
+    //       one a FALSE_REJECT of a mixed-type or `none` legacy form the ORACLE ACCEPTS —
+    //       `rgb(.780, 33%, 151.32)`, `rgb(+0, 159.63, none)` — and that the wave's OWN rulings
+    //       expect accepted: PB-01/02 declares `none` a well-formed fourth argument
+    //       (`rgb(58%, 14%, .816, none)` is its cell), PB-04/05 clamps `rgb(-11, none, none)`.
+    //   (2) the oracle's own reading (commas rewritten to spaces, exactly three channels, the alpha
+    //       behind `/` alone) — G-1 fell 46 → 45 against PB-08's 2,220 ruled rejections, SP-1's six
+    //       and PB-01/02's ruled acceptances.
+    //
+    // WHAT THE NINE CELLS ARE, measured at the cell: every one is a four-argument legacy form whose
+    // FOURTH argument is a NON-FINITE numeral — `rgb(none, 6e167, 27%, 6e316)`,
+    // `rgb(.843, -0, +54, 5e498)`, `rgb(80%, .55, -17, 2e371)` — three of the ten samples carry no
+    // `none` and no mixed type at all. The oracle rejects the four-argument form outright; the
+    // candidate clamps the alpha to 1 (PB-04/05) and accepts. No SINGLE ruling repairs the cell:
+    // ADJ-3's clamp leaves four arguments (the oracle still rejects), PB-01/02's drop requires a
+    // FINITE alpha (`legacyAlphaEdits`), so the resolver falls back to the raw verdict. That is
+    // GROUND-C's own case — "overflow is not a syntax error; range per production; per-cell
+    // adjudication at W4" — and a grammar that rejected it would have to key on finiteness, which
+    // §0v refuses (`<finite-number>` as a rejection label REFUSED). `.k`'s `legacyFormMisaccept`
+    // characterized the cells by their neighbours' spelling rather than by the byte that fails;
+    // the id stands in the remainder and the re-characterization is the unit's finding (F-l1).
+    const legacyRgb = () => SEQ(rgbCh(), sep(), rgbCh(), sep(), rgbCh(), OPT(SEQ(sep(), alpha()), 1));
     const legacyHsl = () => SEQ(hue(), sep(), pctOnly(), sep(), pctOnly(), OPT(SEQ(sep(), alpha()), 1));
 
     // E-2 cure (3), ruled at COHESION §0n.3 and landed by `ALGEBRA-ADDENDA-2026-09-18.md`: the tail
@@ -301,7 +330,7 @@ export function buildGrammar(A) {
     //  `lower.mjs` proves the closed operator set by recording every read of `A`, and a second
     //  destructure would read the twenty-two twice (a duplicate is a HALT there, by design).
     const valueGrammar = buildValueGrammar(
-        { SCAN, LIT, NUM, TEXT, KW, END, SEQ, ALT, CUT, PURE, REP, DROP, DISPATCH, EXPECT, CTOR, REF },
+        { SCAN, LIT, NUM, TEXT, KW, END, SEQ, ALT, CUT, PURE, REP, DROP, DISPATCH, FAIL, EXPECT, CTOR, REF },
         { WS, TOK, hex, named, transparent },
     );
     for (const name of Object.keys(valueGrammar.terms)) {
@@ -329,9 +358,10 @@ export function buildGrammar(A) {
 
     /* ── X.P.W3.j — the stylesheet family (`grammar/stylesheet.mjs`), composed the same way: the
           same algebra `A`, the same notations, and `P:stylesheet` over the productions that now
-          read a declaration's value through `REF("value-body")` — X.P.W3.h's own back-edge. */
+          read a declaration's value through `REF("value-body")` — X.P.W3.h's own back-edge.
+          X.P.W3.l hands it `KW` and `FAIL` besides (the at-rule heads and the one named refusal). */
     const stylesheetGrammar = buildStylesheetGrammar(
-        { SCAN, LIT, TEXT, END, SEQ, ALT, CUT, PURE, REP, DROP, CTOR, RECOVER, REF },
+        { SCAN, LIT, TEXT, KW, END, SEQ, ALT, CUT, PURE, REP, DROP, FAIL, CTOR, RECOVER, REF },
         { WS, TOK, UNIT_KW, OPT },
     );
     for (const name of Object.keys(stylesheetGrammar.terms)) {
@@ -355,6 +385,8 @@ export function buildGrammar(A) {
  * X.P.W3.j retires it — a declaration's value is `REF("value-body")`, so the site is the SAME site
  * under the name the value grammar publishes it under, and the count of back-edges the grammar
  * uses is unchanged. The grammar map is finite and closed (OP-22); a lowering resolves a back-edge
- * by name against `terms`, never by search.
+ * by name against `terms`, never by search. X.P.W3.l adds the stylesheet family's two (a nested
+ * rule inside a body, a nested `{ … }` inside an unknown at-rule's raw body), each with a
+ * mandatory width of at least two code units so no level of either recursion is zero-width.
  */
-export const REF_TARGETS = ["balanced-tail", ...VALUE_REF_TARGETS];
+export const REF_TARGETS = ["balanced-tail", ...VALUE_REF_TARGETS, ...STYLESHEET_REF_TARGETS];

@@ -71,6 +71,8 @@ describe("the pinned universe", () => {
             named: [148, 148],
             p1: [403, 403],
             r1: [172, 172],
+            //  X.P.W3.l: the seventh arm, the stylesheet band (`lib/stylesheet-band.mjs`, W3.md `.l` L726)
+            "stylesheet-band": [470, 470],
         });
         // A union, not a concatenation: the overlap is accounted for rather than double-counted.
         expect(assembled.corpus.counts.armTotal - assembled.corpus.counts.overlap).toBe(

@@ -183,6 +183,29 @@ export const PRODUCTION_LABELS = Object.freeze({
     "'/*'": "<comment-open> ('/*')",
     "'*'": "<asterisk>",
     "'*/'": "<comment-close> ('*/')",
+
+    /* X.P.W3.l — the at-rule and nesting families' labels (`algebra/grammar/stylesheet.mjs`), in
+       L's own appended order: the four new classes (`lbrace` / `rbrace` carry the existing `'{'` /
+       `'}'` and take no index), the at-rule-name table, the constructor guards, and the three `LIT`
+       heads plus the one `FAIL` site. Every row is a named production (G-8). */
+    "<space>": "<space> (a single ' ')",
+    "at-rule body text": "<at-rule-body-text> (any character but '{' or '}')",
+    "at-rule end": "<at-rule-end> (';' or the end of input)",
+    "animation list item": "<animation-list-item-start> (any character but ',', ';', '}' or '!')",
+    "<at-rule-name>": "<at-rule-name> ('property', 'function', 'scroll-timeline' or 'view-timeline')",
+    "<keyframes-rule>": "<keyframes-rule>",
+    "<keyframe-rule>": "<keyframe-rule>",
+    "<at-rule-declarations>": "<at-rule-declarations>",
+    "<scope-rule>": "<scope-rule>",
+    "<starting-style-rule>": "<starting-style-rule>",
+    "<at-rule>": "<at-rule>",
+    "<at-rule-body>": "<at-rule-body>",
+    "<animation-property> (animation or animation-*)": "<animation-property> (animation or animation-*)",
+    "'keyframes'": "<at-rule-name> ('keyframes')",
+    "'scope'": "<at-rule-name> ('scope')",
+    "'starting-style'": "<at-rule-name> ('starting-style')",
+    "'@'": "<at-rule> ('@')",
+    "<starting-style-body>": "<starting-style-body> (a '{ … }' block; ';' is not one)",
 });
 
 /** Both set-differences against `L`, injectivity, and the named-production predicate — at load. */

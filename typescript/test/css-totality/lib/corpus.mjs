@@ -33,6 +33,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 
 import { P2_ROOT, VALUE_JS_ROOT, sha256 } from "./pin.mjs";
+import { stylesheetBand } from "./stylesheet-band.mjs";
 import { FUZZ_PIN, generateFuzzRows, mulberry32 } from "../../../../experiments/w2/corpus/fuzz-gen.mjs";
 
 const CAND_F_TOTALITY = path.join(
@@ -265,8 +266,12 @@ const r1 = () => {
     };
 };
 
-/** Every arm, in the order `W3.md` §5 `.a` names them. */
-export const ARMS = [groundA, fuzzF, fuzzO, namedColors, p1, r1];
+/**
+ * Every arm, in the order `W3.md` §5 `.a` names them — and, seventh, X.P.W3.l's stylesheet band
+ * (`stylesheet-band.mjs`): the at-rule and nesting witnesses generated from the ORACLE's accept
+ * set, `W3.md` `.l` L726. It folds like the six; the `note` below still counts the six `.a` named.
+ */
+export const ARMS = [groundA, fuzzF, fuzzO, namedColors, p1, r1, stylesheetBand];
 
 /**
  * Fold the six arms into one set. Row shape: `{ i, s, bands, prods }` — `i` is the row's index in

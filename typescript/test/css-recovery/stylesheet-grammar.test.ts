@@ -108,9 +108,15 @@ describe("J-2 the declaration name is TEXT, not an ident", () => {
     });
 
     it("a nested rule is NOT swallowed as a name — `{` and `}` bound the class", () => {
-        //  SH-2: the incumbent ACCEPTS this (its `parseStyleBody` falls through to `blocks()`);
-        //  the candidate refuses it, which is the declared at-rule / nesting residual.
-        expect(sheet("a { b { color: red } }").ok).toBe(false);
+        //  SH-2, DISCHARGED by X.P.W3.l: the incumbent ACCEPTS this (its `parseStyleBody` falls
+        //  through to `blocks()`), and so does the candidate now — the `style-rule-mixed` reading
+        //  (L-4) reads `b { … }` as a nested rule, never as a name. The oracle: one style rule `a`
+        //  with no declarations and one child `b`.
+        const r = sheet("a { b { color: red } }");
+        expect(r.ok).toBe(true);
+        const rule = (r.value as { selectors: string[]; declarations: unknown[]; children?: { selectors: string[] }[] }[])[0];
+        expect(rule.declarations).toEqual([]);
+        expect(rule.children?.map((child) => child.selectors)).toEqual([["b"]]);
     });
 });
 

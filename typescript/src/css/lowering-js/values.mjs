@@ -49,11 +49,16 @@ export function splitSelectors(prelude) {
         if (c === "(" || c === "[") depth++;
         else if (c === ")" || c === "]") depth = depth > 0 ? depth - 1 : 0;
         else if (c === "," && depth === 0) {
-            out.push(trimWs(prelude.slice(start, k)));
+            //  X.P.W3.l (E-j2, granted): `splitTopLevel(prelude, ",")` DROPS an empty part —
+            //  `a, , b {}` is `["a", "b"]` at the incumbent, and `, {}` is `[]`. The Wasm twin
+            //  (`runtime.mjs` `splitSelectors`) makes the same test on the trimmed span's length.
+            const part = trimWs(prelude.slice(start, k));
+            if (part.length > 0) out.push(part);
             start = k + 1;
         }
     }
-    out.push(trimWs(prelude.slice(start)));
+    const tail = trimWs(prelude.slice(start));
+    if (tail.length > 0) out.push(tail);
     return out;
 }
 
