@@ -60,6 +60,7 @@ import {
     witnessAtCapacity,
 } from "../../../src/css/bounds.mjs";
 import { callOracle } from "./oracle.mjs";
+import { CORPUS_PATH } from "./corpus.mjs";
 
 export const GATE_VERDICT_PATH =
     "/Users/mkbabb/Programming/value.js/docs/tranches/V/apotheosis/parser-proof/GATE-VERDICT.md";
@@ -398,6 +399,48 @@ export const SPEC_DIVERGENCES = [];
  * after `.e` raised it). Rowing them is not excusing them: their cells REMAIN mirror-defects in
  * G-7's count, and the row is what keeps the difference declared rather than silent.
  */
+/**
+ * **ID-3's SEVEN INPUTS, read rather than typed** (X.P.W3.n). A non-string is not a corpus ROW —
+ * the union is a set of source strings — so the seven declared boundary cases live beside the rows
+ * in the corpus's own `boundary` field (`.a`'s corpus, `.c`'s G-3 leg). This reads them from there
+ * and gives each its VALUE through a declared map, then asserts the value's `typeof` against the
+ * corpus's own `typeofIs` cell: a corpus that gains an eighth shape, or renames one, HALTS the
+ * emission instead of quietly emitting six rows where the gate expects seven. Nothing is `eval`'d.
+ */
+const BOUNDARY_VALUES = Object.freeze({
+    undefined: undefined,
+    null: null,
+    42: 42,
+    "{}": {},
+    "[]": [],
+    true: true,
+    NaN: NaN,
+});
+
+const boundaryDeclarations = () => {
+    const corpus = JSON.parse(readFileSync(CORPUS_PATH, "utf8"));
+    const declared = corpus.boundary;
+    if (!Array.isArray(declared) || declared.length === 0) {
+        throw new Error("ledger: the union corpus declares no non-string boundary cases — ID-3's inputs came back empty");
+    }
+    return declared.map((row) => {
+        if (!Object.hasOwn(BOUNDARY_VALUES, row.js)) {
+            throw new Error(
+                `ledger: the corpus declares a boundary case this file has no value for — \`${row.js}\`. ` +
+                    "ID-3's inputs are READ from the corpus; add the value here rather than dropping the row.",
+            );
+        }
+        const value = BOUNDARY_VALUES[row.js];
+        if (typeof value !== row.typeofIs) {
+            throw new Error(`ledger: boundary case \`${row.js}\` is typeof ${typeof value}, the corpus declares ${row.typeofIs}`);
+        }
+        return { label: row.js, value };
+    });
+};
+
+export const boundaryInputs = () => boundaryDeclarations().map((b) => b.value);
+export const boundaryLabels = () => boundaryDeclarations().map((b) => b.label);
+
 export const INCUMBENT_DEFECTS = [
     {
         id: "SP-1",
@@ -446,6 +489,27 @@ export const INCUMBENT_DEFECTS = [
             "**UNADJUDICATED — routed to X.P.W4's fresh adjudicator**, for the reason ID-1 gives. Measured by `.k` as the last unattributed cell of G-1's `parseTimingFunction` remainder.",
         consumerDirection:
             "NARROWS acceptance, on a string no author writes deliberately. A consumer producing `steps(n,, start)` is emitting a malformed list and now learns of it at the parse instead of silently receiving a timing function it never spelled.",
+    },
+    {
+        id: "ID-3",
+        parser: "parseStylesheet",
+        title: "the incumbent accepts a NON-STRING as an empty stylesheet",
+        // NOT STRINGS, so not corpus rows and not typed here: the seven are READ from the union
+        // corpus's own `boundary` declarations and given their values by `BOUNDARY_VALUES` below,
+        // whose `typeof` is asserted against the corpus's `typeofIs` cell before any of them is
+        // called. A drift in the corpus HALTS the emission rather than moving a row.
+        inputs: boundaryInputs(),
+        inputLabels: boundaryLabels(),
+        incumbentPosture:
+            "SPLITS, and the split is measured in the table below, not asserted: FIVE of the seven — `42`, `{}`, `[]`, `true`, `NaN` — come back `ok:true` with `value: []`, an EMPTY SHEET, because `.length` on a non-string is `undefined`, the scan loop never runs and the empty result is returned as a success; no diagnostic is emitted and the caller cannot tell an empty sheet from a source that was never text. The remaining two — `undefined` and `null` — THROW a raw `TypeError` (`Cannot read properties of … (reading 'length')`), which is the R1 class this wave's G-2 is about and not this row's subject. This row is the FIVE.",
+        candidatePosture:
+            "REJECTS all seven, identically in BOTH lowerings and with no throw: `ok:false css_syntax` with `expected [\"<string source>\"]` at `[0,0)`. The two the incumbent throws on are cured by the same guard, which is `.c`'s G-3 leg.",
+        specCitation:
+            "css-syntax-3 §3 — parsing operates on a stream of CODE POINTS; a value that is not a string is not a stream of code points and has no parse. §5.3.3 (\"parse a stylesheet\") is defined over that stream alone, so `[]` is not the answer for a non-source; there is no answer, which is what a typed rejection says.",
+        adjudication:
+            "**UNADJUDICATED — routed to X.P.W4's fresh adjudicator**, for the reason ID-1 gives (M-23 §1: an author may not adjudicate his own union). Its discovery is X.P.W3.n's: `.c` reported the shape as **BND-1** and `.m` measured it at **172 of `parseStylesheet`'s 206 G-1 misses** — but those 172 were the INSTRUMENT, not this defect. The universe's r1 arm was feeding the corpus `{id, src}` PAIRS instead of the `src` string, so `parseStylesheet` was being called with an object 172 times; §0w ruled that half an instrument defect and `.n` cured it at `test/css-totality/lib/corpus.mjs`. What remains here is the other half — the incumbent's own acceptance — and it is exercised by the SEVEN declared non-string boundary cases (`corpus.boundary`, `.c`'s G-3 leg), never by a corpus row, because a non-string is not a row.",
+        consumerDirection:
+            "NARROWS acceptance. A consumer that handed `parseStylesheet` a non-string — a `null` from a failed file read, a parsed JSON object, a number — received `ok:true` with an empty sheet and proceeded as though the stylesheet were empty. It now receives `ok:false` and learns at the call that it never had a source. No consumer that passed a string is affected.",
     },
 ];
 

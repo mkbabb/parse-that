@@ -251,15 +251,44 @@ const p1 = () => {
     };
 };
 
-/** The 172-input R1 corpus, plus the 7 declared non-string boundary cases beside it. */
+/**
+ * The 172-input R1 corpus, plus the 7 declared non-string boundary cases beside it.
+ *
+ * **BND-1, cured here (X.P.W3.n; COHESION §0w).** `r1.json` records each input as an `{id, src}`
+ * PAIR — the id is the probe's own row label, the `src` is the CSS. This arm handed the PAIR to the
+ * union, so 172 rows of the corpus carried an OBJECT where every other arm carried a string, and
+ * every entry was called with a non-string. `.m` measured the consequence: 172 of `parseStylesheet`'s
+ * 206 misses — the whole `BND-1` class — were the instrument feeding an object, not the candidate
+ * failing. §0w rules it an "instrument defect … The r1 arm hands `src` (the string) — `.n`".
+ *
+ * THE UNWRAP IS LOSSLESS AND CHECKED. `src` must be a string on every row or the arm HALTS: a third
+ * shape is a corpus change, not something to guess at (`test/css-equivalence/lib/corpus.mjs`'s F-c3
+ * reader has always said so at the other end, and its unwrap is now a no-op rather than a repair).
+ *
+ * WHAT IS **NOT** CURED HERE, and is rowed instead: the INCUMBENT accepts a non-string as an empty
+ * sheet (`e.length` undefined → `[]`) where the candidate answers a typed `<string source>`
+ * rejection. That is an incumbent defect, not an instrument one; it is `DIVERGENCE-LEDGER.md` §9's
+ * **ID-3** row and `adjudications.mjs`'s ID-3 class predicate, and it is still exercised — the seven
+ * `boundary` cases below are `.c`'s G-3 leg and are untouched by this cure.
+ */
 const r1 = () => {
     const corpus = json(R1_CORPUS_JSON);
-    const inputs = must(corpus.inputs, "R1 inputs");
-    expect(inputs.length, corpus.counts.inputs, "R1 count against the corpus's own count");
-    expect(inputs.length, 172, "R1 corpus");
+    const pairs = must(corpus.inputs, "R1 inputs");
+    expect(pairs.length, corpus.counts.inputs, "R1 count against the corpus's own count");
+    expect(pairs.length, 172, "R1 corpus");
+    const inputs = pairs.map((pair, i) => {
+        const src = pair === null || typeof pair !== "object" ? pair : pair.src;
+        if (typeof src !== "string") {
+            throw new Error(
+                `corpus: R1 row ${i} carries \`src\` of type ${typeof src} — the r1 arm hands the STRING (BND-1, ` +
+                    `COHESION §0w); a row that is neither a string nor an {id, src} pair is a corpus change, not an unwrap`,
+            );
+        }
+        return src;
+    });
     return {
         id: "r1",
-        provenance: `${R1_CORPUS_JSON} — ${corpus.counts.inputs} inputs + ${corpus.counts.boundary} declared non-string boundary cases, derived from audit/probes/r1-published-totality.mjs:38-43`,
+        provenance: `${R1_CORPUS_JSON} — ${corpus.counts.inputs} inputs (the \`src\` string of each {id, src} pair — BND-1, §0w) + ${corpus.counts.boundary} declared non-string boundary cases, derived from audit/probes/r1-published-totality.mjs:38-43`,
         declared: 172,
         inputs,
         boundary: corpus.boundary,

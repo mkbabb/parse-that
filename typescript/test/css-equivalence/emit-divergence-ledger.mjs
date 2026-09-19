@@ -86,16 +86,24 @@ const entryFor = (row) => row.parser ?? "parseCssColor";
 const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
 const numberWord = (n) => WORDS[n] ?? String(n);
 
-const measuredTable = (inputs, oracle, surfaces, entryName) => {
+/**
+ * `labels` is X.P.W3.n's: **ID-3**'s inputs are the seven declared NON-STRING boundary cases, and
+ * `JSON.stringify` cannot spell them — it answers the JS value `undefined` for `undefined` and the
+ * string `"null"` for `NaN`, so the input column would have named two inputs that were never
+ * passed. The row supplies its own spellings (`inputLabels`, read from the corpus's own `js` cell);
+ * every other row has none and keeps `JSON.stringify`, byte for byte.
+ */
+const measuredTable = (inputs, oracle, surfaces, entryName, labels = null) => {
     if (inputs.length === 0) return ["_No input cell: this row is an axis, not a string. Its two halves are stated as postures above._", ""];
     const out = [
         "| input | incumbent (published 4.0.0, MEASURED) | candidate js (MEASURED) | candidate wasm (MEASURED) |",
         "|---|---|---|---|",
     ];
-    for (const input of inputs) {
+    inputs.forEach((input, i) => {
         const m = measureInput(input, oracle.module[entryName], surfaces, entryName);
-        out.push(`| ${code(JSON.stringify(input))} | ${esc(m.incumbent)} | ${esc(m.js)} | ${esc(m.wasm)} |`);
-    }
+        const spelling = labels === null ? JSON.stringify(input) : labels[i];
+        out.push(`| ${code(spelling)} | ${esc(m.incumbent)} | ${esc(m.js)} | ${esc(m.wasm)} |`);
+    });
     out.push("");
     return out;
 };
@@ -533,7 +541,7 @@ const main = async () => {
         say("");
         say("| field | value |");
         say("|---|---|");
-        say(`| **input(s)** | ${row.inputs.map((i) => code(JSON.stringify(i))).join(" · ")} |`);
+        say(`| **input(s)** | ${(row.inputLabels ?? row.inputs.map((i) => JSON.stringify(i))).map((i) => code(i)).join(" · ")} |`);
         say(`| **entry** | ${code(row.parser)} |`);
         say(`| **incumbent** | ${esc(row.incumbentPosture)} |`);
         say(`| **candidate** | ${esc(row.candidatePosture)} |`);
@@ -541,7 +549,7 @@ const main = async () => {
         say(`| **adjudication** | ${esc(row.adjudication)} |`);
         say(`| **consumer direction** | ${esc(row.consumerDirection)} |`);
         say("");
-        for (const line of measuredTable(row.inputs, oracle, surfaces, entryFor(row))) say(line);
+        for (const line of measuredTable(row.inputs, oracle, surfaces, entryFor(row), row.inputLabels ?? null)) say(line);
     }
 
     // One trailing newline and no blank line before it — `git diff --check` reads a blank line at

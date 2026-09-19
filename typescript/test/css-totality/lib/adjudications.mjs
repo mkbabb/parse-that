@@ -327,11 +327,16 @@ export const G6_ROWS = ADJUDICATIONS.filter((row) => row.g6).sort((a, b) => a.g6
       and nothing else, and fires only when the ORACLE accepts the repaired source — the
       adjudication's own sentence, executable: *the incumbent rejects this input FOR THIS REASON*.
    4. EVERY CLASS DECLARES ITS POPULATION, MEASURED, AND THE CENSUS IS ASSERTED `≤` IT.
-      `population` is the number of rows of the pinned union corpus (26,604, `rows sha256
-      559e84bfb632b140`) the predicate MATCHES, measured by `node scripts/css-universe.mjs --check
-      --pinned-value-commit 6aca8602`, which prints the live figure beside the pin. A widened
-      predicate raises the census above the pin and G-1 goes RED — the defect E-h2 names, caught
-      mechanically rather than by review.
+      `population` is the number of rows of the union corpus the predicate MATCHES, measured by
+      `node scripts/css-universe.mjs --check --pinned-value-commit 6aca8602`, which prints the live
+      figure beside the pin. A widened predicate raises the census above the pin and G-1 goes RED —
+      the defect E-h2 names, caught mechanically rather than by review.
+      THE CORPUS THESE FIGURES ARE READ OVER moved once since `.k` pinned them (26,604 rows, `rows
+      sha256 559e84bfb632b140`) and once again at X.P.W3.n: `.l` added the stylesheet band, and
+      `.n` cured BND-1 so the r1 arm hands the STRING rather than the `{id, src}` pair (§0w). The
+      pins below are therefore re-measured at **27,021 rows, `rows sha256 e119d81be0d088ec`** — a
+      re-pin against a corpus this unit MOVED, printed beside the live figure on every run, never a
+      silent re-pin against a corpus that moved on its own.
    5. A RULING REACHES ONLY THE ENTRIES WHOSE INPUT IT IS ABOUT. `currentcolor` is
       `color_context_required` to `parseCssColor` and an ordinary keyword to `parseCssScalar`
       (MEASURED at the oracle), so PB-13 is scoped to the one entry; the separator, hue and legacy
@@ -456,7 +461,7 @@ export const CLASSES = [
         kind: "reject",
         title: "the comma→space rewrite makes an invalid separator structure invisible",
         expect: "reject",
-        population: 2220,
+        population: 2270, //  MEASURED at 27,021 rows (X.P.W3.n); 2,220 at `.k`'s 26,604 — the corpus moved, not the predicate.
         specCitation:
             "css-color-4 §8.1 / §7.1 — the legacy form is comma-separated THROUGHOUT and the modern form is space-separated throughout, with at most one solidus before <alpha-value>; css-syntax-3 §5.4.1 — an empty component value is not a value",
         why: "a colour call whose top-level separators are mixed, doubled, leading, trailing or empty",
@@ -889,7 +894,11 @@ export const classPopulations = (rows) => {
  * a remainder that cannot be named is the finding, not a rounding error.
  */
 export const remainderId = (src) => {
-    if (typeof src !== "string") return "BND-1 non-string boundary";
+    // X.P.W3.n — **ID-3**, not BND-1. BND-1 was two defects under one tag: the INSTRUMENT feeding
+    // `{id, src}` pairs (cured at `lib/corpus.mjs`, so no union row reaches here as a non-string any
+    // more) and the INCUMBENT accepting a non-string as an empty sheet, which is now a ruled class
+    // with a §9 ledger row of its own (COHESION §0w).
+    if (typeof src !== "string") return "ID-3";
     if (/@[A-Za-z-]+/.test(src)) return "E-j1 at-rule family (unauthored, escalated by .j)";
     if (/\{[^{}]*\{/.test(src)) return "E-j1 nested style body (unauthored, escalated by .j)";
     if (/\/\*/.test(src)) return "F-k3 a comment inside a declaration block is read as the declaration NAME (candidate defect; src/css/** is outside this unit's writable set)";
