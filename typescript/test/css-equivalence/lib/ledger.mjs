@@ -371,7 +371,34 @@ export const capacityRows = () =>
  * routes exactly four `parser-band.md` dissents to §2 by name), and NOT a GATE-VERDICT fixture
  * (that file carries no anchor for this subject). That is why it needs a family of its own.
  */
-export const SPEC_DIVERGENCES = [
+/**
+ * EMPTY AT THIS EMISSION, AND THAT IS A MEASUREMENT. This family holds a spec-cited divergence on a
+ * REALIZED entry that is not an incumbent mis-accept — the incumbent refusing what the spec admits,
+ * say. Its one row, SP-1, WAS an oracle mis-accept, so it is promoted into the INCUMBENT-DEFECT
+ * family below (F-aa3 (c): "SP-1 already carries the legacy-`hsl()` fact, so `.k` either promotes
+ * that one row into the INCUMBENT-DEFECT family or states why both stand — one meaning, one row").
+ * The heading is still emitted, with its count, because a family that disappears when it empties
+ * cannot be told from a family that was never there.
+ */
+export const SPEC_DIVERGENCES = [];
+
+/* ── family H: INCUMBENT-DEFECT — the oracle mis-accepts, the candidate is right per spec ──── */
+
+/**
+ * **ESC-g1's family** (COHESION §0r: it "gains a … row family (**INCUMBENT-DEFECT**: the oracle
+ * mis-accepts, the candidate is right per spec — the legacy-`hsl(120, 50, 50)` row first)"), at the
+ * next free level-2 heading and NOT §6, which is `.e`'s reserved hand-written block (F-aa3 (a);
+ * `emit-divergence-ledger.mjs` lifts §6 verbatim, and a generated family written over it would
+ * overwrite the fresh adjudicator's own region).
+ *
+ * A row here says: the INCUMBENT accepts a string the specification forbids, the candidate refuses
+ * it, and the refusal is correct. Two of the three are UNADJUDICATED and say so in their own
+ * `adjudication` field — `.k` measured them at G-1's honest remainder and declines to rule them,
+ * because an author may not adjudicate his own union (M-23 §1; SP-1, the same shape, was ruled only
+ * after `.e` raised it). Rowing them is not excusing them: their cells REMAIN mirror-defects in
+ * G-7's count, and the row is what keeps the difference declared rather than silent.
+ */
+export const INCUMBENT_DEFECTS = [
     {
         id: "SP-1",
         parser: "parseCssColor",
@@ -387,6 +414,38 @@ export const SPEC_DIVERGENCES = [
             "SPEC-CORRECT, and the candidate is REQUIRED to differ. Discovered by `.e` under L-14 refutation (ledger §6.1, PB-03 attempt (b)), re-measured by `.g`, and NOT created by `.g`'s dimension-token cure — the pre-cure probe already read the identical rejection. `.e` routed it as **F-e2** for a `.d`-EMITTED row; this is that row, and both result columns above are re-measured at every emission rather than typed.",
         consumerDirection:
             "NARROWS acceptance. A consumer that fed `hsl(120, 50, 50)` received a colour — and a wrong one, whose saturation and lightness were 100× the spec's value — and now receives `ok:false`. That is the intended direction: the input is not valid CSS and the value it returned was not the value the string names. A consumer emitting unitless saturation/lightness in the COMMA form must be fixed, not accommodated; the same consumer's SPACE form (`hsl(120 50 50)`) keeps working and is adjudicated separately at PB-03.",
+    },
+    {
+        id: "ID-1",
+        parser: "parseCssValue",
+        title: "the incumbent's UNANCHORED component read: a component value with trailing garbage is accepted",
+        inputs: ["#ff0.99cc", "steps(5e-2%28)", "cubic-bezier(-293, +10, 43.6-49, 160)"],
+        incumbentPosture:
+            "ACCEPTS all three. The read is unanchored: the incumbent consumes the prefix it recognizes — `#ff0`, `5e-2`, `43.6` — and never requires the rest of the component value to be consumed, so `.99cc`, `%28` and `-49` are discarded in silence.",
+        candidatePosture:
+            "REJECTS all three, identically in BOTH lowerings, with `css_syntax` spanning the unconsumed tail.",
+        specCitation:
+            "css-syntax-3 §5.4.7 — a component value is consumed WHOLE, and input left over once the production is satisfied makes the declaration invalid (§5.4.4's trailing-input condition). A token run no production admits cannot be dropped.",
+        adjudication:
+            "**UNADJUDICATED — routed to X.P.W4's fresh adjudicator.** Measured by `.k` as G-1's honest remainder at `parseCssValue` / `parseCssValues` (33 cells each) and inside `parseStylesheet`; those cells REMAIN counted as mirror-defects at G-7. `.k` declines to rule it: an author may not adjudicate his own union (M-23 §1).",
+        consumerDirection:
+            "NARROWS acceptance. A consumer that fed `#ff0.99cc` received the colour `#ff0` and now receives `ok:false`. The direction is intended: the string does not name that colour, and the old answer silently discarded five bytes its author wrote.",
+    },
+    {
+        id: "ID-2",
+        parser: "parseTimingFunction",
+        title: "the incumbent accepts an EMPTY argument in a comma-separated list",
+        inputs: ["steps(1e43,, start)"],
+        incumbentPosture:
+            "ACCEPTS: `{kind:\"steps\", count:1e43, position:\"jump-start\"}` — the empty part between the two commas is skipped and the list reads as two arguments.",
+        candidatePosture:
+            "REJECTS in BOTH lowerings: `ok:false css_syntax [11,19) expected [\"<jump-position>\"]`.",
+        specCitation:
+            "css-syntax-3 §5.4.1 / css-values-4 §2.1 — the parts of a comma-separated list are component values; an EMPTY part is not one, and a production that requires an argument is not satisfied by its absence.",
+        adjudication:
+            "**UNADJUDICATED — routed to X.P.W4's fresh adjudicator**, for the reason ID-1 gives. Measured by `.k` as the last unattributed cell of G-1's `parseTimingFunction` remainder.",
+        consumerDirection:
+            "NARROWS acceptance, on a string no author writes deliberately. A consumer producing `steps(n,, start)` is emitting a malformed list and now learns of it at the parse instead of silently receiving a timing function it never spelled.",
     },
 ];
 
@@ -526,8 +585,43 @@ export const measureCapacityRow = (row, oracle, surfaces) => {
     const cell = (n) => capacityCell(row.region, n, oracleFn, surfaces, entryName);
     if (row.cls === 1) {
         const n = firstFiring((k) => namesRegion(callOracle(surfaces.js[entryName], witnessAtCapacity(row.region, k)), row.production), row.layoutCap * 2);
-        if (n === null) throw new Error(`HALT: the '${row.region}' witness family never names its own production up to ${row.layoutCap * 2}; a class-1 bound that no input reaches is not class 1.`);
-        return { kind: "pair", entryName, coordinate: n, at: cell(n - 1), past: cell(n) };
+        if (n !== null) return { kind: "pair", entryName, coordinate: n, at: cell(n - 1), past: cell(n) };
+        /**
+         * NO COORDINATE — and the reason is MEASURED before anything is said about it. Two causes
+         * look alike from here and mean opposite things:
+         *
+         *   (a) the witness family FITS the input window and still never names the region — a
+         *       class-1 bound no input reaches, which is not a class-1 bound. That HALTS, as it
+         *       always has.
+         *   (b) the largest witness that FITS the window is already smaller than the bound needs,
+         *       so the window cuts the search off before the region can fire. Then nothing is known
+         *       about the bound and the row says exactly that — the same posture §7 already takes
+         *       for classes 2 and 3, whose absent coordinate under the derived window "IS the
+         *       claim". This is **R-f1**'s subject (COHESION §0r: Θ.input = 65,458 derived, "a 64 K
+         *       window is a product defect for `parseStylesheet`", ruled for X.P.W4), reaching the
+         *       instrument: at the derived window in this tree the `marks` family tops out three
+         *       code units per mark, far under `MARK_CAP`, so no witness of it can ever fire.
+         *
+         * Throwing in case (b) would take the whole ledger down over a bound this wave has already
+         * ruled elsewhere, and would report a window limit as a missing bound. The row is emitted
+         * with its measurement instead, and G-7 reads it.
+         */
+        const fits = largestFitting(row.region);
+        const reached = namesRegion(callOracle(surfaces.js[entryName], witnessAtCapacity(row.region, fits)), row.production);
+        if (reached) {
+            throw new Error(`HALT: the '${row.region}' witness family never names its own production up to ${row.layoutCap * 2}; a class-1 bound that no input reaches is not class 1.`);
+        }
+        return {
+            kind: "window-limited",
+            entryName,
+            coordinate: fits,
+            window: cell(fits),
+            why:
+                `the largest \`${row.region}\` witness that FITS the derived input window is n = ${fits} ` +
+                `(${witnessAtCapacity(row.region, fits).length} code units, window ${INPUT_BOUND}), and it does not name ` +
+                `\`${row.production}\`; the search to n = ${row.layoutCap * 2} found no coordinate because the WINDOW cuts ` +
+                `first, not because the bound is absent. R-f1 (COHESION §0r) owns the window and is ruled for X.P.W4.`,
+        };
     }
     const n = row.region === "expsnap" ? THETA.depthBound : largestFitting(row.region);
     return { kind: "window", entryName, coordinate: n, window: cell(n) };
@@ -572,12 +666,17 @@ export const capacityMeasuredReading = (row, m) => {
         "and it does so for its own reason, never for a capacity. MEASURED at this generation and generated from that " +
         "measurement (**F-y1**): a row may not claim an incumbent verdict its own table denies.";
 
-    if (row.cls !== 1 || m.kind !== "pair" || m.past.incumbentAccepted) return { incumbentPosture, consumerDirection: row.consumerDirection };
+    // The witness whose reading the DIRECTION must answer to: the one past the bound where a
+    // coordinate was found, and the largest the window admits where none was. A window-limited row
+    // is still class 1 and its template still claims the incumbent "parses and returns a value" —
+    // F-y1 is about the claim, not about how the witness was chosen, so both kinds are read back.
+    const past = m.kind === "pair" ? m.past : m.kind === "window-limited" ? m.window : null;
+    if (row.cls !== 1 || past === null || past.incumbentAccepted) return { incumbentPosture, consumerDirection: row.consumerDirection };
 
     const consumerDirection =
         `NARROWS the declared shape — Θ.${row.region} = **${num(row.capacity)}** ${row.unit} is a bound published 4.0.0 does not declare — but on THIS row's own ` +
         "witness family the narrowing is **not observable as a verdict change**: published 4.0.0 answers " +
-        `${m.past.incumbent} on the witness whose ${row.unit} exceed the bound, so a consumer at that size received \`ok:false\` from 4.0.0 and ` +
+        `${past.incumbent} on the witness ${m.kind === "pair" ? `whose ${row.unit} exceed the bound` : "the input window admits"}, so a consumer at that size received \`ok:false\` from 4.0.0 and ` +
         "receives `ok:false` here. What changes is the DIAGNOSTIC, not the verdict: the candidate spans the whole input and names the region " +
         `(\`expected[0] = "${row.production} …"\`) where 4.0.0 named the first construct it could not parse. The consumer will not receive a ` +
         "partial value and will not receive a throw. **Whether an input exists that published 4.0.0 ACCEPTS and this bound refuses is NOT " +

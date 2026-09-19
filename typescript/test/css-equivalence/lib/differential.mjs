@@ -43,6 +43,8 @@
 // carry the input's function head (`lib/shape.mjs`). It is a fact with a commit date, not a
 // classification convenience.
 
+import { readFileSync } from "node:fs";
+
 import { readTypeDeclarations } from "../../../../harness/totality/lib/surface.mjs";
 import {
     MIRROR_DEFECT_CLASSES,
@@ -50,10 +52,11 @@ import {
     checkTaxonomyUnmoved,
 } from "../../../../harness/equivalence/taxonomy.ts";
 
-import { ADJUDICATIONS } from "../../css-totality/lib/adjudications.mjs";
+import { ADJUDICATIONS, adjudicator, ruledValue } from "../../css-totality/lib/adjudications.mjs";
+import { STRUCTURED, structuredInputs, syntaxVocabulary } from "../../css-totality/lib/matrix.mjs";
 import { callOracle, loadOracle } from "./oracle.mjs";
 import { distinctSources, loadCorpus } from "./corpus.mjs";
-import { ENTRY_FAMILY, inDeclaredShape, shapeDeclaration } from "./shape.mjs";
+import { ENTRY_FAMILY, inDeclaredShape, installOracleHeads, shapeDeclaration } from "./shape.mjs";
 
 /** The verdicts a cell can carry. The first three are the authority's RED triggers, by name. */
 export const CELL = Object.freeze({
@@ -149,7 +152,7 @@ const classifyCell = ({ input, family, oracle, candidate, adjudicated }) => {
                 adjudication: adjudicated.id,
             };
         }
-        if (candOk && oracleOk && !adjudicated.valueDiffers && !deepEqual(oracle.value.value, candidate.value.value)) {
+        if (candOk && oracleOk && !adjudicated.valueDiffers && !deepEqual(ruledValue(input, oracle.value.value).value, candidate.value.value)) {
             return {
                 verdict: CELL.DIVERGENT_VALUE,
                 why: `${adjudicated.id} is not a value-differing row, yet the values differ`,
@@ -158,7 +161,7 @@ const classifyCell = ({ input, family, oracle, candidate, adjudicated }) => {
             };
         }
         return {
-            verdict: candOk === oracleOk && (!candOk || deepEqual(oracle.value.value, candidate.value.value)) ? CELL.AGREE : CELL.DECLARED_DIVERGENCE,
+            verdict: candOk === oracleOk && (!candOk || deepEqual(ruledValue(input, oracle.value.value).value, candidate.value.value)) ? CELL.AGREE : CELL.DECLARED_DIVERGENCE,
             why: `${adjudicated.id} honoured (${expect})`,
             specUndecided: false,
             adjudication: adjudicated.id,
@@ -166,7 +169,11 @@ const classifyCell = ({ input, family, oracle, candidate, adjudicated }) => {
     }
 
     if (oracleOk && candOk) {
-        if (deepEqual(oracle.value.value, candidate.value.value)) return { verdict: CELL.AGREE, why: null, specUndecided: false };
+        // The ruling's arithmetic, not the raw incumbent value: where PB-03 or PB-04/05 governs the
+        // input, the value the candidate OWES is the ruled one, and comparing against the unruled
+        // reading would score a cell the adjudication already decided (`ruledValue` is the identity
+        // everywhere else, so no unruled cell changes).
+        if (deepEqual(ruledValue(input, oracle.value.value).value, candidate.value.value)) return { verdict: CELL.AGREE, why: null, specUndecided: false };
         return {
             verdict: CELL.DIVERGENT_VALUE,
             why: `incumbent ${JSON.stringify(oracle.value.value)?.slice(0, 90)} vs candidate ${JSON.stringify(candidate.value.value)?.slice(0, 90)}`,
@@ -200,7 +207,29 @@ const classifyCell = ({ input, family, oracle, candidate, adjudicated }) => {
 
 const SAMPLE = 6;
 
-const runEntryRow = ({ name, oracleFn, candidateFn, family, sources, adjIndex }) => {
+/**
+ * The resolver's answer in the shape `classifyCell` reads. E-h2's `adjudicator` returns a CLASS
+ * resolution — `{ id, expected, valueDiffers }` — and an ACCEPT class only fires where the ORACLE
+ * accepts the ruled defect's REPAIR, so the second argument is the oracle's own verdict FUNCTION,
+ * asked about the repaired source (`adjudications.mjs` law 3, and `matrix.mjs:127`'s own). Handing
+ * it a boolean about the unrepaired input silently disables every accept class: the resolver reads
+ * `typeof oracleAccepts !== "function"` and returns null, and the cells the ruling governs come
+ * back as the candidate's defects. One resolver serves G-1 and G-7, which is the point — two gates
+ * that disagree about which ruling governs a cell are two instruments, not one measurement.
+ */
+const resolveAdjudication = (resolve, src, oracleAccepts) => {
+    const resolved = resolve(src, oracleAccepts);
+    return resolved === null ? null : { id: resolved.id, expect: resolved.expected, valueDiffers: resolved.valueDiffers };
+};
+
+/** The ORACLE's verdict function for one entry — the repair test's instrument, never the candidate's. */
+const oracleVerdictFn = (oracleFn) => (source) => {
+    const r = callOracle(oracleFn, source);
+    return !r.threw && r.value?.ok === true;
+};
+
+const runEntryRow = ({ name, oracleFn, candidateFn, family, sources, resolve }) => {
+    const oracleAccepts = oracleVerdictFn(oracleFn);
     const tally = Object.fromEntries(Object.values(CELL).map((k) => [k, 0]));
     const samples = {};
     const misses = [];
@@ -215,7 +244,7 @@ const runEntryRow = ({ name, oracleFn, candidateFn, family, sources, adjIndex })
             family,
             oracle,
             candidate,
-            adjudicated: adjIndex.get(row.src) ?? null,
+            adjudicated: resolveAdjudication(resolve, row.src, oracleAccepts),
         });
         tally[cell.verdict] += 1;
         if (cell.verdict !== CELL.AGREE) {
@@ -232,6 +261,107 @@ const runEntryRow = ({ name, oracleFn, candidateFn, family, sources, adjIndex })
     const mirrorDefects = RED_TRIGGERS.reduce((n, k) => n + tally[k], 0);
     const specUndecided = misses.filter((m) => m.specUndecided).length;
     return { cellsRun, tally, samples, mirrorDefects, specUndecided, misses };
+};
+
+/**
+ * THE COERCER ROW. `coerceToSyntax(source, syntax)` is the one runtime entry with a second argument,
+ * and calling it with one left every cell reading the same descriptor-less answer. The vocabulary is
+ * the incumbent's own, read out of the pinned source text (`syntaxVocabulary`), and it rotates over
+ * the corpus so the row runs one cell per source — the same policy `css-recovery-closure.mjs` uses
+ * for the same entry, and for the same reason.
+ */
+/** The two codes only the descriptor check can raise (`entry.mjs` `coercerOver`). */
+const DESCRIPTOR_CODES = Object.freeze(["syntax_mismatch", "syntax_descriptor_invalid"]);
+
+const runCoercerRow = ({ oracleFn, candidateFn, sources, vocabulary, resolve }) => {
+    // The repair test asks about the SOURCE, so the coercer's verdict function holds the descriptor
+    // fixed at `<color>`'s widest reading — `*`, which admits every value the entry can produce —
+    // and what it measures is therefore the parse, which is what every colour ruling is about.
+    const oracleAccepts = (source) => {
+        const r = callOracle(oracleFn, source, "*");
+        return !r.threw && r.value?.ok === true;
+    };
+    const tally = Object.fromEntries(Object.values(CELL).map((k) => [k, 0]));
+    const samples = {};
+    const misses = [];
+    let cellsRun = 0;
+    sources.forEach((row, index) => {
+        const syntax = vocabulary[index % vocabulary.length];
+        cellsRun += 1;
+        const oracle = callOracle(oracleFn, row.src, syntax);
+        const candidate = callOracle(candidateFn, row.src, syntax);
+        // A COLOUR RULING GOVERNS THE PARSE, NOT THE DESCRIPTOR. `coerceToSyntax` answers two
+        // questions in one call, and only the first is what PB-04/05, ADJ-2 and their siblings
+        // adjudicate: `rgb(255 0 153 / 095)` @ `<transform-function>` is REFUSED BY THE DESCRIPTOR
+        // — both engines reject it, and they agree — yet the ruling says "accept", so scoring the
+        // cell against the ruling reads agreement as 2,517 unhonoured adjudications (MEASURED: it
+        // did). Where the candidate's own rejection code says the descriptor refused it, the ruling
+        // has nothing to say and the cell falls back to the plain engine-against-engine comparison.
+        const descriptorRefused =
+            !candidate.threw &&
+            candidate.value?.ok === false &&
+            DESCRIPTOR_CODES.includes(candidate.value.diagnostics?.[0]?.code);
+        const cell = classifyCell({
+            input: row.src,
+            family: "color",
+            oracle,
+            candidate,
+            adjudicated: descriptorRefused ? null : resolveAdjudication(resolve, row.src, oracleAccepts),
+        });
+        tally[cell.verdict] += 1;
+        if (cell.verdict !== CELL.AGREE) {
+            samples[cell.verdict] ??= [];
+            if (samples[cell.verdict].length < SAMPLE) samples[cell.verdict].push({ input: `${row.src} @ ${syntax}`, why: cell.why, bands: row.bands });
+            if (RED_TRIGGERS.includes(cell.verdict)) misses.push({ input: `${row.src} @ ${syntax}`, verdict: cell.verdict, why: cell.why, specUndecided: cell.specUndecided, bands: row.bands });
+        }
+    });
+    const mirrorDefects = RED_TRIGGERS.reduce((n, k) => n + tally[k], 0);
+    return { cellsRun, tally, samples, mirrorDefects, specUndecided: misses.filter((m) => m.specUndecided).length, misses };
+};
+
+/**
+ * THE STRUCTURED ROWS. Nine entries read a PRODUCT, not text: a parsed stylesheet, a declaration
+ * list, a colour, a collected option set. Handing them corpus STRINGS measured nothing — every cell
+ * came back CANDIDATE_SHAPE because the argument was of the wrong kind, and 26,551 × 9 such cells
+ * were counted as mirror-defects of the candidate. They were defects of the instrument.
+ *
+ * The argument is therefore the ORACLE's own output over the corpus (`structuredInputs`, the
+ * totality matrix's reading, not a second one), and BOTH engines are handed THE SAME product, so
+ * what is measured is the collector and not the parser that fed it. A product the incumbent itself
+ * cannot produce is no cell at all; a throw on the INCUMBENT's side is its own and is counted apart.
+ */
+const runStructuredRow = ({ oracleFn, candidateFn, inputs }) => {
+    const tally = Object.fromEntries(Object.values(CELL).map((k) => [k, 0]));
+    const samples = {};
+    const misses = [];
+    let cellsRun = 0;
+    let oracleThrew = 0;
+    for (const input of inputs) {
+        const oracle = callOracle(oracleFn, input.value);
+        if (oracle.threw) {
+            oracleThrew += 1;
+            continue;
+        }
+        cellsRun += 1;
+        const candidate = callOracle(candidateFn, input.value);
+        let verdict = CELL.AGREE;
+        let why = null;
+        if (candidate.threw) {
+            verdict = CELL.CANDIDATE_THREW;
+            why = `${candidate.error}: ${candidate.message}`;
+        } else if (!deepEqual(oracle.value, candidate.value)) {
+            verdict = CELL.DIVERGENT_VALUE;
+            why = `incumbent ${JSON.stringify(oracle.value)?.slice(0, 90)} vs candidate ${JSON.stringify(candidate.value)?.slice(0, 90)}`;
+        }
+        tally[verdict] += 1;
+        if (verdict !== CELL.AGREE) {
+            samples[verdict] ??= [];
+            if (samples[verdict].length < SAMPLE) samples[verdict].push({ input: input.label, why, bands: null });
+            misses.push({ input: input.label, verdict, why, specUndecided: false, bands: null });
+        }
+    }
+    const mirrorDefects = RED_TRIGGERS.reduce((n, k) => n + tally[k], 0);
+    return { cellsRun, tally, samples, mirrorDefects, specUndecided: 0, misses, oracleThrew };
 };
 
 /* ── the 52 rows ───────────────────────────────────────────────────────────────────────────── */
@@ -251,7 +381,13 @@ export const runFullSurface = async ({ universe, surfaces, unrealizedEntries, ca
     const corpus = loadCorpus();
     const all = distinctSources();
     const sources = limit ? all.slice(0, limit) : all;
-    const adjIndex = adjudicationIndex();
+    // F-z2: the denominator is measured on the ORACLE, over this same corpus, before a cell is run.
+    // The two totality readings below take `{ s }` rows — this module's carry `{ src }` — and the
+    // shim is here rather than in either library so neither grows a second row shape.
+    const totalityRows = sources.map((row) => ({ s: row.src }));
+    const measuredShape = installOracleHeads((name) => oracle.module[name], totalityRows);
+    const vocabulary = syntaxVocabulary(readFileSync(oracle.entryPath, "utf8"));
+    const structured = structuredInputs(oracle.module, totalityRows);
 
     const publishedDecls = readTypeDeclarations(oracle.declarationText);
     const rows = [];
@@ -275,16 +411,19 @@ export const runFullSurface = async ({ universe, surfaces, unrealizedEntries, ca
             continue;
         }
         const family = ENTRY_FAMILY[name] ?? "color";
+        // THREE ENTRY FAMILIES, one per calling convention: the parsers take one CSS string, the
+        // coercer takes a string and a descriptor, and the nine structured entries take a product.
+        const convention = name === "coerceToSyntax" ? "coercer" : STRUCTURED[name] ? "structured" : "parser";
+        const resolve = adjudicator(name);
         const lowerings = {};
         for (const kind of realizedIn) {
-            lowerings[kind] = runEntryRow({
-                name,
-                oracleFn,
-                candidateFn: surfaces[kind][name],
-                family,
-                sources,
-                adjIndex,
-            });
+            const candidateFn = surfaces[kind][name];
+            lowerings[kind] =
+                convention === "coercer"
+                    ? runCoercerRow({ oracleFn, candidateFn, sources, vocabulary, resolve })
+                    : convention === "structured"
+                      ? runStructuredRow({ oracleFn, candidateFn, inputs: structured[STRUCTURED[name].source] ?? [] })
+                      : runEntryRow({ name, oracleFn, candidateFn, family, sources, resolve });
         }
         const mirrorDefects = Math.max(...Object.values(lowerings).map((l) => l.mirrorDefects));
         rows.push({
@@ -292,6 +431,7 @@ export const runFullSurface = async ({ universe, surfaces, unrealizedEntries, ca
             kind: "runtime",
             status: "COMPARED",
             family,
+            convention,
             lowerings: Object.fromEntries(
                 Object.entries(lowerings).map(([k, v]) => [k, { cellsRun: v.cellsRun, tally: v.tally, samples: v.samples, mirrorDefects: v.mirrorDefects, specUndecided: v.specUndecided }]),
             ),

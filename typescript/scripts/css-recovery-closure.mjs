@@ -5,6 +5,7 @@
 //   node scripts/css-recovery-closure.mjs --corpus test/css-totality/corpus.json \
 //        --frozen-union <pinned-value-commit>:src/css/types.ts [--out <evidence.json>]
 //   node scripts/css-recovery-closure.mjs --assert-no-console
+//   node scripts/css-recovery-closure.mjs --corpus … --frozen-union … --no-compositions   (C-3's control)
 //
 // THIS IS NOT A GREP GATE (`W3.md` §6 G-4, §11 item 4). Two of its legs cannot be anything else — a
 // static inspection can say a code is never written, it cannot say a code is always REACHED — so the
@@ -38,6 +39,7 @@ import { FROZEN_CODES, INTRINSIC_CODES, assertFrozenUnion, difference, graphCode
 import { PRODUCTION_LABELS, isNamedProduction, promoteLabel } from "../src/css/diagnostics.mjs";
 import { OP_NAMES } from "../src/css/algebra/ops.mjs";
 import { assertClosedOperatorSet, loadRecoveryLowerings } from "../src/css/lower.mjs";
+import { loadPublicSurfaces } from "../src/css/entry.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const TS_ROOT = path.resolve(HERE, ".."); //                 <p2>/typescript
@@ -364,7 +366,82 @@ function underSilence(body) {
     }
 }
 
-function runCorpus(recoveries, rawLowerings, inputs) {
+/**
+ * E-h3's RUNNER HALF: the corpus through the TWO-ARGUMENT entry.
+ *
+ * `runCorpus` below walks `recovery.entries()`, and every one of those is a one-argument production
+ * — so the composition `coerceToSyntax(source, syntax)` was never called, and the two codes only it
+ * can emit (`syntax_mismatch`, `syntax_descriptor_invalid`) could not appear in the ⊇ direction
+ * however wide the corpus grew. C-3 read that as the union's failure. It was the RUNNER's: a code
+ * emitted by an entry no leg calls is unreachable by measurement, not by construction.
+ *
+ * Every law the one-argument leg applies is applied here, to the same buckets, for both targets:
+ * the descriptor vocabulary is the incumbent's own thirteen components plus `*`, two `|` composites
+ * and the four malformed spellings that make `syntaxAlternatives` return null. A descriptor is
+ * chosen per input by rotation so the pass is O(corpus) rather than O(corpus × vocabulary) — the
+ * corpus is 26,604 rows and the vocabulary 20, and 532,080 further calls through the WASM target
+ * would not buy a law this walk does not already exercise on every row. The four malformed
+ * descriptors additionally run against EVERY input, because that is the only leg that reaches
+ * `syntax_descriptor_invalid` and a rotation could not claim to have tried it everywhere.
+ */
+const SYNTAX_VOCABULARY = Object.freeze([
+    "<angle>", "<color>", "<custom-ident>", "<flex>", "<integer>", "<length>", "<length-percentage>",
+    "<number>", "<percentage>", "<resolution>", "<time>", "<transform-function>", "<transform-list>",
+    "*", "<color>|<length>", "<integer>|<percentage>|*",
+]);
+const MALFORMED_SYNTAX = Object.freeze(["<bogus>", "", "<color>|", "color"]);
+
+function runCompositions(surfaces, inputs, note, emitted, tallies) {
+    const check = (kind, syntax, src, r) => {
+        tallies.calls++;
+        if (r.ok) {
+            if (r.diagnostics.length !== 0) note("okWithDiagnostics", { kind, prod: `coerceToSyntax ${syntax}`, src });
+            return;
+        }
+        tallies.rejections++;
+        if (r.diagnostics.length === 0) note("tuple", { kind, prod: `coerceToSyntax ${syntax}`, src });
+        for (const d of r.diagnostics) {
+            tallies.issues++;
+            emitted.set(d.code, (emitted.get(d.code) ?? 0) + 1);
+            if (!isFrozenCode(d.code)) note("outsideFrozen", { kind, prod: `coerceToSyntax ${syntax}`, src, code: d.code });
+            const spanBad =
+                !Number.isInteger(d.start) || !Number.isInteger(d.end) || d.start < 0 || d.end < d.start || d.end > (typeof src === "string" ? src.length : 0);
+            const slice = typeof src === "string" ? src.slice(d.start, d.end) : "";
+            if (spanBad || d.actual !== (slice === "" ? null : slice)) {
+                note("span", { kind, prod: `coerceToSyntax ${syntax}`, src, start: d.start, end: d.end, len: typeof src === "string" ? src.length : 0, actual: d.actual });
+            }
+            if (d.expected.length < 1) note("expectedEmpty", { kind, prod: `coerceToSyntax ${syntax}`, src });
+            else if (!isNamedProduction(d.expected[0])) note("unnamed", { kind, prod: `coerceToSyntax ${syntax}`, src, expected: d.expected[0] });
+        }
+    };
+
+    for (const [kind, surface] of Object.entries(surfaces)) {
+        inputs.forEach((src, index) => {
+            const syntax = SYNTAX_VOCABULARY[index % SYNTAX_VOCABULARY.length];
+            check(kind, syntax, src, surface.coerceToSyntax(src, syntax));
+            for (const bad of MALFORMED_SYNTAX) check(kind, bad, src, surface.coerceToSyntax(src, bad));
+        });
+        for (const [tag, value] of NON_STRING) {
+            for (const syntax of ["<color>", "<bogus>"]) {
+                const r = surface.coerceToSyntax(value, syntax);
+                tallies.calls++;
+                if (r.ok || r.diagnostics.length === 0) note("tuple", { kind, prod: `coerceToSyntax ${syntax}`, src: `<${tag}>` });
+                else {
+                    tallies.rejections++;
+                    for (const d of r.diagnostics) {
+                        tallies.issues++;
+                        emitted.set(d.code, (emitted.get(d.code) ?? 0) + 1);
+                        if (!isFrozenCode(d.code)) note("outsideFrozen", { kind, prod: `coerceToSyntax ${syntax}`, src: `<${tag}>`, code: d.code });
+                        if (d.expected.length < 1) note("expectedEmpty", { kind, prod: `coerceToSyntax ${syntax}`, src: `<${tag}>` });
+                        else if (!isNamedProduction(d.expected[0])) note("unnamed", { kind, prod: `coerceToSyntax ${syntax}`, src: `<${tag}>`, expected: d.expected[0] });
+                    }
+                }
+            }
+        }
+    }
+}
+
+function runCorpus(recoveries, rawLowerings, inputs, surfaces) {
     const emitted = new Map();
     const BUCKETS = ["tuple", "span", "expectedEmpty", "unnamed", "outsideFrozen", "okWithDiagnostics", "nullFarCode"];
     const counts = Object.fromEntries(BUCKETS.map((b) => [b, 0]));
@@ -425,7 +502,16 @@ function runCorpus(recoveries, rawLowerings, inputs) {
             }
         }
     }
-    return { emitted, counts, samples, calls, rejections, issues };
+    // E-h3: the same corpus, the same laws, through the two-argument entry — its buckets and its
+    // codes are the same run's, because C-3 asks one question of one execution.
+    //
+    // `--no-compositions` is THIS LEG'S NEGATIVE CONTROL, and the file's own rule is why it exists:
+    // "a probe that cannot fail for its intended reason is itself a defect". With the leg withheld,
+    // C-3 must go RED naming exactly `syntax_descriptor_invalid` and `syntax_mismatch` — if it stays
+    // GREEN, something else is emitting them and this leg is not what turned the gate.
+    const tallies = { calls, rejections, issues };
+    if (!flag("--no-compositions")) runCompositions(surfaces, inputs, note, emitted, tallies);
+    return { emitted, counts, samples, calls: tallies.calls, rejections: tallies.rejections, issues: tallies.issues };
 }
 
 /* ── the negative controls ─────────────────────────────────────────────────────────────────── */
@@ -491,7 +577,8 @@ const { isDiagnosticsEnabled } = await import("tsx/esm/api").then((tsx) =>
 
 const corpus = readCorpus(CORPUS.value);
 const armedBefore = isDiagnosticsEnabled();
-const silent = underSilence(() => runCorpus(recoveries, lowerings, corpus.inputs));
+const surfaces = await loadPublicSurfaces();
+const silent = underSilence(() => runCorpus(recoveries, lowerings, corpus.inputs, surfaces));
 const armedAfter = isDiagnosticsEnabled();
 const run = silent.value;
 

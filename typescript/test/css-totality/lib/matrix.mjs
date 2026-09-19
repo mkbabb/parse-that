@@ -29,9 +29,14 @@
 //   structured  the two serializers and the seven collectors, whose inputs are the published
 //               oracle's OWN OUTPUTS over the corpus, plus the seven declared degenerate values.
 
+// X.P.W3.k (COHESION §0s E-h2): the oracle override is no longer a LITERAL index. `adjudicator(entry)`
+// resolves a cell against the twenty-two witnessed inputs FIRST and then against the ten class
+// predicates, scoped to the entries each ruling reaches; `ruledValue` carries the two value rulings'
+// own arithmetic, so a value-differing row is held to the value the adjudication REQUIRES instead of
+// being waved past. Every class's census is counted here, per entry, and printed by the gate.
 import { NINE_PUBLIC_PARSERS } from "../../../../harness/totality/lib/probes.mjs";
 
-import { ADJUDICATIONS, adjudicationIndex } from "./adjudications.mjs";
+import { ADJUDICATIONS, adjudicator, classPopulations, remainderId, ruledValue } from "./adjudications.mjs";
 
 export const TOTAL = "TOTAL";
 export const PARTIAL = "PARTIAL";
@@ -113,11 +118,18 @@ const call = (fn, ...args) => {
  * throws (the R1 class — spec-correct rejection, never bug-compatibility), and an adjudicated input
  * takes the band's verdict instead, flagged `declared`.
  */
-export const partition = (publishedFn, rows, index) => {
+export const partition = (publishedFn, rows, resolve) => {
     const accept = [];
     const reject = [];
+    // The ACCEPT classes ask the ORACLE whether it still rejects once the ruled defect is repaired
+    // (adjudications.mjs law 3). This is the oracle's own verdict function, handed to the resolver —
+    // the candidate is never consulted about its own excuse.
+    const oracleAccepts = (source) => {
+        const r = call(publishedFn, source);
+        return !r.threw && r.value?.ok === true;
+    };
     for (const row of rows) {
-        const adjudicated = index.get(row.s);
+        const adjudicated = resolve(row.s, oracleAccepts);
         const oracle = call(publishedFn, row.s);
         const oracleVerdict = oracle.threw
             ? "reject"
@@ -132,6 +144,8 @@ export const partition = (publishedFn, rows, index) => {
             oracle: oracleVerdict,
             r1: oracle.threw,
             declared: adjudicated ? adjudicated.id : null,
+            declaredIds: adjudicated?.ids ?? (adjudicated ? [adjudicated.id] : []),
+            declaredByClass: adjudicated ? !adjudicated.literal : false,
             valueDiffers: Boolean(adjudicated?.valueDiffers),
             value: !oracle.threw && oracle.value?.ok === true ? oracle.value.value : undefined,
         };
@@ -157,11 +171,13 @@ const summarize = (cells) => ({
  * (DIVERGENT_VALUE / MIS_ACCEPT / FALSE_REJECT_IN_SHAPE / THROW / SHAPE), so `.d`'s G-7 reads this
  * matrix's misses as mirror-defect candidates without re-deriving them.
  */
-const runParserRow = (fn, sets, codes) => {
+const runParserRow = (fn, sets, codes, census = new Map()) => {
     const misses = [];
+    const count = (id) => id && census.set(id, (census.get(id) ?? 0) + 1);
     let cellsRun = 0;
     for (const cell of sets.accept) {
         cellsRun += 1;
+        if (cell.declaredByClass) for (const id of cell.declaredIds) count(id);
         const got = call(fn, cell.s);
         if (got.threw) {
             misses.push({ kind: "THROW", input: cell.s, why: got.why, declared: cell.declared });
@@ -181,19 +197,27 @@ const runParserRow = (fn, sets, codes) => {
             });
             continue;
         }
-        // The value check stands down ONLY for a row the band adjudicates as value-differing
-        // (PB-03's 100× spelling disagreement, PB-04's missing clamp); a declared row that is not
-        // value-differing keeps its check, so a declaration cannot be used to buy silence.
-        if (cell.value !== undefined && !cell.valueDiffers && !deepEqual(got.value.value, cell.value)) {
-            misses.push({
-                kind: "DIVERGENT_VALUE",
-                input: cell.s,
-                why: `oracle ${JSON.stringify(cell.value).slice(0, 90)} vs candidate ${JSON.stringify(got.value.value).slice(0, 90)}`,
-                declared: null,
-            });
+        // THE VALUE CHECK, AGAINST THE VALUE THE ADJUDICATION REQUIRES (X.P.W3.k, E-h2).
+        // `ruledValue` applies PB-03's scaling and PB-04/05's clamp — css-color-4's own arithmetic,
+        // over the ORACLE's returned value — and is the IDENTITY wherever no ruling fires, so a row
+        // no ruling touches keeps exactly the check it had. The two literal rows that predate this
+        // section still carry `valueDiffers`, and only they stand the check down entirely: a class
+        // never buys silence, it substitutes an expectation the candidate is then held to.
+        if (cell.value !== undefined && !cell.valueDiffers) {
+            const ruled = ruledValue(cell.s, cell.value);
+            for (const id of ruled.ids) count(id);
+            if (!deepEqual(got.value.value, ruled.value)) {
+                misses.push({
+                    kind: "DIVERGENT_VALUE",
+                    input: cell.s,
+                    why: `oracle ${JSON.stringify(cell.value).slice(0, 90)}${ruled.ids.length ? ` (ruled by ${ruled.ids.join("+")} to ${JSON.stringify(ruled.value).slice(0, 60)})` : ""} vs candidate ${JSON.stringify(got.value.value).slice(0, 90)}`,
+                    declared: null,
+                });
+            }
         }
     }
     for (const cell of sets.reject) {
+        if (cell.declaredByClass) for (const id of cell.declaredIds) count(id);
         cellsRun += 1;
         const got = call(fn, cell.s);
         if (got.threw) {
@@ -228,31 +252,57 @@ const coercerPairs = (rows, vocabulary, denseBands) => {
     return pairs;
 };
 
-/** The oracle's partition of the coercer pairs — taken ONCE, then read by the candidate run. */
-const coercerSets = (publishedFn, pairs) => {
+/**
+ * The oracle's partition of the coercer pairs — taken ONCE, then read by the candidate run.
+ *
+ * X.P.W3.k: `coerceToSyntax` is a COMPOSITION (parse, then match the descriptor), and the
+ * adjudications govern the PARSE half. A class that rules the source REJECTED rules the coercion
+ * rejected with it; a class that rules the source ACCEPTED leaves the match to decide, and the
+ * match is the oracle's own — so the override is applied and the candidate is still held to the
+ * descriptor. A cell where the two halves disagree lands in the remainder rather than in a class,
+ * which is what makes this override checkable instead of convenient.
+ */
+const coercerSets = (publishedFn, pairs, resolve) => {
     const accept = [];
     const reject = [];
     for (const pair of pairs) {
         const oracle = call(publishedFn, pair.s, pair.syntax);
-        const wantAccept = !oracle.threw && oracle.value?.ok === true;
+        const adjudicated = resolve(pair.s, (source) => {
+            const r = call(publishedFn, source, pair.syntax);
+            return !r.threw && r.value?.ok === true;
+        });
+        const oracleAccepts = !oracle.threw && oracle.value?.ok === true;
+        const wantAccept = adjudicated ? adjudicated.expected === "accept" : oracleAccepts;
         const cell = {
             i: accept.length + reject.length,
             s: `${JSON.stringify(pair.s)} @ ${pair.syntax}`,
             source: pair.s,
             syntax: pair.syntax,
             bands: pair.bands,
-            oracle: wantAccept ? "accept" : "reject",
+            oracle: oracleAccepts ? "accept" : "reject",
             r1: oracle.threw,
-            declared: null,
-            value: wantAccept ? oracle.value.value : undefined,
+            declared: adjudicated ? adjudicated.id : null,
+            declaredIds: adjudicated?.ids ?? (adjudicated ? [adjudicated.id] : []),
+            declaredByClass: adjudicated ? !adjudicated.literal : false,
+            value: oracleAccepts && wantAccept ? oracle.value.value : undefined,
         };
         (wantAccept ? accept : reject).push(cell);
     }
     return { accept, reject };
 };
 
-const runCoercerRow = (fn, sets, codes) => {
+const runCoercerRow = (fn, sets, codes, census = new Map()) => {
     const misses = [];
+    // The coercer crosses ONE source with up to thirteen descriptors, so a cell count here would
+    // not be comparable with a population measured over corpus ROWS. The census counts sources.
+    const counted = new Set();
+    const count = (id, source) => {
+        if (!id) return;
+        const key = `${id}\u0000${source}`;
+        if (counted.has(key)) return;
+        counted.add(key);
+        census.set(id, (census.get(id) ?? 0) + 1);
+    };
     let cellsRun = 0;
     for (const [wantAccept, cells] of [
         [true, sets.accept],
@@ -260,6 +310,7 @@ const runCoercerRow = (fn, sets, codes) => {
     ]) {
         for (const cell of cells) {
             cellsRun += 1;
+            if (cell.declaredByClass) for (const id of cell.declaredIds ?? [cell.declared]) count(id, cell.source);
             const got = call(fn, cell.source, cell.syntax);
             if (got.threw) {
                 misses.push({ kind: "THROW", input: cell.s, why: got.why, declared: null });
@@ -290,7 +341,7 @@ const runCoercerRow = (fn, sets, codes) => {
  * produces a value of the declared shape instead of a throw, which is `W3.md` §2a's own criterion:
  * "no CSS string … makes the candidate parser do anything other than return a typed result".
  */
-const STRUCTURED = {
+export const STRUCTURED = {
     serializeCssColor: { source: "parseCssColor", shape: "result" },
     serializeTimelineOptions: { source: "collectTimelineOptions", shape: "object" },
     collectStyleRules: { source: "parseStylesheet", shape: "array" },
@@ -351,7 +402,7 @@ const runStructuredRow = (fn, spec, inputs, boundary) => {
 };
 
 /** Harvest the structured inputs the oracle itself produces over the corpus. */
-const structuredInputs = (published, rows) => {
+export const structuredInputs = (published, rows) => {
     const sheets = [];
     const declarations = [];
     const colors = [];
@@ -406,8 +457,9 @@ const structuredInputs = (published, rows) => {
  */
 export const buildMatrix = ({ pin, corpus, candidate, declaredTypes, assignability, breadth }) => {
     const codes = frozenCodes(pin.typesText);
-    const index = adjudicationIndex();
     const vocabulary = syntaxVocabulary(pin.publishedJsText);
+    /** id → cells governed, per entry name; the gate prints it and asserts each `≤` its pin. */
+    const censusByEntry = {};
     const rows = corpus.rows;
     const boundary = degenerate(corpus.boundary);
     const structured = structuredInputs(pin.published, rows);
@@ -433,12 +485,13 @@ export const buildMatrix = ({ pin, corpus, candidate, declaredTypes, assignabili
 
             // The corpus is built for EVERY row, present or absent: a row that is ABSENT today must
             // become measurable the instant a peer lands, without this file moving.
+            const resolve = adjudicator(entry.name);
             let sets;
             if (family === "parser") {
-                sets = partition(pin.published[entry.name], rows, index);
+                sets = partition(pin.published[entry.name], rows, resolve);
             } else if (family === "coercer") {
                 const pairs = coercerPairs(rows, vocabulary, ["r1", "ground-a", "named"]);
-                sets = coercerSets(pin.published[entry.name], pairs);
+                sets = coercerSets(pin.published[entry.name], pairs, resolve);
             } else {
                 const spec = STRUCTURED[entry.name];
                 const inputs = structured[spec.source] ?? [];
@@ -472,9 +525,11 @@ export const buildMatrix = ({ pin, corpus, candidate, declaredTypes, assignabili
             }
 
             let result;
-            if (family === "parser") result = runParserRow(fn, sets, codes);
-            else if (family === "coercer") result = runCoercerRow(fn, sets, codes);
+            const census = new Map();
+            if (family === "parser") result = runParserRow(fn, sets, codes, census);
+            else if (family === "coercer") result = runCoercerRow(fn, sets, codes, census);
             else result = runStructuredRow(fn, STRUCTURED[entry.name], sets.inputs, boundary);
+            if (census.size > 0) censusByEntry[entry.name] = Object.fromEntries([...census].sort((a, b) => b[1] - a[1]));
 
             // The dominant miss SHAPES, so `.d` inherits a class list rather than 4,000 rows. The
             // signature is purely descriptive — the miss kind and the input's leading function head
@@ -489,6 +544,13 @@ export const buildMatrix = ({ pin, corpus, candidate, declaredTypes, assignabili
                 .sort((x, y) => y[1] - x[1])
                 .slice(0, 14)
                 .map(([signature, n]) => ({ signature, count: n }));
+
+            // The honest remainder, by id (G-1's own alternative to 52/52).
+            const remainder = {};
+            for (const miss of result.misses) {
+                const id = remainderId(miss.input);
+                remainder[id] = (remainder[id] ?? 0) + 1;
+            }
 
             const corpusEmpty = row.accept.count === 0 || row.reject.count === 0;
             const verdict =
@@ -505,6 +567,8 @@ export const buildMatrix = ({ pin, corpus, candidate, declaredTypes, assignabili
                     ...Object.entries(byKind).map(([kind, n]) => `${kind} ×${n}`),
                 ],
                 missClasses,
+                remainder: Object.fromEntries(Object.entries(remainder).sort((a, b) => b[1] - a[1])),
+                census: censusByEntry[entry.name] ?? {},
                 misses: result.misses.slice(0, 12),
                 missesTotal: result.misses.length,
             };
@@ -568,6 +632,8 @@ export const buildMatrix = ({ pin, corpus, candidate, declaredTypes, assignabili
         runtimeTally: tally(runtimeRows),
         typeTally: tally(typeRows),
         declaredObservations: observeDeclared(pin.published, candidate.namespace),
+        classCensus: censusByEntry,
+        classPopulations: classPopulations(rows),
         breadth,
         vocabulary,
         codes,

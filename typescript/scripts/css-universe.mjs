@@ -193,6 +193,14 @@ const main = async () => {
         for (const u of assignability.unattributed.slice(0, 6)) {
             console.log(`    UNATTRIBUTED ${u.file}(${u.line}) ${u.code}: ${u.message.slice(0, 96)}`);
         }
+        if (assignability.failedSilently) {
+            console.log(
+                `\n  **RED — THE COMPILE TOOK NO READING**: tsc exited ${assignability.exitCode} and printed no\n` +
+                    `  diagnostic, so the 33 type rows below rest on nothing. This is the instrument failing, not\n` +
+                    `  the candidate; re-run before reading any type verdict.\n` +
+                    `${assignability.stdout.trim().split("\n").slice(0, 6).map((l) => `    ${l}`).join("\n")}`,
+            );
+        }
     }
 
     console.log(`\nTHE 52-ROW MATRIX\n${rule()}`);
@@ -231,6 +239,59 @@ const main = async () => {
             o.honoured === null ? "—" : o.honoured ? "YES" : "NO",
         ]),
     );
+    // ── the class predicates' census (COHESION §0s E-h2) ───────────────────────────────────────
+    // "each printing its own census asserted ≤ the ruling's measured population, so a predicate
+    // that swallows an un-ruled input is itself a defect". The census is the cells a class
+    // GOVERNED, per entry; the population is the pinned match count over the pinned union corpus.
+    // Both are printed, and the widest census is checked against the pin below.
+    console.log(`\nadjudication CLASS predicates (E-h2 — one per ruling id; census ≤ the ruling's measured population)`);
+    const censusRows = matrix.classPopulations.map((klass) => {
+        const perEntry = Object.entries(matrix.classCensus)
+            .map(([entry, counts]) => [entry, counts[klass.id] ?? 0])
+            .filter(([, n]) => n > 0)
+            .sort((a, b) => b[1] - a[1]);
+        const widest = perEntry.length > 0 ? perEntry[0][1] : 0;
+        return { ...klass, perEntry, widest, within: widest <= klass.pinned };
+    });
+    table(
+        ["ruling", "population (pinned)", "population (measured)", "census — widest entry", "≤ pin", "governed, by entry"],
+        censusRows.map((r) => [
+            r.id,
+            r.pinned,
+            `${r.measured}${r.agrees ? "" : "  DRIFTED"}`,
+            r.widest,
+            r.within ? "YES" : "**NO**",
+            r.perEntry.map(([entry, n]) => `${entry} ${n}`).join(" · ").slice(0, 78),
+        ]),
+    );
+    const overReaching = censusRows.filter((r) => !r.within);
+    const drifted = censusRows.filter((r) => !r.agrees);
+    console.log(
+        `  ${censusRows.length} class predicates · ${censusRows.reduce((n, r) => n + r.widest, 0)} cells governed at the widest entry · ` +
+            `${overReaching.length} census OVER its pinned population · ${drifted.length} population drifted from its pin`,
+    );
+    for (const r of overReaching)
+        console.log(`  OVER-REACHING  ${r.id} — census ${r.widest} > pinned population ${r.pinned}: the predicate swallows an un-ruled input (E-h2)`);
+    for (const r of drifted)
+        console.log(`  DRIFTED        ${r.id} — pinned ${r.pinned}, measured ${r.measured} over the pinned corpus: the predicate moved, or the corpus did`);
+
+    // ── the honest remainder, by id (G-1's own alternative to 52/52) ───────────────────────────
+    const partialRows = matrix.rows.filter((row) => row.verdict === PARTIAL && row.kind === "runtime");
+    if (partialRows.length > 0) {
+        console.log(`\nthe honest remainder, BY ID (W3.md §6 G-1 — "52/52 or the honest remainder, by id")`);
+        table(
+            ["export", "misses", "remainder, by id"],
+            partialRows.map((row) => [
+                row.name,
+                row.missesTotal ?? 0,
+                Object.entries(row.remainder ?? {})
+                    .map(([id, n]) => `${n}× ${id}`)
+                    .join(" · ")
+                    .slice(0, 110),
+            ]),
+        );
+    }
+
     const unhonoured = matrix.declaredObservations.filter((o) => o.honoured === false);
     console.log(
         `  ${ADJUDICATIONS.length} adjudications · ${matrix.declaredObservations.length} witnessed inputs · ` +
@@ -266,6 +327,8 @@ const main = async () => {
             frozenCodes: matrix.codes,
             syntaxVocabulary: matrix.vocabulary,
             adjudications: ADJUDICATIONS,
+            classPredicates: matrix.classPopulations,
+            classCensus: matrix.classCensus,
             declaredObservations: matrix.declaredObservations,
             tally: { runtime: matrix.runtimeTally, types: matrix.typeTally, all: matrix.aggregate },
             rows: matrix.rows,
@@ -279,6 +342,15 @@ const main = async () => {
 
     const notTotal = matrix.rows.filter((row) => row.verdict !== TOTAL);
     console.log(`\n${rule()}`);
+    if (overReaching.length > 0 || drifted.length > 0) {
+        console.log(
+            `RED — ${overReaching.length} class predicate(s) governed more cells than the ruling's pinned population and ` +
+                `${drifted.length} predicate population(s) drifted from their pin. E-h2: "a predicate that swallows an ` +
+                `un-ruled input is itself a defect". This check runs BEFORE the row tally, because a matrix read through ` +
+                `an over-reaching predicate is not a matrix.`,
+        );
+        return 1;
+    }
     if (notTotal.length === 0 && agreementClean && universeOk) {
         console.log(`GREEN — all ${matrix.rows.length} frozen exports verdict TOTAL.`);
         return 0;

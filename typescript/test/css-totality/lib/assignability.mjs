@@ -176,9 +176,11 @@ export const compile = (generated, types) => {
 
     const rows = Object.fromEntries(types.map((name) => [name, { cellsRun: 2, errors: [] }]));
     const unattributed = [];
+    let diagnosticLines = 0;
     for (const raw of stdout.split("\n")) {
         const match = DIAGNOSTIC.exec(raw.trim());
         if (!match) continue;
+        diagnosticLines += 1;
         const [, file, lineText, , code, message] = match;
         const line = Number(lineText);
         const owner = types.find((name) => {
@@ -203,7 +205,20 @@ export const compile = (generated, types) => {
         if (rows[name].errors.some((e) => UNRESOLVED.includes(e.code))) rows[name].cellsRun = 0;
     }
 
-    return { exitCode, stdout, rows, unattributed };
+    /**
+     * A COMPILE THAT FAILED WITHOUT SAYING WHY TOOK NO READING. `tsc` exits non-zero both for a type
+     * error — which lands as a diagnostic line and is attributed above — and for a failure that
+     * produces none: a missing project, a wedged `npx`, a killed process. Reporting the second as
+     * "0 diagnostics" would hand the 33 type rows a TOTAL verdict off a compile that never ran.
+     * (MEASURED: two back-to-back runs of this gate differed at exactly this line, 0 against 1, with
+     * no diagnostic either time; six isolated compiles of the same project then exited 0, so the
+     * one failure was the runner's, not the program's — and the gate had read it as green.)
+     */
+    const failedSilently = exitCode !== 0 && diagnosticLines === 0;
+    // The reading is withdrawn, not merely announced: a row whose compile did not run has run NO
+    // cells, and the verdict column says so on its own.
+    if (failedSilently) for (const name of types) rows[name].cellsRun = 0;
+    return { exitCode, stdout, rows, unattributed, diagnosticLines, failedSilently };
 };
 
 /** Names the candidate's declaration surface actually exports. */

@@ -53,6 +53,7 @@ import {
     DISSENTS,
     FIXTURES,
     LABEL_ROW,
+    INCUMBENT_DEFECTS,
     SPEC_DIVERGENCES,
     adjudicatedRows,
     capacityMeasuredReading,
@@ -76,6 +77,14 @@ const esc = (s) => String(s).replace(/\|/g, "\\|").replace(/\n/g, " ");
 const code = (s) => `\`${String(s).replace(/`/g, "ʼ")}\``;
 
 const entryFor = (row) => row.parser ?? "parseCssColor";
+
+/**
+ * A cardinal in prose, spelled. Count-driven headings (ESC-g1) must read like English and still move
+ * with the family, so the number is taken from the family's length and spelled here — never typed
+ * into the sentence, which is the defect ESC-g1 measured ("an assertion that hard-codes 'four'").
+ */
+const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+const numberWord = (n) => WORDS[n] ?? String(n);
 
 const measuredTable = (inputs, oracle, surfaces, entryName) => {
     if (inputs.length === 0) return ["_No input cell: this row is an axis, not a string. Its two halves are stated as postures above._", ""];
@@ -123,6 +132,7 @@ const main = async () => {
         ...narrowing,
         ...capacity,
         ...SPEC_DIVERGENCES,
+        ...INCUMBENT_DEFECTS,
     ];
     const empty = directionAudit(allRows);
     const anchors = fixtureAnchorsPresent();
@@ -182,11 +192,12 @@ const main = async () => {
     say("engines did is what is printed. Nothing in those two columns was typed from a document.");
     say("");
     say("**The adjudication and direction columns are CARRIED.** §1's sixteen are `.a`'s, out of");
-    say("`registry/adjudicated/parser-band.md`; §2's four DISSENTS and §3's five fixtures come from their own");
+    say(`\`registry/adjudicated/parser-band.md\`; §2's ${DISSENTS.length} DISSENTS and §3's ${FIXTURES.length} fixtures come from their own`);
     say("authorities; §4 is `.b`'s F-b4, routed to this seat inside the wave; §5 is generated from the");
     say("candidate's own `UNREALIZED_ENTRIES` against the pinned barrel; **§7** is generated from `bounds.mjs`'s");
-    say("own `CAPACITY_REGIONS` and carries §0p/§0q as its authority; **§8** carries css-color-4 §7.1 and the");
-    say("fields `.g` banked for it. **This seat adjudicates nothing.** §6 is reserved for `.e`, the fresh Fable");
+    say(`own \`CAPACITY_REGIONS\` and carries §0p/§0q as its authority; **§9** carries ${INCUMBENT_DEFECTS.length} INCUMBENT-DEFECT rows,`);
+    say("each citing the specification the incumbent's acceptance contradicts. **This seat adjudicates nothing.**");
+    say("§6 is reserved for `.e`, the fresh Fable");
     say("adjudicator (M-23 §1) — *an author cannot adjudicate his own union* — is deliberately left empty by");
     say("this program, and is now CARRIED VERBATIM across re-emissions instead of being destroyed by them.");
     say("");
@@ -205,14 +216,23 @@ const main = async () => {
     say("");
     say("### §0.2 Row census");
     say("");
+    // COUNT-DRIVEN (ESC-g1): the census is generated from the families themselves, so a family that
+    // is added, emptied or promoted moves the table and the total without a hand touching either.
+    // The §6 row is `.e`'s carried block, which this program counts but does not generate.
+    const families = [
+        { section: "§1", family: "ADJUDICATED", rows: adjudications.length, authority: "`registry/adjudicated/parser-band.md` via `.a`'s `lib/adjudications.mjs`" },
+        { section: "§2", family: "PRESERVED DISSENT", rows: DISSENTS.length, authority: "`parser-band.md` DISSENTS, anchored by text" },
+        { section: "§3", family: "REGRESSION FIXTURE", rows: FIXTURES.length, authority: "`apotheosis/parser-proof/GATE-VERDICT.md` F-2" },
+        { section: "§4", family: "LABEL SURFACE", rows: 1, authority: "`X-P-W3.md` `.b` F-b4" },
+        { section: "§5", family: "DECLARED COVERAGE NARROWING", rows: narrowing.length, authority: "the candidate's `UNREALIZED_ENTRIES` × the pinned barrel" },
+        { section: "§7", family: "CAPACITY BOUND", rows: capacity.length, authority: "`bounds.mjs`'s own `CAPACITY_REGIONS`, measured or derived" },
+        { section: "§8", family: "SPEC-DIVERGENCE (realized entry)", rows: SPEC_DIVERGENCES.length, authority: "this wave's own measurement; EMPTY since `.k` promoted SP-1 to §9" },
+        { section: "§9", family: "INCUMBENT-DEFECT", rows: INCUMBENT_DEFECTS.length, authority: "ESC-g1 — the oracle mis-accepts, the candidate is right per spec" },
+    ];
     say("| § | family | rows | authority |");
     say("|---|---|---|---|");
-    say(`| §1 | ADJUDICATED | ${adjudications.length} | \`registry/adjudicated/parser-band.md\` via \`.a\`'s \`lib/adjudications.mjs\` |`);
-    say(`| §2 | PRESERVED DISSENT | ${DISSENTS.length} | \`parser-band.md\` DISSENTS, anchored by text |`);
-    say(`| §3 | REGRESSION FIXTURE | ${FIXTURES.length} | \`apotheosis/parser-proof/GATE-VERDICT.md\` F-2 |`);
-    say("| §4 | LABEL SURFACE | 1 | `X-P-W3.md` `.b` F-b4 |");
-    say(`| §5 | DECLARED COVERAGE NARROWING | ${narrowing.length} | the candidate's \`UNREALIZED_ENTRIES\` × the pinned barrel |`);
-    say(`| | **total** | **${allRows.length}** | |`);
+    for (const f of families) say(`| ${f.section} | ${f.family} | ${f.rows} | ${f.authority} |`);
+    say(`| | **total** | **${families.reduce((n, f) => n + f.rows, 0)}** | ${families.length} generated families; §6 is \`.e\`'s carried block and is counted in neither column |`);
     say("");
     say(`**Empty consumer-direction fields: ${empty.length === 0 ? "0" : empty.join(", ")}.** (G-7 fails on any.)`);
     say(`**\`GATE-VERDICT.md\` anchors present: ${anchors.filter((a) => a.present).length}/${anchors.length}** — each fixture's anchor re-read in its authority at generation.`);
@@ -265,9 +285,9 @@ const main = async () => {
 
     say("---");
     say("");
-    say("## §2 The four preserved DISSENTS");
+    say(`## §2 The ${numberWord(DISSENTS.length)} preserved DISSENTS`);
     say("");
-    say("`W3.md` §2c routes them here by name: *\"`parser-band.md` DISSENTS (token juxtaposition · non-finite ·");
+    say(`\`W3.md\` §2c routes them here by name — ${DISSENTS.length} of them: *"\`parser-band.md\` DISSENTS (token juxtaposition · non-finite ·`);
     say("try/catch posture · bench epistemics) | **DECLARED-DIVERGENCE ROWS, not silent picks** | `.d`'s ledger,");
     say("asserted in both directions; **G-7** fails if any divergence is unrowed.\"* Each is PRESERVED and");
     say("UNRESOLVED: a dissent that this seat resolved would be a dissent this seat overruled.");
@@ -290,11 +310,14 @@ const main = async () => {
 
     say("---");
     say("");
-    say("## §3 R1–R5 — the spec-correct regression fixtures");
+    say(`## §3 ${FIXTURES[0]?.id ?? "—"}–${FIXTURES[FIXTURES.length - 1]?.id ?? "—"} — the spec-correct regression fixtures`);
     say("");
     say("`W3.md` §5 `.d`: *\"R1–R5 from `GATE-VERDICT.md` F-2 are held as **spec-correct regression fixtures** —");
-    say("the mirror preserves spec-correctness, never bug-compatibility.\"* Three of the five are NOT met by this");
-    say("wave and say so in their own rows; a fixture recorded as met when it was not is the dishonesty §11");
+    // NO CARDINAL HERE. The fixtures carry no `met` field, so a count would be this program's guess
+    // about rows it did not author — and a typed "three" is the very defect ESC-g1 measured. Each
+    // row states its own standing in its own adjudication, which is where a reader must look.
+    say(`the mirror preserves spec-correctness, never bug-compatibility."* The fixtures NOT met by this`);
+    say("wave say so in their own rows; a fixture recorded as met when it was not is the dishonesty §11");
     say("guardrail 2 names.");
     say("");
     for (const row of FIXTURES) {
@@ -438,7 +461,14 @@ const main = async () => {
         say("");
         say("| witness | code units | incumbent (published 4.0.0, MEASURED) | candidate js (MEASURED) | candidate wasm (MEASURED) | js ≡ wasm |");
         say("|---|---|---|---|---|---|");
-        const cells = m.kind === "pair" ? [["AT the bound", m.at], ["ONE PAST the bound", m.past]] : [["AT the full window", m.window]];
+        const cells =
+            m.kind === "pair"
+                ? [["AT the bound", m.at], ["ONE PAST the bound", m.past]]
+                : [[m.kind === "window-limited" ? "AT the largest witness the WINDOW admits" : "AT the full window", m.window]];
+        if (m.kind === "window-limited") {
+            say(`**NO COORDINATE, AND THE REASON IS MEASURED:** ${esc(m.why)}`);
+            say("");
+        }
         for (const [what, c] of cells)
             say(`| **${what}** — ${code(c.witness)} | ${groupDigits(c.length)} | ${esc(c.incumbent)} | ${esc(c.js)} | ${esc(c.wasm)} | ${c.identical ? "YES" : "**NO**"} |`);
         say("");
@@ -463,7 +493,42 @@ const main = async () => {
     say("`.e`'s instruction is honoured literally: *\"Returned as F-e2 for a `.d`-emitted row … not hand-added");
     say("here\"* — the two result columns below are re-measured at every emission, never typed.");
     say("");
+    say(`**Rows at this emission: ${SPEC_DIVERGENCES.length}.**${SPEC_DIVERGENCES.length === 0 ? " SP-1, the family's first row, was an oracle MIS-ACCEPT and `.k` promoted it into §9's INCUMBENT-DEFECT family — one meaning, one row (F-aa3 (c)). The heading stands so that an empty family can be told from an absent one." : ""}`);
+    say("");
     for (const row of SPEC_DIVERGENCES) {
+        say(`### ${row.id} — ${row.title}`);
+        say("");
+        say("| field | value |");
+        say("|---|---|");
+        say(`| **input(s)** | ${row.inputs.map((i) => code(JSON.stringify(i))).join(" · ")} |`);
+        say(`| **entry** | ${code(row.parser)} |`);
+        say(`| **incumbent** | ${esc(row.incumbentPosture)} |`);
+        say(`| **candidate** | ${esc(row.candidatePosture)} |`);
+        say(`| **spec citation** | ${esc(row.specCitation)} |`);
+        say(`| **adjudication** | ${esc(row.adjudication)} |`);
+        say(`| **consumer direction** | ${esc(row.consumerDirection)} |`);
+        say("");
+        for (const line of measuredTable(row.inputs, oracle, surfaces, entryFor(row))) say(line);
+    }
+
+    say("---");
+    say("");
+    say("## §9 INCUMBENT-DEFECT — the oracle mis-accepts, the candidate is right per spec");
+    say("");
+    say("**ESC-g1's family** (COHESION §0r). A row here is a difference where the INCUMBENT accepts a string the");
+    say("specification forbids and the candidate refuses it, correctly. It is not §2 (`W3.md` §2c routes exactly");
+    say(`${DISSENTS.length} \`parser-band.md\` dissents there by name), not §3 (no \`GATE-VERDICT.md\` anchor), not §5 (the entry is`);
+    say("realized) and not §8 (whose subject is a spec-cited divergence that is NOT a mis-accept) — which is why");
+    say("it needed a heading of its own. It takes the next free level-2 number: **§6 is `.e`'s reserved");
+    say("hand-written adjudication block** and a generated family written over it would destroy the fresh");
+    say("adjudicator's region (F-aa3 (a)).");
+    say("");
+    say(`Of the ${INCUMBENT_DEFECTS.length} rows, ${INCUMBENT_DEFECTS.filter((r) => /UNADJUDICATED/.test(r.adjudication)).length} are **UNADJUDICATED** and say so in their own adjudication field: \`.k\` measured them`);
+    say("at G-1's honest remainder and declines to rule them, because an author cannot adjudicate his own union");
+    say("(M-23 §1). Their cells REMAIN counted as mirror-defects at G-7 — a row declares a difference, it does");
+    say("not excuse one.");
+    say("");
+    for (const row of INCUMBENT_DEFECTS) {
         say(`### ${row.id} — ${row.title}`);
         say("");
         say("| field | value |");
