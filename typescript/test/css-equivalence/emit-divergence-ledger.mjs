@@ -36,6 +36,12 @@
 // the CANONICAL ledger — `lib/ledger.mjs`'s `CANONICAL_LEDGER_PATH`, not whatever `--out` names
 // (**F-y2**) — and re-emits it verbatim. It still authors none of it.
 //
+// AND ESC-W4g-1 IS CURED AT THE GENERATOR (COHESION §0ah, F-ab1's second limb): that carry lifted ONE
+// region, so the two dated sections appended to the canonical ledger after it — `## §10` (`.f`'s
+// `rulingId` rulings) and `## §11` (`.h`'s new divergence) — were dropped by a re-emission, measured.
+// The carry is now a declared LIST of marked regions, §10's taken as the TAIL so that whatever is
+// appended below it rides out too, each emitted under its own preamble in document order.
+//
 // AND F-y1 IS CURED AT THE GENERATOR: a capacity row's incumbent sentence and consumer direction are
 // now READ BACK from the row's own measured cells (`capacityMeasuredReading`) instead of asserted by
 // a template across all nine regions, because for three of them the template claimed an incumbent
@@ -165,14 +171,47 @@ const main = async () => {
     // cure left open. `.e`'s block lives in exactly one artefact; the carry now addresses that
     // artefact by name and `--out` decides only where the bytes land. The canonical emission is
     // unaffected (it IS the canonical path), and a fresh-path emission now reproduces it.
+    // ESC-W4g-1 (COHESION §0ah, F-ab1's second limb) — THE CARRY IS A LIST, NOT A BLOCK. F-e7's cure
+    // lifted exactly one region, `### §6.`, and that was the whole of what a re-emission preserved.
+    // Two dated sections have since been appended to the canonical ledger BY HAND, under E-3, by two
+    // different seats: `## §10 — rulingId appends, X.P.W4.f` and `## §11 — the NEW divergence
+    // X.P.W4.h opens`. A re-emission dropped both — measured, not supposed: an emission to a scratch
+    // `--out` before this cure printed `^## §10` 0 times and `^## §11` 0 times, so two adjudications'
+    // rows were one regeneration away from being lost (R-C5 / R-2, carried in `X-P-W4S.md` as a
+    // residual FOR THIS SEAT). F-e7 was "the generator destroys the one section it may not write";
+    // this is the same defect, once for each section appended after the cure was written.
+    //
+    // So the carry is now a declared LIST of marks. Each mark names a region of the CANONICAL ledger
+    // (never `--out` — F-y2) and each is sliced to the next level-2 heading, EXCEPT `## §10`, whose
+    // slice is taken as the TAIL: §11 was appended after §10 and every dated section appended after
+    // THIS one must ride out with it, or the next seat re-opens ESC-W4g-1 under a new number. That is
+    // the difference between carrying a section and carrying the region a section opens.
+    //
+    // The regions are emitted IN DOCUMENT ORDER, each under its own preamble: §6's inside §6, where
+    // `.e`'s block belongs, and the tail at the file's end, after §9, where `.f` and `.h` put it.
+    // A tail preamble must stay ABOVE the carried `## §10` heading — a preamble emitted below it
+    // would be swallowed by the next run's slice and printed twice, which is how the first double-run
+    // of F-e7's cure grew 47 → 286 → 525 lines. The two-run check is again what proves this one.
     const outPath = path.isAbsolute(out) ? out : path.resolve(process.cwd(), out);
     const carryPath = CANONICAL_LEDGER_PATH;
     const previous = existsSync(carryPath) ? readFileSync(carryPath, "utf8") : "";
-    const carriedAt = previous.indexOf("\n### §6.");
-    const tail = carriedAt < 0 ? "" : previous.slice(carriedAt + 1);
-    const ends = ["\n## ", "\n---\n"].map((mark) => tail.indexOf(mark)).filter((i) => i >= 0);
-    const block = ends.length > 0 ? tail.slice(0, Math.min(...ends)) : tail;
-    const carried = carriedAt < 0 ? [] : block.replace(/\s+$/, "").split("\n");
+    const CARRIED_REGIONS = [
+        { id: "§6", mark: "\n### §6.", toTail: false },
+        { id: "§10", mark: "\n## §10", toTail: true },
+    ];
+    const sliceCarry = ({ mark, toTail }) => {
+        const at = previous.indexOf(mark);
+        if (at < 0) return [];
+        const rest = previous.slice(at + 1);
+        if (toTail) return rest.replace(/\s+$/, "").split("\n");
+        const ends = ["\n## ", "\n---\n"].map((m) => rest.indexOf(m)).filter((i) => i >= 0);
+        const block = ends.length > 0 ? rest.slice(0, Math.min(...ends)) : rest;
+        return block.replace(/\s+$/, "").split("\n");
+    };
+    const carries = CARRIED_REGIONS.map((r) => ({ ...r, lines: sliceCarry(r) }));
+    const carriedLines = (id) => carries.find((r) => r.id === id)?.lines ?? [];
+    const carried = carriedLines("§6");
+    const carriedTail = carriedLines("§10");
 
     const L = [];
     const say = (s = "") => L.push(s);
@@ -552,6 +591,24 @@ const main = async () => {
         for (const line of measuredTable(row.inputs, oracle, surfaces, entryFor(row), row.inputLabels ?? null)) say(line);
     }
 
+    // ESC-W4g-1's second region, emitted where its sections live: at the file's end, after §9. The
+    // preamble sits ABOVE the carried `## §10` heading on purpose — see the carry's own note.
+    if (carriedTail.length > 0) {
+        say("---");
+        say("");
+        say("**The dated sections below are CARRIED, not regenerated** (ESC-W4g-1, COHESION §0ah — the");
+        say("second limb of F-ab1). F-e7's cure carried one region, the `### §6.` subsections, and a");
+        say("re-emission therefore dropped `.f`'s and `.h`'s hand-appended dated sections: measured at 0");
+        say("occurrences in a scratch emission before this cure. The carry is now a LIST of marked regions,");
+        say("read off the canonical ledger by name (F-y2) and emitted unaltered; the second region is taken");
+        say("as the TAIL, so a dated section appended below it rides out with it instead of needing this");
+        say("defect re-opened under a new number. **This program authors not one byte below this line**, and");
+        say("no seat has to remember to re-append them.");
+        say("");
+        for (const line of carriedTail) say(line);
+        say("");
+    }
+
     // One trailing newline and no blank line before it — `git diff --check` reads a blank line at
     // EOF as whitespace damage, and a generated document should land clean on the first try.
     while (L.length > 0 && L[L.length - 1] === "") L.pop();
@@ -559,7 +616,9 @@ const main = async () => {
     writeFileSync(outPath, text);
     console.log(
         `wrote ${out} — ${Buffer.byteLength(text)} B · ${L.length} lines · ${allRows.length} rows · empty directions ${empty.length} · ` +
-            `\`.e\`'s §6 block carried ${carried.length > 0 ? `${carried.length} lines` : "ABSENT (nothing to carry)"}`,
+            `carried regions ${carries
+                .map((r) => `${r.id} ${r.lines.length > 0 ? `${r.lines.length} lines` : "ABSENT (nothing to carry)"}`)
+                .join(" · ")}`,
     );
     disposeOracle();
     return empty.length === 0 ? 0 : 1;
