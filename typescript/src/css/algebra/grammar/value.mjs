@@ -97,12 +97,27 @@ export const ESCAPED_BACKSLASH = 2;
  */
 export function buildValueGrammar(A, N) {
     const { SCAN, LIT, NUM, TEXT, KW, END, SEQ, ALT, CUT, PURE, REP, DROP, DISPATCH, FAIL, EXPECT, CTOR, REF } = A;
-    const { WS, TOK, hex, named, transparent } = N;
+    const { WS, WS1, TOK, hex, named, transparent } = N;
 
     /* ── the two zero-width assertions (the `.g` idiom, OP-01 alone) ─────────────────────── */
 
     /** The token ends HERE: no `token-char` may follow (whitespace, `,` `/` `:` `;` `)` or the end). */
     const NOT_TOKEN = () => DROP("keyword", SCAN("token-char", 0, 0));
+    /**
+     * X.P.W4.h (F-w4f-2, COHESION §0ab) — THE ABUTTING ITEM MAY NOT BEGIN WITH `!`.
+     *
+     * `token-char` now excludes the bang, so a value token ENDS at one and the declaration's
+     * `important()` can read the tail `parseDeclarations` strips (`/!important\s*$/i`). That
+     * boundary is the whole of the cure — but a boundary is symmetric, and the one other item that
+     * can begin at a `!` is the `!=` OPERATOR. The incumbent's splitter keeps `!` inside a token, so
+     * `red!= blue` is the single token `red!=` there and a refusal, while `red != blue` is three
+     * tokens and a value. `ITEM_SEP` is that rule at the byte: an item is admitted either after AT
+     * LEAST ONE whitespace (any item, `!=` included) or with NO whitespace and no bang at the cursor.
+     * Both arms are `DROP`ped, contribute no leaf, and an empty `ws` run appends no provenance row,
+     * so the group's shape, arity and tiling are exactly what they were.
+     */
+    const NOT_BANG = () => DROP("keyword", SCAN("bang", 0, 0));
+    const ITEM_SEP = () => ALT(WS1(), NOT_BANG());
     /** An identifier or a function name may not BEGIN with a digit (`[-_a-z][\w-]*`, both regexes). */
     const NO_LEADING_DIGIT = () => DROP("keyword", SCAN("leading-digit", 0, 0));
 
@@ -233,7 +248,7 @@ export function buildValueGrammar(A, N) {
      * committed colour failure either way — asserted by the recovery fixture on both lowerings.
      */
     const spaceGroup = () =>
-        CTOR("value-group", REP(WS(), 0, INF, null), REF("value-single"), REP(SEQ(WS(), REF("value-single")), 0, INF, null), PURE(SEPARATORS.indexOf("space")));
+        CTOR("value-group", REP(WS(), 0, INF, null), REF("value-single"), REP(SEQ(ITEM_SEP(), REF("value-single")), 0, INF, null), PURE(SEPARATORS.indexOf("space")));
     const separated = (row, separator, elem, sep) =>
         CTOR(
             row,
@@ -292,7 +307,7 @@ export function buildValueGrammar(A, N) {
     const NOT_SEMI = () => DROP("keyword", SCAN("semi", 0, 0));
     const declSingle = () => SEQ(NOT_SEMI(), REF("value-single"));
     const declSpaceGroup = () =>
-        CTOR("value-group", REP(WS(), 0, INF, null), declSingle(), REP(SEQ(WS(), declSingle()), 0, INF, null), PURE(SEPARATORS.indexOf("space")));
+        CTOR("value-group", REP(WS(), 0, INF, null), declSingle(), REP(SEQ(ITEM_SEP(), declSingle()), 0, INF, null), PURE(SEPARATORS.indexOf("space")));
     const declSlashGroup = () => separated("value-group", "slash", declSpaceGroup, slashSep);
     const declBody = () => separated("value-group", "comma", declSlashGroup, commaSep);
 

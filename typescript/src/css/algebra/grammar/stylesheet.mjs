@@ -130,7 +130,18 @@
 //   SH-2  DISCHARGED by X.P.W3.l (the families above); what remains of it is SH-4 and RT-1.
 //   SH-3  DISCHARGED by X.P.W3.l: `!important` is `/!important\s*$/i` at the END of the part there
 //         and the oracle refuses `! important` (measured); the production admits no gap now, and
-//         `decl-end` holds it at the end of the part.
+//         `decl-end` holds it at the end of the part. X.P.W4.h adds the OTHER side of that regex,
+//         which the value token's boundary had been eating: the pair needs NO PRECEDING SPACE
+//         either (css-syntax-3 §5.4.7; `color: red!important` is valid and 4.0.0 accepts it) —
+//         F-w4f-2, cured in `tables.mjs` (`token-char` excludes `!`) and `grammar/value.mjs`
+//         (`ITEM_SEP` keeps the incumbent's abutting rule). No divergence remains at this tail.
+//   ND-1  (X.P.W4.h, F-w4f-1) the declaration NAME is ONE `<ident-token>` (css-syntax-3 §5.4.4 /
+//         §4.3.11). `parseDeclarations` takes every trimmed byte before the first `:` as a name,
+//         so `col!r`, `backgr!und-color`, `border-co+or`, `(color`, `,color`, `backgro und-color`
+//         and `1color` are names there and are refused here. STRICTER, candidate correct; the
+//         incumbent half is X·V's. Rowed as `DIVERGENCE-LEDGER.md` rulingId F-w4f-1; the corpus
+//         remainder resolver carries its cells under `ID-1b`, whose own predicate is this
+//         mechanism (`nonIdentDeclarationName`, §5.4.4) and whose census stays under its pin.
 //   SH-4  (X.P.W3.l) `parseDeclarations` reads a name as EVERY byte before the first `:` of a
 //         `;`-split part — braces included — so `a { x { } color: red }` is ONE declaration named
 //         `x { } color` there; `decl-name` excludes braces (J-2) and reads a nested rule `x { }`
@@ -214,6 +225,15 @@ export function buildStylesheetGrammar(A, N) {
      * oracle refuses `a { color: red ! important }` (measured); the slice's `WS` between them is
      * gone. `PURE true` / `PURE false` is the expressible form of "whether the arm matched"
      * (the slice's declared deviation, carried).
+     *
+     * X.P.W4.h (F-w4f-2): the leading `WS()` of both arms was already `0..∞`, so this production
+     * never required the space — the VALUE TOKEN did. `NOT_TOKEN` read `!` as a token-char and
+     * refused `red` in `color: red!important`, i.e. the token ran into the tail the incumbent
+     * strips before it tokenizes anything. The cure is that boundary (`tables.mjs` `token-char`),
+     * not a byte here; the incumbent's own abutting rule (`red!= blue` is ONE token there) is held
+     * by `grammar/value.mjs`'s `ITEM_SEP`. Measured after: `red!important` · `)!important` ·
+     * `-!important` · `red!IMPORTANT` ACCEPT in both lowerings and agree with 4.0.0; `red !
+     * important` and `red! important` stay REJECT, as 4.0.0 refuses them.
      */
     const declEnd = () => DROP("keyword", SCAN("any-but-semi-or-close", 0, 0));
     const important = () =>
@@ -235,11 +255,29 @@ export function buildStylesheetGrammar(A, N) {
      * `FAIL` must not fall through to the plain body, which would ACCEPT `animation-name: a,,b`
      * as a two-item list. §5.2: the nearest enclosing `ALT` is this choice, and no further.
      */
+    /**
+     * X.P.W4.h — F-w4f-1, THE NAME IS ONE `<ident-token>` (css-syntax-3 §5.4.4 / §4.3.11).
+     *
+     * `parseDeclarations` reads a name as EVERY byte before the first `:` of a `;`-split part and
+     * trims it, so `col!r`, `backgr!und-color`, `border-co+or`, `(color` and `backgro und-color` are
+     * all NAMES there. §5.4.4 consumes a declaration only when the next token is an `<ident-token>`;
+     * none of those is one. The run is therefore the value grammar's OWN ident spelling — the
+     * `ident` continuation class behind a zero-width "no leading digit" assertion, exactly
+     * `grammar/value.mjs`'s `ident()` — and the whitespace that used to ride INSIDE the run (the
+     * class admitted it, the constructor trimmed it) is now read explicitly before the colon, which
+     * is §5.4.4's own "optional whitespace". `trimWs` in both lowerings' `declaration` constructor
+     * stays and is a no-op on a run that can no longer hold whitespace: no ctor row moves, so §0s's
+     * quartet law is not triggered. The divergence this opens against 4.0.0 is DECLARED
+     * (`DIVERGENCE-LEDGER.md`, rulingId **F-w4f-1**, candidate correct); the incumbent half is X·V's.
+     */
+    const NO_LEADING_DIGIT = () => DROP("keyword", SCAN("leading-digit", 0, 0));
+    const declName = () => SEQ(NO_LEADING_DIGIT(), TEXT("decl-name", 1, INF));
     const animationDeclaration = () =>
         CTOR(
             "declaration",
             SEQ(
-                CTOR("animation-property", TEXT("decl-name", 1, INF)),
+                CTOR("animation-property", declName()),
+                WS(),
                 TOK(":"),
                 CUT(),
                 WS(),
@@ -248,7 +286,7 @@ export function buildStylesheetGrammar(A, N) {
             ),
         );
     const plainDeclaration = () =>
-        CTOR("declaration", SEQ(TEXT("decl-name", 1, INF), TOK(":"), WS(), REF("declaration-body"), important()));
+        CTOR("declaration", SEQ(declName(), WS(), TOK(":"), WS(), REF("declaration-body"), important()));
     const declaration = () => ALT(animationDeclaration(), plainDeclaration());
 
     /** J-5: `(ws-or-semi declaration)* ws-or-semi` — `splitTopLevel(body, ";")`'s own reading. */

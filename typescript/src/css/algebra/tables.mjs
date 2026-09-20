@@ -73,12 +73,24 @@ export const R_cls = {
     //  verdict of `P:value` / `P:values` / `P:scalar`: a brace left over after the token still
     //  meets those entries' `END` and still rejects (measured on both lowerings by the fixture's
     //  `brace-edge` family); it moves only WHERE the token ends, which is the whole point.
+    //  X.P.W4.h widens the exclusion set by the BANG (F-w4f-2, COHESION §0ab). The incumbent never
+    //  hands a value containing the `!important` tail either: `parseDeclarations` strips
+    //  `/!important\s*$/i` off the PART before `parseCssValue` ever sees it, so a value string the
+    //  incumbent tokenizes cannot END in that tail. Under the old set `!` was a token-char, so
+    //  `NOT_TOKEN` refused `red` in `a{color:red!important}` — the value token ran into the tail the
+    //  incumbent had already removed, and the sheet was refused (css-syntax-3 §5.4.7 requires no
+    //  whitespace before the pair; 4.0.0 accepts it). Widening moves no verdict of `P:value` /
+    //  `P:values` / `P:scalar`: a bang left over after the token still meets those entries' `END`
+    //  and still rejects; it moves only WHERE the token ends. The ONE reading it would otherwise
+    //  move is an ABUTTING `!=` operator (`red!= blue`, one token for the incumbent's splitter and
+    //  a refusal there) — held exactly where it was by `grammar/value.mjs`'s `NOT_BANG` separator
+    //  guard, which is why that guard and this row are one act.
     "token-char": {
         label: "token boundary",
         table: table256(
             (b) =>
                 !isWs(b) && b !== ch(",") && b !== ch("/") && b !== ch(":") && b !== ch(";") && b !== ch(")")
-                && b !== ch("{") && b !== ch("}"),
+                && b !== ch("{") && b !== ch("}") && b !== ch("!"),
         ),
         since: "X.P.W3.h",
     },
@@ -126,9 +138,14 @@ export const R_cls = {
     //                label is the existing `'/'`, which `collectLabels` dedupes — no index moves.
     "ws-or-semi": { label: "<whitespace-or-semicolon>", table: table256((b) => isWs(b) || b === ch(";")), since: "X.P.W3.j" },
     "prelude-char": { label: "rule-prelude", table: table256((b) => b !== ch("{") && b !== ch(";")), since: "X.P.W3.j" },
+    //  X.P.W4.h narrows `decl-name` from "every byte but `:` `;` `{` `}`" (the incumbent's
+    //  cut-at-the-colon slice, whitespace and all) to the `ident` CONTINUATION set — css-syntax-3
+    //  §5.4.4's "the next token is an <ident-token>", read with `grammar/stylesheet.mjs`'s
+    //  zero-width leading-digit assertion in front and the optional whitespace before the colon
+    //  read explicitly (F-w4f-1, COHESION §0ab). The label is unchanged, so L does not move.
     "decl-name": {
         label: "declaration-name",
-        table: table256((b) => b !== ch(":") && b !== ch(";") && b !== ch("{") && b !== ch("}")),
+        table: table256(isIdent),
         since: "X.P.W3.j",
     },
     "any-but-star": { label: "comment-text", table: table256((b) => b !== ch("*")), since: "X.P.W3.j" },
@@ -163,6 +180,15 @@ export const R_cls = {
         table: table256((b) => b !== ch(",") && b !== ch(";") && b !== ch("}") && b !== ch("!")),
         since: "X.P.W3.l",
     },
+    // X.P.W4.h — F-w4f-2's second half (COHESION §0ab). `token-char` above now lets a value token
+    //   END at a `!`, which is what lets `important()` read the tail `parseDeclarations` strips.
+    //   The incumbent's splitter, however, keeps `!` INSIDE a token, so `red!= blue` is one token
+    //   there and a refusal; only a WHITESPACE-separated `!=` is an operator. `bang` is read
+    //   ZERO-WIDTH only (`SCAN("bang", 0, 0)`: "no bang here") as the abutting-item guard in
+    //   `grammar/value.mjs`'s two space groups, so an item that directly abuts the token before it
+    //   may not begin with `!` — the splitter's rule, restored at the byte. Its label is the
+    //   existing `'!'`, which `collectLabels` dedupes — no index moves (K-10).
+    bang: { label: "'!'", table: table256((b) => b === ch("!")), since: "X.P.W4.h" },
     // X.P.W3.n — E-j1's residual: the `url()` token inside an at-rule prelude (COHESION §0w).
     //
     //   `blocks()`'s prelude scan is PAREN-AWARE — it breaks on a top-level `{` or `;` and carries a
@@ -677,7 +703,7 @@ export const R_ctor = {
  * against a label an earlier pass carries (`value-color-head` is `<color-function>`, `ident-start`
  * is `ident`), so only a genuinely new label takes a new index.
  */
-const LATER_UNITS = ["X.P.W3.h", "X.P.W3.i", "X.P.W3.j", "X.P.W3.l", "X.P.W3.n"];
+const LATER_UNITS = ["X.P.W3.h", "X.P.W3.i", "X.P.W3.j", "X.P.W3.l", "X.P.W3.n", "X.P.W4.h"];
 
 /** The `EXPECT` / `FAIL` labels each later unit's grammar names, in that grammar's own order. */
 const UNIT_SITE_LABELS = {
@@ -694,6 +720,10 @@ const UNIT_SITE_LABELS = {
     //  and `')'` the value grammar's `TOK` already put in L — all four dedupe, so only the
     //  `paren-block` constructor's own `<simple-block>` is appended, at the END (K-10).
     "X.P.W3.n": [],
+    //  X.P.W4.h names no new EXPECT/FAIL site: `bang`'s label is the `'!'` the declaration's own
+    //  `TOK("!")` already put in L, and the declaration NAME's narrowed `decl-name` keeps its own
+    //  `declaration-name` label. Both dedupe, so L does not move (K-10).
+    "X.P.W4.h": [],
 };
 
 const collectLabels = () => {

@@ -382,7 +382,9 @@ export function buildGrammar(A) {
     //  destructure would read the twenty-two twice (a duplicate is a HALT there, by design).
     const valueGrammar = buildValueGrammar(
         { SCAN, LIT, NUM, TEXT, KW, END, SEQ, ALT, CUT, PURE, REP, DROP, DISPATCH, FAIL, EXPECT, CTOR, REF },
-        { WS, TOK, hex, named, transparent },
+        //  X.P.W4.h — `WS1` joins the value grammar's notations for `ITEM_SEP`'s first arm (F-w4f-2):
+        //  the abutting reading of a space group is the one that may not begin with a `!`.
+        { WS, WS1, TOK, hex, named, transparent },
     );
     for (const name of Object.keys(valueGrammar.terms)) {
         if (terms[name] !== undefined) throw new Error(`HALT: the value grammar redefines production '${name}'`);
