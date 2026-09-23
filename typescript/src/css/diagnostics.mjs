@@ -212,6 +212,20 @@ export const PRODUCTION_LABELS = Object.freeze({
        `lparen`/`rparen` reuse the `'('` / `')'` the value grammar already put in L, so this is the
        one row the unit appends. */
     "<simple-block>": "<simple-block> (a '( … )' block, closed)",
+
+    /* X.P.W5.c — css-color-5 §3 `color-mix()`'s labels, in L's own appended order: the four
+       keyword tables (`in`, the interpolation space, the hue method, `hue`), then the four
+       constructors' guards (`color-mix()` itself, the method, the item percentage — shared by
+       both item rows, so it dedupes). */
+    "'in'": "<in-keyword> ('in')",
+    "<interpolation-color-space>":
+        "<interpolation-color-space> (srgb, srgb-linear, display-p3, display-p3-linear, a98-rgb, prophoto-rgb, rec2020, lab, oklab, xyz, xyz-d50, xyz-d65, hsl, hwb, lch or oklch)",
+    "<hue-interpolation-method>": "<hue-interpolation-method> (shorter, longer, increasing or decreasing)",
+    "'hue'": "<hue-keyword> ('hue')",
+    "<color-mix()>": "<color-mix()>",
+    "<color-interpolation-method> (a hue method follows a polar space only)":
+        "<color-interpolation-method> (a hue method follows a polar space only)",
+    "<percentage [0,100]>": "<percentage [0,100]> (a mix percentage from 0% to 100%)",
 });
 
 /** Both set-differences against `L`, injectivity, and the named-production predicate — at load. */

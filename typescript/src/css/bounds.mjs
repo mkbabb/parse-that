@@ -287,6 +287,12 @@ const CTOR_ALLOC = Object.freeze({
     "raw-block": { fixed: 16, rate: 0 },
     "paren-block": { fixed: 16, rate: 0 }, //                     X.P.W3.n — one mkStr over the source span
     "animation-property": { fixed: 16, rate: 0 }, //                the trimmed span's own mkStr
+    //  X.P.W5.c — css-color-5 §3 `color-mix()` as structure, landed with the same four name-sets.
+    //  The items array is 4 B a pointer, charged to the input (every item is at least one code unit).
+    "color-mix": { fixed: 8 * 3 + 8 + 15, rate: 4 }, //              mkRec(at most 3) + the items array
+    "mix-method": { fixed: 8 * 2 + 8, rate: 0 }, //                   mkRec(at most 2); the names are static
+    "mix-item": { fixed: 8 * 2 + 8, rate: 0 }, //                     mkRec(at most 2)
+    "mix-item-lead": { fixed: 8 * 2 + 8, rate: 0 }, //                mkRec(2)
 });
 
 /**
@@ -319,6 +325,8 @@ const CTOR_SCRATCH_CELLS = Object.freeze({
     "at-starting-style": 4, "at-unknown-block": 6, "at-unknown-stmt": 6, "raw-text": 0, "raw-block": 0,
     "paren-block": 0,
     "animation-property": 0,
+    //  X.P.W5.c: `rec`/`recDyn` hold 2·pairs cells over a reset base; the items array is charged to the input
+    "color-mix": 6, "mix-method": 4, "mix-item": 4, "mix-item-lead": 4,
 });
 
 const pad8 = (n) => Math.ceil(n / 8) * 8;

@@ -16,8 +16,8 @@ import { AT_DECLARATION_KINDS } from "../algebra/tables.mjs";
 import { OPERATORS, SEPARATORS } from "../algebra/grammar/value.mjs";
 import { CODES, KINDS } from "../algebra/ops.mjs";
 import {
-    JUMP_POSITIONS, KEYFRAME_PHASES, RANGE_PHASES, R_cls, R_ctor, R_disp, R_kw, SCROLLER_KEYWORDS,
-    STEP_ALIASES, TIMELINE_AXES, TIMELINE_MODES, TIMING_KEYWORDS, labelIndex,
+    HUE_METHODS, JUMP_POSITIONS, KEYFRAME_PHASES, MIX_POLAR_FROM, MIX_SPACES, RANGE_PHASES, R_cls, R_ctor, R_disp, R_kw,
+    SCROLLER_KEYWORDS, STEP_ALIASES, TIMELINE_AXES, TIMELINE_MODES, TIMING_KEYWORDS, labelIndex,
 } from "../algebra/tables.mjs";
 import { F64, I32 } from "./asm.mjs";
 import {
@@ -1716,6 +1716,78 @@ export function emitCtors(env) {
         c.get(n).i32(9).x("i32.eq").if_("void", (b) => b.get(t).ret());
         c.get(a).i32(9).x("i32.add").i32(INPUT_BASE).x("i32.add").load8u().i32(45).x("i32.ne").if_("void", (b) => b.i32(0).ret());
         c.get(t);
+    });
+
+    //  X.P.W5.c — css-color-5 §3 `color-mix()` as structure, the Wasm half of `js-alg.mjs`'s four
+    //  rows: the same records, the same key order, the same two guards, and no colour arithmetic
+    //  (the surface resolves the mix above both lowerings — `color-mix.mjs`).
+    const MIX_SPACE_TAB = strTable(MIX_SPACES);
+    const HUE_METHOD_TAB = strTable(HUE_METHODS);
+
+    /** `[in, space]` or `[in, space, method, hue]`; a method after a rectangular space fails. */
+    declare("mix-method", (c) => {
+        c.get(1).i32(4).x("i32.eq").if_("void", (b) => {
+            tokenIndex(b, 1);
+            b.i32(MIX_POLAR_FROM).x("i32.lt_s").if_("void", (t) => t.i32(0).ret());
+        });
+        recDyn(c, (u, pair) => {
+            pair(u, "space", (b) => {
+                tokenIndex(b, 1);
+                fromTab(b, MIX_SPACE_TAB);
+            });
+            u.get(1).i32(4).x("i32.eq").if_("void", (b) => {
+                pair(b, "hue", (t) => {
+                    tokenIndex(t, 2);
+                    fromTab(t, HUE_METHOD_TAB);
+                });
+            });
+        });
+    });
+
+    /** css-color-5 §3.2's `<percentage [0,100]>` over leaf `k`: a `T_NUM` with 0 <= v <= 100 (NaN fails). */
+    const mixPercentGuard = (c, p, v, k) => {
+        arg(c, k);
+        c.set(p);
+        c.get(p).load().i32(T_NUM).x("i32.ne").if_("void", (b) => b.i32(0).ret());
+        c.get(p).loadf64(8).set(v);
+        c.get(v).f64(0).x("f64.ge").get(v).f64(100).x("f64.le").x("i32.and")
+            .x("i32.eqz").if_("void", (b) => b.i32(0).ret());
+    };
+
+    /** `[color]` or `[color, percentage]` → `{color}` / `{color, percentage}`. */
+    declare("mix-item", (c) => {
+        const p = c.local(I32);
+        const v = c.local(F64);
+        c.get(1).i32(2).x("i32.eq").if_("void", (b) => mixPercentGuard(b, p, v, 1));
+        recDyn(c, (u, pair) => {
+            pair(u, "color", (b) => arg(b, 0));
+            u.get(1).i32(2).x("i32.eq").if_("void", (b) => pair(b, "percentage", (t) => arg(t, 1)));
+        });
+    });
+
+    /** `[percentage, color]` → `{color, percentage}` — the `&&`'s percentage-first arm. */
+    declare("mix-item-lead", (c) => {
+        const p = c.local(I32);
+        const v = c.local(F64);
+        mixPercentGuard(c, p, v, 0);
+        rec(c, [
+            ["color", (b) => arg(b, 1)],
+            ["percentage", (b) => arg(b, 0)],
+        ]);
+    });
+
+    /** `[method, items]` or `[items]` → `{kind, method?, items}`. */
+    declare("color-mix", (c) => {
+        c.get(1).i32(2).x("i32.eq").if_(I32,
+            (t) => rec(t, [
+                ["kind", (b) => b.i32(data.stringNode("color-mix"))],
+                ["method", (b) => arg(b, 0)],
+                ["items", (b) => listToArr(b, (u) => arg(u, 1))],
+            ]),
+            (e) => rec(e, [
+                ["kind", (b) => b.i32(data.stringNode("color-mix"))],
+                ["items", (b) => listToArr(b, (u) => arg(u, 0))],
+            ]));
     });
 
     return out;

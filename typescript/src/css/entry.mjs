@@ -90,6 +90,7 @@ import {
 import { isFrozenCode, selectCode } from "./codes.mjs";
 import { boundaryIssue, PRODUCTION_LABELS } from "./diagnostics.mjs";
 import { makeRecoveryLowering } from "./lower.mjs";
+import { resolveColorMix } from "./color-mix.mjs";
 
 /* ── the published surface, declared ────────────────────────────────────────────────────────── */
 
@@ -1222,6 +1223,26 @@ const shieldIssue = (label, source) =>
         actual: source === "" ? null : source,
     });
 
+/**
+ * X.P.W5.c — `parseCssColor` over a lowering's own entry: a `color-mix` record becomes the frozen
+ * `CssColor` it computes to (css-color-5 §3.3); every other result passes through untouched. A mix
+ * whose arithmetic leaves the finite range (an input channel near the f64 limit) is refused over
+ * the source with the `<finite-number>` label the colour constructors' own guards already raise.
+ */
+const mixResolverOver = (parse) => (source) => {
+    const result = parse(source);
+    if (!result.ok || result.value?.kind !== "color-mix") return result;
+    const color = resolveColorMix(result.value);
+    if (color === null) {
+        return Object.freeze({ ok: false, diagnostics: Object.freeze([sourceIssue(source, "css_syntax", [PRODUCTION_LABELS["<finite-number>"]])]) });
+    }
+    return Object.freeze({
+        ok: true,
+        value: Object.freeze({ space: color.space, channels: Object.freeze(color.channels), alpha: color.alpha }),
+        diagnostics: result.diagnostics,
+    });
+};
+
 /* ── the entry factory ──────────────────────────────────────────────────────────────────────── */
 
 /**
@@ -1278,6 +1299,11 @@ export function makePublicSurface(lowering) {
             }
         };
     }
+
+    // X.P.W5.c — css-color-5 §3: the grammar reads `color-mix()` into a structural record in both
+    // lowerings; the colour it COMPUTES to is resolved here, once, by the one lowering-independent
+    // resolver (`color-mix.mjs` says why the arithmetic cannot live in the emitter).
+    surface.parseCssColor = mixResolverOver(surface.parseCssColor);
 
     // X.P.W3.h — the two compositions, on the surface: the coercer over THIS lowering's
     // `parseCssValue` (so both targets answer through their own value grammar), the serializer as

@@ -367,7 +367,42 @@ export const R_kw = {
         rows: np({ property: 0, function: 1, "scroll-timeline": 2, "view-timeline": 3 }),
         since: "X.P.W3.l",
     },
+    // X.P.W5.c — css-color-5 §3 `color-mix()`'s `<color-interpolation-method>` (css-color-4 §13.1:
+    // `in [ <rectangular-color-space> | <polar-color-space> <hue-interpolation-method>? ]`). Every
+    // row's value is an INDEX into the canonical lists below; `in` and `hue` are fixed words whose
+    // leaves the `mix-method` constructor reads by position and never by value.
+    "mix-in": { label: "'in'", code: "css_syntax", kind: "token", rows: np({ in: 0 }), since: "X.P.W5.c" },
+    "mix-space": {
+        label: "<interpolation-color-space>",
+        code: "css_syntax",
+        kind: "token",
+        rows: np({
+            srgb: 0, "srgb-linear": 1, "display-p3": 2, "display-p3-linear": 3, "a98-rgb": 4, "prophoto-rgb": 5,
+            rec2020: 6, lab: 7, oklab: 8, xyz: 9, "xyz-d50": 10, "xyz-d65": 11, hsl: 12, hwb: 13, lch: 14, oklch: 15,
+        }),
+        since: "X.P.W5.c",
+    },
+    "hue-method": {
+        label: "<hue-interpolation-method>",
+        code: "css_syntax",
+        kind: "token",
+        rows: np({ shorter: 0, longer: 1, increasing: 2, decreasing: 3 }),
+        since: "X.P.W5.c",
+    },
+    "hue-word": { label: "'hue'", code: "css_syntax", kind: "token", rows: np({ hue: 0 }), since: "X.P.W5.c" },
 };
+
+/**
+ * X.P.W5.c — `R_kw["mix-space"]`'s codomain, by index: css-color-4 §13.1's `<rectangular-color-space>`
+ * (0..11) then `<polar-color-space>` (12..15). A hue method is lawful on a polar space alone.
+ */
+export const MIX_SPACES = [
+    "srgb", "srgb-linear", "display-p3", "display-p3-linear", "a98-rgb", "prophoto-rgb", "rec2020",
+    "lab", "oklab", "xyz", "xyz-d50", "xyz-d65", "hsl", "hwb", "lch", "oklch",
+];
+export const MIX_POLAR_FROM = 12;
+/** `R_kw["hue-method"]`'s codomain, by index (css-color-4 §13.5). */
+export const HUE_METHODS = ["shorter", "longer", "increasing", "decreasing"];
 
 /** X.P.W3.l — the frozen `StylesheetItem.kind` of each `R_kw["at-rule-name"]` row, by id. */
 export const AT_DECLARATION_KINDS = ["property", "function", "scroll-timeline", "view-timeline"];
@@ -424,7 +459,9 @@ export const R_disp = {
     "color-head": {
         label: "<color-function>",
         code: "css_syntax",
-        rows: np({ ...COLOR_HEADS, var: "head-var" }),
+        // X.P.W5.c — css-color-5 §3 `color-mix()` and §2 `light-dark()` are `parseCssColor`'s alone:
+        // in a VALUE both stay calls (the `var()` posture below), so the value surface is unmoved.
+        rows: np({ ...COLOR_HEADS, var: "head-var", "color-mix": "head-color-mix", "light-dark": "head-light-dark" }),
     },
     "timing-head": {
         label: "<timing-function>",
@@ -689,6 +726,26 @@ export const R_ctor = {
     //    which sends the declaration to its plain arm. It is what routes an animation declaration's
     //    value through the body that names a blank comma part (`emptyComma`'s law).
     "animation-property": { label: "<animation-property>", code: "css_syntax", labels: ["<animation-property> (animation or animation-*)"], arity: 1, leafMap: ["name"], since: "X.P.W3.l" },
+
+    // ── X.P.W5.c — css-color-5 §3 `color-mix()`, as STRUCTURE. The four rows build plain records
+    //    and do no colour arithmetic: the mix is RESOLVED above the algebra, once, on the surface
+    //    (`entry.mjs` over `color-mix.mjs`), because resolution needs `pow`/`cbrt`/`atan2`/`sin`/
+    //    `cos` and the Wasm instruction set has none of them — a twin of each in the emitter would
+    //    be a second, drifting implementation of the same arithmetic (G-5 would then compare two
+    //    libms, not two parsers). The guards are the grammar's own: css-color-5 §3.2 "Percentages
+    //    are required to be in the range 0% to 100%", and css-color-4 §13.1's hue method is lawful
+    //    after a `<polar-color-space>` alone.
+    "color-mix": { label: "color-mix()", code: "css_syntax", labels: ["<color-mix()>"], arity: 2, leafMap: ["method", "items"], since: "X.P.W5.c" },
+    "mix-method": {
+        label: "<color-interpolation-method>",
+        code: "css_syntax",
+        labels: ["<color-interpolation-method> (a hue method follows a polar space only)"],
+        arity: 4,
+        leafMap: ["in", "space", "hue-method", "hue"],
+        since: "X.P.W5.c",
+    },
+    "mix-item": { label: "<color-mix-item>", code: "css_syntax", labels: ["<percentage [0,100]>"], arity: 2, leafMap: ["color", "percentage"], since: "X.P.W5.c" },
+    "mix-item-lead": { label: "<color-mix-item>", code: "css_syntax", labels: ["<percentage [0,100]>"], arity: 2, leafMap: ["percentage", "color"], since: "X.P.W5.c" },
 };
 
 /* ── L: the label index (§4.4) — EQ-4 compares INDICES into this list ──────────────────────── */
@@ -703,7 +760,7 @@ export const R_ctor = {
  * against a label an earlier pass carries (`value-color-head` is `<color-function>`, `ident-start`
  * is `ident`), so only a genuinely new label takes a new index.
  */
-const LATER_UNITS = ["X.P.W3.h", "X.P.W3.i", "X.P.W3.j", "X.P.W3.l", "X.P.W3.n", "X.P.W4.h"];
+const LATER_UNITS = ["X.P.W3.h", "X.P.W3.i", "X.P.W3.j", "X.P.W3.l", "X.P.W3.n", "X.P.W4.h", "X.P.W5.c"];
 
 /** The `EXPECT` / `FAIL` labels each later unit's grammar names, in that grammar's own order. */
 const UNIT_SITE_LABELS = {
@@ -724,6 +781,10 @@ const UNIT_SITE_LABELS = {
     //  `TOK("!")` already put in L, and the declaration NAME's narrowed `decl-name` keeps its own
     //  `declaration-name` label. Both dedupe, so L does not move (K-10).
     "X.P.W4.h": [],
+    //  X.P.W5.c names no new EXPECT/FAIL site: `color-mix()` and `light-dark()` read their colours
+    //  through `REF("color-body")`, whose `<color>` EXPECT is already L[0]; only the four keyword
+    //  tables' and the four constructors' own labels are appended, at the END (K-10).
+    "X.P.W5.c": [],
 };
 
 const collectLabels = () => {

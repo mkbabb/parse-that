@@ -249,6 +249,51 @@ export function buildGrammar(A) {
     const colorBody = () => EXPECT(ALT(hex(), named(), transparent(), context(), functional()), "<color>");
     const color = () => SEQ(WS(), colorBody(), WS(), END());
 
+    /* ── X.P.W5.c — css-color-5 §3 `color-mix()` and §2 `light-dark()` ─────────────────────────
+          color-mix() = color-mix( <color-interpolation-method>? , [ <color> && <percentage [0,100]>? ]# )
+          <color-interpolation-method> = in [ <rectangular-color-space> | <polar-color-space> <hue-interpolation-method>? ]
+          <hue-interpolation-method> = [ shorter | longer | increasing | decreasing ] hue      (css-color-4 §13.1)
+          light-dark() = light-dark( <color> , <color> )                                        (css-color-5 §2)
+        Each `<color>` is `REF("color-arg")` — the one colour production, so a mix nests a mix, a
+        `var()` or a context colour exactly as the top level reads it. The method's comma is ELIDED
+        with the method (css-values-4 §2.6: a comma beside an omitted optional term is omitted), so
+        `color-mix(red, blue)` is the Oklab default of css-color-5 §3.1. A percentage is `NUM` then
+        `%`; its range [0,100] is the item constructor's guard (a NEGATIVE or >100% percentage is
+        invalid, not clamped, §3.2). The `&&` is two arms, percentage-first and colour-first.
+        `light-dark()` is not an absolute colour (css-color-5 §2: it "depends on the color mode"),
+        so outside a computed style it has no value: both arms are READ, and the row that answers
+        is `context` — `color_context_required`, the contract `currentcolor` and `var()` already
+        carry (§10.1). Relative colour syntax is unmoved: this unit adds no `from` production. */
+    //  The argument production is `color-body` WITHOUT its `EXPECT`: the recursion runs through a
+    //  REF, so an `EXPECT` per level would nest one expectation snapshot per level, and the snapshot
+    //  stack is a class-3 region (COHESION §0q E-f2) whose bound the Θ proof HALTs on — measured
+    //  (`expsnap 66 > 32`) before this form was written. The outer `<color>` EXPECT still names the
+    //  expectation of the whole colour, exactly as it did for every head before this unit.
+    const colorArg = () => ALT(hex(), named(), transparent(), context(), functional());
+    const mixPct = () => SEQ(NUM(), TOK("%"));
+    const mixItem = () =>
+        ALT(
+            CTOR("mix-item-lead", SEQ(mixPct(), WS(), REF("color-arg"))),
+            CTOR("mix-item", SEQ(REF("color-arg"), ALT(SEQ(WS(), mixPct()), PURE(null)))),
+        );
+    //  The method's two arms are FLAT (the `legacy-rgb` note above: an `ALT` of SEQs under one outer
+    //  SEQ answers a nested tuple), so the constructor reads two leaves or four, never three.
+    const mixMethod = () =>
+        ALT(
+            CTOR(
+                "mix-method",
+                SEQ(KW("ident", "mix-in"), WS1(), KW("ident", "mix-space"), WS1(), KW("ident", "hue-method"), WS1(), KW("ident", "hue-word")),
+            ),
+            CTOR("mix-method", SEQ(KW("ident", "mix-in"), WS1(), KW("ident", "mix-space"))),
+        );
+    const headColorMix = () =>
+        CTOR(
+            "color-mix",
+            SEQ(TOK("("), CUT(), WS(), ALT(SEQ(mixMethod(), sep()), PURE(null)), REP(mixItem(), 1, INF, sep()), WS(), TOK(")")),
+        );
+    const headLightDark = () =>
+        CTOR("context", SEQ(TOK("("), CUT(), WS(), REF("color-arg"), sep(), REF("color-arg"), WS(), TOK(")")));
+
     /* ── §10.2 `P:timing-function` ────────────────────────────────────────────────────────── */
 
     const headCubic = () =>
@@ -317,6 +362,7 @@ export function buildGrammar(A) {
     const terms = {
         color: color(),
         "color-body": colorBody(),
+        "color-arg": colorArg(), //   X.P.W5.c — `color-mix()` / `light-dark()`'s REF target
         hex: hex(),
         named: named(),
         transparent: transparent(),
@@ -367,6 +413,9 @@ export function buildGrammar(A) {
         "space-rec2020": space("rec2020", cch)(),
         "space-xyz": space("xyz", cch)(),
         "space-xyz-d50": space("xyz-d50", cch)(),
+        // X.P.W5.c — css-color-5's two heads, `parseCssColor`'s alone (`R_disp["color-head"]`)
+        "head-color-mix": headColorMix(),
+        "head-light-dark": headLightDark(),
     };
 
     const entries = {
@@ -442,4 +491,6 @@ export function buildGrammar(A) {
  * rule inside a body, a nested `{ … }` inside an unknown at-rule's raw body), each with a
  * mandatory width of at least two code units so no level of either recursion is zero-width.
  */
-export const REF_TARGETS = ["balanced-tail", ...VALUE_REF_TARGETS, ...STYLESHEET_REF_TARGETS];
+//  X.P.W5.c adds `color-arg`: `color-mix()` and `light-dark()` read each colour argument through it,
+//  and every level of that recursion is at least `x(` + `)` wide (a head, its paren, its close).
+export const REF_TARGETS = ["balanced-tail", ...VALUE_REF_TARGETS, ...STYLESHEET_REF_TARGETS, "color-arg"];

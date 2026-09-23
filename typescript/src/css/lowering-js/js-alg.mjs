@@ -25,8 +25,8 @@ import { Parser, createParserContext } from "@mkbabb/parse-that";
 import { ESCAPED_BACKSLASH, ESCAPED_QUOTE, OPERATORS, SEPARATORS } from "../algebra/grammar/value.mjs";
 import { KINDS } from "../algebra/ops.mjs";
 import {
-    AT_DECLARATION_KINDS, JUMP_POSITIONS, KEYFRAME_PHASES, L, RANGE_PHASES, R_cls, R_ctor, R_disp, R_kw, SCROLLER_KEYWORDS,
-    STEP_ALIASES, TIMELINE_AXES, TIMELINE_MODES, TIMING_KEYWORDS, labelIndex,
+    AT_DECLARATION_KINDS, HUE_METHODS, JUMP_POSITIONS, KEYFRAME_PHASES, L, MIX_POLAR_FROM, MIX_SPACES, RANGE_PHASES, R_cls, R_ctor,
+    R_disp, R_kw, SCROLLER_KEYWORDS, STEP_ALIASES, TIMELINE_AXES, TIMELINE_MODES, TIMING_KEYWORDS, labelIndex,
 } from "../algebra/tables.mjs";
 import { asciiFold, clampValue, isList, isTuple, list, NONE_OPT, scaleValue, splitSelectors, span, trimWs, tuple, UNIT } from "./values.mjs";
 
@@ -436,7 +436,27 @@ const CTORS = {
         const lower = asciiFold(name);
         return lower === "animation" || lower.startsWith("animation-") ? name : GUARD;
     },
+
+    // ── X.P.W5.c — css-color-5 §3 `color-mix()` as structure (`tables.mjs` R_ctor): plain records,
+    //    no colour arithmetic — the surface resolves the mix (`color-mix.mjs`). Key order is fixed
+    //    and identical in Wasm (`wasm-alg.mjs`), so G-5's byte identity holds by construction.
+    /** `[in, space]` or `[in, space, method, hue]`: a method after a rectangular space is the guard. */
+    "mix-method": (a) => {
+        const space = MIX_SPACES[a[1]];
+        if (a.length === 2) return { space };
+        return a[1] >= MIX_POLAR_FROM ? { space, hue: HUE_METHODS[a[2]] } : GUARD;
+    },
+    /** `[color]` or `[color, percentage]`; the percentage is css-color-5 §3.2's `<percentage [0,100]>`. */
+    "mix-item": (a) => (a.length === 1 ? { color: a[0] } : mixPercent(a[1]) ? { color: a[0], percentage: a[1] } : GUARD),
+    "mix-item-lead": (a) => (mixPercent(a[0]) ? { color: a[1], percentage: a[0] } : GUARD),
+    /** `[method, items]` or `[items]` — the method is absent when the comma-elided default applies. */
+    "color-mix": (a) => (a.length === 2 ? { kind: "color-mix", method: a[0], items: a[1].l } : { kind: "color-mix", items: a[0].l }),
 };
+
+/** css-color-5 §3.2: "Percentages are required to be in the range 0% to 100%" — NaN and ±∞ fail too. */
+function mixPercent(p) {
+    return typeof p === "number" && p >= 0 && p <= 100;
+}
 
 /**
  * The group rows' shared reading (`tables.mjs` R_ctor `value-args` / `value-group`): the items are
