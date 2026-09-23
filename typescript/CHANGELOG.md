@@ -2,6 +2,59 @@
 
 All notable changes to `@mkbabb/parse-that` are recorded here.
 
+## 2.0.0 — the CSS seam (value.js Tranche X, X·P) — 2026-09-23
+
+A major version, for two reasons. The package gains its CSS surface, `@mkbabb/parse-that/css`.
+The root and `./diagnostics` barrels also lose three runtime exports, and that removal is breaking.
+
+### Added — `./css`: the CSS seam surface (X.P.W2–W5)
+
+- **A new subpath `./css`** (`src/css/build/ac1.js` + `ac1.d.ts`). It publishes the 52 names of
+  value.js's frozen `/css` contract: 19 runtime functions and 33 types. The runtime functions are
+  `parseCssColor`, `parseCssScalar`, `parseCssValue`, `parseCssValues`, `parseTimingFunction`,
+  `parseStylesheet`, `parseKeyframeSelector`, `parseAnimationRange`, `parseAnimationTimeline`,
+  `coerceToSyntax`, `serializeCssColor`, `serializeTimelineOptions` and the seven `collect*`
+  helpers. Every parser is total: it returns a `ParseResult` and does not throw.
+- **One grammar, two lowerings.** The grammar is written once as an algebra
+  (`src/css/algebra/**`). It is lowered to parse-that combinators (`lowering-js`) and to a
+  WebAssembly module (`lowering-wasm`). The two give byte-identical answers over the harness
+  corpora.
+- **The Wasm artifact ships in the tarball** at `src/css/build/ac1.wasm`. `node src/css/build.mjs`
+  builds it reproducibly. Admission (`scripts/wasm-admission.mjs`) reads 0 imports, 0
+  function-kind imports, and empty-import-object instantiation succeeds.
+- **CSS Color 5** (X.P.W5.c): `color-mix()` covers every `<color-space>` and every
+  `<hue-interpolation-method>`, with percentage normalisation per css-values-5 §6.1. The tests are
+  derived from WPT at `5a5b2b59`. `light-dark()` parses both arms and resolves to
+  `color_context_required`, because css-color-5 §2 says it is not absolute. The legacy comma forms
+  `rgb()`/`rgba()`/`hsl()`/`hsla()` are pinned by WPT.
+- **Equivalence.** value.js 4.0.0's parsers (pinned commit `6aca8602`) are the oracle for the
+  full-surface differential harness (`test/css-equivalence/run-full-surface.mjs`). It reads 0
+  mirror-defects, and every declared difference has a row in value.js's `DIVERGENCE-LEDGER.md`.
+
+### Removed — BREAKING: the module-global diagnostics collection (`de36d57`)
+
+- **`collectDiagnostic`, `getCollectedDiagnostics` and `clearCollectedDiagnostics` are no longer
+  exported** from `.` or `./diagnostics`. Recovery diagnostics now live on the `ParserState` that
+  a parse returns (`ParserState.diagnostics`). The old zero-argument get/clear contract read a
+  module-global list, so sequential and nested parses could contaminate each other's diagnostics.
+- **`Parser.state` is deleted.** A parser no longer keeps its last result. Read the fresh
+  `ParserState` that `parseState` returns.
+- Memoized cells now carry source identity, so a cell is never reused across different source
+  strings.
+
+### Added — `./packrat`
+
+- `packratEnter` and `packratExit` are exported from `./packrat` (`49ca70b`). The CSS surface's
+  latch reader uses them through the package's own subpath.
+
+### Gates at the cut
+
+- `npm test`: 15 files, 148 tests. `proof:manifest` and `proof:subpath` are GREEN.
+  `scripts/packed-candidate-surface.mjs` over the packed tarball resolves 52 of 52 seam names from
+  the installed bytes, and the 5 forbidden deep specifiers refuse.
+- `proof:no-css-surface` was retired at X.P.W5.a (COHESION §0bl), when the CSS surface landed on
+  master.
+
 ## 1.0.0 — Tranche S (packrat arming + the legacy/chain breaking cut) — 2026-07-03
 
 The keyframes.js Tranche S dispatch (waves S.H1, S.H2, S.H4) — the single **1.0.0**
