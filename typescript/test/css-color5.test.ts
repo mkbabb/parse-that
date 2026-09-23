@@ -206,19 +206,30 @@ describe("KFA-14 — the legacy comma forms, css-color-4 §5.1 (rgb/rgba) and §
         expect(misses).toEqual([]);
     });
 
-    // F-W5c-1 (this unit's finding, raised for a ruling — NOT cured here): css-color-4 §4.2 reads
-    // `<alpha-value> = <number> | <percentage>` and its changelog "Made explicit that legacy forms do
-    // not support none"; WPT refuses both inputs below. The seam ACCEPTS them under the standing
-    // ruling PB-01/02 (`algebra/grammar.mjs`'s legacy note: "`none` as the FOURTH argument stays
-    // lawful, which is what PB-01/02's own cell `rgb(58%, 14%, .816, none)` requires"). An
-    // adjudicated reading is changed by a dated ruling (E-3), not by a test; the pair is asserted
-    // here AS RULED so the day the ruling moves, this line is the one that must move with it.
-    const RULED_PB_01_02 = ["rgb(255, 255, 255, none)", "hsla(120, 100%, 50%, none)"];
+    // F-W5c-1 — RE-RULED TO THE SPEC (COHESION §0bx, X.P.W5.g; DIVERGENCE-LEDGER §14). css-color-4
+    // §4.2 (ED) reads `<alpha-value> = <number> | <percentage>` and its changelog "Made explicit that
+    // legacy forms do not support none"; WPT refuses both inputs below. Until X.P.W5.g the seam
+    // accepted them under PB-01/02 and this test asserted the pair AS RULED; the ruling moved, so the
+    // pair moved with it: each legacy arm's alpha is `legacyAlpha()` (`algebra/grammar.mjs`) and the
+    // two cells are refused like every other in-scope invalid legacy form, in both lowerings.
+    const F_W5C_1 = ["rgb(255, 255, 255, none)", "hsla(120, 100%, 50%, none)"];
 
-    it("every in-scope WPT invalid legacy form is refused — but the two PB-01/02 cells, asserted as ruled", () => {
+    it("every in-scope WPT invalid legacy form is refused, the two F-W5c-1 `none`-alpha cells included", () => {
         const cases = INVALID.flatMap((f) => loadWptCases(f)).filter((c) => legacy(c.input));
         expect(tally(cases.map((c) => scopeOf(c.input)))).toEqual({ in: 48, calc: 1 });
         const accepted = cases.filter((c) => scopeOf(c.input) === "in" && parse(c.input).ok).map((c) => c.input);
-        expect(accepted).toEqual(RULED_PB_01_02);
+        expect(accepted).toEqual([]);
+        expect(F_W5C_1.every((s) => cases.some((c) => c.input === s))).toBe(true);
+    });
+
+    it("F-W5c-1 in both lowerings: a `none` legacy alpha is css_syntax, the modern `/ none` still parses", async () => {
+        const { js, wasm } = (await loadPublicSurfaces()) as unknown as Record<"js" | "wasm", { parseCssColor: (s: string) => Result }>;
+        for (const s of F_W5C_1) {
+            const a = js.parseCssColor(s);
+            expect(a.ok, s).toBe(false);
+            expect(JSON.stringify(wasm.parseCssColor(s)), s).toBe(JSON.stringify(a));
+        }
+        expect(parse("rgb(255 255 255 / none)")).toMatchObject({ ok: true, value: { alpha: "none" } });
+        expect(parse("hsl(120 100% 50% / none)")).toMatchObject({ ok: true, value: { alpha: "none" } });
     });
 });

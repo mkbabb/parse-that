@@ -174,12 +174,23 @@ export function buildGrammar(A) {
     // `[[r,g,b], alpha]` — measured here before this note was written: `rgb(1, 2, 3)` came back
     // `channels:[{t:[1,2,3]}, 1, null]` in the JS lowering. The alpha tail is therefore spelled
     // once per arm rather than shared.
+    //
+    // ── X.P.W5.g — F-W5c-1, RE-RULED TO THE SPEC (COHESION §0bx; W5.md ADDENDUM 2026-09-23) ──────
+    //
+    // The §4.2 reading quoted above is SUPERSEDED for the legacy arms. css-color-4 (ED) §4.2 writes
+    // `<alpha-value> = <number> | <percentage>`, and its changelog records "Made explicit that legacy
+    // forms do not support none"; WPT `color-invalid-rgb.html` / `color-invalid-hsl.html` refuse
+    // `rgb(255, 255, 255, none)` and `hsla(120, 100%, 50%, none)`. `none` is a keyword of the MODERN
+    // grammar (`alpha()` behind `/`) and of no legacy argument, so each legacy arm's alpha tail is
+    // `legacyAlpha()` — one alpha edit per arm, nothing else moves. PB-01/02 stands for the numeric
+    // four-argument form; its `none` face is withdrawn by the dated row in DIVERGENCE-LEDGER §14.
+    const legacyAlpha = () => CLAMP(0, 1, ALT(pctOf(1, 100), NUMT()));
     const rgbPct = () => CLAMP(0, 255, pctOf(255, 100));
     const rgbNum = () => CLAMP(0, 255, NUMT());
     const legacyRgb = () =>
         ALT(
-            SEQ(rgbPct(), sep(), rgbPct(), sep(), rgbPct(), OPT(SEQ(sep(), alpha()), 1)),
-            SEQ(rgbNum(), sep(), rgbNum(), sep(), rgbNum(), OPT(SEQ(sep(), alpha()), 1)),
+            SEQ(rgbPct(), sep(), rgbPct(), sep(), rgbPct(), OPT(SEQ(sep(), legacyAlpha()), 1)),
+            SEQ(rgbNum(), sep(), rgbNum(), sep(), rgbNum(), OPT(SEQ(sep(), legacyAlpha()), 1)),
         );
     /** `<hue>` in the LEGACY form: `<number> | <angle>`, and no `none` (§7.1 admits it only modern). */
     const legacyHue = () =>
@@ -192,7 +203,7 @@ export function buildGrammar(A) {
         );
     /** `<percentage>` in the LEGACY form: a percentage and nothing else (§7.1). */
     const legacyPct = () => CLAMP(0, 1, pctOf(1, 100));
-    const legacyHsl = () => SEQ(legacyHue(), sep(), legacyPct(), sep(), legacyPct(), OPT(SEQ(sep(), alpha()), 1));
+    const legacyHsl = () => SEQ(legacyHue(), sep(), legacyPct(), sep(), legacyPct(), OPT(SEQ(sep(), legacyAlpha()), 1));
 
     // E-2 cure (3), ruled at COHESION §0n.3 and landed by `ALGEBRA-ADDENDA-2026-09-18.md`: the tail
     // of an unknown function is **`skipped` opaque text**, not a `keyword`. π_keyword (§4.5) reads

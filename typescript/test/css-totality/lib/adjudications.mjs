@@ -679,8 +679,8 @@ function clampedNonFiniteEdits(src) {
 /**
  * PB-01/02's repair: drop the fourth comma argument of a legacy call, alpha and separator alike.
  *
- * ONLY when that argument is a WELL-FORMED `<alpha-value>` — a bare number, a percentage, or
- * `none` (css-color-4 §4.2). The ruling is about the FORM (four comma-separated arguments), not
+ * ONLY when that argument is a WELL-FORMED legacy `<alpha-value>` — a bare number or a percentage (`none`
+ * withdrawn by F-W5c-1, css-color-4 §4.2 ED). The ruling is about the FORM (four comma arguments), not
  * about the alpha's own spelling, so an input whose fourth argument is `7none-425`, `..66` or
  * `}9.969` carries a SECOND defect no ruling covers, and deleting it would make the repair claim
  * an input the ruling never reached. (MEASURED: without this guard the class claimed 24 cells at
@@ -695,10 +695,12 @@ function legacyAlphaEdits(src) {
         const fourth = call.args[3];
         if (third.length === 0 || fourth.length === 0) continue;
         const numeric = soleNumeric(fourth);
-        const ident = soleIdent(fourth);
+        //  X.P.W5.g — F-W5c-1 (COHESION §0bx, re-ruled to the spec): the LEGACY `<alpha-value>` is
+        //  `<number> | <percentage>` (css-color-4 §4.2 ED: "legacy forms do not support none"), so a
+        //  `none` fourth argument is no longer a form this ruling repairs — the candidate refuses it,
+        //  the incumbent refuses it, and the raw verdict stands. DIVERGENCE-LEDGER §14 carries the row.
         const wellFormed =
-            (numeric !== null && (numeric.unit === "" || numeric.unit === "%") && Number.isFinite(numeric.value) && !numeric.trailingDot) ||
-            (ident !== null && ident.text.toLowerCase() === "none");
+            numeric !== null && (numeric.unit === "" || numeric.unit === "%") && Number.isFinite(numeric.value) && !numeric.trailingDot;
         if (!wellFormed) continue;
         edits.push({ start: third[third.length - 1].end, end: fourth[fourth.length - 1].end, text: "" });
     }
