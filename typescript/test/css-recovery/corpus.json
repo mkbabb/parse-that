@@ -1,0 +1,4904 @@
+{
+    "servedModel": "claude-opus-5[1m]",
+    "schema": "x-p-w3.b.recovery-corpus/1",
+    "note": "DERIVED BY SCRIPT (test/css-recovery/build-corpus.mjs). Never hand-edit: `--check` re-derives and exits non-zero on any disagreement. Rows carry inputs and provenance ONLY — no expected values anywhere (W3.md §3: no self-authored answer keys).",
+    "contract": "W3.md §5 `.b` · §6 G-4 · §6 G-8 — the malformed-inverse suite's corpus",
+    "sources": [
+        {
+            "file": "experiments/w2/corpus/r1.json",
+            "read": 172,
+            "new": 172,
+            "provenance": "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+        },
+        {
+            "file": "experiments/w2/corpus/slice.json",
+            "read": 527,
+            "new": 457,
+            "provenance": "slice.json — the §10 slice corpus (X.P.W2.g)"
+        },
+        {
+            "file": "test/css-recovery/build-corpus.mjs",
+            "read": 67,
+            "new": 56,
+            "provenance": "the authored recovery band (X.P.W3.b)"
+        }
+    ],
+    "counts": {
+        "rows": 685,
+        "duplicatesFolded": 81
+    },
+    "rows": [
+        {
+            "id": "c0000",
+            "src": "",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)",
+                "authored recovery band — the empty and the whitespace-only input, per production"
+            ]
+        },
+        {
+            "id": "c0001",
+            "src": "  ",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0002",
+            "src": "/",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0003",
+            "src": ",",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0004",
+            "src": "()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0005",
+            "src": "(",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0006",
+            "src": ")",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0007",
+            "src": "null",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0008",
+            "src": "undefined",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0009",
+            "src": "NaN",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0010",
+            "src": "rgb()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0011",
+            "src": "rgb( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0012",
+            "src": "rgb(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0013",
+            "src": "rgb(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0014",
+            "src": "rgb(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0015",
+            "src": "rgb( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0016",
+            "src": "rgb(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0017",
+            "src": "rgb(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0018",
+            "src": "rgb( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0019",
+            "src": "rgba()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0020",
+            "src": "rgba( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0021",
+            "src": "rgba(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0022",
+            "src": "rgba(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0023",
+            "src": "rgba(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0024",
+            "src": "rgba( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0025",
+            "src": "rgba(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0026",
+            "src": "rgba(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0027",
+            "src": "rgba( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0028",
+            "src": "hsl()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0029",
+            "src": "hsl( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0030",
+            "src": "hsl(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0031",
+            "src": "hsl(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0032",
+            "src": "hsl(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0033",
+            "src": "hsl( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0034",
+            "src": "hsl(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0035",
+            "src": "hsl(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0036",
+            "src": "hsl( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0037",
+            "src": "hsla()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0038",
+            "src": "hsla( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0039",
+            "src": "hsla(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0040",
+            "src": "hsla(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0041",
+            "src": "hsla(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0042",
+            "src": "hsla( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0043",
+            "src": "hsla(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0044",
+            "src": "hsla(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0045",
+            "src": "hsla( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0046",
+            "src": "lab()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0047",
+            "src": "lab( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0048",
+            "src": "lab(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0049",
+            "src": "lab(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0050",
+            "src": "lab(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0051",
+            "src": "lab( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0052",
+            "src": "lab(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0053",
+            "src": "lab(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0054",
+            "src": "lab( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0055",
+            "src": "lch()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0056",
+            "src": "lch( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0057",
+            "src": "lch(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0058",
+            "src": "lch(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0059",
+            "src": "lch(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0060",
+            "src": "lch( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0061",
+            "src": "lch(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0062",
+            "src": "lch(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0063",
+            "src": "lch( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0064",
+            "src": "oklab()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0065",
+            "src": "oklab( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0066",
+            "src": "oklab(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0067",
+            "src": "oklab(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0068",
+            "src": "oklab(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0069",
+            "src": "oklab( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0070",
+            "src": "oklab(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0071",
+            "src": "oklab(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0072",
+            "src": "oklab( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0073",
+            "src": "oklch()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0074",
+            "src": "oklch( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0075",
+            "src": "oklch(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0076",
+            "src": "oklch(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0077",
+            "src": "oklch(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0078",
+            "src": "oklch( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0079",
+            "src": "oklch(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0080",
+            "src": "oklch(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0081",
+            "src": "oklch( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0082",
+            "src": "color()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0083",
+            "src": "color( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0084",
+            "src": "color(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0085",
+            "src": "color(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0086",
+            "src": "color(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0087",
+            "src": "color( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0088",
+            "src": "color(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0089",
+            "src": "color(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0090",
+            "src": "color( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0091",
+            "src": "hwb()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0092",
+            "src": "hwb( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0093",
+            "src": "hwb(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0094",
+            "src": "hwb(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0095",
+            "src": "hwb(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0096",
+            "src": "hwb( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0097",
+            "src": "hwb(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0098",
+            "src": "hwb(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0099",
+            "src": "hwb( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0100",
+            "src": "scroll()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0101",
+            "src": "scroll( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0102",
+            "src": "scroll(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0103",
+            "src": "scroll(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0104",
+            "src": "scroll(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0105",
+            "src": "scroll( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0106",
+            "src": "scroll(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0107",
+            "src": "scroll(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0108",
+            "src": "scroll( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0109",
+            "src": "view()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0110",
+            "src": "view( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0111",
+            "src": "view(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0112",
+            "src": "view(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0113",
+            "src": "view(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0114",
+            "src": "view( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0115",
+            "src": "view(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0116",
+            "src": "view(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0117",
+            "src": "view( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0118",
+            "src": "cubic-bezier()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0119",
+            "src": "cubic-bezier( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0120",
+            "src": "cubic-bezier(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0121",
+            "src": "cubic-bezier(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0122",
+            "src": "cubic-bezier(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0123",
+            "src": "cubic-bezier( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0124",
+            "src": "cubic-bezier(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0125",
+            "src": "cubic-bezier(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0126",
+            "src": "cubic-bezier( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0127",
+            "src": "steps()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0128",
+            "src": "steps( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0129",
+            "src": "steps(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0130",
+            "src": "steps(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0131",
+            "src": "steps(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0132",
+            "src": "steps( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0133",
+            "src": "steps(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0134",
+            "src": "steps(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0135",
+            "src": "steps( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0136",
+            "src": "linear()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0137",
+            "src": "linear( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0138",
+            "src": "linear(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0139",
+            "src": "linear(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0140",
+            "src": "linear(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0141",
+            "src": "linear( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0142",
+            "src": "linear(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0143",
+            "src": "linear(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0144",
+            "src": "linear( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0145",
+            "src": "var()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)",
+                "authored recovery band — the balanced tail — the REF back-edge, and the bytes a DROP skipped opaque"
+            ]
+        },
+        {
+            "id": "c0146",
+            "src": "var( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0147",
+            "src": "var(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0148",
+            "src": "var(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0149",
+            "src": "var(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0150",
+            "src": "var( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0151",
+            "src": "var(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0152",
+            "src": "var(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0153",
+            "src": "var( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0154",
+            "src": "calc()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0155",
+            "src": "calc( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0156",
+            "src": "calc(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0157",
+            "src": "calc(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0158",
+            "src": "calc(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0159",
+            "src": "calc( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)",
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0160",
+            "src": "calc(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0161",
+            "src": "calc(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0162",
+            "src": "calc( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0163",
+            "src": "translate()",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0164",
+            "src": "translate( )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0165",
+            "src": "translate(/)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0166",
+            "src": "translate(,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0167",
+            "src": "translate(/ )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0168",
+            "src": "translate( / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0169",
+            "src": "translate(,,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0170",
+            "src": "translate(/ / )",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0171",
+            "src": "translate( ,)",
+            "provenance": [
+                "r1.json — the 172-input R1 corpus (GATE-VERDICT F-2)"
+            ]
+        },
+        {
+            "id": "c0172",
+            "src": "#abc",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0173",
+            "src": "#ABC",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0174",
+            "src": "#abcd",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0175",
+            "src": "#0a1b2c",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0176",
+            "src": "#0A1B2C",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0177",
+            "src": "#0a1b2c80",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0178",
+            "src": "#fff0",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0179",
+            "src": "aliceblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0180",
+            "src": "antiquewhite",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0181",
+            "src": "aqua",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0182",
+            "src": "aquamarine",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0183",
+            "src": "azure",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0184",
+            "src": "beige",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0185",
+            "src": "bisque",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0186",
+            "src": "black",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0187",
+            "src": "blanchedalmond",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0188",
+            "src": "blue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0189",
+            "src": "blueviolet",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0190",
+            "src": "brown",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0191",
+            "src": "burlywood",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0192",
+            "src": "cadetblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0193",
+            "src": "chartreuse",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0194",
+            "src": "chocolate",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0195",
+            "src": "coral",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0196",
+            "src": "cornflowerblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0197",
+            "src": "cornsilk",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0198",
+            "src": "crimson",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0199",
+            "src": "cyan",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0200",
+            "src": "darkblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0201",
+            "src": "darkcyan",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0202",
+            "src": "darkgoldenrod",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0203",
+            "src": "darkgray",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0204",
+            "src": "darkgreen",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0205",
+            "src": "darkgrey",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0206",
+            "src": "darkkhaki",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0207",
+            "src": "darkmagenta",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0208",
+            "src": "darkolivegreen",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0209",
+            "src": "darkorange",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0210",
+            "src": "darkorchid",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0211",
+            "src": "darkred",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0212",
+            "src": "darksalmon",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0213",
+            "src": "darkseagreen",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0214",
+            "src": "darkslateblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0215",
+            "src": "darkslategray",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0216",
+            "src": "darkslategrey",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0217",
+            "src": "darkturquoise",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0218",
+            "src": "darkviolet",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0219",
+            "src": "deeppink",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0220",
+            "src": "deepskyblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0221",
+            "src": "dimgray",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0222",
+            "src": "dimgrey",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0223",
+            "src": "dodgerblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0224",
+            "src": "firebrick",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0225",
+            "src": "floralwhite",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0226",
+            "src": "forestgreen",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0227",
+            "src": "fuchsia",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0228",
+            "src": "gainsboro",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0229",
+            "src": "ghostwhite",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0230",
+            "src": "gold",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0231",
+            "src": "goldenrod",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0232",
+            "src": "gray",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0233",
+            "src": "green",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0234",
+            "src": "greenyellow",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0235",
+            "src": "grey",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0236",
+            "src": "honeydew",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0237",
+            "src": "hotpink",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0238",
+            "src": "indianred",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0239",
+            "src": "indigo",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0240",
+            "src": "ivory",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0241",
+            "src": "khaki",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0242",
+            "src": "lavender",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0243",
+            "src": "lavenderblush",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0244",
+            "src": "lawngreen",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0245",
+            "src": "lemonchiffon",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0246",
+            "src": "lightblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0247",
+            "src": "lightcoral",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0248",
+            "src": "lightcyan",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0249",
+            "src": "lightgoldenrodyellow",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0250",
+            "src": "lightgray",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0251",
+            "src": "lightgreen",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0252",
+            "src": "lightgrey",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0253",
+            "src": "lightpink",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0254",
+            "src": "lightsalmon",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0255",
+            "src": "lightseagreen",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0256",
+            "src": "lightskyblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0257",
+            "src": "lightslategray",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0258",
+            "src": "lightslategrey",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0259",
+            "src": "lightsteelblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0260",
+            "src": "lightyellow",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0261",
+            "src": "lime",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0262",
+            "src": "limegreen",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0263",
+            "src": "linen",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0264",
+            "src": "magenta",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0265",
+            "src": "maroon",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0266",
+            "src": "mediumaquamarine",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0267",
+            "src": "mediumblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0268",
+            "src": "mediumorchid",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0269",
+            "src": "mediumpurple",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0270",
+            "src": "mediumseagreen",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0271",
+            "src": "mediumslateblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0272",
+            "src": "mediumspringgreen",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0273",
+            "src": "mediumturquoise",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0274",
+            "src": "mediumvioletred",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0275",
+            "src": "midnightblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0276",
+            "src": "mintcream",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0277",
+            "src": "mistyrose",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0278",
+            "src": "moccasin",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0279",
+            "src": "navajowhite",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0280",
+            "src": "navy",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0281",
+            "src": "oldlace",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0282",
+            "src": "olive",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0283",
+            "src": "olivedrab",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0284",
+            "src": "orange",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0285",
+            "src": "orangered",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0286",
+            "src": "orchid",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0287",
+            "src": "palegoldenrod",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0288",
+            "src": "palegreen",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0289",
+            "src": "paleturquoise",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0290",
+            "src": "palevioletred",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0291",
+            "src": "papayawhip",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0292",
+            "src": "peachpuff",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0293",
+            "src": "peru",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0294",
+            "src": "pink",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0295",
+            "src": "plum",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0296",
+            "src": "powderblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0297",
+            "src": "purple",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0298",
+            "src": "rebeccapurple",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0299",
+            "src": "red",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0300",
+            "src": "rosybrown",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0301",
+            "src": "royalblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0302",
+            "src": "saddlebrown",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0303",
+            "src": "salmon",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0304",
+            "src": "sandybrown",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0305",
+            "src": "seagreen",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0306",
+            "src": "seashell",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0307",
+            "src": "sienna",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0308",
+            "src": "silver",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0309",
+            "src": "skyblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0310",
+            "src": "slateblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0311",
+            "src": "slategray",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0312",
+            "src": "slategrey",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0313",
+            "src": "snow",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0314",
+            "src": "springgreen",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0315",
+            "src": "steelblue",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0316",
+            "src": "tan",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0317",
+            "src": "teal",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0318",
+            "src": "thistle",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0319",
+            "src": "tomato",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0320",
+            "src": "turquoise",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0321",
+            "src": "violet",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0322",
+            "src": "wheat",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0323",
+            "src": "white",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0324",
+            "src": "whitesmoke",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0325",
+            "src": "yellow",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0326",
+            "src": "yellowgreen",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0327",
+            "src": "transparent",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0328",
+            "src": "currentcolor",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)",
+                "authored recovery band — the context-colour guard — the one production whose only result is a failure"
+            ]
+        },
+        {
+            "id": "c0329",
+            "src": "currentColor",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0330",
+            "src": "canvastext",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0331",
+            "src": "rgb(1 2 3)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0332",
+            "src": "rgb(1 2 3 / 0.5)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0333",
+            "src": "rgb(50% 20% 30%)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0334",
+            "src": "rgb(none 2 3)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0335",
+            "src": "rgb(1, 2, 3)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0336",
+            "src": "rgba(1, 2, 3, 0.5)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0337",
+            "src": "rgba(1 2 3 / 50%)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0338",
+            "src": "hsl(120 50% 50%)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0339",
+            "src": "hsl(120deg 50% 50% / 0.25)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0340",
+            "src": "hsl(120, 50%, 50%)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0341",
+            "src": "hsla(120, 50%, 50%, 0.5)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0342",
+            "src": "hsl(0.5turn 50% 50%)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0343",
+            "src": "hsl(400grad 50% 50%)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0344",
+            "src": "hsl(1rad 50% 50%)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0345",
+            "src": "hsl(480 50% 50%)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0346",
+            "src": "hsl(none none none)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0347",
+            "src": "oklch(50% 0.1 120)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0348",
+            "src": "oklch(0.5 0.1 120deg / 50%)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0349",
+            "src": "oklch(50% 50% 1rad)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0350",
+            "src": "oklch(none none none)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0351",
+            "src": "oklch(0.5 0.1 120 / none)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0352",
+            "src": "var(--brand)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)",
+                "authored recovery band — the balanced tail — the REF back-edge, and the bytes a DROP skipped opaque"
+            ]
+        },
+        {
+            "id": "c0353",
+            "src": "var(--brand, red)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0354",
+            "src": "var(--a(--b))",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0355",
+            "src": "var(--x, rgb(1 2 3))",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0356",
+            "src": "rgb(1. 2 3)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0357",
+            "src": "rgb(1e400 0 0)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)",
+                "authored recovery band — constructor guards — a shape that parses and a value that cannot be built"
+            ]
+        },
+        {
+            "id": "c0358",
+            "src": "lab(50 1e400 0)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0359",
+            "src": "rgb(-0 0 0)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0360",
+            "src": "rgb(+1 2 3)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0361",
+            "src": "rgb(50%20%30%)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0362",
+            "src": "rgb(1.5.5 3)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0363",
+            "src": "hsl(120 50%50%)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0364",
+            "src": "hsl(120 50 50)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0365",
+            "src": "hsl(120, 50, 50)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0366",
+            "src": "rgb(300 -20 3)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0367",
+            "src": "oklch(1.5 -1 30)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0368",
+            "src": "rgb(0 0 0 / 200%)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0369",
+            "src": "rgb(0 0 0 / 1.5)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0370",
+            "src": "rgb(1,2,3,)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0371",
+            "src": "rgb(1 2 3 / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0372",
+            "src": "rgb(1, 2 3)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0373",
+            "src": "hsl(120%, 50%, 50%)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0374",
+            "src": "lch(50% 50% 50%)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0375",
+            "src": "hwb(120, 30%, 40%)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0376",
+            "src": "red x",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0377",
+            "src": "rgb(1 2)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0378",
+            "src": "rgb(1 2 3 4)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0379",
+            "src": "#ab",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)",
+                "authored recovery band — degenerate heads the R1 corpus does not carry"
+            ]
+        },
+        {
+            "id": "c0380",
+            "src": "#abcde",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)",
+                "authored recovery band — degenerate heads the R1 corpus does not carry"
+            ]
+        },
+        {
+            "id": "c0381",
+            "src": "nosuchcolor",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0382",
+            "src": "color-mix(in srgb, red, blue)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0383",
+            "src": "rgb(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0384",
+            "src": "rgb(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0385",
+            "src": "rgb(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0386",
+            "src": "rgb( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0387",
+            "src": "rgb(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0388",
+            "src": "rgb( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0389",
+            "src": "rgba(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0390",
+            "src": "rgba(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0391",
+            "src": "rgba(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0392",
+            "src": "rgba( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0393",
+            "src": "rgba(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0394",
+            "src": "rgba( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0395",
+            "src": "hsl(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0396",
+            "src": "hsl(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0397",
+            "src": "hsl(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0398",
+            "src": "hsl( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0399",
+            "src": "hsl(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0400",
+            "src": "hsl( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0401",
+            "src": "hsla(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0402",
+            "src": "hsla(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0403",
+            "src": "hsla(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0404",
+            "src": "hsla( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0405",
+            "src": "hsla(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0406",
+            "src": "hsla( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0407",
+            "src": "hwb(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0408",
+            "src": "hwb(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0409",
+            "src": "hwb(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0410",
+            "src": "hwb( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0411",
+            "src": "hwb(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0412",
+            "src": "hwb( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0413",
+            "src": "lab(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0414",
+            "src": "lab(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0415",
+            "src": "lab(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0416",
+            "src": "lab( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0417",
+            "src": "lab(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0418",
+            "src": "lab( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0419",
+            "src": "lch(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0420",
+            "src": "lch(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0421",
+            "src": "lch(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0422",
+            "src": "lch( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0423",
+            "src": "lch(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0424",
+            "src": "lch( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0425",
+            "src": "oklab(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0426",
+            "src": "oklab(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0427",
+            "src": "oklab(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0428",
+            "src": "oklab( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0429",
+            "src": "oklab(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0430",
+            "src": "oklab( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0431",
+            "src": "oklch(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0432",
+            "src": "oklch(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0433",
+            "src": "oklch(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0434",
+            "src": "oklch( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0435",
+            "src": "oklch(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0436",
+            "src": "oklch( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0437",
+            "src": "color(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0438",
+            "src": "color(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0439",
+            "src": "color(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0440",
+            "src": "color( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0441",
+            "src": "color(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0442",
+            "src": "color( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0443",
+            "src": "xyz()",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0444",
+            "src": "xyz( )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0445",
+            "src": "xyz(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0446",
+            "src": "xyz(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0447",
+            "src": "xyz(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0448",
+            "src": "xyz( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0449",
+            "src": "xyz(/)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0450",
+            "src": "xyz( / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0451",
+            "src": "xyz(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0452",
+            "src": "xyz( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0453",
+            "src": "calc(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0454",
+            "src": "calc(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0455",
+            "src": "calc(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0456",
+            "src": "calc( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0457",
+            "src": "calc(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0458",
+            "src": "calc( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0459",
+            "src": "url()",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0460",
+            "src": "url( )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0461",
+            "src": "url(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0462",
+            "src": "url(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0463",
+            "src": "url(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0464",
+            "src": "url( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0465",
+            "src": "url(/)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0466",
+            "src": "url( / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0467",
+            "src": "url(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0468",
+            "src": "url( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0469",
+            "src": "attr()",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0470",
+            "src": "attr( )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0471",
+            "src": "attr(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0472",
+            "src": "attr(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0473",
+            "src": "attr(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0474",
+            "src": "attr( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0475",
+            "src": "attr(/)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0476",
+            "src": "attr( / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0477",
+            "src": "attr(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0478",
+            "src": "attr( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0479",
+            "src": "steps(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0480",
+            "src": "steps(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0481",
+            "src": "steps(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0482",
+            "src": "steps( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0483",
+            "src": "steps(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0484",
+            "src": "steps( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0485",
+            "src": "linear(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0486",
+            "src": "linear(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0487",
+            "src": "linear(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0488",
+            "src": "linear( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0489",
+            "src": "linear(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0490",
+            "src": "linear( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0491",
+            "src": "scroll(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0492",
+            "src": "scroll(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0493",
+            "src": "scroll(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0494",
+            "src": "scroll( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0495",
+            "src": "scroll(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0496",
+            "src": "scroll( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0497",
+            "src": "view(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0498",
+            "src": "view(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0499",
+            "src": "view(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0500",
+            "src": "view( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0501",
+            "src": "view(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0502",
+            "src": "view( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0503",
+            "src": "foo()",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0504",
+            "src": "foo( )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0505",
+            "src": "foo(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0506",
+            "src": "foo(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0507",
+            "src": "foo(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0508",
+            "src": "foo( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0509",
+            "src": "foo(/)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0510",
+            "src": "foo( / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0511",
+            "src": "foo(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0512",
+            "src": "foo( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0513",
+            "src": "a()",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0514",
+            "src": "a( )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0515",
+            "src": "a(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0516",
+            "src": "a(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0517",
+            "src": "a(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0518",
+            "src": "a( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0519",
+            "src": "a(/)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0520",
+            "src": "a( / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0521",
+            "src": "a(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0522",
+            "src": "a( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0523",
+            "src": "a-b()",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0524",
+            "src": "a-b( )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0525",
+            "src": "a-b(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0526",
+            "src": "a-b(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0527",
+            "src": "a-b(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0528",
+            "src": "a-b( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0529",
+            "src": "a-b(/)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0530",
+            "src": "a-b( / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0531",
+            "src": "a-b(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0532",
+            "src": "a-b( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0533",
+            "src": "var(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0534",
+            "src": "var(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0535",
+            "src": "var(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0536",
+            "src": "var( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0537",
+            "src": "var(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0538",
+            "src": "var( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0539",
+            "src": "env()",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0540",
+            "src": "env( )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0541",
+            "src": "env(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0542",
+            "src": "env(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0543",
+            "src": "env(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0544",
+            "src": "env( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0545",
+            "src": "env(/)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0546",
+            "src": "env( / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0547",
+            "src": "env(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0548",
+            "src": "env( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0549",
+            "src": "hsv()",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0550",
+            "src": "hsv( )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0551",
+            "src": "hsv(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0552",
+            "src": "hsv(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0553",
+            "src": "hsv(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0554",
+            "src": "hsv( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0555",
+            "src": "hsv(/)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0556",
+            "src": "hsv( / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0557",
+            "src": "hsv(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0558",
+            "src": "hsv( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0559",
+            "src": "kelvin()",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0560",
+            "src": "kelvin( )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0561",
+            "src": "kelvin(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0562",
+            "src": "kelvin(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0563",
+            "src": "kelvin(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0564",
+            "src": "kelvin( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0565",
+            "src": "kelvin(/)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0566",
+            "src": "kelvin( / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0567",
+            "src": "kelvin(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0568",
+            "src": "kelvin( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0569",
+            "src": "ictcp()",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0570",
+            "src": "ictcp( )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0571",
+            "src": "ictcp(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0572",
+            "src": "ictcp(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0573",
+            "src": "ictcp(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0574",
+            "src": "ictcp( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0575",
+            "src": "ictcp(/)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0576",
+            "src": "ictcp( / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0577",
+            "src": "ictcp(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0578",
+            "src": "ictcp( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0579",
+            "src": "jzazbz()",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0580",
+            "src": "jzazbz( )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0581",
+            "src": "jzazbz(  )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0582",
+            "src": "jzazbz(\t)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0583",
+            "src": "jzazbz(\n)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0584",
+            "src": "jzazbz( \t\n )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0585",
+            "src": "jzazbz(/)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0586",
+            "src": "jzazbz( / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0587",
+            "src": "jzazbz(//)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0588",
+            "src": "jzazbz( / / )",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0589",
+            "src": "linear",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0590",
+            "src": "ease",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0591",
+            "src": "ease-in",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0592",
+            "src": "ease-out",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0593",
+            "src": "ease-in-out",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0594",
+            "src": "step-start",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0595",
+            "src": "step-end",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0596",
+            "src": "cubic-bezier(0.1, 0.7, 1, 0.1)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0597",
+            "src": "cubic-bezier(0,0,1,1)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0598",
+            "src": "cubic-bezier(1.5, 0, 1, 1)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0599",
+            "src": "steps(4)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0600",
+            "src": "steps(4, jump-start)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0601",
+            "src": "steps(4, jump-end)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0602",
+            "src": "steps(4, jump-none)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0603",
+            "src": "steps(4, jump-both)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0604",
+            "src": "steps(4, start)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0605",
+            "src": "steps(4, end)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0606",
+            "src": "steps(1, jump-none)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0607",
+            "src": "steps(0)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)",
+                "authored recovery band — constructor guards — a shape that parses and a value that cannot be built"
+            ]
+        },
+        {
+            "id": "c0608",
+            "src": "steps(1.5)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)",
+                "authored recovery band — constructor guards — a shape that parses and a value that cannot be built"
+            ]
+        },
+        {
+            "id": "c0609",
+            "src": "linear(0, 1)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0610",
+            "src": "linear(0, 0.5 50%, 1)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0611",
+            "src": "linear(0, 0.5 25% 75%, 1)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0612",
+            "src": "linear(0)",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)",
+                "authored recovery band — constructor guards — a shape that parses and a value that cannot be built"
+            ]
+        },
+        {
+            "id": "c0613",
+            "src": "nosuch",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0614",
+            "src": "a{color:red}",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0615",
+            "src": "A { Color : RED !important }",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0616",
+            "src": "a, b { color: #abc }",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0617",
+            "src": "a { color: red } GARBAGE ) ; b { color: blue }",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0618",
+            "src": "a { color: red } GARBAGE0 ) ; b { color: blue }",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0619",
+            "src": "a { color: red } GARBAGE0 ) ; GARBAGE1 ) ; b { color: blue }",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0620",
+            "src": "a { color: red } GARBAGE0 ) ; GARBAGE1 ) ; GARBAGE2 ) ; b { color: blue }",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0621",
+            "src": "a { color: red } GARBAGE0 ) ; GARBAGE1 ) ; GARBAGE2 ) ; GARBAGE3 ) ; GARBAGE4 ) ; b { color: blue }",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0622",
+            "src": "a { color: red } GARBAGE0 ) ; GARBAGE1 ) ; GARBAGE2 ) ; GARBAGE3 ) ; GARBAGE4 ) ; GARBAGE5 ) ; GARBAGE6 ) ; GARBAGE7 ) ; b { color: blue }",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0623",
+            "src": "a { color: red } ; b { color: blue }",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0624",
+            "src": "   ",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0625",
+            "src": "a{}",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0626",
+            "src": "a{color:red;}",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0627",
+            "src": "a{color:red;;}",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)",
+                "authored recovery band — stylesheet RECOVER — the malformed qualified rule the sync-rule skips"
+            ]
+        },
+        {
+            "id": "c0628",
+            "src": "var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(--x)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))",
+            "provenance": [
+                "slice.json — the §10 slice corpus (X.P.W2.g)"
+            ]
+        },
+        {
+            "id": "c0629",
+            "src": "a{",
+            "provenance": [
+                "authored recovery band — stylesheet RECOVER — the malformed qualified rule the sync-rule skips"
+            ]
+        },
+        {
+            "id": "c0630",
+            "src": "a{;}",
+            "provenance": [
+                "authored recovery band — stylesheet RECOVER — the malformed qualified rule the sync-rule skips"
+            ]
+        },
+        {
+            "id": "c0631",
+            "src": "a{color}",
+            "provenance": [
+                "authored recovery band — stylesheet RECOVER — the malformed qualified rule the sync-rule skips"
+            ]
+        },
+        {
+            "id": "c0632",
+            "src": "a{color:}",
+            "provenance": [
+                "authored recovery band — stylesheet RECOVER — the malformed qualified rule the sync-rule skips"
+            ]
+        },
+        {
+            "id": "c0633",
+            "src": "a{color:;}",
+            "provenance": [
+                "authored recovery band — stylesheet RECOVER — the malformed qualified rule the sync-rule skips"
+            ]
+        },
+        {
+            "id": "c0634",
+            "src": "a{:red}",
+            "provenance": [
+                "authored recovery band — stylesheet RECOVER — the malformed qualified rule the sync-rule skips"
+            ]
+        },
+        {
+            "id": "c0635",
+            "src": "}",
+            "provenance": [
+                "authored recovery band — stylesheet RECOVER — the malformed qualified rule the sync-rule skips"
+            ]
+        },
+        {
+            "id": "c0636",
+            "src": "a{}b{}",
+            "provenance": [
+                "authored recovery band — stylesheet RECOVER — the malformed qualified rule the sync-rule skips"
+            ]
+        },
+        {
+            "id": "c0637",
+            "src": "a{color:red}}",
+            "provenance": [
+                "authored recovery band — stylesheet RECOVER — the malformed qualified rule the sync-rule skips"
+            ]
+        },
+        {
+            "id": "c0638",
+            "src": "a{color:red",
+            "provenance": [
+                "authored recovery band — stylesheet RECOVER — the malformed qualified rule the sync-rule skips"
+            ]
+        },
+        {
+            "id": "c0639",
+            "src": "a{color:#gg}",
+            "provenance": [
+                "authored recovery band — stylesheet RECOVER — the malformed qualified rule the sync-rule skips"
+            ]
+        },
+        {
+            "id": "c0640",
+            "src": "a b{color:red}",
+            "provenance": [
+                "authored recovery band — stylesheet RECOVER — the malformed qualified rule the sync-rule skips"
+            ]
+        },
+        {
+            "id": "c0641",
+            "src": "a{color:red}@media{}",
+            "provenance": [
+                "authored recovery band — stylesheet RECOVER — the malformed qualified rule the sync-rule skips"
+            ]
+        },
+        {
+            "id": "c0642",
+            "src": "#abc ",
+            "provenance": [
+                "authored recovery band — END — trailing input after a complete production"
+            ]
+        },
+        {
+            "id": "c0643",
+            "src": "#abcx",
+            "provenance": [
+                "authored recovery band — END — trailing input after a complete production"
+            ]
+        },
+        {
+            "id": "c0644",
+            "src": "red red",
+            "provenance": [
+                "authored recovery band — END — trailing input after a complete production"
+            ]
+        },
+        {
+            "id": "c0645",
+            "src": "rgb(1 2 3) 4",
+            "provenance": [
+                "authored recovery band — END — trailing input after a complete production"
+            ]
+        },
+        {
+            "id": "c0646",
+            "src": "linear ease",
+            "provenance": [
+                "authored recovery band — END — trailing input after a complete production"
+            ]
+        },
+        {
+            "id": "c0647",
+            "src": "a{color:red} ;",
+            "provenance": [
+                "authored recovery band — END — trailing input after a complete production"
+            ]
+        },
+        {
+            "id": "c0648",
+            "src": "CurrentColor",
+            "provenance": [
+                "authored recovery band — the context-colour guard — the one production whose only result is a failure"
+            ]
+        },
+        {
+            "id": "c0649",
+            "src": "canvas",
+            "provenance": [
+                "authored recovery band — the context-colour guard — the one production whose only result is a failure"
+            ]
+        },
+        {
+            "id": "c0650",
+            "src": "highlighttext",
+            "provenance": [
+                "authored recovery band — the context-colour guard — the one production whose only result is a failure"
+            ]
+        },
+        {
+            "id": "c0651",
+            "src": "a{color:currentcolor}",
+            "provenance": [
+                "authored recovery band — the context-colour guard — the one production whose only result is a failure"
+            ]
+        },
+        {
+            "id": "c0652",
+            "src": "cubic-bezier(2,0,0,0)",
+            "provenance": [
+                "authored recovery band — constructor guards — a shape that parses and a value that cannot be built"
+            ]
+        },
+        {
+            "id": "c0653",
+            "src": "cubic-bezier(0,0,2,0)",
+            "provenance": [
+                "authored recovery band — constructor guards — a shape that parses and a value that cannot be built"
+            ]
+        },
+        {
+            "id": "c0654",
+            "src": "steps(1,jump-none)",
+            "provenance": [
+                "authored recovery band — constructor guards — a shape that parses and a value that cannot be built"
+            ]
+        },
+        {
+            "id": "c0655",
+            "src": "hsl(1e400 0% 0%)",
+            "provenance": [
+                "authored recovery band — constructor guards — a shape that parses and a value that cannot be built"
+            ]
+        },
+        {
+            "id": "c0656",
+            "src": "var(--a,var(--b))",
+            "provenance": [
+                "authored recovery band — the balanced tail — the REF back-edge, and the bytes a DROP skipped opaque"
+            ]
+        },
+        {
+            "id": "c0657",
+            "src": "var(",
+            "provenance": [
+                "authored recovery band — the balanced tail — the REF back-edge, and the bytes a DROP skipped opaque"
+            ]
+        },
+        {
+            "id": "c0658",
+            "src": "var(--a))",
+            "provenance": [
+                "authored recovery band — the balanced tail — the REF back-edge, and the bytes a DROP skipped opaque"
+            ]
+        },
+        {
+            "id": "c0659",
+            "src": "var((((",
+            "provenance": [
+                "authored recovery band — the balanced tail — the REF back-edge, and the bytes a DROP skipped opaque"
+            ]
+        },
+        {
+            "id": "c0660",
+            "src": "var((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((()))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))",
+            "provenance": [
+                "authored recovery band — the REF depth bound — at 64 and one past it"
+            ]
+        },
+        {
+            "id": "c0661",
+            "src": "var(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((())))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))",
+            "provenance": [
+                "authored recovery band — the REF depth bound — at 64 and one past it"
+            ]
+        },
+        {
+            "id": "c0662",
+            "src": "var((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((()))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))",
+            "provenance": [
+                "authored recovery band — the REF depth bound — at 64 and one past it"
+            ]
+        },
+        {
+            "id": "c0663",
+            "src": "var(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((())))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))",
+            "provenance": [
+                "authored recovery band — the REF depth bound — at 64 and one past it"
+            ]
+        },
+        {
+            "id": "c0664",
+            "src": "var((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((()))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))",
+            "provenance": [
+                "authored recovery band — the REF depth bound — at 64 and one past it"
+            ]
+        },
+        {
+            "id": "c0665",
+            "src": "rgb(",
+            "provenance": [
+                "authored recovery band — degenerate heads the R1 corpus does not carry"
+            ]
+        },
+        {
+            "id": "c0666",
+            "src": "rgb(1",
+            "provenance": [
+                "authored recovery band — degenerate heads the R1 corpus does not carry"
+            ]
+        },
+        {
+            "id": "c0667",
+            "src": "rgb(1,",
+            "provenance": [
+                "authored recovery band — degenerate heads the R1 corpus does not carry"
+            ]
+        },
+        {
+            "id": "c0668",
+            "src": "rgb(1 2",
+            "provenance": [
+                "authored recovery band — degenerate heads the R1 corpus does not carry"
+            ]
+        },
+        {
+            "id": "c0669",
+            "src": "rgb(1 2 3 /",
+            "provenance": [
+                "authored recovery band — degenerate heads the R1 corpus does not carry"
+            ]
+        },
+        {
+            "id": "c0670",
+            "src": "#",
+            "provenance": [
+                "authored recovery band — degenerate heads the R1 corpus does not carry"
+            ]
+        },
+        {
+            "id": "c0671",
+            "src": "##",
+            "provenance": [
+                "authored recovery band — degenerate heads the R1 corpus does not carry"
+            ]
+        },
+        {
+            "id": "c0672",
+            "src": "#a",
+            "provenance": [
+                "authored recovery band — degenerate heads the R1 corpus does not carry"
+            ]
+        },
+        {
+            "id": "c0673",
+            "src": "#abcdefghi",
+            "provenance": [
+                "authored recovery band — degenerate heads the R1 corpus does not carry"
+            ]
+        },
+        {
+            "id": "c0674",
+            "src": "oklch(0.7 0.1)",
+            "provenance": [
+                "authored recovery band — degenerate heads the R1 corpus does not carry"
+            ]
+        },
+        {
+            "id": "c0675",
+            "src": "oklch(0.7 0.1 30 / )",
+            "provenance": [
+                "authored recovery band — degenerate heads the R1 corpus does not carry"
+            ]
+        },
+        {
+            "id": "c0676",
+            "src": "hsl(120deg 50% 50% / 0.5 0.5)",
+            "provenance": [
+                "authored recovery band — degenerate heads the R1 corpus does not carry"
+            ]
+        },
+        {
+            "id": "c0677",
+            "src": " ",
+            "provenance": [
+                "authored recovery band — the empty and the whitespace-only input, per production"
+            ]
+        },
+        {
+            "id": "c0678",
+            "src": "\t",
+            "provenance": [
+                "authored recovery band — the empty and the whitespace-only input, per production"
+            ]
+        },
+        {
+            "id": "c0679",
+            "src": "\n",
+            "provenance": [
+                "authored recovery band — the empty and the whitespace-only input, per production"
+            ]
+        },
+        {
+            "id": "c0680",
+            "src": "   \r\n  ",
+            "provenance": [
+                "authored recovery band — the empty and the whitespace-only input, per production"
+            ]
+        },
+        {
+            "id": "c0681",
+            "src": "café",
+            "provenance": [
+                "authored recovery band — non-ASCII and control bytes — the 0xFF marker's own band"
+            ]
+        },
+        {
+            "id": "c0682",
+            "src": "\u0000",
+            "provenance": [
+                "authored recovery band — non-ASCII and control bytes — the 0xFF marker's own band"
+            ]
+        },
+        {
+            "id": "c0683",
+            "src": "rgb(1 2 3)",
+            "provenance": [
+                "authored recovery band — non-ASCII and control bytes — the 0xFF marker's own band"
+            ]
+        },
+        {
+            "id": "c0684",
+            "src": "«red»",
+            "provenance": [
+                "authored recovery band — non-ASCII and control bytes — the 0xFF marker's own band"
+            ]
+        }
+    ]
+}

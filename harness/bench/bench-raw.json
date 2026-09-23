@@ -1,0 +1,4011 @@
+{
+  "schema": "x-p-w1.bench/1",
+  "servedModel": "claude-opus-5[1m]",
+  "generated": "2026-09-17T20:02:42.725Z",
+  "finished": "2026-09-17T20:02:44.548Z",
+  "method": {
+    "rounds": 40,
+    "warmupRoundsDiscarded": 10,
+    "statistic": "median of scored rounds",
+    "interleaving": "cells interleaved per round across a live process set",
+    "processModel": "one fresh process per cell; all cells alive simultaneously",
+    "latchObservation": "node loader hook appends a reader to every module declaring PACKRAT_ARMED; read at preload, entry and exit",
+    "barsApplied": "NONE — COHESION §0j.E OC-1: the bench table is RECORDED-NOT-GATING",
+    "historicalFloorsRecordedNotApplied": {
+      "VALUE_RATIO_FLOOR": 0.05,
+      "SHEET_RATIO_FLOOR": 0.1
+    }
+  },
+  "machine": {
+    "node": "v26.0.0",
+    "v8": "14.6.202.33-node.19",
+    "os": "darwin",
+    "os_release": "25.4.0",
+    "cpu": "Apple M5 Max",
+    "cores": 18,
+    "bound": "N=1 machine; same-process hot loop within a cell; ratios only"
+  },
+  "subjects": {
+    "published-4.0.0": {
+      "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/cand-o/vendor/value-js-4.0.0/dist/subpaths/css.js",
+      "bytes": 43972,
+      "sha256": "8b5381305ea26236326f06a38559247b2089a5be7fa78abe43640d0556320c42"
+    },
+    "c14": {
+      "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+      "bytes": 46661,
+      "sha256": "2b57626fff0975276f7d46d84ffc01835bc83bfe4f28ce6b5855622f6a22f0d6"
+    },
+    "deposed": {
+      "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/deposed-full/deposed-bundle.mjs",
+      "bytes": 202595,
+      "sha256": "6c62368f6b4e6c1c28e6c0542bc86004c243fba6bb6d70ac0bba8435a81618eb"
+    },
+    "parse-that-dist": {
+      "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+      "bytes": 40576,
+      "sha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8"
+    }
+  },
+  "census": {
+    "pid": 96134,
+    "ceiling": {
+      "deepestOk": 7773,
+      "mode": "RangeError thrown at depth 7774",
+      "lazyArity": 1,
+      "corpora": [
+        {
+          "corpus": "shared-accepted",
+          "items": 7,
+          "bytes": 306,
+          "declaredMaxDepth": 2,
+          "deepestItem": "acc-sheet-1",
+          "allStrings": true,
+          "margin": 7771,
+          "marginPct": 99.97426990865817
+        },
+        {
+          "corpus": "reject-non-throwing",
+          "items": 9,
+          "bytes": 100,
+          "declaredMaxDepth": 3,
+          "deepestItem": "rej-sheet-1",
+          "allStrings": true,
+          "margin": 7770,
+          "marginPct": 99.96140486298727
+        },
+        {
+          "corpus": "r1-throw-class",
+          "items": 172,
+          "bytes": 1419,
+          "declaredMaxDepth": 1,
+          "deepestItem": "r1-4",
+          "allStrings": true,
+          "margin": 7772,
+          "marginPct": 99.9871349543291
+        },
+        {
+          "corpus": "json-normaliser",
+          "items": 1,
+          "bytes": 220,
+          "declaredMaxDepth": 3,
+          "deepestItem": "json-1",
+          "allStrings": true,
+          "margin": 7770,
+          "marginPct": 99.96140486298727
+        }
+      ]
+    },
+    "boundary": {
+      "probes": 5,
+      "rawThrows": 5,
+      "rawModes": [
+        "TypeError"
+      ],
+      "guardedThrows": 0,
+      "guardedCodes": [
+        "non_string_input"
+      ],
+      "holds": true
+    },
+    "dispositions": [
+      {
+        "engine": "published-4.0.0",
+        "leg": "shared-accepted",
+        "items": 7,
+        "doors": [
+          "parseCssColor",
+          "parseTimingFunction",
+          "parseStylesheet"
+        ],
+        "accept": 7,
+        "reject": 0,
+        "throw": 0,
+        "timed": true,
+        "reason": ""
+      },
+      {
+        "engine": "published-4.0.0",
+        "leg": "reject-non-throwing",
+        "items": 9,
+        "doors": [
+          "parseCssColor",
+          "parseTimingFunction",
+          "parseStylesheet"
+        ],
+        "accept": 0,
+        "reject": 9,
+        "throw": 0,
+        "timed": true,
+        "reason": ""
+      },
+      {
+        "engine": "published-4.0.0",
+        "leg": "r1-throw-class",
+        "items": 172,
+        "doors": [
+          "parseCssColor"
+        ],
+        "accept": 0,
+        "reject": 70,
+        "throw": 102,
+        "timed": true,
+        "reason": ""
+      },
+      {
+        "engine": "c14",
+        "leg": "shared-accepted",
+        "items": 7,
+        "doors": [
+          "parseColor",
+          "parseEasing",
+          "parseStylesheet"
+        ],
+        "accept": 7,
+        "reject": 0,
+        "throw": 0,
+        "timed": true,
+        "reason": ""
+      },
+      {
+        "engine": "c14",
+        "leg": "reject-non-throwing",
+        "items": 9,
+        "doors": [
+          "parseColor",
+          "parseEasing",
+          "parseStylesheet"
+        ],
+        "accept": 0,
+        "reject": 9,
+        "throw": 0,
+        "timed": true,
+        "reason": ""
+      },
+      {
+        "engine": "c14",
+        "leg": "r1-throw-class",
+        "items": 172,
+        "doors": [
+          "parseColor"
+        ],
+        "accept": 0,
+        "reject": 172,
+        "throw": 0,
+        "timed": true,
+        "reason": ""
+      },
+      {
+        "engine": "deposed",
+        "leg": "shared-accepted",
+        "items": 7,
+        "doors": [
+          "CSSValues.Value.parse",
+          "parseCSSStylesheet"
+        ],
+        "accept": 7,
+        "reject": 0,
+        "throw": 0,
+        "timed": true,
+        "reason": ""
+      },
+      {
+        "engine": "deposed",
+        "leg": "reject-non-throwing",
+        "items": 9,
+        "doors": [
+          "CSSValues.Value.parse",
+          "parseCSSStylesheet"
+        ],
+        "accept": 6,
+        "reject": 0,
+        "throw": 3,
+        "timed": false,
+        "reason": "not a non-throwing reject path here: accept 6 / reject 0 / throw 3 of 9"
+      },
+      {
+        "engine": "deposed",
+        "leg": "r1-throw-class",
+        "items": 172,
+        "doors": [
+          "CSSValues.Value.parse"
+        ],
+        "accept": 166,
+        "reject": 6,
+        "throw": 0,
+        "timed": false,
+        "reason": "accepts 166/172 of the degenerate cross-product — this engine is not exercising the throw class at all"
+      },
+      {
+        "engine": "json-normaliser",
+        "leg": "json-normaliser",
+        "items": 1,
+        "doors": [
+          "jsonParser.parse"
+        ],
+        "accept": 1,
+        "reject": 0,
+        "throw": 0,
+        "timed": true,
+        "reason": ""
+      }
+    ],
+    "calibration": [
+      {
+        "engine": "published-4.0.0",
+        "leg": "shared-accepted",
+        "perPassNs": 25116.65,
+        "passes": 119
+      },
+      {
+        "engine": "published-4.0.0",
+        "leg": "reject-non-throwing",
+        "perPassNs": 2475,
+        "passes": 1212
+      },
+      {
+        "engine": "published-4.0.0",
+        "leg": "r1-throw-class",
+        "perPassNs": 3386850,
+        "passes": 1
+      },
+      {
+        "engine": "c14",
+        "leg": "shared-accepted",
+        "perPassNs": 59860.4,
+        "passes": 50
+      },
+      {
+        "engine": "c14",
+        "leg": "reject-non-throwing",
+        "perPassNs": 9577.05,
+        "passes": 313
+      },
+      {
+        "engine": "c14",
+        "leg": "r1-throw-class",
+        "perPassNs": 46664.55,
+        "passes": 64
+      },
+      {
+        "engine": "deposed",
+        "leg": "shared-accepted",
+        "perPassNs": 22683.3,
+        "passes": 132
+      },
+      {
+        "engine": "json-normaliser",
+        "leg": "json-normaliser",
+        "perPassNs": 7452.1,
+        "passes": 403
+      }
+    ]
+  },
+  "latchLedger": [
+    {
+      "cell": "census",
+      "pid": 96134,
+      "entry": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ],
+      "exit": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        },
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "bytes": 46661,
+          "originalSha256": "2b57626fff0975276f7d46d84ffc01835bc83bfe4f28ce6b5855622f6a22f0d6",
+          "declLine": 683,
+          "armSites": 0,
+          "armLines": [],
+          "armed": false
+        },
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/deposed-full/deposed-bundle.mjs",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/deposed-full/deposed-bundle.mjs",
+          "bytes": 202595,
+          "originalSha256": "6c62368f6b4e6c1c28e6c0542bc86004c243fba6bb6d70ac0bba8435a81618eb",
+          "declLine": 727,
+          "armSites": 0,
+          "armLines": [],
+          "armed": false
+        }
+      ]
+    },
+    {
+      "cell": "published-4.0.0/shared-accepted",
+      "pid": 96143,
+      "preload": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ],
+      "entry": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ],
+      "exit": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ]
+    },
+    {
+      "cell": "published-4.0.0/reject-non-throwing",
+      "pid": 96144,
+      "preload": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ],
+      "entry": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ],
+      "exit": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ]
+    },
+    {
+      "cell": "published-4.0.0/r1-throw-class",
+      "pid": 96145,
+      "preload": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ],
+      "entry": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ],
+      "exit": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ]
+    },
+    {
+      "cell": "c14/shared-accepted",
+      "pid": 96146,
+      "preload": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ],
+      "entry": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        },
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "bytes": 46661,
+          "originalSha256": "2b57626fff0975276f7d46d84ffc01835bc83bfe4f28ce6b5855622f6a22f0d6",
+          "declLine": 683,
+          "armSites": 0,
+          "armLines": [],
+          "armed": false
+        }
+      ],
+      "exit": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        },
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "bytes": 46661,
+          "originalSha256": "2b57626fff0975276f7d46d84ffc01835bc83bfe4f28ce6b5855622f6a22f0d6",
+          "declLine": 683,
+          "armSites": 0,
+          "armLines": [],
+          "armed": false
+        }
+      ]
+    },
+    {
+      "cell": "c14/reject-non-throwing",
+      "pid": 96147,
+      "preload": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ],
+      "entry": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        },
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "bytes": 46661,
+          "originalSha256": "2b57626fff0975276f7d46d84ffc01835bc83bfe4f28ce6b5855622f6a22f0d6",
+          "declLine": 683,
+          "armSites": 0,
+          "armLines": [],
+          "armed": false
+        }
+      ],
+      "exit": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        },
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "bytes": 46661,
+          "originalSha256": "2b57626fff0975276f7d46d84ffc01835bc83bfe4f28ce6b5855622f6a22f0d6",
+          "declLine": 683,
+          "armSites": 0,
+          "armLines": [],
+          "armed": false
+        }
+      ]
+    },
+    {
+      "cell": "c14/r1-throw-class",
+      "pid": 96148,
+      "preload": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ],
+      "entry": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        },
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "bytes": 46661,
+          "originalSha256": "2b57626fff0975276f7d46d84ffc01835bc83bfe4f28ce6b5855622f6a22f0d6",
+          "declLine": 683,
+          "armSites": 0,
+          "armLines": [],
+          "armed": false
+        }
+      ],
+      "exit": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        },
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/c14-bundle.mjs",
+          "bytes": 46661,
+          "originalSha256": "2b57626fff0975276f7d46d84ffc01835bc83bfe4f28ce6b5855622f6a22f0d6",
+          "declLine": 683,
+          "armSites": 0,
+          "armLines": [],
+          "armed": false
+        }
+      ]
+    },
+    {
+      "cell": "deposed/shared-accepted",
+      "pid": 96149,
+      "preload": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ],
+      "entry": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        },
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/deposed-full/deposed-bundle.mjs",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/deposed-full/deposed-bundle.mjs",
+          "bytes": 202595,
+          "originalSha256": "6c62368f6b4e6c1c28e6c0542bc86004c243fba6bb6d70ac0bba8435a81618eb",
+          "declLine": 727,
+          "armSites": 0,
+          "armLines": [],
+          "armed": false
+        }
+      ],
+      "exit": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        },
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/deposed-full/deposed-bundle.mjs",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/evidence/W1/rescued/deposed-full/deposed-bundle.mjs",
+          "bytes": 202595,
+          "originalSha256": "6c62368f6b4e6c1c28e6c0542bc86004c243fba6bb6d70ac0bba8435a81618eb",
+          "declLine": 727,
+          "armSites": 0,
+          "armLines": [],
+          "armed": false
+        }
+      ]
+    },
+    {
+      "cell": "json-normaliser/json-normaliser",
+      "pid": 96150,
+      "preload": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ],
+      "entry": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ],
+      "exit": [
+        {
+          "url": "file:///Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "path": "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/node_modules/@mkbabb/parse-that/dist/packrat-entry-CS1td-8B.js",
+          "bytes": 40576,
+          "originalSha256": "1f8674c3d325579363356e1fd091a3735ae9a7ac9da0cb61a4ca0ebfb6d474a8",
+          "declLine": 678,
+          "armSites": 1,
+          "armLines": [
+            722
+          ],
+          "armed": false
+        }
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "engine": "published-4.0.0",
+      "leg": "shared-accepted",
+      "pid": 96143,
+      "passes": 119,
+      "callsPerPass": 7,
+      "bytesPerPass": 306,
+      "doors": [
+        "parseCssColor",
+        "parseTimingFunction",
+        "parseStylesheet"
+      ],
+      "disposition": {
+        "accept": 7,
+        "reject": 0,
+        "throw": 0
+      },
+      "roundsTotal": 40,
+      "roundsScored": 30,
+      "ns_per_call": {
+        "median": 2085.1092436974786,
+        "min": 1990.546218487395,
+        "max": 2238.795918367347,
+        "spread_pct": 11.905836618887951,
+        "n": 30
+      },
+      "mbps": {
+        "median": 20.96499855421672,
+        "min": 19.525801952580196,
+        "max": 21.96094986807388,
+        "spread_pct": 11.615302091227182,
+        "n": 30
+      },
+      "sink": 33320
+    },
+    {
+      "engine": "published-4.0.0",
+      "leg": "reject-non-throwing",
+      "pid": 96144,
+      "passes": 1212,
+      "callsPerPass": 9,
+      "bytesPerPass": 100,
+      "doors": [
+        "parseCssColor",
+        "parseTimingFunction",
+        "parseStylesheet"
+      ],
+      "disposition": {
+        "accept": 0,
+        "reject": 9,
+        "throw": 0
+      },
+      "roundsTotal": 40,
+      "roundsScored": 30,
+      "ns_per_call": {
+        "median": 146.8016593325999,
+        "min": 141.34506784011734,
+        "max": 159.77191052438576,
+        "spread_pct": 12.552203270754458,
+        "n": 30
+      },
+      "mbps": {
+        "median": 75.68792621093996,
+        "min": 69.54358294047712,
+        "max": 78.60982544986614,
+        "spread_pct": 11.97845279063621,
+        "n": 30
+      },
+      "sink": 872640
+    },
+    {
+      "engine": "published-4.0.0",
+      "leg": "r1-throw-class",
+      "pid": 96145,
+      "passes": 1,
+      "callsPerPass": 172,
+      "bytesPerPass": 1419,
+      "doors": [
+        "parseCssColor"
+      ],
+      "disposition": {
+        "accept": 0,
+        "reject": 70,
+        "throw": 102
+      },
+      "roundsTotal": 40,
+      "roundsScored": 30,
+      "ns_per_call": {
+        "median": 18960.752906976744,
+        "min": 18363.61046511628,
+        "max": 19666.424418604653,
+        "spread_pct": 6.871108757548305,
+        "n": 30
+      },
+      "mbps": {
+        "median": 0.43510939098947854,
+        "min": 0.4194966926573297,
+        "max": 0.44925805933815643,
+        "spread_pct": 6.839973417523044,
+        "n": 30
+      },
+      "sink": 250400
+    },
+    {
+      "engine": "c14",
+      "leg": "shared-accepted",
+      "pid": 96146,
+      "passes": 50,
+      "callsPerPass": 7,
+      "bytesPerPass": 306,
+      "doors": [
+        "parseColor",
+        "parseEasing",
+        "parseStylesheet"
+      ],
+      "disposition": {
+        "accept": 7,
+        "reject": 0,
+        "throw": 0
+      },
+      "roundsTotal": 40,
+      "roundsScored": 30,
+      "ns_per_call": {
+        "median": 8010.655714285715,
+        "min": 7368.331428571429,
+        "max": 10382.5,
+        "spread_pct": 37.62698933688146,
+        "n": 30
+      },
+      "mbps": {
+        "median": 5.457123826765809,
+        "min": 4.210381479825255,
+        "max": 5.9327252225353595,
+        "spread_pct": 31.561382834350304,
+        "n": 30
+      },
+      "sink": 14000
+    },
+    {
+      "engine": "c14",
+      "leg": "reject-non-throwing",
+      "pid": 96147,
+      "passes": 313,
+      "callsPerPass": 9,
+      "bytesPerPass": 100,
+      "doors": [
+        "parseColor",
+        "parseEasing",
+        "parseStylesheet"
+      ],
+      "disposition": {
+        "accept": 0,
+        "reject": 9,
+        "throw": 0
+      },
+      "roundsTotal": 40,
+      "roundsScored": 30,
+      "ns_per_call": {
+        "median": 801.5102946396876,
+        "min": 737.9009584664536,
+        "max": 951.588569400071,
+        "spread_pct": 26.66061962805842,
+        "n": 30
+      },
+      "mbps": {
+        "median": 13.863274967007323,
+        "min": 11.676381440895314,
+        "max": 15.057726899017494,
+        "spread_pct": 24.390668627501903,
+        "n": 30
+      },
+      "sink": 225360
+    },
+    {
+      "engine": "c14",
+      "leg": "r1-throw-class",
+      "pid": 96148,
+      "passes": 64,
+      "callsPerPass": 172,
+      "bytesPerPass": 1419,
+      "doors": [
+        "parseColor"
+      ],
+      "disposition": {
+        "accept": 0,
+        "reject": 172,
+        "throw": 0
+      },
+      "roundsTotal": 40,
+      "roundsScored": 30,
+      "ns_per_call": {
+        "median": 63.762309229651166,
+        "min": 62.30323401162791,
+        "max": 65.66433502906976,
+        "spread_pct": 5.271297507962356,
+        "n": 30
+      },
+      "mbps": {
+        "median": 129.3867848034772,
+        "min": 125.63897885126993,
+        "max": 132.41688221931255,
+        "spread_pct": 5.2384819503301205,
+        "n": 30
+      },
+      "sink": 880640
+    },
+    {
+      "engine": "deposed",
+      "leg": "shared-accepted",
+      "pid": 96149,
+      "passes": 132,
+      "callsPerPass": 7,
+      "bytesPerPass": 306,
+      "doors": [
+        "CSSValues.Value.parse",
+        "parseCSSStylesheet"
+      ],
+      "disposition": {
+        "accept": 7,
+        "reject": 0,
+        "throw": 0
+      },
+      "roundsTotal": 40,
+      "roundsScored": 30,
+      "ns_per_call": {
+        "median": 2251.713203463203,
+        "min": 2165.224025974026,
+        "max": 2353.310606060606,
+        "spread_pct": 8.353043353713833,
+        "n": 30
+      },
+      "mbps": {
+        "median": 19.41392290926626,
+        "min": 18.575654910025893,
+        "max": 20.18926687949569,
+        "spread_pct": 8.311622421760111,
+        "n": 30
+      },
+      "sink": 147840
+    },
+    {
+      "engine": "json-normaliser",
+      "leg": "json-normaliser",
+      "pid": 96150,
+      "passes": 403,
+      "callsPerPass": 1,
+      "bytesPerPass": 220,
+      "doors": [
+        "jsonParser.parse"
+      ],
+      "disposition": {
+        "accept": 1,
+        "reject": 0,
+        "throw": 0
+      },
+      "roundsTotal": 40,
+      "roundsScored": 30,
+      "ns_per_call": {
+        "median": 2016.2841191066998,
+        "min": 1939.9305210918114,
+        "max": 2172.352357320099,
+        "spread_pct": 11.527236366433344,
+        "n": 30
+      },
+      "mbps": {
+        "median": 109.11171589440838,
+        "min": 101.27270525827625,
+        "max": 113.40612336785232,
+        "spread_pct": 11.120178992802247,
+        "n": 30
+      },
+      "sink": 64480
+    }
+  ],
+  "rounds": [
+    {
+      "cell": "published-4.0.0/shared-accepted",
+      "pid": 96143,
+      "rounds": [
+        {
+          "n": 1,
+          "t": "round",
+          "pid": 96143,
+          "ns": 4361291,
+          "calls": 833,
+          "nsPerCall": 5235.643457382953,
+          "mbps": 8.349362608456993
+        },
+        {
+          "n": 2,
+          "t": "round",
+          "pid": 96143,
+          "ns": 2199917,
+          "calls": 833,
+          "nsPerCall": 2640.9567827130854,
+          "mbps": 16.55244266033673
+        },
+        {
+          "n": 3,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1929959,
+          "calls": 833,
+          "nsPerCall": 2316.877551020408,
+          "mbps": 18.867758330617388
+        },
+        {
+          "n": 4,
+          "t": "round",
+          "pid": 96143,
+          "ns": 2054125,
+          "calls": 833,
+          "nsPerCall": 2465.93637454982,
+          "mbps": 17.727256130956004
+        },
+        {
+          "n": 5,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1932375,
+          "calls": 833,
+          "nsPerCall": 2319.777911164466,
+          "mbps": 18.84416844556569
+        },
+        {
+          "n": 6,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1916000,
+          "calls": 833,
+          "nsPerCall": 2300.120048019208,
+          "mbps": 19.005219206680586
+        },
+        {
+          "n": 7,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1960000,
+          "calls": 833,
+          "nsPerCall": 2352.9411764705883,
+          "mbps": 18.57857142857143
+        },
+        {
+          "n": 8,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1914291,
+          "calls": 833,
+          "nsPerCall": 2298.0684273709485,
+          "mbps": 19.022186282022954
+        },
+        {
+          "n": 9,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1932375,
+          "calls": 833,
+          "nsPerCall": 2319.777911164466,
+          "mbps": 18.84416844556569
+        },
+        {
+          "n": 10,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1849208,
+          "calls": 833,
+          "nsPerCall": 2219.937575030012,
+          "mbps": 19.69167340829155
+        },
+        {
+          "n": 11,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1853834,
+          "calls": 833,
+          "nsPerCall": 2225.490996398559,
+          "mbps": 19.642535415792356
+        },
+        {
+          "n": 12,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1833542,
+          "calls": 833,
+          "nsPerCall": 2201.1308523409366,
+          "mbps": 19.85992139803724
+        },
+        {
+          "n": 13,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1782084,
+          "calls": 833,
+          "nsPerCall": 2139.3565426170467,
+          "mbps": 20.43338024470227
+        },
+        {
+          "n": 14,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1805750,
+          "calls": 833,
+          "nsPerCall": 2167.767106842737,
+          "mbps": 20.16558216807421
+        },
+        {
+          "n": 15,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1711000,
+          "calls": 833,
+          "nsPerCall": 2054.0216086434575,
+          "mbps": 21.2822910578609
+        },
+        {
+          "n": 16,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1817625,
+          "calls": 833,
+          "nsPerCall": 2182.0228091236495,
+          "mbps": 20.03383536207964
+        },
+        {
+          "n": 17,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1749667,
+          "calls": 833,
+          "nsPerCall": 2100.4405762304923,
+          "mbps": 20.811960218715903
+        },
+        {
+          "n": 18,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1846167,
+          "calls": 833,
+          "nsPerCall": 2216.286914765906,
+          "mbps": 19.72410946572006
+        },
+        {
+          "n": 19,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1691500,
+          "calls": 833,
+          "nsPerCall": 2030.6122448979593,
+          "mbps": 21.527638190954775
+        },
+        {
+          "n": 20,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1780792,
+          "calls": 833,
+          "nsPerCall": 2137.8055222088838,
+          "mbps": 20.448205068306688
+        },
+        {
+          "n": 21,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1805667,
+          "calls": 833,
+          "nsPerCall": 2167.667466986795,
+          "mbps": 20.166509107160955
+        },
+        {
+          "n": 22,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1674417,
+          "calls": 833,
+          "nsPerCall": 2010.1044417767107,
+          "mbps": 21.747270841134554
+        },
+        {
+          "n": 23,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1803583,
+          "calls": 833,
+          "nsPerCall": 2165.1656662665064,
+          "mbps": 20.189811059430035
+        },
+        {
+          "n": 24,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1705125,
+          "calls": 833,
+          "nsPerCall": 2046.968787515006,
+          "mbps": 21.355619089509567
+        },
+        {
+          "n": 25,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1808375,
+          "calls": 833,
+          "nsPerCall": 2170.918367346939,
+          "mbps": 20.136310223266744
+        },
+        {
+          "n": 26,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1687250,
+          "calls": 833,
+          "nsPerCall": 2025.5102040816328,
+          "mbps": 21.58186397984887
+        },
+        {
+          "n": 27,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1729667,
+          "calls": 833,
+          "nsPerCall": 2076.4309723889555,
+          "mbps": 21.052607235959293
+        },
+        {
+          "n": 28,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1675042,
+          "calls": 833,
+          "nsPerCall": 2010.8547418967587,
+          "mbps": 21.739156391302426
+        },
+        {
+          "n": 29,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1755667,
+          "calls": 833,
+          "nsPerCall": 2107.6434573829533,
+          "mbps": 20.74083524950916
+        },
+        {
+          "n": 30,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1755041,
+          "calls": 833,
+          "nsPerCall": 2106.891956782713,
+          "mbps": 20.74823323215811
+        },
+        {
+          "n": 31,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1661208,
+          "calls": 833,
+          "nsPerCall": 1994.2472989195678,
+          "mbps": 21.92019301616655
+        },
+        {
+          "n": 32,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1735542,
+          "calls": 833,
+          "nsPerCall": 2083.483793517407,
+          "mbps": 20.981341851709725
+        },
+        {
+          "n": 33,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1693208,
+          "calls": 833,
+          "nsPerCall": 2032.6626650660264,
+          "mbps": 21.505922485601296
+        },
+        {
+          "n": 34,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1705541,
+          "calls": 833,
+          "nsPerCall": 2047.46818727491,
+          "mbps": 21.350410221741956
+        },
+        {
+          "n": 35,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1864917,
+          "calls": 833,
+          "nsPerCall": 2238.795918367347,
+          "mbps": 19.525801952580196
+        },
+        {
+          "n": 36,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1738250,
+          "calls": 833,
+          "nsPerCall": 2086.734693877551,
+          "mbps": 20.94865525672372
+        },
+        {
+          "n": 37,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1658125,
+          "calls": 833,
+          "nsPerCall": 1990.546218487395,
+          "mbps": 21.96094986807388
+        },
+        {
+          "n": 38,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1731208,
+          "calls": 833,
+          "nsPerCall": 2078.280912364946,
+          "mbps": 21.03386768083327
+        },
+        {
+          "n": 39,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1675042,
+          "calls": 833,
+          "nsPerCall": 2010.8547418967587,
+          "mbps": 21.739156391302426
+        },
+        {
+          "n": 40,
+          "t": "round",
+          "pid": 96143,
+          "ns": 1732250,
+          "calls": 833,
+          "nsPerCall": 2079.53181272509,
+          "mbps": 21.021215182566028
+        }
+      ]
+    },
+    {
+      "cell": "published-4.0.0/reject-non-throwing",
+      "pid": 96144,
+      "rounds": [
+        {
+          "n": 1,
+          "t": "round",
+          "pid": 96144,
+          "ns": 3161125,
+          "calls": 10908,
+          "nsPerCall": 289.79877154382103,
+          "mbps": 38.34078057653525
+        },
+        {
+          "n": 2,
+          "t": "round",
+          "pid": 96144,
+          "ns": 2234292,
+          "calls": 10908,
+          "nsPerCall": 204.83058305830582,
+          "mbps": 54.24537168821264
+        },
+        {
+          "n": 3,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1867375,
+          "calls": 10908,
+          "nsPerCall": 171.19316098276494,
+          "mbps": 64.90394270031462
+        },
+        {
+          "n": 4,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1773916,
+          "calls": 10908,
+          "nsPerCall": 162.62522918958564,
+          "mbps": 68.32341553940547
+        },
+        {
+          "n": 5,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1680625,
+          "calls": 10908,
+          "nsPerCall": 154.07269893656033,
+          "mbps": 72.11602826329491
+        },
+        {
+          "n": 6,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1700750,
+          "calls": 10908,
+          "nsPerCall": 155.9176751008434,
+          "mbps": 71.26267823019256
+        },
+        {
+          "n": 7,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1703084,
+          "calls": 10908,
+          "nsPerCall": 156.13164649798313,
+          "mbps": 71.16501593579648
+        },
+        {
+          "n": 8,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1671375,
+          "calls": 10908,
+          "nsPerCall": 153.22469746974699,
+          "mbps": 72.5151447161768
+        },
+        {
+          "n": 9,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1736750,
+          "calls": 10908,
+          "nsPerCall": 159.21800513384673,
+          "mbps": 69.78551892903411
+        },
+        {
+          "n": 10,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1716084,
+          "calls": 10908,
+          "nsPerCall": 157.32343234323432,
+          "mbps": 70.62591341682575
+        },
+        {
+          "n": 11,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1612584,
+          "calls": 10908,
+          "nsPerCall": 147.83498349834983,
+          "mbps": 75.158875444628
+        },
+        {
+          "n": 12,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1655000,
+          "calls": 10908,
+          "nsPerCall": 151.72350568390172,
+          "mbps": 73.23262839879155
+        },
+        {
+          "n": 13,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1742792,
+          "calls": 10908,
+          "nsPerCall": 159.77191052438576,
+          "mbps": 69.54358294047712
+        },
+        {
+          "n": 14,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1639250,
+          "calls": 10908,
+          "nsPerCall": 150.27961129446277,
+          "mbps": 73.93625133445173
+        },
+        {
+          "n": 15,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1693125,
+          "calls": 10908,
+          "nsPerCall": 155.21864686468646,
+          "mbps": 71.58361018826136
+        },
+        {
+          "n": 16,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1650417,
+          "calls": 10908,
+          "nsPerCall": 151.30335533553355,
+          "mbps": 73.43598617803865
+        },
+        {
+          "n": 17,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1632833,
+          "calls": 10908,
+          "nsPerCall": 149.69132746607994,
+          "mbps": 74.22681927668047
+        },
+        {
+          "n": 18,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1666542,
+          "calls": 10908,
+          "nsPerCall": 152.78162816281628,
+          "mbps": 72.72543986290175
+        },
+        {
+          "n": 19,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1629833,
+          "calls": 10908,
+          "nsPerCall": 149.41629996332966,
+          "mbps": 74.36344705255078
+        },
+        {
+          "n": 20,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1652583,
+          "calls": 10908,
+          "nsPerCall": 151.50192519251925,
+          "mbps": 73.33973543235045
+        },
+        {
+          "n": 21,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1628834,
+          "calls": 10908,
+          "nsPerCall": 149.32471580491384,
+          "mbps": 74.40905580310823
+        },
+        {
+          "n": 22,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1623708,
+          "calls": 10908,
+          "nsPerCall": 148.85478547854785,
+          "mbps": 74.643963077105
+        },
+        {
+          "n": 23,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1626459,
+          "calls": 10908,
+          "nsPerCall": 149.10698569856984,
+          "mbps": 74.51770994534753
+        },
+        {
+          "n": 24,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1602000,
+          "calls": 10908,
+          "nsPerCall": 146.86468646864685,
+          "mbps": 75.65543071161049
+        },
+        {
+          "n": 25,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1563791,
+          "calls": 10908,
+          "nsPerCall": 143.3618445177851,
+          "mbps": 77.50396312550718
+        },
+        {
+          "n": 26,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1598042,
+          "calls": 10908,
+          "nsPerCall": 146.501833516685,
+          "mbps": 75.84281264197061
+        },
+        {
+          "n": 27,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1571041,
+          "calls": 10908,
+          "nsPerCall": 144.02649431609828,
+          "mbps": 77.1462998101259
+        },
+        {
+          "n": 28,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1592792,
+          "calls": 10908,
+          "nsPerCall": 146.020535386872,
+          "mbps": 76.09279805523886
+        },
+        {
+          "n": 29,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1607917,
+          "calls": 10908,
+          "nsPerCall": 147.40713237990465,
+          "mbps": 75.37702505788546
+        },
+        {
+          "n": 30,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1560250,
+          "calls": 10908,
+          "nsPerCall": 143.03722038870555,
+          "mbps": 77.67985899695562
+        },
+        {
+          "n": 31,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1552333,
+          "calls": 10908,
+          "nsPerCall": 142.31142280894755,
+          "mbps": 78.07603136698118
+        },
+        {
+          "n": 32,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1562959,
+          "calls": 10908,
+          "nsPerCall": 143.28557022368904,
+          "mbps": 77.54522031607995
+        },
+        {
+          "n": 33,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1541792,
+          "calls": 10908,
+          "nsPerCall": 141.34506784011734,
+          "mbps": 78.60982544986614
+        },
+        {
+          "n": 34,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1551958,
+          "calls": 10908,
+          "nsPerCall": 142.27704437110378,
+          "mbps": 78.09489689798306
+        },
+        {
+          "n": 35,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1566792,
+          "calls": 10908,
+          "nsPerCall": 143.63696369636963,
+          "mbps": 77.35551368656465
+        },
+        {
+          "n": 36,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1600625,
+          "calls": 10908,
+          "nsPerCall": 146.738632196553,
+          "mbps": 75.72042171026942
+        },
+        {
+          "n": 37,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1574625,
+          "calls": 10908,
+          "nsPerCall": 144.3550605060506,
+          "mbps": 76.97070731126459
+        },
+        {
+          "n": 38,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1564875,
+          "calls": 10908,
+          "nsPerCall": 143.46122112211222,
+          "mbps": 77.4502755811167
+        },
+        {
+          "n": 39,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1592875,
+          "calls": 10908,
+          "nsPerCall": 146.02814448111477,
+          "mbps": 76.08883308483088
+        },
+        {
+          "n": 40,
+          "t": "round",
+          "pid": 96144,
+          "ns": 1554584,
+          "calls": 10908,
+          "nsPerCall": 142.51778511184452,
+          "mbps": 77.96297916355759
+        }
+      ]
+    },
+    {
+      "cell": "published-4.0.0/r1-throw-class",
+      "pid": 96145,
+      "rounds": [
+        {
+          "n": 1,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3462166,
+          "calls": 172,
+          "nsPerCall": 20128.872093023256,
+          "mbps": 0.40985903044510286
+        },
+        {
+          "n": 2,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3460125,
+          "calls": 172,
+          "nsPerCall": 20117.00581395349,
+          "mbps": 0.4101007911563888
+        },
+        {
+          "n": 3,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3437667,
+          "calls": 172,
+          "nsPerCall": 19986.43604651163,
+          "mbps": 0.41277994639969484
+        },
+        {
+          "n": 4,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3346209,
+          "calls": 172,
+          "nsPerCall": 19454.70348837209,
+          "mbps": 0.4240619758060539
+        },
+        {
+          "n": 5,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3316125,
+          "calls": 172,
+          "nsPerCall": 19279.79651162791,
+          "mbps": 0.4279090806287459
+        },
+        {
+          "n": 6,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3362000,
+          "calls": 172,
+          "nsPerCall": 19546.511627906977,
+          "mbps": 0.4220701963117192
+        },
+        {
+          "n": 7,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3512667,
+          "calls": 172,
+          "nsPerCall": 20422.482558139534,
+          "mbps": 0.40396655874297216
+        },
+        {
+          "n": 8,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3273500,
+          "calls": 172,
+          "nsPerCall": 19031.976744186046,
+          "mbps": 0.4334809836566366
+        },
+        {
+          "n": 9,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3347958,
+          "calls": 172,
+          "nsPerCall": 19464.872093023256,
+          "mbps": 0.4238404424428263
+        },
+        {
+          "n": 10,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3324208,
+          "calls": 172,
+          "nsPerCall": 19326.79069767442,
+          "mbps": 0.42686859546695033
+        },
+        {
+          "n": 11,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3295458,
+          "calls": 172,
+          "nsPerCall": 19159.63953488372,
+          "mbps": 0.4305926520683923
+        },
+        {
+          "n": 12,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3215792,
+          "calls": 172,
+          "nsPerCall": 18696.46511627907,
+          "mbps": 0.4412598824799614
+        },
+        {
+          "n": 13,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3265917,
+          "calls": 172,
+          "nsPerCall": 18987.88953488372,
+          "mbps": 0.43448746554183704
+        },
+        {
+          "n": 14,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3355042,
+          "calls": 172,
+          "nsPerCall": 19506.058139534885,
+          "mbps": 0.42294552497405397
+        },
+        {
+          "n": 15,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3263625,
+          "calls": 172,
+          "nsPerCall": 18974.56395348837,
+          "mbps": 0.4347926002527864
+        },
+        {
+          "n": 16,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3298000,
+          "calls": 172,
+          "nsPerCall": 19174.418604651164,
+          "mbps": 0.4302607640994542
+        },
+        {
+          "n": 17,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3254541,
+          "calls": 172,
+          "nsPerCall": 18921.75,
+          "mbps": 0.4360061833604185
+        },
+        {
+          "n": 18,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3253208,
+          "calls": 172,
+          "nsPerCall": 18914,
+          "mbps": 0.4361848366289521
+        },
+        {
+          "n": 19,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3340083,
+          "calls": 172,
+          "nsPerCall": 19419.087209302324,
+          "mbps": 0.42483974200641117
+        },
+        {
+          "n": 20,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3215000,
+          "calls": 172,
+          "nsPerCall": 18691.86046511628,
+          "mbps": 0.4413685847589424
+        },
+        {
+          "n": 21,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3318458,
+          "calls": 172,
+          "nsPerCall": 19293.36046511628,
+          "mbps": 0.42760824455213836
+        },
+        {
+          "n": 22,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3252041,
+          "calls": 172,
+          "nsPerCall": 18907.21511627907,
+          "mbps": 0.43634136223989795
+        },
+        {
+          "n": 23,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3158541,
+          "calls": 172,
+          "nsPerCall": 18363.61046511628,
+          "mbps": 0.44925805933815643
+        },
+        {
+          "n": 24,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3301375,
+          "calls": 172,
+          "nsPerCall": 19194.04069767442,
+          "mbps": 0.4298209079550187
+        },
+        {
+          "n": 25,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3219292,
+          "calls": 172,
+          "nsPerCall": 18716.81395348837,
+          "mbps": 0.4407801466906388
+        },
+        {
+          "n": 26,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3217667,
+          "calls": 172,
+          "nsPerCall": 18707.366279069767,
+          "mbps": 0.44100275137234524
+        },
+        {
+          "n": 27,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3275375,
+          "calls": 172,
+          "nsPerCall": 19042.877906976744,
+          "mbps": 0.4332328359348166
+        },
+        {
+          "n": 28,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3218292,
+          "calls": 172,
+          "nsPerCall": 18711,
+          "mbps": 0.44091710758377417
+        },
+        {
+          "n": 29,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3382625,
+          "calls": 172,
+          "nsPerCall": 19666.424418604653,
+          "mbps": 0.4194966926573297
+        },
+        {
+          "n": 30,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3281833,
+          "calls": 172,
+          "nsPerCall": 19080.424418604653,
+          "mbps": 0.43238031916919595
+        },
+        {
+          "n": 31,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3247458,
+          "calls": 172,
+          "nsPerCall": 18880.56976744186,
+          "mbps": 0.43695715233268606
+        },
+        {
+          "n": 32,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3232125,
+          "calls": 172,
+          "nsPerCall": 18791.424418604653,
+          "mbps": 0.43903004988977834
+        },
+        {
+          "n": 33,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3259791,
+          "calls": 172,
+          "nsPerCall": 18952.273255813954,
+          "mbps": 0.4353039811448034
+        },
+        {
+          "n": 34,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3262708,
+          "calls": 172,
+          "nsPerCall": 18969.232558139534,
+          "mbps": 0.4349148008341537
+        },
+        {
+          "n": 35,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3233542,
+          "calls": 172,
+          "nsPerCall": 18799.662790697676,
+          "mbps": 0.43883765851812034
+        },
+        {
+          "n": 36,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3245041,
+          "calls": 172,
+          "nsPerCall": 18866.517441860466,
+          "mbps": 0.4372826106049199
+        },
+        {
+          "n": 37,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3278166,
+          "calls": 172,
+          "nsPerCall": 19059.10465116279,
+          "mbps": 0.43286398553337446
+        },
+        {
+          "n": 38,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3300708,
+          "calls": 172,
+          "nsPerCall": 19190.162790697676,
+          "mbps": 0.42990776524309327
+        },
+        {
+          "n": 39,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3340125,
+          "calls": 172,
+          "nsPerCall": 19419.331395348836,
+          "mbps": 0.42483439991018296
+        },
+        {
+          "n": 40,
+          "t": "round",
+          "pid": 96145,
+          "ns": 3234958,
+          "calls": 172,
+          "nsPerCall": 18807.89534883721,
+          "mbps": 0.4386455712871697
+        }
+      ]
+    },
+    {
+      "cell": "c14/shared-accepted",
+      "pid": 96146,
+      "rounds": [
+        {
+          "n": 1,
+          "t": "round",
+          "pid": 96146,
+          "ns": 3969000,
+          "calls": 350,
+          "nsPerCall": 11340,
+          "mbps": 3.8548752834467117
+        },
+        {
+          "n": 2,
+          "t": "round",
+          "pid": 96146,
+          "ns": 3610542,
+          "calls": 350,
+          "nsPerCall": 10315.834285714285,
+          "mbps": 4.237590921252266
+        },
+        {
+          "n": 3,
+          "t": "round",
+          "pid": 96146,
+          "ns": 3572417,
+          "calls": 350,
+          "nsPerCall": 10206.905714285715,
+          "mbps": 4.282814688206892
+        },
+        {
+          "n": 4,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2844292,
+          "calls": 350,
+          "nsPerCall": 8126.548571428571,
+          "mbps": 5.3791945412074424
+        },
+        {
+          "n": 5,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2843875,
+          "calls": 350,
+          "nsPerCall": 8125.357142857143,
+          "mbps": 5.379983297437475
+        },
+        {
+          "n": 6,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2810833,
+          "calls": 350,
+          "nsPerCall": 8030.951428571429,
+          "mbps": 5.443226260685
+        },
+        {
+          "n": 7,
+          "t": "round",
+          "pid": 96146,
+          "ns": 3157250,
+          "calls": 350,
+          "nsPerCall": 9020.714285714286,
+          "mbps": 4.845989389500356
+        },
+        {
+          "n": 8,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2853833,
+          "calls": 350,
+          "nsPerCall": 8153.808571428572,
+          "mbps": 5.361210694529077
+        },
+        {
+          "n": 9,
+          "t": "round",
+          "pid": 96146,
+          "ns": 3133708,
+          "calls": 350,
+          "nsPerCall": 8953.451428571429,
+          "mbps": 4.882394913629477
+        },
+        {
+          "n": 10,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2859458,
+          "calls": 350,
+          "nsPerCall": 8169.88,
+          "mbps": 5.350664356671788
+        },
+        {
+          "n": 11,
+          "t": "round",
+          "pid": 96146,
+          "ns": 3021417,
+          "calls": 350,
+          "nsPerCall": 8632.62,
+          "mbps": 5.063849180698989
+        },
+        {
+          "n": 12,
+          "t": "round",
+          "pid": 96146,
+          "ns": 3633875,
+          "calls": 350,
+          "nsPerCall": 10382.5,
+          "mbps": 4.210381479825255
+        },
+        {
+          "n": 13,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2694209,
+          "calls": 350,
+          "nsPerCall": 7697.74,
+          "mbps": 5.678846741288445
+        },
+        {
+          "n": 14,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2711209,
+          "calls": 350,
+          "nsPerCall": 7746.311428571428,
+          "mbps": 5.643238865022947
+        },
+        {
+          "n": 15,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2819875,
+          "calls": 350,
+          "nsPerCall": 8056.785714285715,
+          "mbps": 5.425772418990204
+        },
+        {
+          "n": 16,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2788042,
+          "calls": 350,
+          "nsPerCall": 7965.834285714286,
+          "mbps": 5.4877222079150885
+        },
+        {
+          "n": 17,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2768416,
+          "calls": 350,
+          "nsPerCall": 7909.76,
+          "mbps": 5.526626056199646
+        },
+        {
+          "n": 18,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2993708,
+          "calls": 350,
+          "nsPerCall": 8553.451428571429,
+          "mbps": 5.110718881066557
+        },
+        {
+          "n": 19,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2816125,
+          "calls": 350,
+          "nsPerCall": 8046.071428571428,
+          "mbps": 5.432997469927648
+        },
+        {
+          "n": 20,
+          "t": "round",
+          "pid": 96146,
+          "ns": 3128875,
+          "calls": 350,
+          "nsPerCall": 8939.642857142857,
+          "mbps": 4.889936478766329
+        },
+        {
+          "n": 21,
+          "t": "round",
+          "pid": 96146,
+          "ns": 3003208,
+          "calls": 350,
+          "nsPerCall": 8580.594285714285,
+          "mbps": 5.094552225486879
+        },
+        {
+          "n": 22,
+          "t": "round",
+          "pid": 96146,
+          "ns": 3176750,
+          "calls": 350,
+          "nsPerCall": 9076.42857142857,
+          "mbps": 4.8162430156606595
+        },
+        {
+          "n": 23,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2727625,
+          "calls": 350,
+          "nsPerCall": 7793.214285714285,
+          "mbps": 5.609275468585308
+        },
+        {
+          "n": 24,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2841209,
+          "calls": 350,
+          "nsPerCall": 8117.74,
+          "mbps": 5.385031512993236
+        },
+        {
+          "n": 25,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2746750,
+          "calls": 350,
+          "nsPerCall": 7847.857142857143,
+          "mbps": 5.570219350141075
+        },
+        {
+          "n": 26,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2878542,
+          "calls": 350,
+          "nsPerCall": 8224.405714285715,
+          "mbps": 5.315190815350271
+        },
+        {
+          "n": 27,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2970833,
+          "calls": 350,
+          "nsPerCall": 8488.094285714285,
+          "mbps": 5.1500707040752545
+        },
+        {
+          "n": 28,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2650416,
+          "calls": 350,
+          "nsPerCall": 7572.617142857142,
+          "mbps": 5.7726787040223115
+        },
+        {
+          "n": 29,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2770958,
+          "calls": 350,
+          "nsPerCall": 7917.022857142857,
+          "mbps": 5.52155608276993
+        },
+        {
+          "n": 30,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2640333,
+          "calls": 350,
+          "nsPerCall": 7543.808571428572,
+          "mbps": 5.7947236200888295
+        },
+        {
+          "n": 31,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2823959,
+          "calls": 350,
+          "nsPerCall": 8068.454285714286,
+          "mbps": 5.4179256851816895
+        },
+        {
+          "n": 32,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2683666,
+          "calls": 350,
+          "nsPerCall": 7667.617142857142,
+          "mbps": 5.701156552268427
+        },
+        {
+          "n": 33,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2591584,
+          "calls": 350,
+          "nsPerCall": 7404.5257142857145,
+          "mbps": 5.903725289243952
+        },
+        {
+          "n": 34,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2748833,
+          "calls": 350,
+          "nsPerCall": 7853.808571428572,
+          "mbps": 5.565998370945052
+        },
+        {
+          "n": 35,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2578916,
+          "calls": 350,
+          "nsPerCall": 7368.331428571429,
+          "mbps": 5.9327252225353595
+        },
+        {
+          "n": 36,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2791334,
+          "calls": 350,
+          "nsPerCall": 7975.24,
+          "mbps": 5.481250183603969
+        },
+        {
+          "n": 37,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2675417,
+          "calls": 350,
+          "nsPerCall": 7644.048571428571,
+          "mbps": 5.718734686966555
+        },
+        {
+          "n": 38,
+          "t": "round",
+          "pid": 96146,
+          "ns": 3082375,
+          "calls": 350,
+          "nsPerCall": 8806.785714285714,
+          "mbps": 4.963704935317733
+        },
+        {
+          "n": 39,
+          "t": "round",
+          "pid": 96146,
+          "ns": 3051750,
+          "calls": 350,
+          "nsPerCall": 8719.285714285714,
+          "mbps": 5.013516834603096
+        },
+        {
+          "n": 40,
+          "t": "round",
+          "pid": 96146,
+          "ns": 2931250,
+          "calls": 350,
+          "nsPerCall": 8375,
+          "mbps": 5.219616204690832
+        }
+      ]
+    },
+    {
+      "cell": "c14/reject-non-throwing",
+      "pid": 96147,
+      "rounds": [
+        {
+          "n": 1,
+          "t": "round",
+          "pid": 96147,
+          "ns": 3642334,
+          "calls": 2817,
+          "nsPerCall": 1292.9833155839547,
+          "mbps": 8.593390941083383
+        },
+        {
+          "n": 2,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2814625,
+          "calls": 2817,
+          "nsPerCall": 999.1569045083422,
+          "mbps": 11.12048674334947
+        },
+        {
+          "n": 3,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2659166,
+          "calls": 2817,
+          "nsPerCall": 943.9708910188143,
+          "mbps": 11.770607777024827
+        },
+        {
+          "n": 4,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2699875,
+          "calls": 2817,
+          "nsPerCall": 958.422080227192,
+          "mbps": 11.593129311542201
+        },
+        {
+          "n": 5,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2401250,
+          "calls": 2817,
+          "nsPerCall": 852.413915512957,
+          "mbps": 13.034877667881311
+        },
+        {
+          "n": 6,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2503833,
+          "calls": 2817,
+          "nsPerCall": 888.8296059637913,
+          "mbps": 12.500833721737832
+        },
+        {
+          "n": 7,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2262958,
+          "calls": 2817,
+          "nsPerCall": 803.3219737309195,
+          "mbps": 13.83145422937589
+        },
+        {
+          "n": 8,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2407417,
+          "calls": 2817,
+          "nsPerCall": 854.6031238906638,
+          "mbps": 13.001486655614713
+        },
+        {
+          "n": 9,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2569541,
+          "calls": 2817,
+          "nsPerCall": 912.1551295704651,
+          "mbps": 12.181163873236505
+        },
+        {
+          "n": 10,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2117917,
+          "calls": 2817,
+          "nsPerCall": 751.834220802272,
+          "mbps": 14.778671685434322
+        },
+        {
+          "n": 11,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2140792,
+          "calls": 2817,
+          "nsPerCall": 759.9545615903444,
+          "mbps": 14.620757177717406
+        },
+        {
+          "n": 12,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2324708,
+          "calls": 2817,
+          "nsPerCall": 825.242456514022,
+          "mbps": 13.464056561082081
+        },
+        {
+          "n": 13,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2418375,
+          "calls": 2817,
+          "nsPerCall": 858.4930777422791,
+          "mbps": 12.94257507623921
+        },
+        {
+          "n": 14,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2243542,
+          "calls": 2817,
+          "nsPerCall": 796.4295349662762,
+          "mbps": 13.951154023414762
+        },
+        {
+          "n": 15,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2371708,
+          "calls": 2817,
+          "nsPerCall": 841.9268725594604,
+          "mbps": 13.197240132427769
+        },
+        {
+          "n": 16,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2332666,
+          "calls": 2817,
+          "nsPerCall": 828.0674476393326,
+          "mbps": 13.418123297548814
+        },
+        {
+          "n": 17,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2574500,
+          "calls": 2817,
+          "nsPerCall": 913.9155129570465,
+          "mbps": 12.157700524373665
+        },
+        {
+          "n": 18,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2197875,
+          "calls": 2817,
+          "nsPerCall": 780.2183173588925,
+          "mbps": 14.24102826593869
+        },
+        {
+          "n": 19,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2386209,
+          "calls": 2817,
+          "nsPerCall": 847.0745473908413,
+          "mbps": 13.117040460412312
+        },
+        {
+          "n": 20,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2680625,
+          "calls": 2817,
+          "nsPerCall": 951.588569400071,
+          "mbps": 11.676381440895314
+        },
+        {
+          "n": 21,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2103791,
+          "calls": 2817,
+          "nsPerCall": 746.819666311679,
+          "mbps": 14.877903746142085
+        },
+        {
+          "n": 22,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2483458,
+          "calls": 2817,
+          "nsPerCall": 881.596734114306,
+          "mbps": 12.603394138334533
+        },
+        {
+          "n": 23,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2104708,
+          "calls": 2817,
+          "nsPerCall": 747.1451899183529,
+          "mbps": 14.871421593874306
+        },
+        {
+          "n": 24,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2229417,
+          "calls": 2817,
+          "nsPerCall": 791.4153354632588,
+          "mbps": 14.039544867559547
+        },
+        {
+          "n": 25,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2381708,
+          "calls": 2817,
+          "nsPerCall": 845.476748313809,
+          "mbps": 13.141829309050479
+        },
+        {
+          "n": 26,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2083041,
+          "calls": 2817,
+          "nsPerCall": 739.4536741214057,
+          "mbps": 15.026108463539606
+        },
+        {
+          "n": 27,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2272167,
+          "calls": 2817,
+          "nsPerCall": 806.591054313099,
+          "mbps": 13.775395910599883
+        },
+        {
+          "n": 28,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2537083,
+          "calls": 2817,
+          "nsPerCall": 900.6329428470003,
+          "mbps": 12.337002770504553
+        },
+        {
+          "n": 29,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2085042,
+          "calls": 2817,
+          "nsPerCall": 740.1640042598509,
+          "mbps": 15.011688013958473
+        },
+        {
+          "n": 30,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2078709,
+          "calls": 2817,
+          "nsPerCall": 737.9158679446219,
+          "mbps": 15.057422659929792
+        },
+        {
+          "n": 31,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2282625,
+          "calls": 2817,
+          "nsPerCall": 810.3035143769968,
+          "mbps": 13.712283007502329
+        },
+        {
+          "n": 32,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2106750,
+          "calls": 2817,
+          "nsPerCall": 747.8700745473908,
+          "mbps": 14.857007238637712
+        },
+        {
+          "n": 33,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2078667,
+          "calls": 2817,
+          "nsPerCall": 737.9009584664536,
+          "mbps": 15.057726899017494
+        },
+        {
+          "n": 34,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2171750,
+          "calls": 2817,
+          "nsPerCall": 770.9442669506567,
+          "mbps": 14.412340278577185
+        },
+        {
+          "n": 35,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2306583,
+          "calls": 2817,
+          "nsPerCall": 818.8083067092651,
+          "mbps": 13.569856363287165
+        },
+        {
+          "n": 36,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2516375,
+          "calls": 2817,
+          "nsPerCall": 893.2818601348953,
+          "mbps": 12.438527643932245
+        },
+        {
+          "n": 37,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2167334,
+          "calls": 2817,
+          "nsPerCall": 769.3766418175364,
+          "mbps": 14.441705800767211
+        },
+        {
+          "n": 38,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2143250,
+          "calls": 2817,
+          "nsPerCall": 760.8271210507633,
+          "mbps": 14.603989268634082
+        },
+        {
+          "n": 39,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2589042,
+          "calls": 2817,
+          "nsPerCall": 919.0777422790202,
+          "mbps": 12.089413767717943
+        },
+        {
+          "n": 40,
+          "t": "round",
+          "pid": 96147,
+          "ns": 2231833,
+          "calls": 2817,
+          "nsPerCall": 792.2729854455094,
+          "mbps": 14.024346803725907
+        }
+      ]
+    },
+    {
+      "cell": "c14/r1-throw-class",
+      "pid": 96148,
+      "rounds": [
+        {
+          "n": 1,
+          "t": "round",
+          "pid": 96148,
+          "ns": 2538375,
+          "calls": 11008,
+          "nsPerCall": 230.59365915697674,
+          "mbps": 35.77721967794356
+        },
+        {
+          "n": 2,
+          "t": "round",
+          "pid": 96148,
+          "ns": 1370750,
+          "calls": 11008,
+          "nsPerCall": 124.52307412790698,
+          "mbps": 66.25278132409265
+        },
+        {
+          "n": 3,
+          "t": "round",
+          "pid": 96148,
+          "ns": 1008083,
+          "calls": 11008,
+          "nsPerCall": 91.5773074127907,
+          "mbps": 90.08782014972974
+        },
+        {
+          "n": 4,
+          "t": "round",
+          "pid": 96148,
+          "ns": 795250,
+          "calls": 11008,
+          "nsPerCall": 72.24291424418605,
+          "mbps": 114.19805092738133
+        },
+        {
+          "n": 5,
+          "t": "round",
+          "pid": 96148,
+          "ns": 706500,
+          "calls": 11008,
+          "nsPerCall": 64.18059593023256,
+          "mbps": 128.54352441613588
+        },
+        {
+          "n": 6,
+          "t": "round",
+          "pid": 96148,
+          "ns": 756459,
+          "calls": 11008,
+          "nsPerCall": 68.71902252906976,
+          "mbps": 120.05409414125549
+        },
+        {
+          "n": 7,
+          "t": "round",
+          "pid": 96148,
+          "ns": 713250,
+          "calls": 11008,
+          "nsPerCall": 64.7937863372093,
+          "mbps": 127.32702418506834
+        },
+        {
+          "n": 8,
+          "t": "round",
+          "pid": 96148,
+          "ns": 709791,
+          "calls": 11008,
+          "nsPerCall": 64.47956031976744,
+          "mbps": 127.94752258059061
+        },
+        {
+          "n": 9,
+          "t": "round",
+          "pid": 96148,
+          "ns": 706417,
+          "calls": 11008,
+          "nsPerCall": 64.17305595930233,
+          "mbps": 128.55862755284767
+        },
+        {
+          "n": 10,
+          "t": "round",
+          "pid": 96148,
+          "ns": 735708,
+          "calls": 11008,
+          "nsPerCall": 66.83393895348837,
+          "mbps": 123.44027793635519
+        },
+        {
+          "n": 11,
+          "t": "round",
+          "pid": 96148,
+          "ns": 692666,
+          "calls": 11008,
+          "nsPerCall": 62.92387354651163,
+          "mbps": 131.11080953879647
+        },
+        {
+          "n": 12,
+          "t": "round",
+          "pid": 96148,
+          "ns": 711125,
+          "calls": 11008,
+          "nsPerCall": 64.6007449127907,
+          "mbps": 127.70750571277905
+        },
+        {
+          "n": 13,
+          "t": "round",
+          "pid": 96148,
+          "ns": 688209,
+          "calls": 11008,
+          "nsPerCall": 62.51898619186046,
+          "mbps": 131.9599133402789
+        },
+        {
+          "n": 14,
+          "t": "round",
+          "pid": 96148,
+          "ns": 704500,
+          "calls": 11008,
+          "nsPerCall": 63.99890988372093,
+          "mbps": 128.90844570617458
+        },
+        {
+          "n": 15,
+          "t": "round",
+          "pid": 96148,
+          "ns": 714292,
+          "calls": 11008,
+          "nsPerCall": 64.88844476744185,
+          "mbps": 127.1412811567258
+        },
+        {
+          "n": 16,
+          "t": "round",
+          "pid": 96148,
+          "ns": 687041,
+          "calls": 11008,
+          "nsPerCall": 62.412881540697676,
+          "mbps": 132.1842510126761
+        },
+        {
+          "n": 17,
+          "t": "round",
+          "pid": 96148,
+          "ns": 701417,
+          "calls": 11008,
+          "nsPerCall": 63.71884084302326,
+          "mbps": 129.47504836637833
+        },
+        {
+          "n": 18,
+          "t": "round",
+          "pid": 96148,
+          "ns": 722833,
+          "calls": 11008,
+          "nsPerCall": 65.66433502906976,
+          "mbps": 125.63897885126993
+        },
+        {
+          "n": 19,
+          "t": "round",
+          "pid": 96148,
+          "ns": 711625,
+          "calls": 11008,
+          "nsPerCall": 64.64616642441861,
+          "mbps": 127.6177762164061
+        },
+        {
+          "n": 20,
+          "t": "round",
+          "pid": 96148,
+          "ns": 697958,
+          "calls": 11008,
+          "nsPerCall": 63.4046148255814,
+          "mbps": 130.11671189383887
+        },
+        {
+          "n": 21,
+          "t": "round",
+          "pid": 96148,
+          "ns": 713459,
+          "calls": 11008,
+          "nsPerCall": 64.81277252906976,
+          "mbps": 127.289725127863
+        },
+        {
+          "n": 22,
+          "t": "round",
+          "pid": 96148,
+          "ns": 720833,
+          "calls": 11008,
+          "nsPerCall": 65.48264898255815,
+          "mbps": 125.98757271101627
+        },
+        {
+          "n": 23,
+          "t": "round",
+          "pid": 96148,
+          "ns": 698459,
+          "calls": 11008,
+          "nsPerCall": 63.450127180232556,
+          "mbps": 130.02338004091865
+        },
+        {
+          "n": 24,
+          "t": "round",
+          "pid": 96148,
+          "ns": 708042,
+          "calls": 11008,
+          "nsPerCall": 64.32067587209302,
+          "mbps": 128.26357758438058
+        },
+        {
+          "n": 25,
+          "t": "round",
+          "pid": 96148,
+          "ns": 687958,
+          "calls": 11008,
+          "nsPerCall": 62.49618459302326,
+          "mbps": 132.00805863148622
+        },
+        {
+          "n": 26,
+          "t": "round",
+          "pid": 96148,
+          "ns": 703583,
+          "calls": 11008,
+          "nsPerCall": 63.91560683139535,
+          "mbps": 129.07645579839192
+        },
+        {
+          "n": 27,
+          "t": "round",
+          "pid": 96148,
+          "ns": 710041,
+          "calls": 11008,
+          "nsPerCall": 64.50227107558139,
+          "mbps": 127.90247323746092
+        },
+        {
+          "n": 28,
+          "t": "round",
+          "pid": 96148,
+          "ns": 691291,
+          "calls": 11008,
+          "nsPerCall": 62.79896438953488,
+          "mbps": 131.37159314962872
+        },
+        {
+          "n": 29,
+          "t": "round",
+          "pid": 96148,
+          "ns": 702000,
+          "calls": 11008,
+          "nsPerCall": 63.7718023255814,
+          "mbps": 129.36752136752136
+        },
+        {
+          "n": 30,
+          "t": "round",
+          "pid": 96148,
+          "ns": 704791,
+          "calls": 11008,
+          "nsPerCall": 64.02534520348837,
+          "mbps": 128.8552209094611
+        },
+        {
+          "n": 31,
+          "t": "round",
+          "pid": 96148,
+          "ns": 686417,
+          "calls": 11008,
+          "nsPerCall": 62.356195494186046,
+          "mbps": 132.30441553749395
+        },
+        {
+          "n": 32,
+          "t": "round",
+          "pid": 96148,
+          "ns": 689625,
+          "calls": 11008,
+          "nsPerCall": 62.647619912790695,
+          "mbps": 131.6889613920609
+        },
+        {
+          "n": 33,
+          "t": "round",
+          "pid": 96148,
+          "ns": 700958,
+          "calls": 11008,
+          "nsPerCall": 63.677143895348834,
+          "mbps": 129.55983097418104
+        },
+        {
+          "n": 34,
+          "t": "round",
+          "pid": 96148,
+          "ns": 702833,
+          "calls": 11008,
+          "nsPerCall": 63.84747456395349,
+          "mbps": 129.21419455261776
+        },
+        {
+          "n": 35,
+          "t": "round",
+          "pid": 96148,
+          "ns": 701791,
+          "calls": 11008,
+          "nsPerCall": 63.75281613372093,
+          "mbps": 129.4060482394331
+        },
+        {
+          "n": 36,
+          "t": "round",
+          "pid": 96148,
+          "ns": 712125,
+          "calls": 11008,
+          "nsPerCall": 64.69158793604652,
+          "mbps": 127.52817272248551
+        },
+        {
+          "n": 37,
+          "t": "round",
+          "pid": 96148,
+          "ns": 694334,
+          "calls": 11008,
+          "nsPerCall": 63.075399709302324,
+          "mbps": 130.7958417706752
+        },
+        {
+          "n": 38,
+          "t": "round",
+          "pid": 96148,
+          "ns": 695166,
+          "calls": 11008,
+          "nsPerCall": 63.150981104651166,
+          "mbps": 130.6393005411657
+        },
+        {
+          "n": 39,
+          "t": "round",
+          "pid": 96148,
+          "ns": 715583,
+          "calls": 11008,
+          "nsPerCall": 65.00572311046511,
+          "mbps": 126.91190260249334
+        },
+        {
+          "n": 40,
+          "t": "round",
+          "pid": 96148,
+          "ns": 685834,
+          "calls": 11008,
+          "nsPerCall": 62.30323401162791,
+          "mbps": 132.41688221931255
+        }
+      ]
+    },
+    {
+      "cell": "deposed/shared-accepted",
+      "pid": 96149,
+      "rounds": [
+        {
+          "n": 1,
+          "t": "round",
+          "pid": 96149,
+          "ns": 4129666,
+          "calls": 924,
+          "nsPerCall": 4469.335497835498,
+          "mbps": 9.780936279108285
+        },
+        {
+          "n": 2,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2849125,
+          "calls": 924,
+          "nsPerCall": 3083.468614718615,
+          "mbps": 14.17698416180406
+        },
+        {
+          "n": 3,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2662292,
+          "calls": 924,
+          "nsPerCall": 2881.2683982683984,
+          "mbps": 15.171889484699648
+        },
+        {
+          "n": 4,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2282333,
+          "calls": 924,
+          "nsPerCall": 2470.057359307359,
+          "mbps": 17.697680399836482
+        },
+        {
+          "n": 5,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2195916,
+          "calls": 924,
+          "nsPerCall": 2376.5324675324673,
+          "mbps": 18.39414622417251
+        },
+        {
+          "n": 6,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2324583,
+          "calls": 924,
+          "nsPerCall": 2515.7824675324673,
+          "mbps": 17.376019699016986
+        },
+        {
+          "n": 7,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2156834,
+          "calls": 924,
+          "nsPerCall": 2334.2359307359307,
+          "mbps": 18.72744958582812
+        },
+        {
+          "n": 8,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2122208,
+          "calls": 924,
+          "nsPerCall": 2296.7619047619046,
+          "mbps": 19.033007132194392
+        },
+        {
+          "n": 9,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2347916,
+          "calls": 924,
+          "nsPerCall": 2541.034632034632,
+          "mbps": 17.20334117574905
+        },
+        {
+          "n": 10,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2119917,
+          "calls": 924,
+          "nsPerCall": 2294.2824675324673,
+          "mbps": 19.05357615416075
+        },
+        {
+          "n": 11,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2129542,
+          "calls": 924,
+          "nsPerCall": 2304.6991341991343,
+          "mbps": 18.967458730562722
+        },
+        {
+          "n": 12,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2148500,
+          "calls": 924,
+          "nsPerCall": 2325.21645021645,
+          "mbps": 18.80009308820107
+        },
+        {
+          "n": 13,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2073000,
+          "calls": 924,
+          "nsPerCall": 2243.5064935064934,
+          "mbps": 19.484804630969606
+        },
+        {
+          "n": 14,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2097625,
+          "calls": 924,
+          "nsPerCall": 2270.1569264069262,
+          "mbps": 19.256063405041413
+        },
+        {
+          "n": 15,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2170500,
+          "calls": 924,
+          "nsPerCall": 2349.025974025974,
+          "mbps": 18.609536973047682
+        },
+        {
+          "n": 16,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2064500,
+          "calls": 924,
+          "nsPerCall": 2234.307359307359,
+          "mbps": 19.56502785178009
+        },
+        {
+          "n": 17,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2109875,
+          "calls": 924,
+          "nsPerCall": 2283.414502164502,
+          "mbps": 19.144262100835356
+        },
+        {
+          "n": 18,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2139750,
+          "calls": 924,
+          "nsPerCall": 2315.746753246753,
+          "mbps": 18.876971608832804
+        },
+        {
+          "n": 19,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2030334,
+          "calls": 924,
+          "nsPerCall": 2197.3311688311687,
+          "mbps": 19.894263702425313
+        },
+        {
+          "n": 20,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2086041,
+          "calls": 924,
+          "nsPerCall": 2257.62012987013,
+          "mbps": 19.362994303563546
+        },
+        {
+          "n": 21,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2166584,
+          "calls": 924,
+          "nsPerCall": 2344.787878787879,
+          "mbps": 18.64317284721017
+        },
+        {
+          "n": 22,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2050500,
+          "calls": 924,
+          "nsPerCall": 2219.155844155844,
+          "mbps": 19.698610095098758
+        },
+        {
+          "n": 23,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2013625,
+          "calls": 924,
+          "nsPerCall": 2179.2478354978357,
+          "mbps": 20.059345707368553
+        },
+        {
+          "n": 24,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2105542,
+          "calls": 924,
+          "nsPerCall": 2278.725108225108,
+          "mbps": 19.183659124348978
+        },
+        {
+          "n": 25,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2096750,
+          "calls": 924,
+          "nsPerCall": 2269.2099567099567,
+          "mbps": 19.264099201144628
+        },
+        {
+          "n": 26,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2106417,
+          "calls": 924,
+          "nsPerCall": 2279.6720779220777,
+          "mbps": 19.17569028354784
+        },
+        {
+          "n": 27,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2126417,
+          "calls": 924,
+          "nsPerCall": 2301.3170995670994,
+          "mbps": 18.995333464696717
+        },
+        {
+          "n": 28,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2060792,
+          "calls": 924,
+          "nsPerCall": 2230.2943722943724,
+          "mbps": 19.60023136735779
+        },
+        {
+          "n": 29,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2026292,
+          "calls": 924,
+          "nsPerCall": 2192.95670995671,
+          "mbps": 19.933948315445157
+        },
+        {
+          "n": 30,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2122375,
+          "calls": 924,
+          "nsPerCall": 2296.942640692641,
+          "mbps": 19.031509511749807
+        },
+        {
+          "n": 31,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2010750,
+          "calls": 924,
+          "nsPerCall": 2176.1363636363635,
+          "mbps": 20.088026855650877
+        },
+        {
+          "n": 32,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2075125,
+          "calls": 924,
+          "nsPerCall": 2245.806277056277,
+          "mbps": 19.464851514968974
+        },
+        {
+          "n": 33,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2174459,
+          "calls": 924,
+          "nsPerCall": 2353.310606060606,
+          "mbps": 18.575654910025893
+        },
+        {
+          "n": 34,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2044958,
+          "calls": 924,
+          "nsPerCall": 2213.158008658009,
+          "mbps": 19.751994906496858
+        },
+        {
+          "n": 35,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2015167,
+          "calls": 924,
+          "nsPerCall": 2180.9166666666665,
+          "mbps": 20.043996353652076
+        },
+        {
+          "n": 36,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2108375,
+          "calls": 924,
+          "nsPerCall": 2281.7911255411254,
+          "mbps": 19.157882255291398
+        },
+        {
+          "n": 37,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2063667,
+          "calls": 924,
+          "nsPerCall": 2233.405844155844,
+          "mbps": 19.572925283003507
+        },
+        {
+          "n": 38,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2000667,
+          "calls": 924,
+          "nsPerCall": 2165.224025974026,
+          "mbps": 20.18926687949569
+        },
+        {
+          "n": 39,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2055917,
+          "calls": 924,
+          "nsPerCall": 2225.0183982683984,
+          "mbps": 19.64670752758988
+        },
+        {
+          "n": 40,
+          "t": "round",
+          "pid": 96149,
+          "ns": 2024459,
+          "calls": 924,
+          "nsPerCall": 2190.972943722944,
+          "mbps": 19.95199705205193
+        }
+      ]
+    },
+    {
+      "cell": "json-normaliser/json-normaliser",
+      "pid": 96150,
+      "rounds": [
+        {
+          "n": 1,
+          "t": "round",
+          "pid": 96150,
+          "ns": 2162292,
+          "calls": 403,
+          "nsPerCall": 5365.488833746898,
+          "mbps": 41.00278778259366
+        },
+        {
+          "n": 2,
+          "t": "round",
+          "pid": 96150,
+          "ns": 1297084,
+          "calls": 403,
+          "nsPerCall": 3218.5707196029775,
+          "mbps": 68.35332175865248
+        },
+        {
+          "n": 3,
+          "t": "round",
+          "pid": 96150,
+          "ns": 1030083,
+          "calls": 403,
+          "nsPerCall": 2556.0372208436725,
+          "mbps": 86.07073410589244
+        },
+        {
+          "n": 4,
+          "t": "round",
+          "pid": 96150,
+          "ns": 1082875,
+          "calls": 403,
+          "nsPerCall": 2687.0347394540945,
+          "mbps": 81.87463927046058
+        },
+        {
+          "n": 5,
+          "t": "round",
+          "pid": 96150,
+          "ns": 1057375,
+          "calls": 403,
+          "nsPerCall": 2623.7593052109182,
+          "mbps": 83.84915474642393
+        },
+        {
+          "n": 6,
+          "t": "round",
+          "pid": 96150,
+          "ns": 881042,
+          "calls": 403,
+          "nsPerCall": 2186.2084367245657,
+          "mbps": 100.63084393252535
+        },
+        {
+          "n": 7,
+          "t": "round",
+          "pid": 96150,
+          "ns": 983708,
+          "calls": 403,
+          "nsPerCall": 2440.9627791563275,
+          "mbps": 90.12837142729346
+        },
+        {
+          "n": 8,
+          "t": "round",
+          "pid": 96150,
+          "ns": 980500,
+          "calls": 403,
+          "nsPerCall": 2433.002481389578,
+          "mbps": 90.42325344212136
+        },
+        {
+          "n": 9,
+          "t": "round",
+          "pid": 96150,
+          "ns": 856458,
+          "calls": 403,
+          "nsPerCall": 2125.2059553349877,
+          "mbps": 103.51937865020818
+        },
+        {
+          "n": 10,
+          "t": "round",
+          "pid": 96150,
+          "ns": 838000,
+          "calls": 403,
+          "nsPerCall": 2079.4044665012407,
+          "mbps": 105.79952267303103
+        },
+        {
+          "n": 11,
+          "t": "round",
+          "pid": 96150,
+          "ns": 826625,
+          "calls": 403,
+          "nsPerCall": 2051.178660049628,
+          "mbps": 107.25540601844851
+        },
+        {
+          "n": 12,
+          "t": "round",
+          "pid": 96150,
+          "ns": 817875,
+          "calls": 403,
+          "nsPerCall": 2029.4665012406947,
+          "mbps": 108.40287329970961
+        },
+        {
+          "n": 13,
+          "t": "round",
+          "pid": 96150,
+          "ns": 830875,
+          "calls": 403,
+          "nsPerCall": 2061.7245657568237,
+          "mbps": 106.7067850157966
+        },
+        {
+          "n": 14,
+          "t": "round",
+          "pid": 96150,
+          "ns": 824875,
+          "calls": 403,
+          "nsPerCall": 2046.836228287841,
+          "mbps": 107.48295196241855
+        },
+        {
+          "n": 15,
+          "t": "round",
+          "pid": 96150,
+          "ns": 811750,
+          "calls": 403,
+          "nsPerCall": 2014.2679900744417,
+          "mbps": 109.22081921773946
+        },
+        {
+          "n": 16,
+          "t": "round",
+          "pid": 96150,
+          "ns": 818458,
+          "calls": 403,
+          "nsPerCall": 2030.9131513647642,
+          "mbps": 108.3256562951306
+        },
+        {
+          "n": 17,
+          "t": "round",
+          "pid": 96150,
+          "ns": 837375,
+          "calls": 403,
+          "nsPerCall": 2077.853598014888,
+          "mbps": 105.87848932676519
+        },
+        {
+          "n": 18,
+          "t": "round",
+          "pid": 96150,
+          "ns": 818333,
+          "calls": 403,
+          "nsPerCall": 2030.6029776674939,
+          "mbps": 108.34220299071406
+        },
+        {
+          "n": 19,
+          "t": "round",
+          "pid": 96150,
+          "ns": 796750,
+          "calls": 403,
+          "nsPerCall": 1977.0471464019852,
+          "mbps": 111.27706306871666
+        },
+        {
+          "n": 20,
+          "t": "round",
+          "pid": 96150,
+          "ns": 867084,
+          "calls": 403,
+          "nsPerCall": 2151.573200992556,
+          "mbps": 102.25076232521879
+        },
+        {
+          "n": 21,
+          "t": "round",
+          "pid": 96150,
+          "ns": 815417,
+          "calls": 403,
+          "nsPerCall": 2023.3672456575682,
+          "mbps": 108.72964385093762
+        },
+        {
+          "n": 22,
+          "t": "round",
+          "pid": 96150,
+          "ns": 820916,
+          "calls": 403,
+          "nsPerCall": 2037.012406947891,
+          "mbps": 108.00130585833386
+        },
+        {
+          "n": 23,
+          "t": "round",
+          "pid": 96150,
+          "ns": 875458,
+          "calls": 403,
+          "nsPerCall": 2172.352357320099,
+          "mbps": 101.27270525827625
+        },
+        {
+          "n": 24,
+          "t": "round",
+          "pid": 96150,
+          "ns": 813375,
+          "calls": 403,
+          "nsPerCall": 2018.3002481389578,
+          "mbps": 109.00261257107731
+        },
+        {
+          "n": 25,
+          "t": "round",
+          "pid": 96150,
+          "ns": 792000,
+          "calls": 403,
+          "nsPerCall": 1965.2605459057072,
+          "mbps": 111.94444444444446
+        },
+        {
+          "n": 26,
+          "t": "round",
+          "pid": 96150,
+          "ns": 820042,
+          "calls": 403,
+          "nsPerCall": 2034.8436724565756,
+          "mbps": 108.1164135495499
+        },
+        {
+          "n": 27,
+          "t": "round",
+          "pid": 96150,
+          "ns": 822292,
+          "calls": 403,
+          "nsPerCall": 2040.426799007444,
+          "mbps": 107.8205795508165
+        },
+        {
+          "n": 28,
+          "t": "round",
+          "pid": 96150,
+          "ns": 798667,
+          "calls": 403,
+          "nsPerCall": 1981.803970223325,
+          "mbps": 111.00997036311755
+        },
+        {
+          "n": 29,
+          "t": "round",
+          "pid": 96150,
+          "ns": 802042,
+          "calls": 403,
+          "nsPerCall": 1990.1786600496278,
+          "mbps": 110.54283940242532
+        },
+        {
+          "n": 30,
+          "t": "round",
+          "pid": 96150,
+          "ns": 793708,
+          "calls": 403,
+          "nsPerCall": 1969.498759305211,
+          "mbps": 111.70354840823074
+        },
+        {
+          "n": 31,
+          "t": "round",
+          "pid": 96150,
+          "ns": 788166,
+          "calls": 403,
+          "nsPerCall": 1955.7468982630273,
+          "mbps": 112.48899343539306
+        },
+        {
+          "n": 32,
+          "t": "round",
+          "pid": 96150,
+          "ns": 783500,
+          "calls": 403,
+          "nsPerCall": 1944.168734491315,
+          "mbps": 113.15890236119975
+        },
+        {
+          "n": 33,
+          "t": "round",
+          "pid": 96150,
+          "ns": 803167,
+          "calls": 403,
+          "nsPerCall": 1992.970223325062,
+          "mbps": 110.38800149906557
+        },
+        {
+          "n": 34,
+          "t": "round",
+          "pid": 96150,
+          "ns": 858708,
+          "calls": 403,
+          "nsPerCall": 2130.789081885856,
+          "mbps": 103.24813557111382
+        },
+        {
+          "n": 35,
+          "t": "round",
+          "pid": 96150,
+          "ns": 787833,
+          "calls": 403,
+          "nsPerCall": 1954.9205955334987,
+          "mbps": 112.53654010431144
+        },
+        {
+          "n": 36,
+          "t": "round",
+          "pid": 96150,
+          "ns": 803417,
+          "calls": 403,
+          "nsPerCall": 1993.590570719603,
+          "mbps": 110.35365196404857
+        },
+        {
+          "n": 37,
+          "t": "round",
+          "pid": 96150,
+          "ns": 781792,
+          "calls": 403,
+          "nsPerCall": 1939.9305210918114,
+          "mbps": 113.40612336785232
+        },
+        {
+          "n": 38,
+          "t": "round",
+          "pid": 96150,
+          "ns": 794583,
+          "calls": 403,
+          "nsPerCall": 1971.6699751861042,
+          "mbps": 111.58053972964436
+        },
+        {
+          "n": 39,
+          "t": "round",
+          "pid": 96150,
+          "ns": 804541,
+          "calls": 403,
+          "nsPerCall": 1996.3796526054591,
+          "mbps": 110.19948020051186
+        },
+        {
+          "n": 40,
+          "t": "round",
+          "pid": 96150,
+          "ns": 793333,
+          "calls": 403,
+          "nsPerCall": 1968.5682382133996,
+          "mbps": 111.75634947745776
+        }
+      ]
+    }
+  ]
+}

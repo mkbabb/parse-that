@@ -33,6 +33,23 @@ export interface SecondarySpan {
     label: string;
 }
 
+export interface Diagnostic {
+    offset: number;
+    furthestOffset: number;
+    line: number;
+    column: number;
+    expected: string[];
+    suggestions: Suggestion[];
+    secondarySpans: SecondarySpan[];
+    found: string;
+}
+
+type ParserFault =
+    | Readonly<{ kind: "Nesting"; offset: number; limit: number }>
+    | Readonly<{ kind: "RecoveryNonProgress"; offset: number }>;
+
+const NESTING_LIMIT = 256;
+
 export class ParserState<T = unknown> {
     /**
      * Furthest-offset error tracking, threaded per-parse (the Rust port's
@@ -43,6 +60,10 @@ export class ParserState<T = unknown> {
     expected?: string[];
     suggestions: Suggestion[] = [];
     secondarySpans: SecondarySpan[] = [];
+    diagnostics: Diagnostic[] = [];
+    fault: ParserFault | undefined = undefined;
+    liveDepth = 0;
+    maxDepth = 0;
 
     constructor(
         public src: string,
@@ -55,7 +76,7 @@ export class ParserState<T = unknown> {
     ok<S>(value: S, offset: number = 0): ParserState<S> {
         this.offset += offset;
         this.unsafeSetValue(value);
-        this.isError = false;
+        this.isError = this.fault !== undefined;
         return this as unknown as ParserState<S>;
     }
 
@@ -72,15 +93,38 @@ export class ParserState<T = unknown> {
         return this as unknown as ParserState<S>;
     }
 
-    save(): { offset: number; value: T } {
-        return { offset: this.offset, value: this.value };
+    rollback(
+        offset: number,
+        value: T,
+        diagnosticsLength: number,
+        isError: boolean,
+    ): this {
+        if (this.offset !== offset) this.offset = offset;
+        if (this.value !== value) this.value = value;
+        if (this.diagnostics.length !== diagnosticsLength) {
+            this.diagnostics.length = diagnosticsLength;
+        }
+        this.isError = isError || this.fault !== undefined;
+        return this;
     }
 
-    restore(saved: { offset: number; value: any }): this {
-        this.offset = saved.offset;
-        this.value = saved.value;
-        this.isError = false;
-        return this;
+    enterLazy(): boolean {
+        if (this.liveDepth >= NESTING_LIMIT) {
+            this.fault ??= {
+                kind: "Nesting",
+                offset: this.offset,
+                limit: NESTING_LIMIT,
+            };
+            this.isError = true;
+            return false;
+        }
+        this.liveDepth++;
+        this.maxDepth = Math.max(this.maxDepth, this.liveDepth);
+        return true;
+    }
+
+    leaveLazy(): void {
+        this.liveDepth--;
     }
 
     /** Type-erased value setter — single choke point for the mutable-state cast pattern. */
@@ -99,13 +143,21 @@ export class ParserState<T = unknown> {
     }
 
     clone(): ParserState<T> {
-        return new ParserState<T>(
+        const clone = new ParserState<T>(
             this.src,
             this.value,
             this.offset,
             this.isError,
             this.furthest,
         );
+        clone.expected = this.expected ? [...this.expected] : undefined;
+        clone.suggestions = [...this.suggestions];
+        clone.secondarySpans = [...this.secondarySpans];
+        clone.diagnostics = [...this.diagnostics];
+        clone.fault = this.fault;
+        clone.liveDepth = this.liveDepth;
+        clone.maxDepth = this.maxDepth;
+        return clone;
     }
 
     getColumnNumber(): number {

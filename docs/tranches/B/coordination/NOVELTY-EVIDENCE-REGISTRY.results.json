@@ -1,0 +1,968 @@
+{
+  "status": "GREEN",
+  "controls": [
+    {
+      "id": "baseline",
+      "status": "GREEN",
+      "recordCount": 10
+    },
+    {
+      "id": "baseline_reversed_order",
+      "status": "GREEN",
+      "recordCount": 10
+    },
+    {
+      "id": "baseline_code_unit_distinct_scope",
+      "status": "GREEN",
+      "recordCount": 10
+    },
+    {
+      "id": "baseline_safe_integer_boundaries",
+      "status": "GREEN",
+      "recordCount": 10
+    },
+    {
+      "id": "baseline_literal_astral_scalar",
+      "status": "GREEN",
+      "recordCount": 10
+    },
+    {
+      "id": "baseline_escaped_scalar_pair",
+      "status": "GREEN",
+      "recordCount": 10
+    },
+    {
+      "id": "baseline_escaped_low_boundary_pair",
+      "status": "GREEN",
+      "recordCount": 10
+    },
+    {
+      "id": "baseline_escaped_high_boundary_pair",
+      "status": "GREEN",
+      "recordCount": 10
+    }
+  ],
+  "hostileCount": 130,
+  "hostiles": [
+    {
+      "id": "empty_registry",
+      "status": "RED",
+      "expectedCode": "E_REGISTRY_EMPTY",
+      "actualCode": "E_REGISTRY_EMPTY",
+      "path": "$"
+    },
+    {
+      "id": "duplicate_ids",
+      "status": "RED",
+      "expectedCode": "E_DUPLICATE_ID",
+      "actualCode": "E_DUPLICATE_ID",
+      "path": "$.row.ietm"
+    },
+    {
+      "id": "dangling_build_fk",
+      "status": "RED",
+      "expectedCode": "E_FK_BUILD_MISSING",
+      "actualCode": "E_FK_BUILD_MISSING",
+      "path": "$.arm.ietm.buildId"
+    },
+    {
+      "id": "dangling_expected_product_fk",
+      "status": "RED",
+      "expectedCode": "E_FK_EXPECTED_PRODUCT_MISSING",
+      "actualCode": "E_FK_EXPECTED_PRODUCT_MISSING",
+      "path": "$.fixture.ietm.expectedProductId"
+    },
+    {
+      "id": "dangling_run_fk",
+      "status": "RED",
+      "expectedCode": "E_FK_RUN_MISSING",
+      "actualCode": "E_FK_RUN_MISSING",
+      "path": "$.row.ietm.runId"
+    },
+    {
+      "id": "dangling_arm_fk",
+      "status": "RED",
+      "expectedCode": "E_FK_ARM_MISSING",
+      "actualCode": "E_FK_ARM_MISSING",
+      "path": "$.row.ietm.armId"
+    },
+    {
+      "id": "dangling_fixture_fk",
+      "status": "RED",
+      "expectedCode": "E_FK_FIXTURE_MISSING",
+      "actualCode": "E_FK_FIXTURE_MISSING",
+      "path": "$.row.ietm.fixtureId"
+    },
+    {
+      "id": "dangling_product_fk",
+      "status": "RED",
+      "expectedCode": "E_FK_PRODUCT_MISSING",
+      "actualCode": "E_FK_PRODUCT_MISSING",
+      "path": "$.row.ietm.productId"
+    },
+    {
+      "id": "dangling_law_fk",
+      "status": "RED",
+      "expectedCode": "E_FK_LAW_MISSING",
+      "actualCode": "E_FK_LAW_MISSING",
+      "path": "$.row.ietm.lawIds"
+    },
+    {
+      "id": "wrong_kind_run_target",
+      "status": "RED",
+      "expectedCode": "E_FK_RUN_KIND",
+      "actualCode": "E_FK_RUN_KIND",
+      "path": "$.row.ietm.runId"
+    },
+    {
+      "id": "authority_trust_drift",
+      "status": "RED",
+      "expectedCode": "E_AUTHORITY_TRUST",
+      "actualCode": "E_AUTHORITY_TRUST",
+      "path": "$.auth.n1-a"
+    },
+    {
+      "id": "authority_identity_drift",
+      "status": "RED",
+      "expectedCode": "E_AUTHORITY_TRUST",
+      "actualCode": "E_AUTHORITY_TRUST",
+      "path": "$.auth.renamed"
+    },
+    {
+      "id": "receipt_authority_drift",
+      "status": "RED",
+      "expectedCode": "E_RECEIPT_AUTHORITY",
+      "actualCode": "E_RECEIPT_AUTHORITY",
+      "path": "$.receipt.ietm.authorityId"
+    },
+    {
+      "id": "trusted_root_mismatch",
+      "status": "RED",
+      "expectedCode": "E_ROOT_TRUST",
+      "actualCode": "E_ROOT_TRUST",
+      "path": "$.receipt.ietm.root"
+    },
+    {
+      "id": "run_root_mismatch",
+      "status": "RED",
+      "expectedCode": "E_RUN_ROOT",
+      "actualCode": "E_RUN_ROOT",
+      "path": "$.run.ietm.root"
+    },
+    {
+      "id": "record_set_omission",
+      "status": "RED",
+      "expectedCode": "E_RECORD_SET_OMISSION",
+      "actualCode": "E_RECORD_SET_OMISSION",
+      "path": "$.receipt.ietm.recordIds"
+    },
+    {
+      "id": "record_set_extra",
+      "status": "RED",
+      "expectedCode": "E_RECORD_SET_EXTRA",
+      "actualCode": "E_RECORD_SET_EXTRA",
+      "path": "$.receipt.ietm.recordIds"
+    },
+    {
+      "id": "phase_mismatch",
+      "status": "RED",
+      "expectedCode": "E_PHASE_MISMATCH",
+      "actualCode": "E_PHASE_MISMATCH",
+      "path": "$.row.ietm.phase"
+    },
+    {
+      "id": "build_source_drift",
+      "status": "RED",
+      "expectedCode": "E_BUILD_SOURCE",
+      "actualCode": "E_BUILD_SOURCE",
+      "path": "$.build.ietm.sourceCommit"
+    },
+    {
+      "id": "role_family_mismatch",
+      "status": "RED",
+      "expectedCode": "E_ROLE_FAMILY",
+      "actualCode": "E_ROLE_FAMILY",
+      "path": "$.arm.ietm.role"
+    },
+    {
+      "id": "pl_be_ratio_unit",
+      "status": "RED",
+      "expectedCode": "E_LAW_UNIT",
+      "actualCode": "E_LAW_UNIT",
+      "path": "$.law.be.decisionUnit"
+    },
+    {
+      "id": "ietm_pl3_membership",
+      "status": "RED",
+      "expectedCode": "E_IETM_LAW_COMPAT",
+      "actualCode": "E_IETM_LAW_COMPAT",
+      "path": "$.row.ietm.lawIds"
+    },
+    {
+      "id": "ietm_pl2_membership",
+      "status": "RED",
+      "expectedCode": "E_IETM_LAW_COMPAT",
+      "actualCode": "E_IETM_LAW_COMPAT",
+      "path": "$.row.ietm.lawIds"
+    },
+    {
+      "id": "missing_pl_be",
+      "status": "RED",
+      "expectedCode": "E_PL_BE_MISSING",
+      "actualCode": "E_PL_BE_MISSING",
+      "path": "$"
+    },
+    {
+      "id": "orphan_receipt",
+      "status": "RED",
+      "expectedCode": "E_RECEIPT_COUNT",
+      "actualCode": "E_RECEIPT_COUNT",
+      "path": "$"
+    },
+    {
+      "id": "orphan_run_record",
+      "status": "RED",
+      "expectedCode": "E_ORPHAN_RUN",
+      "actualCode": "E_ORPHAN_RUN",
+      "path": "$.run.orphan"
+    },
+    {
+      "id": "extra_undeclared_record",
+      "status": "RED",
+      "expectedCode": "E_RECORD_SET_OMISSION",
+      "actualCode": "E_RECORD_SET_OMISSION",
+      "path": "$.receipt.ietm.recordIds"
+    },
+    {
+      "id": "declared_count_mismatch",
+      "status": "RED",
+      "expectedCode": "E_DECLARED_COUNT",
+      "actualCode": "E_DECLARED_COUNT",
+      "path": "$.receipt.ietm.declaredCounts.ROW"
+    },
+    {
+      "id": "schema_sha_drift",
+      "status": "RED",
+      "expectedCode": "E_SCHEMA_SHA",
+      "actualCode": "E_SCHEMA_SHA",
+      "path": "$.row.ietm.schemaSha256"
+    },
+    {
+      "id": "missing_authority",
+      "status": "RED",
+      "expectedCode": "E_AUTHORITY_COUNT",
+      "actualCode": "E_AUTHORITY_COUNT",
+      "path": "$"
+    },
+    {
+      "id": "inactive_dnf_family",
+      "status": "RED",
+      "expectedCode": "E_FAMILY_INACTIVE",
+      "actualCode": "E_FAMILY_INACTIVE",
+      "path": "$.arm.ietm"
+    },
+    {
+      "id": "inactive_wrr_family",
+      "status": "RED",
+      "expectedCode": "E_FAMILY_INACTIVE",
+      "actualCode": "E_FAMILY_INACTIVE",
+      "path": "$.arm.ietm"
+    },
+    {
+      "id": "inactive_gll_family",
+      "status": "RED",
+      "expectedCode": "E_GLL_INACTIVE",
+      "actualCode": "E_GLL_INACTIVE",
+      "path": "$.arm.ietm"
+    },
+    {
+      "id": "registry_inventory_orphan",
+      "status": "RED",
+      "expectedCode": "E_REGISTRY_ARTIFACT_SET",
+      "actualCode": "E_REGISTRY_ARTIFACT_SET",
+      "path": "$.receipt.ietm.registryArtifacts"
+    },
+    {
+      "id": "raw_inventory_orphan",
+      "status": "RED",
+      "expectedCode": "E_RAW_ARTIFACT_SET",
+      "actualCode": "E_RAW_ARTIFACT_SET",
+      "path": "$.receipt.ietm.rawArtifacts"
+    },
+    {
+      "id": "artifact_class_overlap",
+      "status": "RED",
+      "expectedCode": "E_ARTIFACT_CLASS_OVERLAP",
+      "actualCode": "E_ARTIFACT_CLASS_OVERLAP",
+      "path": "$.receipt.ietm"
+    },
+    {
+      "id": "artifact_descriptor_conflict",
+      "status": "RED",
+      "expectedCode": "E_ARTIFACT_DESCRIPTOR_CONFLICT",
+      "actualCode": "E_ARTIFACT_DESCRIPTOR_CONFLICT",
+      "path": "$[2].artifact"
+    },
+    {
+      "id": "artifact_path_traversal",
+      "status": "RED",
+      "expectedCode": "E_ARTIFACT_OUTSIDE",
+      "actualCode": "E_ARTIFACT_OUTSIDE",
+      "path": "$[2].artifact.path"
+    },
+    {
+      "id": "artifact_symlink",
+      "status": "RED",
+      "expectedCode": "E_ARTIFACT_SYMLINK",
+      "actualCode": "E_ARTIFACT_SYMLINK",
+      "path": "$[1].commands[0].stdout"
+    },
+    {
+      "id": "orphan_raw",
+      "status": "RED",
+      "expectedCode": "E_ARTIFACT_MISSING",
+      "actualCode": "E_ARTIFACT_MISSING",
+      "path": "$[9].rawArtifacts[0]"
+    },
+    {
+      "id": "orphan_artifact",
+      "status": "RED",
+      "expectedCode": "E_ARTIFACT_MISSING",
+      "actualCode": "E_ARTIFACT_MISSING",
+      "path": "$[1].commands[0].stdout"
+    },
+    {
+      "id": "leaf_artifact_hash_bypass",
+      "status": "RED",
+      "expectedCode": "E_ARTIFACT_HASH",
+      "actualCode": "E_ARTIFACT_HASH",
+      "path": "$[4].bytes"
+    },
+    {
+      "id": "zero_route_counter",
+      "status": "RED",
+      "expectedCode": "E_MECHANISM_UNREACHED",
+      "actualCode": "E_MECHANISM_UNREACHED",
+      "path": "$.row.ietm.mechanismCounters"
+    },
+    {
+      "id": "counter_schema_drift",
+      "status": "RED",
+      "expectedCode": "E_COUNTER_SCHEMA",
+      "actualCode": "E_COUNTER_SCHEMA",
+      "path": "$.row.ietm.mechanismCounters"
+    },
+    {
+      "id": "sample_count_mismatch",
+      "status": "RED",
+      "expectedCode": "E_SAMPLE_COUNT",
+      "actualCode": "E_SAMPLE_COUNT",
+      "path": "$.row.ietm.rawNanoseconds"
+    },
+    {
+      "id": "selected_index_out_of_range",
+      "status": "RED",
+      "expectedCode": "E_SELECTED_INDEX",
+      "actualCode": "E_SELECTED_INDEX",
+      "path": "$.fixture.ietm.selectedIndices"
+    },
+    {
+      "id": "selected_index_duplicate",
+      "status": "RED",
+      "expectedCode": "E_SELECTED_INDEX",
+      "actualCode": "E_SELECTED_INDEX",
+      "path": "$.fixture.ietm.selectedIndices"
+    },
+    {
+      "id": "product_cross_swap",
+      "status": "RED",
+      "expectedCode": "E_ROW_FIXTURE_PRODUCT",
+      "actualCode": "E_ROW_FIXTURE_PRODUCT",
+      "path": "$.row.ietm.productId"
+    },
+    {
+      "id": "raw_timing_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_TIMING",
+      "actualCode": "E_RAW_TIMING",
+      "path": "$.row.ietm.rawNanoseconds"
+    },
+    {
+      "id": "raw_registry_counter_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COUNTER",
+      "actualCode": "E_RAW_COUNTER",
+      "path": "$.row.ietm.mechanismCounters"
+    },
+    {
+      "id": "raw_row_id_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_ROW_ID",
+      "actualCode": "E_RAW_ROW_ID",
+      "path": "$.raw.row.changed.rowId"
+    },
+    {
+      "id": "raw_arm_id_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_ARM_ID",
+      "actualCode": "E_RAW_ARM_ID",
+      "path": "$.raw.row.ietm.armId"
+    },
+    {
+      "id": "raw_run_id_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_ID",
+      "actualCode": "E_RAW_RUN_ID",
+      "path": "$.raw.row.ietm.runId"
+    },
+    {
+      "id": "raw_fixture_id_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_FIXTURE_ID",
+      "actualCode": "E_RAW_FIXTURE_ID",
+      "path": "$.raw.row.ietm.fixtureId"
+    },
+    {
+      "id": "raw_product_id_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_PRODUCT_ID",
+      "actualCode": "E_RAW_PRODUCT_ID",
+      "path": "$.raw.row.ietm.productId"
+    },
+    {
+      "id": "raw_duplicate_row",
+      "status": "RED",
+      "expectedCode": "E_RAW_ROW_DUPLICATE",
+      "actualCode": "E_RAW_ROW_DUPLICATE",
+      "path": "$.raw.row.ietm"
+    },
+    {
+      "id": "raw_omitted_row",
+      "status": "RED",
+      "expectedCode": "E_RAW_ROW_MISSING",
+      "actualCode": "E_RAW_ROW_MISSING",
+      "path": "$.raw"
+    },
+    {
+      "id": "raw_extra_row",
+      "status": "RED",
+      "expectedCode": "E_RAW_ROW_EXTRA",
+      "actualCode": "E_RAW_ROW_EXTRA",
+      "path": "$.raw"
+    },
+    {
+      "id": "raw_malformed_json",
+      "status": "RED",
+      "expectedCode": "E_RAW_JSON",
+      "actualCode": "E_RAW_JSON",
+      "path": "$.receipt.ietm.rawArtifacts"
+    },
+    {
+      "id": "raw_schema_violation",
+      "status": "RED",
+      "expectedCode": "E_RAW_SCHEMA",
+      "actualCode": "E_RAW_SCHEMA",
+      "path": "$.receipt.ietm.rawArtifacts"
+    },
+    {
+      "id": "raw_aggregate_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_AGGREGATE",
+      "actualCode": "E_RAW_AGGREGATE",
+      "path": "$.row.ietm.aggregateIterations"
+    },
+    {
+      "id": "raw_sample_count_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_SAMPLE_COUNT",
+      "actualCode": "E_RAW_SAMPLE_COUNT",
+      "path": "$.raw.row.ietm.rawNanoseconds"
+    },
+    {
+      "id": "raw_counter_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COUNTER",
+      "actualCode": "E_RAW_COUNTER",
+      "path": "$.row.ietm.mechanismCounters"
+    },
+    {
+      "id": "raw_counter_name_duplicate",
+      "status": "RED",
+      "expectedCode": "E_RAW_COUNTER_SCHEMA",
+      "actualCode": "E_RAW_COUNTER_SCHEMA",
+      "path": "$.raw.row.ietm.mechanismCounters"
+    },
+    {
+      "id": "raw_selected_indices_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_SELECTED_INDICES",
+      "actualCode": "E_RAW_SELECTED_INDICES",
+      "path": "$.raw.row.ietm.selectedIndices"
+    },
+    {
+      "id": "raw_fixture_vector_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_FIXTURE_VECTOR",
+      "actualCode": "E_RAW_FIXTURE_VECTOR",
+      "path": "$.raw.row.ietm.fixtureVectorPath"
+    },
+    {
+      "id": "raw_fixture_bytes_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_FIXTURE_BYTES",
+      "actualCode": "E_RAW_FIXTURE_BYTES",
+      "path": "$.raw.row.ietm.fixtureBytesPath"
+    },
+    {
+      "id": "raw_file_unused",
+      "status": "RED",
+      "expectedCode": "E_RAW_FILE_UNUSED",
+      "actualCode": "E_RAW_FILE_UNUSED",
+      "path": "$.receipt.ietm.rawArtifacts"
+    },
+    {
+      "id": "artifact_dot_segment",
+      "status": "RED",
+      "expectedCode": "E_ARTIFACT_PATH_CANONICAL",
+      "actualCode": "E_ARTIFACT_PATH_CANONICAL",
+      "path": "$[2].artifact.path"
+    },
+    {
+      "id": "artifact_double_separator",
+      "status": "RED",
+      "expectedCode": "E_ARTIFACT_PATH_CANONICAL",
+      "actualCode": "E_ARTIFACT_PATH_CANONICAL",
+      "path": "$[2].artifact.path"
+    },
+    {
+      "id": "unbound_sink_substitution",
+      "status": "RED",
+      "expectedCode": "E_RAW_SINK_DESCRIPTOR",
+      "actualCode": "E_RAW_SINK_DESCRIPTOR",
+      "path": "$.raw.row.ietm.sink"
+    },
+    {
+      "id": "raw_law_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_LAWS",
+      "actualCode": "E_RAW_LAWS",
+      "path": "$.raw.row.ietm.lawIds"
+    },
+    {
+      "id": "unbound_warmup_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_WARMUP",
+      "actualCode": "E_RAW_WARMUP",
+      "path": "$.row.ietm.warmupIterations"
+    },
+    {
+      "id": "unbound_cold_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COLD",
+      "actualCode": "E_RAW_COLD",
+      "path": "$.row.ietm.coldSubintervals"
+    },
+    {
+      "id": "raw_gc_descriptor_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_GC_DESCRIPTOR",
+      "actualCode": "E_RAW_GC_DESCRIPTOR",
+      "path": "$.raw.row.ietm.gcBytes"
+    },
+    {
+      "id": "raw_deopt_descriptor_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_DEOPT_DESCRIPTOR",
+      "actualCode": "E_RAW_DEOPT_DESCRIPTOR",
+      "path": "$.raw.row.ietm.deoptBytes"
+    },
+    {
+      "id": "raw_ic_descriptor_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_IC_DESCRIPTOR",
+      "actualCode": "E_RAW_IC_DESCRIPTOR",
+      "path": "$.raw.row.ietm.icBytes"
+    },
+    {
+      "id": "raw_allocation_descriptor_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_ALLOCATION_DESCRIPTOR",
+      "actualCode": "E_RAW_ALLOCATION_DESCRIPTOR",
+      "path": "$.raw.row.ietm.allocationBytes"
+    },
+    {
+      "id": "raw_sink_descriptor_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_SINK_DESCRIPTOR",
+      "actualCode": "E_RAW_SINK_DESCRIPTOR",
+      "path": "$.raw.row.ietm.sink"
+    },
+    {
+      "id": "raw_run_root_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_ROOT",
+      "actualCode": "E_RAW_RUN_ROOT",
+      "path": "$.raw.row.ietm.run.root"
+    },
+    {
+      "id": "unbound_run_pid_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_PID",
+      "actualCode": "E_RAW_RUN_PID",
+      "path": "$.raw.row.ietm.run.pid"
+    },
+    {
+      "id": "unbound_run_process_start_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_PROCESS_START",
+      "actualCode": "E_RAW_RUN_PROCESS_START",
+      "path": "$.raw.row.ietm.run.processStart"
+    },
+    {
+      "id": "unbound_run_seed_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_SEED",
+      "actualCode": "E_RAW_RUN_SEED",
+      "path": "$.raw.row.ietm.run.seed"
+    },
+    {
+      "id": "unbound_run_order_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_ORDER",
+      "actualCode": "E_RAW_RUN_ORDER",
+      "path": "$.raw.row.ietm.run.order"
+    },
+    {
+      "id": "unbound_run_node_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_NODE",
+      "actualCode": "E_RAW_RUN_NODE",
+      "path": "$.raw.row.ietm.run.node"
+    },
+    {
+      "id": "unbound_run_v8_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_V8",
+      "actualCode": "E_RAW_RUN_V8",
+      "path": "$.raw.row.ietm.run.v8"
+    },
+    {
+      "id": "raw_run_environment_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_ENVIRONMENT",
+      "actualCode": "E_RAW_RUN_ENVIRONMENT",
+      "path": "$.raw.row.ietm.run.environment"
+    },
+    {
+      "id": "raw_run_compile_cache_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_RUN_COMPILE_CACHE",
+      "actualCode": "E_RAW_RUN_COMPILE_CACHE",
+      "path": "$.raw.row.ietm.run.compileCacheCanary"
+    },
+    {
+      "id": "raw_command_count_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COMMAND_COUNT",
+      "actualCode": "E_RAW_COMMAND_COUNT",
+      "path": "$.raw.row.ietm.run.commands"
+    },
+    {
+      "id": "raw_command_argv_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COMMAND_ARGV",
+      "actualCode": "E_RAW_COMMAND_ARGV",
+      "path": "$.raw.row.ietm.run.commands[0].argv"
+    },
+    {
+      "id": "raw_command_cwd_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COMMAND_CWD",
+      "actualCode": "E_RAW_COMMAND_CWD",
+      "path": "$.raw.row.ietm.run.commands[0].cwd"
+    },
+    {
+      "id": "unbound_command_exit_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COMMAND_EXIT",
+      "actualCode": "E_RAW_COMMAND_EXIT",
+      "path": "$.raw.row.ietm.run.commands[0].exitCode"
+    },
+    {
+      "id": "raw_command_stdout_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COMMAND_STDOUT",
+      "actualCode": "E_RAW_COMMAND_STDOUT",
+      "path": "$.raw.row.ietm.run.commands[0].stdout"
+    },
+    {
+      "id": "raw_command_stderr_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COMMAND_STDERR",
+      "actualCode": "E_RAW_COMMAND_STDERR",
+      "path": "$.raw.row.ietm.run.commands[0].stderr"
+    },
+    {
+      "id": "large_adjacent_counter_drift",
+      "status": "RED",
+      "expectedCode": "E_RAW_COUNTER",
+      "actualCode": "E_RAW_COUNTER",
+      "path": "$.row.ietm.mechanismCounters"
+    },
+    {
+      "id": "noncanonical_counter",
+      "status": "RED",
+      "expectedCode": "E_RAW_SCHEMA",
+      "actualCode": "E_RAW_SCHEMA",
+      "path": "$.receipt.ietm.rawArtifacts"
+    },
+    {
+      "id": "duplicate_raw_top_key",
+      "status": "RED",
+      "expectedCode": "E_RAW_DUPLICATE_KEY",
+      "actualCode": "E_RAW_DUPLICATE_KEY",
+      "path": "$.receipt.ietm.rawArtifacts$.rowId"
+    },
+    {
+      "id": "duplicate_raw_escaped_top_key",
+      "status": "RED",
+      "expectedCode": "E_RAW_DUPLICATE_KEY",
+      "actualCode": "E_RAW_DUPLICATE_KEY",
+      "path": "$.receipt.ietm.rawArtifacts$.rowId"
+    },
+    {
+      "id": "duplicate_raw_counter_key",
+      "status": "RED",
+      "expectedCode": "E_RAW_DUPLICATE_KEY",
+      "actualCode": "E_RAW_DUPLICATE_KEY",
+      "path": "$.receipt.ietm.rawArtifacts$.mechanismCounters[0].value"
+    },
+    {
+      "id": "duplicate_raw_cold_key",
+      "status": "RED",
+      "expectedCode": "E_RAW_DUPLICATE_KEY",
+      "actualCode": "E_RAW_DUPLICATE_KEY",
+      "path": "$.receipt.ietm.rawArtifacts$.coldSubintervals.startupNs"
+    },
+    {
+      "id": "duplicate_raw_command_key",
+      "status": "RED",
+      "expectedCode": "E_RAW_DUPLICATE_KEY",
+      "actualCode": "E_RAW_DUPLICATE_KEY",
+      "path": "$.receipt.ietm.rawArtifacts$.run.commands[0].exitCode"
+    },
+    {
+      "id": "raw_pid_fractional_round",
+      "status": "RED",
+      "expectedCode": "E_RAW_NUMBER_LEXEME",
+      "actualCode": "E_RAW_NUMBER_LEXEME",
+      "path": "$.receipt.ietm.rawArtifacts$.run.pid"
+    },
+    {
+      "id": "raw_pid_exponent_alias",
+      "status": "RED",
+      "expectedCode": "E_RAW_NUMBER_LEXEME",
+      "actualCode": "E_RAW_NUMBER_LEXEME",
+      "path": "$.receipt.ietm.rawArtifacts$.run.pid"
+    },
+    {
+      "id": "raw_seed_negative_zero",
+      "status": "RED",
+      "expectedCode": "E_RAW_NUMBER_LEXEME",
+      "actualCode": "E_RAW_NUMBER_LEXEME",
+      "path": "$.receipt.ietm.rawArtifacts$.run.seed"
+    },
+    {
+      "id": "raw_warmup_underflow",
+      "status": "RED",
+      "expectedCode": "E_RAW_NUMBER_LEXEME",
+      "actualCode": "E_RAW_NUMBER_LEXEME",
+      "path": "$.receipt.ietm.rawArtifacts$.warmupIterations"
+    },
+    {
+      "id": "raw_aggregate_fractional_round",
+      "status": "RED",
+      "expectedCode": "E_RAW_NUMBER_LEXEME",
+      "actualCode": "E_RAW_NUMBER_LEXEME",
+      "path": "$.receipt.ietm.rawArtifacts$.aggregateIterations"
+    },
+    {
+      "id": "raw_selected_index_fractional_round",
+      "status": "RED",
+      "expectedCode": "E_RAW_NUMBER_LEXEME",
+      "actualCode": "E_RAW_NUMBER_LEXEME",
+      "path": "$.receipt.ietm.rawArtifacts$.selectedIndices[0]"
+    },
+    {
+      "id": "raw_artifact_bytes_fractional_round",
+      "status": "RED",
+      "expectedCode": "E_RAW_NUMBER_LEXEME",
+      "actualCode": "E_RAW_NUMBER_LEXEME",
+      "path": "$.receipt.ietm.rawArtifacts$.run.commands[0].stdout.bytes"
+    },
+    {
+      "id": "raw_command_exit_negative_zero",
+      "status": "RED",
+      "expectedCode": "E_RAW_NUMBER_LEXEME",
+      "actualCode": "E_RAW_NUMBER_LEXEME",
+      "path": "$.receipt.ietm.rawArtifacts$.run.commands[0].exitCode"
+    },
+    {
+      "id": "raw_pid_above_safe",
+      "status": "RED",
+      "expectedCode": "E_RAW_NUMBER_RANGE",
+      "actualCode": "E_RAW_NUMBER_RANGE",
+      "path": "$.receipt.ietm.rawArtifacts$.run.pid"
+    },
+    {
+      "id": "raw_command_exit_below_safe",
+      "status": "RED",
+      "expectedCode": "E_RAW_NUMBER_RANGE",
+      "actualCode": "E_RAW_NUMBER_RANGE",
+      "path": "$.receipt.ietm.rawArtifacts$.run.commands[0].exitCode"
+    },
+    {
+      "id": "raw_pid_overflow_exponent",
+      "status": "RED",
+      "expectedCode": "E_RAW_NUMBER_LEXEME",
+      "actualCode": "E_RAW_NUMBER_LEXEME",
+      "path": "$.receipt.ietm.rawArtifacts$.run.pid"
+    },
+    {
+      "id": "raw_unicode_unpaired_high",
+      "status": "RED",
+      "expectedCode": "E_RAW_UNICODE_SCALAR",
+      "actualCode": "E_RAW_UNICODE_SCALAR",
+      "path": "$.receipt.ietm.rawArtifacts$.run.processStart"
+    },
+    {
+      "id": "raw_unicode_unpaired_low",
+      "status": "RED",
+      "expectedCode": "E_RAW_UNICODE_SCALAR",
+      "actualCode": "E_RAW_UNICODE_SCALAR",
+      "path": "$.receipt.ietm.rawArtifacts$.run.processStart"
+    },
+    {
+      "id": "raw_unicode_high_non_low",
+      "status": "RED",
+      "expectedCode": "E_RAW_UNICODE_SCALAR",
+      "actualCode": "E_RAW_UNICODE_SCALAR",
+      "path": "$.receipt.ietm.rawArtifacts$.run.processStart"
+    },
+    {
+      "id": "raw_unicode_reversed_pair",
+      "status": "RED",
+      "expectedCode": "E_RAW_UNICODE_SCALAR",
+      "actualCode": "E_RAW_UNICODE_SCALAR",
+      "path": "$.receipt.ietm.rawArtifacts$.run.processStart"
+    },
+    {
+      "id": "raw_invalid_utf8",
+      "status": "RED",
+      "expectedCode": "E_RAW_ENCODING",
+      "actualCode": "E_RAW_ENCODING",
+      "path": "$.receipt.ietm.rawArtifacts"
+    },
+    {
+      "id": "raw_pid_plus",
+      "status": "RED",
+      "expectedCode": "E_RAW_JSON",
+      "actualCode": "E_RAW_JSON",
+      "path": "$.receipt.ietm.rawArtifacts"
+    },
+    {
+      "id": "raw_pid_leading_zero",
+      "status": "RED",
+      "expectedCode": "E_RAW_JSON",
+      "actualCode": "E_RAW_JSON",
+      "path": "$.receipt.ietm.rawArtifacts"
+    },
+    {
+      "id": "raw_pid_zero",
+      "status": "RED",
+      "expectedCode": "E_RAW_SCHEMA",
+      "actualCode": "E_RAW_SCHEMA",
+      "path": "$.receipt.ietm.rawArtifacts"
+    },
+    {
+      "id": "raw_seed_negative",
+      "status": "RED",
+      "expectedCode": "E_RAW_SCHEMA",
+      "actualCode": "E_RAW_SCHEMA",
+      "path": "$.receipt.ietm.rawArtifacts"
+    },
+    {
+      "id": "registry_pid_fractional_round",
+      "status": "RED",
+      "expectedCode": "E_REGISTRY_NUMBER_LEXEME",
+      "actualCode": "E_REGISTRY_NUMBER_LEXEME",
+      "path": "$[1].pid"
+    },
+    {
+      "id": "registry_pid_exponent_alias",
+      "status": "RED",
+      "expectedCode": "E_REGISTRY_NUMBER_LEXEME",
+      "actualCode": "E_REGISTRY_NUMBER_LEXEME",
+      "path": "$[1].pid"
+    },
+    {
+      "id": "registry_seed_negative_zero",
+      "status": "RED",
+      "expectedCode": "E_REGISTRY_NUMBER_LEXEME",
+      "actualCode": "E_REGISTRY_NUMBER_LEXEME",
+      "path": "$[1].seed"
+    },
+    {
+      "id": "registry_pid_above_safe",
+      "status": "RED",
+      "expectedCode": "E_REGISTRY_NUMBER_RANGE",
+      "actualCode": "E_REGISTRY_NUMBER_RANGE",
+      "path": "$[1].pid"
+    },
+    {
+      "id": "registry_duplicate_key",
+      "status": "RED",
+      "expectedCode": "E_REGISTRY_DUPLICATE_KEY",
+      "actualCode": "E_REGISTRY_DUPLICATE_KEY",
+      "path": "$[1].pid"
+    },
+    {
+      "id": "registry_unicode_unpaired_high",
+      "status": "RED",
+      "expectedCode": "E_REGISTRY_UNICODE_SCALAR",
+      "actualCode": "E_REGISTRY_UNICODE_SCALAR",
+      "path": "$[1].processStart"
+    },
+    {
+      "id": "registry_invalid_utf8",
+      "status": "RED",
+      "expectedCode": "E_REGISTRY_ENCODING",
+      "actualCode": "E_REGISTRY_ENCODING",
+      "path": "$"
+    },
+    {
+      "id": "registry_malformed_json",
+      "status": "RED",
+      "expectedCode": "E_REGISTRY_JSON",
+      "actualCode": "E_REGISTRY_JSON",
+      "path": "$"
+    },
+    {
+      "id": "receipt_interrupted",
+      "status": "RED",
+      "expectedCode": "E_RECEIPT_INTERRUPTED",
+      "actualCode": "E_RECEIPT_INTERRUPTED",
+      "path": "$.receipt.ietm.interrupted"
+    }
+  ],
+  "inputs": {
+    "baselineSha256": "633d1d7fdc28b703667a00bc5c54a440e2f1cb33cde3b1c910f02e2b2cf096cf",
+    "mutantsSha256": "f9f3d6970459d8492546b74ca3c9238602c6b30576628b3c93dc791886882cfb",
+    "validatorSha256": "3976b24b0327e8fab0f38771a8736d75bc3d52741c0c1ffc8e9291f2f253c992",
+    "validatorTestSha256": "2fb2e23e05ee2f14127304ce51f9bb5c8ddead358f2c42532f57a5ed8ef0ea39",
+    "schemaSha256": "9520d29a401947527ea8e26a19180cdb0797c253f0f6253cc9662b04ad8aeb23",
+    "rawSchemaSha256": "48507dccc084755c9b3dea4bf39d0dbb1ce30b3d49e8157b656c3d48b3af8e8d",
+    "trustedPolicySha256": "a74050058dde083788779e18ea94dadbd4373d6ef92ee66fbe78ca6356c0b7f0",
+    "expectedRoot": "/Users/mkbabb/Documents/Codex/2026-08-01/parser-novelty-n2-ietm-f0"
+  }
+}

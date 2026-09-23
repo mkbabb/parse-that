@@ -1,0 +1,90 @@
+{
+  "environment": {
+    "node": "26.0.0",
+    "v8": "14.6.202.33-node.19",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "workload": {
+    "shape": "sequence",
+    "canonicalProperties": 753,
+    "warmIterations": 100000,
+    "measuredIterations": 3000000,
+    "stagedElapsedMs": 167.178583,
+    "closureElapsedMs": 18170.717334
+  },
+  "cpuProfile": {
+    "stagedTopSelf": [
+      {
+        "name": "compiled spanned sequence",
+        "file": "typescript/test/prototypes/pass3/s/kernel.ts",
+        "line": 397,
+        "hits": 76
+      },
+      {
+        "name": "StagedParser.parseState",
+        "file": "typescript/test/prototypes/pass3/s/run-state.ts",
+        "line": 56,
+        "hits": 27
+      },
+      {
+        "name": "RunState",
+        "file": "typescript/test/prototypes/pass3/s/run-state.ts",
+        "line": 21,
+        "hits": 6
+      },
+      {
+        "name": "garbage collector",
+        "hits": 9
+      }
+    ],
+    "closureTopSelf": [
+      {
+        "name": "stringParser",
+        "file": "typescript/src/parse/leaf.ts",
+        "line": 168,
+        "hits": 4275
+      },
+      {
+        "name": "anyParser",
+        "file": "typescript/src/parse/leaf.ts",
+        "line": 56,
+        "hits": 2108
+      },
+      {
+        "name": "rollback",
+        "file": "typescript/src/parse/state.ts",
+        "line": 53,
+        "hits": 1131
+      },
+      {
+        "name": "mergeErrorState",
+        "file": "typescript/src/parse/utils.ts",
+        "line": 21,
+        "hits": 777
+      },
+      {
+        "name": "garbage collector",
+        "hits": 17
+      }
+    ]
+  },
+  "trace": {
+    "scavengeEvents": 44,
+    "markCompactEvents": 3,
+    "bailoutEvents": 38,
+    "dependentCodeDeoptimizationEvents": 29,
+    "namedCandidateBailouts": 0,
+    "qualification": "The full vite-node trace contains loader, source-map, harness and anonymous OSR events. Zero bailout line names RunState, StagedParser.parseState or the compiled kernel; this is not a claim that every anonymous event is unrelated."
+  },
+  "inlineCache": {
+    "method": "esbuild-bundled staged-only hot run; V8 --log-ic; address-range join against candidate code-creation records",
+    "rawEventCount": 3690,
+    "runStateEvents": 11,
+    "parseStateEvents": 3,
+    "compiledSequenceEvents": 81,
+    "candidatePolymorphicOrMegamorphicTransitions": 0,
+    "candidateObservedTransitions": "initial X→X plus monomorphic 0→1 only",
+    "rawLogDisposition": "not banked; 2.8 MB standalone and 40 MB vite-node logs were summarized to avoid repository ballast"
+  }
+}

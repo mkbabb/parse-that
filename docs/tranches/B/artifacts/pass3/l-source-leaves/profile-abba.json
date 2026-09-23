@@ -1,0 +1,5772 @@
+{
+  "schema": "p2-source-leaf-v1",
+  "node": "v26.0.0",
+  "v8": "14.6.202.33-node.19",
+  "baselineRoot": "/tmp/parse-that-m2-baseline-20260729/typescript",
+  "lengths": [
+    8,
+    64,
+    4096
+  ],
+  "samples": 11,
+  "equality": [
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "callback",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "callback",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "callback",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "ascii",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "ascii",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "ascii",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-name",
+      "plane": "capture",
+      "family": "callback",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-name",
+      "plane": "capture",
+      "family": "callback",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-name",
+      "plane": "capture",
+      "family": "callback",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-name",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-name",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-name",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-number",
+      "plane": "capture",
+      "family": "callback",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-number",
+      "plane": "capture",
+      "family": "callback",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-number",
+      "plane": "capture",
+      "family": "callback",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-number",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-number",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-number",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-number",
+      "plane": "value",
+      "family": "callback",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-number",
+      "plane": "value",
+      "family": "callback",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-number",
+      "plane": "value",
+      "family": "callback",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-number",
+      "plane": "value",
+      "family": "sticky",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-number",
+      "plane": "value",
+      "family": "sticky",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "css-number",
+      "plane": "value",
+      "family": "sticky",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-number",
+      "plane": "capture",
+      "family": "callback",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-number",
+      "plane": "capture",
+      "family": "callback",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-number",
+      "plane": "capture",
+      "family": "callback",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-number",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-number",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-number",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-number",
+      "plane": "value",
+      "family": "callback",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-number",
+      "plane": "value",
+      "family": "callback",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-number",
+      "plane": "value",
+      "family": "callback",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-number",
+      "plane": "value",
+      "family": "sticky",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-number",
+      "plane": "value",
+      "family": "sticky",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-number",
+      "plane": "value",
+      "family": "sticky",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-string",
+      "plane": "capture",
+      "family": "callback",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-string",
+      "plane": "capture",
+      "family": "callback",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-string",
+      "plane": "capture",
+      "family": "callback",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-string",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-string",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-string",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-string",
+      "plane": "value",
+      "family": "callback",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-string",
+      "plane": "value",
+      "family": "callback",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-string",
+      "plane": "value",
+      "family": "callback",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-string",
+      "plane": "value",
+      "family": "sticky",
+      "length": 8,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-string",
+      "plane": "value",
+      "family": "sticky",
+      "length": 64,
+      "success": true,
+      "failure": true
+    },
+    {
+      "shape": "json-string",
+      "plane": "value",
+      "family": "sticky",
+      "length": 4096,
+      "success": true,
+      "failure": true
+    }
+  ],
+  "points": [
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "callback",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 41.02499999999812,
+          "batches": [
+            50.787499999997486,
+            57.72636666666813,
+            49.479166666666664,
+            45.07083333333336,
+            44.7749999999966,
+            41.02499999999812,
+            40.57223333333393,
+            34.99723333333501,
+            34.89029999999881,
+            34.91526666666308,
+            34.84443333333426
+          ]
+        },
+        "candidate": {
+          "median": 66.52083333333394,
+          "batches": [
+            63.306966666664266,
+            82.71803333333689,
+            65.18193333333404,
+            81.67359999999915,
+            68.84863333333442,
+            73.99723333333364,
+            75.27363333333217,
+            65.09719999999864,
+            65.05000000000034,
+            66.26946666666527,
+            66.52083333333394
+          ]
+        },
+        "ratio": 0.6167240839335709,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 47.173633333333484,
+          "batches": [
+            58.13196666666727,
+            47.173633333333484,
+            46.466666666666846,
+            44.611100000001144,
+            48.159733333333556,
+            44.29443333333438,
+            50.81250000000258,
+            48.412499999998694,
+            44.801400000001955,
+            44.76250000000164,
+            47.95139999999947
+          ]
+        },
+        "candidate": {
+          "median": 30.952766666666776,
+          "batches": [
+            31.7263999999985,
+            31.01250000000088,
+            31.644466666667387,
+            31.82363333333645,
+            30.70973333333313,
+            30.552799999998115,
+            30.944466666664994,
+            30.54306666666662,
+            30.952766666666776,
+            30.843033333333853,
+            45.03196666666629
+          ]
+        },
+        "ratio": 1.52405223873364,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "callback",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 53.92776666666729,
+          "batches": [
+            53.60696666666626,
+            71.50416666666692,
+            71.12640000000283,
+            49.85140000000001,
+            49.38473333333302,
+            69.1236333333298,
+            65.54166666666863,
+            52.9027666666669,
+            49.40416666666654,
+            53.92776666666729,
+            72.68609999999853
+          ]
+        },
+        "candidate": {
+          "median": 362.4944333333322,
+          "batches": [
+            389.9777666666675,
+            372.29719999999895,
+            354.0361333333332,
+            365.26666666666944,
+            353.8083333333323,
+            361.3569666666649,
+            359.64030000000093,
+            374.6986333333325,
+            352.3611333333368,
+            362.4944333333322,
+            373.6541666666654
+          ]
+        },
+        "ratio": 0.1487685374111054,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 44.4958333333337,
+          "batches": [
+            44.4958333333337,
+            48.140266666666776,
+            49.85833333333479,
+            49.036100000000715,
+            44.74723333333562,
+            44.25833333333079,
+            44.358333333336006,
+            44.39583333333227,
+            44.36386666666674,
+            46.37779999999717,
+            44.07223333333453
+          ]
+        },
+        "candidate": {
+          "median": 31.594433333331533,
+          "batches": [
+            34.791666666668185,
+            31.441666666667818,
+            31.99166666666618,
+            32.123633333333146,
+            31.741666666668305,
+            31.594433333331533,
+            34.47640000000168,
+            31.501366666668673,
+            31.57500000000179,
+            31.562499999999243,
+            31.531933333333956
+          ]
+        },
+        "ratio": 1.4083440859308411,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "callback",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 1709.5415000000003,
+          "batches": [
+            1613.1460000000288,
+            1971.6665000000262,
+            2082.2294999999826,
+            2054.728999999952,
+            1557.083499999976,
+            1531.6454999999678,
+            1342.375000000061,
+            1415.1875000000018,
+            1709.5415000000003,
+            2058.1455000000233,
+            2063.4375000000773
+          ]
+        },
+        "candidate": {
+          "median": 23819.062499999975,
+          "batches": [
+            24054.812500000025,
+            23711.5,
+            23821.583499999975,
+            23287.000000000033,
+            23971.020500000006,
+            24192.770999999993,
+            24165.00000000008,
+            23448.270499999922,
+            23227.10399999994,
+            23819.062499999975,
+            23570.395499999904
+          ]
+        },
+        "ratio": 0.07177198934676804,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 47.97900000005484,
+          "batches": [
+            48.00000000000182,
+            47.97900000005484,
+            48.333500000012464,
+            47.06249999992451,
+            46.93750000001273,
+            47.27050000008148,
+            46.9585000000734,
+            53.37499999995998,
+            50.39600000009159,
+            48.56250000000273,
+            46.895500000005086
+          ]
+        },
+        "candidate": {
+          "median": 33.75000000005457,
+          "batches": [
+            33.97899999993115,
+            35.62499999998181,
+            33.75000000005457,
+            33.437499999990905,
+            33.541499999955704,
+            33.41699999998582,
+            33.68749999992815,
+            100.27049999996508,
+            35.583500000029744,
+            37.18749999995907,
+            33.64600000008977
+          ]
+        },
+        "ratio": 1.4215999999993263,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 38.11249999999594,
+          "batches": [
+            43.270833333326664,
+            42.58193333333414,
+            42.950000000003755,
+            40.92359999999644,
+            37.309733333336226,
+            37.997199999995246,
+            37.10969999999634,
+            37.08750000000691,
+            38.88470000000173,
+            37.10416666666182,
+            38.11249999999594
+          ]
+        },
+        "candidate": {
+          "median": 34.44026666666863,
+          "batches": [
+            39.831933333334746,
+            42.708333333333336,
+            40.7888666666698,
+            39.60556666666737,
+            33.98613333333742,
+            34.26249999999982,
+            34.1555666666712,
+            36.6833333333337,
+            34.44026666666863,
+            34.269433333338384,
+            33.9749999999943
+          ]
+        },
+        "ratio": 1.1066261585274342,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 47.28193333332911,
+          "batches": [
+            47.69306666666277,
+            46.7569666666653,
+            46.22220000000349,
+            48.11806666666598,
+            50.88750000000649,
+            47.47916666666091,
+            47.540266666669595,
+            45.85276666666687,
+            45.748600000001716,
+            47.28193333332911,
+            45.780566666667255
+          ]
+        },
+        "candidate": {
+          "median": 41.838900000000955,
+          "batches": [
+            41.838900000000955,
+            45.788900000002286,
+            41.80416666667195,
+            45.25279999999536,
+            42.91109999999965,
+            42.85696666666657,
+            45.97499999999854,
+            41.21390000000247,
+            41.15416666666837,
+            41.19306666666489,
+            41.55556666666295
+          ]
+        },
+        "ratio": 1.1300950391460585,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 65.72499999999764,
+          "batches": [
+            71.97083333333012,
+            69.02083333333545,
+            69.09583333333558,
+            66.9999999999997,
+            65.72499999999764,
+            64.95140000000295,
+            57.69859999999577,
+            65.01250000000405,
+            64.9694666666619,
+            66.55556666666295,
+            65.06390000000313
+          ]
+        },
+        "candidate": {
+          "median": 64.2500000000003,
+          "batches": [
+            67.20556666666653,
+            68.20416666666915,
+            69.02359999999894,
+            63.35276666666232,
+            63.8541666666697,
+            66.04583333333571,
+            55.322233333337564,
+            66.83470000000398,
+            63.05276666666941,
+            64.2500000000003,
+            63.13333333333351
+          ]
+        },
+        "ratio": 1.0229571984435382,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 44.90279999999984,
+          "batches": [
+            47.23193333333408,
+            44.43473333333259,
+            44.34029999999893,
+            44.840300000002266,
+            46.49863333333997,
+            45.00973333332847,
+            47.35416666666576,
+            48.94859999999426,
+            44.89443333333535,
+            44.90279999999984,
+            44.74723333333562
+          ]
+        },
+        "candidate": {
+          "median": 40.29446666666748,
+          "batches": [
+            40.418066666666164,
+            40.254166666666904,
+            40.413866666669186,
+            41.719433333340326,
+            40.061100000002625,
+            40.29446666666748,
+            40.23056666666586,
+            40.19029999999476,
+            40.49863333333784,
+            42.42223333333186,
+            40.18609999999777
+          ]
+        },
+        "ratio": 1.1143664059746565,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 1965.562499999919,
+          "batches": [
+            1965.1039999999966,
+            1964.1249999999673,
+            1998.4375000000227,
+            1344.4579999999178,
+            1347.9580000000624,
+            1965.562499999919,
+            1972.6459999999406,
+            2020.7084999999552,
+            2020.7084999999552,
+            1979.7290000000203,
+            1965.0834999999915
+          ]
+        },
+        "candidate": {
+          "median": 1959.62499999996,
+          "batches": [
+            2016.3539999999784,
+            1961.291499999902,
+            1959.62499999996,
+            1857.5624999999718,
+            1341.562500000009,
+            1683.1459999999652,
+            1422.0829999999296,
+            1958.7080000000014,
+            1961.812499999951,
+            1977.104000000054,
+            2060.583000000065
+          ]
+        },
+        "ratio": 1.0030299164380732,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 44.87499999993361,
+          "batches": [
+            45.062499999971806,
+            44.85449999992852,
+            44.54149999992296,
+            50.93750000003183,
+            45.70849999993243,
+            45.02100000001974,
+            45.229000000063024,
+            44.87499999993361,
+            44.64600000005703,
+            44.83349999998154,
+            44.62499999999636
+          ]
+        },
+        "candidate": {
+          "median": 40.521000000012464,
+          "batches": [
+            40.521000000012464,
+            40.29149999996662,
+            40.792000000010376,
+            40.291500000080305,
+            44.27050000003874,
+            40.27099999996153,
+            40.54149999990386,
+            40.395999999987,
+            40.70799999999508,
+            40.58349999991151,
+            40.25000000001455
+          ]
+        },
+        "ratio": 1.107450457785341,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "ascii",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 37.15696666667251,
+          "batches": [
+            48.08749999999691,
+            40.672233333331555,
+            41.1638666666704,
+            36.222233333334465,
+            35.91806666666646,
+            37.15696666667251,
+            36.883333333336545,
+            38.987499999999876,
+            36.29583333333055,
+            38.60969999999877,
+            36.166666666660305
+          ]
+        },
+        "candidate": {
+          "median": 32.486099999997954,
+          "batches": [
+            40.98609999999402,
+            32.34583333332921,
+            33.01249999999527,
+            34.47916666666515,
+            35.018066666665014,
+            48.383333333337454,
+            32.486099999997954,
+            32.26666666666915,
+            30.779166666669273,
+            30.606933333334986,
+            30.69583333333412
+          ]
+        },
+        "ratio": 1.1437804681594543,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 45.881933333339475,
+          "batches": [
+            49.695833333332,
+            45.920833333336006,
+            45.57359999999638,
+            48.934699999995246,
+            45.15696666666524,
+            44.85416666666425,
+            61.51389999999992,
+            45.661099999999045,
+            44.849999999996726,
+            48.068033333333915,
+            45.881933333339475
+          ]
+        },
+        "candidate": {
+          "median": 35.89306666666896,
+          "batches": [
+            35.89306666666896,
+            36.06529999999566,
+            41.10693333332923,
+            35.35280000000209,
+            35.10833333333115,
+            34.98749999999594,
+            36.28749999999551,
+            35.35000000000158,
+            36.134733333331795,
+            35.370833333331575,
+            39.83196666667178
+          ]
+        },
+        "ratio": 1.2782951582107747,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "ascii",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 57.591666666667145,
+          "batches": [
+            56.947233333335134,
+            69.58333333333637,
+            72.32500000000073,
+            50.7472000000007,
+            50.56806666666489,
+            52.91529999999511,
+            52.17639999999999,
+            59.665299999998446,
+            57.591666666667145,
+            63.372233333340475,
+            68.23333333333417
+          ]
+        },
+        "candidate": {
+          "median": 86.8819333333325,
+          "batches": [
+            86.88890000000053,
+            88.55280000000221,
+            81.65276666666917,
+            75.99999999999909,
+            79.19166666667176,
+            83.89720000000125,
+            86.56526666666194,
+            93.2486000000002,
+            87.1569333333279,
+            91.58193333333506,
+            86.8819333333325
+          ]
+        },
+        "ratio": 0.6628727568217216,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 45.42500000000018,
+          "batches": [
+            45.115266666668205,
+            47.03333333333527,
+            45.42500000000018,
+            44.85000000000431,
+            44.84859999999268,
+            47.44859999999941,
+            44.73473333333307,
+            45.13333333333473,
+            45.92499999999594,
+            52.20139999999749,
+            62.15833333333194
+          ]
+        },
+        "candidate": {
+          "median": 35.51803333333131,
+          "batches": [
+            35.51803333333131,
+            51.776400000001864,
+            40.04030000000209,
+            35.37363333333209,
+            35.501400000005866,
+            38.88750000000224,
+            35.2375000000014,
+            35.03469999999804,
+            36.888900000000525,
+            35.25833333333139,
+            49.73889999999604
+          ]
+        },
+        "ratio": 1.2789277934871424,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "ascii-name",
+      "plane": "capture",
+      "family": "ascii",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 2053.4794999999804,
+          "batches": [
+            2053.4794999999804,
+            1343.4579999999414,
+            1346.0625000000164,
+            1965.2919999999767,
+            2068.6459999999443,
+            2151.7915000000585,
+            1968.6665000000403,
+            2097.833000000037,
+            1660.0834999999279,
+            2108.041500000013,
+            2058.437499999968
+          ]
+        },
+        "candidate": {
+          "median": 3974.0209999999934,
+          "batches": [
+            5551.791500000036,
+            5876.333499999987,
+            5787.124999999946,
+            5604.229000000032,
+            3912.8124999999727,
+            3974.0209999999934,
+            3570.4165000000785,
+            3367.4374999999372,
+            4004.083000000037,
+            3381.5834999999197,
+            3254.7084999999925
+          ]
+        },
+        "ratio": 0.5167258804118005,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 47.020999999972446,
+          "batches": [
+            47.208500000010645,
+            47.39549999999326,
+            47.333499999922424,
+            46.81249999998727,
+            46.70799999996689,
+            46.93750000001273,
+            47.97899999994115,
+            47.103999999990265,
+            47.020999999972446,
+            46.95800000001782,
+            47.02050000003055
+          ]
+        },
+        "candidate": {
+          "median": 36.687499999970896,
+          "batches": [
+            37.29199999997945,
+            36.81249999999636,
+            36.64600000001883,
+            36.72900000003665,
+            36.666500000023916,
+            36.66699999996581,
+            36.85399999994843,
+            36.81249999999636,
+            36.687499999970896,
+            36.437499999919964,
+            36.520999999993364
+          ]
+        },
+        "ratio": 1.2816626916527358,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-name",
+      "plane": "capture",
+      "family": "callback",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 44.98473333333853,
+          "batches": [
+            67.71389999999731,
+            49.337499999993874,
+            48.961100000004386,
+            44.90696666666736,
+            44.98473333333853,
+            44.362500000003514,
+            44.22223333333477,
+            46.223599999999955,
+            44.91113333333487,
+            49.03333333333346,
+            44.64583333333394
+          ]
+        },
+        "candidate": {
+          "median": 41.52639999999792,
+          "batches": [
+            43.00696666666681,
+            39.918066666670406,
+            44.27636666666027,
+            41.363899999995134,
+            45.18890000000132,
+            40.243066666668405,
+            41.52639999999792,
+            42.406966666665845,
+            40.14583333333424,
+            41.31250000000364,
+            42.886099999994556
+          ]
+        },
+        "ratio": 1.0832803549872079,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 49.2430666666678,
+          "batches": [
+            62.634733333334225,
+            48.8680666666672,
+            48.52639999999913,
+            49.2430666666678,
+            50.14166666666521,
+            53.70833333333849,
+            49.945833333337454,
+            49.37500000000151,
+            48.962500000000844,
+            49.17776666666972,
+            48.76529999999851
+          ]
+        },
+        "candidate": {
+          "median": 37.36666666666224,
+          "batches": [
+            36.59306666666756,
+            36.41526666666929,
+            36.99999999999666,
+            43.893066666661674,
+            38.89306666666622,
+            37.36666666666224,
+            37.3833333333323,
+            36.9305666666681,
+            39.25833333333534,
+            36.7430666666678,
+            37.4513666666644
+          ]
+        },
+        "ratio": 1.3178340767174033,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-name",
+      "plane": "capture",
+      "family": "callback",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 88.20696666666663,
+          "batches": [
+            90.77636666666724,
+            108.09303333332991,
+            100.25973333332938,
+            85.6222333333335,
+            88.08196666665633,
+            85.04303333334065,
+            88.20696666666663,
+            99.71806666667362,
+            85.83193333332324,
+            90.7124999999875,
+            85.37916666665903
+          ]
+        },
+        "candidate": {
+          "median": 131.56666666665538,
+          "batches": [
+            132.08750000000387,
+            131.6319333333316,
+            131.56666666665538,
+            145.40833333332253,
+            129.29026666667295,
+            128.5013999999895,
+            129.6097333333364,
+            128.87916666666874,
+            133.69166666666388,
+            130.5638666666558,
+            132.66943333333074
+          ]
+        },
+        "ratio": 0.6704355206486511,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 46.61389999999604,
+          "batches": [
+            45.55556666665931,
+            46.09443333333729,
+            48.82500000000315,
+            48.20556666666865,
+            47.88473333334574,
+            46.61389999999604,
+            47.33473333332464,
+            53.42083333333297,
+            46.07916666665612,
+            46.2722000000061,
+            46.37916666667176
+          ]
+        },
+        "candidate": {
+          "median": 36.40973333334235,
+          "batches": [
+            34.97776666666444,
+            35.30970000000101,
+            37.48333333332993,
+            36.458333333333336,
+            35.747233333328644,
+            38.915300000007846,
+            37.24583333334219,
+            36.40973333334235,
+            35.23473333333035,
+            35.42220000000877,
+            36.877766666672564
+          ]
+        },
+        "ratio": 1.2802593079501954,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-name",
+      "plane": "capture",
+      "family": "callback",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 2941.083499999877,
+          "batches": [
+            2930.3955000000315,
+            2959.3750000001364,
+            2941.083499999877,
+            2930.8750000000146,
+            2954.5625000000655,
+            2933.771000000206,
+            2942.7705000000515,
+            2939.2290000000685,
+            2932.8749999999673,
+            2988.896000000068,
+            2942.2915000000103
+          ]
+        },
+        "candidate": {
+          "median": 7863.312499999893,
+          "batches": [
+            7829.833000000008,
+            7904.958500000021,
+            7850.396000000046,
+            7830.478999999968,
+            8001.104499999883,
+            7863.312499999893,
+            7804.8959999998715,
+            7852.791499999967,
+            8059.604000000036,
+            8590.291499999921,
+            8433.85400000011
+          ]
+        },
+        "ratio": 0.37402602274803615,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 46.6039999998884,
+          "batches": [
+            46.604000000115775,
+            46.749999999974534,
+            46.45849999997154,
+            46.72899999991387,
+            46.85399999993933,
+            46.6039999998884,
+            46.37500000012551,
+            46.583499999997,
+            46.45849999997154,
+            46.81249999998727,
+            46.333000000004176
+          ]
+        },
+        "candidate": {
+          "median": 35.853999999972075,
+          "batches": [
+            35.979499999939435,
+            36.08350000013161,
+            35.395999999991545,
+            36.06250000007094,
+            35.750000000007276,
+            35.91649999998481,
+            35.499999999956344,
+            35.853999999972075,
+            35.312499999918145,
+            35.853999999972075,
+            37.83300000009149
+          ]
+        },
+        "ratio": 1.2998270764747224,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-name",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 41.93749999999454,
+          "batches": [
+            46.06803333332816,
+            46.26530000000457,
+            44.4110999999945,
+            41.837499999989326,
+            43.64306666666379,
+            41.78613333333487,
+            41.59583333333406,
+            42.03196666665766,
+            41.92636666666658,
+            41.93610000000566,
+            41.93749999999454
+          ]
+        },
+        "candidate": {
+          "median": 39.17363333333318,
+          "batches": [
+            43.00693333332977,
+            42.586099999986494,
+            38.97640000000138,
+            38.95139999999628,
+            38.46666666666654,
+            38.6708333333445,
+            39.55416666666072,
+            40.298600000005536,
+            39.17363333333318,
+            42.00139999999617,
+            38.89026666667329
+          ]
+        },
+        "ratio": 1.0705542588593528,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 47.74999999999636,
+          "batches": [
+            47.097233333336895,
+            46.82639999999386,
+            48.7527666666665,
+            47.74999999999636,
+            46.501400000003436,
+            49.865266666665775,
+            46.08333333333879,
+            48.24583333333976,
+            51.30276666667063,
+            46.88889999999143,
+            47.79719999999846
+          ]
+        },
+        "candidate": {
+          "median": 41.54583333333903,
+          "batches": [
+            41.16666666667091,
+            41.08053333334283,
+            41.743066666670835,
+            46.3680666666581,
+            41.21390000000247,
+            41.65693333332759,
+            43.37083333333187,
+            40.56803333332937,
+            41.54583333333903,
+            41.10000000000582,
+            48.57916666666521
+          ]
+        },
+        "ratio": 1.149333065890839,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-name",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 95.11803333333167,
+          "batches": [
+            95.11803333333167,
+            104.0486000000025,
+            100.77083333332364,
+            103.15416666667261,
+            85.85833333333237,
+            94.11109999999401,
+            103.30553333333228,
+            97.40000000000086,
+            88.70973333334102,
+            86.891666666664,
+            86.6069333333447
+          ]
+        },
+        "candidate": {
+          "median": 96.8499999999949,
+          "batches": [
+            101.81110000000142,
+            100.62639999999496,
+            97.09303333332477,
+            96.92636666665445,
+            82.62083333332461,
+            82.6708333333348,
+            97.40416666666836,
+            96.8499999999949,
+            82.84723333332902,
+            85.15276666666978,
+            86.18469999999736
+          ]
+        },
+        "ratio": 0.9821170194459129,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 47.6972333333227,
+          "batches": [
+            47.6972333333227,
+            50.03473333334417,
+            47.22220000000259,
+            48.94026666665923,
+            49.49030000000979,
+            47.14166666667552,
+            46.76526666667087,
+            51.50696666666287,
+            47.662500000008855,
+            47.44026666667196,
+            50.79723333333277
+          ]
+        },
+        "candidate": {
+          "median": 41.647199999988516,
+          "batches": [
+            41.34306666666513,
+            41.627799999999596,
+            41.43613333333936,
+            41.434699999990706,
+            41.16666666665576,
+            42.201400000006586,
+            42.084733333331314,
+            42.30000000000776,
+            42.511100000001534,
+            41.70000000000679,
+            41.647199999988516
+          ]
+        },
+        "ratio": 1.1452686695224614,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-name",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 3782.687499999838,
+          "batches": [
+            3782.687499999838,
+            3831.521000000066,
+            3896.937499999922,
+            3004.5834999998533,
+            2988.0000000000564,
+            4090.167000000065,
+            3368.0835000000116,
+            3829.041499999903,
+            3869.957999999997,
+            3031.1874999999873,
+            3015.8540000002176
+          ]
+        },
+        "candidate": {
+          "median": 3406.8750000001273,
+          "batches": [
+            3685.8335000001716,
+            3955.3750000000036,
+            3936.81249999986,
+            3208.0625000000964,
+            3406.8750000001273,
+            4084.2914999998357,
+            3084.8540000001776,
+            3065.74999999998,
+            4096.103999999968,
+            3047.7079999998296,
+            2966.562500000009
+          ]
+        },
+        "ratio": 1.1103100348559007,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 47.64549999981682,
+          "batches": [
+            47.87499999997635,
+            47.895500000095126,
+            47.2500000000764,
+            47.603999999864754,
+            47.499999999899956,
+            47.64549999981682,
+            47.79149999990295,
+            47.68750000016553,
+            47.62499999992542,
+            47.72950000005949,
+            47.499999999899956
+          ]
+        },
+        "candidate": {
+          "median": 41.81249999987813,
+          "batches": [
+            41.791500000044834,
+            42.06249999992906,
+            41.437500000029104,
+            41.97950000002493,
+            41.5414999999939,
+            41.97950000002493,
+            41.687500000080036,
+            41.81249999987813,
+            41.68749999985266,
+            44.0209999999297,
+            41.833499999938795
+          ]
+        },
+        "ratio": 1.1395037369197176,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-number",
+      "plane": "capture",
+      "family": "callback",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 38.786100000000566,
+          "batches": [
+            44.85416666666425,
+            42.872199999995544,
+            37.615300000000694,
+            37.690266666671356,
+            38.81389999999859,
+            37.840266666671596,
+            39.30833333333794,
+            38.022233333337375,
+            38.07916666666339,
+            38.786100000000566,
+            39.32360000000396
+          ]
+        },
+        "candidate": {
+          "median": 31.76943333332929,
+          "batches": [
+            31.76943333332929,
+            31.955566666662584,
+            31.316666666665093,
+            31.46249999999782,
+            31.625000000000604,
+            31.424999999990177,
+            33.193066666672166,
+            33.043066666671926,
+            35.81666666667236,
+            31.331966666660566,
+            32.50276666666044
+          ]
+        },
+        "ratio": 1.2208621914357565,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 54.57499999999224,
+          "batches": [
+            47.04029999999572,
+            66.12500000001091,
+            47.43053333333288,
+            54.57499999999224,
+            55.25970000000295,
+            55.36250000000109,
+            48.06943333333039,
+            63.14859999999195,
+            60.029166666663514,
+            49.697233333336044,
+            52.68056666665568
+          ]
+        },
+        "candidate": {
+          "median": 38.8319666666727,
+          "batches": [
+            37.41943333332832,
+            36.65973333333265,
+            38.28333333334133,
+            37.776399999999434,
+            49.95000000000498,
+            40.98469999998997,
+            38.4069666666619,
+            38.855566666673745,
+            41.36113333333924,
+            38.8319666666727,
+            38.976366666671915
+          ]
+        },
+        "ratio": 1.4054142677978476,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-number",
+      "plane": "capture",
+      "family": "callback",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 55.741666666654055,
+          "batches": [
+            58.04166666666788,
+            58.53473333333265,
+            56.655566666662104,
+            54.85000000000279,
+            54.6819666666579,
+            64.0791666666549,
+            53.51109999999911,
+            52.71803333333386,
+            55.741666666654055,
+            52.872233333331074,
+            56.537499999997934
+          ]
+        },
+        "candidate": {
+          "median": 95.15276666666068,
+          "batches": [
+            124.76390000000113,
+            104.18470000001132,
+            92.97776666665716,
+            96.7902666666608,
+            93.45970000000912,
+            96.00553333333059,
+            92.11946666666032,
+            91.95140000000113,
+            96.93886666667215,
+            91.88889999998841,
+            95.15276666666068
+          ]
+        },
+        "ratio": 0.5858123585825764,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 49.41250000000158,
+          "batches": [
+            49.17776666666214,
+            50.462500000003274,
+            50.055566666666586,
+            49.16110000000723,
+            51.54999999999745,
+            64.43613333332603,
+            53.856933333327106,
+            47.40140000000489,
+            47.369433333324196,
+            49.41250000000158,
+            47.80136666666598
+          ]
+        },
+        "candidate": {
+          "median": 38.27779999999924,
+          "batches": [
+            38.791666666656965,
+            41.218033333325366,
+            38.62500000000182,
+            38.16943333332953,
+            38.27779999999924,
+            38.38470000000598,
+            42.87083333332096,
+            37.279166666667145,
+            37.1083333333445,
+            37.34583333333224,
+            37.79306666665434
+          ]
+        },
+        "ratio": 1.2908918485389067,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-number",
+      "plane": "capture",
+      "family": "callback",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 1029.7499999999218,
+          "batches": [
+            1038.770999999997,
+            1030.2914999999757,
+            1025.9790000000066,
+            1028.2710000001316,
+            1026.6250000001946,
+            1048.020999999835,
+            1035.1040000000467,
+            1029.1875000000346,
+            1173.1454999999187,
+            1029.7499999999218,
+            1025.3125000001546
+          ]
+        },
+        "candidate": {
+          "median": 5876.375000000053,
+          "batches": [
+            5809.417000000167,
+            5793.812500000057,
+            6593.666500000154,
+            5815.145499999971,
+            5844.646000000012,
+            6007.58350000001,
+            6004.520999999841,
+            6040.99999999994,
+            5876.375000000053,
+            5905.812499999911,
+            5818.562499999871
+          ]
+        },
+        "ratio": 0.1752355831613729,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 48.04199999989578,
+          "batches": [
+            48.60400000006848,
+            48.58349999994971,
+            48.312500000065484,
+            48.04199999989578,
+            48.708499999975174,
+            47.56250000014006,
+            47.47899999983929,
+            47.54200000002129,
+            47.81249999996362,
+            106.12499999979264,
+            46.95799999990413
+          ]
+        },
+        "candidate": {
+          "median": 37.47900000007576,
+          "batches": [
+            37.83350000003338,
+            40.06249999997635,
+            37.24999999985812,
+            38.37500000008731,
+            37.645499999825915,
+            37.41700000000492,
+            36.91649999996116,
+            37.146000000120694,
+            37.47900000007576,
+            37.10399999999936,
+            38.12500000003638
+          ]
+        },
+        "ratio": 1.2818378291789714,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-number",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 41.81530000000748,
+          "batches": [
+            42.06526666666832,
+            43.75140000000405,
+            42.095833333329814,
+            42.48053333332488,
+            37.50276666666347,
+            38.865266666668205,
+            37.61806666666416,
+            38.06666666666084,
+            42.15973333333144,
+            41.81530000000748,
+            38.14859999999195
+          ]
+        },
+        "candidate": {
+          "median": 35.57640000000598,
+          "batches": [
+            38.85833333332206,
+            41.04306666666465,
+            39.13473333333665,
+            40.09583333333163,
+            34.9777666666796,
+            35.377799999999596,
+            35.57640000000598,
+            34.9180666666598,
+            34.57776666665874,
+            34.65556666666696,
+            37.44863333334555
+          ]
+        },
+        "ratio": 1.1753662540335854,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 48.6930333333324,
+          "batches": [
+            48.6930333333324,
+            51.64720000000974,
+            47.8833333333417,
+            48.28749999999976,
+            51.55556666666901,
+            48.244433333335714,
+            51.425000000002306,
+            47.57639999999507,
+            47.55556666665749,
+            54.42916666667467,
+            49.79446666666263
+          ]
+        },
+        "candidate": {
+          "median": 42.75276666667196,
+          "batches": [
+            44.2513999999998,
+            42.75276666667196,
+            57.9610999999962,
+            57.18056666666295,
+            42.68053333333531,
+            42.39723333333434,
+            43.16666666666909,
+            46.42363333332469,
+            42.63750000000073,
+            42.552766666661526,
+            41.88749999999952
+          ]
+        },
+        "ratio": 1.138944614110581,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-number",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 54.03889999999289,
+          "batches": [
+            54.92636666666234,
+            53.6791666666583,
+            58.44720000000052,
+            50.95000000001164,
+            57.363866666658694,
+            52.11946666666639,
+            53.38193333333645,
+            58.25973333333726,
+            54.03889999999289,
+            60.60970000000149,
+            53.251399999999194
+          ]
+        },
+        "candidate": {
+          "median": 52.39719999999579,
+          "batches": [
+            63.47083333333406,
+            52.39719999999579,
+            55.10969999998754,
+            47.86666666667164,
+            47.87916666665903,
+            51.275000000002066,
+            48.779166666675636,
+            54.656933333323344,
+            57.737499999999876,
+            59.66529999999087,
+            51.127766666665295
+          ]
+        },
+        "ratio": 1.0313318268914604,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 52.20140000001265,
+          "batches": [
+            52.63749999999163,
+            50.67223333332246,
+            52.73473333333338,
+            54.673599999993414,
+            49.97636666666949,
+            52.20140000001265,
+            54.17776666666517,
+            48.54166666665757,
+            47.64029999999669,
+            47.204166666673096,
+            58.07223333332937
+          ]
+        },
+        "candidate": {
+          "median": 44.73750000000412,
+          "batches": [
+            44.33610000000954,
+            45.3777666666762,
+            44.73750000000412,
+            43.94863333333585,
+            45.5861000000065,
+            49.476400000003196,
+            43.52083333333212,
+            43.30416666666679,
+            42.173599999993414,
+            47.90416666666412,
+            58.005533333334824
+          ]
+        },
+        "ratio": 1.1668376641521732,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-number",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 1078.166499999952,
+          "batches": [
+            1078.166499999952,
+            1102.041999999983,
+            1079.4579999999314,
+            1073.5209999998006,
+            1081.583000000137,
+            1078.5625000000891,
+            1075.0624999998308,
+            1082.1670000000267,
+            1072.291499999892,
+            1073.4999999999673,
+            1074.3124999999054
+          ]
+        },
+        "candidate": {
+          "median": 1081.2085000000025,
+          "batches": [
+            1086.853999999903,
+            1078.3539999999903,
+            1080.1249999999527,
+            1079.5625000000655,
+            1120.6664999999703,
+            1081.2085000000025,
+            1093.708500000048,
+            1080.12500000018,
+            1079.7085000001516,
+            1121.4794999998503,
+            1084.8124999999982
+          ]
+        },
+        "ratio": 0.9971864816082648,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 49.37500000005457,
+          "batches": [
+            49.66650000005757,
+            104.64600000000246,
+            49.37500000005457,
+            48.895999999786,
+            48.91699999984667,
+            49.97900000012123,
+            48.958500000026106,
+            48.978999999917505,
+            48.83350000000064,
+            57.3540000000321,
+            49.500000000080036
+          ]
+        },
+        "candidate": {
+          "median": 43.66700000014134,
+          "batches": [
+            44.229500000028565,
+            44.000000000096406,
+            43.8334999998915,
+            43.562500000007276,
+            43.854000000010274,
+            43.062500000132786,
+            43.33350000001701,
+            43.66700000014134,
+            43.666499999972075,
+            43.54200000011588,
+            44.854500000155895
+          ]
+        },
+        "ratio": 1.1307165594131667,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-number",
+      "plane": "value",
+      "family": "callback",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 55.058333333333096,
+          "batches": [
+            61.9986000000002,
+            62.588866666677255,
+            59.06943333332796,
+            53.61389999999725,
+            53.861133333324084,
+            57.35833333333176,
+            54.26386666667895,
+            55.41803333333822,
+            54.18056666667326,
+            53.644433333344445,
+            55.058333333333096
+          ]
+        },
+        "candidate": {
+          "median": 47.57639999999507,
+          "batches": [
+            53.498599999996564,
+            49.715266666665535,
+            48.17360000000311,
+            51.433333333322174,
+            50.624999999990905,
+            47.486099999999475,
+            47.55553333334319,
+            47.57639999999507,
+            46.715299999990144,
+            46.80833333333491,
+            46.022200000000645
+          ]
+        },
+        "ratio": 1.157261443348778,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 50.66806666667011,
+          "batches": [
+            56.08749999999721,
+            50.66806666667011,
+            50.50416666666327,
+            53.65276666666432,
+            51.67500000000776,
+            50.354166666663026,
+            52.52640000000307,
+            50.18056666666174,
+            50.048599999990984,
+            52.61946666666214,
+            49.1235999999996
+          ]
+        },
+        "candidate": {
+          "median": 38.06943333332431,
+          "batches": [
+            40.70139999998901,
+            38.069433333339475,
+            38.06943333332431,
+            40.062500000006665,
+            38.627766666665295,
+            37.850000000010674,
+            38.36806666666538,
+            37.89863333334627,
+            37.57360000001124,
+            37.53749999999248,
+            37.74723333334199
+          ]
+        },
+        "ratio": 1.3309382943275256,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-number",
+      "plane": "value",
+      "family": "callback",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 129.1416666666767,
+          "batches": [
+            135.2444333333248,
+            133.33886666666027,
+            134.79583333332812,
+            126.99999999999818,
+            129.21526666667282,
+            128.71806666666998,
+            129.1416666666767,
+            127.70973333332829,
+            129.81386666666975,
+            128.87500000000122,
+            126.80416666667043
+          ]
+        },
+        "candidate": {
+          "median": 161.69859999999971,
+          "batches": [
+            161.0388999999941,
+            168.50416666667724,
+            159.22083333333225,
+            160.82499999999223,
+            160.8069333333333,
+            161.23333333333295,
+            179.7514000000016,
+            161.69859999999971,
+            168.54860000000068,
+            166.0846999999952,
+            162.37636666666427
+          ]
+        },
+        "ratio": 0.7986566777119711,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 48.51666666666764,
+          "batches": [
+            47.8833333333417,
+            50.223599999996324,
+            48.155566666658466,
+            48.51666666666764,
+            49.15416666667625,
+            48.491666666662546,
+            48.254166666659636,
+            50.73886666665809,
+            49.476366666673734,
+            47.98886666667385,
+            50.00696666666044
+          ]
+        },
+        "candidate": {
+          "median": 36.6944333333322,
+          "batches": [
+            36.59303333332294,
+            35.97500000000764,
+            36.33613333333111,
+            36.6944333333322,
+            39.76526666666965,
+            36.40140000000732,
+            37.05140000000331,
+            38.052799999998875,
+            36.85973333332792,
+            36.04860000000372,
+            36.89443333334263
+          ]
+        },
+        "ratio": 1.3221805668980438,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-number",
+      "plane": "value",
+      "family": "callback",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 6103.687499999978,
+          "batches": [
+            5838.7709999999515,
+            5835.271000000148,
+            5836.666499999865,
+            5850.687500000049,
+            6088.895999999977,
+            6284.854500000165,
+            6103.687499999978,
+            6165.60400000003,
+            6156.93750000014,
+            6158.4170000000995,
+            6115.999999999985
+          ]
+        },
+        "candidate": {
+          "median": 10941.64550000005,
+          "batches": [
+            10627.541500000007,
+            10597.520499999973,
+            10623.771000000033,
+            10606.208000000152,
+            10852.062500000102,
+            10941.64550000005,
+            11489.125000000058,
+            11852.416500000118,
+            12463.645499999986,
+            12669.9165,
+            11733.916500000078
+          ]
+        },
+        "ratio": 0.5578399976493436,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 51.4584999998533,
+          "batches": [
+            52.25000000018554,
+            50.50000000005639,
+            51.02050000004965,
+            50.81250000012005,
+            50.687499999867214,
+            52.312499999970896,
+            51.77100000014434,
+            52.0209999999679,
+            51.93750000012187,
+            51.4584999998533,
+            51.20800000008785
+          ]
+        },
+        "candidate": {
+          "median": 38.02099999984421,
+          "batches": [
+            37.64550000005329,
+            37.64599999999518,
+            37.22949999996672,
+            38.02099999984421,
+            37.312500000098225,
+            49.41699999994853,
+            45.22899999983565,
+            39.50000000008913,
+            38.60450000001947,
+            37.896000000046115,
+            38.33349999990787
+          ]
+        },
+        "ratio": 1.3534231082839525,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-number",
+      "plane": "value",
+      "family": "sticky",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 71.08333333332364,
+          "batches": [
+            74.47636666667373,
+            81.22639999999895,
+            71.88613333332796,
+            55.71803333332355,
+            59.29026666667596,
+            63.74026666667305,
+            76.12083333333429,
+            54.06389999999798,
+            54.33750000000449,
+            71.43750000000182,
+            71.08333333332364
+          ]
+        },
+        "candidate": {
+          "median": 62.063900000005866,
+          "batches": [
+            60.237499999993815,
+            55.23749999999078,
+            63.73053333333398,
+            62.063900000005866,
+            50.22220000000743,
+            51.10973333332064,
+            64.26806666666683,
+            50.83469999999579,
+            74.73750000000716,
+            66.68750000000425,
+            67.15556666667908
+          ]
+        },
+        "ratio": 1.1453249527231921,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 60.51110000000032,
+          "batches": [
+            64.8375000000063,
+            66.91249999998945,
+            70.58750000001055,
+            66.36806666665507,
+            65.1472333333307,
+            58.85136666665858,
+            50.54026666666687,
+            60.51110000000032,
+            59.13193333332553,
+            56.37083333332764,
+            60.36389999999301
+          ]
+        },
+        "candidate": {
+          "median": 49.90553333333689,
+          "batches": [
+            55.10556666666465,
+            55.55693333332481,
+            56.78333333333588,
+            56.318066666653976,
+            55.233333333323266,
+            48.85696666666869,
+            43.29999999999927,
+            42.75140000001253,
+            42.84583333333103,
+            45.63053333332997,
+            49.90553333333689
+          ]
+        },
+        "ratio": 1.2125128409273789,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-number",
+      "plane": "value",
+      "family": "sticky",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 158.70416666666642,
+          "batches": [
+            158.8569666666596,
+            136.57780000000153,
+            158.70416666666642,
+            148.22083333333467,
+            129.05973333333046,
+            145.8958333333309,
+            160.87639999999132,
+            142.15416666667505,
+            163.76390000000356,
+            174.13196666666408,
+            172.78193333333243
+          ]
+        },
+        "candidate": {
+          "median": 162.44583333333748,
+          "batches": [
+            162.44583333333748,
+            170.2569666666629,
+            133.4764000000026,
+            135.74723333332864,
+            143.43749999999696,
+            133.11806666667204,
+            143.3708333333319,
+            166.60276666666505,
+            167.84303333333813,
+            177.31803333332815,
+            167.30139999999665
+          ]
+        },
+        "ratio": 0.9769666812013997,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 58.47219999999045,
+          "batches": [
+            58.47219999999045,
+            53.129166666667516,
+            64.19583333333019,
+            51.31110000000566,
+            52.95833333332969,
+            63.434699999985845,
+            60.40140000001581,
+            56.2374999999823,
+            51.58333333332242,
+            65.9597333333295,
+            67.46526666665886
+          ]
+        },
+        "candidate": {
+          "median": 47.12916666665781,
+          "batches": [
+            47.12916666665781,
+            44.484699999990575,
+            56.53886666665737,
+            50.58333333333091,
+            44.07083333333806,
+            43.506966666670145,
+            47.52083333332848,
+            47.454166666648234,
+            43.62083333335249,
+            58.1111000000116,
+            45.8138999999998
+          ]
+        },
+        "ratio": 1.2406796923349257,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "css-number",
+      "plane": "value",
+      "family": "sticky",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 6015.895999999884,
+          "batches": [
+            5963.125000000218,
+            6015.895999999884,
+            6048.624999999902,
+            5886.458500000117,
+            5969.416999999794,
+            6068.353999999999,
+            5930.562500000178,
+            6044.354499999827,
+            6115.47950000022,
+            5952.645500000017,
+            6058.187500000258
+          ]
+        },
+        "candidate": {
+          "median": 6027.437499999905,
+          "batches": [
+            6059.146000000055,
+            5922.27099999991,
+            6025.020999999924,
+            6027.437499999905,
+            5987.020999999913,
+            6211.916499999916,
+            6051.187499999742,
+            6006.146000000172,
+            6068.666499999836,
+            6027.875000000222,
+            5836.333500000364
+          ]
+        },
+        "ratio": 0.9980851730109153,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 50.79149999983201,
+          "batches": [
+            51.79150000003574,
+            81.58299999968222,
+            61.37499999977081,
+            50.95849999997881,
+            50.79149999983201,
+            52.520499999900494,
+            50.14600000004066,
+            49.416500000006636,
+            49.271000000317144,
+            49.20850000007704,
+            49.43749999983993
+          ]
+        },
+        "candidate": {
+          "median": 42.91650000004665,
+          "batches": [
+            44.08349999994243,
+            43.166999999812106,
+            47.89600000003702,
+            42.85399999980655,
+            43.54150000017398,
+            48.66700000002311,
+            42.60400000021036,
+            42.91650000004665,
+            42.35399999970468,
+            41.833499999938795,
+            42.145999999775086
+          ]
+        },
+        "ratio": 1.183495858231142,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-number",
+      "plane": "capture",
+      "family": "callback",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 40.0874999999966,
+          "batches": [
+            43.847233333356904,
+            44.12636666666003,
+            45.088899999973364,
+            39.476366666682836,
+            39.56666666666327,
+            40.0874999999966,
+            39.808333333318544,
+            41.98193333334833,
+            39.33749999999539,
+            40.187499999986656,
+            39.298633333358644
+          ]
+        },
+        "candidate": {
+          "median": 37.30556666669145,
+          "batches": [
+            40.81389999998161,
+            37.23886666666658,
+            38.52083333331393,
+            36.469433333331835,
+            37.91946666666869,
+            37.952766666664196,
+            36.808333333344,
+            37.30556666669145,
+            33.89863333334991,
+            34.50556666666671,
+            51.30970000000161
+          ]
+        },
+        "ratio": 1.0745715340061843,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 50.28056666666696,
+          "batches": [
+            51.71666666668292,
+            52.86946666665244,
+            50.28056666666696,
+            53.65416666666837,
+            49.35969999999846,
+            49.62499999998424,
+            52.497199999985845,
+            49.737500000022315,
+            49.98750000001261,
+            49.112499999985936,
+            52.11249999999078
+          ]
+        },
+        "candidate": {
+          "median": 37.580566666686835,
+          "batches": [
+            36.936100000002625,
+            36.59030000001925,
+            37.52083333335273,
+            37.820833333353214,
+            37.02776666668796,
+            37.31526666667075,
+            38.79306666664585,
+            37.98750000002352,
+            37.64583333331757,
+            40.27223333332586,
+            37.580566666686835
+          ]
+        },
+        "ratio": 1.3379406200183244,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-number",
+      "plane": "capture",
+      "family": "callback",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 53.87916666665357,
+          "batches": [
+            57.84446666666554,
+            56.552766666663956,
+            57.62500000000728,
+            53.83196666665147,
+            53.87916666665357,
+            52.57639999999811,
+            52.395833333351526,
+            60.347233333353266,
+            58.34306666668757,
+            51.95276666666662,
+            51.75280000000082
+          ]
+        },
+        "candidate": {
+          "median": 82.06666666668146,
+          "batches": [
+            90.40693333333061,
+            81.89166666667612,
+            86.05973333333168,
+            82.97220000000986,
+            82.26109999999002,
+            85.36386666667872,
+            82.06666666668146,
+            78.99306666665021,
+            69.52916666665867,
+            72.97776666664504,
+            75.11526666667123
+          ]
+        },
+        "ratio": 0.6565292445163752,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 50.58193333334203,
+          "batches": [
+            48.84166666667322,
+            50.444433333329165,
+            65.66389999998137,
+            48.205533333324034,
+            48.20140000001629,
+            49.36666666665891,
+            58.27223333335496,
+            50.58193333334203,
+            53.58473333332464,
+            50.88473333332028,
+            52.712499999991756
+          ]
+        },
+        "candidate": {
+          "median": 37.059733333353506,
+          "batches": [
+            37.059733333353506,
+            36.6999999999886,
+            36.57083333331078,
+            36.23333333331781,
+            36.263899999994464,
+            36.002800000005664,
+            40.69859999999607,
+            37.43333333335006,
+            37.383333333339884,
+            37.19443333332796,
+            38.431966666666995
+          ]
+        },
+        "ratio": 1.3648758041067348,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-number",
+      "plane": "capture",
+      "family": "callback",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 1068.6040000000503,
+          "batches": [
+            1087.812500000382,
+            1327.9374999997344,
+            1402.7920000003178,
+            1175.2289999999448,
+            1277.2915000000467,
+            1068.6040000000503,
+            1027.062499999829,
+            1048.9375000001928,
+            1034.6460000000661,
+            1039.8959999997714,
+            1037.041500000214
+          ]
+        },
+        "candidate": {
+          "median": 3010.333499999888,
+          "batches": [
+            4433.958500000244,
+            4728.083500000139,
+            4796.729000000141,
+            4407.9790000000685,
+            2656.916999999794,
+            3010.333499999888,
+            3053.146000000197,
+            2913.1875000002765,
+            2916.2295000000995,
+            2649.895999999899,
+            2803.3955000000788
+          ]
+        },
+        "ratio": 0.35497860951289617,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 49.81249999991633,
+          "batches": [
+            50.22900000039954,
+            49.895999999989726,
+            49.812500000371074,
+            50.24999999977808,
+            50.02100000001519,
+            49.6250000001055,
+            49.72899999984293,
+            49.81249999991633,
+            49.77099999996426,
+            49.667000000226835,
+            49.645999999938795
+          ]
+        },
+        "candidate": {
+          "median": 37.60400000010122,
+          "batches": [
+            37.603999999646476,
+            37.49999999990905,
+            37.66649999988658,
+            37.792000000081316,
+            37.624999999934516,
+            37.708000000293396,
+            37.146000000120694,
+            37.60400000010122,
+            37.72899999967194,
+            37.27100000014616,
+            37.542000000030384
+          ]
+        },
+        "ratio": 1.3246596106739241,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-number",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 46.255566666665494,
+          "batches": [
+            48.348600000008446,
+            46.255566666665494,
+            59.75276666667924,
+            46.96666666665502,
+            47.45556666663712,
+            43.138900000000525,
+            42.859733333352786,
+            45.18609999998565,
+            43.1777666666676,
+            48.374999999972104,
+            43.970833333332855
+          ]
+        },
+        "candidate": {
+          "median": 41.08333333333575,
+          "batches": [
+            58.140299999983355,
+            41.73193333332772,
+            45.24306666665628,
+            40.72640000000926,
+            41.08333333333575,
+            38.23196666668689,
+            40.07916666666158,
+            43.170833333321454,
+            39.729166666681216,
+            39.73890000000514,
+            41.813900000003436
+          ]
+        },
+        "ratio": 1.12589614604453,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 50.66390000001775,
+          "batches": [
+            54.25969999999627,
+            49.32639999997264,
+            49.29026666668506,
+            50.79443333333984,
+            49.10279999997631,
+            51.409733333336284,
+            54.99166666665285,
+            55.18470000000283,
+            50.66390000001775,
+            48.62639999998161,
+            49.376366666668524
+          ]
+        },
+        "candidate": {
+          "median": 41.89719999997881,
+          "batches": [
+            41.983333333337214,
+            42.0319666666425,
+            45.13749999999466,
+            41.734699999991186,
+            42.2458333333149,
+            41.89166666668219,
+            41.89719999997881,
+            41.70833333331151,
+            45.195833333339884,
+            41.64166666666158,
+            41.78613333333487
+          ]
+        },
+        "ratio": 1.209243099778586,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-number",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 53.71526666667705,
+          "batches": [
+            55.894433333317764,
+            68.87636666666974,
+            53.14583333335273,
+            52.64999999999418,
+            55.57359999999486,
+            52.73749999999685,
+            56.370833333342794,
+            52.36946666667184,
+            56.88750000002376,
+            53.71526666667705,
+            51.70556666668442
+          ]
+        },
+        "candidate": {
+          "median": 50.53333333332072,
+          "batches": [
+            53.64306666666987,
+            53.719433333329405,
+            49.90136666665421,
+            50.159733333354474,
+            50.66113333335427,
+            69.55556666668296,
+            50.47776666666929,
+            50.53333333332072,
+            52.81250000001212,
+            49.806933333335714,
+            49.8555333333267
+          ]
+        },
+        "ratio": 1.0629670184701279,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 50.14306666665409,
+          "batches": [
+            60.980566666664046,
+            57.79306666666646,
+            58.86113333335743,
+            48.341666666662306,
+            48.8319333333493,
+            48.725000000013104,
+            50.33886666666755,
+            51.777800000005904,
+            47.91386666665858,
+            48.341666666662306,
+            50.14306666665409
+          ]
+        },
+        "candidate": {
+          "median": 41.79166666666182,
+          "batches": [
+            50.23333333335056,
+            46.55556666666598,
+            44.820833333354436,
+            41.30416666666861,
+            41.50696666665681,
+            43.233333333319024,
+            41.72500000001188,
+            41.6653000000224,
+            41.79166666666182,
+            41.251399999994945,
+            44.91666666666182
+          ]
+        },
+        "ratio": 1.1998340977067177,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-number",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 1051.0835000000043,
+          "batches": [
+            1114.4795000000158,
+            1031.6459999999097,
+            1063.9169999999467,
+            1077.354000000014,
+            1057.0419999999103,
+            1032.9584999999497,
+            1028.4790000000612,
+            1042.7500000000691,
+            1084.2914999998357,
+            1038.8334999997824,
+            1051.0835000000043
+          ]
+        },
+        "candidate": {
+          "median": 1034.896000000117,
+          "batches": [
+            1259.8750000001928,
+            1036.2915000000612,
+            1352.41649999989,
+            1078.895999999986,
+            1032.832999999755,
+            1074.8125000000073,
+            1030.7079999997768,
+            1030.999999999949,
+            1034.896000000117,
+            1033.7499999995998,
+            1032.1249999997235
+          ]
+        },
+        "ratio": 1.0156416683414424,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 48.791499999879306,
+          "batches": [
+            49.22949999991033,
+            49.104000000170345,
+            48.791499999879306,
+            49.75000000013097,
+            49.37500000005457,
+            48.99999999997817,
+            48.687499999687134,
+            48.64599999973507,
+            48.72900000009395,
+            48.45800000020972,
+            48.45849999992424
+          ]
+        },
+        "candidate": {
+          "median": 41.66699999996126,
+          "batches": [
+            42.145999999775086,
+            41.66699999996126,
+            41.66650000024674,
+            41.39549999990777,
+            41.70849999991333,
+            41.04150000011941,
+            42.4790000001849,
+            41.24999999976353,
+            41.7290000000321,
+            41.437500000029104,
+            41.70849999991333
+          ]
+        },
+        "ratio": 1.1709866321051352,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-number",
+      "plane": "value",
+      "family": "callback",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 55.480566666665254,
+          "batches": [
+            61.37223333331955,
+            59.00833333331927,
+            57.462499999989326,
+            54.92776666666638,
+            59.3764000000192,
+            54.272233333358606,
+            53.48610000000917,
+            53.95973333334041,
+            53.644433333344445,
+            72.13609999998879,
+            55.480566666665254
+          ]
+        },
+        "candidate": {
+          "median": 49.33750000000146,
+          "batches": [
+            49.431933333319954,
+            49.33750000000146,
+            46.39999999999418,
+            46.99999999999515,
+            50.18193333335148,
+            47.20693333335173,
+            49.76390000001629,
+            49.51806666664803,
+            46.73333333333479,
+            52.53193333331486,
+            46.96666666665502
+          ]
+        },
+        "ratio": 1.124511105480894,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 50.418066666679806,
+          "batches": [
+            50.00416666665235,
+            63.00970000002053,
+            55.105566666679806,
+            50.176366666649606,
+            50.31806666665943,
+            54.7472333333341,
+            50.418066666679806,
+            49.934699999994336,
+            52.16803333332792,
+            51.85696666667354,
+            50.07916666666764
+          ]
+        },
+        "candidate": {
+          "median": 36.604166666681216,
+          "batches": [
+            36.604166666681216,
+            36.32916666668583,
+            37.58193333333111,
+            36.20973333333192,
+            36.84999999998884,
+            49.87776666666832,
+            36.31666666666813,
+            36.39166666665309,
+            35.77083333332969,
+            39.848600000004815,
+            37.10416666666182
+          ]
+        },
+        "ratio": 1.3773859988615076,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-number",
+      "plane": "value",
+      "family": "callback",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 137.71109999997861,
+          "batches": [
+            172.00276666668893,
+            137.71109999997861,
+            134.99026666665182,
+            144.7152666666625,
+            138.09306666665483,
+            137.24306666666357,
+            135.329166666664,
+            138.17636666666053,
+            137.41113333332274,
+            147.52219999997274,
+            136.8513666666634
+          ]
+        },
+        "candidate": {
+          "median": 159.1971999999866,
+          "batches": [
+            159.1971999999866,
+            156.1999999999898,
+            156.1458333333576,
+            151.5625,
+            164.2153000000083,
+            166.25416666668875,
+            162.72776666664865,
+            164.40276666665642,
+            150.9903000000122,
+            152.03473333331203,
+            167.65140000000733
+          ]
+        },
+        "ratio": 0.8650346865396515,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 51.34583333331951,
+          "batches": [
+            56.07639999998354,
+            58.09303333332234,
+            52.213866666685746,
+            54.16529999999209,
+            51.08749999999418,
+            51.34583333331951,
+            52.798600000005536,
+            51.14306666664561,
+            50.87916666667904,
+            50.284700000005,
+            50.35279999998844
+          ]
+        },
+        "candidate": {
+          "median": 38.06249999997818,
+          "batches": [
+            40.04863333332954,
+            46.208333333349096,
+            38.6708333333445,
+            38.06249999997818,
+            37.96113333334385,
+            37.72916666666788,
+            37.881933333331595,
+            37.64026666667632,
+            38.102800000009054,
+            38.740266666657895,
+            38.03473333333992
+          ]
+        },
+        "ratio": 1.3489874110567868,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-number",
+      "plane": "value",
+      "family": "callback",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 5895.47900000025,
+          "batches": [
+            5854.3125000001055,
+            6083.8959999996405,
+            5918.062499999905,
+            5895.500000000084,
+            5834.416499999861,
+            5854.979499999899,
+            5876.124999999774,
+            5934.02100000003,
+            5843.8954999996895,
+            5909.333499999774,
+            5895.47900000025
+          ]
+        },
+        "candidate": {
+          "median": 9600.77050000018,
+          "batches": [
+            9315.770499999871,
+            9600.77050000018,
+            9916.854000000058,
+            9862.79149999973,
+            9646.52100000012,
+            9397.39550000013,
+            9292.458499999611,
+            9803.520500000104,
+            9693.707999999788,
+            9512.708499999917,
+            9130.687500000022
+          ]
+        },
+        "ratio": 0.6140631108722097,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 50.77099999971324,
+          "batches": [
+            51.68749999984357,
+            108.52100000010978,
+            51.375000000007276,
+            50.54150000023583,
+            50.499999999829015,
+            50.14600000004066,
+            50.16650000015943,
+            50.16650000015943,
+            51.33300000034069,
+            50.77099999971324,
+            51.18750000019645
+          ]
+        },
+        "candidate": {
+          "median": 37.1250000002874,
+          "batches": [
+            38.06250000025102,
+            38.14599999986967,
+            37.41649999983565,
+            37.062500000047294,
+            37.2920000004342,
+            36.93750000002183,
+            37.10399999999936,
+            36.89600000006976,
+            37.1250000002874,
+            37.29150000026493,
+            36.895499999900494
+          ]
+        },
+        "ratio": 1.3675690235507125,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-number",
+      "plane": "value",
+      "family": "sticky",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 56.17083333333236,
+          "batches": [
+            60.30276666667002,
+            60.654166666669575,
+            58.106933333328925,
+            53.24860000000626,
+            53.23609999998856,
+            58.56943333331704,
+            53.70556666666744,
+            55.47083333331102,
+            56.17083333333236,
+            53.449999999975255,
+            56.88749999999345
+          ]
+        },
+        "candidate": {
+          "median": 53.949999999986176,
+          "batches": [
+            57.77500000000752,
+            54.14583333334424,
+            53.949999999986176,
+            54.08886666667361,
+            54.62500000000242,
+            55.7958333333166,
+            49.66389999999592,
+            49.56526666665014,
+            49.32083333333139,
+            51.368066666661136,
+            49.61109999997765
+          ]
+        },
+        "ratio": 1.041164658634787,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 52.6125000000017,
+          "batches": [
+            52.6125000000017,
+            50.03193333335124,
+            59.20693333334081,
+            55.90140000000853,
+            50.3097333333244,
+            62.351399999988644,
+            59.154166666667145,
+            50.698600000002145,
+            50.51803333332525,
+            57.779166666659876,
+            49.874999999974534
+          ]
+        },
+        "candidate": {
+          "median": 42.340266666663716,
+          "batches": [
+            45.65556666666453,
+            41.405533333333246,
+            46.85416666667758,
+            42.84723333333507,
+            42.27916666665502,
+            46.32083333332654,
+            42.340266666663716,
+            42.05973333331106,
+            42.12083333331975,
+            41.75276666665014,
+            44.466666666661084
+          ]
+        },
+        "ratio": 1.2426114463144313,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-number",
+      "plane": "value",
+      "family": "sticky",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 136.82363333333947,
+          "batches": [
+            138.45833333331635,
+            131.5722333333421,
+            146.62916666669238,
+            141.7000000000068,
+            136.82363333333947,
+            129.63193333334857,
+            142.69583333331565,
+            129.2902999999872,
+            129.46526666667827,
+            137.1444666666927,
+            131.68613333333874
+          ]
+        },
+        "candidate": {
+          "median": 130.01666666668825,
+          "batches": [
+            131.18333333335008,
+            141.03886666668285,
+            127.14583333333091,
+            126.58333333332241,
+            129.62500000000242,
+            130.01666666668825,
+            131.03196666667523,
+            129.19583333335441,
+            132.16946666664927,
+            125.6333333333411,
+            130.83750000002206
+          ]
+        },
+        "ratio": 1.0523545699268049,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 51.49583333335006,
+          "batches": [
+            51.27363333331232,
+            53.18056666668175,
+            50.24583333333794,
+            52.040299999983596,
+            51.09166666667685,
+            53.463899999981855,
+            51.49583333335006,
+            53.28473333332416,
+            50.283333333330425,
+            50.20833333331514,
+            60.4471999999987
+          ]
+        },
+        "candidate": {
+          "median": 42.52636666666755,
+          "batches": [
+            42.23470000000209,
+            42.054166666669815,
+            41.64583333331393,
+            42.68886666668549,
+            45.829166666650664,
+            43.38333333331927,
+            42.280566666674225,
+            43.71803333333446,
+            42.52636666666755,
+            42.081933333338384,
+            44.202766666664196
+          ]
+        },
+        "ratio": 1.2109154242352156,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-number",
+      "plane": "value",
+      "family": "sticky",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 5875.687499999913,
+          "batches": [
+            5854.833500000041,
+            5941.9794999998885,
+            5939.812499999789,
+            5851.3960000000225,
+            6078.06249999976,
+            5875.687499999913,
+            5977.624999999989,
+            5872.417000000041,
+            5851.478999999927,
+            6025.395499999831,
+            5858.541500000229
+          ]
+        },
+        "candidate": {
+          "median": 5922.0414999999775,
+          "batches": [
+            5963.146000000052,
+            6062.082999999802,
+            6026.97900000021,
+            5876.874999999927,
+            6036.750000000211,
+            6025.99999999984,
+            5864.978999999948,
+            5897.791999999754,
+            5850.937499999873,
+            5922.0414999999775,
+            5841.187499999705
+          ]
+        },
+        "ratio": 0.9921726316845187,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 50.77100000016799,
+          "batches": [
+            51.041499999882944,
+            50.72900000004665,
+            50.416499999755615,
+            51.06249999971624,
+            50.85450000024139,
+            50.354499999684776,
+            50.77100000016799,
+            50.54149999978108,
+            50.74999999987995,
+            50.79149999983201,
+            50.895500000024185
+          ]
+        },
+        "candidate": {
+          "median": 42.1875000001819,
+          "batches": [
+            42.91700000021592,
+            42.083499999989726,
+            42.374999999992724,
+            41.87499999989086,
+            42.39599999982602,
+            41.97900000008303,
+            42.458500000066124,
+            42.02100000020437,
+            42.1875000001819,
+            42.14600000022983,
+            42.541499999970256
+          ]
+        },
+        "ratio": 1.2034607407395337,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-string",
+      "plane": "capture",
+      "family": "callback",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 41.101399999994705,
+          "batches": [
+            44.65000000000146,
+            45.83890000000489,
+            41.488866666683556,
+            41.101399999994705,
+            43.2958333333166,
+            40.52500000000994,
+            41.83890000000853,
+            40.6264000000192,
+            41.013899999992034,
+            40.62916666665235,
+            40.63886666666197
+          ]
+        },
+        "candidate": {
+          "median": 31.42639999999422,
+          "batches": [
+            30.984733333358843,
+            31.59863333333609,
+            30.96666666666958,
+            31.456966666670873,
+            30.880566666655792,
+            31.42639999999422,
+            32.64443333334081,
+            31.595833333328,
+            33.29443333332165,
+            31.25693333331583,
+            31.08886666665664
+          ]
+        },
+        "ratio": 1.3078621795688423,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 57.91386666666464,
+          "batches": [
+            55.17223333332974,
+            68.6777666666482,
+            66.07083333331805,
+            64.48749999999563,
+            57.91386666666464,
+            60.33749999999903,
+            63.55833333333673,
+            57.72223333333386,
+            54.58750000000994,
+            57.28196666668737,
+            56.747233333347445
+          ]
+        },
+        "candidate": {
+          "median": 40.67499999997987,
+          "batches": [
+            37.480533333321844,
+            40.11806666667326,
+            48.9764000000226,
+            40.22500000000946,
+            40.67499999997987,
+            42.34999999998763,
+            40.21113333334749,
+            37.79029999999087,
+            47.55696666667669,
+            45.41526666665353,
+            41.49999999999636
+          ]
+        },
+        "ratio": 1.423819709076664,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-string",
+      "plane": "capture",
+      "family": "callback",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 89.87776666666225,
+          "batches": [
+            89.87776666666225,
+            95.48886666667993,
+            89.85833333332873,
+            97.99443333334541,
+            86.42916666664557,
+            90.686133333323,
+            85.95416666667006,
+            87.28889999999107,
+            90.43750000000728,
+            86.48193333331922,
+            90.42916666667224
+          ]
+        },
+        "candidate": {
+          "median": 82.8110999999808,
+          "batches": [
+            105.37500000000364,
+            95.66250000001068,
+            74.7847333333387,
+            86.03056666667423,
+            82.8110999999808,
+            91.8903000000076,
+            75.16526666668142,
+            76.48750000001505,
+            74.89723333331615,
+            84.10693333332044,
+            74.2944333333071
+          ]
+        },
+        "ratio": 1.0853347759742726,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 60.11946666667427,
+          "batches": [
+            109.46806666667423,
+            68.83890000002187,
+            68.06946666665681,
+            54.38609999998031,
+            57.60693333331801,
+            67.99863333332421,
+            58.980566666681014,
+            60.16946666665414,
+            53.98750000000897,
+            57.15136666664573,
+            60.11946666667427
+          ]
+        },
+        "candidate": {
+          "median": 39.0861000000162,
+          "batches": [
+            46.923599999990984,
+            52.94723333333119,
+            40.35833333330932,
+            38.75833333334715,
+            37.94723333330694,
+            38.4652666666625,
+            39.0861000000162,
+            45.80696666668398,
+            38.3111000000099,
+            55.35139999998743,
+            37.98193333332164
+          ]
+        },
+        "ratio": 1.5381290706069255,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-string",
+      "plane": "capture",
+      "family": "callback",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 3118.270500000108,
+          "batches": [
+            3104.271000000154,
+            3116.353999999774,
+            3344.166999999743,
+            3375.4374999998618,
+            3187.728999999763,
+            3118.270500000108,
+            3088.4790000000066,
+            3009.666500000094,
+            3319.3750000000364,
+            3134.9789999999302,
+            3024.0830000002456
+          ]
+        },
+        "candidate": {
+          "median": 5358.249999999771,
+          "batches": [
+            6117.708499999935,
+            5144.521000000168,
+            5248.874999999771,
+            5530.146000000059,
+            5761.8539999998575,
+            5999.895999999808,
+            5095.270999999684,
+            5358.249999999771,
+            5953.478999999788,
+            5281.437499999811,
+            4948.562499999753
+          ]
+        },
+        "ratio": 0.5819568889096703,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 61.229500000081316,
+          "batches": [
+            65.41650000008303,
+            61.50000000025102,
+            61.31249999998545,
+            61.25000000020009,
+            63.228999999864754,
+            61.229500000081316,
+            60.95800000002782,
+            60.39600000030987,
+            60.72900000026493,
+            60.500000000047294,
+            59.85400000008667
+          ]
+        },
+        "candidate": {
+          "median": 40.14599999982238,
+          "batches": [
+            42.229000000133965,
+            40.39550000015879,
+            40.958499999760534,
+            40.14599999982238,
+            40.041499999915686,
+            40.06249999974898,
+            40.43749999982538,
+            40.14599999982238,
+            40.33350000008795,
+            39.874999999938154,
+            38.66650000009031
+          ]
+        },
+        "ratio": 1.5251706272194545,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-string",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 43.162499999986416,
+          "batches": [
+            44.905533333318694,
+            46.573600000010636,
+            49.19719999998051,
+            46.280566666670595,
+            42.145833333324845,
+            41.018066666644394,
+            43.162499999986416,
+            40.84720000000743,
+            41.943033333336636,
+            40.68889999998647,
+            43.76666666667007
+          ]
+        },
+        "candidate": {
+          "median": 39.190266666658616,
+          "batches": [
+            41.88749999999952,
+            56.27636666664936,
+            41.16666666665576,
+            40.63056666664124,
+            38.4180666666604,
+            39.190266666658616,
+            38.26390000000781,
+            38.40279999997923,
+            37.98333333331053,
+            38.33193333333232,
+            40.069433333337656
+          ]
+        },
+        "ratio": 1.1013576500286282,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 57.54723333332852,
+          "batches": [
+            56.06386666665155,
+            57.92500000000776,
+            55.35276666666202,
+            55.91806666664827,
+            58.68610000000747,
+            56.04303333332913,
+            55.797199999991186,
+            60.81109999998565,
+            57.85970000000209,
+            57.54723333332852,
+            60.06249999997332
+          ]
+        },
+        "candidate": {
+          "median": 48.722200000005,
+          "batches": [
+            48.554166666660116,
+            48.436100000011116,
+            48.46113333333051,
+            48.024999999991756,
+            50.75140000002041,
+            48.26943333334081,
+            48.729166666665456,
+            48.722200000005,
+            50.37500000001576,
+            49.39443333332746,
+            52.22499999999854
+          ]
+        },
+        "ratio": 1.1811296151102086,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-string",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 87.99443333333936,
+          "batches": [
+            90.53890000001653,
+            87.99443333333936,
+            88.68610000002568,
+            86.74026666667486,
+            90.40139999997336,
+            86.52780000002167,
+            86.57360000000456,
+            89.03053333333446,
+            87.54720000000209,
+            84.56249999999272,
+            88.18610000001475
+          ]
+        },
+        "candidate": {
+          "median": 86.7375000000114,
+          "batches": [
+            109.94026666667196,
+            86.7375000000114,
+            87.84860000002179,
+            87.82639999999446,
+            89.39443333335173,
+            87.5486333333356,
+            83.05696666666336,
+            83.29583333334085,
+            82.6569333333282,
+            82.86526666667365,
+            84.39583333332241
+          ]
+        },
+        "ratio": 1.0144912331267075,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 62.50696666666044,
+          "batches": [
+            57.766666666672485,
+            57.822200000009616,
+            62.50696666666044,
+            66.51109999999487,
+            63.31109999997959,
+            59.19026666667075,
+            62.04026666667536,
+            63.46943333331486,
+            62.67916666668801,
+            62.984699999985125,
+            59.001400000003436
+          ]
+        },
+        "candidate": {
+          "median": 51.77083333334546,
+          "batches": [
+            53.30696666666578,
+            50.12780000000323,
+            59.716666666675636,
+            61.81386666664063,
+            52.43613333332178,
+            51.77083333334546,
+            51.27776666665038,
+            55.105566666649494,
+            51.469433333325775,
+            50.901399999990346,
+            49.780566666656036
+          ]
+        },
+        "ratio": 1.207378028168611,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-string",
+      "plane": "capture",
+      "family": "sticky",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 3140.625,
+          "batches": [
+            3121.146000000408,
+            3022.895999999946,
+            3260.8545000002773,
+            3103.104499999972,
+            3141.6669999998708,
+            3094.479500000034,
+            3296.8545000003364,
+            3279.187499999807,
+            3140.625,
+            3119.6044999996952,
+            3236.916999999721
+          ]
+        },
+        "candidate": {
+          "median": 3088.8334999999643,
+          "batches": [
+            3027.1459999999024,
+            3047.6039999998648,
+            3452.166500000203,
+            3010.7499999999163,
+            3048.0625000000146,
+            3008.062500000051,
+            3137.4375000000327,
+            3126.8749999999272,
+            3123.5624999999345,
+            3125.312500000291,
+            3088.8334999999643
+          ]
+        },
+        "ratio": 1.0167673330401383,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 57.916499999919324,
+          "batches": [
+            58.021000000280765,
+            58.35400000023583,
+            58.021000000280765,
+            57.916499999919324,
+            57.97899999970468,
+            58.10399999973015,
+            57.39599999969869,
+            57.12500000026921,
+            57.20849999988786,
+            57.56250000013097,
+            57.374999999865395
+          ]
+        },
+        "candidate": {
+          "median": 49.49999999962529,
+          "batches": [
+            50.270499999896856,
+            49.81249999991633,
+            49.6250000001055,
+            49.4170000001759,
+            107.4585000001207,
+            50.72900000004665,
+            49.49999999962529,
+            48.52100000016435,
+            48.333500000353524,
+            48.41699999997218,
+            48.83350000000064
+          ]
+        },
+        "ratio": 1.1700303030375303,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-string",
+      "plane": "value",
+      "family": "callback",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 76.50416666668511,
+          "batches": [
+            77.27363333333415,
+            78.7694333333396,
+            79.22083333332921,
+            73.99583333332582,
+            72.56946666666408,
+            76.50416666668511,
+            74.75139999999858,
+            76.71113333335597,
+            73.52499999997235,
+            73.61943333332117,
+            91.78056666666332
+          ]
+        },
+        "candidate": {
+          "median": 62.90136666666513,
+          "batches": [
+            63.84720000002441,
+            62.609733333344295,
+            67.7847333333375,
+            72.18193333334663,
+            62.95973333335496,
+            64.92360000002009,
+            62.35833333333479,
+            62.8208333333229,
+            62.894433333318986,
+            62.90136666666513,
+            62.37219999999677
+          ]
+        },
+        "ratio": 1.2162560325931493,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 60.60696666666748,
+          "batches": [
+            69.85416666666424,
+            60.8888666666644,
+            61.21946666665584,
+            67.8069333333345,
+            62.73056666665676,
+            59.615300000011,
+            58.88333333332411,
+            60.60696666666748,
+            59.81526666667681,
+            58.86946666666214,
+            56.133333333339884
+          ]
+        },
+        "candidate": {
+          "median": 39.83056666666016,
+          "batches": [
+            47.90973333335084,
+            43.13333333332897,
+            39.83056666666016,
+            41.65833333333163,
+            44.7277999999945,
+            38.131933333321896,
+            40.868033333329855,
+            37.70139999999932,
+            38.51109999999001,
+            38.56389999997798,
+            37.32780000000275
+          ]
+        },
+        "ratio": 1.5216194932370377,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-string",
+      "plane": "value",
+      "family": "callback",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 129.7597000000072,
+          "batches": [
+            137.47360000000603,
+            135.2833333333365,
+            126.25140000000101,
+            128.64583333333334,
+            129.7347333333164,
+            129.16946666664444,
+            127.88053333333664,
+            129.7597000000072,
+            145.07083333334472,
+            141.1277666666744,
+            130.77916666667684
+          ]
+        },
+        "candidate": {
+          "median": 121.51250000000194,
+          "batches": [
+            116.70833333334183,
+            116.78749999997913,
+            131.07780000000275,
+            129.70276666665086,
+            131.85556666667253,
+            135.84719999998924,
+            120.96946666664128,
+            118.88473333331906,
+            121.51250000000194,
+            117.94303333332815,
+            129.50969999998657
+          ]
+        },
+        "ratio": 1.0678712066660232,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 59.44863333334069,
+          "batches": [
+            59.938899999997375,
+            62.64306666665409,
+            59.6360999999888,
+            59.44863333334069,
+            54.74860000000869,
+            55.51803333334344,
+            55.29026666666444,
+            54.65973333333144,
+            55.45416666667128,
+            65.14026666667026,
+            60.43889999997798
+          ]
+        },
+        "candidate": {
+          "median": 40.11526666666517,
+          "batches": [
+            38.58613333334991,
+            41.39723333334283,
+            40.15139999998306,
+            38.5986333333373,
+            53.27359999998104,
+            45.51386666668501,
+            40.84723333335205,
+            38.126399999994945,
+            39.134699999976874,
+            40.11526666666517,
+            39.13473333332149
+          ]
+        },
+        "ratio": 1.4819453607855755,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-string",
+      "plane": "value",
+      "family": "callback",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 4202.645500000017,
+          "batches": [
+            4139.416500000152,
+            4276.39599999975,
+            4329.624999999851,
+            4202.645500000017,
+            4338.042000000314,
+            4263.750000000073,
+            4176.062500000171,
+            4730.354499999976,
+            4146.895999999742,
+            4100.500000000011,
+            4102.437500000178
+          ]
+        },
+        "candidate": {
+          "median": 4375.250000000051,
+          "batches": [
+            4121.603999999934,
+            4024.81250000028,
+            4415.291499999967,
+            4464.312500000233,
+            4751.521000000139,
+            4098.916500000087,
+            4375.250000000051,
+            4141.291999999794,
+            4773.958499999935,
+            5022.020999999768,
+            4035.396000000219
+          ]
+        },
+        "ratio": 0.960549797154441,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 54.895500000384345,
+          "batches": [
+            58.43749999985448,
+            58.37500000006912,
+            60.354000000188535,
+            55.81250000022919,
+            55.29149999983929,
+            54.812500000025466,
+            54.646000000047934,
+            54.895500000384345,
+            54.70800000011877,
+            54.583500000262575,
+            54.874999999810825
+          ]
+        },
+        "candidate": {
+          "median": 38.04149999996298,
+          "batches": [
+            37.95850000005885,
+            38.3334999996805,
+            38.04149999996298,
+            38.52099999994607,
+            38.083500000084314,
+            37.72949999984121,
+            37.74999999995998,
+            37.52100000019709,
+            38.083500000084314,
+            37.916499999937514,
+            87.35400000023219
+          ]
+        },
+        "ratio": 1.4430424667912087,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-string",
+      "plane": "value",
+      "family": "sticky",
+      "length": 8,
+      "success": {
+        "control": {
+          "median": 81.08473333331858,
+          "batches": [
+            79.29026666667293,
+            77.37359999997959,
+            82.64723333334891,
+            90.39446666665754,
+            95.63333333332291,
+            92.69306666668247,
+            81.08473333331858,
+            79.77500000000266,
+            84.00416666666692,
+            77.2791666666611,
+            80.641666666664
+          ]
+        },
+        "candidate": {
+          "median": 76.08193333332262,
+          "batches": [
+            75.61109999999947,
+            78.37916666664266,
+            74.89863333333535,
+            74.48473333333823,
+            81.04860000000069,
+            99.32640000000295,
+            80.2250000000034,
+            76.08193333332262,
+            75.13613333333826,
+            73.25000000000728,
+            92.64166666665308
+          ]
+        },
+        "ratio": 1.0657554268248965,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 61.177766666696705,
+          "batches": [
+            61.177766666696705,
+            62.37359999998565,
+            59.016666666654295,
+            59.56249999999272,
+            63.20833333332605,
+            56.608333333345705,
+            56.35969999999968,
+            60.48193333332772,
+            61.76803333331311,
+            61.584733333347685,
+            65.16806666668344
+          ]
+        },
+        "candidate": {
+          "median": 51.05416666668437,
+          "batches": [
+            50.8597333333455,
+            54.13196666665196,
+            51.243033333321364,
+            51.05416666668437,
+            49.5833333333394,
+            49.83613333333779,
+            48.37916666665478,
+            64.76529999999912,
+            52.86110000000311,
+            52.31666666665357,
+            50.681933333332076
+          ]
+        },
+        "ratio": 1.1982913572188132,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-string",
+      "plane": "value",
+      "family": "sticky",
+      "length": 64,
+      "success": {
+        "control": {
+          "median": 139.2805666666694,
+          "batches": [
+            143.08750000000146,
+            145.64863333331837,
+            134.73613333332347,
+            147.40416666666837,
+            139.2805666666694,
+            146.01803333331796,
+            146.03193333332456,
+            133.53333333331344,
+            134.4597333333392,
+            138.61526666666273,
+            136.1527666666613
+          ]
+        },
+        "candidate": {
+          "median": 136.3430666666924,
+          "batches": [
+            135.11943333332965,
+            138.04999999999077,
+            138.49443333335026,
+            138.04999999999077,
+            136.03750000002037,
+            135.71806666665603,
+            132.36249999999927,
+            136.75416666665114,
+            141.5985999999975,
+            136.3430666666924,
+            133.96113333334748
+          ]
+        },
+        "ratio": 1.0215449165974686,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 61.52083333333091,
+          "batches": [
+            63.20693333333717,
+            65.8402666666916,
+            58.05000000000291,
+            58.06526666668408,
+            61.52083333333091,
+            62.933333333330665,
+            63.76249999999952,
+            60.53750000000946,
+            59.793066666649494,
+            59.740266666691845,
+            62.620833333342794
+          ]
+        },
+        "candidate": {
+          "median": 53.20833333331999,
+          "batches": [
+            53.20833333331999,
+            53.02639999999883,
+            49.39443333332746,
+            49.183333333348855,
+            53.466666666645324,
+            54.538866666674345,
+            57.0013999999901,
+            53.86943333332965,
+            51.76389999999932,
+            51.29446666666505,
+            60.39166666666158
+          ]
+        },
+        "ratio": 1.15622552858286,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    },
+    {
+      "shape": "json-string",
+      "plane": "value",
+      "family": "sticky",
+      "length": 4096,
+      "success": {
+        "control": {
+          "median": 4349.39600000007,
+          "batches": [
+            4349.39600000007,
+            4273.354000000381,
+            4352.666999999656,
+            4165.833000000021,
+            4371.354500000052,
+            4277.000000000044,
+            4261.958499999764,
+            4668.979000000036,
+            4218.083499999921,
+            4640.978999999788,
+            4468.104000000039
+          ]
+        },
+        "candidate": {
+          "median": 4190.562499999942,
+          "batches": [
+            4335.500000000138,
+            4317.583000000013,
+            4308.041499999945,
+            4149.645999999848,
+            4171.854499999881,
+            4177.187499999945,
+            4261.770499999784,
+            4164.708499999961,
+            4597.021000000041,
+            4163.9374999999745,
+            4190.562499999942
+          ]
+        },
+        "ratio": 1.0379026681979162,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      },
+      "failure": {
+        "control": {
+          "median": 60.020499999609456,
+          "batches": [
+            59.958499999993364,
+            60.479000000214,
+            60.22949999987759,
+            59.812500000134605,
+            59.64600000015707,
+            60.0205000000642,
+            60.24999999999636,
+            60.020499999609456,
+            62.35449999985576,
+            59.52099999967686,
+            58.95849999978964
+          ]
+        },
+        "candidate": {
+          "median": 50.24999999977808,
+          "batches": [
+            50.020499999845924,
+            51.62500000005821,
+            50.24999999977808,
+            50.16699999987395,
+            50.39600000009159,
+            50.08349999980055,
+            50.353999999970256,
+            49.729500000012195,
+            50.3750000002583,
+            50.208500000280765,
+            50.64600000014252
+          ]
+        },
+        "ratio": 1.1944378109427765,
+        "order": [
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate",
+          "candidate/control",
+          "control/candidate"
+        ]
+      }
+    }
+  ],
+  "memory": [
+    {
+      "shape": "ascii-name",
+      "family": "control",
+      "retained": {
+        "heapUsed": -763.875,
+        "arrayBuffers": 0,
+        "external": -191.84375
+      }
+    },
+    {
+      "shape": "ascii-name",
+      "family": "callback",
+      "retained": {
+        "heapUsed": 1497.5,
+        "arrayBuffers": 0,
+        "external": 0
+      }
+    },
+    {
+      "shape": "ascii-name",
+      "family": "sticky",
+      "retained": {
+        "heapUsed": 1829.5625,
+        "arrayBuffers": 0,
+        "external": 0
+      }
+    },
+    {
+      "shape": "ascii-name",
+      "family": "ascii",
+      "retained": {
+        "heapUsed": 1767.59375,
+        "arrayBuffers": 0,
+        "external": 0
+      }
+    },
+    {
+      "shape": "css-name",
+      "family": "control",
+      "retained": {
+        "heapUsed": 624.21875,
+        "arrayBuffers": 0,
+        "external": 0
+      }
+    },
+    {
+      "shape": "css-name",
+      "family": "callback",
+      "retained": {
+        "heapUsed": 1217.71875,
+        "arrayBuffers": 0,
+        "external": 0
+      }
+    },
+    {
+      "shape": "css-name",
+      "family": "sticky",
+      "retained": {
+        "heapUsed": 1360.875,
+        "arrayBuffers": 0,
+        "external": 0
+      }
+    },
+    {
+      "shape": "css-number",
+      "family": "control",
+      "retained": {
+        "heapUsed": 622.875,
+        "arrayBuffers": 0,
+        "external": 0
+      }
+    },
+    {
+      "shape": "css-number",
+      "family": "callback",
+      "retained": {
+        "heapUsed": 1329.5,
+        "arrayBuffers": 0,
+        "external": 0
+      }
+    },
+    {
+      "shape": "css-number",
+      "family": "sticky",
+      "retained": {
+        "heapUsed": 1483.78125,
+        "arrayBuffers": 0,
+        "external": 0
+      }
+    },
+    {
+      "shape": "json-number",
+      "family": "control",
+      "retained": {
+        "heapUsed": 616.875,
+        "arrayBuffers": 0,
+        "external": 0
+      }
+    },
+    {
+      "shape": "json-number",
+      "family": "callback",
+      "retained": {
+        "heapUsed": 1300.40625,
+        "arrayBuffers": 0,
+        "external": 0
+      }
+    },
+    {
+      "shape": "json-number",
+      "family": "sticky",
+      "retained": {
+        "heapUsed": 1464.875,
+        "arrayBuffers": 0,
+        "external": 0
+      }
+    },
+    {
+      "shape": "json-string",
+      "family": "control",
+      "retained": {
+        "heapUsed": 616.875,
+        "arrayBuffers": 0,
+        "external": 0
+      }
+    },
+    {
+      "shape": "json-string",
+      "family": "callback",
+      "retained": {
+        "heapUsed": 1232.875,
+        "arrayBuffers": 0,
+        "external": 0
+      }
+    },
+    {
+      "shape": "json-string",
+      "family": "sticky",
+      "retained": {
+        "heapUsed": 1384.875,
+        "arrayBuffers": 0,
+        "external": 0
+      }
+    }
+  ]
+}

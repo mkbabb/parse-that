@@ -1,0 +1,3813 @@
+{
+    "schema": "x-p-w2.g.slice/1",
+    "note": "DERIVED BY SCRIPT (build-corpus.mjs). Never hand-edit: `--check` re-derives and exits non-zero on any disagreement. Rows carry inputs and declarations ONLY — no expected values anywhere (self-authored answer keys are PRUNED, W2.md §5 .g).",
+    "contract": "experiments/w2/contract/ALGEBRA.md §10 (the shared slice) · §10.5 (the declared third-cell rows)",
+    "restrictions": [
+        "rule := qualified-rule — an input whose stylesheet prelude begins with '@' is OUTSIDE this corpus (§10.3)",
+        "value-slice := colour — a declaration whose value is not a colour is OUTSIDE this corpus (§10.3)"
+    ],
+    "counts": {
+        "rows": 527,
+        "byProd": {
+            "P:color": 483,
+            "P:timing-function": 29,
+            "P:stylesheet": 15
+        },
+        "byFamily": {
+            "hex": 7,
+            "named": 148,
+            "transparent": 1,
+            "context": 3,
+            "functional": 21,
+            "var-context": 4,
+            "numeric-edge": 5,
+            "juxtaposition": 3,
+            "r6-bare-number": 2,
+            "clamp": 4,
+            "unsound-accept": 7,
+            "malformed": 12,
+            "ground-a": 210,
+            "ground-a-guarded": 60,
+            "timing-keyword": 5,
+            "step-alias": 2,
+            "cubic-bezier": 3,
+            "steps": 10,
+            "linear-function": 4,
+            "positive-control": 3,
+            "recovery": 1,
+            "recovery-n": 5,
+            "recovery-zero-sync": 1,
+            "edge": 5,
+            "deep-nesting": 1
+        },
+        "groundA": 210
+    },
+    "thirdCellDeclared": [
+        {
+            "key": "a",
+            "what": "issue spans — Π [far.f, len(S)) and RECOVER [m, m+skip) vs the incumbent's [0, len(S))",
+            "cite": "DM-6 · grammar.ts:50-51"
+        },
+        {
+            "key": "b",
+            "what": "legacy 4-arg rgba(1, 2, 3, 0.5) / hsla(…) — the incumbent REJECTS",
+            "cite": "band GAP P-012/P-015"
+        },
+        {
+            "key": "c",
+            "what": "clamps — the incumbent is unclamped and rejects alpha > 1 where §4.2 clamps",
+            "cite": "§10.5 (c)"
+        },
+        {
+            "key": "d",
+            "what": "the seven unsound accepts the incumbent admits and the algebra rejects",
+            "cite": "band L86-95"
+        },
+        {
+            "key": "e",
+            "what": "juxtaposition — the incumbent rejects all three rows; the band's reading accepts",
+            "cite": "DM-2"
+        },
+        {
+            "key": "f",
+            "what": "1e400 — the incumbent rejects outright; the algebra clamps where a clamp exists",
+            "cite": "DM-3"
+        },
+        {
+            "key": "g",
+            "what": "R6 bare-number hsl s/l — the incumbent reads [120, 50, 50]",
+            "cite": "DM-7"
+        },
+        {
+            "key": "h",
+            "what": "named expectations where the incumbent has expected: [] (6 of 25) or a ColorIssue code in the label slot",
+            "cite": "D-1"
+        },
+        {
+            "key": "i",
+            "what": "W1 R-9: A-F2 color-mix() (incumbent rejects; slice rejects with <color>) · D-F2 @@@ { } (incumbent accepts as unknown; @-preludes are OUTSIDE the slice corpus, so the row is DECLARED, never compared)",
+            "cite": "X-P-W1.md R-9 · §10.3 restriction"
+        },
+        {
+            "key": "j",
+            "what": "recovery — N sites give the incumbent 1 issue and the algebra N",
+            "cite": "§10.3"
+        },
+        {
+            "key": "k",
+            "what": "trailing_input where the incumbent reports css_syntax (`red x`)",
+            "cite": "OP-07"
+        }
+    ],
+    "rows": [
+        {
+            "id": "s0000",
+            "prod": "P:color",
+            "family": "hex",
+            "src": "#abc",
+            "provenance": "§10.1 hex"
+        },
+        {
+            "id": "s0001",
+            "prod": "P:color",
+            "family": "hex",
+            "src": "#ABC",
+            "provenance": "§10.1 hex"
+        },
+        {
+            "id": "s0002",
+            "prod": "P:color",
+            "family": "hex",
+            "src": "#abcd",
+            "provenance": "§10.1 hex"
+        },
+        {
+            "id": "s0003",
+            "prod": "P:color",
+            "family": "hex",
+            "src": "#0a1b2c",
+            "provenance": "§10.1 hex"
+        },
+        {
+            "id": "s0004",
+            "prod": "P:color",
+            "family": "hex",
+            "src": "#0A1B2C",
+            "provenance": "§10.1 hex"
+        },
+        {
+            "id": "s0005",
+            "prod": "P:color",
+            "family": "hex",
+            "src": "#0a1b2c80",
+            "provenance": "§10.1 hex"
+        },
+        {
+            "id": "s0006",
+            "prod": "P:color",
+            "family": "hex",
+            "src": "#fff0",
+            "provenance": "§10.1 hex"
+        },
+        {
+            "id": "s0007",
+            "prod": "P:color",
+            "family": "named",
+            "src": "aliceblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0008",
+            "prod": "P:color",
+            "family": "named",
+            "src": "antiquewhite",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0009",
+            "prod": "P:color",
+            "family": "named",
+            "src": "aqua",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0010",
+            "prod": "P:color",
+            "family": "named",
+            "src": "aquamarine",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0011",
+            "prod": "P:color",
+            "family": "named",
+            "src": "azure",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0012",
+            "prod": "P:color",
+            "family": "named",
+            "src": "beige",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0013",
+            "prod": "P:color",
+            "family": "named",
+            "src": "bisque",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0014",
+            "prod": "P:color",
+            "family": "named",
+            "src": "black",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0015",
+            "prod": "P:color",
+            "family": "named",
+            "src": "blanchedalmond",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0016",
+            "prod": "P:color",
+            "family": "named",
+            "src": "blue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0017",
+            "prod": "P:color",
+            "family": "named",
+            "src": "blueviolet",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0018",
+            "prod": "P:color",
+            "family": "named",
+            "src": "brown",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0019",
+            "prod": "P:color",
+            "family": "named",
+            "src": "burlywood",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0020",
+            "prod": "P:color",
+            "family": "named",
+            "src": "cadetblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0021",
+            "prod": "P:color",
+            "family": "named",
+            "src": "chartreuse",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0022",
+            "prod": "P:color",
+            "family": "named",
+            "src": "chocolate",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0023",
+            "prod": "P:color",
+            "family": "named",
+            "src": "coral",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0024",
+            "prod": "P:color",
+            "family": "named",
+            "src": "cornflowerblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0025",
+            "prod": "P:color",
+            "family": "named",
+            "src": "cornsilk",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0026",
+            "prod": "P:color",
+            "family": "named",
+            "src": "crimson",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0027",
+            "prod": "P:color",
+            "family": "named",
+            "src": "cyan",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0028",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0029",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkcyan",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0030",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkgoldenrod",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0031",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkgray",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0032",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkgreen",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0033",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkgrey",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0034",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkkhaki",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0035",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkmagenta",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0036",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkolivegreen",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0037",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkorange",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0038",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkorchid",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0039",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkred",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0040",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darksalmon",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0041",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkseagreen",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0042",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkslateblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0043",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkslategray",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0044",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkslategrey",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0045",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkturquoise",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0046",
+            "prod": "P:color",
+            "family": "named",
+            "src": "darkviolet",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0047",
+            "prod": "P:color",
+            "family": "named",
+            "src": "deeppink",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0048",
+            "prod": "P:color",
+            "family": "named",
+            "src": "deepskyblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0049",
+            "prod": "P:color",
+            "family": "named",
+            "src": "dimgray",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0050",
+            "prod": "P:color",
+            "family": "named",
+            "src": "dimgrey",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0051",
+            "prod": "P:color",
+            "family": "named",
+            "src": "dodgerblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0052",
+            "prod": "P:color",
+            "family": "named",
+            "src": "firebrick",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0053",
+            "prod": "P:color",
+            "family": "named",
+            "src": "floralwhite",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0054",
+            "prod": "P:color",
+            "family": "named",
+            "src": "forestgreen",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0055",
+            "prod": "P:color",
+            "family": "named",
+            "src": "fuchsia",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0056",
+            "prod": "P:color",
+            "family": "named",
+            "src": "gainsboro",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0057",
+            "prod": "P:color",
+            "family": "named",
+            "src": "ghostwhite",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0058",
+            "prod": "P:color",
+            "family": "named",
+            "src": "gold",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0059",
+            "prod": "P:color",
+            "family": "named",
+            "src": "goldenrod",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0060",
+            "prod": "P:color",
+            "family": "named",
+            "src": "gray",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0061",
+            "prod": "P:color",
+            "family": "named",
+            "src": "green",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0062",
+            "prod": "P:color",
+            "family": "named",
+            "src": "greenyellow",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0063",
+            "prod": "P:color",
+            "family": "named",
+            "src": "grey",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0064",
+            "prod": "P:color",
+            "family": "named",
+            "src": "honeydew",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0065",
+            "prod": "P:color",
+            "family": "named",
+            "src": "hotpink",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0066",
+            "prod": "P:color",
+            "family": "named",
+            "src": "indianred",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0067",
+            "prod": "P:color",
+            "family": "named",
+            "src": "indigo",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0068",
+            "prod": "P:color",
+            "family": "named",
+            "src": "ivory",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0069",
+            "prod": "P:color",
+            "family": "named",
+            "src": "khaki",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0070",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lavender",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0071",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lavenderblush",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0072",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lawngreen",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0073",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lemonchiffon",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0074",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lightblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0075",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lightcoral",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0076",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lightcyan",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0077",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lightgoldenrodyellow",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0078",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lightgray",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0079",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lightgreen",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0080",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lightgrey",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0081",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lightpink",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0082",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lightsalmon",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0083",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lightseagreen",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0084",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lightskyblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0085",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lightslategray",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0086",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lightslategrey",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0087",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lightsteelblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0088",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lightyellow",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0089",
+            "prod": "P:color",
+            "family": "named",
+            "src": "lime",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0090",
+            "prod": "P:color",
+            "family": "named",
+            "src": "limegreen",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0091",
+            "prod": "P:color",
+            "family": "named",
+            "src": "linen",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0092",
+            "prod": "P:color",
+            "family": "named",
+            "src": "magenta",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0093",
+            "prod": "P:color",
+            "family": "named",
+            "src": "maroon",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0094",
+            "prod": "P:color",
+            "family": "named",
+            "src": "mediumaquamarine",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0095",
+            "prod": "P:color",
+            "family": "named",
+            "src": "mediumblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0096",
+            "prod": "P:color",
+            "family": "named",
+            "src": "mediumorchid",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0097",
+            "prod": "P:color",
+            "family": "named",
+            "src": "mediumpurple",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0098",
+            "prod": "P:color",
+            "family": "named",
+            "src": "mediumseagreen",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0099",
+            "prod": "P:color",
+            "family": "named",
+            "src": "mediumslateblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0100",
+            "prod": "P:color",
+            "family": "named",
+            "src": "mediumspringgreen",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0101",
+            "prod": "P:color",
+            "family": "named",
+            "src": "mediumturquoise",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0102",
+            "prod": "P:color",
+            "family": "named",
+            "src": "mediumvioletred",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0103",
+            "prod": "P:color",
+            "family": "named",
+            "src": "midnightblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0104",
+            "prod": "P:color",
+            "family": "named",
+            "src": "mintcream",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0105",
+            "prod": "P:color",
+            "family": "named",
+            "src": "mistyrose",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0106",
+            "prod": "P:color",
+            "family": "named",
+            "src": "moccasin",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0107",
+            "prod": "P:color",
+            "family": "named",
+            "src": "navajowhite",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0108",
+            "prod": "P:color",
+            "family": "named",
+            "src": "navy",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0109",
+            "prod": "P:color",
+            "family": "named",
+            "src": "oldlace",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0110",
+            "prod": "P:color",
+            "family": "named",
+            "src": "olive",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0111",
+            "prod": "P:color",
+            "family": "named",
+            "src": "olivedrab",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0112",
+            "prod": "P:color",
+            "family": "named",
+            "src": "orange",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0113",
+            "prod": "P:color",
+            "family": "named",
+            "src": "orangered",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0114",
+            "prod": "P:color",
+            "family": "named",
+            "src": "orchid",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0115",
+            "prod": "P:color",
+            "family": "named",
+            "src": "palegoldenrod",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0116",
+            "prod": "P:color",
+            "family": "named",
+            "src": "palegreen",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0117",
+            "prod": "P:color",
+            "family": "named",
+            "src": "paleturquoise",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0118",
+            "prod": "P:color",
+            "family": "named",
+            "src": "palevioletred",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0119",
+            "prod": "P:color",
+            "family": "named",
+            "src": "papayawhip",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0120",
+            "prod": "P:color",
+            "family": "named",
+            "src": "peachpuff",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0121",
+            "prod": "P:color",
+            "family": "named",
+            "src": "peru",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0122",
+            "prod": "P:color",
+            "family": "named",
+            "src": "pink",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0123",
+            "prod": "P:color",
+            "family": "named",
+            "src": "plum",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0124",
+            "prod": "P:color",
+            "family": "named",
+            "src": "powderblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0125",
+            "prod": "P:color",
+            "family": "named",
+            "src": "purple",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0126",
+            "prod": "P:color",
+            "family": "named",
+            "src": "rebeccapurple",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0127",
+            "prod": "P:color",
+            "family": "named",
+            "src": "red",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0128",
+            "prod": "P:color",
+            "family": "named",
+            "src": "rosybrown",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0129",
+            "prod": "P:color",
+            "family": "named",
+            "src": "royalblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0130",
+            "prod": "P:color",
+            "family": "named",
+            "src": "saddlebrown",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0131",
+            "prod": "P:color",
+            "family": "named",
+            "src": "salmon",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0132",
+            "prod": "P:color",
+            "family": "named",
+            "src": "sandybrown",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0133",
+            "prod": "P:color",
+            "family": "named",
+            "src": "seagreen",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0134",
+            "prod": "P:color",
+            "family": "named",
+            "src": "seashell",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0135",
+            "prod": "P:color",
+            "family": "named",
+            "src": "sienna",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0136",
+            "prod": "P:color",
+            "family": "named",
+            "src": "silver",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0137",
+            "prod": "P:color",
+            "family": "named",
+            "src": "skyblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0138",
+            "prod": "P:color",
+            "family": "named",
+            "src": "slateblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0139",
+            "prod": "P:color",
+            "family": "named",
+            "src": "slategray",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0140",
+            "prod": "P:color",
+            "family": "named",
+            "src": "slategrey",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0141",
+            "prod": "P:color",
+            "family": "named",
+            "src": "snow",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0142",
+            "prod": "P:color",
+            "family": "named",
+            "src": "springgreen",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0143",
+            "prod": "P:color",
+            "family": "named",
+            "src": "steelblue",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0144",
+            "prod": "P:color",
+            "family": "named",
+            "src": "tan",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0145",
+            "prod": "P:color",
+            "family": "named",
+            "src": "teal",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0146",
+            "prod": "P:color",
+            "family": "named",
+            "src": "thistle",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0147",
+            "prod": "P:color",
+            "family": "named",
+            "src": "tomato",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0148",
+            "prod": "P:color",
+            "family": "named",
+            "src": "turquoise",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0149",
+            "prod": "P:color",
+            "family": "named",
+            "src": "violet",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0150",
+            "prod": "P:color",
+            "family": "named",
+            "src": "wheat",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0151",
+            "prod": "P:color",
+            "family": "named",
+            "src": "white",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0152",
+            "prod": "P:color",
+            "family": "named",
+            "src": "whitesmoke",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0153",
+            "prod": "P:color",
+            "family": "named",
+            "src": "yellow",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0154",
+            "prod": "P:color",
+            "family": "named",
+            "src": "yellowgreen",
+            "provenance": "§10.1 named-color (148)"
+        },
+        {
+            "id": "s0155",
+            "prod": "P:color",
+            "family": "transparent",
+            "src": "transparent",
+            "provenance": "§10.1 transparent · grammar.ts:264"
+        },
+        {
+            "id": "s0156",
+            "prod": "P:color",
+            "family": "context",
+            "src": "currentcolor",
+            "provenance": "§10.1 context-color (20 spellings) → color_context_required"
+        },
+        {
+            "id": "s0157",
+            "prod": "P:color",
+            "family": "context",
+            "src": "currentColor",
+            "provenance": "§10.1 context-color (20 spellings) → color_context_required"
+        },
+        {
+            "id": "s0158",
+            "prod": "P:color",
+            "family": "context",
+            "src": "canvastext",
+            "provenance": "§10.1 context-color (20 spellings) → color_context_required"
+        },
+        {
+            "id": "s0159",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "rgb(1 2 3)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0160",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "rgb(1 2 3 / 0.5)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0161",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "rgb(50% 20% 30%)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0162",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "rgb(none 2 3)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0163",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "rgb(1, 2, 3)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0164",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "rgba(1, 2, 3, 0.5)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0165",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "rgba(1 2 3 / 50%)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0166",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "hsl(120 50% 50%)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0167",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "hsl(120deg 50% 50% / 0.25)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0168",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "hsl(120, 50%, 50%)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0169",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "hsla(120, 50%, 50%, 0.5)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0170",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "hsl(0.5turn 50% 50%)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0171",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "hsl(400grad 50% 50%)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0172",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "hsl(1rad 50% 50%)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0173",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "hsl(480 50% 50%)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0174",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "hsl(none none none)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0175",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "oklch(50% 0.1 120)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0176",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "oklch(0.5 0.1 120deg / 50%)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0177",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "oklch(50% 50% 1rad)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0178",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "oklch(none none none)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0179",
+            "prod": "P:color",
+            "family": "functional",
+            "src": "oklch(0.5 0.1 120 / none)",
+            "provenance": "§10.1 modern/legacy channel forms"
+        },
+        {
+            "id": "s0180",
+            "prod": "P:color",
+            "family": "var-context",
+            "src": "var(--brand)",
+            "provenance": "§10.1 var ⇒ CTOR context (the value IS the failure)"
+        },
+        {
+            "id": "s0181",
+            "prod": "P:color",
+            "family": "var-context",
+            "src": "var(--brand, red)",
+            "provenance": "§10.1 var ⇒ CTOR context (the value IS the failure)"
+        },
+        {
+            "id": "s0182",
+            "prod": "P:color",
+            "family": "var-context",
+            "src": "var(--a(--b))",
+            "provenance": "§10.1 var ⇒ CTOR context (the value IS the failure)"
+        },
+        {
+            "id": "s0183",
+            "prod": "P:color",
+            "family": "var-context",
+            "src": "var(--x, rgb(1 2 3))",
+            "provenance": "§10.1 var ⇒ CTOR context (the value IS the failure)"
+        },
+        {
+            "id": "s0184",
+            "prod": "P:color",
+            "family": "numeric-edge",
+            "src": "rgb(1. 2 3)",
+            "provenance": "§4.1 OP-03 NUM · DM-3"
+        },
+        {
+            "id": "s0185",
+            "prod": "P:color",
+            "family": "numeric-edge",
+            "src": "rgb(1e400 0 0)",
+            "provenance": "§4.1 OP-03 NUM · DM-3"
+        },
+        {
+            "id": "s0186",
+            "prod": "P:color",
+            "family": "numeric-edge",
+            "src": "lab(50 1e400 0)",
+            "provenance": "§4.1 OP-03 NUM · DM-3"
+        },
+        {
+            "id": "s0187",
+            "prod": "P:color",
+            "family": "numeric-edge",
+            "src": "rgb(-0 0 0)",
+            "provenance": "§4.1 OP-03 NUM · DM-3"
+        },
+        {
+            "id": "s0188",
+            "prod": "P:color",
+            "family": "numeric-edge",
+            "src": "rgb(+1 2 3)",
+            "provenance": "§4.1 OP-03 NUM · DM-3"
+        },
+        {
+            "id": "s0189",
+            "prod": "P:color",
+            "family": "juxtaposition",
+            "src": "rgb(50%20%30%)",
+            "provenance": "§11 DM-2 (band token-stream reading; dissent preserved)",
+            "declaredMark": "DM-2"
+        },
+        {
+            "id": "s0190",
+            "prod": "P:color",
+            "family": "juxtaposition",
+            "src": "rgb(1.5.5 3)",
+            "provenance": "§11 DM-2 (band token-stream reading; dissent preserved)",
+            "declaredMark": "DM-2"
+        },
+        {
+            "id": "s0191",
+            "prod": "P:color",
+            "family": "juxtaposition",
+            "src": "hsl(120 50%50%)",
+            "provenance": "§11 DM-2 (band token-stream reading; dissent preserved)",
+            "declaredMark": "DM-2"
+        },
+        {
+            "id": "s0192",
+            "prod": "P:color",
+            "family": "r6-bare-number",
+            "src": "hsl(120 50 50)",
+            "provenance": "§11 DM-7 (R6)",
+            "declaredMark": "DM-7"
+        },
+        {
+            "id": "s0193",
+            "prod": "P:color",
+            "family": "r6-bare-number",
+            "src": "hsl(120, 50, 50)",
+            "provenance": "§11 DM-7 (R6)",
+            "declaredMark": "DM-7"
+        },
+        {
+            "id": "s0194",
+            "prod": "P:color",
+            "family": "clamp",
+            "src": "rgb(300 -20 3)",
+            "provenance": "§8 band row · §10.5 (c)"
+        },
+        {
+            "id": "s0195",
+            "prod": "P:color",
+            "family": "clamp",
+            "src": "oklch(1.5 -1 30)",
+            "provenance": "§8 band row · §10.5 (c)"
+        },
+        {
+            "id": "s0196",
+            "prod": "P:color",
+            "family": "clamp",
+            "src": "rgb(0 0 0 / 200%)",
+            "provenance": "§8 band row · §10.5 (c)"
+        },
+        {
+            "id": "s0197",
+            "prod": "P:color",
+            "family": "clamp",
+            "src": "rgb(0 0 0 / 1.5)",
+            "provenance": "§8 band row · §10.5 (c)"
+        },
+        {
+            "id": "s0198",
+            "prod": "P:color",
+            "family": "unsound-accept",
+            "src": "rgb(1,2,3,)",
+            "provenance": "§10.5 (d) — the band's seven",
+            "thirdCellDivergence": "d"
+        },
+        {
+            "id": "s0199",
+            "prod": "P:color",
+            "family": "unsound-accept",
+            "src": "rgb(1 2 3 / )",
+            "provenance": "§10.5 (d) — the band's seven",
+            "thirdCellDivergence": "d"
+        },
+        {
+            "id": "s0200",
+            "prod": "P:color",
+            "family": "unsound-accept",
+            "src": "rgb(1, 2 3)",
+            "provenance": "§10.5 (d) — the band's seven",
+            "thirdCellDivergence": "d"
+        },
+        {
+            "id": "s0201",
+            "prod": "P:color",
+            "family": "unsound-accept",
+            "src": "hsl(120%, 50%, 50%)",
+            "provenance": "§10.5 (d) — the band's seven",
+            "thirdCellDivergence": "d"
+        },
+        {
+            "id": "s0202",
+            "prod": "P:color",
+            "family": "unsound-accept",
+            "src": "lch(50% 50% 50%)",
+            "provenance": "§10.5 (d) — the band's seven",
+            "thirdCellDivergence": "d"
+        },
+        {
+            "id": "s0203",
+            "prod": "P:color",
+            "family": "unsound-accept",
+            "src": "rgb(1. 2 3)",
+            "provenance": "§10.5 (d) — the band's seven",
+            "thirdCellDivergence": "d"
+        },
+        {
+            "id": "s0204",
+            "prod": "P:color",
+            "family": "unsound-accept",
+            "src": "hwb(120, 30%, 40%)",
+            "provenance": "§10.5 (d) — the band's seven",
+            "thirdCellDivergence": "d"
+        },
+        {
+            "id": "s0205",
+            "prod": "P:color",
+            "family": "malformed",
+            "src": "red x",
+            "provenance": "§10.5 (a)/(h)/(i) · EQ-6"
+        },
+        {
+            "id": "s0206",
+            "prod": "P:color",
+            "family": "malformed",
+            "src": "rgb(1 2)",
+            "provenance": "§10.5 (a)/(h)/(i) · EQ-6"
+        },
+        {
+            "id": "s0207",
+            "prod": "P:color",
+            "family": "malformed",
+            "src": "rgb(1 2 3 4)",
+            "provenance": "§10.5 (a)/(h)/(i) · EQ-6"
+        },
+        {
+            "id": "s0208",
+            "prod": "P:color",
+            "family": "malformed",
+            "src": "#ab",
+            "provenance": "§10.5 (a)/(h)/(i) · EQ-6"
+        },
+        {
+            "id": "s0209",
+            "prod": "P:color",
+            "family": "malformed",
+            "src": "#abcde",
+            "provenance": "§10.5 (a)/(h)/(i) · EQ-6"
+        },
+        {
+            "id": "s0210",
+            "prod": "P:color",
+            "family": "malformed",
+            "src": "nosuchcolor",
+            "provenance": "§10.5 (a)/(h)/(i) · EQ-6"
+        },
+        {
+            "id": "s0211",
+            "prod": "P:color",
+            "family": "malformed",
+            "src": "color-mix(in srgb, red, blue)",
+            "provenance": "§10.5 (a)/(h)/(i) · EQ-6"
+        },
+        {
+            "id": "s0212",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgb()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0213",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgb( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0214",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgb(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0215",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgb(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0216",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgb(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0217",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgb( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0218",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgb(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0219",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgb( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0220",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgb(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0221",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgb( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0222",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgba()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0223",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgba( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0224",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgba(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0225",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgba(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0226",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgba(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0227",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgba( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0228",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgba(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0229",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgba( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0230",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgba(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0231",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "rgba( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0232",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsl()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0233",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsl( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0234",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsl(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0235",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsl(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0236",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsl(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0237",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsl( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0238",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsl(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0239",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsl( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0240",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsl(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0241",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsl( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0242",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsla()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0243",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsla( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0244",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsla(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0245",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsla(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0246",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsla(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0247",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsla( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0248",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsla(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0249",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsla( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0250",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsla(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0251",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hsla( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0252",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hwb()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0253",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hwb( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0254",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hwb(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0255",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hwb(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0256",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hwb(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0257",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hwb( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0258",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hwb(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0259",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hwb( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0260",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hwb(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0261",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "hwb( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0262",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lab()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0263",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lab( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0264",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lab(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0265",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lab(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0266",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lab(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0267",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lab( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0268",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lab(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0269",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lab( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0270",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lab(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0271",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lab( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0272",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lch()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0273",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lch( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0274",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lch(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0275",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lch(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0276",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lch(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0277",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lch( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0278",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lch(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0279",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lch( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0280",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lch(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0281",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "lch( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0282",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklab()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0283",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklab( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0284",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklab(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0285",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklab(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0286",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklab(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0287",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklab( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0288",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklab(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0289",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklab( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0290",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklab(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0291",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklab( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0292",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklch()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0293",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklch( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0294",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklch(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0295",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklch(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0296",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklch(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0297",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklch( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0298",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklch(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0299",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklch( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0300",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklch(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0301",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "oklch( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0302",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "color()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0303",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "color( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0304",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "color(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0305",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "color(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0306",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "color(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0307",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "color( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0308",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "color(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0309",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "color( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0310",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "color(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0311",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "color( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0312",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "xyz()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0313",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "xyz( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0314",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "xyz(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0315",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "xyz(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0316",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "xyz(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0317",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "xyz( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0318",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "xyz(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0319",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "xyz( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0320",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "xyz(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0321",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "xyz( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0322",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "calc()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0323",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "calc( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0324",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "calc(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0325",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "calc(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0326",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "calc(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0327",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "calc( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0328",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "calc(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0329",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "calc( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0330",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "calc(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0331",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "calc( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0332",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "url()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0333",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "url( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0334",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "url(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0335",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "url(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0336",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "url(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0337",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "url( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0338",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "url(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0339",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "url( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0340",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "url(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0341",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "url( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0342",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "attr()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0343",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "attr( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0344",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "attr(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0345",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "attr(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0346",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "attr(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0347",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "attr( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0348",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "attr(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0349",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "attr( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0350",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "attr(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0351",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "attr( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0352",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "steps()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0353",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "steps( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0354",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "steps(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0355",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "steps(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0356",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "steps(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0357",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "steps( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0358",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "steps(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0359",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "steps( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0360",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "steps(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0361",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "steps( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0362",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "linear()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0363",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "linear( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0364",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "linear(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0365",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "linear(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0366",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "linear(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0367",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "linear( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0368",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "linear(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0369",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "linear( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0370",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "linear(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0371",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "linear( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0372",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "scroll()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0373",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "scroll( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0374",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "scroll(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0375",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "scroll(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0376",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "scroll(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0377",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "scroll( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0378",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "scroll(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0379",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "scroll( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0380",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "scroll(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0381",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "scroll( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0382",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "view()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0383",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "view( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0384",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "view(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0385",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "view(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0386",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "view(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0387",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "view( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0388",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "view(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0389",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "view( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0390",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "view(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0391",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "view( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0392",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "foo()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0393",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "foo( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0394",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "foo(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0395",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "foo(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0396",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "foo(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0397",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "foo( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0398",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "foo(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0399",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "foo( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0400",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "foo(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0401",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "foo( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0402",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0403",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0404",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0405",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0406",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0407",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0408",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0409",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0410",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0411",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0412",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a-b()",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0413",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a-b( )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0414",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a-b(  )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0415",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a-b(\t)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0416",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a-b(\n)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0417",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a-b( \t\n )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0418",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a-b(/)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0419",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a-b( / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0420",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a-b(//)",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0421",
+            "prod": "P:color",
+            "family": "ground-a",
+            "src": "a-b( / / )",
+            "provenance": "§8 D-5 · denominator.test.ts:141-151"
+        },
+        {
+            "id": "s0422",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "var()",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0423",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "var( )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0424",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "var(  )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0425",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "var(\t)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0426",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "var(\n)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0427",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "var( \t\n )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0428",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "var(/)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0429",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "var( / )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0430",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "var(//)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0431",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "var( / / )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0432",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "env()",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0433",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "env( )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0434",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "env(  )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0435",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "env(\t)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0436",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "env(\n)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0437",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "env( \t\n )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0438",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "env(/)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0439",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "env( / )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0440",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "env(//)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0441",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "env( / / )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0442",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "hsv()",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0443",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "hsv( )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0444",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "hsv(  )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0445",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "hsv(\t)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0446",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "hsv(\n)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0447",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "hsv( \t\n )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0448",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "hsv(/)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0449",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "hsv( / )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0450",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "hsv(//)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0451",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "hsv( / / )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0452",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "kelvin()",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0453",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "kelvin( )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0454",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "kelvin(  )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0455",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "kelvin(\t)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0456",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "kelvin(\n)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0457",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "kelvin( \t\n )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0458",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "kelvin(/)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0459",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "kelvin( / )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0460",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "kelvin(//)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0461",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "kelvin( / / )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0462",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "ictcp()",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0463",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "ictcp( )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0464",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "ictcp(  )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0465",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "ictcp(\t)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0466",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "ictcp(\n)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0467",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "ictcp( \t\n )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0468",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "ictcp(/)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0469",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "ictcp( / )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0470",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "ictcp(//)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0471",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "ictcp( / / )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0472",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "jzazbz()",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0473",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "jzazbz( )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0474",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "jzazbz(  )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0475",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "jzazbz(\t)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0476",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "jzazbz(\n)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0477",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "jzazbz( \t\n )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0478",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "jzazbz(/)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0479",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "jzazbz( / )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0480",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "jzazbz(//)",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0481",
+            "prod": "P:color",
+            "family": "ground-a-guarded",
+            "src": "jzazbz( / / )",
+            "provenance": "denominator.test.ts — the guarded control"
+        },
+        {
+            "id": "s0482",
+            "prod": "P:timing-function",
+            "family": "timing-keyword",
+            "src": "linear",
+            "provenance": "§10.2 R_kw timing-keyword (5)"
+        },
+        {
+            "id": "s0483",
+            "prod": "P:timing-function",
+            "family": "timing-keyword",
+            "src": "ease",
+            "provenance": "§10.2 R_kw timing-keyword (5)"
+        },
+        {
+            "id": "s0484",
+            "prod": "P:timing-function",
+            "family": "timing-keyword",
+            "src": "ease-in",
+            "provenance": "§10.2 R_kw timing-keyword (5)"
+        },
+        {
+            "id": "s0485",
+            "prod": "P:timing-function",
+            "family": "timing-keyword",
+            "src": "ease-out",
+            "provenance": "§10.2 R_kw timing-keyword (5)"
+        },
+        {
+            "id": "s0486",
+            "prod": "P:timing-function",
+            "family": "timing-keyword",
+            "src": "ease-in-out",
+            "provenance": "§10.2 R_kw timing-keyword (5)"
+        },
+        {
+            "id": "s0487",
+            "prod": "P:timing-function",
+            "family": "step-alias",
+            "src": "step-start",
+            "provenance": "§10.2 R_kw step-alias (2)"
+        },
+        {
+            "id": "s0488",
+            "prod": "P:timing-function",
+            "family": "step-alias",
+            "src": "step-end",
+            "provenance": "§10.2 R_kw step-alias (2)"
+        },
+        {
+            "id": "s0489",
+            "prod": "P:timing-function",
+            "family": "cubic-bezier",
+            "src": "cubic-bezier(0.1, 0.7, 1, 0.1)",
+            "provenance": "§10.2 guard x1,x2 ∈ [0,1]"
+        },
+        {
+            "id": "s0490",
+            "prod": "P:timing-function",
+            "family": "cubic-bezier",
+            "src": "cubic-bezier(0,0,1,1)",
+            "provenance": "§10.2 guard x1,x2 ∈ [0,1]"
+        },
+        {
+            "id": "s0491",
+            "prod": "P:timing-function",
+            "family": "cubic-bezier",
+            "src": "cubic-bezier(1.5, 0, 1, 1)",
+            "provenance": "§10.2 guard x1,x2 ∈ [0,1]"
+        },
+        {
+            "id": "s0492",
+            "prod": "P:timing-function",
+            "family": "steps",
+            "src": "steps(4)",
+            "provenance": "§10.2 guards: integer ≥ 1; jump-none ⇒ ≥ 2; 6 spellings → 4 values"
+        },
+        {
+            "id": "s0493",
+            "prod": "P:timing-function",
+            "family": "steps",
+            "src": "steps(4, jump-start)",
+            "provenance": "§10.2 guards: integer ≥ 1; jump-none ⇒ ≥ 2; 6 spellings → 4 values"
+        },
+        {
+            "id": "s0494",
+            "prod": "P:timing-function",
+            "family": "steps",
+            "src": "steps(4, jump-end)",
+            "provenance": "§10.2 guards: integer ≥ 1; jump-none ⇒ ≥ 2; 6 spellings → 4 values"
+        },
+        {
+            "id": "s0495",
+            "prod": "P:timing-function",
+            "family": "steps",
+            "src": "steps(4, jump-none)",
+            "provenance": "§10.2 guards: integer ≥ 1; jump-none ⇒ ≥ 2; 6 spellings → 4 values"
+        },
+        {
+            "id": "s0496",
+            "prod": "P:timing-function",
+            "family": "steps",
+            "src": "steps(4, jump-both)",
+            "provenance": "§10.2 guards: integer ≥ 1; jump-none ⇒ ≥ 2; 6 spellings → 4 values"
+        },
+        {
+            "id": "s0497",
+            "prod": "P:timing-function",
+            "family": "steps",
+            "src": "steps(4, start)",
+            "provenance": "§10.2 guards: integer ≥ 1; jump-none ⇒ ≥ 2; 6 spellings → 4 values"
+        },
+        {
+            "id": "s0498",
+            "prod": "P:timing-function",
+            "family": "steps",
+            "src": "steps(4, end)",
+            "provenance": "§10.2 guards: integer ≥ 1; jump-none ⇒ ≥ 2; 6 spellings → 4 values"
+        },
+        {
+            "id": "s0499",
+            "prod": "P:timing-function",
+            "family": "steps",
+            "src": "steps(1, jump-none)",
+            "provenance": "§10.2 guards: integer ≥ 1; jump-none ⇒ ≥ 2; 6 spellings → 4 values"
+        },
+        {
+            "id": "s0500",
+            "prod": "P:timing-function",
+            "family": "steps",
+            "src": "steps(0)",
+            "provenance": "§10.2 guards: integer ≥ 1; jump-none ⇒ ≥ 2; 6 spellings → 4 values"
+        },
+        {
+            "id": "s0501",
+            "prod": "P:timing-function",
+            "family": "steps",
+            "src": "steps(1.5)",
+            "provenance": "§10.2 guards: integer ≥ 1; jump-none ⇒ ≥ 2; 6 spellings → 4 values"
+        },
+        {
+            "id": "s0502",
+            "prod": "P:timing-function",
+            "family": "linear-function",
+            "src": "linear(0, 1)",
+            "provenance": "§10.2 REP linear-stop 2 ∞"
+        },
+        {
+            "id": "s0503",
+            "prod": "P:timing-function",
+            "family": "linear-function",
+            "src": "linear(0, 0.5 50%, 1)",
+            "provenance": "§10.2 REP linear-stop 2 ∞"
+        },
+        {
+            "id": "s0504",
+            "prod": "P:timing-function",
+            "family": "linear-function",
+            "src": "linear(0, 0.5 25% 75%, 1)",
+            "provenance": "§10.2 REP linear-stop 2 ∞"
+        },
+        {
+            "id": "s0505",
+            "prod": "P:timing-function",
+            "family": "linear-function",
+            "src": "linear(0)",
+            "provenance": "§10.2 REP linear-stop 2 ∞"
+        },
+        {
+            "id": "s0506",
+            "prod": "P:timing-function",
+            "family": "malformed",
+            "src": "",
+            "provenance": "§10.2 rejection rows · EQ-6"
+        },
+        {
+            "id": "s0507",
+            "prod": "P:timing-function",
+            "family": "malformed",
+            "src": "nosuch",
+            "provenance": "§10.2 rejection rows · EQ-6"
+        },
+        {
+            "id": "s0508",
+            "prod": "P:timing-function",
+            "family": "malformed",
+            "src": "steps()",
+            "provenance": "§10.2 rejection rows · EQ-6"
+        },
+        {
+            "id": "s0509",
+            "prod": "P:timing-function",
+            "family": "malformed",
+            "src": "cubic-bezier()",
+            "provenance": "§10.2 rejection rows · EQ-6"
+        },
+        {
+            "id": "s0510",
+            "prod": "P:timing-function",
+            "family": "malformed",
+            "src": "linear()",
+            "provenance": "§10.2 rejection rows · EQ-6"
+        },
+        {
+            "id": "s0511",
+            "prod": "P:stylesheet",
+            "family": "positive-control",
+            "src": "a{color:red}",
+            "provenance": "§10.3 positive control (ok:true)"
+        },
+        {
+            "id": "s0512",
+            "prod": "P:stylesheet",
+            "family": "positive-control",
+            "src": "A { Color : RED !important }",
+            "provenance": "§10.3 name folded, selectors preserved"
+        },
+        {
+            "id": "s0513",
+            "prod": "P:stylesheet",
+            "family": "positive-control",
+            "src": "a, b { color: #abc }",
+            "provenance": "§10.3 selectors split on top-level comma"
+        },
+        {
+            "id": "s0514",
+            "prod": "P:stylesheet",
+            "family": "recovery",
+            "src": "a { color: red } GARBAGE ) ; b { color: blue }",
+            "provenance": "§10.3 the scenario, verbatim",
+            "plantedSites": 1
+        },
+        {
+            "id": "s0515",
+            "prod": "P:stylesheet",
+            "family": "recovery-n",
+            "src": "a { color: red } GARBAGE0 ) ; b { color: blue }",
+            "provenance": "§7 R-LAW-4 — N sites ⇒ N issues",
+            "plantedSites": 1
+        },
+        {
+            "id": "s0516",
+            "prod": "P:stylesheet",
+            "family": "recovery-n",
+            "src": "a { color: red } GARBAGE0 ) ; GARBAGE1 ) ; b { color: blue }",
+            "provenance": "§7 R-LAW-4 — N sites ⇒ N issues",
+            "plantedSites": 2
+        },
+        {
+            "id": "s0517",
+            "prod": "P:stylesheet",
+            "family": "recovery-n",
+            "src": "a { color: red } GARBAGE0 ) ; GARBAGE1 ) ; GARBAGE2 ) ; b { color: blue }",
+            "provenance": "§7 R-LAW-4 — N sites ⇒ N issues",
+            "plantedSites": 3
+        },
+        {
+            "id": "s0518",
+            "prod": "P:stylesheet",
+            "family": "recovery-n",
+            "src": "a { color: red } GARBAGE0 ) ; GARBAGE1 ) ; GARBAGE2 ) ; GARBAGE3 ) ; GARBAGE4 ) ; b { color: blue }",
+            "provenance": "§7 R-LAW-4 — N sites ⇒ N issues",
+            "plantedSites": 5
+        },
+        {
+            "id": "s0519",
+            "prod": "P:stylesheet",
+            "family": "recovery-n",
+            "src": "a { color: red } GARBAGE0 ) ; GARBAGE1 ) ; GARBAGE2 ) ; GARBAGE3 ) ; GARBAGE4 ) ; GARBAGE5 ) ; GARBAGE6 ) ; GARBAGE7 ) ; b { color: blue }",
+            "provenance": "§7 R-LAW-4 — N sites ⇒ N issues",
+            "plantedSites": 8
+        },
+        {
+            "id": "s0520",
+            "prod": "P:stylesheet",
+            "family": "recovery-zero-sync",
+            "src": "a { color: red } ; b { color: blue }",
+            "provenance": "§7 R-LAW-4 — a sync matching at offset 0 must not re-enter",
+            "plantedSites": 0
+        },
+        {
+            "id": "s0521",
+            "prod": "P:stylesheet",
+            "family": "edge",
+            "src": "",
+            "provenance": "§10.3 REP/OPT edges"
+        },
+        {
+            "id": "s0522",
+            "prod": "P:stylesheet",
+            "family": "edge",
+            "src": "   ",
+            "provenance": "§10.3 REP/OPT edges"
+        },
+        {
+            "id": "s0523",
+            "prod": "P:stylesheet",
+            "family": "edge",
+            "src": "a{}",
+            "provenance": "§10.3 REP/OPT edges"
+        },
+        {
+            "id": "s0524",
+            "prod": "P:stylesheet",
+            "family": "edge",
+            "src": "a{color:red;}",
+            "provenance": "§10.3 REP/OPT edges"
+        },
+        {
+            "id": "s0525",
+            "prod": "P:stylesheet",
+            "family": "edge",
+            "src": "a{color:red;;}",
+            "provenance": "§10.3 REP/OPT edges"
+        },
+        {
+            "id": "s0526",
+            "prod": "P:color",
+            "family": "deep-nesting",
+            "src": "var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(var(--x)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))",
+            "provenance": "§6 G-11 · §11 DM-5 (Θ.depthBound = 64)",
+            "generated": "var( x 10000"
+        }
+    ]
+}

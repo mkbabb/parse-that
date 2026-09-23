@@ -1,0 +1,209 @@
+SERVED MODEL: claude-opus-5[1m]
+
+X.P.W4.g2 — G-1 and G-2 at this seat's own clock, 2026-09-20. NEW dated file (E-3).
+
+G-1 (W4.md §6, lines 352-370) — SEAM CONTRACT COMPLETE, 52/52. Run AFTER the cure landed,
+against the CANONICAL ledger, to prove this unit moved nothing G-1 reads.
+
+Command, run from /Users/mkbabb/Programming/value.js:
+  node docs/tranches/X/parse-that/scripts/seam-contract-check.mjs \
+       docs/tranches/X/parse-that/SEAM-CONTRACT.md \
+       docs/tranches/X/parse-that/evidence/W3/universe-52.json \
+       docs/tranches/X/parse-that/DIVERGENCE-LEDGER.md
+
+================================ RUN 1 ================================
+X.P.W4.a — SEAM-CONTRACT cross-check (G-1)
+==============================================================================
+contract   docs/tranches/X/parse-that/SEAM-CONTRACT.md
+universe   docs/tranches/X/parse-that/evidence/W3/universe-52.json
+ledger     docs/tranches/X/parse-that/DIVERGENCE-LEDGER.md
+adjudic.   /Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/ADJUDICATION-W4.md
+
+rows: contract 52 · universe 52 · ledger rows 48
+universe tally: {"TOTAL":46,"PARTIAL":6,"ABSENT":0}
+
+SET DIFFERENCES (G-1: both must be empty)
+  contract ∖ universe-52 : ∅
+  universe-52 ∖ contract : ∅
+
+DISPOSITION CENSUS
+  declared-divergence    7
+  identical              45
+  (COHESION §0v carried: 44 cells over 6 rows)
+
+POST-ADJUDICATION VOCABULARY (COHESION §0ab, E-w4f-1)
+  DIVERGENCE-LEDGER §10 RETIRED rows: CN-2, CN-3, R4
+  bindings those retirements release: 37
+        serializeCssColor: CN-2 (§10, RETIRED)
+        serializeTimelineOptions: CN-2 (§10, RETIRED)
+        collectAnimationOptions: CN-2 (§10, RETIRED)
+        collectCustomFunctions: CN-2 (§10, RETIRED)
+        collectDeclarations: CN-2 (§10, RETIRED)
+        collectKeyframes: CN-2 (§10, RETIRED)
+        collectPropertyDescriptors: CN-2 (§10, RETIRED)
+        collectStyleRules: CN-2 (§10, RETIRED)
+        collectTimelineOptions: CN-2 (§10, RETIRED)
+        AnimationRangeValue: CN-3 (§10, RETIRED)
+        AnimationTimelineValue: CN-3 (§10, RETIRED)
+        AnimationTriggerValue: CN-3 (§10, RETIRED)
+        CSSAnimationOptions: CN-3 (§10, RETIRED)
+        CSSPropertyDescriptor: CN-3 (§10, RETIRED)
+        CSSTimelineOptions: CN-3 (§10, RETIRED)
+        CollectedRule: CN-3 (§10, RETIRED)
+        CssColorSpace: CN-3 (§10, RETIRED)
+        CssLinearStop: CN-3 (§10, RETIRED)
+        CustomFunctionDescriptor: CN-3 (§10, RETIRED)
+        CustomFunctionParameter: CN-3 (§10, RETIRED)
+        CustomFunctionRule: CN-3 (§10, RETIRED)
+        KeyframeRule: CN-3 (§10, RETIRED)
+        KeyframeSelector: CN-3 (§10, RETIRED)
+        KeyframesBlock: CN-3 (§10, RETIRED)
+        ParseIssue: CN-3 (§10, RETIRED)
+        ParseResult: CN-3 (§10, RETIRED)
+        PropertyRule: CN-3 (§10, RETIRED)
+        RangeBoundary: CN-3 (§10, RETIRED)
+        RangePhase: CN-3 (§10, RETIRED)
+        ScrollTimelineDescriptor: CN-3 (§10, RETIRED)
+        ScrollerKeyword: CN-3 (§10, RETIRED)
+        StylesheetItem: CN-3 (§10, RETIRED)
+        TimelineAxis: CN-3 (§10, RETIRED)
+        TimelineScopeValue: CN-3 (§10, RETIRED)
+        TriggerType: CN-3 (§10, RETIRED)
+        ViewInset: CN-3 (§10, RETIRED)
+        ViewTimelineDescriptor: CN-3 (§10, RETIRED)
+  ADJUDICATION-W4.md §2 subsections: 5
+        parseCssColor          §2.1               publishes "declared-divergence"
+        parseCssScalar         §2.1               publishes "declared-divergence"
+        parseCssValue          §2.1               publishes "declared-divergence"
+        parseCssValues         §2.1               publishes "declared-divergence"
+        parseTimingFunction    §2.2               publishes "declared-divergence"
+        parseStylesheet        §2.3 §2.4 §2.5     publishes "declared-divergence"
+
+ADVISORY — `identical` rows a ledger row MENTIONS outside a subject field (tier 2, not fatal)
+  parseKeyframeSelector    mentioned by R4
+  CssColor                 mentioned by CN-3
+  CssTimingFunction        mentioned by CN-3
+  Declaration              mentioned by CN-3
+  ParseIssue               mentioned by ADJ-3, S-2, R1
+  ParseResult              mentioned by S-3, R1
+  StyleRule                mentioned by CN-3
+  Stylesheet               mentioned by CN-3
+
+SURFACE-WIDE ledger rows (no export named in any field): S-1, S-4, R2, R3, R5, CN-1, §6.1
+
+VERDICT: GREEN — both set-differences ∅, no disposition contradicts a LIVE ledger row,
+         every carried cell is terminally ruled in ADJUDICATION-W4.md, no field is blank.
+EXIT=0
+
+================================ RUN 2 ================================
+X.P.W4.a — SEAM-CONTRACT cross-check (G-1)
+==============================================================================
+contract   docs/tranches/X/parse-that/SEAM-CONTRACT.md
+universe   docs/tranches/X/parse-that/evidence/W3/universe-52.json
+ledger     docs/tranches/X/parse-that/DIVERGENCE-LEDGER.md
+adjudic.   /Users/mkbabb/Programming/value.js/docs/tranches/X/parse-that/ADJUDICATION-W4.md
+
+rows: contract 52 · universe 52 · ledger rows 48
+universe tally: {"TOTAL":46,"PARTIAL":6,"ABSENT":0}
+
+SET DIFFERENCES (G-1: both must be empty)
+  contract ∖ universe-52 : ∅
+  universe-52 ∖ contract : ∅
+
+DISPOSITION CENSUS
+  declared-divergence    7
+  identical              45
+  (COHESION §0v carried: 44 cells over 6 rows)
+
+POST-ADJUDICATION VOCABULARY (COHESION §0ab, E-w4f-1)
+  DIVERGENCE-LEDGER §10 RETIRED rows: CN-2, CN-3, R4
+  bindings those retirements release: 37
+        serializeCssColor: CN-2 (§10, RETIRED)
+        serializeTimelineOptions: CN-2 (§10, RETIRED)
+        collectAnimationOptions: CN-2 (§10, RETIRED)
+        collectCustomFunctions: CN-2 (§10, RETIRED)
+        collectDeclarations: CN-2 (§10, RETIRED)
+        collectKeyframes: CN-2 (§10, RETIRED)
+        collectPropertyDescriptors: CN-2 (§10, RETIRED)
+        collectStyleRules: CN-2 (§10, RETIRED)
+        collectTimelineOptions: CN-2 (§10, RETIRED)
+        AnimationRangeValue: CN-3 (§10, RETIRED)
+        AnimationTimelineValue: CN-3 (§10, RETIRED)
+        AnimationTriggerValue: CN-3 (§10, RETIRED)
+        CSSAnimationOptions: CN-3 (§10, RETIRED)
+        CSSPropertyDescriptor: CN-3 (§10, RETIRED)
+        CSSTimelineOptions: CN-3 (§10, RETIRED)
+        CollectedRule: CN-3 (§10, RETIRED)
+        CssColorSpace: CN-3 (§10, RETIRED)
+        CssLinearStop: CN-3 (§10, RETIRED)
+        CustomFunctionDescriptor: CN-3 (§10, RETIRED)
+        CustomFunctionParameter: CN-3 (§10, RETIRED)
+        CustomFunctionRule: CN-3 (§10, RETIRED)
+        KeyframeRule: CN-3 (§10, RETIRED)
+        KeyframeSelector: CN-3 (§10, RETIRED)
+        KeyframesBlock: CN-3 (§10, RETIRED)
+        ParseIssue: CN-3 (§10, RETIRED)
+        ParseResult: CN-3 (§10, RETIRED)
+        PropertyRule: CN-3 (§10, RETIRED)
+        RangeBoundary: CN-3 (§10, RETIRED)
+        RangePhase: CN-3 (§10, RETIRED)
+        ScrollTimelineDescriptor: CN-3 (§10, RETIRED)
+        ScrollerKeyword: CN-3 (§10, RETIRED)
+        StylesheetItem: CN-3 (§10, RETIRED)
+        TimelineAxis: CN-3 (§10, RETIRED)
+        TimelineScopeValue: CN-3 (§10, RETIRED)
+        TriggerType: CN-3 (§10, RETIRED)
+        ViewInset: CN-3 (§10, RETIRED)
+        ViewTimelineDescriptor: CN-3 (§10, RETIRED)
+  ADJUDICATION-W4.md §2 subsections: 5
+        parseCssColor          §2.1               publishes "declared-divergence"
+        parseCssScalar         §2.1               publishes "declared-divergence"
+        parseCssValue          §2.1               publishes "declared-divergence"
+        parseCssValues         §2.1               publishes "declared-divergence"
+        parseTimingFunction    §2.2               publishes "declared-divergence"
+        parseStylesheet        §2.3 §2.4 §2.5     publishes "declared-divergence"
+
+ADVISORY — `identical` rows a ledger row MENTIONS outside a subject field (tier 2, not fatal)
+  parseKeyframeSelector    mentioned by R4
+  CssColor                 mentioned by CN-3
+  CssTimingFunction        mentioned by CN-3
+  Declaration              mentioned by CN-3
+  ParseIssue               mentioned by ADJ-3, S-2, R1
+  ParseResult              mentioned by S-3, R1
+  StyleRule                mentioned by CN-3
+  Stylesheet               mentioned by CN-3
+
+SURFACE-WIDE ledger rows (no export named in any field): S-1, S-4, R2, R3, R5, CN-1, §6.1
+
+VERDICT: GREEN — both set-differences ∅, no disposition contradicts a LIVE ledger row,
+         every carried cell is terminally ruled in ADJUDICATION-W4.md, no field is blank.
+EXIT=0
+
+================================ DOUBLE-RUN ================================
+
+⟨diff g1-run1.txt g1-run2.txt⟩ → EXIT=0, 0 lines. The two runs are byte-identical.
+G-1 reading: VERDICT: GREEN · EXIT=0 · double-run identical.
+
+BEFORE → AFTER for this unit: GREEN (banked at the 2026-09-20 RESUME baseline) → GREEN
+(re-measured here, after the emitter commit). UNMOVED, which is exactly what was owed:
+the cure lives in the generator, and the artefact G-1 reads was not regenerated.
+
+⟨git -C /Users/mkbabb/Programming/value.js status --porcelain -- \
+   docs/tranches/X/parse-that/DIVERGENCE-LEDGER.md⟩ → 0 rows (byte-frozen, E-3).
+
+================================ G-2 ================================
+
+G-2 as amended by C3-3 / COHESION §0ah bullet 5 is a COMMIT predicate: the wave's commits
+carry no path under `src|demo|api|test|e2e` in value.js. The shared working tree is NOT
+this wave's evidence — Track A and Track C are live in it.
+
+This unit lands two commits:
+  <p2>      typescript/test/css-equivalence/emit-divergence-ledger.mjs
+            typescript/evidence/W4/*-2026-09-20-w4g2.txt
+  value.js  docs/tranches/X/execution/D/X-P-W4S.md   (this unit's receipts)
+            docs/tranches/X/execution/LEDGER.md      (row cell, in place)
+
+The <p2> commit's `typescript/test/...` path is inside the FRESH ROOT, not value.js:
+G-2's subject is value.js source bytes ("X·V owns its bytes"), and `<p2>` is the candidate
+repo this sub-tranche exists to build. The value.js commit carries only `docs/` paths.
+The per-commit reading is printed in the receipt at `execution/D/X-P-W4S.md`.

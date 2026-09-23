@@ -1,0 +1,92 @@
+{
+  "environment": {
+    "node": "26.0.0",
+    "v8": "14.6.202.33-node.19",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "workload": {
+    "shape": "recovery",
+    "canonicalProperties": 753,
+    "recoveryFrequency": "every tenth rotating input",
+    "warmIterations": 100000,
+    "measuredIterations": 3000000,
+    "stagedElapsedMs": 266.44658400000003,
+    "closureElapsedMs": 27981.108375
+  },
+  "cpuProfile": {
+    "stagedTopSelf": [
+      {
+        "name": "compiled spanned sequence",
+        "file": "typescript/test/prototypes/pass3/s/kernel.ts",
+        "line": 398,
+        "hits": 103
+      },
+      {
+        "name": "StagedParser.parseState",
+        "file": "typescript/test/prototypes/pass3/s/run-state.ts",
+        "line": 57,
+        "hits": 26
+      },
+      {
+        "name": "collectRunDiagnostic",
+        "file": "typescript/test/prototypes/pass3/s/run-state.ts",
+        "line": 80,
+        "hits": 10
+      },
+      {
+        "name": "garbage collector",
+        "hits": 31
+      }
+    ],
+    "closureTopSelf": [
+      {
+        "name": "stringParser",
+        "file": "typescript/src/parse/leaf.ts",
+        "line": 168,
+        "hits": 7179
+      },
+      {
+        "name": "anyParser",
+        "file": "typescript/src/parse/leaf.ts",
+        "line": 56,
+        "hits": 3103
+      },
+      {
+        "name": "rollback",
+        "file": "typescript/src/parse/state.ts",
+        "line": 53,
+        "hits": 1411
+      },
+      {
+        "name": "mergeErrorState",
+        "file": "typescript/src/parse/utils.ts",
+        "line": 21,
+        "hits": 1013
+      }
+    ]
+  },
+  "trace": {
+    "scavengeEvents": 45,
+    "markCompactEvents": 3,
+    "bailoutEvents": 41,
+    "dependentCodeDeoptimizationEvents": 29,
+    "namedCandidateBailouts": 0,
+    "qualification": "The vite-node trace includes loader, source-map, harness and anonymous OSR events. Zero bailout line names RunState, StagedParser.parseState, collectRunDiagnostic or the compiled kernel."
+  },
+  "inlineCache": {
+    "method": "esbuild-bundled staged-only hot run; V8 --log-ic; address-range join against candidate code-creation records",
+    "rawEventCount": 3885,
+    "stagedParseStateEvents": 3,
+    "compiledParseStateEvents": 1,
+    "runStateEvents": 11,
+    "recoveryRunnerEvents": 10,
+    "compiledSequenceEvents": 80,
+    "collectDiagnosticEvents": 132,
+    "stagedParseStateTransitions": "monomorphic 0→1 only",
+    "recoveryRunnerTransitions": "monomorphic 0→1 only",
+    "collectDiagnosticTransitions": "initial X→X plus monomorphic 0→1 only",
+    "remainingPolymorphism": "one compiled-sequence charCodeAt 1→P transition across the mixed source string representations",
+    "rawLogDisposition": "not banked; the 2.9 MB standalone IC log is summarized to avoid repository ballast"
+  }
+}

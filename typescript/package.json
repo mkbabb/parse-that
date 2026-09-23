@@ -10,6 +10,10 @@
             "import": "./dist/parse.js",
             "require": "./dist/parse.cjs"
         },
+        "./css": {
+            "types": "./src/css/build/ac1.d.ts",
+            "import": "./src/css/build/ac1.js"
+        },
         "./core": {
             "types": "./dist/core.d.ts",
             "import": "./dist/core.js",
@@ -37,7 +41,6 @@
         "build": "vite build",
         "bench": "vitest bench",
         "proof:manifest": "node test/manifest-gate.mjs",
-        "proof:no-css-surface": "node scripts/proof-no-css-surface.mjs",
         "proof:subpath": "node test/subpath-gate.mjs",
         "proof:packrat-cross-input": "node scripts/proof-packrat-cross-input.mjs",
         "proof:packrat-reentrant": "node scripts/proof-packrat-reentrant.mjs",
@@ -46,10 +49,11 @@
         "proof:no-span-surface": "node scripts/proof-no-span-surface.mjs",
         "proof:no-dead-combinator": "node scripts/proof-no-dead-combinator.mjs",
         "proof:perf": "NODE_OPTIONS='--expose-gc' node scripts/proof-perf.mjs",
-        "proof:all": "npm run proof:manifest && npm run proof:no-css-surface && npm run proof:subpath && npm run proof:packrat-cross-input && npm run proof:packrat-reentrant && npm run proof:packrat-large-offset && npm run proof:packrat-armed && npm run proof:no-span-surface && npm run proof:no-dead-combinator && npm run proof:perf"
+        "proof:all": "npm run proof:manifest && npm run proof:subpath && npm run proof:packrat-cross-input && npm run proof:packrat-reentrant && npm run proof:packrat-large-offset && npm run proof:packrat-armed && npm run proof:no-span-surface && npm run proof:no-dead-combinator && npm run proof:perf"
     },
     "files": [
-        "./dist"
+        "./dist",
+        "./src/css"
     ],
     "devDependencies": {
         "@types/node": "^22.0.0",

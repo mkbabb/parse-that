@@ -1,0 +1,168 @@
+// SERVED MODEL: claude-opus-5[1m]
+//
+// X.P.W3.b — G-4's suite: THE UNION IS CLOSED, AND THERE IS NO FALLBACK ARM.
+//
+//   npx vitest run --config typescript/test/css-recovery/vitest.config.ts test/css-recovery/closure.test.ts
+//
+// The gate of record is `scripts/css-recovery-closure.mjs` — it executes the corpus and inspects the
+// built graph, and its output is the evidence. This suite asserts the same laws from the test side so
+// a regression reddens in the ordinary run as well as in the gate, and it keeps ONE assertion that is
+// BORN RED on purpose: the ⊇ direction. `W3.md` §6 G-4's falsifier names it — "a frozen code no
+// corpus input can produce (dead code in the contract is as much a defect as an undeclared one)" —
+// and the honest way to carry a red gate is a failing assertion that says why, never `test.skip`.
+
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { describe, expect, it } from "vitest";
+
+import { OP_NAMES } from "../../src/css/algebra/ops.mjs";
+import { FROZEN_CODES, assertFrozenUnion, difference, graphCodeSites, isFrozenCode } from "../../src/css/codes.mjs";
+import { assertClosedOperatorSet, loadRecoveryLowerings } from "../../src/css/lower.mjs";
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const corpus: { rows: { id: string; src: string }[] } = JSON.parse(
+    readFileSync(path.join(HERE, "corpus.json"), "utf8"),
+);
+
+/** Built rather than written: a raw NUL in the source makes git and `file(1)` read it as binary. */
+const NUL = String.fromCharCode(0);
+
+const recoveries = await loadRecoveryLowerings();
+const { lowerings } = await import("../../src/css/harness-adapter.mjs");
+
+/** Every issue the corpus produces, once, so the laws below read one execution rather than four. */
+const run = (() => {
+    const issues: { kind: string; prod: string; src: string; issue: Record<string, unknown> }[] = [];
+    let rejections = 0;
+    let successes = 0;
+    for (const kind of ["js", "wasm"] as const) {
+        for (const prod of recoveries[kind].entries()) {
+            const entry = recoveries[kind].entry(prod);
+            for (const row of corpus.rows) {
+                const r = entry(row.src);
+                if (r.ok) {
+                    successes++;
+                    expect(r.diagnostics).toEqual([]);
+                    continue;
+                }
+                rejections++;
+                for (const issue of r.diagnostics) issues.push({ kind, prod, src: row.src, issue });
+            }
+        }
+    }
+    return { issues, rejections, successes };
+})();
+
+describe("the eight are the union, and the union is authenticated", () => {
+    it("carries exactly the eight codes of value.js/src/css/types.ts:11-19", () => {
+        expect(FROZEN_CODES.length).toBe(8);
+        expect(assertFrozenUnion([...FROZEN_CODES], "the suite").missing).toEqual([]);
+    });
+
+    it("refuses a ninth and refuses a narrowing — the authentication is not decorative", () => {
+        expect(() => assertFrozenUnion([...FROZEN_CODES, "ninth_code"], "control")).toThrow(/HALT/);
+        expect(() => assertFrozenUnion(FROZEN_CODES.slice(1), "control")).toThrow(/HALT/);
+    });
+});
+
+describe("⊆ — nothing outside the eight can be declared or emitted", () => {
+    for (const kind of ["js", "wasm"] as const) {
+        it(`${kind}: every code the BUILT GRAPH can declare is one of the eight`, () => {
+            const sites = graphCodeSites(lowerings[kind]);
+            expect(sites.length).toBeGreaterThan(0);
+            expect(sites.filter((s: { code: string }) => !isFrozenCode(s.code))).toEqual([]);
+        });
+    }
+
+    it("every code the EXECUTED corpus emits is one of the eight", () => {
+        expect(run.issues.filter((r) => !isFrozenCode(r.issue.code as string))).toEqual([]);
+    });
+});
+
+describe("⊇ — every frozen code is emitted by at least one corpus input", () => {
+    it("BORN RED: the slice realizes 3 of the 9 public entries, so 5 codes have no production", () => {
+        const emitted = [...new Set(run.issues.map((r) => r.issue.code as string))];
+        const missing = difference(FROZEN_CODES, emitted);
+        expect(
+            missing,
+            `frozen \\ emitted = [${missing.join(", ")}] — the candidate's grammar names ` +
+                `[${recoveries.js.entries().join(", ")}]; the missing codes are the diagnostic vocabulary of the six ` +
+                `public parsers the §10 slice does not realize (keyframe selector · syntax descriptor · syntax ` +
+                `mismatch · animation options · timeline options). Curing this is a grammar act in ` +
+                `algebra/grammar.mjs, which no unit of this wave owns — X.P.W3.b routed it rather than narrowing ` +
+                `the denominator to make the gate green.`,
+        ).toEqual([]);
+    });
+});
+
+describe("the shape laws the frozen type states", () => {
+    it("ok:false always carries a non-empty [ParseIssue, ...ParseIssue[]]", () => {
+        expect(run.rejections).toBeGreaterThan(0);
+        expect(run.successes).toBeGreaterThan(0);
+        for (const kind of ["js", "wasm"] as const) {
+            for (const prod of recoveries[kind].entries()) {
+                const r = recoveries[kind].entry(prod)(`${NUL}not a production${NUL}`);
+                expect(r.ok).toBe(false);
+                expect(r.diagnostics.length).toBeGreaterThanOrEqual(1);
+            }
+        }
+    });
+
+    it("every [start,end) indexes real bytes, and `actual` is exactly those bytes", () => {
+        const bad = run.issues.filter(({ src, issue }) => {
+            const start = issue.start as number;
+            const end = issue.end as number;
+            if (!Number.isInteger(start) || !Number.isInteger(end)) return true;
+            if (start < 0 || end < start || end > src.length) return true;
+            const slice = src.slice(start, end);
+            return issue.actual !== (slice === "" ? null : slice);
+        });
+        expect(bad).toEqual([]);
+    });
+
+    it("every issue carries at least one expectation", () => {
+        expect(run.issues.filter(({ issue }) => (issue.expected as string[]).length < 1)).toEqual([]);
+    });
+});
+
+describe("the closed operator set is WIRED (COHESION §0n.1), not a comment", () => {
+    it("the grammar destructures exactly the twenty-two, both differences ∅", () => {
+        const s = assertClosedOperatorSet();
+        expect(s.destructured).toBe(OP_NAMES.length);
+        expect(s.extra).toEqual([]);
+        expect(s.missing).toEqual([]);
+    });
+
+    it("a 23rd operation HALTS — the check can fail for its intended reason", () => {
+        expect(() =>
+            assertClosedOperatorSet((A: Record<string, unknown>) => {
+                const {
+                    SCAN, LIT, NUM, DIGITS, TEXT, KW, END, SEQ, ALT, CUT, PURE, REP, DROP, DISPATCH,
+                    FAIL, EXPECT, CLAMP, SCALE, CTOR, TRY, RECOVER, REF, TWENTY_THIRD,
+                } = A;
+                return [SCAN, LIT, NUM, DIGITS, TEXT, KW, END, SEQ, ALT, CUT, PURE, REP, DROP, DISPATCH,
+                    FAIL, EXPECT, CLAMP, SCALE, CTOR, TRY, RECOVER, REF, TWENTY_THIRD];
+            }),
+        ).toThrow(/23rd operation/);
+    });
+
+    it("a missing operation HALTS too — closure is asserted in both directions", () => {
+        expect(() =>
+            assertClosedOperatorSet((A: Record<string, unknown>) => {
+                const { SCAN, LIT } = A;
+                return [SCAN, LIT];
+            }),
+        ).toThrow(/HALT/);
+    });
+
+    it("both lowerings publish exactly the twenty-two", () => {
+        for (const kind of ["js", "wasm"] as const) {
+            const names = lowerings[kind].registry().map((row: { name: string }) => row.name);
+            expect(names.length).toBe(OP_NAMES.length);
+            expect(difference(names, OP_NAMES)).toEqual([]);
+            expect(difference(OP_NAMES, names)).toEqual([]);
+        }
+    });
+});

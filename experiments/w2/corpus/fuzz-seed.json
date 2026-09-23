@@ -1,0 +1,15 @@
+{
+    "schema": "x-p-w2.g.fuzz-seed/1",
+    "note": "THE PIN, not the rows: 30,000 rows are regenerated deterministically by fuzz-gen.mjs from this seed. rowsSha256 is the assertion that a replay produced the same corpus.",
+    "generator": "mulberry32",
+    "seed": 1592639710,
+    "rows": 30000,
+    "mix": {
+        "P:color": 0.6,
+        "P:timing-function": 0.2,
+        "P:stylesheet": 0.2
+    },
+    "malformedShare": "~1/2 by construction (the mutation arm)",
+    "contract": "ALGEBRA.md §1 C-CORP · §10 the shared slice",
+    "rowsSha256": "39f3903bbfb1f92f723113ca894e2279f71c0f3b31208c0d981b4164872d09ff"
+}

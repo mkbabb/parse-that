@@ -1,0 +1,187 @@
+[
+  {
+    "kind": "AUTHORITY",
+    "id": "auth.n1-a",
+    "schemaSha256": "9520d29a401947527ea8e26a19180cdb0797c253f0f6253cc9662b04ad8aeb23",
+    "phase": "N2",
+    "branch": "codex/css-totality-combinators-20260729",
+    "head": "a04a7e658bee32a1fb252a4e5b4f3ce359a5947d",
+    "parentHashes": [],
+    "scope": [
+      "N1_A=a04a7e658bee32a1fb252a4e5b4f3ce359a5947d",
+      "N2_FAMILY=N_IETM",
+      "N2_LAW=PL_BE_NET_BENEFIT",
+      "ZERO_DOWNSTREAM_CREDIT"
+    ],
+    "zeroCredit": true
+  },
+  {
+    "kind": "RUN",
+    "id": "run.ietm",
+    "schemaSha256": "9520d29a401947527ea8e26a19180cdb0797c253f0f6253cc9662b04ad8aeb23",
+    "phase": "N2",
+    "root": "/Users/mkbabb/Documents/Codex/2026-08-01/parser-novelty-n2-ietm-f0",
+    "pid": 1,
+    "processStart": "source-only-gold",
+    "seed": 0,
+    "order": "AA",
+    "node": "v26.0.0",
+    "v8": "14.6.202.33-node.19",
+    "environment": {
+      "NODE_DISABLE_COMPILE_CACHE": "1",
+      "NODE_OPTIONS": "",
+      "NODE_COMPILE_CACHE": null
+    },
+    "compileCacheCanary": "GREEN_DISABLED",
+    "commands": [
+      {
+        "argv": ["node", "semantic-validator-gold"],
+        "cwd": "/Users/mkbabb/Programming/parse-that-css-totality",
+        "exitCode": 0,
+        "stdout": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/artifact.txt", "bytes": 24, "sha256": "13b9390079e010d94fdf1dbaef7b71473655978ecbc77e96d8f66f482f0309ba"},
+        "stderr": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/freeze-proof.json", "bytes": 39, "sha256": "503ff6d1b5748a1ecb690aafaa43c4695b03c446de2c373b0c193447727bec13"}
+      }
+    ]
+  },
+  {
+    "kind": "ARM",
+    "id": "arm.ietm",
+    "schemaSha256": "9520d29a401947527ea8e26a19180cdb0797c253f0f6253cc9662b04ad8aeb23",
+    "phase": "N2",
+    "role": "CANDIDATE",
+    "family": "N_IETM",
+    "artifact": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/artifact.txt", "bytes": 24, "sha256": "13b9390079e010d94fdf1dbaef7b71473655978ecbc77e96d8f66f482f0309ba"},
+    "buildId": "build.ietm",
+    "importGraph": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/artifact.txt", "bytes": 24, "sha256": "13b9390079e010d94fdf1dbaef7b71473655978ecbc77e96d8f66f482f0309ba"},
+    "mechanismCounterNames": ["memoReuse"]
+  },
+  {
+    "kind": "BUILD",
+    "id": "build.ietm",
+    "schemaSha256": "9520d29a401947527ea8e26a19180cdb0797c253f0f6253cc9662b04ad8aeb23",
+    "phase": "N2",
+    "sourceCommit": "a04a7e658bee32a1fb252a4e5b4f3ce359a5947d",
+    "sourceManifest": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/artifact.txt", "bytes": 24, "sha256": "13b9390079e010d94fdf1dbaef7b71473655978ecbc77e96d8f66f482f0309ba"},
+    "toolchain": {"node": "v26.0.0", "v8": "14.6.202.33-node.19", "typescript": "5.9.3", "npm": "11.12.1"},
+    "commands": [
+      {
+        "argv": ["node", "semantic-validator-gold"],
+        "cwd": "/Users/mkbabb/Programming/parse-that-css-totality",
+        "exitCode": 0,
+        "stdout": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/artifact.txt", "bytes": 24, "sha256": "13b9390079e010d94fdf1dbaef7b71473655978ecbc77e96d8f66f482f0309ba"},
+        "stderr": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/artifact.txt", "bytes": 24, "sha256": "13b9390079e010d94fdf1dbaef7b71473655978ecbc77e96d8f66f482f0309ba"}
+      }
+    ],
+    "outputs": [
+      {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/artifact.txt", "bytes": 24, "sha256": "13b9390079e010d94fdf1dbaef7b71473655978ecbc77e96d8f66f482f0309ba"}
+    ],
+    "packageGraph": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/artifact.txt", "bytes": 24, "sha256": "13b9390079e010d94fdf1dbaef7b71473655978ecbc77e96d8f66f482f0309ba"},
+    "exportGraph": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/artifact.txt", "bytes": 24, "sha256": "13b9390079e010d94fdf1dbaef7b71473655978ecbc77e96d8f66f482f0309ba"}
+  },
+  {
+    "kind": "FIXTURE",
+    "id": "fixture.ietm",
+    "schemaSha256": "9520d29a401947527ea8e26a19180cdb0797c253f0f6253cc9662b04ad8aeb23",
+    "phase": "N2",
+    "subject": "HOSTILE",
+    "bytes": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/fixture.txt", "bytes": 3, "sha256": "78230b526f9213fee494a82bc3a4f8467feaa685a5738e43ff83e173ac93eec3"},
+    "vector": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/vector.json", "bytes": 4, "sha256": "c14196f132c1e9be0508ae80ab52fcb3e1d3fc05880415f3dc980971df207c9e"},
+    "selectedIndices": [0],
+    "expectedProductId": "product.ietm"
+  },
+  {
+    "kind": "PRODUCT",
+    "id": "product.ietm",
+    "schemaSha256": "9520d29a401947527ea8e26a19180cdb0797c253f0f6253cc9662b04ad8aeb23",
+    "phase": "N2",
+    "subject": "CANDIDATE_GENERIC",
+    "encoding": "parse-that-complete-product-v1",
+    "canonicalBytes": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/product.json", "bytes": 367, "sha256": "a3c3d28cb04d2b009a2e91e31a3b6f8846313024838bf9731a0b2dcf00d0366d"},
+    "coverage": {
+      "holes": true,
+      "undefined": true,
+      "falsy": true,
+      "negativeZero": true,
+      "nan": true,
+      "infinities": true,
+      "typedValue": true,
+      "slots": true,
+      "utf16Spans": true,
+      "terminal": true,
+      "frontier": true,
+      "mismatch": true,
+      "fault": true,
+      "rollback": true,
+      "recovery": true,
+      "diagnostics": true,
+      "provenance": true,
+      "freeze": true
+    },
+    "freezeProof": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/freeze-proof.json", "bytes": 39, "sha256": "503ff6d1b5748a1ecb690aafaa43c4695b03c446de2c373b0c193447727bec13"},
+    "finalOffsetAsserted": true,
+    "mechanismReachAsserted": true
+  },
+  {
+    "kind": "LAW",
+    "id": "law.be",
+    "schemaSha256": "9520d29a401947527ea8e26a19180cdb0797c253f0f6253cc9662b04ad8aeb23",
+    "phase": "N2",
+    "family": "PL_BE_NET_BENEFIT",
+    "evaluator": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/pl-be-evaluator.mjs", "bytes": 164, "sha256": "875d1dfee14b23be362724cd9c312a72e28acc4d6c60bc295e8f5417d0b934d0"},
+    "enumerationOrder": "ORDERED_7_POWER_7",
+    "indexConvention": "source-order-zero-based",
+    "decisionUnit": "NANOSECONDS"
+  },
+  {
+    "kind": "HOSTILE",
+    "id": "hostile.control",
+    "schemaSha256": "9520d29a401947527ea8e26a19180cdb0797c253f0f6253cc9662b04ad8aeb23",
+    "phase": "N2",
+    "mutation": "NOOP_GREEN",
+    "artifact": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/artifact.txt", "bytes": 24, "sha256": "13b9390079e010d94fdf1dbaef7b71473655978ecbc77e96d8f66f482f0309ba"},
+    "expectedDisposition": "GREEN_DETECTED"
+  },
+  {
+    "kind": "ROW",
+    "id": "row.ietm",
+    "schemaSha256": "9520d29a401947527ea8e26a19180cdb0797c253f0f6253cc9662b04ad8aeb23",
+    "phase": "N2",
+    "runId": "run.ietm",
+    "armId": "arm.ietm",
+    "fixtureId": "fixture.ietm",
+    "productId": "product.ietm",
+    "lawIds": ["law.be"],
+    "rawNanoseconds": ["1"],
+    "warmupIterations": 0,
+    "aggregateIterations": 1,
+    "coldSubintervals": {"startupNs": "1", "importNs": "1", "buildNs": "1", "firstCompleteParseNs": "1"},
+    "mechanismCounters": {"memoReuse": "1"},
+    "gcBytes": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/artifact.txt", "bytes": 24, "sha256": "13b9390079e010d94fdf1dbaef7b71473655978ecbc77e96d8f66f482f0309ba"},
+    "deoptBytes": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/freeze-proof.json", "bytes": 39, "sha256": "503ff6d1b5748a1ecb690aafaa43c4695b03c446de2c373b0c193447727bec13"},
+    "icBytes": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/vector.json", "bytes": 4, "sha256": "c14196f132c1e9be0508ae80ab52fcb3e1d3fc05880415f3dc980971df207c9e"},
+    "allocationBytes": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/fixture.txt", "bytes": 3, "sha256": "78230b526f9213fee494a82bc3a4f8467feaa685a5738e43ff83e173ac93eec3"},
+    "sink": {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/product.json", "bytes": 367, "sha256": "a3c3d28cb04d2b009a2e91e31a3b6f8846313024838bf9731a0b2dcf00d0366d"}
+  },
+  {
+    "kind": "RECEIPT",
+    "id": "receipt.ietm",
+    "schemaSha256": "9520d29a401947527ea8e26a19180cdb0797c253f0f6253cc9662b04ad8aeb23",
+    "phase": "N2",
+    "authorityId": "auth.n1-a",
+    "recordIds": ["auth.n1-a", "run.ietm", "arm.ietm", "build.ietm", "fixture.ietm", "product.ietm", "law.be", "hostile.control", "row.ietm"],
+    "root": "/Users/mkbabb/Documents/Codex/2026-08-01/parser-novelty-n2-ietm-f0",
+    "rootWasAbsent": true,
+    "interrupted": false,
+    "declaredCounts": {"AUTHORITY": 1, "RUN": 1, "ARM": 1, "BUILD": 1, "FIXTURE": 1, "ROW": 1, "PRODUCT": 1, "LAW": 1, "HOSTILE": 1, "RECEIPT": 1},
+    "registryArtifacts": [
+      {"path": "docs/tranches/B/coordination/NOVELTY-EVIDENCE-REGISTRY.schema.json", "bytes": 16932, "sha256": "9520d29a401947527ea8e26a19180cdb0797c253f0f6253cc9662b04ad8aeb23"},
+      {"path": "docs/tranches/B/coordination/NOVELTY-RAW-ROW.schema.json", "bytes": 5558, "sha256": "48507dccc084755c9b3dea4bf39d0dbb1ce30b3d49e8157b656c3d48b3af8e8d"},
+      {"path": "docs/tranches/B/coordination/NOVELTY-EVIDENCE-REGISTRY.semantic.mjs", "bytes": 45400, "sha256": "3976b24b0327e8fab0f38771a8736d75bc3d52741c0c1ffc8e9291f2f253c992"}
+    ],
+    "rawArtifacts": [
+      {"path": "docs/tranches/B/artifacts/novelty-n1-a1-semantic-registry/raw.ndjson", "bytes": 2313, "sha256": "c4b0a43d3831ecf685274728aa8a3ae67d14a173cf816357ffbd571dabfd6c9d"}
+    ],
+    "verdict": "AMEND",
+    "credit": {"prototype": 0, "formation": 0, "product": 0, "css": 0, "api": 0, "package": 0, "release": 0}
+  }
+]

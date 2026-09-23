@@ -1,0 +1,1 @@
+{"encoding":"parse-that-complete-product-v1","value":{"tag":"string","value":""},"slots":[],"utf16Spans":[],"terminal":{"offset":0,"status":"success"},"frontier":{"offset":2,"labels":["ab"]},"mismatch":null,"fault":null,"rollback":{"offset":0,"value":"","diagnostics":0},"recovery":[],"diagnostics":[],"provenance":{"orderedArms":[0,1]},"freeze":{"deepFrozen":true}}

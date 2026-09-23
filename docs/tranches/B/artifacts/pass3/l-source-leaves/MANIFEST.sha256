@@ -1,0 +1,11 @@
+b59cf301665620852295623c815cd3ff18cc9270d0d57a3da6b3c34ad9c6a605  docs/tranches/B/artifacts/pass3/l-source-leaves/README.md
+6924b0f21813ea7d69270c57a3b4d04afc89cf27981dfc54237ccd49471d0ce2  docs/tranches/B/artifacts/pass3/l-source-leaves/profile-abba.json
+b4d9f5e0f31fda02df2ae80e261e55ce78d7c6bc043bd8678de1d6bf7dcdee37  docs/tranches/B/artifacts/pass3/l-source-leaves/p2-source-leaves.cpuprofile
+9cf5854e2c332bd139d2295c2f389831f172dcd973678aba5007869e79d8f53f  docs/tranches/B/artifacts/pass3/l-source-leaves/v8-deopt-gc.log
+8d3c85a7033d825a32a506369e2afa69358abbd2197ff9016c3658025accfce0  docs/tranches/B/artifacts/pass3/l-source-leaves/production-proof-perf.log
+764b8bea17fcff059da629a16dd8a7bf1b128bef213f5e2493db44a9f9894133  typescript/test/prototypes/pass3/s/kernel.ts
+916f281bebe1f1b4a429a84d16f34a3185d6b77461906a867a0f61a990b1aaf4  typescript/test/prototypes/pass3/l/fixtures.ts
+f00a69a17282e9883f4c5f967377eb30cebe34651529d62eb2550dc3be735b60  typescript/test/prototypes/pass3/l/leaves.ts
+690bb7f6c102056b851825789e574e3df1deb01d6750f7310eae15e642fb2eb3  typescript/test/prototypes/pass3/l/leaves.test.ts
+f8432e31a7191522c1216418d659d4c500c4cef3058a65eed38a607d8014f0e5  typescript/test/prototypes/pass3/l/profile.ts
+3bd3112677638e05b4885433017c630e813ee52bd13614c3b2b23ffd83d834e4  typescript/test/prototypes/pass3/l/vitest.config.ts

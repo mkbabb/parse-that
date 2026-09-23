@@ -1,0 +1,11 @@
+acc08998d14bb95fc9880a75e8037fb63b24fb8c42cba7466d6233c0d2cf0feb  typescript/test/prototypes/pass3/s/kernel.ts
+5efff2c43142545167f3c3472582c4131ea7fb9a1eed5500b47ad96a21b74224  typescript/test/prototypes/pass3/products/fixtures.ts
+7f4b6f81f08ccb364567857016d165eec3ccbfd99410b8b6b5585bd93f086826  typescript/test/prototypes/pass3/products/products.ts
+999aa25c4ae36fc544d2d3af1d997ee68a3c0e1cfc8e1a75bc248943ce663d9c  typescript/test/prototypes/pass3/products/products.test.ts
+9507e1b12fdd3a4357946f7d0d46075bf3a7b00dce657262ad91808c1544e74f  typescript/test/prototypes/pass3/products/profile.ts
+ca3210ee6112de5e5f2c68849b343914cf962a79ef65988ce89e26f0684b69fa  typescript/test/prototypes/pass3/products/vitest.config.ts
+8b52411f46eafae1261195675db1e7071ba7168df3a54681f85d02ae586915f7  docs/tranches/B/artifacts/pass3/p2-shaped-products/README.md
+2e37a9491474fe844ca51f50b84cc959104ea7819c25c7d524279d10a8746554  docs/tranches/B/artifacts/pass3/p2-shaped-products/profile-abba.json
+759af7e027494218726ba57896c0a6e442693b612bc645f6bb0f5d0b63f20302  docs/tranches/B/artifacts/pass3/p2-shaped-products/p2-shaped-products.cpuprofile
+5b459283d4dcaa1754a92d0b274cdefe736e6a30e31582891ac3daba55ad492e  docs/tranches/B/artifacts/pass3/p2-shaped-products/v8-deopt-gc.log
+1ee6e37ede14ff7085c4ea353624f0c830c96ec974c6c20573a7e27998aeb141  docs/tranches/B/artifacts/pass3/p2-shaped-products/production-proof-perf.log

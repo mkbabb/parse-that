@@ -1,0 +1,631 @@
+v8-version,14,6,202,33,-node.19,0
+v8-platform,macos,macos
+new,CodeRange,0x126604000,0
+new,MemoryChunk,0x274c84b80000,262144
+new,MemoryChunk,0x8fe3f540000,262144
+new,MemoryChunk,0x243b908c0000,262144
+new,MemoryChunk,0x35b1c4740000,262144
+new,MemoryChunk,0x25d39e540000,262144
+new,MemoryChunk,0x24b6ce900000,262144
+new,MemoryChunk,0x22cd6400000,262144
+new,MemoryChunk,0x37b3c3040000,262144
+heap-capacity,1048512
+heap-available,4397727616
+new,MemoryChunk,0x1f25eda80000,262144
+new,MemoryChunk,0x3e8dfbbc0000,262144
+new,MemoryChunk,0x25928c5c0000,262144
+new,MemoryChunk,0x24e684180000,262144
+new,MemoryChunk,0xd3869800000,262144
+new,MemoryChunk,0x126640000,262144
+new,MemoryChunk,0xe42ec980000,262144
+new,MemoryChunk,0xce478cc0000,262144
+new,MemoryChunk,0x23c6ad880000,262144
+new,MemoryChunk,0x17f8cda00000,262144
+new,MemoryChunk,0x3325b9dc0000,262144
+new,MemoryChunk,0x2aa982880000,262144
+new,MemoryChunk,0x17882de40000,262144
+new,MemoryChunk,0x126680000,262144
+new,MemoryChunk,0x932134c0000,262144
+new,MemoryChunk,0x31aefd880000,262144
+new,MemoryChunk,0x1dbee01c0000,262144
+new,MemoryChunk,0x14d0e7000000,262144
+new,MemoryChunk,0x183f55740000,262144
+new,MemoryChunk,0x275e38580000,147456
+new,MemoryChunk,0x2de872480000,262144
+new,MemoryChunk,0x222cc9fc0000,262144
+new,MemoryChunk,0x19acc0280000,262144
+new,MemoryChunk,0x2b1dfa440000,262144
+new,MemoryChunk,0x34ecce4c0000,262144
+code-deopt,26131,416,0x126645280,-1,9320,deopt-eager,<node:internal/per_context/primordials:334:24>,wrong map
+new,MemoryChunk,0x230f6d440000,262144
+new,MemoryChunk,0x313e2bac0000,262144
+new,MemoryChunk,0x1e770da80000,262144
+new,MemoryChunk,0xb3a56dc0000,262144
+new,MemoryChunk,0x3f9d18400000,262144
+new,MemoryChunk,0x3ef01e500000,262144
+new,MemoryChunk,0x2a1726a40000,262144
+new,MemoryChunk,0x3f4721980000,294912
+new,MemoryChunk,0x34c59e1c0000,262144
+new,MemoryChunk,0x251808bc0000,262144
+new,MemoryChunk,0x1bc4c05c0000,262144
+new,MemoryChunk,0x7f3824c0000,180224
+new,MemoryChunk,0x38d628d40000,262144
+new,MemoryChunk,0x185464940000,262144
+new,MemoryChunk,0x9bf46d40000,262144
+new,MemoryChunk,0x54a6b840000,262144
+new,MemoryChunk,0x203a3a480000,262144
+new,MemoryChunk,0x4c415500000,262144
+new,MemoryChunk,0x14a77bb40000,262144
+new,MemoryChunk,0x1a1709540000,262144
+new,MemoryChunk,0x15624d480000,262144
+new,MemoryChunk,0x9192c100000,262144
+new,MemoryChunk,0x210a42d40000,262144
+new,MemoryChunk,0x26802e440000,262144
+new,MemoryChunk,0x2755b1500000,262144
+new,MemoryChunk,0x14bdf06c0000,262144
+new,MemoryChunk,0x564e5f40000,262144
+new,MemoryChunk,0x257645700000,147456
+new,MemoryChunk,0x1aa1b56c0000,147456
+code-deopt,78507,864,0x126665880,-1,13737,deopt-eager,<node:internal/bootstrap/realm:421:10>,wrong map
+new,MemoryChunk,0xcccbd940000,262144
+new,MemoryChunk,0x2ab7ff9c0000,262144
+new,MemoryChunk,0x1264cbac0000,262144
+new,MemoryChunk,0x326148e40000,262144
+code-deopt,87898,864,0x126665880,-1,14034,deopt-lazy,<node:internal/bootstrap/realm:429:14>,(unknown)
+new,MemoryChunk,0x153d1aac0000,262144
+new,MemoryChunk,0x3a2fc7080000,262144
+new,MemoryChunk,0xb30b040000,262144
+new,MemoryChunk,0x128efcec0000,262144
+new,MemoryChunk,0x286444300000,262144
+new,MemoryChunk,0xefeabd80000,262144
+new,MemoryChunk,0x1266c0000,262144
+new,MemoryChunk,0x32d19c5c0000,262144
+new,MemoryChunk,0x32448f680000,262144
+new,MemoryChunk,0x94589800000,262144
+new,MemoryChunk,0x1f7ce8540000,262144
+new,MemoryChunk,0x2abea380000,262144
+new,MemoryChunk,0x2923e3d00000,262144
+new,MemoryChunk,0x39a409a00000,262144
+new,MemoryChunk,0x35c3c9a80000,262144
+new,MemoryChunk,0xd40f0a40000,262144
+new,MemoryChunk,0x169e265c0000,262144
+new,MemoryChunk,0x3e18dd740000,262144
+new,MemoryChunk,0x386701e40000,262144
+new,MemoryChunk,0x1da4bbf40000,262144
+new,MemoryChunk,0x32578b280000,262144
+new,MemoryChunk,0xc96000000,262144
+delete,MemoryChunk,0x998389400
+new,MemoryChunk,0x294d2a840000,262144
+new,MemoryChunk,0x1d81394c0000,262144
+delete,MemoryChunk,0x9983a3800
+delete,MemoryChunk,0x9983a1000
+code-deopt,130120,1056,0x12666b740,-1,3034,deopt-eager,<node:internal/worker/js_transferable:96:29>,Insufficient type feedback for binary operation
+new,MemoryChunk,0x3a9ceb40000,1605632
+new,MemoryChunk,0x2bf4c8a40000,180224
+new,MemoryChunk,0x3bdee7bc0000,147456
+new,MemoryChunk,0x1f893be80000,262144
+new,MemoryChunk,0x138e9fe80000,262144
+new,MemoryChunk,0x1e1df5740000,262144
+new,MemoryChunk,0x4962c880000,262144
+new,MemoryChunk,0x3e70c1a80000,180224
+new,MemoryChunk,0x358d49900000,294912
+new,MemoryChunk,0x155987180000,262144
+new,MemoryChunk,0x3abe85080000,147456
+new,MemoryChunk,0x343c23300000,262144
+new,MemoryChunk,0xc400a280000,475136
+new,MemoryChunk,0x2a4be82c0000,262144
+code-deopt,238999,2208,0x1266b7420,-1,4172,deopt-eager,<node:path:126:33>,Insufficient type feedback for compare operation
+new,MemoryChunk,0x3a207b480000,262144
+new,MemoryChunk,0x11f23740000,262144
+new,MemoryChunk,0x335b73000000,212992
+new,MemoryChunk,0x3f9ac5d40000,524288
+new,MemoryChunk,0x11f610500000,262144
+new,MemoryChunk,0x2d8621140000,262144
+code-deopt,250719,3488,0x1266dc240,-1,3461,deopt-eager,<node:path:110:17>,Insufficient type feedback for binary operation
+new,MemoryChunk,0x3ca949440000,262144
+new,MemoryChunk,0x18a222980000,262144
+new,MemoryChunk,0x3e0df4840000,262144
+new,MemoryChunk,0x2eacbe1c0000,262144
+new,MemoryChunk,0x3cfb32c80000,262144
+new,MemoryChunk,0xf24bf040000,262144
+new,MemoryChunk,0x297437c40000,262144
+new,MemoryChunk,0x9c8e4d80000,262144
+new,MemoryChunk,0xc878d240000,262144
+new,MemoryChunk,0x3747ae700000,262144
+new,MemoryChunk,0x3dd739700000,262144
+new,MemoryChunk,0x18968cd00000,262144
+new,MemoryChunk,0x2192d7d80000,229376
+new,MemoryChunk,0x219cfee00000,262144
+new,MemoryChunk,0x82ba0fc0000,212992
+new,MemoryChunk,0x1ea89b940000,262144
+new,MemoryChunk,0x833a8780000,262144
+new,MemoryChunk,0x2c98b1680000,262144
+new,MemoryChunk,0x29012c5c0000,262144
+new,MemoryChunk,0x360b9b4c0000,262144
+new,MemoryChunk,0x1e1abb440000,262144
+new,MemoryChunk,0x100a2d600000,262144
+new,MemoryChunk,0xf3fb4640000,262144
+new,MemoryChunk,0x2d1fbd880000,262144
+new,MemoryChunk,0xb510b880000,262144
+new,MemoryChunk,0x1828839c0000,262144
+new,MemoryChunk,0x3d1341200000,262144
+new,MemoryChunk,0x3094414c0000,262144
+new,MemoryChunk,0x25bf78d00000,262144
+new,MemoryChunk,0x16a9d3100000,262144
+new,MemoryChunk,0x216771080000,262144
+new,MemoryChunk,0x21548e040000,262144
+new,MemoryChunk,0xa61e7400000,262144
+new,MemoryChunk,0x259d2cc0000,262144
+new,MemoryChunk,0x3bff69100000,262144
+new,MemoryChunk,0x1d20c940000,262144
+new,MemoryChunk,0x1430c6d80000,262144
+new,MemoryChunk,0x1ef036c40000,262144
+new,MemoryChunk,0x1cb42fa80000,262144
+new,MemoryChunk,0x26917f40000,262144
+new,MemoryChunk,0x28f1eddc0000,262144
+new,MemoryChunk,0xb8ed7d00000,262144
+new,MemoryChunk,0x1c63eb7c0000,262144
+new,MemoryChunk,0x2184c08c0000,262144
+new,MemoryChunk,0x220ffb4c0000,262144
+new,MemoryChunk,0x2e7703580000,262144
+new,MemoryChunk,0xfdd00640000,262144
+new,MemoryChunk,0x289839dc0000,262144
+new,MemoryChunk,0x3c9e5500000,262144
+new,MemoryChunk,0x27ea84780000,262144
+new,MemoryChunk,0x399b82900000,262144
+new,MemoryChunk,0xc68bc2c0000,262144
+new,MemoryChunk,0x28d66c900000,262144
+new,MemoryChunk,0xb0f3ecc0000,262144
+delete,MemoryChunk,0x999348800
+delete,MemoryChunk,0x998839000
+new,MemoryChunk,0x3f7010dc0000,262144
+new,MemoryChunk,0x36ee69240000,9076736
+new,MemoryChunk,0x838ffe00000,1605632
+new,MemoryChunk,0xcddc9340000,180224
+new,MemoryChunk,0x328e91600000,147456
+new,MemoryChunk,0x263bc4b40000,262144
+new,MemoryChunk,0x96c674c0000,262144
+new,MemoryChunk,0x3dc7b2480000,262144
+new,MemoryChunk,0x2d49d0080000,180224
+new,MemoryChunk,0x36f6ef0c0000,294912
+new,MemoryChunk,0x2abd44e40000,262144
+new,MemoryChunk,0x2ebf61b00000,262144
+new,MemoryChunk,0x162598440000,262144
+new,MemoryChunk,0x3f5c30200000,262144
+new,MemoryChunk,0x207c2e640000,262144
+new,MemoryChunk,0x21a4383c0000,262144
+new,MemoryChunk,0x29f9f3680000,262144
+new,MemoryChunk,0x2290b0d80000,262144
+new,MemoryChunk,0x2239aa700000,262144
+new,MemoryChunk,0x27628a8c0000,262144
+new,MemoryChunk,0x28000ce00000,262144
+new,MemoryChunk,0x87a2cfc0000,262144
+new,MemoryChunk,0x2adbef840000,262144
+new,MemoryChunk,0x2a1012040000,262144
+new,MemoryChunk,0x3f1653780000,262144
+new,MemoryChunk,0x13216e900000,262144
+new,MemoryChunk,0x384a7bf00000,262144
+new,MemoryChunk,0xa398b280000,262144
+new,MemoryChunk,0x139c9fa40000,262144
+new,MemoryChunk,0x3ed756800000,262144
+new,MemoryChunk,0x8ebb8e80000,262144
+new,MemoryChunk,0x62d8f380000,262144
+code-deopt,372023,960,0x1266f1a20,-1,146499,dependency-change,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/node_modules/typescript/lib/typescript.js:3173:21>,dependent allocation site tenuring changed
+code-deopt,372043,800,0x1266edce0,-1,423152,dependency-change,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/node_modules/typescript/lib/typescript.js:9162:14>,dependent allocation site tenuring changed
+new,MemoryChunk,0x111c73480000,262144
+new,MemoryChunk,0xba4ab640000,262144
+new,MemoryChunk,0x3b2bf7e40000,262144
+new,MemoryChunk,0x1e7fad7c0000,262144
+new,MemoryChunk,0x1ac576480000,262144
+new,MemoryChunk,0x1b2378580000,262144
+new,MemoryChunk,0x2d379bc00000,262144
+new,MemoryChunk,0xf5fb840000,262144
+new,MemoryChunk,0x126700000,262144
+new,MemoryChunk,0x10f408200000,262144
+new,MemoryChunk,0x1cc240080000,262144
+new,MemoryChunk,0x34ce82f40000,262144
+new,MemoryChunk,0x7000000000,262144
+new,MemoryChunk,0x18000b3c0000,262144
+new,MemoryChunk,0x35a6fed80000,262144
+new,MemoryChunk,0x72293d80000,262144
+new,MemoryChunk,0xe460f4c0000,262144
+new,MemoryChunk,0x12411e340000,262144
+new,MemoryChunk,0xd1669540000,262144
+new,MemoryChunk,0x3114e8dc0000,262144
+new,MemoryChunk,0x11dba7400000,262144
+new,MemoryChunk,0xed37f2c0000,262144
+new,MemoryChunk,0x1dac7bb40000,262144
+new,MemoryChunk,0x3bf77edc0000,262144
+new,MemoryChunk,0x2befdf380000,262144
+new,MemoryChunk,0x3fcf83b40000,262144
+new,MemoryChunk,0x3b4d003c0000,262144
+new,MemoryChunk,0x146640000,557056
+new,MemoryChunk,0xf09be9c0000,147456
+new,MemoryChunk,0x316dc0800000,262144
+new,MemoryChunk,0x245a32f40000,262144
+new,MemoryChunk,0x2ab6c480000,262144
+new,MemoryChunk,0x1bfa5d3c0000,262144
+new,MemoryChunk,0x3fe672240000,262144
+new,MemoryChunk,0x10656b880000,262144
+new,MemoryChunk,0x20f5630c0000,262144
+new,MemoryChunk,0x1e1258c0000,262144
+new,MemoryChunk,0x30626ee00000,262144
+new,MemoryChunk,0x2b5f84a80000,262144
+code-deopt,402897,6336,0x126700040,-1,20991,deopt-eager,<node:internal/modules/cjs/loader:720:62>,Insufficient type feedback for compare operation
+new,MemoryChunk,0x1695aa900000,262144
+new,MemoryChunk,0xfbc480c0000,262144
+new,MemoryChunk,0x207ae1fc0000,262144
+new,MemoryChunk,0x3c44fec00000,262144
+new,MemoryChunk,0x146a0ad80000,262144
+new,MemoryChunk,0x1a1945200000,262144
+new,MemoryChunk,0xe67288c0000,262144
+new,MemoryChunk,0x1050f380000,262144
+new,MemoryChunk,0x3d8518600000,262144
+new,MemoryChunk,0x58a9eb80000,262144
+new,MemoryChunk,0x589ada00000,262144
+new,MemoryChunk,0x267d71840000,262144
+new,MemoryChunk,0x3620a71c0000,262144
+new,MemoryChunk,0x200f62740000,212992
+new,MemoryChunk,0x1137dfc40000,212992
+new,MemoryChunk,0x126740000,376832
+new,MemoryChunk,0x36a435340000,262144
+new,MemoryChunk,0x7078f740000,262144
+new,MemoryChunk,0x1267c0000,262144
+new,MemoryChunk,0xfecf5500000,262144
+new,MemoryChunk,0x1ee3aa700000,262144
+new,MemoryChunk,0x126800000,262144
+new,MemoryChunk,0x126840000,376832
+new,MemoryChunk,0x2967c3900000,262144
+new,MemoryChunk,0x1452bc700000,262144
+new,MemoryChunk,0x302326d80000,262144
+new,MemoryChunk,0x25e27f680000,262144
+code-deopt,430670,3616,0x1267ddd60,-1,1726,dependency-change,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/ajv/dist/compile/codegen/code.js:55:11>,dependent prototype chain changed
+code-deopt,430683,1184,0x126800f20,-1,2285,dependency-change,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/ajv/dist/compile/codegen/code.js:78:20>,dependent prototype chain changed
+new,MemoryChunk,0x1b3cfd080000,262144
+new,MemoryChunk,0x306fe47c0000,262144
+new,MemoryChunk,0x285752100000,262144
+new,MemoryChunk,0x16bdcc40000,262144
+new,MemoryChunk,0x214e27a40000,262144
+new,MemoryChunk,0x2e3348480000,262144
+new,MemoryChunk,0x3c2356280000,262144
+new,MemoryChunk,0x17091c400000,262144
+new,MemoryChunk,0x398e02440000,262144
+new,MemoryChunk,0x150d5ee80000,262144
+new,MemoryChunk,0x87ae1ec0000,262144
+new,MemoryChunk,0x399b6b600000,262144
+new,MemoryChunk,0x1a023c980000,262144
+new,MemoryChunk,0x6f3b8b00000,262144
+new,MemoryChunk,0x2069a65c0000,262144
+new,MemoryChunk,0x2d00a9540000,262144
+new,MemoryChunk,0x93741500000,262144
+new,MemoryChunk,0x3f511be80000,262144
+new,MemoryChunk,0x17451b6c0000,262144
+new,MemoryChunk,0x1994cc780000,262144
+new,MemoryChunk,0xf8dae700000,262144
+new,MemoryChunk,0x1a068a9c0000,262144
+new,MemoryChunk,0x32fbb4780000,262144
+new,MemoryChunk,0x1515ff580000,262144
+new,MemoryChunk,0x2e4335f80000,262144
+new,MemoryChunk,0xb0130000000,262144
+new,MemoryChunk,0x2489bbf80000,262144
+code-deopt,449096,1856,0x12673bf80,-1,408,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/api/Extractor.js:7:56>,Insufficient type feedback for generic named access
+new,MemoryChunk,0x1ff902540000,262144
+new,MemoryChunk,0x1b3a8dd00000,262144
+new,MemoryChunk,0x37c1cbac0000,262144
+new,MemoryChunk,0xb864e400000,262144
+code-deopt,450246,1504,0x12673e240,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/collector/Collector.js:33:9>,Insufficient type feedback for call
+new,MemoryChunk,0x1f2e8ac40000,262144
+new,MemoryChunk,0x216a356c0000,262144
+new,MemoryChunk,0x2a89959c0000,262144
+new,MemoryChunk,0x134921d80000,262144
+new,MemoryChunk,0x3203cbf40000,262144
+new,MemoryChunk,0x2997f4580000,262144
+new,MemoryChunk,0x2b79cb3c0000,262144
+code-deopt,452402,1504,0x1267e2a00,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/collector/CollectorEntity.js:33:9>,Insufficient type feedback for call
+new,MemoryChunk,0x22c227840000,262144
+new,MemoryChunk,0x395b57a80000,262144
+new,MemoryChunk,0x134ecf300000,262144
+new,MemoryChunk,0x28544ae40000,262144
+new,MemoryChunk,0x17939ccc0000,262144
+code-deopt,453622,1504,0x1267e3cc0,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/analyzer/AstSymbolTable.js:33:9>,Insufficient type feedback for call
+new,MemoryChunk,0x186132980000,262144
+new,MemoryChunk,0x948e6a80000,262144
+new,MemoryChunk,0x10be0e9c0000,262144
+new,MemoryChunk,0x24282b00000,262144
+code-deopt,454329,1504,0x1267e4f80,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/analyzer/AstDeclaration.js:33:9>,Insufficient type feedback for call
+new,MemoryChunk,0xf5a4a300000,262144
+new,MemoryChunk,0xd0600480000,262144
+new,MemoryChunk,0x1d52da5c0000,262144
+new,MemoryChunk,0x17c4690c0000,262144
+code-deopt,455288,1504,0x1267e6240,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/analyzer/Span.js:33:9>,Insufficient type feedback for call
+new,MemoryChunk,0x26e0f7a80000,262144
+new,MemoryChunk,0x187010c00000,262144
+new,MemoryChunk,0x21fff5ac0000,262144
+new,MemoryChunk,0x4f9ea180000,262144
+new,MemoryChunk,0x33bdd2f80000,262144
+new,MemoryChunk,0x1dfd3d3c0000,262144
+new,MemoryChunk,0x3a8bfe2c0000,262144
+new,MemoryChunk,0x6f9a6f00000,262144
+new,MemoryChunk,0x2c2592d40000,262144
+new,MemoryChunk,0x32d8c56c0000,262144
+new,MemoryChunk,0x35b362700000,262144
+new,MemoryChunk,0x13819f480000,262144
+new,MemoryChunk,0xcee810c0000,262144
+new,MemoryChunk,0x23180ed80000,262144
+new,MemoryChunk,0x314f105c0000,262144
+new,MemoryChunk,0x161b8de80000,262144
+new,MemoryChunk,0x1bcf98780000,262144
+new,MemoryChunk,0x350a5c740000,262144
+new,MemoryChunk,0xdb9294c0000,262144
+code-deopt,458035,1504,0x1267e6e20,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/analyzer/TypeScriptHelpers.js:33:9>,Insufficient type feedback for call
+code-deopt,459220,1504,0x1267e87c0,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/analyzer/TypeScriptInternals.js:33:9>,Insufficient type feedback for call
+code-deopt,460164,1504,0x1267e9f20,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/analyzer/ExportAnalyzer.js:33:9>,Insufficient type feedback for call
+code-deopt,461149,1504,0x1267eb1e0,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/analyzer/SyntaxHelpers.js:33:9>,Insufficient type feedback for call
+code-deopt,462228,1504,0x1267ec4a0,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/aedoc/PackageDocComment.js:33:9>,Insufficient type feedback for call
+new,MemoryChunk,0x1268c0000,262144
+code-deopt,463262,1504,0x1267ed080,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/analyzer/AstReferenceResolver.js:33:9>,Insufficient type feedback for call
+code-deopt,464176,1504,0x1267ee340,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/generators/DtsRollupGenerator.js:33:9>,Insufficient type feedback for call
+code-deopt,465391,1504,0x1267eef20,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/generators/DtsEmitHelpers.js:33:9>,Insufficient type feedback for call
+new,MemoryChunk,0x9bbcb340000,262144
+new,MemoryChunk,0x167f250c0000,262144
+new,MemoryChunk,0x89f6bf80000,262144
+code-deopt,467577,1504,0x1267f16c0,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/generators/ExcerptBuilder.js:33:9>,Insufficient type feedback for call
+code-deopt,468415,1504,0x1267f2980,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/generators/DeclarationReferenceGenerator.js:33:9>,Insufficient type feedback for call
+code-deopt,469308,1504,0x1267f3c40,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/generators/ApiReportGenerator.js:33:9>,Insufficient type feedback for call
+new,MemoryChunk,0x3b25a2c00000,262144
+new,MemoryChunk,0x35c9efc80000,262144
+new,MemoryChunk,0x14eb1d2c0000,262144
+new,MemoryChunk,0x14cf18e80000,262144
+new,MemoryChunk,0x10ef15e40000,262144
+new,MemoryChunk,0x2d0455980000,262144
+new,MemoryChunk,0x2b5740100000,262144
+new,MemoryChunk,0x15a0425c0000,262144
+new,MemoryChunk,0x28160bc40000,262144
+new,MemoryChunk,0x34bd4ff80000,262144
+new,MemoryChunk,0x2a5ac83c0000,262144
+new,MemoryChunk,0x68e8e000000,262144
+new,MemoryChunk,0xe3b8d1c0000,262144
+new,MemoryChunk,0x1801b3800000,262144
+new,MemoryChunk,0x3496ff380000,262144
+code-deopt,472632,1504,0x126825980,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/enhancers/DocCommentEnhancer.js:33:9>,Insufficient type feedback for call
+code-deopt,473588,1504,0x126826560,-1,1457,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/@microsoft/api-extractor/lib-commonjs/collector/MessageRouter.js:33:9>,Insufficient type feedback for call
+code-deopt,485380,3488,0x1266dcfe0,-1,40072,deopt-eager,<node:path:1270:19>,Insufficient type feedback for call
+code-deopt,486948,1024,0x1268084e0,-1,3827,dependency-change,</Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/ajv/dist/compile/codegen/code.js:133:23>,dependent prototype chain changed
+new,MemoryChunk,0x126900000,180224
+new,MemoryChunk,0x126940000,262144
+new,MemoryChunk,0x1f4645780000,262144
+new,MemoryChunk,0x1d77c2b80000,262144
+code-deopt,498912,1728,0x12666a580,-1,26220,dependency-change,<node:internal/url:895:17>,dependent prototype chain changed
+new,MemoryChunk,0x2229c9380000,262144
+new,MemoryChunk,0x139765c80000,262144
+new,MemoryChunk,0xa21df400000,262144
+new,MemoryChunk,0x126980000,262144
+new,MemoryChunk,0x2c61c6c80000,262144
+code-deopt,508892,1376,0x12694f700,0,9484,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:231:16> inlined at <file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:206:11>,Insufficient type feedback for generic named access
+code-deopt,510225,5792,0x126978160,-1,10377,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:273:3>,Insufficient type feedback for call
+code-deopt,511370,1536,0x126980aa0,-1,30670,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:893:53>,Insufficient type feedback for generic named access
+code-deopt,511395,608,0x12697eae0,0,24178,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:704:21> inlined at <file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:707:16>,unexpected name in keyed access
+code-deopt,511416,544,0x126980880,-1,24178,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:704:21>,unexpected name in keyed access
+code-deopt,511426,1440,0x12697e540,-1,28466,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:832:30>,Insufficient type feedback for generic keyed access
+code-deopt,511443,4992,0x1269823a0,-1,27019,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:788:28>,Insufficient type feedback for call
+new,MemoryChunk,0x1269c0000,262144
+new,MemoryChunk,0x801bbc00000,262144
+code-deopt,511940,4256,0x126974700,-1,11667,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:324:3>,Insufficient type feedback for generic keyed access
+new,MemoryChunk,0x10f560a40000,262144
+new,MemoryChunk,0x2c7064d80000,262144
+code-deopt,516111,4864,0x1269c1e00,-1,11620,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:322:12>,wrong map
+code-deopt,516198,544,0x12697d380,-1,21732,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:634:30>,Insufficient type feedback for call
+code-deopt,516231,5984,0x1269c06a0,1,27519,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:806:21> inlined at <file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:779:15>,wrong map
+code-deopt,516257,1024,0x126981d00,2,24187,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:704:30> inlined at <file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:707:16> inlined at <file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:749:16>,unexpected name in keyed access
+new,MemoryChunk,0x12216800000,262144
+new,MemoryChunk,0x281d17080000,262144
+code-deopt,518800,2560,0x1268e55c0,-1,8181,dependency-change,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:185:23>,dependent property cell changed
+code-deopt,518819,1984,0x1269779a0,-1,8181,dependency-change,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:185:23>,dependent property cell changed
+code-deopt,518828,2048,0x1269757a0,-1,8536,dependency-change,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:199:23>,dependent property cell changed
+code-deopt,518870,3360,0x126965340,-1,79770,dependency-change,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/rollup/dist/es/shared/parseAst.js:2066:25>,dependent property cell changed
+code-deopt,518880,1600,0x126964d00,-1,58021,dependency-change,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/rollup/dist/es/shared/parseAst.js:1470:24>,dependent property cell changed
+code-deopt,518889,896,0x126964980,-1,80330,dependency-change,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/rollup/dist/es/shared/parseAst.js:2082:25>,dependent property cell changed
+code-deopt,518898,960,0x1269620e0,-1,79378,dependency-change,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/rollup/dist/es/shared/parseAst.js:2056:21>,dependent property cell changed
+code-deopt,518906,2432,0x1268e1c60,-1,266582,dependency-change,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:7212:11>,dependent property cell changed
+code-deopt,518915,1280,0x1269583a0,-1,266582,dependency-change,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:7212:11>,dependent property cell changed
+code-deopt,518925,1696,0x126955ea0,-1,266582,dependency-change,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:7212:11>,dependent property cell changed
+code-deopt,518937,544,0x12694f4e0,-1,9410,dependency-change,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:228:7>,dependent property cell changed
+code-deopt,518948,1152,0x126834940,-1,11587,dependency-change,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/mlly/dist/index.mjs:423:40>,dependent property cell changed
+code-deopt,518957,512,0x126834740,-1,460,dependency-change,<node:internal/v8/startup_snapshot:21:28>,dependent property cell changed
+code-deopt,518964,3616,0x12667f140,-1,6671,dependency-change,<node:internal/modules/cjs/loader:238:24>,dependent property cell changed
+code-deopt,518970,928,0x12666fc20,-1,10029,dependency-change,<node:internal/util/debuglog:393:38>,dependent property cell changed
+code-deopt,518976,1760,0x12694fc60,-1,26220,dependency-change,<node:internal/url:895:17>,dependent property cell changed
+code-deopt,518982,5760,0x1266df620,-1,70459,dependency-change,<node:fs:2684:22>,dependent property cell changed
+code-deopt,518988,800,0x1266c2840,-1,5012,dependency-change,<node:fs:198:20>,dependent property cell changed
+new,MemoryChunk,0x25179d340000,262144
+new,MemoryChunk,0x31a222b80000,262144
+code-deopt,521065,8096,0x12696c760,-1,560588,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:15571:18>,wrong call target
+new,MemoryChunk,0x369447d80000,262144
+new,MemoryChunk,0x983de8c0000,262144
+new,MemoryChunk,0x159c0e5c0000,262144
+new,MemoryChunk,0x33969c6c0000,262144
+new,MemoryChunk,0x213eb46c0000,262144
+new,MemoryChunk,0x181ff50c0000,262144
+code-deopt,522851,7136,0x126972b20,-1,105274,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:3068:3>,wrong map
+new,MemoryChunk,0x152defcc0000,262144
+new,MemoryChunk,0x3914060c0000,262144
+new,MemoryChunk,0xc7dd3e80000,262144
+new,MemoryChunk,0x3d9d08a40000,262144
+new,MemoryChunk,0x389e54bc0000,262144
+new,MemoryChunk,0x1cd92f040000,262144
+new,MemoryChunk,0xa62ec980000,262144
+code-deopt,525511,9568,0x1268eec20,13,27519,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:806:21> inlined at <file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:779:15> inlined at <file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:745:9> inlined at <file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:881:4>,wrong map
+new,MemoryChunk,0x262254940000,262144
+new,MemoryChunk,0x2023955c0000,262144
+code-deopt,526389,1216,0x126987640,-1,24305,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:709:10>,not a Smi
+new,MemoryChunk,0x1e9eb8280000,262144
+new,MemoryChunk,0x98154a80000,262144
+new,MemoryChunk,0x2d7a225c0000,262144
+new,MemoryChunk,0x7000040000,163840
+new,MemoryChunk,0x10505e8c0000,163840
+new,MemoryChunk,0x16e4a4b00000,262144
+new,MemoryChunk,0xefb1b580000,262144
+code-deopt,531759,7136,0x1269ea560,-1,105274,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:3068:3>,wrong map
+new,MemoryChunk,0x2ce259ec0000,262144
+new,MemoryChunk,0xa3f8b840000,262144
+new,MemoryChunk,0x2ae66bc80000,262144
+code-deopt,532499,3968,0x1269eec80,-1,29608,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:869:50>,prepare for on stack replacement (OSR)
+new,MemoryChunk,0x4f71a380000,262144
+new,MemoryChunk,0x4093c880000,262144
+new,MemoryChunk,0x1aad9e880000,262144
+code-deopt,535454,8704,0x1269e7ca0,-1,560777,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:15573:23>,Insufficient type feedback for generic named access
+code-deopt,535873,3392,0x126991a00,-1,556928,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:15482:39>,wrong map
+new,MemoryChunk,0x353a068c0000,262144
+new,MemoryChunk,0x335b54280000,262144
+new,MemoryChunk,0x23f215040000,262144
+new,MemoryChunk,0x1eac25a80000,262144
+new,MemoryChunk,0x390d6bac0000,262144
+new,MemoryChunk,0x394d78700000,262144
+new,MemoryChunk,0x134dc480000,262144
+new,MemoryChunk,0x3de807240000,262144
+new,MemoryChunk,0x357bb9b80000,262144
+new,MemoryChunk,0xfeb1acc0000,262144
+new,MemoryChunk,0xa9634e40000,262144
+new,MemoryChunk,0xd29b7780000,262144
+new,MemoryChunk,0x6be83b80000,262144
+new,MemoryChunk,0x165d5adc0000,262144
+new,MemoryChunk,0x50f95dc0000,262144
+new,MemoryChunk,0x4e643040000,262144
+new,MemoryChunk,0x1fb0e85c0000,262144
+new,MemoryChunk,0xcbd8bec0000,262144
+new,MemoryChunk,0x2c3962a00000,262144
+new,MemoryChunk,0x1e9239b80000,262144
+new,MemoryChunk,0x3fb81d9c0000,262144
+new,MemoryChunk,0x3c50977c0000,262144
+new,MemoryChunk,0x2f659c440000,262144
+new,MemoryChunk,0x27bfc0040000,262144
+new,MemoryChunk,0x90e10ac0000,262144
+new,MemoryChunk,0x31ddd5d80000,262144
+new,MemoryChunk,0x1e528b140000,262144
+new,MemoryChunk,0x3cc342e40000,262144
+new,MemoryChunk,0x1a3dc1340000,262144
+code-deopt,540196,1696,0x1269841c0,-1,58021,dependency-change,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/rollup/dist/es/shared/parseAst.js:1470:24>,dependent allocation site tenuring changed
+new,MemoryChunk,0x126a00000,262144
+code-deopt,556323,800,0x1269e7580,-1,564230,dependency-change,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:15634:29>,dependent field type changed
+new,MemoryChunk,0x126a40000,262144
+new,MemoryChunk,0x25abb2e40000,262144
+new,MemoryChunk,0xf99cbd40000,262144
+new,MemoryChunk,0x3ecade340000,262144
+new,MemoryChunk,0x1a3543600000,262144
+new,MemoryChunk,0x34f4c7d40000,262144
+new,MemoryChunk,0x1f636abc0000,262144
+new,MemoryChunk,0x255d9bcc0000,262144
+new,MemoryChunk,0x1e6616040000,262144
+new,MemoryChunk,0x14c1692c0000,262144
+new,MemoryChunk,0x304f89dc0000,262144
+new,MemoryChunk,0x20cc1ee80000,262144
+new,MemoryChunk,0x379e8be80000,262144
+new,MemoryChunk,0x380774440000,262144
+new,MemoryChunk,0x30bed9140000,262144
+new,MemoryChunk,0xf79cf7c0000,262144
+new,MemoryChunk,0x2c5643400000,262144
+new,MemoryChunk,0x165b1dd00000,262144
+new,MemoryChunk,0x185500200000,262144
+new,MemoryChunk,0x27564e040000,262144
+new,MemoryChunk,0x2e863e280000,262144
+new,MemoryChunk,0x22fb02940000,262144
+new,MemoryChunk,0x35aa72e00000,262144
+new,MemoryChunk,0x2d617f600000,262144
+new,MemoryChunk,0x32a695940000,262144
+new,MemoryChunk,0x12229fb80000,262144
+new,MemoryChunk,0x191ee6880000,262144
+new,MemoryChunk,0x17bdb3b40000,262144
+new,MemoryChunk,0x1da96b80000,262144
+new,MemoryChunk,0x12d53e500000,262144
+new,MemoryChunk,0x279b48cc0000,262144
+new,MemoryChunk,0x1f62673c0000,262144
+new,MemoryChunk,0x3be9b36c0000,262144
+new,MemoryChunk,0x11a1e6700000,262144
+new,MemoryChunk,0x3456bf280000,262144
+new,MemoryChunk,0xdbaf1e00000,262144
+new,MemoryChunk,0x40fe2100000,262144
+new,MemoryChunk,0x32ad18180000,262144
+new,MemoryChunk,0x238221980000,262144
+new,MemoryChunk,0x2d8e8ba80000,262144
+new,MemoryChunk,0x3fefad40000,262144
+new,MemoryChunk,0x5dd94440000,262144
+new,MemoryChunk,0x29d987a00000,262144
+new,MemoryChunk,0x2a75d7d40000,262144
+new,MemoryChunk,0x915d4580000,262144
+new,MemoryChunk,0x13e5a0ec0000,262144
+new,MemoryChunk,0x9b083980000,262144
+new,MemoryChunk,0x2ca701cc0000,147456
+new,MemoryChunk,0x1545225c0000,147456
+new,MemoryChunk,0x2ef5ab740000,262144
+new,MemoryChunk,0x3fd088880000,262144
+new,MemoryChunk,0x297de5040000,262144
+new,MemoryChunk,0x2e1001740000,262144
+new,MemoryChunk,0x393578c00000,262144
+new,MemoryChunk,0x2a49f3300000,262144
+new,MemoryChunk,0x3c088bc0000,262144
+new,MemoryChunk,0x2633ed080000,262144
+new,MemoryChunk,0x3fac3e840000,262144
+new,MemoryChunk,0x1ff12e580000,262144
+new,MemoryChunk,0xb5ce7b00000,262144
+new,MemoryChunk,0x2252f7540000,262144
+new,MemoryChunk,0x31b264b80000,262144
+new,MemoryChunk,0x1e9f45b80000,262144
+code-deopt,586957,8928,0x1269940a0,-1,560777,deopt-eager,<file:///Users/mkbabb/Programming/parse-that-css-totality/typescript/node_modules/vite/dist/node/chunks/config.js:15573:23>,wrong call target
+new,MemoryChunk,0x229e53c80000,262144
+new,MemoryChunk,0x126a80000,262144
+new,MemoryChunk,0x121761640000,262144
+new,MemoryChunk,0x2016d2640000,262144
+new,MemoryChunk,0x309cc9c0000,262144
+new,MemoryChunk,0x362bd2bc0000,262144
+new,MemoryChunk,0x58777900000,262144
+new,MemoryChunk,0xca8b3c80000,262144
+new,MemoryChunk,0x14788f180000,262144
+new,MemoryChunk,0x1d5ddf40000,262144
+new,MemoryChunk,0x9751b2c0000,262144
+new,MemoryChunk,0x1ec196f40000,262144
+code-deopt,609125,6496,0x126a250c0,-1,9433,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/test/prototypes/pass3/u/unordered.ts:265:21>,wrong map
+new,MemoryChunk,0x28d44e900000,262144
+new,MemoryChunk,0x120c9c00000,262144
+new,MemoryChunk,0x1364fa580000,262144
+new,MemoryChunk,0x1d3013c40000,262144
+new,MemoryChunk,0x3fff8c400000,262144
+new,MemoryChunk,0x2daab9c80000,262144
+new,MemoryChunk,0x246b23400000,262144
+new,MemoryChunk,0xb98a3c00000,262144
+new,MemoryChunk,0x123536c80000,262144
+new,MemoryChunk,0x2b406da00000,262144
+new,MemoryChunk,0x3fdd4dc40000,262144
+new,MemoryChunk,0xb0a02680000,262144
+new,MemoryChunk,0xc66825c0000,262144
+new,MemoryChunk,0x2d26f41c0000,262144
+new,MemoryChunk,0x32a63700000,262144
+new,MemoryChunk,0x9fba28c0000,262144
+new,MemoryChunk,0x3db581700000,262144
+new,MemoryChunk,0x26512ee40000,262144
+new,MemoryChunk,0x1342e9280000,262144
+new,MemoryChunk,0x3031aeb40000,262144
+new,MemoryChunk,0x3bf93fd80000,262144
+new,MemoryChunk,0x270839c80000,262144
+new,MemoryChunk,0x2d0e83780000,262144
+new,MemoryChunk,0x3cbd56a40000,262144
+new,MemoryChunk,0x31ad7ab00000,262144
+new,MemoryChunk,0x3290b5040000,262144
+new,MemoryChunk,0x13d91eb00000,262144
+new,MemoryChunk,0x110251b80000,262144
+new,MemoryChunk,0x31a0e8680000,262144
+new,MemoryChunk,0x1871d5080000,262144
+new,MemoryChunk,0x3e05edbc0000,262144
+new,MemoryChunk,0x1fda137c0000,262144
+new,MemoryChunk,0x1524cb2c0000,262144
+new,MemoryChunk,0x1ced61ac0000,262144
+new,MemoryChunk,0x1c37e8b00000,262144
+new,MemoryChunk,0xfe839c40000,262144
+new,MemoryChunk,0x1585aa080000,262144
+new,MemoryChunk,0x32b9b9880000,262144
+new,MemoryChunk,0x1ab8c7ec0000,262144
+new,MemoryChunk,0x28211e980000,262144
+new,MemoryChunk,0x33a544b40000,262144
+code-deopt,663794,1344,0x126a29ca0,-1,7975,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/test/prototypes/pass3/u/profile.ts:229:3>,prepare for on stack replacement (OSR)
+code-deopt,668508,2848,0x126a2a1e0,-1,8076,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/test/prototypes/pass3/u/profile.ts:230:39>,Insufficient type feedback for generic named access
+code-deopt,720928,1344,0x126a2ad00,-1,8097,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/test/prototypes/pass3/u/profile.ts:231:3>,prepare for on stack replacement (OSR)
+code-deopt,1753853,2944,0x126a2b240,-1,8184,deopt-eager,</Users/mkbabb/Programming/parse-that-css-totality/typescript/test/prototypes/pass3/u/profile.ts:232:25>,Insufficient type feedback for generic named access

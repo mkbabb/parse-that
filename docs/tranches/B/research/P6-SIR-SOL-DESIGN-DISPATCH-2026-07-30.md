@@ -1,0 +1,318 @@
+# P6-SIR Sol design and Luna dispatch
+
+Date: 2026-07-30
+
+Status: **SPLIT-ATOM DESIGN/DISPATCH ONLY — ZERO CREDIT — NO RELEASE**
+
+## Decision
+
+P6 assays one previously split control atom only: a parser step returns one
+signed integer.
+
+```text
+Step = (runState, cursor) => signed integer
+
+result >= 0  success; result is the next UTF-16 cursor
+result == -1 routine mismatch; frontier evidence remains in runState
+result == -2 typed fault; the sticky typed fault remains in runState
+```
+
+Every return must be a safe integer in exactly
+`{-2, -1} ∪ [0, source.length]`. The integer is the sole internal
+success/mismatch/fault discriminator.
+
+The ordinary semantic value remains in run state. No object, tuple, region
+handle or state object is the hot control return.
+
+This is the scalar observation split/moved from P4 Region-Slot Return ABI. It
+is not a new family and receives no novelty credit. Its surrounding topology
+remains the native closure/call-stack/value-in-run topology already exercised
+by P3 direct closure. It is not the P4 RSR family: regions,
+numeric/reference slabs, journals, output slots, accepted-root reachability,
+deferred allocation and root finalization remain pruned.
+The terminal genealogy classification is therefore:
+
+```text
+RSR.signed-step atom: SPLIT and assay
+surrounding topology: FOLD into P3 direct closure
+novelty/family credit: zero
+```
+
+## Immutable coordinates
+
+- accepted control:
+  `de36d57dccdd20068b8c11a78f6e83d42e7d681f`;
+- P4 owner adjudication:
+  `270feca0d48ef7caab3d44ad9bcc62d9a6687870`;
+- corrected P4 jury A1 manifest:
+  `3297c808d66ed3c528134a2567a4f85ba7602769270868abfd701fa80ce0b311`;
+- P5 executable negative evidence:
+  `0bc0d37bfadf62ddde432686947309cc1741325e`;
+- canonical P5/P6 routing:
+  `3dca3330aae757a5b476ec2bc4ff0aa35ec339a9`;
+- accepted-M2 source SHA-256:
+
+```text
+efec8b86685cdc592aae0a6c179b59bac257b31395f01ae4c07bf5fb8458348b  json.ts
+4962e0212883ba16bc8a7639a8668d86c4fc8030ba9a49efb6126f3ba46cd8f5  parser.ts
+ff9eb71f301e646d899b1f63c4ff85326991ad1b98a6b219748babead1b7f125  state.ts
+```
+
+The Luna continuation must use an immutable archive of accepted M2 and bundle
+its exported live `jsonParser`. It may not rebuild the timed control from
+candidate-shaped primitives.
+
+Expected local toolchain coordinates, to be independently reproduced:
+
+```text
+3751609e01dc46f5ad50f31d4d5f9ecc05e2aad5ccdb61e1508ae780715a8770  exact-M2 ESM control bundle
+79fffbb53be7306c1505f97281b63a01902f53ac56682c61f673c78011c5dd14  esbuild executable
+08dad0581f00a0cabf4d49ec92ca1f25fdfd01c2c18fa8e92b35f04d4c24c164  Node executable
+```
+
+Toolchain identity is esbuild `0.27.3`, Node `v26.0.0`, V8
+`14.6.202.33-node.19`, Darwin arm64. Luna records independently reproduced
+bundle/tool hashes; a mismatch stops before timing.
+
+## Genealogy and non-alias falsification
+
+P6 is a `SPLIT` assay of the signed-step atom, never `KEEP` as a new family.
+An encoding rename is not evidence. The packet must prove all rows below
+before timing.
+
+| Predecessor | Its control ABI | P6 inverse |
+|---|---|---|
+| P1-R | run-owned mutable cursor/`run.status`, checkpoint objects and journal lengths | cursor is an argument/return, mismatch/fault is the return tag, and each atomic combinator owns direct scalar locals; no run cursor/status discriminator, checkpoint object or journal |
+| P3 direct closure `19c1e12` | `(state) => state`; every leaf/combinator mutates `state.offset` and branches on mutable `state.isError` | `(state, cursor) => integer`; internal success returns cursor, internal mismatch returns `-1`; `state.offset`/`state.isError` are projected once at the root and are not hot control flow |
+| P4 RSR design | the same signed-step atom plus region indices, checkpoints, numeric/reference slabs, output slots and finalizer | assay only the already-split scalar atom; no region/slab/output-slot/finalizer structure or deferred product walk |
+| Luna F2 | region objects/arrays and region-switched runtime | no region object, region array, family switch or runtime route |
+| P5 cursor-EUW `0bc0d37` | cursor success plus frozen singleton thrown on routine mismatch | identical closure/call-stack/value topology except routine mismatch is `-1`; no throw/catch occurs on the routine path |
+| P1-V | program counter, opcode/operand tape and explicit instruction/call/choice stacks | native closure calls only; no PC, op array, instruction loop, tape or explicit execution stack |
+| P1-K | continuation objects, success/mismatch bounce stacks and trampoline loop | native closure calls only; no continuation, bounce, trampoline or explicit success/mismatch stack |
+| P5-TOL | leases checkpoint ownership away from deterministic composition and needs annotations/analysis or dual executors | `then`, `skip`, `next`, choice and repetition each retain their own local atomic rollback; no lease or ownership transfer |
+| accepted M2 | `(state) => state` and mutable error status | exact control only; no candidate compatibility executor, wrapper or fallback |
+
+The taxonomy is RED if any candidate step:
+
+- returns `runState`, an object, tuple, array or region handle;
+- mutates or reads `runState.offset` or `runState.isError` between combinators
+  as its internal success/failure discriminator;
+- stores or reads cursor/status/kind/code aliases in run state as a hidden
+  discriminator;
+- returns a non-safe integer, a negative value other than `-1`/`-2`, or a
+  successful cursor beyond `source.length`;
+- throws/catches routine mismatch;
+- materializes a region, slab, journal, token, instruction, scanner result or
+  generated parser;
+- selects between internal/external, old/new or control/candidate executors at
+  parse time; or
+- uses a wrapper, shim, fallback, compatibility alias or alternate grammar.
+
+The root may set the public final offset/error once after the signed step
+returns. Typed faults remain separate from routine mismatch through the `-2`
+tag and the run-state fault value.
+
+Before timing, raw probes compare candidate effects with accepted-M2 public
+effects for:
+
+- literal success;
+- zero-width success at a nonzero input cursor;
+- literal mismatch and furthest frontier;
+- direct `-1` reachability;
+- direct and nested sticky `-2` typed-fault reachability;
+- `then` right-child mismatch restoring the sequence entry value and
+  diagnostics;
+- `skip` and `next` right-child mismatch restoring their own atomic entry;
+- `wrap` close-parser mismatch restoring its composed atomic entry;
+- left-choice partial mismatch restoring before the right arm;
+- `sepBy` separator-plus-element mismatch restoring to before the separator;
+  and
+- nested recovered diagnostics followed by enclosing rollback.
+
+Each probe compares value, UTF-16 offset, error, furthest, ordered expected,
+suggestions, secondary spans, diagnostics and fault. Fault/frontier/work/max
+depth evidence follows the accepted law and is not erased as ordinary
+rollback data.
+
+The raw step also runs against an alias-trap state whose `cursor`, `offset`,
+`status`, `isError`, `kind` and `code` accessors count and reject internal
+reads/writes. Candidate internal execution must record zero accesses. The
+public root projection is assayed separately after the raw step returns.
+Static source inspection corroborates the trap; it does not replace it.
+
+## Minimal combinator surface
+
+Implement only the generic surface consumed by the live dispatch JSON assay:
+
+```text
+literal
+sticky regex leaf
+map
+or
+then / next / skip
+trim
+wrap
+sepBy
+lazy
+first-code-unit dispatch
+public parseState/result projection
+```
+
+Every combinator has one raw executor. `or`, `then`, `skip`, `next`, `wrap`
+and `sepBy` own their exact atomic rollback locally. Each saves only direct
+scalar locals such as entry value and diagnostic length and restores them on
+the child mismatch/fault paths required by accepted M2. Checkpoints may not
+move to a parent/owner, because that would recur as TOL. They may not become a
+transaction object, lease, region or journal. `map`, `trim` and `lazy` add no
+speculative owner beyond the atomic combinators they invoke.
+Ordinary value arrays/objects required by the JSON product are allowed;
+per-run control-plane arrays/objects are not.
+
+`dispatch` is the accepted live first-code-unit shape. An ordered-choice JSON
+root is an invalid substitute. A fixed grammar-time route map and parser
+array, constructed once by `dispatch(table)` and closed over immutably, are
+allowed. Rebuilding, copying or allocating a dispatch map/list per parse,
+step or run is forbidden.
+
+## Grammar and product
+
+Author one idiomatic `makeJson(primitives)` combinator grammar and instantiate
+it for:
+
+1. equality-only accepted-M2 primitives;
+2. the P6 candidate.
+
+The timed control remains the exact accepted-M2 exported `jsonParser`.
+
+Use the four exact P5 fixture bytes:
+
+```text
+{"a":[1,true,null,"x"]}
+[{"b":2},false,"y",null]
+{"nested":{"arr":[1,2,3]},"s":"hello"}
+[0,{"x":[true,false]},-12.5e2,"\u0041"]
+```
+
+Before timing, each fixture must prove:
+
+- native expected value equals exact accepted-M2 value;
+- the equality-only rebuilt M2 grammar equals exact accepted-M2 public
+  result;
+- P6 value equals the native value; and
+- P6 immutable public success result equals exact accepted M2.
+
+The public result includes source, value, final UTF-16 offset, error,
+furthest, expected, suggestions, secondary spans and diagnostics. This
+success-only product deliberately favors P6; failure/recovery omissions
+cannot rescue a raw loss.
+
+## Fatal raw assay
+
+Run exactly seven fresh paired OS processes. In each process:
+
+- verify the taxonomy and four-fixture equality first;
+- warm control and candidate equally, outside measured batches;
+- run ten balanced alternating AB/BA batches;
+- parse 2,000 fixture selections per arm per batch;
+- use a deterministic xorshift32 permutation seeded uniquely per process;
+- time the same immutable public result projection on both arms;
+- record PID, executable, Node, V8, seed, batch order, per-batch nanoseconds
+  and `control/candidate` ratio.
+
+For process `i`, arithmetic is exact:
+
+```text
+ratio[i] = sum(controlBatchNs[i][0..9])
+         / sum(candidateBatchNs[i][0..9])
+```
+
+Admission for this cell is conjunctive:
+
+```text
+all seven raw ratios >= 10.0000000000
+```
+
+The first ratio below `10x` is terminal. Complete all seven already-launched
+rows for a stable negative range, then stop. Do not compute bootstrap, run
+CSS, profile, or add mechanism variants.
+
+Only if all seven raw rows clear `10x` may Luna compute the exact-bootstrap
+95% lower bound. Let `logRatio[i] = ln(ratio[i])`. Enumerate all
+`7^7 = 823543` ordered seven-draw resamples with replacement. Each resample
+statistic is `exp(sum(selected logRatio) / 7)`. Sort the distribution
+ascending. Use the nearest-rank convention, converted to zero-based indices:
+
+```text
+lowIndex  = ceil(0.025 * 823543) - 1 = 20588
+highIndex = ceil(0.975 * 823543) - 1 = 802954
+```
+
+The statistic at `lowIndex` must be `>=10x`.
+
+Seven hot-success rows are a one-way performance kill gate only. Passing them
+would not establish novelty, complete correctness, formation or survival;
+it would only permit the conditional planes below.
+
+## Conditional continuation
+
+If and only if the fatal cell and bootstrap are green:
+
+1. extend equal products to scale 4/33 success, terminal failure,
+   diagnostics-on recovered success and typed fault;
+2. seal allocation, retained heap, IC, optimization/deoptimization and GC;
+3. request an immutable Value-owned real combinator CSS vertical using the
+   same generic P6 primitives;
+4. prove nonzero P6 mechanism reachability from that vertical; and
+5. continue toward the full 1,439/1,653 denominator, all recovery/source
+   fidelity planes and Keyframes consumer obligations.
+
+Luna must not author a Value CSS grammar, edit Value, or substitute a
+handwritten CSS reader. A green raw result returns a boundary request; it
+does not grant CSS, formation, candidate or release credit.
+
+## Luna packet
+
+Continue the existing Luna task
+`019fb16a-09d7-7d80-ae5f-3d894e25855d`. Do not create a task.
+
+Sole output root:
+
+```text
+/Users/mkbabb/Documents/Codex/2026-07-30/parser-p6-sir-luna/outputs
+```
+
+Keep the packet small:
+
+```text
+runtime.mjs
+json-factory.mjs
+worker.mjs
+run.mjs
+raw.json
+TAXONOMY.json
+RECEIPT.md
+MANIFEST.sha256
+```
+
+`MANIFEST.sha256` binds the other seven files. Verify it twice after the last
+write. `RECEIPT.md` reports exact row count, unique PIDs, ratio range,
+equality/taxonomy disposition, bootstrap reached or withheld, and exact
+remainder. No sentinel profile/CSS files are created when raw is RED.
+`TAXONOMY.json` records every genealogy row, atomic rollback probe,
+cursor/status alias count, grammar-time dispatch-map census and forbidden
+per-parse container count, signed return-domain/reachability probe and exact
+control-bundle/toolchain hashes. Timing is unreachable unless all are green.
+
+After Luna seals, a fresh Sol adjudication must independently verify the
+manifest, taxonomy, accepted-M2 binding, equality arithmetic and all raw
+ratios. The present Sol design pass grants no implementation or adjudication
+credit.
+
+## Ownership and stop law
+
+Parse-that owns only this private generic runtime research. Value owns the
+sole CSS grammar/consumer/UI. BBNF remains blocked until
+`V.L6.css-path-abi-freeze`.
+
+No production source, public API, candidate pack, consumer migration,
+formation audit, release or downstream edge starts from this dispatch.

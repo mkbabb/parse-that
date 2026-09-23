@@ -1,0 +1,19 @@
+{
+    "schema": "x-p-w3-d/oracle-pin@1",
+    "note": "The DIFFERENTIAL ORACLE. W3.md §5 `.d`: 'The oracle is the vendored, sha-pinned published 4.0.0 tarball — never `dist/` in the working tree (cand-O's dist-drift finding; the repo's own dist/subpaths/css.js differs from what 4.0.0 ships, which is why a source-resolved import cannot witness the defect).' W3.md §6 G-7: 'the vendored tarball's sha256 is asserted in-test before any comparison runs, so an unpinned oracle fails first.'",
+    "file": "value.js-4.0.0.tgz",
+    "package": "@mkbabb/value.js",
+    "version": "4.0.0",
+    "bytes": 37290,
+    "sha256": "7f80658ca4e16e99ccbb41ad6c9d8c08b2e5f86a7c951d2a833c97f89fb303ae",
+    "npmIntegrity": "sha512-Z8ywb4htSxJlRFvoU1DNtvzr9Bsuaw9ahT/hvNlKbnRj6fTnLuXjn0itKq1Q5s6rwg24ct0zcLZ04BuR3/SzGw==",
+    "npmIntegritySha512Hex": "67ccb06f886d4b1265445be85350cdb6fcebf41b2e6b0f5a853fe1bcd94a6e7463e9f4e72ee5e39f48ad2aad50e6ceabc20db872dd3370b674e01b91dff4b31b",
+    "provenance": {
+        "registryUrl": "https://registry.npmjs.org/@mkbabb/value.js/-/value.js-4.0.0.tgz",
+        "takenFrom": "~/.npm/_cacache — the content-addressed body npm itself verified against the registry's own sha512 integrity before it wrote it. The integrity above is the registry's, read out of _cacache/index-v5; the sha256 is this seat's own reading of the same bytes. The tarball is copied here VERBATIM and is never regenerated: `npm pack` over a working tree produces a DIFFERENT artifact (the dist-drift finding), and this wave's oracle must be what npm ships.",
+        "vendoredBy": "X.P.W3.d, 2026-09-18",
+        "readOnlyAfterVendoring": true
+    },
+    "entry": "package/dist/subpaths/css.js",
+    "declaration": "package/dist/subpaths/css.d.ts"
+}

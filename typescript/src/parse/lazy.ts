@@ -19,7 +19,12 @@ export function createLazyCached<T>(fn: () => Parser<T>): (state: ParserState<T>
     let cached: Parser<T> | undefined;
     return (state: ParserState<T>) => {
         if (!cached) cached = fn();
-        return cached.parser(state) as ParserState<T>;
+        if (!state.enterLazy()) return state;
+        try {
+            return cached.parser(state) as ParserState<T>;
+        } finally {
+            state.leaveLazy();
+        }
     };
 }
 
