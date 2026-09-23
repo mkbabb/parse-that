@@ -729,6 +729,13 @@ const triggerOver = (parseRange, parseTimeline) => (source) => {
     return Object.keys(result).length > 0 ? result : undefined;
 };
 
+/** A parsed value that holds a `var()` CALL at any depth (css-variables-1 §3's parse-time trigger). */
+const containsVar = (value) =>
+    isRecord(value)
+    && ((value.kind === "call" && folded(value.name) === "var")
+        || (Array.isArray(value.args) && value.args.some(containsVar))
+        || (Array.isArray(value.items) && value.items.some(containsVar)));
+
 /** `rules.ts` optionDeclarationValid — the animation family's per-property admissibility, over a PARSED value. */
 function optionDeclarationValid(name, value) {
     const items = commaItems(value);
@@ -770,6 +777,12 @@ const completerOver = (surface) => {
 
     /** `parseDeclarations`'s checks AFTER the value parse, over the folded name and the parsed value. */
     const checkDeclaration = (name, value) => {
+        //  X.P.W5.g — R-b-2 (F-W5b-1; COHESION §0bx; DIVERGENCE-LEDGER §14): css-variables-1 §3 —
+        //  "If a property contains one or more var() functions, and those functions are syntactically
+        //  valid, the entire property's grammar must be assumed to be valid at parse time. It is only
+        //  syntax-checked at computed-value time." The value grammar has already read every `var()`
+        //  as a well-formed CALL, so a value that holds one is past every per-property check below.
+        if (containsVar(value)) return undefined;
         if (!optionDeclarationValid(name, value)) {
             return refuse(name === "animation-timeline" ? "timeline_option_invalid" : "animation_option_invalid", [optionProduction(name, value)]);
         }

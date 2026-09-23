@@ -76,7 +76,7 @@ const ruledMiss = (row) => {
 };
 import { STRUCTURED, structuredInputs, syntaxVocabulary } from "../../css-totality/lib/matrix.mjs";
 import { callOracle, loadOracle } from "./oracle.mjs";
-import { F_W4F_1, resolveRuling } from "./ruled.mjs";
+import { F_W4F_1, R_B_2, resolveRuling, resolveVarRuling } from "./ruled.mjs";
 import { distinctSources, loadCorpus } from "./corpus.mjs";
 import { ENTRY_FAMILY, inDeclaredShape, installOracleHeads, shapeDeclaration } from "./shape.mjs";
 
@@ -267,10 +267,21 @@ const reclassifyWith = ({ oracleFn, candidateFn, family, resolve, oracleAccepts 
 
 const applyRuling = ({ name, input, candidate, reclassify, cell }) => {
     if (!RED_TRIGGERS.includes(cell.verdict)) return cell;
-    const ruling = resolveRuling({ entry: name, input, candidate, reclassify });
+    //  X.P.W5.g — R-b-2 is a second ruled CLASS: consulted only when no per-cell ruling and no
+    //  F-w4f-1 repair governs the cell, and honoured only by its own mechanism test (`ruled.mjs`).
+    //  A cell can carry BOTH faces — a comment OPENING the body (F-w4f-1's trivia face) in front of
+    //  an animation declaration that holds a `var()` (R-b-2). F-w4f-1's repair then still reads RED
+    //  (the var() half remains), so R-b-2's test is read on the cell too, and it governs only when it
+    //  is honoured: its deletion spans the declaration's own leading trivia, so both faces go at once.
+    let ruling = resolveRuling({ entry: name, input, candidate, reclassify });
+    if (ruling === null || (ruling.rulingId === F_W4F_1.id && !ruling.honoured)) {
+        const composed = resolveVarRuling({ entry: name, input, candidate, reclassify });
+        if (composed !== null && (ruling === null || composed.honoured))
+            ruling = ruling === null ? composed : { ...composed, why: `${composed.why} (the declaration's leading comment is F-w4f-1's trivia face, deleted with it)` };
+    }
     if (ruling === null) return cell;
     if (ruling.honoured) return { verdict: CELL.DECLARED_DIVERGENCE, why: ruling.why, specUndecided: false, adjudication: ruling.rulingId };
-    if (ruling.rulingId === F_W4F_1.id) return { ...cell, why: `${cell.why} · ${ruling.why}` };
+    if (ruling.rulingId === F_W4F_1.id || ruling.rulingId === R_B_2.id) return { ...cell, why: `${cell.why} · ${ruling.why}` };
     return { verdict: CELL.ADJUDICATION_UNHONOURED, why: ruling.why, specUndecided: false, adjudication: ruling.rulingId };
 };
 

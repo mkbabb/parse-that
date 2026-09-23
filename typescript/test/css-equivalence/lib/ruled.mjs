@@ -326,3 +326,102 @@ export const resolveRuling = ({ entry, input, candidate, reclassify }) => {
                 : `F-w4f-1's repair test FAILS: ${failures.join("; ")}`,
     };
 };
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════════
+   X.P.W5.g — R-b-2 (F-W5b-1; COHESION §0bx; DIVERGENCE-LEDGER §14): THE SECOND RULED CLASS.
+
+   css-variables-1 §3: "If a property contains one or more var() functions, and those functions are
+   syntactically valid, the entire property's grammar must be assumed to be valid at parse time."
+   The candidate now honours that (`src/css/entry.mjs` `checkDeclaration` → `containsVar`); 4.0.0
+   runs its per-property animation checks over the unsubstituted text and refuses. The class is
+   honoured by the same kind of MECHANISM TEST as F-w4f-1, never on a match: the candidate ACCEPTS
+   the sheet, and deleting exactly the animation-family declarations that hold a `var()` (each with
+   its own leading trivia, through its `;`) leaves a sheet the two engines no longer disagree on —
+   so the `var()` declarations were the whole divergence. Fail-closed: a sheet that still reads RED
+   after the deletion keeps its original verdict.
+   ══════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/** The property names whose parse-time checks `checkDeclaration` runs (the family R-b-2 governs). */
+const R_B_2_FAMILY = (name) => /^animation(-|$)/.test(name) || name === "timeline-scope";
+
+/**
+ * Every declaration span of `src` — the bytes after a `{` or `;` through the next `;` or `}` at
+ * paren depth 0, comments and strings skipped — with its folded NAME and whether it holds a `var(`.
+ */
+const declarationSpans = (src) => {
+    const spans = [];
+    let depth = 0;
+    let open = -1; //   the index of the `{` / `;` that opened the current span, or -1
+    for (let i = 0; i < src.length; i += 1) {
+        const ch = src[i];
+        if (ch === "/" && src[i + 1] === "*") {
+            const end = src.indexOf("*/", i + 2);
+            i = end < 0 ? src.length : end + 1;
+            continue;
+        }
+        if (ch === '"' || ch === "'") {
+            let j = i + 1;
+            while (j < src.length && src[j] !== ch) j += src[j] === "\\" ? 2 : 1;
+            i = j;
+            continue;
+        }
+        if (ch === "(") depth += 1;
+        else if (ch === ")") depth = Math.max(0, depth - 1);
+        else if (depth === 0 && (ch === "{" || ch === ";" || ch === "}")) {
+            if (open >= 0 && ch !== "{") {
+                const body = src.slice(open + 1, i);
+                const bare = body.replace(/\/\*[\s\S]*?(\*\/|$)/g, " ");
+                const colon = bare.indexOf(":");
+                if (colon > 0) {
+                    spans.push({
+                        start: open + 1,
+                        end: ch === ";" ? i + 1 : i,
+                        name: bare.slice(0, colon).trim().toLowerCase(),
+                        holdsVar: /(^|[^\w-])var\(/i.test(bare.slice(colon + 1)),
+                    });
+                }
+            }
+            open = i; //   a `}` opens too: a declaration may follow a nested block's close
+        }
+    }
+    return spans;
+};
+
+/** The sheet with every R-b-2 declaration deleted, or `null` when it holds none. */
+export const deleteVarDeclarations = (src) => {
+    if (typeof src !== "string") return null;
+    const spans = declarationSpans(src).filter((s) => s.holdsVar && R_B_2_FAMILY(s.name));
+    if (spans.length === 0) return null;
+    let out = src;
+    for (const s of [...spans].reverse()) out = out.slice(0, s.start) + out.slice(s.end);
+    return { repaired: out, names: spans.map((s) => s.name) };
+};
+
+/** The R-b-2 row, as the differential's ledger count and the printed reading carry it. */
+export const R_B_2 = Object.freeze({
+    id: "R-b-2",
+    entry: "parseStylesheet",
+    ruledAt: "COHESION §0bx · W5.md ADDENDUM 2026-09-23 · DIVERGENCE-LEDGER.md §14",
+    specCitation: "css-variables-1 §3 — a property value holding a syntactically valid var() is assumed valid at parse time and syntax-checked only at computed-value time",
+    consumerDirection:
+        "WIDENS — an animation-family declaration whose value holds a var() (`animation: fade var(--d) var(--ease)`, `animation-delay: calc(var(--base) + 40ms)`) is accepted and carried as its parsed value; 4.0.0 refused the whole sheet (animation_option_invalid). collectAnimationOptions reads no parse-time option from such a declaration (its value is known only after substitution).",
+});
+
+/** R-b-2's resolver, beside F-w4f-1's: `null` when the class does not govern the cell. */
+export const resolveVarRuling = ({ entry, input, candidate, reclassify }) => {
+    if (entry !== R_B_2.entry) return null;
+    const repair = deleteVarDeclarations(input);
+    if (repair === null) return null;
+    const after = reclassify(repair.repaired);
+    const failures = [];
+    if (!accepted(candidate)) failures.push("the candidate refuses the sheet that holds the var() declaration(s)");
+    if (after.red) failures.push(`deleting the var() declaration(s) still reads ${after.verdict}`);
+    return {
+        rulingId: R_B_2.id,
+        honoured: failures.length === 0,
+        why:
+            failures.length === 0
+                ? `R-b-2 ruled at ${R_B_2.ruledAt} honoured — the candidate accepts; deleting ${repair.names.length} var() declaration(s) (${repair.names.join(", ")}) leaves ${after.verdict}`
+                : `R-b-2's mechanism test FAILS: ${failures.join("; ")}`,
+    };
+};
