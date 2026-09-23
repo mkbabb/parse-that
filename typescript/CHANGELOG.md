@@ -27,6 +27,9 @@ The root and `./diagnostics` barrels also lose three runtime exports, and that r
   derived from WPT at `5a5b2b59`. `light-dark()` parses both arms and resolves to
   `color_context_required`, because css-color-5 §2 says it is not absolute. The legacy comma forms
   `rgb()`/`rgba()`/`hsl()`/`hsla()` are pinned by WPT.
+- **A declaration name may be non-ASCII** (X.P.W5 Repair 1). css-syntax-3 §4.2 counts a non-ASCII
+  code point as an ident code point, so `a { Xé: red }` and `--x≡y: red` now parse. The
+  declaration-name class had been ASCII-only.
 - **Equivalence.** value.js 4.0.0's parsers (pinned commit `6aca8602`) are the oracle for the
   full-surface differential harness (`test/css-equivalence/run-full-surface.mjs`). It reads 0
   mirror-defects, and every declared difference has a row in value.js's `DIVERGENCE-LEDGER.md`.

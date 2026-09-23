@@ -143,9 +143,15 @@ export const R_cls = {
     //  §5.4.4's "the next token is an <ident-token>", read with `grammar/stylesheet.mjs`'s
     //  zero-width leading-digit assertion in front and the optional whitespace before the colon
     //  read explicitly (F-w4f-1, COHESION §0ab). The label is unchanged, so L does not move.
+    //  X.P.W5 Repair 1 (2026-09-23): the continuation set is css-syntax-3 §4.2's "ident code point"
+    //  — an ident-start code point (a letter, U+005F, or a NON-ASCII code point), a digit, or U+002D —
+    //  so the non-ASCII marker 0xFF belongs to it, exactly as it already belongs to `ident-start`.
+    //  W4.h's narrowing used the ASCII `isIdent` alone and refused `a { Xé: red }` and
+    //  `--x≡y: red` (J-6's regression test read RED on master); a non-ASCII byte is still never
+    //  folded here, the name is a SPAN in both targets (J-6).
     "decl-name": {
         label: "declaration-name",
-        table: table256(isIdent),
+        table: table256((b) => isIdent(b) || b === 0xff),
         since: "X.P.W3.j",
     },
     "any-but-star": { label: "comment-text", table: table256((b) => b !== ch("*")), since: "X.P.W3.j" },

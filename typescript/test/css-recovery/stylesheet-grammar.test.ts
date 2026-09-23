@@ -83,13 +83,23 @@ describe("J-1 the declaration value is `REF(\"value-body\")`", () => {
 /* ── 2. J-2 — the name is every byte before the first colon, trimmed and lowercased ──────────── */
 
 describe("J-2 the declaration name is TEXT, not an ident", () => {
-    it("the six shapes the corpus witnesses, each one the incumbent's own name", () => {
-        expect(names(sheet("a { backgrou(d-color: red }"))).toEqual(["backgrou(d-color"]);
-        expect(names(sheet("a { border-co+or: blue }"))).toEqual(["border-co+or"]);
-        expect(names(sheet("a { ,ackground-color: red }"))).toEqual([",ackground-color"]);
-        expect(names(sheet("a { !color: red }"))).toEqual(["!color"]);
-        expect(names(sheet("a { /olor: red }"))).toEqual(["/olor"]);
-        expect(names(sheet("a { backgro und-color: red }"))).toEqual(["backgro und-color"]);
+    // Re-pinned 2026-09-23 (X.P.W5 Repair 1): X.P.W4.h narrowed the name to one <ident-token>
+    // (css-syntax-3 §5.4.4) under the F-w4f-1 ruling (COHESION §0ab; DIVERGENCE-LEDGER §11,
+    // "declared-divergence, candidate correct", NARROWS) — the six shapes the incumbent carried as
+    // names are now each a whole-sheet refusal, identical in both lowerings.
+    it("the six shapes the corpus witnesses are each REFUSED whole — not one <ident-token> (F-w4f-1)", () => {
+        for (const src of [
+            "a { backgrou(d-color: red }",
+            "a { border-co+or: blue }",
+            "a { ,ackground-color: red }",
+            "a { !color: red }",
+            "a { /olor: red }",
+            "a { backgro und-color: red }",
+        ]) {
+            const r = sheet(src);
+            expect(r.ok, src).toBe(false);
+            expect(r.diagnostics![0].code, src).toBe("css_syntax");
+        }
     });
 
     it("the name is TRIMMED and then LOWERCASED, in that order (`stylesheet.ts:391`)", () => {
