@@ -32,9 +32,9 @@ const corpus: { rows: { id: string; src: string }[] } = JSON.parse(
     readFileSync(path.join(HERE, "corpus.json"), "utf8"),
 );
 
-const { isDiagnosticsEnabled } = (await import("tsx/esm/api").then((tsx) =>
-    tsx.tsImport("../../src/parse/utils.ts", import.meta.url),
-)) as { isDiagnosticsEnabled: () => boolean };
+// Vitest transforms TypeScript itself; `tsx` was never a dependency of this package (the import
+// failed to resolve on master — X.P.W5 Repair 1), so the module is imported directly.
+const { isDiagnosticsEnabled } = await import("../../src/parse/utils.ts");
 
 const recoveries = await loadRecoveryLowerings();
 

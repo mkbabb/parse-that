@@ -219,15 +219,15 @@ describe("the R1 class — every degenerate function head is a typed rejection",
 /* ── the surface declares what it does not carry ────────────────────────────────────────────── */
 
 describe("the unrealized entries are NAMED, never stubbed", () => {
-    it("the six the grammar does not carry are declared and absent from the surface", () => {
-        expect(UNREALIZED_ENTRIES).toEqual([
-            "parseCssScalar",
-            "parseCssValue",
-            "parseCssValues",
-            "parseKeyframeSelector",
-            "parseAnimationTimeline",
-            "parseAnimationRange",
-        ]);
+    // Re-pinned 2026-09-23 (X.P.W5 Repair 1): six at W3.g; X.P.W3.h realized P:scalar/P:value/
+    // P:values and X.P.W3.i the animation family, so `entry.mjs` now declares NONE — and each of the
+    // six formerly named is PRESENT on both surfaces, never stubbed.
+    it("none is unrealized any more: the six once named are carried by both surfaces, and the declared list is empty", () => {
+        expect(UNREALIZED_ENTRIES).toEqual([]);
+        for (const name of ["parseCssScalar", "parseCssValue", "parseCssValues", "parseKeyframeSelector", "parseAnimationTimeline", "parseAnimationRange"]) {
+            expect(typeof (surfaces.js as Record<string, unknown>)[name], name).toBe("function");
+            expect(typeof (surfaces.wasm as Record<string, unknown>)[name], name).toBe("function");
+        }
         for (const name of UNREALIZED_ENTRIES) {
             expect(surfaces.js).not.toHaveProperty(name);
             expect(surfaces.wasm).not.toHaveProperty(name);

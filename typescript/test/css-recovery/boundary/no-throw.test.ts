@@ -179,10 +179,12 @@ describe("T-1b — the entry module's whole `throw` census is construction-time 
 describe("the corpus union, as the two sweeps read it", () => {
     it("is derived from both generated corpora, with the normalization published", () => {
         //  X.P.W3.l: the union grew by the stylesheet band (`test/css-totality/lib/stylesheet-band.mjs`,
-        //  470 rows, W3.md `.l` L726) — 26,604 + 470; the pin moves with the seventh arm, nothing else did
-        expect(corpus.counts.totalityRows).toBe(27074);
+        //  470 rows, W3.md `.l` L726) — 26,604 + 470 = 27,074. Re-pinned 2026-09-23 (X.P.W5 Repair 1):
+        //  W3.n's BND-1 cure (`fb45434`) hands the r1 arm its STRING, so 53 r1 sources now dedupe
+        //  against the other arms (27,021) and no row needs F-c3's unwrap any more (172 → 0)
+        expect(corpus.counts.totalityRows).toBe(27021);
         expect(corpus.counts.recoveryRows).toBe(685);
-        expect(corpus.counts.unwrapped).toBe(172);
+        expect(corpus.counts.unwrapped).toBe(0);
         expect(corpus.sources.length).toBe(corpus.counts.distinct);
         expect(corpus.sources.length).toBeGreaterThan(26000);
     });

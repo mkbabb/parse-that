@@ -97,7 +97,10 @@ describe("G-7 · the graduated corpus", () => {
     it("is `.a`'s union, whose replay digest still agrees with its own banked value", () => {
         const corpus = loadCorpus();
         expect(corpus.rowsSha256Agrees, `corpus replay drifted: ${corpus.rowsSha256} vs ${corpus.rowsSha256Recorded}`).toBe(true);
-        expect(corpus.rows.length).toBe(26604);
+        // 27,021 (re-pinned 2026-09-23, X.P.W5 Repair 1, from the settled bytes): the 26,604-row union
+        // gained the 470-row stylesheet band at W3.l (`92ed4cc` → 27,074), then W3.n's BND-1 cure
+        // (`fb45434`) handed the r1 arm its STRING, so 53 r1 sources now dedupe against other arms.
+        expect(corpus.rows.length).toBe(27021);
     });
 
     it("carries all six folded arms, none silently dropped", () => {
@@ -107,9 +110,11 @@ describe("G-7 · the graduated corpus", () => {
         }
     });
 
-    it("F-c3 — 172 r1 rows arrive as {id, src} objects and are unwrapped losslessly, with the count published", () => {
+    it("F-c3 — cured at the source: no r1 row arrives as an {id, src} object any more (W3.n BND-1, `fb45434`)", () => {
         const corpus = loadCorpus();
-        expect(corpus.unwrapped).toBe(172);
+        // Was 172 before `fb45434`; the unwrap stays in `loadCorpus` as a lossless guard, and a
+        // re-appearing object row is a corpus regression this pin catches.
+        expect(corpus.unwrapped).toBe(0);
         expect(corpus.rows.every((r: { src: unknown }) => typeof r.src === "string")).toBe(true);
     });
 });

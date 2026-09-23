@@ -232,13 +232,16 @@ describe("serializeCssColor — the incumbent's serializer on the surface", () =
 });
 
 describe("the label surface — sixteen labels appended after the nine capacity labels, none moved", () => {
-    it("L's tail is exactly the unit's labels, in registry order, and every one has a named production", () => {
-        const tail = L.slice(L.indexOf("expsnap <= 32") + 1);
+    it("the block after the nine capacity labels is exactly the unit's labels, in registry order, and every one has a named production", () => {
+        // Re-pinned 2026-09-23 (X.P.W5 Repair 1): the LATER_UNITS after W3.h (`tables.mjs`
+        // `collectLabels`) append their own blocks after this one, so this unit's sixteen are the
+        // block at indices 60..75, not L's whole tail; no index in it moved (K-10).
+        const tail = L.slice(L.indexOf("expsnap <= 32") + 1, L.indexOf("expsnap <= 32") + 1 + 16);
         expect(tail).toEqual([
             "token boundary", "ident start", "<unit>", "<operator>", "double quote", "single quote", "string text",
             "<color-space>", "concrete xyz-d50", "<function-arguments>", "<value-list>", "<value>", "<scalar>", "'\\'", "'\"'", "'''",
         ]);
-        expect(L.length).toBe(76);
+        expect(L.indexOf(tail[15])).toBe(75);
         for (const label of tail) expect(PRODUCTION_LABELS[label], label).toBeDefined();
         expect(L.indexOf("<string>")).toBeLessThan(L.indexOf("token boundary"));
     });

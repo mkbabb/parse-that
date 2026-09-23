@@ -20,7 +20,8 @@
 
 import { describe, expect, it } from "vitest";
 
-import { DEPTH_BOUND, DEPTH_LABEL, DEPTH_PRODUCTION, THETA, assertDepthBound, witnessAtDepth } from "../../../src/css/bounds.mjs";
+import { CAPACITY_LABELS, DEPTH_BOUND, DEPTH_LABEL, DEPTH_PRODUCTION, INPUT_BOUND, THETA, assertDepthBound, witnessAtDepth } from "../../../src/css/bounds.mjs";
+import { promoteLabel } from "../../../src/css/diagnostics.mjs";
 import { loadPublicSurfaces } from "../../../src/css/entry.mjs";
 import { lowerings } from "../../../src/css/harness-adapter.mjs";
 
@@ -98,7 +99,12 @@ describe("PT-04's own coordinate — 7,761 and 7,762 — is a regression fixture
                 }).not.toThrow();
                 expect(r!.ok).toBe(false);
                 expect(r!.diagnostics[0].code).toBe("css_syntax");
-                expect(r!.diagnostics[0].expected[0]).toBe(DEPTH_PRODUCTION);
+                // Re-pinned 2026-09-23 (X.P.W5 Repair 1): PT-04's witness is 15,525 / 15,527 code
+                // units, past the DERIVED Θ.input (14,107 since W3.h, DIVERGENCE-LEDGER CAP-1), and
+                // the window is checked BEFORE the run — so the typed rejection names the input
+                // window, not the depth bound. The depth rejection itself is the block above.
+                expect(witnessAtDepth(depth).length).toBeGreaterThan(INPUT_BOUND);
+                expect(r!.diagnostics[0].expected[0]).toBe(promoteLabel(CAPACITY_LABELS.input));
             });
         }
     }

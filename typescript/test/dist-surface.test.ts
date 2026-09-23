@@ -77,9 +77,9 @@ describe("dist surface == source surface (PT-WAVE-3a publish-discipline)", () =>
         expect(present, `source barrel still names *Span: ${present.join(", ")}`).toEqual([]);
     });
 
-    // A.W1 (inv-A-1) — the CSS surface left for value.js (D2/D3). The source
-    // barrel must no longer name any CSS symbol. (The runtime-surface gate is
-    // proof:no-css-surface; this is the source-side complement.)
+    // A.W1 (inv-A-1) — the root barrel names no CSS symbol: the CSS seam ships
+    // on its own `./css` subpath (X.P.W5, COHESION §0bl), never through `.`.
+    // (`proof:no-css-surface` was retired at X.P.W5.a; this is the source-side gate.)
     it("the source barrel names zero CSS symbols", () => {
         const src = readFileSync(SRC_INDEX, "utf8");
         const parsersBarrel = readFileSync(

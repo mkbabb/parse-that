@@ -224,8 +224,11 @@ describe("the nine capacities are declared in Θ, read from the layout, and carr
     it("the nine labels sit AFTER \"<string>\" in L, so no existing label index moved (E-f1, K-10)", () => {
         const at = L.indexOf("<string>");
         expect(at).toBeGreaterThan(0);
-        expect(L.slice(at + 1)).toEqual(REGIONS.map((r) => CAPACITY_LABELS[r]));
-        expect(L.length).toBe(51 + 9);
+        // Re-pinned 2026-09-23 (X.P.W5 Repair 1): LATER_UNITS (W3.h onward, `tables.mjs`
+        // `collectLabels`) append their own blocks AFTER the nine, so the nine are the nine labels
+        // immediately after "<string>" (indices 51..59), not L's whole tail.
+        expect(L.slice(at + 1, at + 1 + 9)).toEqual(REGIONS.map((r) => CAPACITY_LABELS[r]));
+        expect(at + 1 + 9).toBe(51 + 9);
     });
 
     it("NEGATIVE CONTROL — a lowering whose Θ disagrees with a declared capacity HALTS by name", () => {
@@ -267,7 +270,10 @@ describe("class 3 — unreachable by construction: K from the emitter's node tab
 
     it("NEGATIVE CONTROL — a ceiling that does not fit HALTS at the assertion, naming the region", () => {
         const c = CLASS3_CEILINGS;
-        expect(() => assertClass3Unreachable({ ...c, vstack: { K: 2, S: c.vstack.S, unit: "code unit" } }, INPUT_BOUND)).toThrowError(/vstack \d+ > 65536/);
+        // K derived (X.P.W5 Repair 1): the smallest vstack rate that overflows at the DERIVED window —
+        // a pinned K: 2 fitted W3.f's 65,458 window and no longer overflows at 14,107.
+        const overK = Math.floor((lay.VSTACK_CAP - c.vstack.S) / INPUT_BOUND) + 1;
+        expect(() => assertClass3Unreachable({ ...c, vstack: { K: overK, S: c.vstack.S, unit: "code unit" } }, INPUT_BOUND)).toThrowError(/vstack \d+ > 65536/);
         expect(() => assertClass3Unreachable({ ...c, expsnap: { K: 1, S: 1, unit: "depth level" } }, INPUT_BOUND)).toThrowError(/expsnap 65 > 32/);
         expect(() => assertClass3Unreachable(c, lay.INPUT_CAP + 1)).toThrowError(/HALT/);
     });
@@ -284,10 +290,37 @@ const pairFor = (region: Region, unitCeiling: number) => {
     return { prod, at: bandRow(`${region} AT (n=${n - 1})`, prod, witnessAtCapacity(region, n - 1)), past: bandRow(`${region} PAST (n=${n})`, prod, witnessAtCapacity(region, n)), n };
 };
 
+/** The largest repetition count whose witness still FITS the derived input window. */
+const largestFitting = (region: Region) => {
+    let n = 1;
+    while (witnessAtCapacity(region, n + 1).length <= INPUT_BOUND) n++;
+    return n;
+};
+
+/**
+ * WINDOW-LIMITED (X.P.W5 Repair 1, re-pinned from the settled bytes). Θ.input is DERIVED (§0q),
+ * and the grammar's arena rate moved it from W3.f's 65,458 to 14,107 code units (CAP-1). Under that
+ * window the `a{c}` family tops out at n = ⌊14,107 / 4⌋ = 3,526 recoveries, under REC_CAP = D_CAP =
+ * 4,096, so the window cuts BEFORE either journal can fire — DIVERGENCE-LEDGER CAP-3 / CAP-4 "NO
+ * COORDINATE, AND THE REASON IS MEASURED", the posture `test/css-equivalence/lib/ledger.mjs`
+ * `measureCapacityRow` takes (case b). Case (a) — a family that FITS and still never names its
+ * region — would be a class-1 bound no input reaches, and the reading below would catch it.
+ */
+const windowLimited = (region: Region) => {
+    const prod = WITNESS_PRODUCTION[region];
+    const fits = largestFitting(region);
+    return {
+        prod,
+        fits,
+        at: bandRow(`${String(region)} WINDOW (n=${fits})`, prod, witnessAtCapacity(region, fits)),
+        past: bandRow(`${String(region)} PAST-WINDOW (n=${fits + 1})`, prod, witnessAtCapacity(region, fits + 1)),
+    };
+};
+
 describe("class 1 — input · marks · recoveries · D: an ordinary ok:false css_syntax naming the bound, identical in both lowerings", () => {
     const input = pairFor("input", lay.INPUT_CAP * 2);
     const marks = pairFor("marks", lay.MARK_CAP * 2);
-    const recoveries = pairFor("recoveries", lay.REC_CAP * 2);
+    const recoveries = windowLimited("recoveries");
 
     it("the input witness generator produces exactly the length it names, and the marks/recoveries coordinates are the census's", () => {
         expect(witnessAtCapacity("input", 2)).toBe("{}");
@@ -295,8 +328,14 @@ describe("class 1 — input · marks · recoveries · D: an ordinary ok:false cs
         expect(input.n).toBe(INPUT_BOUND + 1);
         expect(input.at.length).toBe(INPUT_BOUND);
         expect(input.past.length).toBe(INPUT_BOUND + 1);
-        expect(marks.n).toBe(16382); //                  the banked census: `a{}`×16382 is the first to overflow the mark journal
-        expect(recoveries.n).toBe(lay.REC_CAP + 1); //   one recovery per malformed rule
+        // Re-pinned 2026-09-23 (X.P.W5 Repair 1) from the settled bytes: W3.f's census read 16,382; the
+        // nested-body grammar (W3.l) records more marks per `a{}` rule, and DIVERGENCE-LEDGER CAP-2
+        // binary-searches the first naming coordinate at n = 1,724 (5,172 code units, inside the window).
+        expect(marks.n).toBe(1724);
+        // The recovery family is WINDOW-LIMITED (CAP-3/CAP-4): the largest fitting witness is 3,526
+        // malformed rules (14,104 code units), each exactly one recovery, under REC_CAP.
+        expect(recoveries.fits).toBe(Math.floor(INPUT_BOUND / 4));
+        expect(recoveries.fits).toBeLessThan(lay.REC_CAP);
     });
 
     for (const kind of KINDS) {
@@ -323,15 +362,17 @@ describe("class 1 — input · marks · recoveries · D: an ordinary ok:false cs
             expect([past.diagnostics[0].start, past.diagnostics[0].end, past.diagnostics[0].actual]).toEqual([0, marks.past.length, marks.past]);
         });
 
-        it(`${kind}: recoveries + D — AT the bound carries 4096 recovery diagnostics and no capacity row; ONE PAST names BOTH journals, in Θ's order`, () => {
+        it(`${kind}: recoveries + D — WINDOW-LIMITED: the largest fitting witness never names either journal (the mark journal fills first); one more rule is the input-window rejection`, () => {
             const entry = entryFor(kind, recoveries.prod);
             const at = entry(recoveries.at);
             const past = entry(recoveries.past);
             expect(at.ok).toBe(false);
-            expect(at.diagnostics).toHaveLength(lay.REC_CAP);
-            expect(at.diagnostics.some((d) => REGIONS.some((r) => d.expected[0] === promoteLabel(CAPACITY_LABELS[r])))).toBe(false);
+            // Measured: at n = 3,526 the `a{c}` family's marks exceed MARK_CAP before the recovery or
+            // diagnostic journal reaches 4,096, so the one row is `<mark-journal>` — never CAP-3/CAP-4.
+            expect(at.diagnostics.map((d) => d.expected[0])).toEqual([promoteLabel(CAPACITY_LABELS.marks)]);
+            expect(namesRegion(at, "recoveries") || namesRegion(at, "D")).toBe(false);
             expect(past.ok).toBe(false);
-            expect(past.diagnostics.map((d) => d.expected[0])).toEqual([promoteLabel(CAPACITY_LABELS.recoveries), promoteLabel(CAPACITY_LABELS.D)]);
+            expect(past.diagnostics.map((d) => d.expected[0])).toEqual([promoteLabel(CAPACITY_LABELS.input)]);
             for (const d of past.diagnostics) expect([d.code, d.start, d.end, d.actual]).toEqual(["css_syntax", 0, recoveries.past.length, recoveries.past]);
         });
     }
@@ -514,12 +555,20 @@ describe("class 3 — the census families at the window: every measured peak sit
         }
     });
 
-    it("the one-cell-per-code-unit family reaches within S of the value stack's cap at the window and is answered by the declared bounds, not by a trap", () => {
-        const r = readings.find((x) => x.name.startsWith(";×n"))!;
-        expect(r.vstackPeak).toBeGreaterThanOrEqual(INPUT_BOUND);
-        expect(r.vstackPeak).toBeLessThanOrEqual(INPUT_BOUND + CLASS3_CEILINGS.vstack.S);
-        expect(r.product.ok).toBe(false);
-        expect(r.product.D.map((d) => (d as Issue).expected[0])).toEqual(["marks", "recoveries", "D"].map((k) => CAPACITY_LABELS[k as Region]));
+    // Re-pinned 2026-09-23 (X.P.W5 Repair 1), measured at the window: W3.l's `wsSemi()` reads a
+    // top-level `;` as sheet trivia, so `;×n` is no longer one recovered rule per code unit — it is an
+    // ACCEPTED empty sheet whose value-stack peak is static (3 cells). The densest family is now
+    // `a{c:1 ×n}` (7,073 cells at 14,107 code units), still under K × len + S; the recovery-dense
+    // `a{c;×n}` is the family answered by the declared class-1 journals, not by a trap.
+    it("`;×n` is sheet trivia at the window (accepted, static stack); the densest family stays under the derived ceiling; `a{c;×n}` is answered by the declared journals, not by a trap", () => {
+        const semi = readings.find((x) => x.name.startsWith(";×n"))!;
+        expect(semi.product.ok).toBe(true);
+        expect(semi.vstackPeak).toBeLessThanOrEqual(CLASS3_CEILINGS.vstack.S);
+        const densest = Math.max(...readings.map((x) => x.vstackPeak));
+        expect(densest).toBeLessThanOrEqual(CLASS3_CEILINGS.vstack.K * INPUT_BOUND + CLASS3_CEILINGS.vstack.S);
+        const rec = readings.find((x) => x.name === "a{c;×n}")!;
+        expect(rec.product.ok).toBe(false);
+        expect(rec.product.D.map((d) => (d as Issue).expected[0])).toEqual(["marks", "recoveries", "D"].map((k) => CAPACITY_LABELS[k as Region]));
     });
 
     it("the snapshot stack's census maximum is 1 in every family, the derivation's own static ceiling", () => {
@@ -557,10 +606,13 @@ describe("G-5 boundary band — G-5's canonical() (fixed key order, no array sor
 
     it("the band is a BAND: it holds the at/past pair of every class-1 region, ESC-e1's pair, the ruled witness, the trap families and the census", () => {
         const names = band.map((b) => b.name);
-        for (const r of ["input", "marks", "recoveries"]) {
+        for (const r of ["input", "marks"]) {
             expect(names.some((n) => n.startsWith(`${r} AT`))).toBe(true);
             expect(names.some((n) => n.startsWith(`${r} PAST`))).toBe(true);
         }
+        // recoveries is WINDOW-LIMITED (CAP-3): its pair is the largest fitting witness and one past the window
+        expect(names.some((n) => n.startsWith("recoveries WINDOW"))).toBe(true);
+        expect(names.some((n) => n.startsWith("recoveries PAST-WINDOW"))).toBe(true);
         expect(names.filter((n) => n.startsWith("ESC-e1"))).toHaveLength(2);
         expect(names.filter((n) => n.startsWith("trap family"))).toHaveLength(3);
         expect(names.filter((n) => n.startsWith("census"))).toHaveLength(22);

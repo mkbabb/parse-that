@@ -82,17 +82,33 @@ describe("⊆ — nothing outside the eight can be declared or emitted", () => {
 });
 
 describe("⊇ — every frozen code is emitted by at least one corpus input", () => {
-    it("BORN RED: the slice realizes 3 of the 9 public entries, so 5 codes have no production", () => {
-        const emitted = [...new Set(run.issues.map((r) => r.issue.code as string))];
+    // Re-pinned 2026-09-23 (X.P.W5 Repair 1), measured: X.P.W3.h/.i realized all nine frozen parsers
+    // (`entry.mjs` UNREALIZED_ENTRIES = []), and the corpus now emits six of the eight codes through a
+    // production. The remaining two — `syntax_descriptor_invalid` and `syntax_mismatch` — belong to
+    // `coerceToSyntax`, which COHESION §0s E-h3 rules a SURFACE COMPOSITION with no production (a
+    // descriptor is not CSS text; `entry.mjs` §THE TWO COMPOSITIONS). So ⊇ is read over the corpus
+    // PLUS one witness per composition code, through both public surfaces.
+    it("every frozen code is emitted: six by a production over the corpus, the two composition codes by coerceToSyntax on both surfaces", async () => {
+        const { loadPublicSurfaces } = await import("../../src/css/entry.mjs");
+        const surfaces = await loadPublicSurfaces();
+        const composed: string[] = [];
+        for (const kind of ["js", "wasm"] as const) {
+            const coerce = (surfaces[kind] as unknown as { coerceToSyntax: (s: string, d: string) => { ok: boolean; diagnostics?: { code: string }[] } }).coerceToSyntax;
+            for (const [src, descriptor] of [["red", "<not-a-descriptor"], ["red", "<length>"]]) {
+                const r = coerce(src, descriptor);
+                expect(r.ok, `${kind} coerceToSyntax(${src}, ${descriptor})`).toBe(false);
+                composed.push(...r.diagnostics!.map((d) => d.code));
+            }
+        }
+        expect([...new Set(composed)].sort()).toEqual(["syntax_descriptor_invalid", "syntax_mismatch"]);
+        const byProduction = [...new Set(run.issues.map((r) => r.issue.code as string))];
+        expect(difference(FROZEN_CODES, byProduction).sort()).toEqual(["syntax_descriptor_invalid", "syntax_mismatch"]);
+        const emitted = [...byProduction, ...composed];
         const missing = difference(FROZEN_CODES, emitted);
         expect(
             missing,
-            `frozen \\ emitted = [${missing.join(", ")}] — the candidate's grammar names ` +
-                `[${recoveries.js.entries().join(", ")}]; the missing codes are the diagnostic vocabulary of the six ` +
-                `public parsers the §10 slice does not realize (keyframe selector · syntax descriptor · syntax ` +
-                `mismatch · animation options · timeline options). Curing this is a grammar act in ` +
-                `algebra/grammar.mjs, which no unit of this wave owns — X.P.W3.b routed it rather than narrowing ` +
-                `the denominator to make the gate green.`,
+            `frozen \\ emitted = [${missing.join(", ")}] — a frozen code neither a production (over the corpus) nor ` +
+                `coerceToSyntax emits; the grammar names [${recoveries.js.entries().join(", ")}].`,
         ).toEqual([]);
     });
 });

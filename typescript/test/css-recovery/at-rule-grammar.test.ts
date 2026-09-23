@@ -238,8 +238,10 @@ describe("nested style bodies — declarations first, then the mixed reading", (
     it("F-k3 cured: a comment inside a declaration block is trivia in the mixed reading, a name in the first", () => {
         expect(first("a { color: red; /* c */ }")).toEqual({ kind: "style", selectors: ["a"], declarations: [decl("color", red)] });
         expect(first("a { /* c */ }")).toEqual({ kind: "style", selectors: ["a"], declarations: [] });
-        //  the oracle's own reading of a comment BEFORE the first colon: it is part of the name
-        expect((first("a { /* c */ color: red }").declarations as { name: string }[])[0].name).toBe("/* c */ color");
+        //  Re-pinned 2026-09-23 (X.P.W5 Repair 1): the oracle reads a comment BEFORE the first colon as
+        //  part of the name (`/* c */ color`); since X.P.W4.h the name is one <ident-token> and the
+        //  comment is trivia in front of it — F-w4f-1's "other face" (DIVERGENCE-LEDGER §11, NARROWS)
+        expect((first("a { /* c */ color: red }").declarations as { name: string }[])[0].name).toBe("color");
     });
 
     it("SH-4, declared: a name spanning braces is one declaration at the oracle and a rule + a declaration here", () => {
@@ -267,15 +269,21 @@ describe("E-j2 — splitSelectors drops empty parts in BOTH lowerings", () => {
     });
 });
 
-describe("F-k2 — MEASURED and RE-CHARACTERIZED (F-l1): the legacy forms are X.P.W3.h's, unchanged", () => {
-    it("the ORACLE and the rulings both accept mixed-type and `none` three-argument legacy forms; so does the candidate", () => {
+// Re-pinned 2026-09-23 (X.P.W5 Repair 1): X.P.W3.n RE-LANDED the css-color-4 §8.1 cure with its
+// adjudication (COHESION §0w, ID-5; `algebra/grammar.mjs` the F-k2 note) — the three legacy channels
+// are ONE type and never `none`; the oracle's mixed-type and `none`-channel acceptances are the
+// declared ID-5 divergence (`expect: "reject"`). The alpha tail is untouched (§4.2, PB-01/02).
+describe("F-k2 — the §8.1 cure as X.P.W3.n re-landed it (ID-5): homogeneous legacy channels, no `none` channel", () => {
+    it("the candidate REFUSES mixed-type and `none`-channel legacy forms (ID-5), and keeps a well-formed alpha tail", () => {
         const c = (source: string) => both("parseCssColor", source).value;
-        //  the oracle (measured): rgb(10, 20%, 30) → [10, 51, 30]; rgb(none, 20, 30) → [none, 20, 30]
-        expect(c("rgb(10, 20%, 30)")).toEqual({ space: "rgb", channels: [10, 51, 30], alpha: 1 });
-        expect(c("rgb(none, 20, 30)")).toEqual({ space: "rgb", channels: ["none", 20, 30], alpha: 1 });
-        //  PB-01/02 (ruled): a four-argument form with a well-formed alpha — `none` included — parses
+        const refused = (source: string) => expect(both("parseCssColor", source).ok, source).toBe(false);
+        //  the oracle accepts these two (rgb(10, 20%, 30) → [10, 51, 30]); §8.1 forbids them
+        refused("rgb(10, 20%, 30)");
+        refused("rgb(none, 20, 30)");
+        //  a four-argument form with a well-formed alpha parses; PB-01/02's own cell is mixed-type,
+        //  so ID-5 turns it by its CHANNEL types, not by its `none` alpha
         expect(c("rgb(10, 20, 30, .5)")).toEqual({ space: "rgb", channels: [10, 20, 30], alpha: 0.5 });
-        expect(c("rgb(58%, 14%, .816, none)")).toEqual({ space: "rgb", channels: [147.9, 35.7, 0.816], alpha: "none" });
+        refused("rgb(58%, 14%, .816, none)");
         //  SP-1 (ruled): the legacy hsl form admits no bare number for saturation or lightness
         expect(both("parseCssColor", "hsl(10, 10, 10)").ok).toBe(false);
     });
@@ -284,7 +292,9 @@ describe("F-k2 — MEASURED and RE-CHARACTERIZED (F-l1): the legacy forms are X.
         //  the candidate clamps the alpha (PB-04/05) and accepts; the oracle rejects the four-argument
         //  form; no single ruling repairs the cell (`grammar.mjs`, the F-k2 note). Held, and reported.
         expect(both("parseCssColor", "rgb(.843, -0, +54, 5e498)")).toMatchObject({ ok: true, value: { alpha: 1 } });
-        expect(both("parseCssColor", "rgb(none, 6e167, 27%, 6e316)")).toMatchObject({ ok: true, value: { alpha: 1 } });
+        //  Re-pinned (X.P.W5 Repair 1): this cell's `none` CHANNEL is turned by the §8.1 cure (ID-5)
+        //  before its non-finite alpha is ever read; the GROUND-C cell above is the unmixed one
+        expect(both("parseCssColor", "rgb(none, 6e167, 27%, 6e316)").ok).toBe(false);
     });
 });
 
