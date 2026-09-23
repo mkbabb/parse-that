@@ -147,11 +147,15 @@ let LR_STACK: LR | undefined;
 // parse path. So the epoch is only needed once a memoizer EXISTS in the process.
 //
 // The latch arms on the FIRST memoize()/mergeMemos() CONSTRUCTION (makeMemoized)
-// and NEVER disarms: a memoized parser, once built, could be invoked at any later
-// parse (directly, or nested inside another parser's .map), so from the moment any
-// memoizer exists the epoch machinery must run for cross-input + re-entrancy
-// soundness (PT-B1 / PT-Q1). Until then, packratEnter / packratExit / resetPackrat
-// are TRUE NO-OPS. Once armed the memoize path is BYTE-IDENTICAL to before —
+// and DISARMS at resetPackrat() (ESC-c1, O-15 PT-03: the latch was one-way, so a
+// reset cleared the memo store yet left every later default-path parse paying the
+// epoch). Its only arming path is the memoizer's own: construction, and — because a
+// memoized parser built before a reset can still be invoked after it (directly, or
+// nested inside another parser's .map) — the first memoized node of an epoch-less
+// parse re-arms it (memoizeFn, the CURRENT_SRC anchor), so any nested parse from
+// that node on opens its own epoch and cross-input + re-entrancy soundness (PT-B1 /
+// PT-Q1) holds across a reset. While disarmed, packratEnter / packratExit /
+// resetPackrat are TRUE NO-OPS. Once armed the memoize path is BYTE-IDENTICAL to before —
 // arming precedes any memoized invocation, so every memoized parse still opens its
 // epoch exactly as it always did (soundness proven armed: left recursion 2/2,
 // p11 F6). The do-not-touch surface (C-14 REFINE) is that armed path.
@@ -276,6 +280,9 @@ export function resetPackrat(): void {
     GROWING.clear();
     LR_STACK = undefined;
     CURRENT_SRC = undefined;
+    // DISARM (ESC-c1): the reset returns the machinery to its module-init state, the
+    // latch included. It re-arms only through the memoizer's own arming path.
+    PACKRAT_ARMED = false;
 }
 
 /**
@@ -293,7 +300,8 @@ function makeMemoized<T>(
     // (directly or nested), so packratEnter/packratExit/resetPackrat must run for
     // cross-input + re-entrancy soundness from here on. Arming at CONSTRUCTION (not
     // first invocation) guarantees the latch is set before any memoized parse can
-    // open its epoch — the armed path stays byte-identical. The latch never disarms.
+    // open its epoch — the armed path stays byte-identical. resetPackrat() disarms it;
+    // memoizeFn re-arms it if this wrapper is invoked after a reset.
     PACKRAT_ARMED = true;
 
     const p = parser as Parser<unknown>;
@@ -439,8 +447,14 @@ function makeMemoized<T>(
         // node purely as a within-epoch consistency anchor — the reset itself has
         // moved OUT of the hot path to packratEnter (PT-Q1: no per-node reset, so a
         // nested parse(differentSrc) can no longer wipe the outer grow's cells).
+        //
+        // RE-ARM (ESC-c1): resetPackrat() disarms the latch and clears CURRENT_SRC
+        // together, so a memoized node invoked after a reset — its parse opened no
+        // epoch — lands here first and re-arms before any nested parse can run
+        // epoch-less against this parse's tables. Once per epoch, off the per-node path.
         if (CURRENT_SRC === undefined) {
             CURRENT_SRC = state.src;
+            PACKRAT_ARMED = true;
         }
         const pos = state.offset;
         const key = getCijKey(p, pos);
