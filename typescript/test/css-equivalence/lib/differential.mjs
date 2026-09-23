@@ -38,6 +38,14 @@
 // `specUndecided: true`, so `.e` can see exactly how much of the count rests on a reading this wave
 // does not own, and can overturn it with a spec citation rather than with a preference.
 //
+// ── 2026-09-23, X.P.W5.b — THE SPEC READINGS THAT HAVE SINCE BEEN RULED ARE USED ──────────────
+//
+// The "overturn it with a spec citation" above happened: `ADJUDICATION-W4.md` §2 ruled the 44
+// carried cells one at a time (COHESION §0v's "per-cell adjudication") and COHESION §0ab ruled the
+// F-w4f-1 class, each candidate-correct with its citation. `./ruled.mjs` carries those rulings,
+// and `applyRuling` below consults them ONLY for a cell this module already reads RED. The
+// convention is unchanged for every cell no ruling governs — it still counts AGAINST the candidate.
+//
 // COVERAGE_NARROWING is the one declared NON-defect this module applies, and only where the
 // candidate's grammar registry — authored at X.P.W2, committed before this seat opened — does not
 // carry the input's function head (`lib/shape.mjs`). It is a fact with a commit date, not a
@@ -68,6 +76,7 @@ const ruledMiss = (row) => {
 };
 import { STRUCTURED, structuredInputs, syntaxVocabulary } from "../../css-totality/lib/matrix.mjs";
 import { callOracle, loadOracle } from "./oracle.mjs";
+import { F_W4F_1, resolveRuling } from "./ruled.mjs";
 import { distinctSources, loadCorpus } from "./corpus.mjs";
 import { ENTRY_FAMILY, inDeclaredShape, installOracleHeads, shapeDeclaration } from "./shape.mjs";
 
@@ -241,8 +250,33 @@ const oracleVerdictFn = (oracleFn) => (source) => {
     return !r.threw && r.value?.ok === true;
 };
 
+/**
+ * X.P.W5.b — THE RULED DIVERGENCES (`./ruled.mjs`). A cell the parser-band classification reads as
+ * a RED trigger is handed to the rulings `ADJUDICATION-W4.md` §2 made one cell at a time and the one
+ * class COHESION §0ab ruled (F-w4f-1). An honoured ruling is a DECLARED_DIVERGENCE; a per-cell
+ * ruling the candidate has moved off is ADJUDICATION_UNHONOURED; a class whose repair test fails
+ * leaves the cell exactly as RED as it was, with the failure in its `why`. Nothing else changes:
+ * a cell no ruling governs is returned untouched.
+ */
+const reclassifyWith = ({ oracleFn, candidateFn, family, resolve, oracleAccepts }) => (src) => {
+    const oracle = callOracle(oracleFn, src);
+    const candidate = callOracle(candidateFn, src);
+    const cell = classifyCell({ input: src, family, oracle, candidate, adjudicated: resolveAdjudication(resolve, src, oracleAccepts) });
+    return { verdict: cell.verdict, red: RED_TRIGGERS.includes(cell.verdict), candidate };
+};
+
+const applyRuling = ({ name, input, candidate, reclassify, cell }) => {
+    if (!RED_TRIGGERS.includes(cell.verdict)) return cell;
+    const ruling = resolveRuling({ entry: name, input, candidate, reclassify });
+    if (ruling === null) return cell;
+    if (ruling.honoured) return { verdict: CELL.DECLARED_DIVERGENCE, why: ruling.why, specUndecided: false, adjudication: ruling.rulingId };
+    if (ruling.rulingId === F_W4F_1.id) return { ...cell, why: `${cell.why} · ${ruling.why}` };
+    return { verdict: CELL.ADJUDICATION_UNHONOURED, why: ruling.why, specUndecided: false, adjudication: ruling.rulingId };
+};
+
 const runEntryRow = ({ name, oracleFn, candidateFn, family, sources, resolve }) => {
     const oracleAccepts = oracleVerdictFn(oracleFn);
+    const reclassify = reclassifyWith({ oracleFn, candidateFn, family, resolve, oracleAccepts });
     const tally = Object.fromEntries(Object.values(CELL).map((k) => [k, 0]));
     const samples = {};
     const misses = [];
@@ -252,12 +286,18 @@ const runEntryRow = ({ name, oracleFn, candidateFn, family, sources, resolve }) 
         cellsRun += 1;
         const oracle = callOracle(oracleFn, row.src);
         const candidate = callOracle(candidateFn, row.src);
-        const cell = classifyCell({
+        const cell = applyRuling({
+            name,
             input: row.src,
-            family,
-            oracle,
             candidate,
-            adjudicated: resolveAdjudication(resolve, row.src, oracleAccepts),
+            reclassify,
+            cell: classifyCell({
+                input: row.src,
+                family,
+                oracle,
+                candidate,
+                adjudicated: resolveAdjudication(resolve, row.src, oracleAccepts),
+            }),
         });
         tally[cell.verdict] += 1;
         if (cell.verdict !== CELL.AGREE) {

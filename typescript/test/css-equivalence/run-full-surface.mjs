@@ -36,6 +36,7 @@ import {
     fixtureAnchorsPresent,
     narrowingRows,
 } from "./lib/ledger.mjs";
+import { F_W4F_1, RULED_CELLS } from "./lib/ruled.mjs";
 
 const UNPACKED_400 =
     "/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/prototypes/css-parser/cand-o/vendor/value-js-4.0.0";
@@ -129,6 +130,10 @@ const main = async () => {
         }).map((r) => ({ id: r.id, family: "NARROWING", consumerDirection: r.consumerDirection })),
         ...capacityRows().map((r) => ({ id: r.id, family: "CAPACITY", consumerDirection: r.consumerDirection })),
         ...SPEC_DIVERGENCES.map((r) => ({ id: r.id, family: "SPEC-DIVERGENCE", consumerDirection: r.consumerDirection })),
+        //  X.P.W5.b — the rulings the differential now honours (`lib/ruled.mjs`): ADJUDICATION-W4 §2's
+        //  per-cell rows and COHESION §0ab's F-w4f-1 class, each counted here with its direction.
+        ...RULED_CELLS.map((r) => ({ id: `${r.rulingId} ${r.appendixA}`, family: "RULED", consumerDirection: r.direction })),
+        { id: F_W4F_1.id, family: "RULED", consumerDirection: F_W4F_1.consumerDirection },
     ];
 
     const emptyDirections = directionAudit(ledgerRows);
