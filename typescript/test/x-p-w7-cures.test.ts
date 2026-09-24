@@ -111,3 +111,23 @@ describe("P-2 the failure path is silent and allocation-free", () => {
         expect(bytes()).toBe(0);
     });
 });
+
+describe("P-3 F-p-EOF: an empty-matching regex matches at end of input", () => {
+    it("/\\s*/ matches '' on empty input and after the last token", () => {
+        const ws = regex(/\s*/);
+        const empty = ws.parseState("");
+        expect([empty.isError, empty.offset]).toEqual([false, 0]);
+        const mid = ws.parseState("x");
+        expect(empty.value).toBe(mid.value);
+
+        const tail = all(string("abc"), regex(/\s*/)).parseState("abc");
+        expect([tail.isError, tail.offset]).toEqual([false, 3]);
+        expect(whitespace.parseState("").isError).toBe(false);
+        expect(regex(/a?/).parseState("").isError).toBe(false);
+    });
+
+    it("a regex that cannot match empty still fails at end of input", () => {
+        const state = regex(/[a-z]+/).parseState("");
+        expect([state.isError, state.offset, state.furthest]).toEqual([true, 0, 0]);
+    });
+});

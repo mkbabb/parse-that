@@ -242,13 +242,10 @@ export function regex(
     const hasCustomMatch = matchFunction != null;
     const label = `/${r.source}/${r.flags}`;
 
+    // End of input is an ordinary position: a pattern that can match empty
+    // (`/\s*/`, `/a?/`) matches '' there exactly as it does mid-input, and a
+    // pattern that cannot match empty fails there with its label.
     const regexParser = (state: ParserState<string>) => {
-        if (state.offset >= state.src.length) {
-            mergeErrorState(state as ParserState<unknown>, label);
-            state.isError = true;
-            return state;
-        }
-
         const savedOffset = state.offset;
         sticky.lastIndex = savedOffset;
 
