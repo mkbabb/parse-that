@@ -2,7 +2,60 @@
 
 All notable changes to `@mkbabb/parse-that` are recorded here.
 
-## Unreleased — the CSS surface retires (value.js Tranche X, X.P.W6 / W6R) — 2026-09-23
+## 2.0.0 — first publication: a general parsing library with four core cures (value.js Tranche X, X.P.W7) — 2026-09-23
+
+The first 2.x published to npm. It is the net of everything below: the `./css` seam that the
+2.0.0 history entry describes was added and then retired before publication, so the published
+package has no `./css` subpath. On top of that it carries three general-library cures and one documented contract (X.P.W7 `.p`,
+value.js COHESION §0ck). Each is a law in `test/x-p-w7-cures.test.ts`.
+
+### Changed — BREAKING: `mapState` becomes the span-carrying `mapSpan`
+
+- **`parser.mapSpan((value, start, end) => …)`** replaces `parser.mapState((next, prev) => …)`.
+  The callback receives the parsed value and the `[start, end)` offsets it matched; its return
+  value is the new value. A failed inner parse never calls it.
+- **Why:** `mapState` handed the callback a view built with `Object.create(state)`, which made
+  every live per-parse state a V8 prototype and turned the core's inline caches megamorphic
+  (21% of self time in value.js's profile). `mapSpan` hands out no state and copies none, so every
+  per-parse state keeps `ParserState`'s one hidden class (`%HaveSameMap`, gate P-1).
+- **Migration:** `p.mapState((n, o) => n.ok(f(n.value, o.offset, n.offset)))` becomes
+  `p.mapSpan((v, start, end) => f(v, start, end))`. There is no alias.
+
+### Changed — BREAKING: a parse never writes to the console
+
+- `parseState`/`parse` no longer print the error display (`console.error`) on failure. Failure
+  evidence travels on the returned state: `furthest` always; with diagnostics enabled also
+  `expected`, `suggestions` and `secondarySpans`. `statePrint` and `formatDiagnostic` render it on
+  demand.
+- With diagnostics off, the failure path moves one number (`furthest`) and allocates nothing: no
+  error state, no expected/label arrays, no fresh suggestion or span arrays (gate P-2).
+
+### Fixed — F-p-EOF: an empty-matching regex matches at end of input
+
+- `regex()` no longer fails at end of input before trying its pattern. `/\s*/`, `/a?/` and the
+  `whitespace` parser now match `''` at the end of the source exactly as they do mid-input (the
+  value is the same as a mid-input empty match); a pattern that cannot match empty still fails
+  there with its label (gate P-3).
+
+### Measured, not admitted — a self-patching `lazy`
+
+- A `Parser.lazy` that replaces its own `parser` with the resolved target's function on first
+  call was built and measured against these cures on the paired bench. It regressed the JSON
+  entry (medians 1.037 and 1.046 in two runs) and read at or above parity elsewhere, so `lazy`
+  keeps its closure-local cache (the spec admits the patch only if the bench does not regress).
+
+### Documented — `all()` is positional (the 2.x contract)
+
+- `all(p0, …, pn-1)` yields one array of length n, slot i = pi's value, `undefined` slots kept.
+
+### Kept — the complete-rollback runtime (`90d4ec5`)
+
+- `90d4ec5` was banked as "NO RELEASE" pending a performance admission. Measured against the
+  published 0.8.2 on the paired bench (`test/benchmarks/paired/`, one fresh process per cell,
+  both arms in-process, 3 reps × 11 rounds, load recorded), HEAD with these cures reads at or
+  below 0.8.2 on every entry, twice, so it ships (value.js COHESION §0ck decision 6).
+
+## Pre-release history of 2.0.0 — the CSS surface retires (value.js Tranche X, X.P.W6 / W6R) — 2026-09-23
 
 parse-that is a general parsing library again. The 2.0.0 entry below describes a CSS surface
 that no longer exists at HEAD. Neither 2.0.0 nor this entry has been published (npm reads 1.0.0 as
@@ -28,7 +81,7 @@ the newest version, 2026-09-23).
   `docs/tranches/X/parse-that/evidence/W6R/`. The package's published files are unchanged by the
   move.
 
-## 2.0.0 — the CSS seam (value.js Tranche X, X·P) — 2026-09-23
+## Pre-release history of 2.0.0 — the CSS seam (value.js Tranche X, X·P) — 2026-09-23
 
 A major version, for two reasons. The package gains its CSS surface, `@mkbabb/parse-that/css`.
 The root and `./diagnostics` barrels also lose three runtime exports, and that removal is breaking.
