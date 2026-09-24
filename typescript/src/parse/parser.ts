@@ -1,7 +1,7 @@
 import { createParserContext, ParserState } from "./state.js";
 import type { ParserContext } from "./state.js";
 import { parserDebug, parserPrint } from "./debug.js";
-import { mergeErrorState, addSuggestion, isDiagnosticsEnabled, collectDiagnostic, reportUnclosedDelimiter } from "./utils.js";
+import { mergeErrorState, addSuggestion, collectDiagnostic, reportUnclosedDelimiter } from "./utils.js";
 import { createLazyCached } from "./lazy.js";
 import { trimStateWhitespace, eof, all, _initWhitespace, whitespace } from "./leaf.js";
 import { packratEnter, packratExit } from "./packrat.js";
@@ -48,26 +48,13 @@ export class Parser<T = string> {
     }
 
     private parseStateInner(val: string) {
+        // The failure path is silent: a parse never writes to the console.
+        // Failure evidence (furthest offset, and with diagnostics enabled the
+        // expected set, suggestions and secondary spans) travels on the
+        // returned state; `statePrint`/`formatDiagnostic` render it on demand.
         const state = new ParserState(val) as ParserState<T>;
         this.parser(state);
         if (state.fault) state.isError = true;
-
-        if (state.isError) {
-            // Build the error display at the furthest offset the parse reached.
-            // The furthest-offset / expected-set / diagnostics now live on the
-            // state instance, so the display is rendered directly from it: copy
-            // the error tracking onto a view positioned at `furthest`.
-            const furthest = state.furthest >= 0 ? state.furthest : state.offset;
-            const errorState = new ParserState(val, undefined, furthest, true);
-            errorState.expected = state.expected;
-            errorState.suggestions = state.suggestions;
-            errorState.secondarySpans = state.secondarySpans;
-            errorState.furthest = furthest;
-            if (isDiagnosticsEnabled()) {
-                console.error(errorState.toString());
-            }
-        }
-
         return state;
     }
 

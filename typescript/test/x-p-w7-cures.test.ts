@@ -57,3 +57,57 @@ describe("P-1 mapSpan: no state is ever a prototype", () => {
         expect((Parser.prototype as unknown as Record<string, unknown>).mapState).toBeUndefined();
     });
 });
+
+describe("P-2 the failure path is silent and allocation-free", () => {
+    afterEach(() => {
+        disableDiagnostics();
+        vi.restoreAllMocks();
+    });
+
+    function captureConsole() {
+        let bytes = 0;
+        const count = (...args: unknown[]) => { bytes += args.map(String).join(" ").length; };
+        for (const m of ["error", "warn", "log", "info", "debug", "trace"] as const) {
+            vi.spyOn(console, m).mockImplementation(count);
+        }
+        const write = (chunk: unknown) => { bytes += String(chunk).length; return true; };
+        vi.spyOn(process.stdout, "write").mockImplementation(write as typeof process.stdout.write);
+        vi.spyOn(process.stderr, "write").mockImplementation(write as typeof process.stderr.write);
+        return () => bytes;
+    }
+
+    // Fails at several increasing offsets, so the furthest frontier advances.
+    const failing = all(string("("), regex(/[0-9]+/).sepBy(string(","), 1), string(")"));
+    const choice = any(string("alpha"), string("beta"), regex(/[0-9]+/));
+
+    it("diagnostics off: 0 console bytes, no error arrays allocated", () => {
+        const bytes = captureConsole();
+        const state = new ParserState("(1,22,333x)");
+        const { suggestions, secondarySpans, diagnostics } = state;
+        failing.parser(state);
+        choice.parser(state);
+        expect(state.isError).toBe(true);
+        expect(state.furthest).toBe(9);
+        expect(state.expected).toBeUndefined();
+        expect(state.suggestions).toBe(suggestions);
+        expect(state.secondarySpans).toBe(secondarySpans);
+        expect(state.diagnostics).toBe(diagnostics);
+        expect([suggestions.length, secondarySpans.length, diagnostics.length]).toEqual([0, 0, 0]);
+
+        const top = failing.parseState("(1,22,333x)");
+        expect(top.isError).toBe(true);
+        expect(top.expected).toBeUndefined();
+        expect(failing.parse("(1,x")).toBeUndefined();
+        expect(bytes()).toBe(0);
+    });
+
+    it("diagnostics on: still 0 console bytes; the evidence is on the state", () => {
+        enableDiagnostics();
+        const bytes = captureConsole();
+        const top = failing.parseState("(1,22,333x)");
+        expect(top.isError).toBe(true);
+        expect(top.furthest).toBe(9);
+        expect(top.expected).toEqual(['","', '")"']);
+        expect(bytes()).toBe(0);
+    });
+});
