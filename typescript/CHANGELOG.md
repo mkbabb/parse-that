@@ -2,6 +2,32 @@
 
 All notable changes to `@mkbabb/parse-that` are recorded here.
 
+## Unreleased — the CSS surface retires (value.js Tranche X, X.P.W6 / W6R) — 2026-09-23
+
+parse-that is a general parsing library again. The 2.0.0 entry below describes a CSS surface
+that no longer exists at HEAD. Neither 2.0.0 nor this entry has been published (npm reads 1.0.0 as
+the newest version, 2026-09-23).
+
+### Removed — BREAKING: the `./css` subpath and the CSS surface (`92d8ea7`)
+
+- **The `./css` export is gone** from `package.json`, with everything behind it: the AC-1 grammar
+  algebra (`src/css/algebra/**`), its reifier, the JS and Wasm lowerings, the `ac1.wasm` build
+  (`src/css/build.mjs`, `scripts/wasm-admission.mjs`), the CSS tests and corpora, the CSS-only
+  scripts, and `experiments/w2/ac1-tagless`. `@mkbabb/parse-that/css` no longer resolves.
+- **Why:** the owner ruled on 2026-09-23 (value.js COHESION §0by): "No custom grammar, unless it's
+  BBNF." The CSS grammar now lives in value.js, authored in BBNF (`src/css/grammar/*.bbnf`) and
+  compiled onto parse-that's combinators. parse-that stays the library underneath it.
+- **Guard:** `proof:no-css-surface` is restored and fails if a CSS surface reappears.
+
+### Moved — the AC-1 research instruments (X.P.W6R.p, `d129a97`)
+
+- `harness/**` (the equivalence, bench, totality and W2 harnesses) and
+  `experiments/w2/{contract,corpus,stage0}` left the repository: 62 files. They measured the
+  retired CSS surface, and `harness/equivalence/harness.ts` imported from an absolute job-scratch path
+  outside the repository. Their bytes at `92d8ea7` are kept, with a sha256 MANIFEST, in value.js at
+  `docs/tranches/X/parse-that/evidence/W6R/`. The package's published files are unchanged by the
+  move.
+
 ## 2.0.0 — the CSS seam (value.js Tranche X, X·P) — 2026-09-23
 
 A major version, for two reasons. The package gains its CSS surface, `@mkbabb/parse-that/css`.

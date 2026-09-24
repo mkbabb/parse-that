@@ -15,7 +15,7 @@ typescript/                TS library (@mkbabb/parse-that v0.8.2)
     state.ts               ParserState, Span, ParserContext
     debug.ts               Diagnostics rendering, ANSI output, formatDiagnostic()
     ansi.ts                Zero-dep ANSI helpers (NO_COLOR + TTY aware)
-    parsers/               Domain parsers (JSON, CSV, CSS)
+    parsers/               Domain parsers (JSON, CSV)
   test/                    Vitest tests (14 test files)
   test/benchmarks/         Competitor JSON parsers for benchmarking
 rust/                      Rust workspace
