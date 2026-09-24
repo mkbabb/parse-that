@@ -175,30 +175,24 @@ export class Parser<T = string> {
         );
     }
 
-    mapState<S extends T>(
-        fn: (
-            newState: ParserState<T>,
-            oldState: ParserState<T>,
-        ) => ParserState<S>,
-    ) {
-        const mapState = (state: ParserState<T>) => {
-            // Snapshot old offset before parsing (avoids full clone on success)
-            const oldOffset = state.offset;
-            const oldValue = state.value;
-            this.parser(state);
+    /**
+     * Map the parsed value together with the span it matched: `fn` receives
+     * the value and the `[start, end)` offsets. The state itself is never
+     * handed out or copied, so every per-parse state keeps one hidden class.
+     */
+    mapSpan<S>(fn: (value: T, start: number, end: number) => S) {
+        const mapSpan = (state: ParserState<T | S>) => {
+            const start = state.offset;
+            this.parser(state as ParserState<T>);
             if (state.isError) {
                 return state;
             }
-            // Build a lightweight view for the old state
-            const oldView = Object.create(state);
-            oldView.offset = oldOffset;
-            oldView.value = oldValue;
-            return fn(state, oldView);
+            return state.ok(fn(state.value as T, start, state.offset));
         };
 
         return new Parser(
-            mapState as ParserFunction<S>,
-            createParserContext("mapState", this as Parser<unknown>),
+            mapSpan as ParserFunction<S>,
+            createParserContext("mapSpan", this as Parser<unknown>),
         );
     }
 

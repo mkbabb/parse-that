@@ -216,7 +216,7 @@ export const parserNames = [
     "eof",
     "dispatch",
     "debug",
-    "mapState",
+    "mapSpan",
     "recover",
     "peek",
     "lookAhead",
