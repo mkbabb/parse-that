@@ -131,3 +131,11 @@ describe("P-3 F-p-EOF: an empty-matching regex matches at end of input", () => {
         expect([state.isError, state.offset, state.furthest]).toEqual([true, 0, 0]);
     });
 });
+
+describe("(e) all() is positional", () => {
+    it("keeps an undefined slot for an unmatched opt() and an empty regex match", () => {
+        const p = all(string("a"), string("b").opt(), regex(/\s*/), string("c"));
+        expect(p.parse("ac")).toEqual(["a", undefined, undefined, "c"]);
+        expect(p.parse("ab c")).toEqual(["a", "b", " ", "c"]);
+    });
+});
