@@ -71,3 +71,20 @@ codegen-units   = 1
 [alias]
 iter-check = "check --profile ax-iter"
 iter-test  = "nextest run --cargo-profile ax-iter"
+
+# ── Patches (CB-1a, sk-v27 LW1.COMP-4 extended to this repo at the LW1 lockstep gate) ──
+# bbnf-regex depends on egraph, egraph-derive and csp-solver, which live in
+# bbnf-lang and are not on crates.io until ruling X-5's leaf move (LW2.TOPO-1)
+# and the LW6 publish. They enter as git + rev edges pinned to bbnf-lang
+# origin/master, so a clean clone resolves with no sibling checkout and no
+# path that leaves the repository. Moving the pin is one commit that edits
+# the rev here and the lockfile. To develop against a local bbnf-lang, override
+# outside the repository (~/.cargo/config.toml or `cargo --config`).
+[patch.crates-io]
+egraph        = { git = "https://github.com/mkbabb/bbnf-lang", rev = "c9b93adb4e4c2ec793af881f390f997cd4e11696" }
+egraph-derive = { git = "https://github.com/mkbabb/bbnf-lang", rev = "c9b93adb4e4c2ec793af881f390f997cd4e11696" }
+csp-solver    = { git = "https://github.com/mkbabb/bbnf-lang", rev = "c9b93adb4e4c2ec793af881f390f997cd4e11696" }
+# pprint enters at the same rev bbnf-lang pins (CB-1a, 048a8e622), so the
+# whole pprint -> parse-that -> bbnf-lang DAG resolves one pprint.
+pprint        = { git = "https://github.com/mkbabb/pprint", rev = "2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4" }
+pprint_derive = { git = "https://github.com/mkbabb/pprint", rev = "2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4" }

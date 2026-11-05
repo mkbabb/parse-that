@@ -271,6 +271,7 @@ dependencies = [
 [[package]]
 name = "csp-solver"
 version = "0.1.0"
+source = "git+https://github.com/mkbabb/bbnf-lang?rev=c9b93adb4e4c2ec793af881f390f997cd4e11696#c9b93adb4e4c2ec793af881f390f997cd4e11696"
 
 [[package]]
 name = "cssparser"
@@ -398,6 +399,7 @@ dependencies = [
 [[package]]
 name = "egraph"
 version = "0.1.0"
+source = "git+https://github.com/mkbabb/bbnf-lang?rev=c9b93adb4e4c2ec793af881f390f997cd4e11696#c9b93adb4e4c2ec793af881f390f997cd4e11696"
 dependencies = [
  "csp-solver",
  "rustc-hash",
@@ -407,6 +409,7 @@ dependencies = [
 [[package]]
 name = "egraph-derive"
 version = "0.1.0"
+source = "git+https://github.com/mkbabb/bbnf-lang?rev=c9b93adb4e4c2ec793af881f390f997cd4e11696#c9b93adb4e4c2ec793af881f390f997cd4e11696"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1041,6 +1044,7 @@ checksum = "c33a9471896f1c69cecef8d20cbe2f7accd12527ce60845ff44c153bb2a21b49"
 [[package]]
 name = "pprint"
 version = "0.3.6"
+source = "git+https://github.com/mkbabb/pprint?rev=2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4#2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4"
 dependencies = [
  "itoap",
  "pprint_derive",
@@ -1050,6 +1054,7 @@ dependencies = [
 [[package]]
 name = "pprint_derive"
 version = "0.2.2"
+source = "git+https://github.com/mkbabb/pprint?rev=2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4#2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1868,15 +1873,3 @@ name = "zmij"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
-
-[[patch.unused]]
-name = "bbnf"
-version = "0.2.11"
-
-[[patch.unused]]
-name = "bbnf-ir"
-version = "0.1.6"
-
-[[patch.unused]]
-name = "bbnf-ser"
-version = "0.1.0"
