@@ -155,6 +155,15 @@ export function dispatch<T>(table: Record<string, Parser<T>>) {
     );
 }
 
+/**
+ * Fixed-length sequence — the 2.x positional contract. `all(p0, …, pn-1)`
+ * succeeds with exactly one array of length n whose slot i is pi's value,
+ * whatever that value is: an `undefined` from an `opt()` that did not match,
+ * or from a regex that matched empty, keeps its slot (nothing is dropped,
+ * flattened or merged), so the result type is the tuple of the parsers'
+ * value types and callers destructure it by position. On failure the whole
+ * sequence rolls back (offset, value, recovered diagnostics) and fails.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function all<T extends Array<Parser<any>>>(...parsers: T) {
     type ExtractValue<T extends ReadonlyArray<Parser<unknown>>> = {
@@ -242,13 +251,10 @@ export function regex(
     const hasCustomMatch = matchFunction != null;
     const label = `/${r.source}/${r.flags}`;
 
+    // End of input is an ordinary position: a pattern that can match empty
+    // (`/\s*/`, `/a?/`) matches '' there exactly as it does mid-input, and a
+    // pattern that cannot match empty fails there with its label.
     const regexParser = (state: ParserState<string>) => {
-        if (state.offset >= state.src.length) {
-            mergeErrorState(state as ParserState<unknown>, label);
-            state.isError = true;
-            return state;
-        }
-
         const savedOffset = state.offset;
         sticky.lastIndex = savedOffset;
 

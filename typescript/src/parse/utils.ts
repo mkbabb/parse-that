@@ -27,12 +27,16 @@ export function isDiagnosticsEnabled() {
 
 export function mergeErrorState(state: ParserState<unknown>, label?: string) {
     if (state.offset > state.furthest) {
-        // New furthest offset — clear and start fresh. The expected-set is a
-        // diagnostic feature: only seed it when diagnostics are enabled.
+        // New furthest offset — start fresh. The expected-set, suggestions
+        // and secondary spans are diagnostic features: with diagnostics off
+        // the failure path moves one number and allocates nothing (they are
+        // only ever written while diagnostics are enabled).
         state.furthest = state.offset;
-        state.expected = diagnosticsEnabled && label ? [label] : undefined;
-        state.suggestions = [];
-        state.secondarySpans = [];
+        if (diagnosticsEnabled) {
+            state.expected = label ? [label] : undefined;
+            state.suggestions = [];
+            state.secondarySpans = [];
+        }
     } else if (state.offset === state.furthest) {
         // Same furthest offset — accumulate the label (diagnostics only).
         if (diagnosticsEnabled && label) {

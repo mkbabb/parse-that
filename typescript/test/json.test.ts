@@ -97,7 +97,8 @@ describe("JSON Parser", () => {
         expect(result).toEqual({ name: "John", age: 30, isStudent: true });
     });
 
-    it("should read a JSON file", () => {
+    // ../data/ is gitignored (local benchmark fixtures); absent in CI, the case skips.
+    it.skipIf(!fs.existsSync("../data/json/data-l.json"))("should read a JSON file", () => {
         const input = fs.readFileSync("../data/json/data-l.json", "utf-8");
         const result = jsonValue.parse(input);
         expect(result).toEqual(JSON.parse(input));
