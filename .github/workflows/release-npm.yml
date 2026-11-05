@@ -1,0 +1,70 @@
+# Publish @mkbabb/parse-that (typescript/) to npm on a matching v*.*.* tag.
+#
+# This workflow touches only typescript/ and depends on no Rust job, so the Rust
+# CI never blocks a package release. Provenance is signed through the
+# workflow's OIDC identity.
+name: release-npm
+
+on:
+    push:
+        tags:
+            - "v*.*.*"
+
+concurrency:
+    group: release-npm-${{ github.ref }}
+    cancel-in-progress: false
+
+permissions:
+    contents: read
+    id-token: write
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        defaults:
+            run:
+                working-directory: typescript
+        steps:
+            - uses: actions/checkout@v5
+              with:
+                  fetch-depth: 0
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 24
+                  registry-url: "https://registry.npmjs.org"
+            # npm trusted publishing (OIDC) needs npm >= 11.5. Until a trusted
+            # publisher is registered for this package + release-npm.yml, the
+            # publish authenticates with NODE_AUTH_TOKEN; once that trust is
+            # verified (npm trust list) the token is removed.
+            - name: npm for trusted publishing
+              run: npm install -g npm@11.12.1
+            - run: npm ci
+            - name: assert release tag matches package version
+              run: |
+                  expected="v$(node -p 'require("./package.json").version')"
+                  if [ "${GITHUB_REF_NAME}" != "${expected}" ]; then
+                      echo "::error::release tag ${GITHUB_REF_NAME} does not match package.json ${expected}"
+                      exit 1
+                  fi
+                  echo "release tag ${GITHUB_REF_NAME} matches package.json"
+            - name: check types
+              run: npx tsc --noEmit
+            - name: test
+              run: npm test
+            - name: build
+              run: npm run build
+            - name: verify publish boundary
+              run: npm run proof:manifest && npm run proof:subpath
+            - name: verify release changelog
+              run: |
+                  version="$(node -p 'require("./package.json").version')"
+                  if ! grep -q "^## ${version}\b" CHANGELOG.md; then
+                      echo "::error::CHANGELOG.md has no '## ${version}' entry"
+                      exit 1
+                  fi
+                  echo "CHANGELOG.md carries ${version}"
+            - name: publish with provenance
+              run: npm publish --provenance --access public
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
