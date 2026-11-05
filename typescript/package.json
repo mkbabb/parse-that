@@ -2,6 +2,11 @@
     "name": "@mkbabb/parse-that",
     "version": "2.0.0",
     "description": "Parser combinators for TypeScript",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/mkbabb/parse-that.git",
+        "directory": "typescript"
+    },
     "type": "module",
     "sideEffects": false,
     "exports": {
