@@ -70,7 +70,8 @@ describe("CSV Parser", () => {
         ]);
     });
 
-    it("should parse a csv file", () => {
+    // ../data/ is gitignored (local benchmark fixtures); absent in CI, the case skips.
+    it.skipIf(!fs.existsSync("../data/csv/data.csv"))("should parse a csv file", () => {
         const filepath = "../data/csv/data.csv";
         const input = fs.readFileSync(filepath, "utf-8");
         const result = csv.parse(input);

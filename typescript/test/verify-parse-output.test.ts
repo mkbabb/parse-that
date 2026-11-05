@@ -5,7 +5,11 @@ import { JSONParser as HandParser } from "./benchmarks/parse-that";
 const dataDir = "../data/json";
 const files = ["data.json", "apache-builds.json", "twitter.json"];
 
-describe("Parse correctness — all parsers produce JSON.parse output", () => {
+// ../data/ is gitignored (local benchmark fixtures); absent in CI, the suite skips.
+const present = files.filter((f) => fs.existsSync(`${dataDir}/${f}`));
+
+describe.skipIf(present.length === 0)("Parse correctness — all parsers produce JSON.parse output", () => {
+    if (present.length === 0) it.skip("no ../data/json fixtures present", () => {});
     for (const file of files) {
         const filePath = `${dataDir}/${file}`;
         if (!fs.existsSync(filePath)) continue;
