@@ -1,5 +1,5 @@
 use parse_that::regex::hir::{ByteRange, CharClass, CodepointRange, Hir, ParseOptions, Repetition};
-use parse_that::regex::parser::{parse, parse_with};
+use parse_that::regex::{parse, parse_with};
 
 fn p(s: &str) -> Hir {
     parse(s).unwrap_or_else(|e| panic!("parse({:?}) failed: {}", s, e))
