@@ -23,10 +23,11 @@ pub enum JsonValue<'a> {
 
 pub fn json_value<'a>() -> Parser<'a, JsonValue<'a>> {
     // ── String parser using monolithic SIMD scanner ────────────
-    // Returns raw spans (no unescape) — zero-copy.
+    // Returns the raw content span between the quotes (escapes are
+    // validated, not decoded) — zero-copy.
 
     let json_string_content = || -> Parser<'a, Cow<'a, str>> {
-        sp_quoted_string(&STRICT_QUOTED_STRING_CONFIG).map(|s| Cow::Borrowed(s.as_str()))
+        sp_quoted_string_content(&STRICT_QUOTED_STRING_CONFIG).map(|s| Cow::Borrowed(s.as_str()))
     };
 
     // ── Leaf values ───────────────────────────────────────────

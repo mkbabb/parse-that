@@ -10,10 +10,12 @@
 //!
 //! For each 64-byte stripe:
 //!
-//!     quote_bits     = bitmask of byte == b'"'
-//!     bs_bits        = bitmask of byte == b'\\'
-//!     real_quotes    = quote_bits & !escaped(bs_bits, carry_bs)
-//!     in_string[i]   = prev_instring ^ parity(real_quotes[0..=i])
+//! ```text
+//! quote_bits     = bitmask of byte == b'"'
+//! bs_bits        = bitmask of byte == b'\\'
+//! real_quotes    = quote_bits & !escaped(bs_bits, carry_bs)
+//! in_string[i]   = prev_instring ^ parity(real_quotes[0..=i])
+//! ```
 //!
 //! The prefix-parity of the real-quote bitmask (XORed with the
 //! previous stripe's in-string flag) names, bit-for-bit, the bytes
