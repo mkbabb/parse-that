@@ -25,3 +25,11 @@ Verdict: LW1 NOT CLOSED. The record is in bbnf-lang `sk-v27` `4f2c5772d` (LEDGER
   - One prose doctest in `scan/quote_parity.rs`.
   - css_parse_test also needs the gitignored `data/css` (LW2.TOPO-6).
 - The master working tree's uncommitted ByteClass8 and scanners work has not been captured yet (LW1.TOPO-3 remainder).
+
+## LG-1 on CI (2026-11-06)
+
+Verdict: still NOT CLOSED. The record is in bbnf-lang `sk-v27-lw1-gate` `b133466de` (LEDGER §5 LG-1 rows). For this repo:
+- `957bf74` (merged into `sk-v27` as `eb03b36`): JSON strings and keys are their content again. AQ.4 had swapped in the quoted-span scanner, and `sp_quoted_string_content` now restores the content form. json_test is 29/8 ×2, and the 8 are the `data/json` corpus tests. With the corpus present it is 37/37 ×2.
+- The quote-parity pseudo-code is now a `text` block, so `cargo test --doc` returns rc 0 ×2.
+- CI is still RED at dependency resolution. The bbnf-lang edges need the private `docs/precepts` submodule. This is owner ruling R-a, or X-5's move together with PP-07.
+- `test_nested_media` still overflows a 2 MiB debug stack. Each at-rule nesting level costs about 1.36 MiB, and the measurements are in bbnf-lang `evidence/LW1.LG1/`.
