@@ -48,7 +48,7 @@ pub struct Diagnostic {
 /// `ParserState::new`. Lets every SIMD kernel load a full SIMD vector
 /// across the last byte of the public input without per-chunk tail
 /// bounds checks. 64 bytes covers a full 64-byte stripe (four 16-byte
-/// NEON / SSE loads, one 64-byte AVX-512 load, one cache line).
+/// NEON or Wasm SIMD128 loads, one cache line).
 ///
 /// Callers that opt into the padded view do so via
 /// [`ParserState::padded_bytes`]. The public `src_bytes` / `src`
@@ -59,7 +59,7 @@ pub const INPUT_PAD_BYTES: usize = 64;
 /// Cache-line-sized, 64-byte-aligned chunk used as the backing
 /// allocation for [`ParserState::padded_buf`]. The `repr(C, align(64))`
 /// forces `Vec<PaddedChunk>` to allocate 64-byte-aligned memory,
-/// satisfying NEON u8x16, SSE u8x16, and AVX-512 `zmm` load alignment
+/// satisfying NEON and Wasm SIMD128 load alignment
 /// at the start of the buffer.
 #[repr(C, align(64))]
 #[derive(Clone, Copy, Debug)]

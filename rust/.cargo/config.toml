@@ -1,0 +1,20 @@
+# Local development overrides — resolve crates from sibling repos instead of crates.io.
+# This file is .gitignored. Remove or comment out entries to use published crates.
+[patch.crates-io]
+parse_that = { path = "parse_that" }
+bbnf-regex = { path = "regex" }
+pprint = { path = "../../pprint/rust" }
+pprint_derive = { path = "../../pprint/rust/derive" }
+bbnf = { path = "../../bbnf-lang/crates/core" }
+bbnf-ir = { path = "../../bbnf-lang/crates/ir" }
+bbnf-ser = { path = "../../bbnf-lang/crates/ser" }
+# bbnf_derive retired in bbnf-lang B2 (commit `6142387f`); the
+# `../../bbnf-lang/crates/derive` source no longer exists. Post-B2 the
+# regex-bootstrap crate re-exports `parse_that::regex::generated`
+# directly, so no patch line and no registry edge are needed.
+# bbnf-regex requires 0.1; use BBNF's exact 0.1 substrate, not the newer
+# standalone 0.6 workspace.
+csp-solver = { path = "../../bbnf-lang/crates/csp-solver" }
+# Tranche H: HIR e-graph support for bbnf-regex.
+egraph = { path = "../../bbnf-lang/crates/egraph" }
+egraph-derive = { path = "../../bbnf-lang/crates/egraph-derive" }

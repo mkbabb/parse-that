@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "contract": "PT-0.W0",
+  "name": "pt0-parse-only",
+  "scope": "PT-0.W0.parse-only",
+  "gate_status": "RED",
+  "platform": "darwin",
+  "arch": "arm64",
+  "repository_allowlist": ["parse-that"],
+  "tool_allowlist": ["git", "node", "rustc", "cargo"]
+}

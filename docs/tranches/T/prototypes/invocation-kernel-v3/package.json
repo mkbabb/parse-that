@@ -1,0 +1,40 @@
+{
+  "name": "@parse-that/invocation-kernel-v3-prototype",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Executable sealed-graph and iterative-run prototype for parse-that Tranche T",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "clean": "node ./scripts/clean.mjs",
+    "build": "npm run clean --silent && ../../../../../typescript/node_modules/.bin/tsc -p tsconfig.build.json",
+    "typecheck": "../../../../../typescript/node_modules/.bin/tsc -p tsconfig.json",
+    "compile:test": "node ./scripts/clean-tests.mjs && ../../../../../typescript/node_modules/.bin/tsc -p tsconfig.test.json",
+    "test": "npm run typecheck --silent && npm run compile:test --silent && node --test --test-concurrency=1 .test-dist/test/*.test.js",
+    "test:graph": "npm run compile:test --silent && node --test .test-dist/test/graph.test.js",
+    "test:types": "npm run typecheck --silent",
+    "test:machine": "npm run compile:test --silent && node --test .test-dist/test/machine.test.js",
+    "test:deep": "npm run compile:test --silent && node --test .test-dist/test/deep.test.js",
+    "test:lr": "npm run compile:test --silent && node --test .test-dist/test/lr.test.js",
+    "test:limits": "npm run compile:test --silent && node --test .test-dist/test/limits.test.js",
+    "test:oracle": "npm run compile:test --silent && node --test .test-dist/test/oracle.test.js",
+    "test:properties": "npm run compile:test --silent && node --test .test-dist/test/properties.test.js",
+    "test:hostile": "npm run test:graph --silent && npm run test:machine --silent && npm run test:lr --silent && npm run test:limits --silent && npm run test:oracle --silent && npm run test:properties --silent && npm run test:deep --silent && npm run test:package --silent",
+    "test:package": "npm run compile:test --silent && node --test .test-dist/test/package.test.js",
+    "test:packed": "npm run build --silent && node ./scripts/test-packed.mjs",
+    "measure:state": "npm run compile:test --silent && node .test-dist/test/measure.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

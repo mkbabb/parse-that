@@ -1,0 +1,11 @@
+{
+  "name": "@parse-that-major/common-evidence",
+  "version": "0.0.0-private",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/scripts/*.test.mjs",
+    "capture": "node scripts/pin.mjs capture",
+    "verify": "node scripts/pin.mjs verify"
+  }
+}

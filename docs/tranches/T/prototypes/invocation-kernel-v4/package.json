@@ -1,0 +1,37 @@
+{
+  "name": "@parse-that/invocation-kernel-v4-prototype",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Clean-break invocation kernel v4 carrier for parse-that Tranche T",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "EVIDENCE.md",
+    "LICENSE",
+    "ARTIFACTS.json"
+  ],
+  "scripts": {
+    "clean": "node ./scripts/clean.mjs",
+    "build": "npm run clean --silent && ../../../../../typescript/node_modules/.bin/tsc -p tsconfig.build.json",
+    "typecheck:src": "../../../../../typescript/node_modules/.bin/tsc -p tsconfig.json",
+    "typecheck": "npm run build --silent && ../../../../../typescript/node_modules/.bin/tsc -p tsconfig.test.json --noEmit",
+    "compile:test": "node ./scripts/clean-tests.mjs && ../../../../../typescript/node_modules/.bin/tsc -p tsconfig.test.json",
+    "test": "npm run build --silent && npm run compile:test --silent && node --test --test-concurrency=1 .test-dist/test/*.test.js .test-dist/test/public/*.test.js .test-dist/test/oracle/receipt.test.js",
+    "test:hostile": "npm run build --silent && npm run compile:test --silent && node --test --test-concurrency=1 .test-dist/test/seal.test.js .test-dist/test/control.test.js .test-dist/test/lr.test.js .test-dist/test/run.test.js .test-dist/test/debug.test.js",
+    "test:deep": "npm run build --silent && npm run compile:test --silent && node --test .test-dist/test/seal.test.js .test-dist/test/run.test.js",
+    "test:oracle": "npm run build --silent && npm run compile:test --silent && node --test .test-dist/test/oracle/receipt.test.js",
+    "test:state": "npm run build --silent && npm run compile:test --silent && node --test .test-dist/test/journal.test.js .test-dist/test/control.test.js .test-dist/test/lr.test.js .test-dist/test/debug.test.js",
+    "test:package": "npm run build --silent && npm run compile:test --silent && node .test-dist/test/package/harness.js",
+    "test:packed": "npm run test:package --silent",
+    "test:extended": "npm run build --silent && npm run compile:test --silent && PT_V4_EXTENDED=1 node --test .test-dist/test/run.test.js",
+    "measure": "npm run build --silent && npm run compile:test --silent && node .test-dist/test/measure.js"
+  },
+  "engines": { "node": ">=22" }
+}

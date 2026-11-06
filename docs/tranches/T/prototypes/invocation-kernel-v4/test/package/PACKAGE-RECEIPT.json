@@ -1,0 +1,17 @@
+{
+  "schema": "parse-that.invocation-kernel-v4.package-receipt.v1",
+  "replays": 2,
+  "buildSha256": "bde9252730679a24cf3945883edbc45ae9ca588b1019269a92e6e0e23aa6a216",
+  "publicSuiteSha256": "64f310a498950de9621e1aa2f6a90fd7349d9beabd7fb9d1f4b84e796f1c81b0",
+  "publicSuiteFiles": ["semantics.test.js", "surface.test.js"],
+  "tarballSha256": "cc80c7f2536bcf76c2be6f2972fb8e2c80b74aee1a6930310dd823540bd1aa98",
+  "tarballBytes": 26554,
+  "archiveFiles": 27,
+  "distributionBytes": 94207,
+  "viteFiles": ["assets/index-BSFyJAUV.js", "index.html"],
+  "strictDeclarations": true,
+  "deepSubpathRejected": true,
+  "esmIdentity": true,
+  "worker": true,
+  "packsByteIdentical": true
+}

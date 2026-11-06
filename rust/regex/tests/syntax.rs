@@ -1,8 +1,8 @@
-use parse_that::regex::hir::{ByteRange, CharClass, CodepointRange, Hir, ParseOptions, Repetition};
-use parse_that::regex::parser::{parse, parse_with};
+use bbnf_regex::hir::{ByteRange, CharClass, CodepointRange, Hir, Look, ParseOptions, Repetition};
+use bbnf_regex::{parse, parse_with};
 
 fn p(s: &str) -> Hir {
-    parse(s).unwrap_or_else(|e| panic!("parse({:?}) failed: {}", s, e))
+    parse(s).unwrap_or_else(|e| panic!("parse({s:?}) failed: {e}"))
 }
 
 #[test]
@@ -29,7 +29,7 @@ fn char_class() {
             assert!(!negated);
             assert_eq!(ranges, vec![ByteRange::new(b'a', b'z')]);
         }
-        other => panic!("expected Bytes class, got {:?}", other),
+        other => panic!("expected Bytes class, got {other:?}"),
     }
 }
 
@@ -37,7 +37,7 @@ fn char_class() {
 fn negated_class() {
     match p("[^abc]") {
         Hir::Class(CharClass::Bytes { negated, .. }) => assert!(negated),
-        other => panic!("expected negated Bytes class, got {:?}", other),
+        other => panic!("expected negated Bytes class, got {other:?}"),
     }
 }
 
@@ -45,7 +45,7 @@ fn negated_class() {
 fn alternation() {
     match p("a|b|c") {
         Hir::Alternation(branches) => assert_eq!(branches.len(), 3),
-        other => panic!("expected Alternation, got {:?}", other),
+        other => panic!("expected Alternation, got {other:?}"),
     }
 }
 
@@ -58,7 +58,7 @@ fn quantifiers() {
             greedy: true,
             ..
         }) => {}
-        other => panic!("expected star, got {:?}", other),
+        other => panic!("expected star, got {other:?}"),
     }
     match p("a+") {
         Hir::Repetition(Repetition {
@@ -67,7 +67,7 @@ fn quantifiers() {
             greedy: true,
             ..
         }) => {}
-        other => panic!("expected plus, got {:?}", other),
+        other => panic!("expected plus, got {other:?}"),
     }
     match p("a?") {
         Hir::Repetition(Repetition {
@@ -76,7 +76,7 @@ fn quantifiers() {
             greedy: true,
             ..
         }) => {}
-        other => panic!("expected optional, got {:?}", other),
+        other => panic!("expected optional, got {other:?}"),
     }
 }
 
@@ -89,7 +89,7 @@ fn lazy_quantifier() {
             greedy: false,
             ..
         }) => {}
-        other => panic!("expected lazy star, got {:?}", other),
+        other => panic!("expected lazy star, got {other:?}"),
     }
 }
 
@@ -101,78 +101,86 @@ fn bounded_repetition() {
             max: Some(5),
             ..
         }) => {}
-        other => panic!("expected {{3,5}}, got {:?}", other),
+        other => panic!("expected {{3,5}}, got {other:?}"),
     }
 }
 
 #[test]
 fn non_capturing_group() {
     match p("(?:abc)") {
-        Hir::Group(inner) => {
-            assert!(matches!(*inner, Hir::Concat(_)));
-        }
-        other => panic!("expected Group, got {:?}", other),
+        Hir::Group(inner) => assert!(matches!(*inner, Hir::Concat(_))),
+        other => panic!("expected Group, got {other:?}"),
     }
 }
 
 #[test]
+fn capturing_and_non_capturing_groups_have_distinct_hir() {
+    assert_ne!(
+        p("(abc)"),
+        p("(?:abc)"),
+        "capturing and non-capturing groups must not lower to the same HIR"
+    );
+}
+
+#[test]
+fn multiline_anchors_lower_to_line_assertions() {
+    let hir = p("(?m)^a$");
+    let Hir::Concat(items) = hir else {
+        panic!("expected concatenated multiline pattern, got {hir:?}");
+    };
+    assert!(items.contains(&Hir::Look(Look::StartLF)));
+    assert!(items.contains(&Hir::Look(Look::EndLF)));
+}
+
+#[test]
 fn dotall_flag_unicode() {
-    // (?s). in unicode mode → Unicode class matching all codepoints.
     match p("(?s).") {
         Hir::Concat(items) => {
-            assert_eq!(items.len(), 2); // Empty (from flag group) + dot
+            assert_eq!(items.len(), 2);
             match &items[1] {
                 Hir::Class(CharClass::Unicode {
                     ranges,
                     negated: false,
-                }) => {
-                    assert_eq!(ranges[0], CodepointRange::new('\0', '\u{10FFFF}'));
-                }
-                other => panic!("expected Unicode class for dotall, got {:?}", other),
+                }) => assert_eq!(ranges[0], CodepointRange::new('\0', '\u{10FFFF}')),
+                other => panic!("expected Unicode class for dotall, got {other:?}"),
             }
         }
-        other => panic!("expected Concat, got {:?}", other),
+        other => panic!("expected Concat, got {other:?}"),
     }
 }
 
 #[test]
 fn dotall_flag_byte_mode() {
-    // (?s). in byte mode → Bytes class matching all bytes.
     let hir = parse_with("(?s).", &ParseOptions::byte_mode()).unwrap();
     match hir {
         Hir::Concat(items) => match &items[1] {
             Hir::Class(CharClass::Bytes {
                 ranges,
                 negated: false,
-            }) => {
-                assert_eq!(ranges[0], ByteRange::new(0, 255));
-            }
-            other => panic!("expected Bytes class for dotall byte mode, got {:?}", other),
+            }) => assert_eq!(ranges[0], ByteRange::new(0, 255)),
+            other => panic!("expected Bytes class for dotall byte mode, got {other:?}"),
         },
-        other => panic!("expected Concat, got {:?}", other),
+        other => panic!("expected Concat, got {other:?}"),
     }
 }
 
 #[test]
-fn shorthand_classes() {
+fn shorthand_digit_class() {
     match p(r"\d") {
         Hir::Class(CharClass::Bytes {
             ranges,
             negated: false,
-        }) => {
-            assert_eq!(ranges, vec![ByteRange::new(b'0', b'9')]);
-        }
-        other => panic!("expected digit class, got {:?}", other),
+        }) => assert_eq!(ranges, vec![ByteRange::new(b'0', b'9')]),
+        other => panic!("expected digit class, got {other:?}"),
     }
-    match p(r"\w") {
-        Hir::Class(CharClass::Bytes {
-            ranges,
-            negated: false,
-        }) => {
-            assert_eq!(ranges.len(), 4); // 0-9, A-Z, _, a-z
-        }
-        other => panic!("expected word class, got {:?}", other),
-    }
+}
+
+#[test]
+fn unicode_word_class_is_not_ascii_only() {
+    assert!(
+        matches!(p(r"\w"), Hir::Class(CharClass::Unicode { .. })),
+        "default Unicode mode must not lower \\w to an ASCII byte class"
+    );
 }
 
 #[test]
@@ -184,7 +192,6 @@ fn escaped_literal() {
 
 #[test]
 fn json_number() {
-    // The canonical JSON number pattern should parse without error.
     let _hir = p(r"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?");
 }
 
@@ -222,11 +229,8 @@ fn hex_color() {
 fn byte_mode() {
     let hir = parse_with(r"\w", &ParseOptions::byte_mode()).unwrap();
     match hir {
-        Hir::Class(CharClass::Bytes { ranges, .. }) => {
-            // Byte mode: \w = [0-9A-Za-z_]
-            assert_eq!(ranges.len(), 4);
-        }
-        other => panic!("expected Bytes class in byte mode, got {:?}", other),
+        Hir::Class(CharClass::Bytes { ranges, .. }) => assert_eq!(ranges.len(), 4),
+        other => panic!("expected Bytes class in byte mode, got {other:?}"),
     }
 }
 
@@ -236,9 +240,7 @@ fn dot_default() {
         Hir::Class(CharClass::Bytes {
             negated: true,
             ranges,
-        }) => {
-            assert_eq!(ranges, vec![ByteRange::new(b'\n', b'\n')]);
-        }
-        other => panic!("expected negated class for dot, got {:?}", other),
+        }) => assert_eq!(ranges, vec![ByteRange::new(b'\n', b'\n')]),
+        other => panic!("expected negated class for dot, got {other:?}"),
     }
 }

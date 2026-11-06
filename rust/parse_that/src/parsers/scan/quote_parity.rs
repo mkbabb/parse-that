@@ -20,13 +20,10 @@
 //! that sit inside a quoted region. A closing `"` toggles the flag;
 //! an opening `"` does the same; everything between is flagged.
 //!
-//! On x86-64 we realise `prefix_xor` via `_mm_clmulepi64_si128(mask,
-//! 0xFFFF_FFFF_FFFF_FFFF, 0)` — a carry-less multiply whose low
-//! 64-bit lane contains the running-XOR of `mask`. On aarch64 the
-//! corresponding intrinsic is `vmull_p64`. On platforms lacking
-//! pclmul / pmull we fall back to the inlined bit-twiddle identity
-//! `x ^= x << 1; x ^= x << 2; … x ^= x << 32;`, which is five shifts
-//! and xors — still branchless, no per-byte work, O(1) per stripe.
+//! Apple ARM uses `vmull_p64` when the crypto extension is enabled.
+//! The browser Wasm path and the architecture-neutral reference use the
+//! inlined bit-twiddle identity `x ^= x << 1; x ^= x << 2; … x ^= x <<
+//! 32;`, which is five shifts and xors: branchless, with no per-byte work.
 
 use super::quoted_simd::odd_parity_backslashes;
 use crate::state::PaddedView;
@@ -39,16 +36,7 @@ const STRIPE: usize = 64;
 #[doc(hidden)]
 #[inline(always)]
 pub fn prefix_xor(mask: u64) -> u64 {
-    #[cfg(all(target_arch = "x86_64", target_feature = "pclmulqdq"))]
-    unsafe {
-        use std::arch::x86_64::*;
-        let a = _mm_set_epi64x(0, mask as i64);
-        let b = _mm_set_epi64x(0, -1i64);
-        let result = _mm_clmulepi64_si128(a, b, 0x00);
-        return _mm_cvtsi128_si64(result) as u64;
-    }
-
-    #[cfg(all(target_arch = "aarch64", target_feature = "aes"))]
+    #[cfg(all(target_arch = "aarch64", target_os = "macos", target_feature = "aes"))]
     unsafe {
         use std::arch::aarch64::*;
         let result = vmull_p64(mask, u64::MAX);

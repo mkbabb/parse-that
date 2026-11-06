@@ -1,0 +1,16 @@
+{
+  "schema": "parse-that.invocation-kernel-v4.artifacts.v1",
+  "files": [
+    "dist/control.d.ts", "dist/control.js",
+    "dist/debug.d.ts", "dist/debug.js",
+    "dist/index.d.ts", "dist/index.js",
+    "dist/journal.d.ts", "dist/journal.js",
+    "dist/lr.d.ts", "dist/lr.js",
+    "dist/model.d.ts", "dist/model.js",
+    "dist/outcome.d.ts", "dist/outcome.js",
+    "dist/parser.d.ts", "dist/parser.js",
+    "dist/run.d.ts", "dist/run.js",
+    "dist/seal.d.ts", "dist/seal.js",
+    "dist/types.d.ts", "dist/types.js"
+  ]
+}

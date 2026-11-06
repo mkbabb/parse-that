@@ -8,7 +8,9 @@
 //! original length — padding is never leaked to consumers that compute
 //! byte offsets against `input.len()`.
 
-use parse_that::state::{INPUT_PAD_BYTES, ParserState};
+use std::panic::catch_unwind;
+
+use parse_that::state::{INPUT_PAD_BYTES, PaddedView, ParserState};
 
 fn check_padding_invariants(src: &str) {
     let state = ParserState::new(src);
@@ -100,8 +102,8 @@ fn padded_bytes_permit_full_stripe_read_at_end() {
 }
 
 #[test]
-fn padded_bytes_aligned_for_avx512_cache_line() {
-    // AVX-512 `zmm` loads + cache-line fills benefit from 64-byte
+fn padded_bytes_aligned_for_simd_stripes_and_cache_lines() {
+    // SIMD stripe loads and cache-line fills benefit from 64-byte
     // alignment at buffer start. The invariant is spelled out in
     // `ParserState::padded_bytes`; repeat it here to lock the
     // contract down via a test.
@@ -115,4 +117,29 @@ fn padded_bytes_aligned_for_avx512_cache_line() {
             "padded_bytes must be 64-byte aligned for len={n} (got addr {addr:#x})",
         );
     }
+}
+
+#[test]
+fn padded_view_new_rejects_short_backing_unconditionally() {
+    let short_backing = [0; INPUT_PAD_BYTES - 1];
+
+    let result = catch_unwind(|| PaddedView::new(&short_backing, 0));
+
+    assert!(
+        result.is_err(),
+        "PaddedView::new must reject backing shorter than len + INPUT_PAD_BYTES in every build",
+    );
+}
+
+#[test]
+fn padded_view_new_rejects_nonzero_padding_unconditionally() {
+    let mut nonzero_padding = [0; INPUT_PAD_BYTES];
+    nonzero_padding[INPUT_PAD_BYTES - 1] = 1;
+
+    let result = catch_unwind(|| PaddedView::new(&nonzero_padding, 0));
+
+    assert!(
+        result.is_err(),
+        "PaddedView::new must reject nonzero padding in every build",
+    );
 }

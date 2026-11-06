@@ -164,8 +164,8 @@ fn owned_decode(
 /// invalid input.
 ///
 /// Inside the loop, escape-free 16-byte stripes copy through a
-/// `u8x16` register store ([`store_chunk`]) — one `vst1q_u8` (NEON) /
-/// `_mm_storeu_si128` (x86) per stripe with no per-byte branch.
+/// `u8x16` register store ([`store_chunk`]) per stripe with no per-byte
+/// branch.
 /// Sub-stripe runs copy the prefix up to the next stop byte.
 #[inline]
 fn decode_escapes_simd(bytes: &[u8], mut pos: usize, arena: &mut Vec<u8>) -> Option<usize> {
@@ -219,7 +219,7 @@ fn decode_escapes_simd(bytes: &[u8], mut pos: usize, arena: &mut Vec<u8>) -> Opt
 }
 
 /// Append a `u8x16` register's contents to `arena` as a single 128-bit
-/// store (`vst1q_u8` on NEON, `_mm_storeu_si128` on x86). Reserves
+/// Apple NEON or browser Wasm SIMD store. Reserves
 /// space if needed, then writes the lane bytes through a raw pointer
 /// before bumping `len` — the register never round-trips through a
 /// stack temporary.

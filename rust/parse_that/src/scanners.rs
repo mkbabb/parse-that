@@ -85,6 +85,142 @@ pub fn cached_dfa(pattern: &str) -> Arc<crate::regex::dfa::Dfa> {
 /// form feed.
 pub const ASCII_WS: [u8; 5] = [b' ', b'\t', b'\n', b'\r', 0x0C];
 
+/// An exact byte class of at most eight members, encoded as paired nibble
+/// lookup tables.
+///
+/// Each member owns one bit in both tables, so matching the low and high
+/// nibbles cannot manufacture cross-member false positives. The encoding is
+/// data-driven: callers may construct any class of zero through eight bytes.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ByteClass8 {
+    lo: [u8; 16],
+    hi: [u8; 16],
+}
+
+impl ByteClass8 {
+    /// Construct an exact class. Duplicate members are harmless; more than
+    /// eight entries are rejected because the nibble encoding has eight bits.
+    pub const fn new(members: &[u8]) -> Self {
+        assert!(
+            members.len() <= 8,
+            "ByteClass8 accepts at most eight members"
+        );
+        let mut lo = [0u8; 16];
+        let mut hi = [0u8; 16];
+        let mut index = 0;
+        while index < members.len() {
+            let bit = 1u8 << index;
+            let byte = members[index];
+            lo[(byte & 0x0f) as usize] |= bit;
+            hi[(byte >> 4) as usize] |= bit;
+            index += 1;
+        }
+        Self { lo, hi }
+    }
+
+    /// Return a 64-bit membership bitmap for the first 64 bytes of `stripe`.
+    /// Bit `i` is set exactly when `stripe[i]` belongs to this class.
+    ///
+    /// Native execution is Apple ARM NEON; browser execution is Wasm SIMD.
+    /// The caller-facing operation is safe and rejects undersized stripes
+    /// before either intrinsic kernel can load memory.
+    #[inline(always)]
+    pub fn member_bitmap_64(&self, stripe: &[u8]) -> u64 {
+        assert!(
+            stripe.len() >= 64,
+            "ByteClass8::member_bitmap_64 requires a 64-byte stripe"
+        );
+        #[cfg(all(target_arch = "aarch64", target_os = "macos"))]
+        unsafe {
+            return self.member_bitmap_64_neon(stripe.as_ptr());
+        }
+        #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+        unsafe {
+            return self.member_bitmap_64_wasm(stripe.as_ptr());
+        }
+        #[cfg(not(any(
+            all(target_arch = "aarch64", target_os = "macos"),
+            all(target_arch = "wasm32", target_os = "unknown")
+        )))]
+        {
+            panic!("ByteClass8 supports only Apple ARM64 and browser Wasm SIMD")
+        }
+    }
+
+    /// Return the exact complement of [`Self::member_bitmap_64`].
+    #[inline(always)]
+    pub fn nonmember_bitmap_64(&self, stripe: &[u8]) -> u64 {
+        !self.member_bitmap_64(stripe)
+    }
+
+    #[cfg(all(target_arch = "aarch64", target_os = "macos"))]
+    #[inline(always)]
+    unsafe fn member_bitmap_64_neon(&self, ptr: *const u8) -> u64 {
+        use core::arch::aarch64::*;
+
+        #[inline(always)]
+        unsafe fn chunk(
+            ptr: *const u8,
+            lo: uint8x16_t,
+            hi: uint8x16_t,
+            nibble_mask: uint8x16_t,
+            bit_weights: uint8x16_t,
+        ) -> u16 {
+            unsafe {
+                let bytes = vld1q_u8(ptr);
+                let low = vqtbl1q_u8(lo, vandq_u8(bytes, nibble_mask));
+                let high = vqtbl1q_u8(hi, vshrq_n_u8(bytes, 4));
+                let matched = vandq_u8(low, high);
+                let lanes = vtstq_u8(matched, matched);
+                let weighted = vandq_u8(lanes, bit_weights);
+                let lower = vaddv_u8(vget_low_u8(weighted)) as u16;
+                let upper = vaddv_u8(vget_high_u8(weighted)) as u16;
+                lower | (upper << 8)
+            }
+        }
+
+        unsafe {
+            let lo = vld1q_u8(self.lo.as_ptr());
+            let hi = vld1q_u8(self.hi.as_ptr());
+            let nibble_mask = vdupq_n_u8(0x0f);
+            let weights = [1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128];
+            let bit_weights = vld1q_u8(weights.as_ptr());
+            let m0 = chunk(ptr, lo, hi, nibble_mask, bit_weights) as u64;
+            let m1 = chunk(ptr.add(16), lo, hi, nibble_mask, bit_weights) as u64;
+            let m2 = chunk(ptr.add(32), lo, hi, nibble_mask, bit_weights) as u64;
+            let m3 = chunk(ptr.add(48), lo, hi, nibble_mask, bit_weights) as u64;
+            m0 | (m1 << 16) | (m2 << 32) | (m3 << 48)
+        }
+    }
+
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+    #[target_feature(enable = "simd128")]
+    unsafe fn member_bitmap_64_wasm(&self, ptr: *const u8) -> u64 {
+        use core::arch::wasm32::*;
+
+        unsafe {
+            let lo = v128_load(self.lo.as_ptr().cast());
+            let hi = v128_load(self.hi.as_ptr().cast());
+            let nibble_mask = u8x16_splat(0x0f);
+            let mut bitmap = 0u64;
+            let mut offset = 0usize;
+            while offset < 64 {
+                let bytes = v128_load(ptr.add(offset).cast());
+                let low = u8x16_swizzle(lo, v128_and(bytes, nibble_mask));
+                let high = u8x16_swizzle(hi, u8x16_shr(bytes, 4));
+                let matched = v128_and(low, high);
+                let lanes = u8x16_ne(matched, u8x16_splat(0));
+                bitmap |= (u8x16_bitmask(lanes) as u64) << offset;
+                offset += 16;
+            }
+            bitmap
+        }
+    }
+}
+
+/// JSON/CSS ASCII whitespace, shared by generated consumers.
+pub const ASCII_WHITESPACE_CLASS: ByteClass8 = ByteClass8::new(&[b' ', b'\t', b'\n', b'\r']);
+
 /// Skip leading whitespace at `state.offset`. Three-tier acceleration:
 ///
 /// 1. **Scalar 2-byte probe** — handles 0..=1 whitespace bytes (80%+
@@ -226,8 +362,7 @@ fn trim_leading_whitespace_bulk_simd(state: &mut ParserState<'_>) {
 // is non-zero.  Each target gets its own bit (up to 8), so cross-target
 // nibble collisions don't cause false positives.
 //
-// On x86-64 this compiles to two VPSHUFB instructions per 16-byte chunk.
-// On ARM it compiles to TBL.
+// On Apple ARM this compiles to TBL; browser Wasm uses SIMD128 swizzles.
 
 /// Build nibble lookup tables for SIMD byte classification.
 /// Supports up to 8 unique target bytes with zero false positives.
@@ -251,7 +386,7 @@ pub fn build_nibble_luts(targets: &[u8]) -> ([u8; 16], [u8; 16]) {
 }
 
 /// SIMD nibble-LUT byte scanner: find first occurrence of any target byte
-/// in `haystack` using two 16-byte lookup tables + `swizzle_dyn` (vpshufb/tbl).
+/// in `haystack` using two 16-byte lookup tables plus SIMD swizzles.
 ///
 /// Processes 16 bytes per iteration.  The `lo_lut`/`hi_lut` must be pre-built
 /// via [`build_nibble_luts`].
@@ -306,7 +441,7 @@ pub fn find_first_of_nibble_lut(
 /// Returns `(position, byte_found)`.
 ///
 /// Auto-dispatches based on target count:
-/// - 1–3 targets: `memchr::memchr[1,2,3]` (hardware-accelerated AVX2/SSE2).
+/// - 1–3 targets: `memchr::memchr[1,2,3]`.
 /// - 4–8 targets: the shared nibble-LUT SIMD kernel above.
 /// - 9+ targets: 256-byte scalar LUT.
 ///
@@ -330,7 +465,7 @@ pub fn find_first_of(haystack: &[u8], targets: &[u8]) -> Option<(usize, u8)> {
         4..=8 => {
             // The 4-byte SIMD equality-splat path collapses into the
             // nibble-LUT path — the per-chunk SIMD cost is dominated
-            // by the two PSHUFB / TBL lookups, not the mask
+            // by the two SIMD table lookups, not the mask
             // construction, so keeping a specialised `_4` kernel
             // produced no measurable benefit over the unified LUT.
             let (lo_lut, hi_lut) = build_nibble_luts(targets);

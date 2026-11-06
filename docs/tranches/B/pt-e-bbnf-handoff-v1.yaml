@@ -1,0 +1,62 @@
+format: pt-e-bbnf-handoff-v1
+ruling:
+  beta_break_permitted_in_principle: true
+  authorized_in_current_mega_tranche: false
+  current_tranche_limit: necessity-proven non-novel full-css blockers only
+inputs:
+  parse_that_npm_1_0_integrity: ""
+  parse_that_source_revision: "ef10d5b78236"
+  rust_parse_that_revision: "ef10d5b78236"
+  bbnf_revision: "b3cf48e3bc8f"
+  css_corpus_sha256: ""
+  css_projection_sha256: ""
+proven_defects:
+  - id: PT-COMBINATOR-RUNTIME-TYPE-DIVERGENCE
+    route: external-unless-p01-css-blocker
+  - id: PT-CORE-SCC-PACKAGE-IDENTITY
+    route: external
+  - id: PT-EOF-DIAGNOSTIC
+    route: external-unless-p01-css-blocker
+  - id: PT-GLOBAL-DIAGNOSTICS
+    route: external-unless-p01-css-blocker
+  - id: PT-NESTED-RECOVERY-ROLLBACK
+    route: external-unless-p01-css-blocker
+  - id: PT-NONASCII-DISPATCH
+    route: external-unless-p01-css-blocker
+  - id: PT-PARSE-STATE-TYPE-DIVERGENCE
+    route: external
+  - id: PT-RAW-CROSS-SOURCE-MEMO
+    route: external-unless-p01-css-blocker
+requested_pt_e_scope:
+  - execution-model and per-run-context redesign
+  - memo and recovery architecture
+  - new combinator families
+  - package topology export-condition and loader-identity reset
+  - raw mutable API and Parser.state disposition
+  - Tape SoA Pratt and substrate experiments
+  - truthful result API and comprehensive type redesign
+requested_bbnf_scope:
+  - byte-offset to UTF-16 boundary contract
+  - CSS grammar tree and generated artifact ownership
+  - grammar IR host capability and emitter ABI
+  - module import and recursive-rule contracts
+  - Rust parse_that and bbnf versioned baseline
+  - standalone-or-shared witness classification
+forbidden_current_tranche_scope:
+  - aliases shims forwarding paths or dual execution
+  - BBNF host emitter or grammar uplift
+  - new parser or combinator public APIs
+  - opaque kernel or RunContext adoption
+  - package topology or module-format reset
+  - Tape SoA or Pratt
+return_required:
+  - API break and casualty ledger
+  - corpus commands environments and raw evidence digests
+  - explicit adoption rejection or further-routing decision
+  - implemented artifact digests and manifests
+  - owner repository revisions and dirty-state proof
+  - package and consumer crater results
+authority:
+  mutates_value_or_keyframes: false
+  authorizes_current_tranche_uplift: false
+  requires_new_owner_return_before_adoption: true

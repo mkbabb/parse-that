@@ -2,6 +2,12 @@
 #![feature(fmt_helpers_for_derive)]
 #![feature(stmt_expr_attributes)]
 
+#[cfg(not(any(
+    all(target_arch = "aarch64", target_os = "macos"),
+    all(target_arch = "wasm32", target_os = "unknown")
+)))]
+compile_error!("parse_that supports only Apple ARM64 and browser Wasm (wasm32-unknown-unknown)");
+
 // ── Core (always available — used by generated parsers) ──────────────────
 
 pub mod bump_slab;

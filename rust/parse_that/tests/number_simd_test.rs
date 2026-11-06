@@ -126,15 +126,13 @@ fn cross_validate_all_counts() {
             scalar_val = scalar_val * 10 + (input[j] - b'0') as u64;
         }
 
-        if let Some(result) = scan(&input, 0) {
-            assert_eq!(result.count, count, "count mismatch for {count} digits");
-            assert_eq!(
-                result.value, scalar_val,
-                "value mismatch for {count} digits: SIMD={}, scalar={}",
-                result.value, scalar_val
-            );
-        }
-        // If scan_digits_simd returns None (leading byte is not
-        // an ASCII digit), that's fine — the scalar path handles it.
+        let result = scan(&input, 0)
+            .unwrap_or_else(|| panic!("expected SIMD result for {count} leading digits"));
+        assert_eq!(result.count, count, "count mismatch for {count} digits");
+        assert_eq!(
+            result.value, scalar_val,
+            "value mismatch for {count} digits: SIMD={}, scalar={}",
+            result.value, scalar_val
+        );
     }
 }

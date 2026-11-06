@@ -1,0 +1,115 @@
+{
+  "schema_version": 3,
+  "contract": "PT-0.W0",
+  "repositories": [
+    {
+      "id": "parse-that",
+      "relative_path": ".",
+      "package_json": {
+        "path": "typescript/package.json",
+        "name": "@mkbabb/parse-that",
+        "version": "1.0.0"
+      },
+      "operands": [
+        {
+          "id": "typescript-production",
+          "roots": ["typescript"]
+        },
+        {
+          "id": "rust-production",
+          "roots": ["rust"]
+        },
+        {
+          "id": "tranche-t",
+          "roots": ["docs/tranches/T"]
+        },
+        {
+          "id": "tranche-u",
+          "roots": ["docs/tranches/U"]
+        },
+        {
+          "id": "invocation-v4",
+          "roots": ["docs/tranches/T/prototypes/invocation-kernel-v4"]
+        },
+        {
+          "id": "binding-authority",
+          "roots": [".gitmodules", "docs/instructions", "docs/precepts", "docs/tranches/B"]
+        },
+        {
+          "id": "toolchain-selection",
+          "roots": ["rust-toolchain.toml", ".cargo"]
+        }
+      ],
+      "lockfiles": ["typescript/package-lock.json", "rust/Cargo.lock"],
+      "content_excludes": ["typescript/node_modules", "rust/target"],
+      "output_excludes": [
+        "docs/tranches/T/prototypes/major/common/receipts",
+        "docs/tranches/T/prototypes/major/common/runs"
+      ]
+    },
+    {
+      "id": "bbnf-lang",
+      "relative_path": "../bbnf-lang",
+      "operands": [
+        {
+          "id": "sk-v25",
+          "roots": ["restart/skinny/tranches/sk-v25"]
+        },
+        {
+          "id": "workspace-manifests",
+          "roots": ["Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".cargo"]
+        }
+      ],
+      "lockfiles": ["Cargo.lock"],
+      "content_excludes": [
+        "restart/skinny/tranches/sk-v25/prototypes/type-kernel/target",
+        "restart/skinny/tranches/sk-v25/prototypes/type-kernel-v2/target",
+        "restart/skinny/tranches/sk-v25/prototypes/type-kernel-v3/target",
+        "restart/skinny/tranches/sk-v25/prototypes/type-kernel-v4/target"
+      ],
+      "output_excludes": []
+    },
+    {
+      "id": "keyframes.js",
+      "relative_path": "../keyframes.js",
+      "package_json": {
+        "path": "package.json",
+        "name": "@mkbabb/keyframes.js",
+        "version": "6.0.0"
+      },
+      "operands": [
+        {
+          "id": "keyframes-6-source",
+          "roots": ["package.json", "package-lock.json", "src", "test", "scripts", "dist"]
+        },
+        {
+          "id": "keyframes-u-evidence",
+          "roots": ["docs/tranches/U"]
+        }
+      ],
+      "lockfiles": ["package-lock.json"],
+      "output_excludes": []
+    },
+    {
+      "id": "glass-ui",
+      "relative_path": "../glass-ui",
+      "package_json": {
+        "path": "package.json",
+        "name": "@mkbabb/glass-ui",
+        "version": "7.0.0"
+      },
+      "operands": [
+        {
+          "id": "glass-7-source",
+          "roots": ["package.json", "package-lock.json", "src", "tests", "scripts", "dist"]
+        },
+        {
+          "id": "glass-7-evidence",
+          "roots": ["docs/tranches/V"]
+        }
+      ],
+      "lockfiles": ["package-lock.json"],
+      "output_excludes": []
+    }
+  ]
+}

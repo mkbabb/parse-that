@@ -1,0 +1,176 @@
+{
+  "format": "pt-e-bbnf-live/2",
+  "stream_id": "value-vnext-2026-07-18",
+  "events": [
+    {
+      "sequence": 1,
+      "kind": "snapshot",
+      "created_at": "2026-07-18T17:20:17-04:00",
+      "previous_event_sha256": "genesis",
+      "event_sha256": "238d8f980298b4bc75e1600460c79ae6da0e46c54e9e7ec3b856f581b8e39fe7",
+      "pins": {
+        "value_js": {
+          "path": "/Users/mkbabb/Programming/value.js",
+          "branch": "tranche-u",
+          "head": "c654824e0b252cda7f8490b67f182a48c48cc0ed",
+          "dirty_count": 9,
+          "dirty_sha256": "67abe419bb83f4de65ae898d27d6333244f09f4911367b7efb671780992f852b"
+        },
+        "parse_that": {
+          "path": "/Users/mkbabb/Programming/parse-that",
+          "branch": "master",
+          "head": "ef10d5b78236c4a30a7bb22a6113b60bdc4bdf42",
+          "dirty_count": 8,
+          "dirty_sha256": "7c36d761c35f3f3dbb702ef8405707e5c93458c33204b98b7255ff706ae6953d"
+        },
+        "bbnf_lang": {
+          "path": "/Users/mkbabb/Programming/bbnf-lang",
+          "branch": "master",
+          "head": "af15f63e0d2d3d719938c13b906a50acbb92ea3b",
+          "dirty_count": 73,
+          "dirty_sha256": "a65e92377e178d1d511cf6c66727b0494982208e680a3aebbe0448413c93a0fa"
+        }
+      },
+      "authority": {
+        "coordination_only": true,
+        "imports_active_novelty": false,
+        "mutates_bbnf": false,
+        "mutation_owner": "none"
+      },
+      "evidence": [
+        {
+          "path": "/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v25/CAMPAIGN-STATE.md",
+          "sha256": "a31bc23566532551a7f7aa801d10d56e85f78e5e4dcdfb1ed56385c8f8795a02"
+        },
+        {
+          "path": "/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v25/HANDOFF.md",
+          "sha256": "9be82e72d82c09aae2e1dd251c9d516a6843a39868ce9853ef656ea44a9b9786"
+        },
+        {
+          "path": "/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v25/RUN-LEDGER.md",
+          "sha256": "0133b7f2baff5ec97aa444fb16589958250d4f473fb2a31abdb3ca9002f225d9"
+        },
+        {
+          "path": "/Users/mkbabb/Programming/parse-that/docs/tranches/T/VALUEJS-BANK-ADJUDICATION.md",
+          "sha256": "934b9e6f7e56e47ea58db21967f44cb1188891a791729835ecdb3f88ee3cc1d1"
+        }
+      ],
+      "wave_id": "P00",
+      "package": {
+        "name": "@mkbabb/parse-that",
+        "version": "1.0.0"
+      },
+      "active": {
+        "campaign": "SK-V25",
+        "coordination_index_sha256": "fc5826bb70926dea46740ff9e5deaf99fcc147c3c018ed332f432774374be4b3",
+        "v3_prototype_tree_sha256": "6ec504762ce50a3b2f0070669bb4c893ab8aab1aa4024180d6913a733f4ad2c6",
+        "bbnf_campaign_tree_sha256": "ae9c16247f6984b09cdc500a030876da5f6413fdeb0c5e056773f4ccda7074aa",
+        "production_authority": false
+      },
+      "active_locks": ["PT-C", "PT-E", "PT-J", "PT-K", "PT-R", "PT-V"],
+      "defect_ids": [
+        "PT-ARTIFACT-SKIP",
+        "PT-COMBINATOR-RUNTIME-TYPE-DIVERGENCE",
+        "PT-CORE-SCC-AND-BUNDLE",
+        "PT-DISPATCH-DOMAIN-CONTRACT",
+        "PT-EOF-DIAGNOSTIC",
+        "PT-GLOBAL-DIAGNOSTICS",
+        "PT-LOADER-IDENTITY",
+        "PT-NESTED-RECOVERY-ROLLBACK",
+        "PT-RAW-CROSS-SOURCE-MEMO",
+        "PT-STATE-RESULT-DIVERGENCE"
+      ],
+      "vnext_publication_branches": [
+        "unchanged-1.0.0-no-republish",
+        "compatible-1.0.1"
+      ],
+      "v1_historical_sha256": "f7d60b452300dacf3a8a382c37a2d82b5fd05e28c96ae42ea2a50e9e3a6a9b9c",
+      "acknowledgement_required_before_p03": true
+    },
+    {
+      "sequence": 2,
+      "kind": "snapshot",
+      "created_at": "2026-07-18T23:53:25.708Z",
+      "previous_event_sha256": "238d8f980298b4bc75e1600460c79ae6da0e46c54e9e7ec3b856f581b8e39fe7",
+      "event_sha256": "a16215f9d57bcd09ffff8120c42a18339a9d7d915ee5e02f72c52357d6c18622",
+      "pins": {
+        "value_js": {
+          "path": "/Users/mkbabb/Programming/value.js",
+          "branch": "tranche-u",
+          "head": "c654824e0b252cda7f8490b67f182a48c48cc0ed",
+          "dirty_count": 9,
+          "dirty_sha256": "67abe419bb83f4de65ae898d27d6333244f09f4911367b7efb671780992f852b"
+        },
+        "parse_that": {
+          "path": "/Users/mkbabb/Programming/parse-that",
+          "branch": "master",
+          "head": "ef10d5b78236c4a30a7bb22a6113b60bdc4bdf42",
+          "dirty_count": 8,
+          "dirty_sha256": "7c36d761c35f3f3dbb702ef8405707e5c93458c33204b98b7255ff706ae6953d"
+        },
+        "bbnf_lang": {
+          "path": "/Users/mkbabb/Programming/bbnf-lang",
+          "branch": "master",
+          "head": "af15f63e0d2d3d719938c13b906a50acbb92ea3b",
+          "dirty_count": 74,
+          "dirty_sha256": "00183eb158d32c5aaf98c59bb4bc5181de700ec8c8b1c555eb4c7450a95c5920"
+        }
+      },
+      "authority": {
+        "coordination_only": true,
+        "imports_active_novelty": false,
+        "mutates_bbnf": false,
+        "mutation_owner": "none"
+      },
+      "evidence": [
+        {
+          "path": "/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v25/CAMPAIGN-STATE.md",
+          "sha256": "87696e0ce19f35d9bfaaea11a25714c8a9947142ca4933e92336a0a731196dea"
+        },
+        {
+          "path": "/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v25/HANDOFF.md",
+          "sha256": "9be82e72d82c09aae2e1dd251c9d516a6843a39868ce9853ef656ea44a9b9786"
+        },
+        {
+          "path": "/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v25/RUN-LEDGER.md",
+          "sha256": "26fd3c42411f8950f0769f5021bd7f1b5eb818c3144f6a0ac6a7d99d5775d0c2"
+        },
+        {
+          "path": "/Users/mkbabb/Programming/parse-that/docs/tranches/T/VALUEJS-BANK-ADJUDICATION.md",
+          "sha256": "934b9e6f7e56e47ea58db21967f44cb1188891a791729835ecdb3f88ee3cc1d1"
+        }
+      ],
+      "wave_id": "P00",
+      "package": {
+        "name": "@mkbabb/parse-that",
+        "version": "1.0.0"
+      },
+      "active": {
+        "campaign": "SK-V25",
+        "coordination_index_sha256": "fc5826bb70926dea46740ff9e5deaf99fcc147c3c018ed332f432774374be4b3",
+        "v3_prototype_tree_sha256": "6ec504762ce50a3b2f0070669bb4c893ab8aab1aa4024180d6913a733f4ad2c6",
+        "bbnf_campaign_tree_sha256": "ae9c16247f6984b09cdc500a030876da5f6413fdeb0c5e056773f4ccda7074aa",
+        "production_authority": false
+      },
+      "active_locks": ["PT-C", "PT-E", "PT-J", "PT-K", "PT-R", "PT-V"],
+      "defect_ids": [
+        "PT-ARTIFACT-SKIP",
+        "PT-COMBINATOR-RUNTIME-TYPE-DIVERGENCE",
+        "PT-CORE-SCC-AND-BUNDLE",
+        "PT-DISPATCH-DOMAIN-CONTRACT",
+        "PT-EOF-DIAGNOSTIC",
+        "PT-GLOBAL-DIAGNOSTICS",
+        "PT-LOADER-IDENTITY",
+        "PT-NESTED-RECOVERY-ROLLBACK",
+        "PT-RAW-CROSS-SOURCE-MEMO",
+        "PT-STATE-RESULT-DIVERGENCE"
+      ],
+      "vnext_publication_branches": [
+        "unchanged-1.0.0-no-republish",
+        "compatible-1.0.1"
+      ],
+      "v1_historical_sha256": "f7d60b452300dacf3a8a382c37a2d82b5fd05e28c96ae42ea2a50e9e3a6a9b9c",
+      "acknowledgement_required_before_p03": true
+    }
+  ]
+}
