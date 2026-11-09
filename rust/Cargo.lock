@@ -271,7 +271,10 @@ dependencies = [
 [[package]]
 name = "csp-solver"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/bbnf-lang?rev=c9b93adb4e4c2ec793af881f390f997cd4e11696#c9b93adb4e4c2ec793af881f390f997cd4e11696"
+source = "git+https://github.com/mkbabb/bbnf-lang?rev=1874fa3f8db8d007ae82fb2582636b30b02546e2#1874fa3f8db8d007ae82fb2582636b30b02546e2"
+dependencies = [
+ "include_dir",
+]
 
 [[package]]
 name = "cssparser"
@@ -399,7 +402,7 @@ dependencies = [
 [[package]]
 name = "egraph"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/bbnf-lang?rev=c9b93adb4e4c2ec793af881f390f997cd4e11696#c9b93adb4e4c2ec793af881f390f997cd4e11696"
+source = "git+https://github.com/mkbabb/bbnf-lang?rev=1874fa3f8db8d007ae82fb2582636b30b02546e2#1874fa3f8db8d007ae82fb2582636b30b02546e2"
 dependencies = [
  "csp-solver",
  "rustc-hash",
@@ -409,7 +412,7 @@ dependencies = [
 [[package]]
 name = "egraph-derive"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/bbnf-lang?rev=c9b93adb4e4c2ec793af881f390f997cd4e11696#c9b93adb4e4c2ec793af881f390f997cd4e11696"
+source = "git+https://github.com/mkbabb/bbnf-lang?rev=1874fa3f8db8d007ae82fb2582636b30b02546e2#1874fa3f8db8d007ae82fb2582636b30b02546e2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -552,6 +555,25 @@ name = "heck"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
+
+[[package]]
+name = "include_dir"
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "923d117408f1e49d914f1a379a309cffe4f18c05cf4e3d12e613a15fc81bd0dd"
+dependencies = [
+ "include_dir_macros",
+]
+
+[[package]]
+name = "include_dir_macros"
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7cab85a7ed0bd5f0e76d93846e0147172bed2e2d3f859bcc33a8d9699cad1a75"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
 
 [[package]]
 name = "indexmap"
