@@ -439,7 +439,7 @@ fn test_multiple_rules() {
 
 #[test]
 fn test_parse_normalize_css() {
-    let css = include_str!("../../../data/css/normalize.css");
+    let css = &parse_that_corpus::read_to_string("css/normalize.css");
     let nodes = parse_css(css);
     // normalize.css has ~30+ rules
     assert!(nodes.len() > 20, "expected 20+ rules, got {}", nodes.len());
@@ -447,7 +447,7 @@ fn test_parse_normalize_css() {
 
 #[test]
 fn test_parse_bootstrap_css() {
-    let css = include_str!("../../../data/css/bootstrap.css");
+    let css = &parse_that_corpus::read_to_string("css/bootstrap.css");
     let nodes = parse_css(css);
     // bootstrap.css has thousands of rules
     assert!(
@@ -460,7 +460,7 @@ fn test_parse_bootstrap_css() {
 #[test]
 #[ignore] // 3.6MB file — too slow in debug, runs in release benchmarks
 fn test_parse_tailwind_css() {
-    let css = include_str!("../../../data/css/tailwind-output.css");
+    let css = &parse_that_corpus::read_to_string("css/tailwind-output.css");
     let nodes = parse_css(css);
     assert!(
         nodes.len() > 100,

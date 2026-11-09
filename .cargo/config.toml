@@ -71,6 +71,8 @@ codegen-units   = 1
 [alias]
 iter-check = "check --profile ax-iter"
 iter-test  = "nextest run --cargo-profile ax-iter"
+# `cargo xtask corpus fetch|verify|pack|dir` (from rust/): corpus custody, corpus/MANIFEST.sha256.
+xtask      = "run -p xtask --"
 
 # ── Patches (CB-1a, sk-v27 LW1.COMP-4 extended to this repo at the LW1 lockstep gate) ──
 # bbnf-regex depends on egraph, egraph-derive and csp-solver, which live in

@@ -1,7 +1,6 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use std::path::Path;
 
 use divan::counter::BytesCount;
 use divan::{Bencher, black_box};
@@ -12,7 +11,7 @@ use cssparser::{
 };
 
 fn data_dir() -> std::path::PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/css")
+    parse_that_corpus::path("css")
 }
 
 #[divan::bench]

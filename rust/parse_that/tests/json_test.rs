@@ -43,7 +43,7 @@ mod tests {
 
     #[test]
     fn test_json_file() {
-        let json_file_path = "../../data/json/data-l.json";
+        let json_file_path = parse_that_corpus::path("json/data-l.json");
         let json_string = fs::read_to_string(json_file_path).unwrap();
 
         let arr = json_parser().parse(&json_string).unwrap();
@@ -60,7 +60,7 @@ mod tests {
     fn test_json_file_print() {
         use pprint::{Printer, pprint};
 
-        let json_file_path = "../../data/json/data.json";
+        let json_file_path = parse_that_corpus::path("json/data.json");
         let json_string = fs::read_to_string(json_file_path).unwrap();
 
         let arr = json_parser().parse(&json_string).unwrap();
@@ -393,9 +393,9 @@ mod tests {
     // ── Combinator equivalence tests with serde_json ──────────────
 
     fn test_equivalence_for_file(filename: &str) {
-        let path = format!("../../data/json/{}", filename);
+        let path = parse_that_corpus::path(&format!("json/{}", filename));
         let data =
-            fs::read_to_string(&path).unwrap_or_else(|e| panic!("Failed to read {}: {}", path, e));
+            fs::read_to_string(&path).unwrap_or_else(|e| panic!("Failed to read {}: {}", path.display(), e));
 
         let ours = json_parser()
             .parse(&data)

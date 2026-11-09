@@ -1,0 +1,10 @@
+[package]
+name = "xtask"
+version = "0.0.0"
+edition = "2024"
+publish = false
+description = "Workspace tasks for parse-that: `cargo xtask corpus fetch|verify|pack|dir`."
+
+[dependencies]
+sha2 = "0.10"
+parse-that-corpus = { path = "../corpus" }
