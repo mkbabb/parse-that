@@ -65,3 +65,23 @@ jobs:
       - name: workspace tests with diagnostics (nextest, ax-iter)
         run: cargo nextest run --cargo-profile ax-iter --workspace --features diagnostics --no-fail-fast
         working-directory: rust
+
+  hermetic:
+    # sk-v27 LW2.TOPO-1: a fresh checkout, with no sibling repositories and no
+    # credentials, resolves and builds the workspace from its pinned edges, and
+    # the three-repository crate graph is a DAG (ruling X-5).
+    name: Rust — repo DAG + hermetic clean-clone build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: show toolchain resolution
+        run: |
+          rustup show
+          rustc --version
+          cargo --version
+      - name: repo DAG (pprint <- parse-that <- bbnf-lang)
+        run: sh scripts/check-repo-dag.sh
+      - name: hermetic build
+        run: sh scripts/check-hermetic-build.sh
