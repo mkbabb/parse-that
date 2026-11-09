@@ -1,7 +1,6 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use std::path::Path;
 
 use divan::counter::BytesCount;
 use divan::{Bencher, black_box};
@@ -9,7 +8,7 @@ use divan::{Bencher, black_box};
 use parse_that::json::json_parser;
 
 fn data_dir() -> std::path::PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/json")
+    parse_that_corpus::path("json")
 }
 
 #[divan::bench]

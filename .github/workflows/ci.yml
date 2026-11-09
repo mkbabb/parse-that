@@ -48,6 +48,12 @@ jobs:
       - name: clippy (ax-iter)
         run: cargo clippy --profile ax-iter --workspace -- -D warnings
         working-directory: rust
+      # The test corpus is the release asset named in corpus/MANIFEST.sha256,
+      # fetched over public HTTPS with no token and checked file by file
+      # before any test reads it.
+      - name: corpus — fetch and verify (release asset, sha256 manifest)
+        run: cargo xtask corpus fetch
+        working-directory: rust
       # `--cargo-profile ax-iter` selects the cargo build profile defined
       # in .cargo/config.toml (parse-that has no .config/nextest.toml; the
       # nextest runner uses its built-in `default` profile). Mirrors the

@@ -2,7 +2,7 @@
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use divan::counter::BytesCount;
 use divan::{Bencher, black_box};
@@ -106,7 +106,7 @@ fn ws<'i>(input: &mut &'i str) -> ModalResult<&'i str> {
 // ── Benchmarks ───────────────────────────────────────────────────────────
 
 fn data_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/json")
+    parse_that_corpus::path("json")
 }
 
 #[divan::bench]
