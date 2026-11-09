@@ -8,3 +8,10 @@ description = "Workspace tasks for parse-that: `cargo xtask corpus fetch|verify|
 [dependencies]
 sha2 = "0.10"
 parse-that-corpus = { path = "../corpus" }
+
+[dev-dependencies]
+# tests/public_api_callers.rs (sk-v27 LW2.TOPO-1, ruling A-2): every `pub`
+# item of the audited library crates has a caller in this workspace.
+cargo_metadata = "0.18"
+proc-macro2 = { version = "1", features = ["span-locations"] }
+syn = { version = "2", features = ["full", "visit"] }

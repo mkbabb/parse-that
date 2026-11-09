@@ -65,6 +65,11 @@ jobs:
       - name: workspace tests with diagnostics (nextest, ax-iter)
         run: cargo nextest run --cargo-profile ax-iter --workspace --features diagnostics --no-fail-fast
         working-directory: rust
+      # nextest does not run doctests; the audited library crates' doctests
+      # are callers of record for tests/public_api_callers.rs (ruling A-2).
+      - name: doctests (parse-that-egraph, parse-that-egraph-derive)
+        run: cargo test --profile ax-iter --doc -p parse-that-egraph -p parse-that-egraph-derive
+        working-directory: rust
 
   hermetic:
     # sk-v27 LW2.TOPO-1: a fresh checkout, with no sibling repositories and no
