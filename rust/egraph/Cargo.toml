@@ -1,0 +1,21 @@
+[package]
+name = "parse-that-egraph"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "General-purpose e-graph: equality saturation, rewrite rules, cost-model extraction"
+repository = "https://github.com/mkbabb/parse-that"
+
+[lib]
+name = "parse_that_egraph"
+
+[dependencies]
+smallvec = "1"
+rustc-hash = "2"
+# The scheduler's dirty-class propagation runs on csp-solver's constraint
+# network. csp-solver has one home, mkbabb/csp-solver; 0.4.0 is the release
+# whose src/ is the source this crate was built and tested against.
+csp-solver = "0.4.0"
+
+[dev-dependencies]
+parse-that-egraph-derive = { version = "0.1.0", path = "../egraph-derive" }

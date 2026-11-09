@@ -1,11 +1,11 @@
 //! Tranche O — extracted from `regex/src/egraph/rules/repetition.rs`.
 //! Tests for the `AbsorbRepetition` HIR rewrite rule.
 
-use egraph::{EGraph, NoAnalysis, Rewrite};
+use parse_that_egraph::{EGraph, NoAnalysis, Rewrite};
 
-use bbnf_regex::egraph::rules::{AbsorbRepetition, AbsorbRepetitionMatch, merge_bounds};
-use bbnf_regex::egraph::{HirENode, insert_hir};
-use bbnf_regex::hir::{Hir, Repetition};
+use parse_that_regex::egraph::rules::{AbsorbRepetition, AbsorbRepetitionMatch, merge_bounds};
+use parse_that_regex::egraph::{HirENode, insert_hir};
+use parse_that_regex::hir::{Hir, Repetition};
 
 fn rep(inner: Hir, min: u32, max: Option<u32>) -> Hir {
     Hir::Repetition(Repetition {

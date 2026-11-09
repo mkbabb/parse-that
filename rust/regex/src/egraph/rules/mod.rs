@@ -42,7 +42,7 @@ pub use repetition::{AbsorbRepetition, AbsorbRepetitionMatch, merge_bounds};
 pub use superset::{AbsorbMatch, SupersetAbsorbClass};
 pub use union::{UnionMatch, UnionMergeClass};
 
-use egraph::{Analysis, RewriteFn};
+use parse_that_egraph::{Analysis, RewriteFn};
 
 use crate::egraph::node::HirENode;
 

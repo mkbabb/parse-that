@@ -63,21 +63,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bbnf-regex"
-version = "0.1.0"
-dependencies = [
- "csp-solver",
- "divan",
- "egraph",
- "egraph-derive",
- "mimalloc",
- "proc-macro2",
- "rustc-hash",
- "serde",
- "smallvec",
-]
-
-[[package]]
 name = "bitflags"
 version = "2.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -270,8 +255,9 @@ dependencies = [
 
 [[package]]
 name = "csp-solver"
-version = "0.1.0"
-source = "git+https://github.com/mkbabb/bbnf-lang?rev=1874fa3f8db8d007ae82fb2582636b30b02546e2#1874fa3f8db8d007ae82fb2582636b30b02546e2"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1bcb2264b535b1394feb9c646beee05d5bc096e1a64514a1bd35602ff9595f7d"
 dependencies = [
  "include_dir",
 ]
@@ -397,26 +383,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd1511a7b6a56299bd043a9c167a6d2bfb37bf84a6dfceaba651168adfb43c87"
 dependencies = [
  "dtoa",
-]
-
-[[package]]
-name = "egraph"
-version = "0.1.0"
-source = "git+https://github.com/mkbabb/bbnf-lang?rev=1874fa3f8db8d007ae82fb2582636b30b02546e2#1874fa3f8db8d007ae82fb2582636b30b02546e2"
-dependencies = [
- "csp-solver",
- "rustc-hash",
- "smallvec",
-]
-
-[[package]]
-name = "egraph-derive"
-version = "0.1.0"
-source = "git+https://github.com/mkbabb/bbnf-lang?rev=1874fa3f8db8d007ae82fb2582636b30b02546e2#1874fa3f8db8d007ae82fb2582636b30b02546e2"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.117",
 ]
 
 [[package]]
@@ -909,11 +875,43 @@ name = "parse-that-corpus"
 version = "0.0.0"
 
 [[package]]
+name = "parse-that-egraph"
+version = "0.1.0"
+dependencies = [
+ "csp-solver",
+ "parse-that-egraph-derive",
+ "rustc-hash",
+ "smallvec",
+]
+
+[[package]]
+name = "parse-that-egraph-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "parse-that-regex"
+version = "0.1.0"
+dependencies = [
+ "divan",
+ "mimalloc",
+ "parse-that-egraph",
+ "parse-that-egraph-derive",
+ "proc-macro2",
+ "rustc-hash",
+ "serde",
+ "smallvec",
+]
+
+[[package]]
 name = "parse_that"
 version = "0.4.0"
 dependencies = [
  "aho-corasick",
- "bbnf-regex",
  "colored",
  "cssparser 0.34.0",
  "divan",
@@ -924,6 +922,7 @@ dependencies = [
  "mimalloc",
  "nom",
  "parse-that-corpus",
+ "parse-that-regex",
  "pest",
  "pest_grammars",
  "pprint",
@@ -1072,7 +1071,7 @@ checksum = "c33a9471896f1c69cecef8d20cbe2f7accd12527ce60845ff44c153bb2a21b49"
 [[package]]
 name = "pprint"
 version = "0.3.6"
-source = "git+https://github.com/mkbabb/pprint?rev=2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4#2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4"
+source = "git+https://github.com/mkbabb/pprint?rev=fe7e9cad4547c898426ad527284600c72af02b4b#fe7e9cad4547c898426ad527284600c72af02b4b"
 dependencies = [
  "itoap",
  "pprint_derive",
@@ -1082,7 +1081,7 @@ dependencies = [
 [[package]]
 name = "pprint_derive"
 version = "0.2.2"
-source = "git+https://github.com/mkbabb/pprint?rev=2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4#2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4"
+source = "git+https://github.com/mkbabb/pprint?rev=fe7e9cad4547c898426ad527284600c72af02b4b#fe7e9cad4547c898426ad527284600c72af02b4b"
 dependencies = [
  "proc-macro2",
  "quote",

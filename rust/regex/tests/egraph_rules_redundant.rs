@@ -1,11 +1,11 @@
 //! Tranche O — extracted from `regex/src/egraph/rules/redundant.rs`.
 //! Tests for the `DeduplicateAlternation` HIR rewrite rule.
 
-use egraph::{EGraph, NoAnalysis, Rewrite};
+use parse_that_egraph::{EGraph, NoAnalysis, Rewrite};
 
-use bbnf_regex::egraph::rules::DeduplicateAlternation;
-use bbnf_regex::egraph::{HirENode, insert_hir};
-use bbnf_regex::hir::Hir;
+use parse_that_regex::egraph::rules::DeduplicateAlternation;
+use parse_that_regex::egraph::{HirENode, insert_hir};
+use parse_that_regex::hir::Hir;
 
 fn mk_lit(b: u8) -> Hir {
     Hir::Literal(vec![b])

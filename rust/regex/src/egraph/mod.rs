@@ -8,7 +8,7 @@
 //!
 //! - [`HirENode`] — the e-node enum (variant-parallel to `Hir`,
 //!   with `Id` children). Derives `Language` via
-//!   `egraph_derive::Language`.
+//!   `parse_that_egraph_derive::Language`.
 //! - The substrate analysis is `egraph::NoAnalysis` — neither
 //!   tier consumes per-class lattice data, so the wrapper struct
 //!   was deleted in Tranche M.
@@ -45,7 +45,7 @@ pub use rules::default_hir_rules;
 pub use saturation_cache::SaturationCache;
 pub use translate::{extract_hir, insert_hir};
 
-use egraph::{CspScheduler, EGraph, Id, NoAnalysis, RewriteFn, Scheduler};
+use parse_that_egraph::{CspScheduler, EGraph, Id, NoAnalysis, RewriteFn, Scheduler};
 
 use crate::hir::Hir;
 use crate::info::count_hir_nodes;
@@ -154,7 +154,7 @@ pub fn simplify_hir(hir: &Hir, cost: &RegexExtractionCost) -> Hir {
 /// JSON's 4-6 unique regex patterns previously paid the full
 /// `build → saturate → extract → drop` cycle on every compile of the
 /// same grammar (`compile_json` was 9.17% inclusive on
-/// `bbnf_regex::egraph::saturate_hir_egraph` per the post-W samply
+/// `parse_that_regex::egraph::saturate_hir_egraph` per the post-W samply
 /// profile). The trivial-HIR `needs_saturation` skip in
 /// [`simplify_hir`] only handled `Empty / Literal / Class / Look`
 /// leaves; JSON's string and number patterns have nested

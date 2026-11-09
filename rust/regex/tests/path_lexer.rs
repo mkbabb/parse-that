@@ -5,7 +5,7 @@
 //! dependency, adversarial inputs (whitespace, escaped quotes, Unicode
 //! identifiers).
 
-use bbnf_regex::path_lexer::{PathLexError, PathTokenKind, lex_path};
+use parse_that_regex::path_lexer::{PathLexError, PathTokenKind, lex_path};
 use proc_macro2::Span;
 
 /// `kinds(input)` reduces a successful lex to its `PathTokenKind` shape —

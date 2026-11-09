@@ -1,8 +1,8 @@
 //! Tranche O — extracted from `regex/src/algebra/superset.rs`.
 //! Pure-function tests over `algebra::is_superset`.
 
-use bbnf_regex::ByteSet;
-use bbnf_regex::algebra::is_superset;
+use parse_that_regex::ByteSet;
+use parse_that_regex::algebra::is_superset;
 
 #[test]
 fn superset_basic() {
