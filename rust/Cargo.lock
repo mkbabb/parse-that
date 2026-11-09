@@ -905,6 +905,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "parse-that-corpus"
+version = "0.0.0"
+
+[[package]]
 name = "parse_that"
 version = "0.4.0"
 dependencies = [
@@ -919,6 +923,7 @@ dependencies = [
  "memchr",
  "mimalloc",
  "nom",
+ "parse-that-corpus",
  "pest",
  "pest_grammars",
  "pprint",
@@ -937,6 +942,7 @@ dependencies = [
 name = "parse_that_cli"
 version = "0.1.0"
 dependencies = [
+ "parse-that-corpus",
  "parse_that",
 ]
 
@@ -1868,6 +1874,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "05f360fc0b24296329c78fda852a1e9ae82de9cf7b27dae4b7f62f118f77b9ed"
 dependencies = [
  "tap",
+]
+
+[[package]]
+name = "xtask"
+version = "0.0.0"
+dependencies = [
+ "parse-that-corpus",
+ "sha2",
 ]
 
 [[package]]
