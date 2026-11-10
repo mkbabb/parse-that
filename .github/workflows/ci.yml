@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [master]
 
+# sk-v27 LW2.TOPO-3: the arm set is macos-14 and ubuntu-latest on the pinned
+# stable toolchain (rust-toolchain.toml), a `cargo +stable` job on the latest
+# stable, the opt-in nightly plane, and an Intel SDE job for AVX-512. `ci-ok`
+# needs every job and is the one required check. The build wrapper is set
+# here, never in .cargo/config.toml (LW2.TOPO-2).
+
 jobs:
   typescript:
     runs-on: ubuntu-latest
@@ -26,18 +32,23 @@ jobs:
         working-directory: typescript
 
   rust:
-    runs-on: ubuntu-latest
+    name: Rust (${{ matrix.os }}) — clippy + nextest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: "true"
     steps:
       - uses: actions/checkout@v4
-      # Pinned toolchain lives in rust-toolchain.toml (nightly-2026-04-11).
-      # rustup honours the committed file automatically; no explicit
-      # channel override here — the pin is the source of truth, mirrored
-      # across bbnf-lang and parse-that per B1.W2.c propagation.
-      - name: show toolchain resolution
+      - name: toolchain (the rust-toolchain.toml pin, stable)
         run: |
-          rustup show
+          rustup toolchain install
+          rustup show active-toolchain
           rustc --version
-          cargo --version
+      - uses: mozilla-actions/sccache-action@v0.0.9
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: rust
@@ -45,8 +56,8 @@ jobs:
         uses: taiki-e/install-action@v2
         with:
           tool: nextest
-      - name: clippy (ax-iter)
-        run: cargo clippy --profile ax-iter --workspace -- -D warnings
+      - name: clippy -D warnings (all targets)
+        run: cargo clippy --profile ax-iter --workspace --all-targets -- -D warnings
         working-directory: rust
       # The test corpus is the release asset named in corpus/MANIFEST.sha256,
       # fetched over public HTTPS with no token and checked file by file
@@ -56,9 +67,7 @@ jobs:
         working-directory: rust
       # `--cargo-profile ax-iter` selects the cargo build profile defined
       # in .cargo/config.toml (parse-that has no .config/nextest.toml; the
-      # nextest runner uses its built-in `default` profile). Mirrors the
-      # existing `iter-test` alias shape and satisfies the iter-profile-
-      # always invariant (every iteration cargo command carries ax-iter).
+      # nextest runner uses its built-in `default` profile).
       - name: workspace tests (nextest, ax-iter)
         run: cargo nextest run --cargo-profile ax-iter --workspace --no-fail-fast
         working-directory: rust
@@ -71,6 +80,77 @@ jobs:
         run: cargo test --profile ax-iter --doc -p parse-that-egraph -p parse-that-egraph-derive
         working-directory: rust
 
+  stable:
+    # The LW1.PERF-2 command on the latest stable release: the forward arm of
+    # the pin, so a new stable that breaks the build is read before the pin
+    # moves.
+    name: Rust — cargo +stable (latest)
+    runs-on: ubuntu-latest
+    env:
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: mozilla-actions/sccache-action@v0.0.9
+      - run: cargo +stable --version
+      - run: cargo +stable build --release --locked
+        working-directory: rust
+      - run: cargo +stable xtask corpus fetch
+        working-directory: rust
+      - run: cargo +stable test --workspace --locked --no-fail-fast
+        working-directory: rust
+
+  nightly-plane:
+    # The opt-in plane (parse_that feature `nightly`: portable-SIMD scan
+    # kernels, smallbox coercion) on the nightly the programme last pinned,
+    # through the alias family in .cargo/config.toml. The scan suites run on
+    # both planes; tests/lanes_test.rs holds each plane to the scalar
+    # definition.
+    name: Rust — nightly plane (parse_that/nightly)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-04-11
+          components: clippy
+      - name: clippy -D warnings (nightly plane)
+        run: cargo +nightly-2026-04-11 clippy -p parse_that --features nightly --lib --tests -- -D warnings
+        working-directory: rust
+      - name: scan suites (nightly plane)
+        run: cargo +nightly-2026-04-11 test -p parse_that --features nightly --locked --lib --test lanes_test --test structural_bitmap_test --test quoted_simd_test --test quote_parity_test --test ws_comment_test --test decode_test --test number_simd_test --test number_fastpath_test --test padded_input_test
+        working-directory: rust
+
+  sde:
+    # Intel SDE (Sapphire Rapids) executes the scan suites compiled for that
+    # CPU on both planes, so every AVX-512 instruction the compiler emits for
+    # the kernels runs on an emulated part that has the ISA (ruling X-4: an
+    # x86 tier is executed in CI). `--target` keeps RUSTFLAGS off build
+    # scripts and proc macros, which run natively on the runner.
+    name: Rust — Intel SDE (AVX-512, sapphirerapids)
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -C target-cpu=sapphirerapids
+    steps:
+      - uses: actions/checkout@v4
+      - name: toolchain (the rust-toolchain.toml pin, stable)
+        run: |
+          rustup toolchain install
+          rustup toolchain install nightly-2026-04-11 --profile minimal
+          rustc --version
+      - uses: petarpetrovt/setup-sde@6d2773bc0ef3005fd52e0ae0bb91782321793aec # v6.0
+      - name: scan suites under SDE (stable plane)
+        run: |
+          export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="$SDE_PATH/sde64 -spr --"
+          cargo test --target x86_64-unknown-linux-gnu -p parse_that --locked --lib --test lanes_test --test structural_bitmap_test --test quoted_simd_test --test quote_parity_test --test ws_comment_test --test decode_test --test number_simd_test --test number_fastpath_test --test padded_input_test
+        working-directory: rust
+      - name: scan suites under SDE (nightly plane)
+        run: |
+          export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="$SDE_PATH/sde64 -spr --"
+          cargo +nightly-2026-04-11 test --target x86_64-unknown-linux-gnu -p parse_that --features nightly --locked --lib --test lanes_test --test structural_bitmap_test --test quoted_simd_test --test quote_parity_test --test ws_comment_test --test decode_test --test number_simd_test --test number_fastpath_test --test padded_input_test
+        working-directory: rust
+
   hermetic:
     # sk-v27 LW2.TOPO-1: a fresh checkout, with no sibling repositories and no
     # credentials, resolves and builds the workspace from its pinned edges, and
@@ -81,12 +161,25 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: show toolchain resolution
+      - name: toolchain (the rust-toolchain.toml pin, stable)
         run: |
-          rustup show
+          rustup toolchain install
           rustc --version
-          cargo --version
       - name: repo DAG (pprint <- parse-that <- bbnf-lang)
         run: sh scripts/check-repo-dag.sh
       - name: hermetic build
         run: sh scripts/check-hermetic-build.sh
+
+  ci-ok:
+    # The one required check: every arm above, by name.
+    name: ci-ok
+    if: always()
+    needs: [typescript, rust, stable, nightly-plane, sde, hermetic]
+    runs-on: ubuntu-latest
+    steps:
+      - name: every arm succeeded
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null
