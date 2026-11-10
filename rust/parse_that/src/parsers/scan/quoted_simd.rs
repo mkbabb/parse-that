@@ -1,6 +1,6 @@
 // SIMD-accelerated quoted string scanner with escape-parity handling.
 //
-// Uses portable_simd (u8x16) to classify 16 bytes at a time. When a
+// Uses the 16-byte lane primitives (`super::lanes`) to classify 16 bytes at a time. When a
 // chunk contains backslashes, the escape parity of all 16 positions is
 // resolved via bitwise arithmetic — no per-backslash branches.
 //
@@ -9,7 +9,7 @@
 // (including zero). Equivalently, position `i` is "escaped" iff it is
 // immediately preceded by an odd-length backslash run.
 
-use std::simd::prelude::*;
+use super::lanes;
 
 const CHUNK: usize = 16;
 const MASK16: u32 = 0xFFFF;
@@ -36,14 +36,11 @@ pub fn scan_quoted_string_simd(bytes: &[u8], start: usize, quote: u8) -> Option<
     // run (meaning the first byte of the next chunk is escaped).
     let mut carry: u32 = 0;
 
-    let quote_splat = u8x16::splat(quote);
-    let bs_splat = u8x16::splat(b'\\');
-
     while pos + CHUNK <= len {
-        let chunk = u8x16::from_slice(&bytes[pos..pos + CHUNK]);
+        let chunk = lanes::load(&bytes[pos..pos + CHUNK]);
 
-        let quote_bits = chunk.simd_eq(quote_splat).to_bitmask() as u32;
-        let bs_bits = chunk.simd_eq(bs_splat).to_bitmask() as u32;
+        let quote_bits = lanes::eq_mask(chunk, quote) as u32;
+        let bs_bits = lanes::eq_mask(chunk, b'\\') as u32;
 
         // ── Fast path: no backslashes, no carry from previous chunk ──
         if bs_bits == 0 && carry == 0 {

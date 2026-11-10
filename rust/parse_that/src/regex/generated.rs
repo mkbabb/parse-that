@@ -10,6 +10,7 @@ pub struct RegexParser;
 pub const GRAMMAR_RegexParser: [&'static str; 1usize] = [
     "// Regex grammar \u{2014} full L4 spec for self-hosting parse-that\'s regex parser.\n//\n// Natural recursion: alternation \u{2192} concat \u{2192} quantified \u{2192} atom \u{2192} group \u{2192} alternation.\n// Rules in the cycle survive the IR optimizer; leaf rules are correctly inlined.\n//\n// Regenerate: scripts/bootstrap-regex.sh\n\n// \u{2500}\u{2500} Leaf rules (defined first \u{2014} inlined by optimizer) \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\nliteral = /[^\\\\()\\[\\]{}|*+?.^$]/ ;\n\nclass_escape\n    = \"\\\\\" >> /[dDwWsS]/\n    | \"\\\\\" >> \"u\" >> \"{\" >> /[0-9a-fA-F]+/ << \"}\"\n    | \"\\\\\" >> \"u\" >> /[0-9a-fA-F]{4}/\n    | \"\\\\\" >> \"x\" >> /[0-9a-fA-F]{2}/\n    | \"\\\\\" >> /[^\\n]/\n    ;\n\nclass_atom = class_escape | /[^\\]\\\\]/ ;\n\nclass_item\n    = class_atom , \"-\" >> class_atom\n    | class_escape\n    | /[^\\]\\\\]/\n    ;\n\nchar_class = \"[\" >> \"^\" ? , class_item + << \"]\" ;\n\nescape\n    = \"\\\\\" >> /[dDwWsS]/\n    | \"\\\\\" >> /[pP]/ >> \"{\" >> /[A-Za-z_]+/ << \"}\"\n    | \"\\\\\" >> \"u\" >> \"{\" >> /[0-9a-fA-F]+/ << \"}\"\n    | \"\\\\\" >> \"u\" >> /[0-9a-fA-F]{4}/\n    | \"\\\\\" >> \"x\" >> /[0-9a-fA-F]{2}/\n    | \"\\\\\" >> /[^\\n]/\n    ;\n\nquantifier\n    = \"*\" , \"?\" ?\n    | \"+\" , \"?\" ?\n    | \"?\" , \"?\" ?\n    | \"{\" >> /\\d+/ , ( \",\" , /\\d+/ ? ) ? << \"}\" , \"?\" ?\n    ;\n\n// \u{2500}\u{2500} Recursive spine (last rule = entry point) \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\ngroup\n    = \"(?:\" >> alternation << \")\"\n    | \"(?\" >> /[simux]+/ , \":\" >> alternation << \")\"\n    | \"(?\" >> /[simux]+/ << \")\"\n    | \"(\" >> alternation << \")\"\n    ;\n\natom\n    = group\n    | char_class\n    | \".\"\n    | \"^\"\n    | \"$\"\n    | escape\n    | literal\n    ;\n\nquantified = atom , quantifier ? ;\n\nconcat = quantified * ;\n\nalternation = concat , ( \"|\" >> concat ) * ;\n\n// Entry point \u{2014} last rule in source order.\nregex = alternation ;\n",
 ];
+#[derive(Debug)]
 pub enum RegexParserEnum<'a> {
     escape(crate::Span<'a>),
     quantifier(crate::Span<'a>),
@@ -32,74 +33,6 @@ pub enum RegexParserEnum<'a> {
     atom_0(crate::Span<'a>),
     #[doc(hidden)]
     __Phantom(::core::marker::PhantomData<&'a ()>),
-}
-#[automatically_derived]
-impl<'a> ::core::fmt::Debug for RegexParserEnum<'a> {
-    #[inline]
-    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-        match self {
-            RegexParserEnum::escape(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "escape", &__self_0)
-            }
-            RegexParserEnum::quantifier(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "quantifier", &__self_0)
-            }
-            RegexParserEnum::class_escape(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "class_escape", &__self_0)
-            }
-            RegexParserEnum::literal(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "literal", &__self_0)
-            }
-            RegexParserEnum::class_atom(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "class_atom", &__self_0)
-            }
-            RegexParserEnum::class_item(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "class_item", &__self_0)
-            }
-            RegexParserEnum::char_class(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "char_class", &__self_0)
-            }
-            RegexParserEnum::group(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "group", &__self_0)
-            }
-            RegexParserEnum::alternation(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "alternation", &__self_0)
-            }
-            RegexParserEnum::atom(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "atom", &__self_0)
-            }
-            RegexParserEnum::concat(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "concat", &__self_0)
-            }
-            RegexParserEnum::quantified(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "quantified", &__self_0)
-            }
-            RegexParserEnum::regex(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "regex", &__self_0)
-            }
-            RegexParserEnum::class_atom_0(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "class_atom_0", &__self_0)
-            }
-            RegexParserEnum::class_item_0(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "class_item_0", &__self_0)
-            }
-            RegexParserEnum::class_item_1(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "class_item_1", &__self_0)
-            }
-            RegexParserEnum::group_0(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "group_0", &__self_0)
-            }
-            RegexParserEnum::group_1(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "group_1", &__self_0)
-            }
-            RegexParserEnum::atom_0(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "atom_0", &__self_0)
-            }
-            RegexParserEnum::__Phantom(__self_0) => {
-                ::core::fmt::Formatter::debug_tuple_field1_finish(f, "__Phantom", &__self_0)
-            }
-        }
-    }
 }
 #[automatically_derived]
 impl<'a> ::core::clone::Clone for RegexParserEnum<'a> {

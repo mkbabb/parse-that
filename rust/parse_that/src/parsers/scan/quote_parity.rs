@@ -72,16 +72,15 @@ pub fn prefix_xor(mask: u64) -> u64 {
 
 #[inline(always)]
 fn classify_stripe_64(bytes: &[u8], offset: usize) -> (u64, u64) {
-    use std::simd::prelude::*;
+    use super::lanes;
 
     let mut quote = 0u64;
     let mut bs = 0u64;
     for k in 0..4 {
-        let chunk = u8x16::from_slice(unsafe {
-            bytes.get_unchecked(offset + k * 16..offset + k * 16 + 16)
-        });
-        let q = chunk.simd_eq(u8x16::splat(b'"')).to_bitmask() as u64;
-        let b = chunk.simd_eq(u8x16::splat(b'\\')).to_bitmask() as u64;
+        let chunk =
+            lanes::load(unsafe { bytes.get_unchecked(offset + k * 16..offset + k * 16 + 16) });
+        let q = lanes::eq_mask(chunk, b'"') as u64;
+        let b = lanes::eq_mask(chunk, b'\\') as u64;
         quote |= q << (k * 16);
         bs |= b << (k * 16);
     }
@@ -181,7 +180,7 @@ pub fn filter_quote_parity(view: PaddedView<'_>, positions: &mut Vec<u32>) {
 
     let input = view.bytes();
     let len = view.len();
-    let nwords = (len + 63) / 64;
+    let nwords = len.div_ceil(64);
     let mut in_string_map = vec![0u64; nwords];
 
     compute_in_string_bitmap(view, |offset, in_string, _real_quotes| {
@@ -200,10 +199,7 @@ pub fn filter_quote_parity(view: PaddedView<'_>, positions: &mut Vec<u32>) {
         let word = in_string_map[pos / 64];
         let bit = (word >> (pos % 64)) & 1;
 
-        if byte == b'"' {
-            positions[write] = positions[read];
-            write += 1;
-        } else if bit == 0 {
+        if byte == b'"' || bit == 0 {
             positions[write] = positions[read];
             write += 1;
         }

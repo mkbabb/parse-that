@@ -329,7 +329,7 @@ fn test_var_function() {
         CssNode::QualifiedRule { declarations, .. } => match &declarations[0].values[0] {
             CssValue::Function { name, args } => {
                 assert_eq!(name.as_str(), "var");
-                assert!(args.len() >= 1);
+                assert!(!args.is_empty());
                 match &args[0] {
                     CssValue::Ident(s) => assert_eq!(s.as_str(), "--main-color"),
                     other => panic!("expected Ident, got {:?}", other),
@@ -408,7 +408,7 @@ fn test_at_import() {
     assert_eq!(nodes.len(), 1);
     match &nodes[0] {
         CssNode::AtImport { values } => {
-            assert!(values.len() >= 1);
+            assert!(!values.is_empty());
         }
         other => panic!("expected AtImport, got {:?}", other),
     }

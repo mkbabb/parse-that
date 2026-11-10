@@ -140,7 +140,10 @@ pub fn sp_quoted_string<'a>(config: &QuotedStringConfig) -> SpanParser<'a> {
 #[inline]
 pub fn sp_quoted_string_content<'a>(config: &QuotedStringConfig) -> SpanParser<'a> {
     if config.quote_char == b'"' && config.allows_escapes && config.allows_u_escapes {
-        sp_new!(SpanKind::Scanner(SpanScanner::QuotedStringStrictContent), "string")
+        sp_new!(
+            SpanKind::Scanner(SpanScanner::QuotedStringStrictContent),
+            "string"
+        )
     } else {
         panic!(
             "sp_quoted_string_content: only STRICT_QUOTED_STRING_CONFIG (full RFC 8259 \

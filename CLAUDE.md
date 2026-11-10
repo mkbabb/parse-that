@@ -64,7 +64,7 @@ npx tsc --noEmit  # type check
 ### Rust
 ```bash
 cd rust
-cargo test --workspace      # nightly required (cold_path)
+cargo test --workspace      # stable 1.99.1 (rust-toolchain.toml)
 cargo check --workspace
 cargo bench --bench parse_that_combinator  # single bench
 ```
@@ -105,7 +105,7 @@ Cargo.toml uses crates.io version-only deps (no absolute paths).
 - TS: Mutable `ParserState` with save/restore — zero-alloc hot path
 - TS: Span variants (`stringSpan`, `regexSpan`, `manySpan`, `sepBySpan`, `wrapSpan`, `optSpan`, `skipSpan`, `nextSpan`, `altSpan`, `takeUntilAnySpan`) for zero-copy
 - Rust: `pprint` (path dep to `/Programming/pprint`) for pretty-printing
-- Rust: nightly required — `#![feature(cold_path)]`
+- Rust: stable (rust-toolchain.toml pins 1.99.1); nightly is opt-in — parse_that's `nightly` feature and the `cargo +nightly` alias family in `.cargo/config.toml`
 - Rust: `Parser<'a, O>` (boxed dyn) + `SpanParser<'a>` (enum-dispatched, vtable-free)
 - Rust: `SmallBox<S32>` — 32-byte inline closure storage for parser functions, avoids heap allocation for typical parsers
 - Rust: `diagnostics` Cargo feature — expected sets, suggestions, secondary spans, error recovery
@@ -127,4 +127,4 @@ Cargo.toml uses crates.io version-only deps (no absolute paths).
 
 GitHub Actions (`.github/workflows/ci.yml`):
 - **TypeScript**: Node 24 → tsc --noEmit → vitest → vite build
-- **Rust**: nightly → clippy -D warnings → cargo test --workspace → cargo test --workspace --features diagnostics
+- **Rust**: stable pin → clippy -D warnings → cargo test --workspace → cargo test --workspace --features diagnostics

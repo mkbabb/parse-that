@@ -1,6 +1,7 @@
-#![feature(portable_simd)]
-#![feature(fmt_helpers_for_derive)]
-#![feature(stmt_expr_attributes)]
+// The default build is stable (sk-v27 LW2.TOPO-2). The opt-in `nightly`
+// feature turns on the portable-SIMD scan kernels; each has a stable scalar
+// twin with the same contract, selected when the feature is off.
+#![cfg_attr(feature = "nightly", feature(portable_simd))]
 
 // ── Core (always available — used by generated parsers) ──────────────────
 

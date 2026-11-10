@@ -223,10 +223,9 @@ fn parse_media_query<'a>(state: &mut ParserState<'a>) -> Option<MediaQuery<'a>> 
         // No media type — must be a condition
         state.offset = cp;
         modifier = None;
-        if let Some(cond) = parse_media_condition(state) {
+        {
+            let cond = parse_media_condition(state)?;
             conditions.push(cond);
-        } else {
-            return None;
         }
     }
 

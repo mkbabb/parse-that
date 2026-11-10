@@ -41,8 +41,7 @@ pub(super) fn check_one_pass_eligible(hir: &Hir) -> bool {
 
         Hir::Alternation(alts) => {
             // Check pairwise FIRST set disjointness.
-            let firsts: Vec<Option<CharSet128>> =
-                alts.iter().map(|a| first_chars_of_hir(a)).collect();
+            let firsts: Vec<Option<CharSet128>> = alts.iter().map(first_chars_of_hir).collect();
             for i in 0..firsts.len() {
                 for j in (i + 1)..firsts.len() {
                     match (&firsts[i], &firsts[j]) {

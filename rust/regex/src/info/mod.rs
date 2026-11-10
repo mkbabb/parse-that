@@ -292,7 +292,7 @@ impl RegexInfo {
         // Classification is purely structural — every dialect flag is
         // recovered from the HIR walk in `classify_regex_from_hir`.
         let classification = classify_regex_from_hir(hir);
-        let first_chars = regex_first_chars_from_hir(hir).unwrap_or_else(CharSet128::new);
+        let first_chars = regex_first_chars_from_hir(hir).unwrap_or_default();
         let nullable = is_nullable(hir);
         let (min_len, max_len) = compute_match_width(hir);
         let must_consume = !nullable && min_len > 0;

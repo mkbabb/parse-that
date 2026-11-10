@@ -61,9 +61,7 @@ pub fn scan_balanced(bytes: &[u8], config: &BalancedScanConfig) -> usize {
                     depth += 1;
                     i += 1;
                 } else if b == config.close {
-                    if depth > 0 {
-                        depth -= 1;
-                    }
+                    depth = depth.saturating_sub(1);
                     i += 1;
                 } else if config.quotes.contains(&b) {
                     // Skip quoted string — memchr2 for SIMD-accelerated scanning

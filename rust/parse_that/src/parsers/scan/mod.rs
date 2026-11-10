@@ -7,6 +7,7 @@ mod balanced;
 mod decode;
 mod digits;
 mod ident;
+pub mod lanes;
 mod number;
 mod number_f64;
 pub mod number_simd;

@@ -1,4 +1,3 @@
-use parse_that::regex::byteset::ByteSet;
 use parse_that::regex::nfa::Nfa;
 
 #[test]

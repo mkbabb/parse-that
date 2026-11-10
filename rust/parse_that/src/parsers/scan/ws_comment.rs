@@ -4,22 +4,22 @@
 // whitespace runs skew tiny: 84–100% of runs are ≤ 4 bytes, and 63%
 // are exactly one byte (`\n` between declarations). A 64-byte stripe
 // kernel is overkill for these runs; the per-call overhead (4 ×
-// `u8x16` classify, AND, to_bitmask, CTZ) dominates the 1–3 byte
+// 16-byte classify, AND, to_bitmask, CTZ) dominates the 1–3 byte
 // advance.
 //
 // Tiered fast path:
 //   1. Inline single-byte short-circuit — bails the no-op WS sites
 //      (~300 in the CSS L4 generated parser).
-//   2. Inline 16-byte SIMD chunk — classifies one `u8x16`, CTZ
+//   2. Inline 16-byte SIMD chunk — classifies one chunk, CTZ
 //      finds the terminating byte. Resolves every run ≤ 16 bytes,
 //      which covers ~100% of CSS and essentially all JSON WS.
 //   3. Cold 64-byte stripe walker — only reached when a 16-byte
 //      chunk is entirely WS or contains a comment opener. Handles
 //      long runs and block-comment bodies.
 
+use super::lanes::{self, Chunk, NibbleLut};
 use super::structural_bitmap::classify_stripe;
 use crate::state::{PaddedView, ParserState, Span};
-use std::simd::prelude::*;
 
 /// Byte-class lookup table for ASCII whitespace only.
 static WS_LUT: [bool; 256] = {
@@ -66,19 +66,11 @@ fn is_ws(b: u8) -> bool {
     WS_LUT[b as usize]
 }
 
-/// Classify one `u8x16` chunk against the WS|`/` byte set. Returns a
+/// Classify one 16-byte chunk against the WS|`/` byte set. Returns a
 /// 16-bit mask with bit `i` set iff `chunk[i]` is WS or `/`.
 #[inline(always)]
-fn classify_ws_slash_16(chunk: u8x16) -> u16 {
-    let lo = u8x16::from_array(WS_SLASH_LO_LUT);
-    let hi = u8x16::from_array(WS_SLASH_HI_LUT);
-    let lo_mask = u8x16::splat(0x0F);
-    let lo_n = chunk & lo_mask;
-    let hi_n = chunk >> 4;
-    let lo_r = lo.swizzle_dyn(lo_n);
-    let hi_r = hi.swizzle_dyn(hi_n);
-    let matched = lo_r & hi_r;
-    matched.simd_ne(u8x16::splat(0)).to_bitmask() as u16
+fn classify_ws_slash_16(chunk: Chunk) -> u16 {
+    NibbleLut::new(&WS_SLASH_LO_LUT, &WS_SLASH_HI_LUT).mask(chunk)
 }
 
 /// Scan whitespace and block comments: `(\s | /\*…\*/)*`. Always
@@ -114,9 +106,9 @@ pub fn scan_ws_block_comments<'a>(state: &mut ParserState<'a>) -> Option<Span<'a
     // means `start + 16` is in-bounds on the backing buffer for any
     // `start <= len`; NUL padding classifies as non-WS so stripes
     // that straddle the public end terminate naturally.
-    let chunk = u8x16::from_slice(unsafe { padded.get_unchecked(start..start + 16) });
+    let chunk = lanes::load(unsafe { padded.get_unchecked(start..start + 16) });
     let ws_slash_mask = classify_ws_slash_16(chunk);
-    let non_ws_mask = !ws_slash_mask & 0xFFFFu16;
+    let non_ws_mask = !ws_slash_mask;
 
     if non_ws_mask != 0 {
         // Some byte in the chunk is neither WS nor `/`. If there is
@@ -146,8 +138,8 @@ pub fn scan_ws_block_comments<'a>(state: &mut ParserState<'a>) -> Option<Span<'a
 
 /// Bitmask of positions where byte == `/` within a 16-byte chunk.
 #[inline(always)]
-fn slash_mask_16(chunk: u8x16) -> u16 {
-    chunk.simd_eq(u8x16::splat(b'/')).to_bitmask() as u16
+fn slash_mask_16(chunk: Chunk) -> u16 {
+    lanes::eq_mask(chunk, b'/')
 }
 
 /// Outlined cold-path SIMD bitmap walker. Returns the offset of the
@@ -165,8 +157,7 @@ fn slash_mask_16(chunk: u8x16) -> u16 {
 fn scan_ws_bitmap_cold(view: PaddedView<'_>, start: usize) -> usize {
     let bytes = view.bytes();
     let len = view.len();
-    let lo_v = u8x16::from_array(WS_SLASH_LO_LUT);
-    let hi_v = u8x16::from_array(WS_SLASH_HI_LUT);
+    let lut = NibbleLut::new(&WS_SLASH_LO_LUT, &WS_SLASH_HI_LUT);
 
     let mut i = start;
 
@@ -176,7 +167,7 @@ fn scan_ws_bitmap_cold(view: PaddedView<'_>, start: usize) -> usize {
     // on the NUL classification to terminate. Every `return` site
     // clamps to `len` so padded positions never escape.
     while i < len {
-        let mask = classify_stripe(bytes, i, lo_v, hi_v);
+        let mask = classify_stripe(bytes, i, &lut);
         let inv = !mask;
         if inv != 0 {
             // First non-(ws|`/`) byte in this stripe. May fall in the
@@ -205,31 +196,27 @@ fn scan_ws_bitmap_cold(view: PaddedView<'_>, start: usize) -> usize {
         // Entire stripe is ws or `/` (in the public region — padded
         // NUL bytes are non-ws so `inv != 0` above handles them).
         // Probe each `/` for `*`.
-        let mut slash_mask = slash_mask_stripe(bytes, i);
-        let mut stripe_consumed = false;
-        while slash_mask != 0 {
-            let bit = slash_mask.trailing_zeros() as usize;
-            let slash_abs = i + bit;
-            slash_mask &= !(1u64 << bit);
+        // Only the first `/` matters: it either opens a comment or ends
+        // the scan.
+        let slash_mask = slash_mask_stripe(bytes, i);
+        if slash_mask != 0 {
+            let slash_abs = i + slash_mask.trailing_zeros() as usize;
             if slash_abs >= len {
                 return len;
             }
             if slash_abs + 1 < len && unsafe { *bytes.get_unchecked(slash_abs + 1) } == b'*' {
                 // Block comment opens — skip body; i jumps past `*/`.
                 i = skip_block_comment_tail(view, slash_abs + 2);
-                stripe_consumed = true;
-                break;
+                continue;
             }
             // `/` not followed by `*` inside an all-ws stripe —
             // scan terminates at this `/`.
             return slash_abs;
         }
-        if !stripe_consumed {
-            // Full stripe is ws; advance by the stripe width. The
-            // next iteration's stripe read is still in-bounds on the
-            // padded view even when `i + 64` exceeds `len`.
-            i += 64;
-        }
+        // Full stripe is ws; advance by the stripe width. The next
+        // iteration's stripe read is still in-bounds on the padded view
+        // even when `i + 64` exceeds `len`.
+        i += 64;
     }
     len
 }
@@ -241,10 +228,9 @@ fn scan_ws_bitmap_cold(view: PaddedView<'_>, start: usize) -> usize {
 fn slash_mask_stripe(bytes: &[u8], offset: usize) -> u64 {
     let mut mask: u64 = 0;
     for k in 0..4 {
-        let chunk = u8x16::from_slice(unsafe {
-            bytes.get_unchecked(offset + k * 16..offset + k * 16 + 16)
-        });
-        let m = chunk.simd_eq(u8x16::splat(b'/')).to_bitmask() as u64;
+        let chunk =
+            lanes::load(unsafe { bytes.get_unchecked(offset + k * 16..offset + k * 16 + 16) });
+        let m = lanes::eq_mask(chunk, b'/') as u64;
         mask |= m << (k * 16);
     }
     mask
@@ -296,7 +282,6 @@ pub fn scan_block_comment<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
     if end == len
         && (len < 2
             || unsafe { *bytes.get_unchecked(len - 1) } != b'/'
-            || len < 2
             || unsafe { *bytes.get_unchecked(len - 2) } != b'*')
     {
         return None;

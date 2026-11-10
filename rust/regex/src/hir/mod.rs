@@ -152,7 +152,7 @@ fn add_codepoint_range(out: &mut Vec<CodepointRange>, lo: u32, hi: u32) {
         if hi >= 0xE000 {
             out.push(CodepointRange::new('\u{E000}', char::from_u32(hi).unwrap()));
         }
-    } else if lo >= 0xD800 && lo <= 0xDFFF {
+    } else if (0xD800..=0xDFFF).contains(&lo) {
         // Start is in surrogate range — skip to E000.
         if hi >= 0xE000 {
             out.push(CodepointRange::new('\u{E000}', char::from_u32(hi).unwrap()));
