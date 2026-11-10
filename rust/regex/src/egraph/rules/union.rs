@@ -9,7 +9,7 @@
 //!
 //! Mirrors the grammar-tier `UnionMergeAlt` rule.
 
-use egraph::{Analysis, EGraph, Id, Rewrite};
+use parse_that_egraph::{Analysis, EGraph, Id, Rewrite};
 
 use crate::algebra::try_union;
 use crate::egraph::node::HirENode;

@@ -7,7 +7,7 @@
 //! across tiers — splitting them would let branch-factoring and
 //! dispatch incentives drift between regex and grammar extraction.
 
-use egraph::{CostConfig, CostModel, CostWeights, Id};
+use parse_that_egraph::{CostConfig, CostModel, CostWeights, Id};
 
 use crate::egraph::node::HirENode;
 
@@ -47,7 +47,7 @@ impl Default for RegexExtractionCost {
 
 impl RegexExtractionCost {
     /// Build a `RegexExtractionCost` from a shared
-    /// [`egraph::CostConfig`].
+    /// [`parse_that_egraph::CostConfig`].
     ///
     /// Only the cross-tier `weights` substrate flows through the
     /// shared config; HIR-specific knobs (literal-per-byte, class

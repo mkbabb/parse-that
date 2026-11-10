@@ -1,11 +1,11 @@
 //! Tranche O — extracted from `regex/src/egraph/rules/union.rs`.
 //! Tests for the `UnionMergeClass` HIR rewrite rule.
 
-use egraph::{EGraph, NoAnalysis, Rewrite};
+use parse_that_egraph::{EGraph, NoAnalysis, Rewrite};
 
-use bbnf_regex::egraph::rules::{UnionMatch, UnionMergeClass};
-use bbnf_regex::egraph::{HirENode, insert_hir};
-use bbnf_regex::hir::{ByteRange, CharClass, Hir};
+use parse_that_regex::egraph::rules::{UnionMatch, UnionMergeClass};
+use parse_that_regex::egraph::{HirENode, insert_hir};
+use parse_that_regex::hir::{ByteRange, CharClass, Hir};
 
 fn mk_class(ranges: &[(u8, u8)]) -> Hir {
     Hir::Class(CharClass::Bytes {

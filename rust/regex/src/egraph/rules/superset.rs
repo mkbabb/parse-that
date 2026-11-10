@@ -10,7 +10,7 @@
 //!
 //! Mirrors the grammar-tier `SupersetAbsorbAlt` rule.
 
-use egraph::{Analysis, EGraph, Id, Rewrite};
+use parse_that_egraph::{Analysis, EGraph, Id, Rewrite};
 
 use crate::algebra::is_superset;
 use crate::egraph::node::HirENode;

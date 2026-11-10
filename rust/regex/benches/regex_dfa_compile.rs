@@ -16,7 +16,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use divan::{Bencher, black_box};
 
-use bbnf_regex::Dfa;
+use parse_that_regex::Dfa;
 
 const COMPILE_PATTERNS: &[&str] = &[
     r"\d+",

@@ -9,7 +9,7 @@
 
 use rustc_hash::FxHashSet;
 
-use egraph::{Analysis, EGraph, Id, Rewrite};
+use parse_that_egraph::{Analysis, EGraph, Id, Rewrite};
 
 use crate::egraph::node::HirENode;
 

@@ -87,8 +87,8 @@ harness = false
 # ── dependencies ────────────────────────────────────────────
 
 [dependencies]
-bbnf-regex = { version = "0.1", path = "../regex" }
-pprint = "0.3"
+parse-that-regex = { version = "0.1", path = "../regex" }
+pprint = { version = "0.3", git = "https://github.com/mkbabb/pprint", rev = "fe7e9cad4547c898426ad527284600c72af02b4b" }
 colored = { version = "3", optional = true }
 memchr = "2.5.0"
 aho-corasick = "1.1"

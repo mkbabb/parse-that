@@ -10,7 +10,7 @@
 //! Non-destructive: adds the flattened form as a new e-node in
 //! the same e-class; cost-guided extraction picks the cheapest.
 
-use egraph::{Analysis, EGraph, Id, Rewrite};
+use parse_that_egraph::{Analysis, EGraph, Id, Rewrite};
 
 use crate::egraph::node::HirENode;
 

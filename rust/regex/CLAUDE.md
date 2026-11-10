@@ -1,4 +1,4 @@
-# CLAUDE.md — rust/regex/ (bbnf-regex)
+# CLAUDE.md — rust/regex/ (parse-that-regex)
 
 Bespoke regex engine: HIR + hand-written parser, NFA→DFA compilation,
 structural classification, ByteSet algebra, HIR-tier equality saturation,
@@ -108,7 +108,7 @@ rust/regex/
   the algebra module.
 - **`HirENode`** — e-node enum parallel to `Hir` (with `Id` children
   instead of `Box<Hir>` / `Vec<Hir>`). Derives `Language` via
-  `egraph_derive::Language`.
+  `parse_that_egraph_derive::Language`.
 
 ## E-graph integration
 
@@ -124,14 +124,14 @@ saturation, mirroring the grammar tier's `BBNF_EGRAPH_REPORT`.
 ## Conventions
 
 - **No inline tests in `src/`** (Tranche O). All tests live in `tests/`
-  as integration test binaries; they import via `use bbnf_regex::...`.
+  as integration test binaries; they import via `use parse_that_regex::...`.
 - **No `regex` crate dependency**. Pattern parsing, classification,
   and matching are all bespoke.
 - **`smallvec` for compact storage** in NFA states and HIR children.
 - **Negated classes are first-class** — never expanded eagerly into
   positive form. The `CharClass::Bytes { negated }` flag flows through
   the entire pipeline.
-- **Tests use `bbnf_regex::*` paths** — every public type is reachable
+- **Tests use `parse_that_regex::*` paths** — every public type is reachable
   via the crate root re-exports in `lib.rs`.
 - **Benches use `bencher` (not criterion)** — the parse-that workspace
   convention. `mimalloc` is the global allocator.
