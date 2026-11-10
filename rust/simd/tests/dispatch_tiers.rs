@@ -41,6 +41,7 @@ fn every_isa_tier_of_the_target_is_compiled() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "Miri selects the scalar tier by design (dispatch::select)")]
 fn selected_tier_is_the_best_supported() {
     let sel = selected_tier();
     #[cfg(target_arch = "x86_64")]
