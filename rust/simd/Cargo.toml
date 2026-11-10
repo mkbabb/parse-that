@@ -1,0 +1,31 @@
+[package]
+name = "parse-that-simd"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "SIMD structural-byte scanning kernels (NEON, AVX2, AVX-512, wasm32 SIMD128) behind one runtime-dispatched tier table, each held to one scalar oracle"
+repository = "https://github.com/mkbabb/parse-that"
+
+[lib]
+name = "parse_that_simd"
+path = "src/lib.rs"
+
+[features]
+default = []
+# Every scan runs the scalar oracle, whatever the CPU supports. Also selected
+# at runtime by `PARSE_THAT_SCAN_TIER=scalar` and always under Miri.
+force-scalar = []
+
+[dependencies]
+
+[dev-dependencies]
+parse-that-corpus = { path = "../corpus" }
+proptest = { version = "1", default-features = false, features = ["std", "bit-set"] }
+divan = "0.1"
+
+[target.'cfg(unix)'.dev-dependencies]
+libc = "0.2"
+
+[[bench]]
+name = "stage1_throughput"
+harness = false

@@ -27,7 +27,7 @@ use std::str::FromStr;
 use syn::visit::Visit;
 
 /// The audited crates, by package name.
-const AUDITED: &[&str] = &["parse-that-egraph", "parse-that-egraph-derive"];
+const AUDITED: &[&str] = &["parse-that-egraph", "parse-that-egraph-derive", "parse-that-simd"];
 
 #[derive(Debug)]
 struct Item {

@@ -17,6 +17,14 @@ pub mod quoted_simd;
 pub mod structural_bitmap;
 mod ws_comment;
 
+// The structural-byte kernels live in `parse-that-simd`, the only
+// `core::arch` code of the SIMD-index path; this module is their public
+// face (sk-v27 LW2.PERF-1, X-3). Generated parsers name these paths.
+pub use parse_that_simd::{
+    KernelShape, StructuralAlphabet, StructuralIndex, Tier, compiled_tiers,
+    next_structural_at_or_after, scan_structural, scan_with, selected_tier,
+};
+
 pub use balanced::{BalancedScanConfig, scan_balanced};
 pub use decode::{StringPayload, decode_json_string_to_arena};
 pub use digits::{

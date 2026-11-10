@@ -79,8 +79,8 @@ jobs:
         working-directory: rust
       # nextest does not run doctests; the audited library crates' doctests
       # are callers of record for tests/public_api_callers.rs (ruling A-2).
-      - name: doctests (parse-that-egraph, parse-that-egraph-derive)
-        run: cargo test --profile ax-iter --doc -p parse-that-egraph -p parse-that-egraph-derive
+      - name: doctests (parse-that-egraph, parse-that-egraph-derive, parse-that-simd)
+        run: cargo test --profile ax-iter --doc -p parse-that-egraph -p parse-that-egraph-derive -p parse-that-simd
         working-directory: rust
 
   stable:
@@ -153,6 +153,50 @@ jobs:
           export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="$SDE_PATH/sde64 -spr --"
           cargo +nightly-2026-04-11 test --target x86_64-unknown-linux-gnu -p parse_that --features nightly --locked --lib --test lanes_test --test structural_bitmap_test --test quoted_simd_test --test quote_parity_test --test ws_comment_test --test decode_test --test number_simd_test --test number_fastpath_test --test padded_input_test
         working-directory: rust
+      # parse-that-simd on a default build (no target-cpu): the runtime
+      # dispatch must select the AVX-512 tier on the emulated part, and its
+      # kernel meets the scalar oracle there (LW2.PERF-1, X-4).
+      - name: corpus — fetch and verify (parse-that-simd correctness suite)
+        run: cargo xtask corpus fetch
+        working-directory: rust
+        env:
+          RUSTFLAGS: ""
+      - name: parse-that-simd suites under SDE (default build, runtime dispatch)
+        run: |
+          export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="$SDE_PATH/sde64 -spr --"
+          cargo test --target x86_64-unknown-linux-gnu -p parse-that-simd --locked --no-fail-fast --lib --tests -- --nocapture
+        working-directory: rust
+        env:
+          RUSTFLAGS: ""
+
+  wasm:
+    # parse-that-simd's SIMD128 tier on wasm32-wasip1 under Node's WASI
+    # (scripts/wasi-run.mjs). wasm has no runtime feature detection, so the
+    # tier exists only in a build that enables simd128.
+    name: Rust — wasm32 SIMD128 (parse-that-simd, Node WASI)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: toolchain (the rust-toolchain.toml pin, stable) + wasm32-wasip1
+        run: |
+          rustup toolchain install
+          rustup target add wasm32-wasip1
+          rustc --version
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: corpus — fetch and verify
+        run: cargo xtask corpus fetch
+        working-directory: rust
+      - name: parse-that-simd suites on wasm32 (simd128)
+        run: |
+          export CARGO_TARGET_WASM32_WASIP1_RUNNER="node --no-warnings $PWD/scripts/wasi-run.mjs"
+          export PARSE_THAT_CORPUS_DIR="$PWD/../data"
+          RUSTFLAGS="-C target-feature=+simd128" cargo test -p parse-that-simd --locked --no-fail-fast --target wasm32-wasip1 --lib --tests -- --nocapture
+        working-directory: rust
+      - name: parse-that-simd builds on wasm32 without simd128 (scalar only)
+        run: cargo check -p parse-that-simd --locked --target wasm32-wasip1
+        working-directory: rust
 
   hermetic:
     # sk-v27 LW2.TOPO-1: a fresh checkout, with no sibling repositories and no
@@ -177,7 +221,7 @@ jobs:
     # The one required check: every arm above, by name.
     name: ci-ok
     if: always()
-    needs: [typescript, rust, stable, nightly-plane, sde, hermetic]
+    needs: [typescript, rust, stable, nightly-plane, sde, wasm, hermetic]
     runs-on: ubuntu-latest
     steps:
       - name: every arm succeeded
