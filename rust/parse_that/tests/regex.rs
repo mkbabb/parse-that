@@ -14,3 +14,5 @@ mod nfa_test;
 mod parser_test;
 #[path = "regex/utf8_test.rs"]
 mod utf8_test;
+#[path = "regex/generated_utf8_test.rs"]
+mod generated_utf8_test;
