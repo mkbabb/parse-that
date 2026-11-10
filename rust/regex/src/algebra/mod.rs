@@ -1,7 +1,7 @@
 //! Algebraic operations on regex HIR: superset checking, union computation.
 //!
-//! Pure HIR operations — no grammar IR dependency. The bbnf-ir pass calls
-//! these for pattern simplification within Alt nodes.
+//! Pure HIR operations — no grammar IR dependency. A grammar optimizer
+//! calls these to simplify patterns within alternations.
 
 mod superset;
 mod union;
