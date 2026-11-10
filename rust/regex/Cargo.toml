@@ -19,7 +19,7 @@ smallvec = "1.13"
 serde = { version = "1", optional = true, features = ["derive"] }
 # AZ-IV.W2.3 — `path_lexer` exposes a custom HIR API for path-string
 # literals. Tokens carry `proc_macro2::Span` so the consuming `path!`
-# proc-macro (bbnf-path, AZ-IV.W2.4) can anchor diagnostics at the macro
+# proc-macro (AZ-IV.W2.4) can anchor diagnostics at the macro
 # call-site. proc-macro2 is callable from both proc-macro contexts and
 # ordinary library/test contexts under its default features.
 proc-macro2 = "1"

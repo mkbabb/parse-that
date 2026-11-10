@@ -5,9 +5,9 @@ structural classification, ByteSet algebra, HIR-tier equality saturation,
 unified regex info pass, FIRST-set extraction.
 
 A leaf crate with zero parser-combinator or grammar-IR dependencies. Used
-by `parse_that` (re-exports the engine), by `bbnf` (DFA codegen + regex
-classification + structural facts), and by `bbnf-ir` (FIRST sets + the
-shared `CharSet128` substrate).
+by `parse_that` (re-exports the engine) and by downstream grammar
+compilers (DFA codegen, regex classification, structural facts, FIRST
+sets over the shared `CharSet128` substrate).
 
 ## Structure
 
@@ -100,8 +100,8 @@ rust/regex/
   pattern identity.
 - **`RegexClass`** — semantic pattern category enum (JsonNumber,
   JsonString, Numeric, HexDigits, Identifier, QuotedString, etc.).
-  Drives `FnDescriptor` specialization in bbnf and inline scanner
-  selection in `bbnf::generate::fast_paths`.
+  Lets a code generator specialize a leaf's scanner (for example, an
+  inline fast path chosen per class).
 - **`CharSet128`** — 128-bit ASCII byte set. The shared substrate for
   FIRST/FOLLOW sets across the workspace.
 - **`ByteSet`** — 256-bit full byte set, used by NFA transitions and
@@ -118,8 +118,8 @@ before any downstream analysis. `simplify_hir` does build → saturate
 Every analysis (FIRST sets, nullable, width, DFA sizing) therefore sees
 the canonicalized HIR with zero caller-side awareness.
 
-`BBNF_HIR_EGRAPH_REPORT=1` prints the per-rule fire counts for the HIR
-saturation, mirroring the grammar tier's `BBNF_EGRAPH_REPORT`.
+`PARSE_THAT_REGEX_EGRAPH_REPORT=1` prints the per-rule fire counts for the
+HIR saturation.
 
 ## Conventions
 
@@ -143,8 +143,8 @@ saturation, mirroring the grammar tier's `BBNF_EGRAPH_REPORT`.
   on the public types when the `serde` feature is enabled.
 - **egraph** + **egraph-derive** + **csp-solver** — local-path deps via
   `parse-that/rust/.cargo/config.toml`'s `[patch.crates-io]` table. The
-  HIR e-graph tier consumes this substrate identically to the grammar
-  tier in `bbnf-ir`.
+  HIR e-graph tier consumes this substrate like any other `egraph`
+  client.
 
 [dev-dependencies]
 - **bencher** — bench harness for the 4 bench binaries.

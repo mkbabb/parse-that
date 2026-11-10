@@ -1,8 +1,7 @@
 //! HIR rewrite rules for equality saturation over the regex HIR.
 //!
-//! Mirrors the grammar-tier rules in
-//! `bbnf_ir::egraph::rules::regex` — same shape, same retention
-//! policy, identical `Rewrite` / `RewriteFn` substrate. The HIR
+//! Rules on the general `egraph` crate's `Rewrite` / `RewriteFn`
+//! substrate. The HIR
 //! tier handles *intra-regex* rewrites (simplifications that
 //! operate on the content of a single pattern), leaving the
 //! grammar tier to handle *grammar-level Alt* rewrites (fusion
@@ -26,8 +25,7 @@
 //!
 //! Instrumentation: every rule's name flows into the
 //! `BackoffScheduler` report, which prints per-rule fire counts
-//! when `BBNF_HIR_EGRAPH_REPORT=1` is set in the environment,
-//! mirroring `BBNF_EGRAPH_REPORT` on the grammar tier.
+//! when `PARSE_THAT_REGEX_EGRAPH_REPORT=1` is set in the environment.
 
 mod flatten;
 mod redundant;

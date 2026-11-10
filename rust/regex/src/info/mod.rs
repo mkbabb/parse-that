@@ -191,8 +191,8 @@ impl RegexInfo {
     /// Analyze a regex pattern, computing all properties in a single parse.
     ///
     /// Uses [`crate::egraph::RegexExtractionCost::default`] for HIR
-    /// canonicalization. Consumers with a non-default cost (e.g. the
-    /// bbnf-lang grammar pipeline reading from `ir.cost_config`) should
+    /// canonicalization. Consumers with a non-default cost (e.g. a
+    /// grammar pipeline with its own cost configuration) should
     /// call [`Self::analyze_with_cost`] instead.
     ///
     /// Returns `None` if the pattern fails to parse.

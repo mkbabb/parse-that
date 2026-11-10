@@ -4,7 +4,7 @@
 //! `classify_regex_from_hir` over the parsed HIRs. Measures the cost
 //! of recognizing semantic categories — Numeric, HexDigits,
 //! Identifier, QuotedString — that drive `FnDescriptor`
-//! specialization in bbnf and `RegexInfo`'s classification field.
+//! specialization in a code generator and `RegexInfo`'s classification field.
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
