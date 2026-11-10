@@ -7,7 +7,7 @@
 //!
 //! ## Stripe model
 //!
-//! 64-byte stripes. Classification is four `u8x16` nibble-LUT
+//! 64-byte stripes. Classification is four 16-byte nibble-LUT
 //! comparisons (a lo-nibble lookup, a hi-nibble lookup, a bitwise
 //! AND, a non-zero test) per 16-byte chunk; four chunks per stripe,
 //! ORed into a 64-bit mask. The caller CTZ-iterates the mask,
@@ -25,36 +25,20 @@
 //! the 16-byte / scalar tail loops that the pre-AW-IV implementation
 //! carried.
 
+use super::lanes::{self, NibbleLut};
 use crate::state::{INPUT_PAD_BYTES, PaddedView};
-use std::simd::prelude::*;
 
 const STRIPE: usize = 64;
-
-/// Apply the 4-way nibble-LUT classification to a 16-byte chunk.
-/// Returns a 16-bit mask with bit `i` set iff `chunk[i]` is a
-/// member of the classified byte set.
-#[inline(always)]
-fn classify_16(chunk: u8x16, lo: u8x16, hi: u8x16, lo_mask: u8x16) -> u16 {
-    let lo_n = chunk & lo_mask;
-    let hi_n = chunk >> 4;
-    let lo_r = lo.swizzle_dyn(lo_n);
-    let hi_r = hi.swizzle_dyn(hi_n);
-    let matched = lo_r & hi_r;
-    matched.simd_ne(u8x16::splat(0)).to_bitmask() as u16
-}
 
 /// Build a 64-bit structural-byte mask for a 64-byte stripe.
 /// Caller guarantees `bytes.len() >= offset + 64`.
 #[inline(always)]
-pub fn classify_stripe(bytes: &[u8], offset: usize, lo: u8x16, hi: u8x16) -> u64 {
-    let lo_mask = u8x16::splat(0x0F);
+pub fn classify_stripe(bytes: &[u8], offset: usize, lut: &NibbleLut) -> u64 {
     let mut mask: u64 = 0;
     for k in 0..4 {
-        let chunk = u8x16::from_slice(unsafe {
-            bytes.get_unchecked(offset + k * 16..offset + k * 16 + 16)
-        });
-        let m = classify_16(chunk, lo, hi, lo_mask) as u64;
-        mask |= m << (k * 16);
+        let chunk =
+            lanes::load(unsafe { bytes.get_unchecked(offset + k * 16..offset + k * 16 + 16) });
+        mask |= (lut.mask(chunk) as u64) << (k * 16);
     }
     mask
 }
@@ -107,8 +91,7 @@ pub fn find_next_structural_from(
     lo_lut: &[u8; 16],
     hi_lut: &[u8; 16],
 ) -> Option<(usize, u8)> {
-    let lo = u8x16::from_array(*lo_lut);
-    let hi = u8x16::from_array(*hi_lut);
+    let lut = NibbleLut::new(lo_lut, hi_lut);
     let bytes = view.bytes();
     let len = view.len();
     debug_assert!(
@@ -123,7 +106,7 @@ pub fn find_next_structural_from(
     // Full-stripe hot loop: every iteration fits entirely in the
     // public input range.
     while i + STRIPE <= len {
-        let mask = classify_stripe(bytes, i, lo, hi);
+        let mask = classify_stripe(bytes, i, &lut);
         if mask != 0 {
             let pos = i + mask.trailing_zeros() as usize;
             return Some((pos, unsafe { *bytes.get_unchecked(pos) }));
@@ -136,7 +119,7 @@ pub fn find_next_structural_from(
     // clear for non-NUL needles); the explicit tail mask is kept as
     // a debug_assert correctness probe below.
     if i < len {
-        let mask = classify_stripe(bytes, i, lo, hi);
+        let mask = classify_stripe(bytes, i, &lut);
         let valid_bits = len - i;
         let keep_mask = if valid_bits >= STRIPE {
             u64::MAX
@@ -157,8 +140,7 @@ pub fn find_next_structural_from(
 /// byte-class LUTs; yields structural byte positions via `next()`.
 pub struct NibbleBitmapIter<'a> {
     bytes: &'a [u8],
-    lo: u8x16,
-    hi: u8x16,
+    lut: NibbleLut,
     byte_lut: [bool; 256],
     offset: usize,
     stripe_mask: u64,
@@ -170,8 +152,7 @@ impl<'a> NibbleBitmapIter<'a> {
     pub fn new(bytes: &'a [u8], start: usize, lo_lut: &[u8; 16], hi_lut: &[u8; 16]) -> Self {
         Self {
             bytes,
-            lo: u8x16::from_array(*lo_lut),
-            hi: u8x16::from_array(*hi_lut),
+            lut: NibbleLut::new(lo_lut, hi_lut),
             byte_lut: expand_byte_lut(lo_lut, hi_lut),
             offset: start,
             stripe_mask: 0,
@@ -179,9 +160,30 @@ impl<'a> NibbleBitmapIter<'a> {
         }
     }
 
+    /// Fast-forward the iterator past `new_offset`. Positions before
+    /// `new_offset` will be skipped on subsequent `next()` calls.
+    #[inline]
+    pub fn set_offset(&mut self, new_offset: usize) {
+        self.offset = new_offset;
+        if self.stripe_base != usize::MAX && new_offset >= self.stripe_base {
+            let rel = new_offset - self.stripe_base;
+            if rel < 64 {
+                self.stripe_mask &= !((1u64 << rel) - 1);
+            } else {
+                self.stripe_mask = 0;
+            }
+        } else {
+            self.stripe_mask = 0;
+        }
+    }
+}
+
+impl Iterator for NibbleBitmapIter<'_> {
+    type Item = (usize, u8);
+
     /// Return the next structural position at or after `self.offset`.
     #[inline]
-    pub fn next(&mut self) -> Option<(usize, u8)> {
+    fn next(&mut self) -> Option<(usize, u8)> {
         let len = self.bytes.len();
 
         while self.stripe_mask != 0 {
@@ -204,7 +206,7 @@ impl<'a> NibbleBitmapIter<'a> {
         }
 
         while i + STRIPE <= len {
-            let mask = classify_stripe(self.bytes, i, self.lo, self.hi);
+            let mask = classify_stripe(self.bytes, i, &self.lut);
             if mask != 0 {
                 self.stripe_base = i;
                 self.stripe_mask = mask;
@@ -241,23 +243,6 @@ impl<'a> NibbleBitmapIter<'a> {
 
         self.offset = len;
         None
-    }
-
-    /// Fast-forward the iterator past `new_offset`. Positions before
-    /// `new_offset` will be skipped on subsequent `next()` calls.
-    #[inline]
-    pub fn set_offset(&mut self, new_offset: usize) {
-        self.offset = new_offset;
-        if self.stripe_base != usize::MAX && new_offset >= self.stripe_base {
-            let rel = new_offset - self.stripe_base;
-            if rel < 64 {
-                self.stripe_mask &= !((1u64 << rel) - 1);
-            } else {
-                self.stripe_mask = 0;
-            }
-        } else {
-            self.stripe_mask = 0;
-        }
     }
 }
 

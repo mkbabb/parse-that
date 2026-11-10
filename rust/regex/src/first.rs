@@ -61,10 +61,10 @@ fn first_chars_from_hir(hir: &Hir) -> Option<CharSet128> {
             let first = first_chars_from_hir(&seq[0])?;
             if is_nullable(&seq[0]) {
                 let mut cs = first;
-                if seq.len() > 1 {
-                    if let Some(next) = first_chars_from_hir(&seq[1]) {
-                        cs.union(&next);
-                    }
+                if seq.len() > 1
+                    && let Some(next) = first_chars_from_hir(&seq[1])
+                {
+                    cs.union(&next);
                 }
                 Some(cs)
             } else {

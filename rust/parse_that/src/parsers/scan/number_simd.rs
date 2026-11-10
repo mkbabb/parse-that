@@ -68,7 +68,7 @@ unsafe fn count_leading_digits_neon(ptr: *const u8) -> u32 {
 #[cfg(target_arch = "aarch64")]
 #[inline(always)]
 unsafe fn accumulate_digits_neon(ptr: *const u8, count: u32) -> u64 {
-    debug_assert!(count >= 1 && count <= 16);
+    debug_assert!((1..=16).contains(&count));
 
     if count == 16 {
         // Full stripe — two 8-digit SWAR folds. Each

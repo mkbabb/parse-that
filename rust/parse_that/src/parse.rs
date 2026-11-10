@@ -1,4 +1,4 @@
-use smallbox::{SmallBox, space::S32};
+use smallbox::{SmallBox, smallbox, space::S32};
 
 use crate::scanners::trim_leading_whitespace_mut;
 use crate::state::ParserState;
@@ -71,7 +71,9 @@ where
     #[inline]
     pub fn new(parser_fn: impl ParserFn<'a, Output>) -> Parser<'a, Output> {
         Parser {
-            parser_fn: SmallBox::new(parser_fn),
+            // `smallbox!` unsizes on stable; the `nightly` feature only adds
+            // `CoerceUnsized` for callers who coerce a `SmallBox` themselves.
+            parser_fn: smallbox!(parser_fn),
             flags: 0,
         }
     }
@@ -111,12 +113,12 @@ where
         let result = self.parser_fn.call(state);
 
         // Post: handle save_state backtracking
-        if let Some(cp) = checkpoint {
-            if result.is_none() {
-                state.furthest_offset = state.furthest_offset.max(state.offset);
-                state.offset = cp;
-                return None;
-            }
+        if let Some(cp) = checkpoint
+            && result.is_none()
+        {
+            state.furthest_offset = state.furthest_offset.max(state.offset);
+            state.offset = cp;
+            return None;
         }
 
         // Post: trim whitespace — skip on failure

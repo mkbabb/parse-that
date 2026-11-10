@@ -56,7 +56,7 @@ fn stripe_boundary_input_padding() {
     // Inputs at 63 / 64 / 65 bytes exercise the PaddedChunk-size
     // allocation boundary.
     for n in [63usize, 64, 65] {
-        let src: String = (0..n).map(|i| ((b'a' + (i % 26) as u8) as char)).collect();
+        let src: String = (0..n).map(|i| (b'a' + (i % 26) as u8) as char).collect();
         check_padding_invariants(&src);
     }
 }
@@ -65,9 +65,7 @@ fn stripe_boundary_input_padding() {
 fn long_input_padding() {
     // ~4 KB input: crosses many cache lines and verifies the
     // allocation scales.
-    let src: String = (0..4096)
-        .map(|i| ((b'0' + (i % 10) as u8) as char))
-        .collect();
+    let src: String = (0..4096).map(|i| (b'0' + (i % 10) as u8) as char).collect();
     check_padding_invariants(&src);
 }
 

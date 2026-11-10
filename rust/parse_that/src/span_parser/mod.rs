@@ -164,12 +164,12 @@ impl<'a> SpanParser<'a> {
 
         let result = self.call_inner(state);
 
-        if let Some(cp) = checkpoint {
-            if result.is_none() {
-                state.furthest_offset = state.furthest_offset.max(state.offset);
-                state.offset = cp;
-                return None;
-            }
+        if let Some(cp) = checkpoint
+            && result.is_none()
+        {
+            state.furthest_offset = state.furthest_offset.max(state.offset);
+            state.offset = cp;
+            return None;
         }
         // Skip post-trim on failure
         if result.is_some() && self.flags & FLAG_TRIM_WS != 0 {

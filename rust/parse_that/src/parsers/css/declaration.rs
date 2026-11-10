@@ -38,12 +38,11 @@ pub(super) fn css_declaration<'a>() -> Parser<'a, CssDeclaration<'a>> {
         }
 
         // Check for !important pattern: last value is "important"
-        if !values.is_empty() {
-            if let Some(CssValue::Ident(s)) = values.last() {
-                if s.as_str() == "important" {
-                    important = true;
-                }
-            }
+        if !values.is_empty()
+            && let Some(CssValue::Ident(s)) = values.last()
+            && s.as_str() == "important"
+        {
+            important = true;
         }
 
         // Consume optional ;

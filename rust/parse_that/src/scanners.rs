@@ -151,16 +151,12 @@ fn trim_leading_whitespace_scan_and_cache(state: &mut ParserState<'_>) {
 
     let mut bitmap: u64 = 0;
     {
-        use std::simd::prelude::*;
+        use crate::parsers::scan::lanes;
         let window = &bytes[offset..offset + window_len];
         let mut i = 0;
         while i + 16 <= window_len {
-            let chunk = u8x16::from_slice(&window[i..i + 16]);
-            let mask = chunk.simd_eq(u8x16::splat(b' '))
-                | chunk.simd_eq(u8x16::splat(b'\t'))
-                | chunk.simd_eq(u8x16::splat(b'\n'))
-                | chunk.simd_eq(u8x16::splat(b'\r'));
-            let bits = mask.to_bitmask() as u64;
+            let chunk = lanes::load(&window[i..i + 16]);
+            let bits = ws_mask_16(chunk) as u64;
             bitmap |= bits << i;
             i += 16;
         }
@@ -186,26 +182,30 @@ fn trim_leading_whitespace_scan_and_cache(state: &mut ParserState<'_>) {
     }
 }
 
+/// Bitmask of the JSON/CSS whitespace bytes (space, tab, LF, CR) in one
+/// 16-byte chunk.
+#[inline(always)]
+fn ws_mask_16(chunk: crate::parsers::scan::lanes::Chunk) -> u16 {
+    use crate::parsers::scan::lanes::eq_mask;
+    eq_mask(chunk, b' ') | eq_mask(chunk, b'\t') | eq_mask(chunk, b'\n') | eq_mask(chunk, b'\r')
+}
+
 /// SIMD bulk loop for WS runs that exceed the 64-byte cached window.
 /// Processes 16 bytes per iteration until a non-WS byte is hit or
 /// input ends.
 #[inline(never)]
 fn trim_leading_whitespace_bulk_simd(state: &mut ParserState<'_>) {
-    use std::simd::prelude::*;
+    use crate::parsers::scan::lanes;
     let bytes = state.src_bytes;
     let mut i = state.offset;
     let end = bytes.len();
     while i + 16 <= end {
-        let chunk = u8x16::from_slice(&bytes[i..i + 16]);
-        let mask = chunk.simd_eq(u8x16::splat(b' '))
-            | chunk.simd_eq(u8x16::splat(b'\t'))
-            | chunk.simd_eq(u8x16::splat(b'\n'))
-            | chunk.simd_eq(u8x16::splat(b'\r'));
-        if mask.all() {
+        let mask = ws_mask_16(lanes::load(&bytes[i..i + 16]));
+        if mask == u16::MAX {
             i += 16;
             continue;
         }
-        let first_non_ws = (!mask).to_bitmask().trailing_zeros() as usize;
+        let first_non_ws = (!mask).trailing_zeros() as usize;
         state.offset = i + first_non_ws;
         return;
     }
@@ -251,7 +251,7 @@ pub fn build_nibble_luts(targets: &[u8]) -> ([u8; 16], [u8; 16]) {
 }
 
 /// SIMD nibble-LUT byte scanner: find first occurrence of any target byte
-/// in `haystack` using two 16-byte lookup tables + `swizzle_dyn` (vpshufb/tbl).
+/// in `haystack` using two 16-byte lookup tables ([`crate::parsers::scan::lanes::NibbleLut`]).
 ///
 /// Processes 16 bytes per iteration.  The `lo_lut`/`hi_lut` must be pre-built
 /// via [`build_nibble_luts`].
@@ -264,26 +264,18 @@ pub fn find_first_of_nibble_lut(
     lo_lut: &[u8; 16],
     hi_lut: &[u8; 16],
 ) -> Option<(usize, u8)> {
-    use std::simd::prelude::*;
+    use crate::parsers::scan::lanes::{self, NibbleLut};
 
-    let lo = u8x16::from_array(*lo_lut);
-    let hi = u8x16::from_array(*hi_lut);
-    let lo_mask = u8x16::splat(0x0F);
+    let lut = NibbleLut::new(lo_lut, hi_lut);
 
     let len = haystack.len();
     let mut i = 0;
 
     // SIMD: 16 bytes at a time
     while i + 16 <= len {
-        let chunk = u8x16::from_slice(&haystack[i..i + 16]);
-        let lo_nibbles = chunk & lo_mask;
-        let hi_nibbles = chunk >> 4;
-        let lo_result = lo.swizzle_dyn(lo_nibbles);
-        let hi_result = hi.swizzle_dyn(hi_nibbles);
-        let matched = lo_result & hi_result;
-        let is_match = matched.simd_ne(u8x16::splat(0));
-        if is_match.any() {
-            let pos = is_match.to_bitmask().trailing_zeros() as usize;
+        let matched = lut.mask(lanes::load(&haystack[i..i + 16]));
+        if matched != 0 {
+            let pos = matched.trailing_zeros() as usize;
             let idx = i + pos;
             return Some((idx, unsafe { *haystack.get_unchecked(idx) }));
         }

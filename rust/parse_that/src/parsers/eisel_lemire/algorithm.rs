@@ -41,8 +41,7 @@ pub(super) fn compute_float(q: i64, mut w: u64) -> (u64, i32) {
         return (mantissa, power2);
     }
     if lo <= 1
-        && q >= MIN_EXPONENT_ROUND_TO_EVEN
-        && q <= MAX_EXPONENT_ROUND_TO_EVEN
+        && (MIN_EXPONENT_ROUND_TO_EVEN..=MAX_EXPONENT_ROUND_TO_EVEN).contains(&q)
         && mantissa & 3 == 1
         && (mantissa << (upperbit + 64 - MANTISSA_EXPLICIT_BITS as i32 - 3)) == hi
     {

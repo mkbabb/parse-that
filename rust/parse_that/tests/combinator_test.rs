@@ -738,11 +738,11 @@ mod tests {
 
     fn gen_json_number(seed: &mut u64) -> String {
         let mut out = String::new();
-        if next_rand(seed) % 2 == 0 {
+        if next_rand(seed).is_multiple_of(2) {
             out.push('-');
         }
 
-        if next_rand(seed) % 10 == 0 {
+        if next_rand(seed).is_multiple_of(10) {
             out.push('0');
         } else {
             out.push((b'1' + (next_rand(seed) % 9) as u8) as char);
@@ -752,7 +752,7 @@ mod tests {
             }
         }
 
-        if next_rand(seed) % 3 == 0 {
+        if next_rand(seed).is_multiple_of(3) {
             out.push('.');
             let frac_len = (next_rand(seed) % 6 + 1) as usize;
             for _ in 0..frac_len {
@@ -760,8 +760,12 @@ mod tests {
             }
         }
 
-        if next_rand(seed) % 3 == 0 {
-            out.push(if next_rand(seed) % 2 == 0 { 'e' } else { 'E' });
+        if next_rand(seed).is_multiple_of(3) {
+            out.push(if next_rand(seed).is_multiple_of(2) {
+                'e'
+            } else {
+                'E'
+            });
             match next_rand(seed) % 3 {
                 0 => out.push('+'),
                 1 => out.push('-'),

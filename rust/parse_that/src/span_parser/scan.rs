@@ -123,11 +123,9 @@ impl<'a> SpanParser<'a> {
         hi_lut: &[u8; 16],
         state: &mut ParserState<'a>,
     ) -> Option<Span<'a>> {
-        use std::simd::prelude::*;
+        use crate::parsers::scan::lanes::{self, NibbleLut};
 
-        let lo = u8x16::from_array(*lo_lut);
-        let hi = u8x16::from_array(*hi_lut);
-        let lo_mask_const = u8x16::splat(0x0F);
+        let lut = NibbleLut::new(lo_lut, hi_lut);
 
         let bytes = state.src_bytes;
         let start = state.offset;
@@ -136,20 +134,12 @@ impl<'a> SpanParser<'a> {
 
         // SIMD: classify 16 bytes at a time
         while i + 16 <= end {
-            let chunk = u8x16::from_slice(&bytes[i..i + 16]);
-            let lo_nibbles = chunk & lo_mask_const;
-            let hi_nibbles = chunk >> 4;
-
-            let lo_result = lo.swizzle_dyn(lo_nibbles);
-            let hi_result = hi.swizzle_dyn(hi_nibbles);
-            let matched = lo_result & hi_result;
-
-            let is_excluded = matched.simd_ne(u8x16::splat(0));
-            if !is_excluded.any() {
+            let excluded = lut.mask(lanes::load(&bytes[i..i + 16]));
+            if excluded == 0 {
                 i += 16;
                 continue;
             }
-            i += is_excluded.to_bitmask().trailing_zeros() as usize;
+            i += excluded.trailing_zeros() as usize;
             // Found an excluded byte — break to return result
             if i == start {
                 #[cfg(feature = "diagnostics")]

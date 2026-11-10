@@ -8,7 +8,7 @@ Rust parser combinator workspace. Workspace members: `parse_that` (core library)
 Cargo.toml                Workspace root (members: src, parse_that, bootstrap, regex)
 parse_that/               Core library crate
   src/
-    lib.rs                Barrel re-exports, #![feature(cold_path, portable_simd, ...)]
+    lib.rs                Barrel re-exports; portable_simd only under the opt-in `nightly` feature
     parse.rs              Parser<'a, O> struct, ParserResult, ParserFn trait
     state.rs              ParserState<'a>, Span<'a>, Diagnostic, Suggestion, SecondarySpan
     bump_slab.rs          BumpSlab — byte-based bump allocator for monolithic codegen
@@ -97,7 +97,7 @@ src/                      CLI binary
 ## Build
 
 ```bash
-cargo test --workspace      # nightly required
+cargo test --workspace      # stable 1.99.1 (rust-toolchain.toml)
 cargo check --workspace
 cargo clippy --workspace -- -D warnings
 cargo bench --bench parse_that_combinator
@@ -127,7 +127,7 @@ JsonValue<'a>                // Null | Bool | Number | String(Cow) | Array | Obj
 
 ## Conventions
 
-- Edition 2024, nightly required for `#![feature(cold_path)]`
+- Edition 2024, stable 1.99.1; the `nightly` feature (portable-SIMD scan kernels) is opt-in
 - `diagnostics` Cargo feature — expected sets, suggestions, secondary spans, error recovery (zero overhead when off). `colored` crate optional behind this feature.
 - `recover(sync, sentinel)` — parse past errors, collect Diagnostic snapshots into thread-local store
 - `minus(excluded)` — EBNF set-difference: match self only if excluded fails at same position. Saves/restores `furthest_offset`.

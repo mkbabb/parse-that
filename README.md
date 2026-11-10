@@ -74,7 +74,7 @@ expr.parse("1 + 2 * 3"); // => [1, "+", [2, "*", 3]]
 typescript/            TS library (@mkbabb/parse-that v0.8.2)
   src/parse/           Isomorphic module layout (see below)
   test/                Vitest tests + benchmark comparators
-rust/                  Rust workspace (nightly, edition 2024)
+rust/                  Rust workspace (stable 1.99.1, edition 2024)
   parse_that/          Core lib — isomorphic module layout (see below)
   src/                 CLI binary (parse_that_cli)
 grammar/               Shared test vectors (BBNF grammars in bbnf-lang repo)

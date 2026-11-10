@@ -270,10 +270,11 @@ fn try_classify_whitespace_block_comment(hir: &Hir) -> Option<RegexClass> {
 /// emits `Empty` as a flag marker (e.g., `(?s)` produces
 /// `Concat([Empty, ...])`).
 fn strip_leading_empty(hir: &Hir) -> &Hir {
-    if let Hir::Concat(parts) = hir {
-        if parts.len() == 2 && matches!(&parts[0], Hir::Empty) {
-            return &parts[1];
-        }
+    if let Hir::Concat(parts) = hir
+        && parts.len() == 2
+        && matches!(&parts[0], Hir::Empty)
+    {
+        return &parts[1];
     }
     hir
 }
@@ -416,9 +417,7 @@ fn try_classify_numeric(hir: &Hir) -> Option<RegexClass> {
     if idx >= parts.len() {
         return None;
     }
-    if is_digit_repetition(&parts[idx]) {
-        idx += 1;
-    } else if is_digit_class(&parts[idx]) {
+    if is_digit_repetition(&parts[idx]) || is_digit_class(&parts[idx]) {
         idx += 1;
     } else if is_json_integer_alternation(&parts[idx]) {
         // `(0|[1-9]\d*)` — the JSON integer alternation deliberately
@@ -462,10 +461,11 @@ fn try_classify_numeric(hir: &Hir) -> Option<RegexClass> {
 
 /// Check if HIR is an optional sign class: `[-+]?` or `-?`
 fn is_optional_sign_class(hir: &Hir) -> bool {
-    if let Hir::Repetition(rep) = hir {
-        if rep.min == 0 && rep.max == Some(1) {
-            return is_sign_class(&rep.sub);
-        }
+    if let Hir::Repetition(rep) = hir
+        && rep.min == 0
+        && rep.max == Some(1)
+    {
+        return is_sign_class(&rep.sub);
     }
     if let Hir::Group(sub) = hir {
         return is_optional_sign_class(sub);
@@ -490,10 +490,10 @@ fn is_sign_class(hir: &Hir) -> bool {
 
 /// Check if HIR is a digit repetition: `\d+`, `[0-9]+`, etc.
 fn is_digit_repetition(hir: &Hir) -> bool {
-    if let Hir::Repetition(rep) = hir {
-        if rep.min >= 1 || (rep.min == 0 && rep.max.is_none()) {
-            return is_digit_class(&rep.sub);
-        }
+    if let Hir::Repetition(rep) = hir
+        && (rep.min >= 1 || (rep.min == 0 && rep.max.is_none()))
+    {
+        return is_digit_class(&rep.sub);
     }
     if let Hir::Group(sub) = hir {
         return is_digit_repetition(sub);
@@ -515,12 +515,12 @@ fn is_digit_class(hir: &Hir) -> bool {
 /// Check if HIR matches `(0|[1-9]\d*)` (JSON integer alternation).
 fn is_json_integer_alternation(hir: &Hir) -> bool {
     let inner = unwrap_group(hir);
-    if let Hir::Alternation(alts) = inner {
-        if alts.len() == 2 {
-            let is_zero = is_literal_byte(&alts[0], b'0');
-            let is_nonzero_seq = is_nonzero_digit_seq(&alts[1]);
-            return is_zero && is_nonzero_seq;
-        }
+    if let Hir::Alternation(alts) = inner
+        && alts.len() == 2
+    {
+        let is_zero = is_literal_byte(&alts[0], b'0');
+        let is_nonzero_seq = is_nonzero_digit_seq(&alts[1]);
+        return is_zero && is_nonzero_seq;
     }
     false
 }
@@ -555,10 +555,10 @@ fn is_nonzero_digit_seq(hir: &Hir) -> bool {
 /// Check if HIR matches `(\d+(\.\d+)?|\.\d+)` (CSS non-nullable number body).
 fn is_css_number_body(hir: &Hir) -> bool {
     let inner = unwrap_group(hir);
-    if let Hir::Alternation(alts) = inner {
-        if alts.len() == 2 {
-            return is_digits_with_optional_fraction(&alts[0]) && is_dot_digits(&alts[1]);
-        }
+    if let Hir::Alternation(alts) = inner
+        && alts.len() == 2
+    {
+        return is_digits_with_optional_fraction(&alts[0]) && is_dot_digits(&alts[1]);
     }
     false
 }
@@ -587,10 +587,11 @@ fn is_dot_digits(hir: &Hir) -> bool {
 
 /// Check if HIR is an optional fraction: `(\.\d+)?` or `\.\d+`.
 fn is_fraction_part(hir: &Hir) -> bool {
-    if let Hir::Repetition(rep) = hir {
-        if rep.min == 0 && rep.max == Some(1) {
-            return is_dot_digits_inner(&rep.sub);
-        }
+    if let Hir::Repetition(rep) = hir
+        && rep.min == 0
+        && rep.max == Some(1)
+    {
+        return is_dot_digits_inner(&rep.sub);
     }
     is_dot_digits_inner(hir)
 }
@@ -609,10 +610,11 @@ fn is_dot_digits_inner(hir: &Hir) -> bool {
 
 /// Check if HIR is an optional exponent: `([eE][+-]?\d+)?`.
 fn is_exponent_part(hir: &Hir) -> bool {
-    if let Hir::Repetition(rep) = hir {
-        if rep.min == 0 && rep.max == Some(1) {
-            return is_exponent_inner(&rep.sub);
-        }
+    if let Hir::Repetition(rep) = hir
+        && rep.min == 0
+        && rep.max == Some(1)
+    {
+        return is_exponent_inner(&rep.sub);
     }
     is_exponent_inner(hir)
 }
@@ -771,10 +773,12 @@ fn has_u_then_quad_hex(parts: &[Hir]) -> bool {
             continue;
         }
         let tail = unwrap_group(&window[1]);
-        if let Hir::Repetition(rep) = tail {
-            if rep.min == 4 && rep.max == Some(4) && is_hex_class(&rep.sub) {
-                return true;
-            }
+        if let Hir::Repetition(rep) = tail
+            && rep.min == 4
+            && rep.max == Some(4)
+            && is_hex_class(&rep.sub)
+        {
+            return true;
         }
     }
     false
@@ -783,10 +787,10 @@ fn has_u_then_quad_hex(parts: &[Hir]) -> bool {
 // ── HexDigits ──────────────────────────────────────────────────────────────
 
 fn try_classify_hex(hir: &Hir) -> bool {
-    if let Hir::Repetition(rep) = hir {
-        if rep.min >= 1 || rep.max.is_none() {
-            return is_hex_class(&rep.sub);
-        }
+    if let Hir::Repetition(rep) = hir
+        && (rep.min >= 1 || rep.max.is_none())
+    {
+        return is_hex_class(&rep.sub);
     }
     false
 }
@@ -813,10 +817,10 @@ fn try_classify_identifier(hir: &Hir) -> Option<RegexClass> {
     // pattern with a `--` custom-property branch, e.g.
     // `-?[a-zA-Z_][\w-]*|--[\w-]+`. Detect that shape directly.
     let inner = unwrap_group(hir);
-    if let Hir::Alternation(alts) = inner {
-        if let Some(class) = try_classify_identifier_alt(alts) {
-            return Some(class);
-        }
+    if let Hir::Alternation(alts) = inner
+        && let Some(class) = try_classify_identifier_alt(alts)
+    {
+        return Some(class);
     }
 
     // Single concat — `[-?]? [a-zA-Z_] [\w-]*` with optional leading
@@ -910,10 +914,10 @@ fn is_double_dash_word_run(hir: &Hir) -> bool {
     if idx != parts.len() - 1 {
         return false;
     }
-    if let Hir::Repetition(rep) = &parts[idx] {
-        if rep.min >= 1 {
-            return is_word_class(unwrap_group(&rep.sub));
-        }
+    if let Hir::Repetition(rep) = &parts[idx]
+        && rep.min >= 1
+    {
+        return is_word_class(unwrap_group(&rep.sub));
     }
     false
 }
@@ -946,10 +950,11 @@ fn strip_optional_leading_dash(hir: &Hir) -> (bool, &Hir) {
 }
 
 fn is_optional_dash(hir: &Hir) -> bool {
-    if let Hir::Repetition(rep) = hir {
-        if rep.min == 0 && rep.max == Some(1) {
-            return is_dash_byte(&rep.sub);
-        }
+    if let Hir::Repetition(rep) = hir
+        && rep.min == 0
+        && rep.max == Some(1)
+    {
+        return is_dash_byte(&rep.sub);
     }
     if let Hir::Group(sub) = hir {
         return is_optional_dash(sub);

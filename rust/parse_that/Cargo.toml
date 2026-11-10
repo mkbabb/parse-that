@@ -14,6 +14,9 @@ path = "src/lib.rs"
 default = ["combinators"]
 combinators = []
 diagnostics = ["dep:colored"]
+# Opt-in nightly plane (sk-v27 LW2.TOPO-2), off by default: the portable-SIMD
+# scan kernels and smallbox's unsizing coercion. A default build is stable.
+nightly = ["smallbox/nightly"]
 
 # ── parse_that benches ──────────────────────────────────────
 
@@ -94,7 +97,7 @@ memchr = "2.5.0"
 aho-corasick = "1.1"
 fast-float2 = "0.2"
 smallvec = "1.13"
-smallbox = { version = "0.8", features = ["nightly"] }
+smallbox = "0.8"
 
 [dev-dependencies]
 # The one corpus resolver for tests and benches (`cargo xtask corpus fetch`).

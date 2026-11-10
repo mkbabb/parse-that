@@ -238,19 +238,19 @@ pub fn scan_number_mantissa(
         // once. If all scanned digits fit within the 19-digit mantissa
         // budget, accumulate them in one shot. Otherwise fall through to
         // the chunked/scalar loops that enforce the budget per-digit.
-        if total_digits < 19 && i < len {
-            if let Some(result) = number_simd::scan_digits_simd(view, i) {
-                if total_digits + result.count as usize <= 19 {
-                    // All scanned digits fit in the mantissa budget.
-                    mantissa = mantissa
-                        .wrapping_mul(number_simd::POW10[result.count as usize])
-                        .wrapping_add(result.value);
-                    i += result.count as usize;
-                    total_digits += result.count as usize;
-                }
-                // If they don't fit, fall through to chunked/scalar loops.
-            }
+        if total_digits < 19
+            && i < len
+            && let Some(result) = number_simd::scan_digits_simd(view, i)
+            && total_digits + result.count as usize <= 19
+        {
+            // All scanned digits fit in the mantissa budget.
+            mantissa = mantissa
+                .wrapping_mul(number_simd::POW10[result.count as usize])
+                .wrapping_add(result.value);
+            i += result.count as usize;
+            total_digits += result.count as usize;
         }
+        // If they don't fit, fall through to chunked/scalar loops.
         // 8-digit SWAR chunks for remaining fractional digits.
         while i < len && total_digits + 8 <= 19 {
             let b = unsafe { *bytes.get_unchecked(i) };

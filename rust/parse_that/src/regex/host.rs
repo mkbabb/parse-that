@@ -199,7 +199,7 @@ fn lower_quantifier(
         parse_braced_quantifier(span)?
     };
 
-    let greedy = !rest.first().is_some_and(|&b| b == b'?');
+    let greedy = rest.first() != Some(&b'?');
 
     Ok(Hir::Repetition(Repetition {
         sub: Box::new(inner.clone()),

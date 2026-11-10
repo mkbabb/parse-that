@@ -190,9 +190,7 @@ fn split_at_boundary(out: &mut Vec<Utf8Sequence>, lo: &[u8], hi: &[u8], depth: u
     // Part 1: lo[depth] with lo's continuation bytes → max continuation.
     if lo[depth] < hi[depth] || depth == len - 1 {
         let mut hi1 = lo.to_vec();
-        for i in (depth + 1)..len {
-            hi1[i] = cont_max;
-        }
+        hi1[depth + 1..len].fill(cont_max);
         split_range(out, lo, &hi1, depth);
     }
 
@@ -212,12 +210,10 @@ fn split_at_boundary(out: &mut Vec<Utf8Sequence>, lo: &[u8], hi: &[u8], depth: u
             start: mid_lo,
             end: mid_hi,
         };
-        for i in (depth + 1)..len {
-            ranges[i] = Utf8Range {
-                start: cont_min,
-                end: cont_max,
-            };
-        }
+        ranges[depth + 1..len].fill(Utf8Range {
+            start: cont_min,
+            end: cont_max,
+        });
         out.push(Utf8Sequence {
             ranges,
             len: len as u8,
@@ -227,9 +223,7 @@ fn split_at_boundary(out: &mut Vec<Utf8Sequence>, lo: &[u8], hi: &[u8], depth: u
     // Part 3: hi[depth] with min continuation → hi's continuation bytes.
     if hi[depth] > lo[depth] {
         let mut lo3 = hi.to_vec();
-        for i in (depth + 1)..len {
-            lo3[i] = cont_min;
-        }
+        lo3[depth + 1..len].fill(cont_min);
         split_range(out, &lo3, hi, depth);
     }
 }

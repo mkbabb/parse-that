@@ -122,7 +122,7 @@ fn stripe_boundary_comment() {
 fn all_slash_stripe_terminates() {
     // 64 `/` with no `*`: scan terminates at idx 0 because the
     // first `/` is not followed by `*`.
-    let input = format!("{}", "/".repeat(64));
+    let input = "/".repeat(64).to_string();
     let (off, _) = scan(&input);
     assert_eq!(off, 0);
 }

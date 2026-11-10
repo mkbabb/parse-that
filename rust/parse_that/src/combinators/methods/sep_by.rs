@@ -173,10 +173,10 @@ where
                 let cp = state.offset;
                 trim_leading_whitespace_mut(state);
                 // Peek terminator — skip separator attempt entirely
-                if let Some(&b) = state.src_bytes.get(state.offset) {
-                    if terminator.contains(&b) {
-                        break;
-                    }
+                if let Some(&b) = state.src_bytes.get(state.offset)
+                    && terminator.contains(&b)
+                {
+                    break;
                 }
                 if sep.parser_fn.call(state).is_none() {
                     state.offset = cp;

@@ -112,8 +112,8 @@ fn cross_validate_all_counts() {
     for count in 1..=16u32 {
         let mut input = [b'0'; 32];
         // Fill with a recognizable pattern
-        for j in 0..count as usize {
-            input[j] = b'1' + (j % 9) as u8;
+        for (j, b) in input.iter_mut().enumerate().take(count as usize) {
+            *b = b'1' + (j % 9) as u8;
         }
         // Terminate with non-digit
         if (count as usize) < 32 {
@@ -122,8 +122,8 @@ fn cross_validate_all_counts() {
 
         // Scalar reference
         let mut scalar_val: u64 = 0;
-        for j in 0..count as usize {
-            scalar_val = scalar_val * 10 + (input[j] - b'0') as u64;
+        for &d in &input[..count as usize] {
+            scalar_val = scalar_val * 10 + (d - b'0') as u64;
         }
 
         if let Some(result) = scan(&input, 0) {
