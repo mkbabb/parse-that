@@ -35,8 +35,10 @@ impl<'a> Parser<'a> {
             Some(b'p') => self.parse_unicode_property(false),
             Some(b'P') => self.parse_unicode_property(true),
 
-            // Word boundary (zero-width — not supported, return empty for now).
-            Some(b'b') => Ok(Hir::Literal(vec![0x08])), // \b inside regex = backspace
+            // `\b` outside a class is the ECMAScript word-boundary assertion,
+            // which the engine has no `Look` for yet. Inside a class it is
+            // backspace (`parse_class_escape_single`).
+            Some(b'b') => Err(self.err("unsupported assertion: \\b (word boundary)".into())),
 
             // Literal escapes.
             Some(b) if is_escapable(b) => Ok(self.maybe_case_fold_byte(b)),

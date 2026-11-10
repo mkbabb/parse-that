@@ -6,6 +6,8 @@ mod byteset_test;
 mod dfa_test;
 #[path = "regex/equiv_test.rs"]
 mod equiv_test;
+#[path = "regex/generated_utf8_test.rs"]
+mod generated_utf8_test;
 #[path = "regex/hir_test.rs"]
 mod hir_test;
 #[path = "regex/nfa_test.rs"]
@@ -14,5 +16,3 @@ mod nfa_test;
 mod parser_test;
 #[path = "regex/utf8_test.rs"]
 mod utf8_test;
-#[path = "regex/generated_utf8_test.rs"]
-mod generated_utf8_test;

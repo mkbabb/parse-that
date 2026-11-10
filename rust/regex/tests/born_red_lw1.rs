@@ -75,8 +75,14 @@ fn alt_longer_branch_first_agrees() {
 /// stands for is witnessed by the two tests below.)
 #[test]
 fn superset_absorb_e_acute_greek_guard() {
-    assert!(!pattern_is_superset("[α-ω]", "[é]"), "[α-ω] does not contain é");
-    assert!(!pattern_is_superset("[é]", "[α-ω]"), "[é] does not contain [α-ω]");
+    assert!(
+        !pattern_is_superset("[α-ω]", "[é]"),
+        "[α-ω] does not contain é"
+    );
+    assert!(
+        !pattern_is_superset("[é]", "[α-ω]"),
+        "[é] does not contain [α-ω]"
+    );
 }
 
 /// Oracle `rx2-absorb-byte-collision`: `/[Ã©]/uy` does not match `"é"`. The
@@ -88,7 +94,10 @@ fn superset_absorb_e_acute_greek_guard() {
 #[test]
 #[ignore = "born-RED LW1.RX-2 (SupersetAbsorbAlt): containment is tested on UTF-8 byte sets, not scalar-value sets; cure LW2.RX-4 / LW4.RX-2"]
 fn superset_absorb_compares_scalar_values() {
-    assert!(!pattern_is_superset("[Ã©]", "[é]"), "[Ã©] does not contain é");
+    assert!(
+        !pattern_is_superset("[Ã©]", "[é]"),
+        "[Ã©] does not contain é"
+    );
 }
 
 /// Oracles `rx2-absorb-e-acute-in-e-acute` and `rx2-union-greek-on-beta`:
@@ -101,9 +110,21 @@ fn superset_absorb_compares_scalar_values() {
 fn union_merge_keeps_both_branches_languages() {
     let merged = parse_that_regex::algebra::try_union_patterns("[é]", "[α-ω]");
     let merged = merged.expect("both are single classes");
-    assert_eq!(leaf(&merged, "é"), Some(2), "merged {merged:?} must match é");
-    assert_eq!(leaf(&merged, "β"), Some(2), "merged {merged:?} must match β");
-    assert_eq!(leaf(&merged, "Ã"), None, "merged {merged:?} must not match Ã");
+    assert_eq!(
+        leaf(&merged, "é"),
+        Some(2),
+        "merged {merged:?} must match é"
+    );
+    assert_eq!(
+        leaf(&merged, "β"),
+        Some(2),
+        "merged {merged:?} must match β"
+    );
+    assert_eq!(
+        leaf(&merged, "Ã"),
+        None,
+        "merged {merged:?} must not match Ã"
+    );
 }
 
 /// Oracles `rx2-absorb-order-run-first` (3 bytes) and

@@ -137,6 +137,9 @@ fn print_smoke_corpus() {
         "note": "LW2.RX-3: the smoke corpus with every accepted pattern replaced by Hir::to_source of its parse; rejected patterns are absent.",
         "cases": printed_cases,
     });
-    std::fs::write(out, serde_json::to_string_pretty(&corpus).expect("json") + "\n")
-        .expect("write printed corpus");
+    std::fs::write(
+        out,
+        serde_json::to_string_pretty(&corpus).expect("json") + "\n",
+    )
+    .expect("write printed corpus");
 }
