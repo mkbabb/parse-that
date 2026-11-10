@@ -26,6 +26,11 @@
 //! - [`scalar`] — portable fallback; correctness reference for
 //!   `tests/fuzz.rs`.
 //!
+//! [`prim`] holds the block primitives (one 64- or 16-byte block
+//! classified against caller data) that a scanner with its own loop
+//! composes; each has a scalar oracle and a NEON body, selected by the
+//! same tier decision.
+//!
 //! Helpers:
 //!
 //! - [`alphabet`] — `StructuralAlphabet` config + `KernelShape`
@@ -51,6 +56,7 @@ pub mod compaction;
 pub mod dispatch;
 pub mod index;
 pub mod parity;
+pub mod prim;
 pub mod scalar;
 #[cfg(any(
     target_arch = "aarch64",

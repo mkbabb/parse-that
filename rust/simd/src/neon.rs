@@ -370,7 +370,7 @@ unsafe fn raw_quotes_and_bs(
 /// the 16 nibbles as a u64 and apply a parallel-bits-extract to
 /// reconstruct the 16-bit per-byte mask.
 #[inline(always)]
-unsafe fn movemask_u8x16(v: uint8x16_t) -> u16 {
+pub(crate) unsafe fn movemask_u8x16(v: uint8x16_t) -> u16 {
     // SAFETY: pure SIMD intrinsics on a register; no memory access.
     unsafe {
         // Reinterpret the 16-byte vector as 8 u16 lanes, then narrow
