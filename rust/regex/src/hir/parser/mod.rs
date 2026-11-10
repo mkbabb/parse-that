@@ -3,7 +3,7 @@
 //! Hand-written recursive descent parser (not using parse-that combinators —
 //! avoids circular dependency and keeps the implementation zero-copy).
 //!
-//! Supports the regex subset used by BBNF grammars:
+//! Supports the regex subset that grammar leaves use:
 //! - Character classes: `[a-z]`, `[^abc]`, `\d`, `\w`, `\s`, `\S`, `\W`, `\D`
 //! - Alternation: `a|b`
 //! - Concatenation: `ab`

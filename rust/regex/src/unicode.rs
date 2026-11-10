@@ -1,7 +1,7 @@
 //! Unicode general-category property tables.
 //!
 //! Minimal codepoint ranges for `\p{Name}` / `\P{Name}` escapes.
-//! Covers the most common categories used by BBNF grammars.
+//! Covers the most common categories that grammar leaves use.
 
 use crate::hir::CodepointRange;
 

@@ -1,7 +1,6 @@
 //! Per-compile HIR canonicalization cache (Tranche X phase 3).
 //!
-//! `bbnf-ir::passes::regex_info::compute_regex_info` allocates one
-//! cache per compile, drops it at the end, and threads it through
+//! A grammar compiler allocates one cache per compile, drops it at the end, and threads it through
 //! every `RegexInfo::analyze_with_cost_cached` call. The cache stores
 //! `Hir → canonical Hir` so each unique pattern's saturation cost is
 //! paid at most once per compile.
