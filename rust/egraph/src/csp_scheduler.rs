@@ -28,7 +28,7 @@ use std::hash::BuildHasherDefault;
 use rustc_hash::FxHasher;
 
 use csp_solver::{
-    Csp,
+    Csp, Unsatisfiable,
     constraint::{Constraint, Revision, VarId},
     domain::{Domain, LatticeDomain},
     variable::Variable,
@@ -234,7 +234,15 @@ impl<N: Language, A: Analysis<N>> Scheduler<N, A> for CspScheduler {
             // On first iteration all classes are already dirty — the
             // closure is a no-op. On subsequent iterations the closure
             // extends the seed dirty set with parents of dirty classes.
-            let _ = csp.propagate();
+            // `ParentDirtyProp` only joins `dirty` upward in a lattice
+            // with no conflict element and never reports
+            // `Unsatisfiable`, so the closure always reaches its fixed
+            // point.
+            if let Err(Unsatisfiable) = csp.propagate() {
+                unreachable!(
+                    "the dirty closure is a monotone join; no constraint reports Unsatisfiable"
+                );
+            }
 
             // Harvest the dirty set from the propagated CSP.
             let dirty: DirtyClassSet = class_var
