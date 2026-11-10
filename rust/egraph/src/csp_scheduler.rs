@@ -239,7 +239,9 @@ impl<N: Language, A: Analysis<N>> Scheduler<N, A> for CspScheduler {
             // `Unsatisfiable`, so the closure always reaches its fixed
             // point.
             if let Err(Unsatisfiable) = csp.propagate() {
-                unreachable!("the dirty closure is a monotone join; no constraint reports Unsatisfiable");
+                unreachable!(
+                    "the dirty closure is a monotone join; no constraint reports Unsatisfiable"
+                );
             }
 
             // Harvest the dirty set from the propagated CSP.
