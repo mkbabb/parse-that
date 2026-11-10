@@ -12,8 +12,8 @@
 //! The un-ignored tests pin behaviour that is right today and that a cure
 //! must keep.
 
-use bbnf_regex::algebra::pattern_is_superset;
-use bbnf_regex::{Dfa, DfaOptions};
+use parse_that_regex::algebra::pattern_is_superset;
+use parse_that_regex::{Dfa, DfaOptions};
 
 /// Sticky leaf match: bytes consumed from offset 0, as the Rust leaf reads it.
 fn leaf(pattern: &str, input: &str) -> Option<usize> {
@@ -99,7 +99,7 @@ fn superset_absorb_compares_scalar_values() {
 #[test]
 #[ignore = "born-RED LW1.RX-2 (UnionMergeAlt): the union is printed from UTF-8 bytes as Latin-1 chars; cure LW2.RX-4 / LW4.RX-2"]
 fn union_merge_keeps_both_branches_languages() {
-    let merged = bbnf_regex::algebra::try_union_patterns("[é]", "[α-ω]");
+    let merged = parse_that_regex::algebra::try_union_patterns("[é]", "[α-ω]");
     let merged = merged.expect("both are single classes");
     assert_eq!(leaf(&merged, "é"), Some(2), "merged {merged:?} must match é");
     assert_eq!(leaf(&merged, "β"), Some(2), "merged {merged:?} must match β");
