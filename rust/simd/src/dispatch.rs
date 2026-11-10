@@ -91,6 +91,11 @@ impl Tier {
         if !self.is_compiled() {
             return false;
         }
+        // Miri checks the scalar and dispatch code; it does not model the
+        // vector intrinsics, so no SIMD tier runs under it.
+        if cfg!(miri) {
+            return self == Tier::Scalar;
+        }
         match self {
             Tier::Scalar | Tier::Neon | Tier::Simd128 => true,
             #[cfg(target_arch = "x86_64")]
