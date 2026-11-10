@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [master]
 
-# sk-v27 LW2.TOPO-3: the arm set is macos-14 and ubuntu-latest on the pinned
+# sk-v27 LW2.TOPO-3: the arm set is macos-15 (for the order's macos-14) and ubuntu-latest on the pinned
 # stable toolchain (rust-toolchain.toml), a `cargo +stable` job on the latest
 # stable, the opt-in nightly plane, and an Intel SDE job for AVX-512. `ci-ok`
 # needs every job and is the one required check. The build wrapper is set
@@ -36,7 +36,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, ubuntu-latest]
+        # macos-15 (Apple silicon, NEON): GitHub no longer serves macos-14
+        # ("The configuration 'macos-14-arm64-us-default' is not supported",
+        # pprint run 42732073134); the order's macos-14 arm reads here.
+        os: [macos-15, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     env:
       RUSTC_WRAPPER: sccache
