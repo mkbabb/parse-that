@@ -38,6 +38,10 @@ parse-that-egraph-derive = { version = "0.1.0", path = "../egraph-derive" }
 divan = "0.1"
 mimalloc = "0.1"
 serde_json = "1"
+# sk-v27 LW2.RX-1 (OR-7 spike, Route A only): regex-automata as the
+# determinizer, at the version the workspace lock already resolves.
+regex-automata = "=0.4.14"
+regex-syntax = "=0.8.10"
 
 # ── parse-that-regex benches (Tranche P) ──────────────────────────
 
