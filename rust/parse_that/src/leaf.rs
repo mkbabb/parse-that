@@ -71,10 +71,9 @@ pub fn string_span<'a>(s: &'a str) -> Parser<'a, Span<'a>> {
 #[inline(always)]
 fn dfa_impl<'a>(dfa: &crate::regex::dfa::Dfa, state: &mut ParserState<'a>) -> Option<Span<'a>> {
     let bytes = &state.src_bytes[state.offset..];
+    // A zero-length match is a match (sk-v27 S4-B, the TS `regex` leaf's
+    // contract). Repetition guards progress, never the leaf.
     let end = dfa.find_at(bytes, 0)?;
-    if end == 0 {
-        return None;
-    }
     let start = state.offset;
     state.offset += end;
     Some(Span::new(start, state.offset, state.src))

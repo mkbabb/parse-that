@@ -1,8 +1,8 @@
 //! Tranche O — extracted from `regex/src/info.rs`.
 //! End-to-end tests over `RegexInfo::analyze`.
 
-use bbnf_regex::classify::RegexClass;
-use bbnf_regex::info::RegexInfo;
+use parse_that_regex::classify::RegexClass;
+use parse_that_regex::info::RegexInfo;
 
 #[test]
 fn test_simple_literal() {

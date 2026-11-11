@@ -1,8 +1,8 @@
 //! Tranche O — extracted from `regex/src/algebra/union.rs`.
 //! Pure-function tests over `algebra::try_union`.
 
-use bbnf_regex::ByteSet;
-use bbnf_regex::algebra::try_union;
+use parse_that_regex::ByteSet;
+use parse_that_regex::algebra::try_union;
 
 #[test]
 fn union_disjoint() {

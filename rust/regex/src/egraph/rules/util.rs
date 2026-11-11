@@ -9,7 +9,7 @@
 //! try_union}` operate on, and rebuild a canonical `CharClass` from
 //! the merged `ByteSet` for installation back into the e-graph.
 
-use egraph::{Analysis, EGraph, Id};
+use parse_that_egraph::{Analysis, EGraph, Id};
 
 use crate::egraph::node::HirENode;
 use crate::hir::{ByteRange, CharClass};

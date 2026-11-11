@@ -1,0 +1,21 @@
+{
+  "name": "sk-v27-LW2-RX-2-word-boundary",
+  "note": "A-9 born-RED cases for LW2.RX-2: \\b and \\B outside a class are ECMAScript word-boundary assertions over the ASCII word set [A-Za-z0-9_] (no u/i flag), never backspace; inside a class \\b is backspace. Offsets `at` are UTF-8 byte offsets; a leaf is a sticky match at `at`. The oracle answers are the expected values the Rust tests assert.",
+  "cases": [
+    { "id": "wb-b-foo-start", "pattern": "\\bfoo", "flags": "", "input": "foo" },
+    { "id": "wb-b-foo-midword", "pattern": "\\bfoo", "flags": "", "input": "xfoo", "at": 1 },
+    { "id": "wb-b-foo-after-space", "pattern": "\\bfoo", "flags": "", "input": " foo", "at": 1 },
+    { "id": "wb-foo-b-end", "pattern": "foo\\b", "flags": "", "input": "foo" },
+    { "id": "wb-foo-b-word-follows", "pattern": "foo\\b", "flags": "", "input": "foox" },
+    { "id": "wb-foo-b-punct-follows", "pattern": "foo\\b", "flags": "", "input": "foo-" },
+    { "id": "wb-B-midword", "pattern": "a\\Bb", "flags": "", "input": "ab" },
+    { "id": "wb-B-at-boundary", "pattern": "\\Bb", "flags": "", "input": "a b", "at": 2 },
+    { "id": "wb-B-inside-word", "pattern": "\\Bb", "flags": "", "input": "ab", "at": 1 },
+    { "id": "wb-b-empty-input", "pattern": "\\b", "flags": "", "input": "" },
+    { "id": "wb-B-empty-input", "pattern": "\\B", "flags": "", "input": "" },
+    { "id": "wb-b-underscore-digit", "pattern": "\\b_9\\b", "flags": "", "input": "_9" },
+    { "id": "wb-b-non-ascii-not-word", "pattern": "\\bé", "flags": "", "input": "aé", "at": 1 },
+    { "id": "wb-class-backspace", "pattern": "[\\b]", "flags": "", "input": "\b" },
+    { "id": "wb-class-not-b", "pattern": "[\\b]", "flags": "", "input": "b" }
+  ]
+}

@@ -4,16 +4,16 @@
 //! `classify_regex_from_hir` over the parsed HIRs. Measures the cost
 //! of recognizing semantic categories — Numeric, HexDigits,
 //! Identifier, QuotedString — that drive `FnDescriptor`
-//! specialization in bbnf and `RegexInfo`'s classification field.
+//! specialization in a code generator and `RegexInfo`'s classification field.
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use divan::{Bencher, black_box};
 
-use bbnf_regex::classify::classify_regex_from_hir;
-use bbnf_regex::hir::{Hir, ParseOptions};
-use bbnf_regex::parse_with;
+use parse_that_regex::classify::classify_regex_from_hir;
+use parse_that_regex::hir::{Hir, ParseOptions};
+use parse_that_regex::parse_with;
 
 const PATTERNS: &[&str] = &[
     r#"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?"#,

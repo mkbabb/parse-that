@@ -49,6 +49,12 @@ where
                     break;
                 }
                 if let Some(value) = self.call(state) {
+                    // Guard: a (sep elem) iteration that consumed nothing
+                    // adds nothing and ends the loop, as TS `sepBy` does
+                    // (S4-B: leaves may match empty).
+                    if state.offset == cp {
+                        break;
+                    }
                     values.push(value);
                 } else {
                     // Element after separator failed — backtrack past the
@@ -116,6 +122,12 @@ where
                 // Trim before next element
                 trim_leading_whitespace_mut(state);
                 if let Some(value) = self.call(state) {
+                    // Guard: a (sep elem) iteration that consumed nothing
+                    // adds nothing and ends the loop, as TS `sepBy` does
+                    // (S4-B: leaves may match empty).
+                    if state.offset == cp {
+                        break;
+                    }
                     values.push(value);
                 } else {
                     state.offset = cp;
@@ -173,10 +185,10 @@ where
                 let cp = state.offset;
                 trim_leading_whitespace_mut(state);
                 // Peek terminator — skip separator attempt entirely
-                if let Some(&b) = state.src_bytes.get(state.offset) {
-                    if terminator.contains(&b) {
-                        break;
-                    }
+                if let Some(&b) = state.src_bytes.get(state.offset)
+                    && terminator.contains(&b)
+                {
+                    break;
                 }
                 if sep.parser_fn.call(state).is_none() {
                     state.offset = cp;
@@ -184,6 +196,12 @@ where
                 }
                 trim_leading_whitespace_mut(state);
                 if let Some(value) = self.call(state) {
+                    // Guard: a (sep elem) iteration that consumed nothing
+                    // adds nothing and ends the loop, as TS `sepBy` does
+                    // (S4-B: leaves may match empty).
+                    if state.offset == cp {
+                        break;
+                    }
                     values.push(value);
                 } else {
                     state.offset = cp;

@@ -186,23 +186,19 @@ impl std::fmt::Debug for ByteSet {
             return write!(f, "ByteSet{{ALL}}");
         }
         write!(f, "ByteSet{{")?;
-        let mut first = true;
-        let mut printed = 0;
-        for b in self.iter() {
+        for (printed, b) in self.iter().enumerate() {
             if printed >= 16 {
                 write!(f, ", ...+{}", count as usize - printed)?;
                 break;
             }
-            if !first {
+            if printed > 0 {
                 write!(f, ", ")?;
             }
-            first = false;
             if b.is_ascii_graphic() {
                 write!(f, "'{}'", b as char)?;
             } else {
                 write!(f, "0x{:02X}", b)?;
             }
-            printed += 1;
         }
         write!(f, "}}")
     }

@@ -329,7 +329,7 @@ fn test_var_function() {
         CssNode::QualifiedRule { declarations, .. } => match &declarations[0].values[0] {
             CssValue::Function { name, args } => {
                 assert_eq!(name.as_str(), "var");
-                assert!(args.len() >= 1);
+                assert!(!args.is_empty());
                 match &args[0] {
                     CssValue::Ident(s) => assert_eq!(s.as_str(), "--main-color"),
                     other => panic!("expected Ident, got {:?}", other),
@@ -408,7 +408,7 @@ fn test_at_import() {
     assert_eq!(nodes.len(), 1);
     match &nodes[0] {
         CssNode::AtImport { values } => {
-            assert!(values.len() >= 1);
+            assert!(!values.is_empty());
         }
         other => panic!("expected AtImport, got {:?}", other),
     }
@@ -439,7 +439,7 @@ fn test_multiple_rules() {
 
 #[test]
 fn test_parse_normalize_css() {
-    let css = include_str!("../../../data/css/normalize.css");
+    let css = &parse_that_corpus::read_to_string("css/normalize.css");
     let nodes = parse_css(css);
     // normalize.css has ~30+ rules
     assert!(nodes.len() > 20, "expected 20+ rules, got {}", nodes.len());
@@ -447,7 +447,7 @@ fn test_parse_normalize_css() {
 
 #[test]
 fn test_parse_bootstrap_css() {
-    let css = include_str!("../../../data/css/bootstrap.css");
+    let css = &parse_that_corpus::read_to_string("css/bootstrap.css");
     let nodes = parse_css(css);
     // bootstrap.css has thousands of rules
     assert!(
@@ -460,7 +460,7 @@ fn test_parse_bootstrap_css() {
 #[test]
 #[ignore] // 3.6MB file — too slow in debug, runs in release benchmarks
 fn test_parse_tailwind_css() {
-    let css = include_str!("../../../data/css/tailwind-output.css");
+    let css = &parse_that_corpus::read_to_string("css/tailwind-output.css");
     let nodes = parse_css(css);
     assert!(
         nodes.len() > 100,

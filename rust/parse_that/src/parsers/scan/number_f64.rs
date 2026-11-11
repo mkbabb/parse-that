@@ -30,10 +30,10 @@ pub fn number_parts_to_f64(parts: &NumberParts, src: &str) -> f64 {
     }
 
     // Eisel-Lemire for <= 19 significant digits.
-    if parts.n_digits <= 19 {
-        if let Some(f) = compute_f64(parts.exponent as i64, parts.mantissa, parts.negative) {
-            return f;
-        }
+    if parts.n_digits <= 19
+        && let Some(f) = compute_f64(parts.exponent as i64, parts.mantissa, parts.negative)
+    {
+        return f;
     }
 
     // Emergency fallback (~0.01%): ambiguous rounding or >19 significant digits.
@@ -118,7 +118,7 @@ pub fn parse_number_f64(s: &str) -> f64 {
     let (neg, digits_start) = if bytes[0] == b'-' {
         (true, 1)
     } else if bytes[0] == b'+' {
-        (true, 1)
+        (false, 1)
     } else {
         (false, 0)
     };

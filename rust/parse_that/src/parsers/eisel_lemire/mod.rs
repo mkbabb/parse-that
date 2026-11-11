@@ -100,7 +100,7 @@ fn try_fast_path_f64(exponent: i64, mantissa: u64, negative: bool) -> Option<f64
     if mantissa > MAX_MANTISSA_FAST_PATH {
         return None;
     }
-    if exponent < MIN_EXPONENT_FAST_PATH || exponent > MAX_EXPONENT_DISGUISED_FAST_PATH {
+    if !(MIN_EXPONENT_FAST_PATH..=MAX_EXPONENT_DISGUISED_FAST_PATH).contains(&exponent) {
         return None;
     }
 

@@ -1,5 +1,5 @@
 [workspace]
-members = ["src", "parse_that", "bootstrap", "regex"]
+members = ["src", "parse_that", "simd", "bootstrap", "regex", "egraph", "egraph-derive", "corpus", "xtask"]
 resolver = "2"
 
 

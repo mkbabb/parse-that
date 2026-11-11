@@ -393,3 +393,20 @@ fn integer_scan_right_up_to_input_boundary() {
     assert!(is_int);
     assert_eq!(end, input.len());
 }
+
+/// A leading `+` is a positive sign on the integer fast path, as it is on
+/// the float path (`fast_float2`). Found by clippy's `if_same_then_else`
+/// (sk-v27 LW2.TOPO-3): the `+` arm returned `neg = true`.
+#[test]
+fn parse_number_f64_plus_sign_is_positive() {
+    use parse_that::parse_number_f64;
+    for (src, want) in [
+        ("+5", 5.0),
+        ("+0", 0.0),
+        ("+123456789012345678", 123456789012345678.0),
+        ("+1.5", 1.5),
+        ("-5", -5.0),
+    ] {
+        assert_eq!(parse_number_f64(src).to_bits(), f64::to_bits(want), "{src}");
+    }
+}

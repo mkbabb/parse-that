@@ -1,13 +1,12 @@
 //! Regex HIR extraction cost model.
 //!
-//! Mirrors `bbnf_ir::egraph::GrammarCostModel` on the grammar tier:
-//! embeds the shared `egraph::CostWeights` substrate (per-node
+//! Embeds the shared `CostWeights` substrate (per-node
 //! structural cost, alt-branch penalty, dispatch bonus) and layers
 //! HIR-specific knobs on top. The shared weights stay in sync
 //! across tiers — splitting them would let branch-factoring and
 //! dispatch incentives drift between regex and grammar extraction.
 
-use egraph::{CostConfig, CostModel, CostWeights, Id};
+use parse_that_egraph::{CostConfig, CostModel, CostWeights, Id};
 
 use crate::egraph::node::HirENode;
 
@@ -47,15 +46,15 @@ impl Default for RegexExtractionCost {
 
 impl RegexExtractionCost {
     /// Build a `RegexExtractionCost` from a shared
-    /// [`egraph::CostConfig`].
+    /// [`parse_that_egraph::CostConfig`].
     ///
     /// Only the cross-tier `weights` substrate flows through the
     /// shared config; HIR-specific knobs (literal-per-byte, class
     /// cost, repeat cost, merged bonus) keep their `Default` values
     /// because the egraph crate is deliberately domain-agnostic and
     /// shouldn't carry HIR-specific tunables. Consumers that need
-    /// to override the HIR knobs (e.g. the bbnf-lang grammar
-    /// pipeline reading its `CostConfig.hir_*` fields) call this
+    /// to override the HIR knobs (e.g. a grammar pipeline reading
+    /// its own cost configuration) call this
     /// constructor and then set the individual fields.
     pub fn from_egraph_config(cfg: &CostConfig) -> Self {
         Self {
@@ -71,11 +70,9 @@ impl RegexExtractionCost {
 /// `child_cost` closure). Alternations additionally pay
 /// `alt_per_branch` per child to encourage factoring.
 ///
-/// Mirrors `bbnf_ir::egraph::GrammarCostModel::cost`: same
-/// structural weight plumbing, same alt-branch penalty. Diverges
-/// only on the leaf multipliers — literal byte count and
-/// char-class cardinality for the HIR tier, versus
-/// literal/regex/ref multipliers for the grammar tier.
+/// Uses the shared `CostWeights` structural weights and alt-branch
+/// penalty. Only the leaf multipliers are HIR-specific: literal byte
+/// count and char-class cardinality.
 impl CostModel<HirENode> for RegexExtractionCost {
     type Cost = f64;
 

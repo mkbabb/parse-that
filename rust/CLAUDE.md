@@ -1,6 +1,6 @@
 # rust/
 
-Rust parser combinator workspace. Workspace members: `parse_that` (core library), `bbnf-regex` (bespoke regex engine — see `regex/CLAUDE.md`), `bootstrap`, and `parse_that_cli` (CLI binary).
+Rust parser combinator workspace. Workspace members: `parse_that` (core library), `parse-that-regex` (bespoke regex engine — see `regex/CLAUDE.md`), `parse-that-egraph` and `parse-that-egraph-derive` (e-graph + `#[derive(Language)]`), `bootstrap`, and `parse_that_cli` (CLI binary).
 
 ## Structure
 
@@ -8,7 +8,7 @@ Rust parser combinator workspace. Workspace members: `parse_that` (core library)
 Cargo.toml                Workspace root (members: src, parse_that, bootstrap, regex)
 parse_that/               Core library crate
   src/
-    lib.rs                Barrel re-exports, #![feature(cold_path, portable_simd, ...)]
+    lib.rs                Barrel re-exports; portable_simd only under the opt-in `nightly` feature
     parse.rs              Parser<'a, O> struct, ParserResult, ParserFn trait
     state.rs              ParserState<'a>, Span<'a>, Diagnostic, Suggestion, SecondarySpan
     bump_slab.rs          BumpSlab — byte-based bump allocator for monolithic codegen
@@ -42,7 +42,7 @@ parse_that/               Core library crate
       scan.rs             Inline scan dispatch (LUT, byte-class loops)
       span_scanner.rs     SpanScanner variants (CssIdent, CssWsComment, CssString, CssBlockComment)
       assertions.rs       Negate / not / eof assertion handlers
-    regex/                Internal bridge to bbnf-regex (generated DFA tables, host glue)
+    regex/                Internal bridge to parse-that-regex (generated DFA tables, host glue)
       mod.rs              Module declarations
       host.rs             Host-side regex runtime helpers
       generated.rs        Pre-compiled DFA tables
@@ -78,7 +78,9 @@ parse_that/               Core library crate
     parse_that/           Parser<Span> JSON benches
     competitors/          nom / winnow / pest / serde_json / simd-json / sonic-rs / jiter baselines
 bootstrap/                Bootstrap grammar tooling (workspace member)
-regex/                    bbnf-regex workspace member — bespoke NFA/DFA regex engine (see regex/CLAUDE.md)
+regex/                    parse-that-regex workspace member — bespoke NFA/DFA regex engine (see regex/CLAUDE.md)
+egraph/                   parse-that-egraph — e-graph: equality saturation, rewrites, CSP scheduler, extraction
+egraph-derive/            parse-that-egraph-derive — #[derive(Language)]
 src/                      CLI binary
   Cargo.toml              parse_that_cli
   main.rs                 JSON + CSV benchmark runner
@@ -87,14 +89,15 @@ src/                      CLI binary
 ## Workspace Members
 
 - **parse_that** — this crate. Parser combinators, SpanParser, scanner primitives, domain parsers.
-- **bbnf-regex** (`regex/`) — separate workspace member; bespoke HIR → NFA → DFA regex engine. Has its own `regex/CLAUDE.md`. `parse_that` re-exports it via `parse_that::regex`.
+- **parse-that-regex** (`regex/`) — separate workspace member; bespoke HIR → NFA → DFA regex engine. Has its own `regex/CLAUDE.md`. `parse_that` re-exports it via `parse_that::regex`.
+- **parse-that-egraph** (`egraph/`), **parse-that-egraph-derive** (`egraph-derive/`) — general e-graph library and its derive (moved from bbnf-lang, sk-v27 LW2.TOPO-1); parse-that-regex simplifies HIR on it.
 - **bootstrap** — bootstrap grammar tooling.
 - **parse_that_cli** (`src/`) — CLI binary: JSON + CSV benchmark runner.
 
 ## Build
 
 ```bash
-cargo test --workspace      # nightly required
+cargo test --workspace      # stable 1.99.1 (rust-toolchain.toml)
 cargo check --workspace
 cargo clippy --workspace -- -D warnings
 cargo bench --bench parse_that_combinator
@@ -124,7 +127,7 @@ JsonValue<'a>                // Null | Bool | Number | String(Cow) | Array | Obj
 
 ## Conventions
 
-- Edition 2024, nightly required for `#![feature(cold_path)]`
+- Edition 2024, stable 1.99.1; the `nightly` feature (portable-SIMD scan kernels) is opt-in
 - `diagnostics` Cargo feature — expected sets, suggestions, secondary spans, error recovery (zero overhead when off). `colored` crate optional behind this feature.
 - `recover(sync, sentinel)` — parse past errors, collect Diagnostic snapshots into thread-local store
 - `minus(excluded)` — EBNF set-difference: match self only if excluded fails at same position. Saves/restores `furthest_offset`.

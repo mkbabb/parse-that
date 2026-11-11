@@ -1,6 +1,8 @@
-//! Bespoke regex engine: HIR, NFA→DFA compilation, structural classification.
+//! Regex engine for parser generators: HIR, NFA→DFA compilation, e-graph
+//! simplification, structural classification.
 //!
-//! This crate provides the pure regex engine used by parse-that and bbnf.
+//! This crate is the regex engine parse-that and the parser generators built
+//! on it share.
 //! No dependencies on parser combinators or grammar infrastructure.
 //!
 //! ## Modules

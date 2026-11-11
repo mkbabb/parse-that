@@ -79,11 +79,11 @@ pub(super) fn parse_value_inline<'a>(state: &mut ParserState<'a>) -> Option<CssV
             let cp = state.offset;
             state.offset += 1;
             scan_ws_block_comments(state);
-            if let Some(s) = scan_ident(state, &CSS_IDENT_CONFIG) {
-                if s.as_str() == "important" {
-                    // We'll mark important in the declaration, skip this value
-                    return Some(CssValue::Ident(s)); // Let caller detect
-                }
+            if let Some(s) = scan_ident(state, &CSS_IDENT_CONFIG)
+                && s.as_str() == "important"
+            {
+                // We'll mark important in the declaration, skip this value
+                return Some(CssValue::Ident(s)); // Let caller detect
             }
             state.offset = cp;
             None

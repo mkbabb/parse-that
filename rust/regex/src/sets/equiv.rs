@@ -64,7 +64,7 @@ fn compute_classes_small(byte_sets: &[ByteSet]) -> ([u8; 256], u16) {
 
 /// General path: > 64 ByteSets → signature is a Vec<u64>.
 fn compute_classes_large(byte_sets: &[ByteSet]) -> ([u8; 256], u16) {
-    let num_words = (byte_sets.len() + 63) / 64;
+    let num_words = byte_sets.len().div_ceil(64);
     let mut signatures: Vec<Vec<u64>> = vec![vec![0u64; num_words]; 256];
 
     for (i, bs) in byte_sets.iter().enumerate() {

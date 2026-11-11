@@ -4,6 +4,7 @@
 //! `negated` flag instead of materializing the complement as positive ranges.
 
 pub mod parser;
+mod print;
 
 // ── Byte-level range ────────────────────────────────────────────────────
 
@@ -152,7 +153,7 @@ fn add_codepoint_range(out: &mut Vec<CodepointRange>, lo: u32, hi: u32) {
         if hi >= 0xE000 {
             out.push(CodepointRange::new('\u{E000}', char::from_u32(hi).unwrap()));
         }
-    } else if lo >= 0xD800 && lo <= 0xDFFF {
+    } else if (0xD800..=0xDFFF).contains(&lo) {
         // Start is in surrogate range — skip to E000.
         if hi >= 0xE000 {
             out.push(CodepointRange::new('\u{E000}', char::from_u32(hi).unwrap()));
@@ -182,6 +183,13 @@ pub enum Look {
     StartCRLF,
     /// End of line (CRLF).
     EndCRLF,
+    /// `\b` outside a class — the ECMAScript word boundary over the ASCII
+    /// word set `[A-Za-z0-9_]`: exactly one of the bytes before and after the
+    /// position is a word byte (the edges of the input count as non-word).
+    /// Never backspace; inside a class `\b` is backspace (sk-v27 A-9).
+    WordBoundary,
+    /// `\B` — the negation of [`Look::WordBoundary`] at the same position.
+    NotWordBoundary,
 }
 
 // ── Repetition ──────────────────────────────────────────────────────────

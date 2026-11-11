@@ -48,14 +48,14 @@ fn simple_string() {
     // simdjson convention (prefix-xor of unescaped quote positions):
     // opening quote → bit is set (inside starts here).
     // closing quote → bit flips back to 0 (outside resumes).
-    assert_eq!(got[0], false);
-    assert_eq!(got[1], false);
-    assert_eq!(got[2], true); // opening quote (inside from here)
-    assert_eq!(got[3], true); // 'k'
-    assert_eq!(got[4], true); // 'e'
-    assert_eq!(got[5], true); // 'y'
-    assert_eq!(got[6], false); // closing quote (outside resumes)
-    assert_eq!(got[7], false);
+    assert!(!got[0]);
+    assert!(!got[1]);
+    assert!(got[2]); // opening quote (inside from here)
+    assert!(got[3]); // 'k'
+    assert!(got[4]); // 'e'
+    assert!(got[5]); // 'y'
+    assert!(!got[6]); // closing quote (outside resumes)
+    assert!(!got[7]);
 }
 
 #[test]
@@ -64,16 +64,16 @@ fn escaped_quote() {
     // 0 1 2 3 4 5 6 7 8 9
     let input = br#"{"k\"y":1}"#;
     let got = collect_in_string(input);
-    assert_eq!(got[0], false); // {
-    assert_eq!(got[1], true); // opening " (inside starts here)
-    assert_eq!(got[2], true); // k
-    assert_eq!(got[3], true); // \
-    assert_eq!(got[4], true); // escaped "
-    assert_eq!(got[5], true); // y
-    assert_eq!(got[6], false); // closing " (outside resumes)
-    assert_eq!(got[7], false); // :
-    assert_eq!(got[8], false); // 1
-    assert_eq!(got[9], false); // }
+    assert!(!got[0]); // {
+    assert!(got[1]); // opening " (inside starts here)
+    assert!(got[2]); // k
+    assert!(got[3]); // \
+    assert!(got[4]); // escaped "
+    assert!(got[5]); // y
+    assert!(!got[6]); // closing " (outside resumes)
+    assert!(!got[7]); // :
+    assert!(!got[8]); // 1
+    assert!(!got[9]); // }
 }
 
 #[test]
@@ -109,8 +109,8 @@ fn long_no_escape() {
     let close_idx = prefix.len() + body.len();
     // Opening quote bit is set (inside).
     assert!(got[1], "opening quote should be inside");
-    for i in prefix.len()..close_idx {
-        assert!(got[i], "expected idx {i} inside string");
+    for (i, &inside) in got.iter().enumerate().take(close_idx).skip(prefix.len()) {
+        assert!(inside, "expected idx {i} inside string");
     }
     // Closing quote toggles off.
     assert!(!got[close_idx], "closing quote should toggle outside");

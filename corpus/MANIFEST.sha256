@@ -1,0 +1,16 @@
+# Corpus custody for parse-that's tests, benches and examples. Transport: the release asset
+# below on mkbabb/parse-that; custody: this manifest. From rust/: `cargo xtask corpus fetch` / `verify`.
+# json/twitter.json is upstream simdjson jsonexamples/twitter.json at commit 9c003534b.
+15d165a43b3758832422034651803452fe864638674cd468ed8a223b0225974f  corpus-v1.tar.gz
+4a50207b956a4ab943640ee993118b554a34e96a23261cfe58b9aa1807a7849b  css/bootstrap.css
+580818700724d42d7fcc4979b0197971fca1c6d2e0286769237a0ac897df5512  css/normalize.css
+cd6e8eacbfd6f2ddcc6d8e6e1306c387d1ed695455d95431a41d1a425de7740e  css/tailwind-output.css
+90f93573226454e4e090380bb9141e5d9934bec2ddc7f71b424a9eea52960fa8  csv/active_charter_schools_report.csv
+cd602842ee6ddf451fd3c0c1d3047b3ee7ec1325f17ae0ef7529eafe724391ca  csv/data.csv
+53bb41c52712bad3bf08df6cadbc7471ffdef3293701106bff123e83be85e448  json/apache-builds.json
+f83b3b354030d5dd58740c68ac4fecef64cb730a0d12a90362a7f23077f50d78  json/canada.json
+a73e7a883f6ea8de113dff59702975e60119b4b58d451d518a929f31c92e2059  json/citm_catalog.json
+aaf8a8b2a42fbe7c95c1960b7736e5ea16276b4331b017712f724ebd8628f4ec  json/data.json
+02be45299748ea80cca9aa10f17f6856d64799af5f01a396808d28f628ad7229  json/data-l.json
+77c00b003d5a683393b2b2df814e70e8918fac227356116e29186a2068bdea98  json/data-xl.json
+30721e496a8d73cfc50658923c34eb2c0fbe15ee6835005e43ee624d8dedf200  json/twitter.json

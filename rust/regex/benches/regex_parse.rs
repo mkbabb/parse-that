@@ -1,4 +1,4 @@
-//! Tranche P: bbnf-regex HIR parser throughput.
+//! Tranche P: parse-that-regex HIR parser throughput.
 //!
 //! Cold-parse 50+ real-world regex patterns drawn from JSON, CSS,
 //! identifiers, dates, IPs, hex literals, etc. Each iteration parses
@@ -10,8 +10,8 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use divan::{Bencher, black_box};
 
-use bbnf_regex::hir::ParseOptions;
-use bbnf_regex::parse_with;
+use parse_that_regex::hir::ParseOptions;
+use parse_that_regex::parse_with;
 
 const PATTERNS: &[&str] = &[
     // ── JSON ──────────────────────────────────────────────────

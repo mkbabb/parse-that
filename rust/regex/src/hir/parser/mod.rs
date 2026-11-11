@@ -3,7 +3,7 @@
 //! Hand-written recursive descent parser (not using parse-that combinators —
 //! avoids circular dependency and keeps the implementation zero-copy).
 //!
-//! Supports the regex subset used by BBNF grammars:
+//! Supports the regex subset that grammar leaves use:
 //! - Character classes: `[a-z]`, `[^abc]`, `\d`, `\w`, `\s`, `\S`, `\W`, `\D`
 //! - Alternation: `a|b`
 //! - Concatenation: `ab`
@@ -83,7 +83,12 @@ impl<'a> Parser<'a> {
         while !self.at_end() {
             match self.peek() {
                 Some(b'|') | Some(b')') => break,
-                _ => items.push(self.parse_quantified()?),
+                // A bare flag group (`(?i)`, `(?s)`) only sets parser state;
+                // it reads as `Empty` and is not an item of the sequence.
+                _ => match self.parse_quantified()? {
+                    Hir::Empty => {}
+                    item => items.push(item),
+                },
             }
         }
         match items.len() {

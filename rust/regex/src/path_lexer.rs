@@ -1,7 +1,7 @@
 //! Bespoke path-string lexer (AZ-IV.W2.3).
 //!
 //! Hand-rolled recursive-descent over the path alphabet — does **not**
-//! depend on `regex-syntax` or the bbnf-regex HIR parser, keeping the
+//! depend on `regex-syntax` or the parse-that-regex HIR parser, keeping the
 //! consuming `path!` proc-macro crate (AZ-IV.W2.4) narrow.
 //!
 //! Alphabet: identifier (`[A-Za-z_][A-Za-z0-9_]*`, Unicode-aware via

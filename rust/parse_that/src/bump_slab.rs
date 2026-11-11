@@ -57,7 +57,7 @@ impl BumpSlab {
         if values.is_empty() {
             return &[];
         }
-        let size = std::mem::size_of::<T>() * values.len();
+        let size = std::mem::size_of_val(values);
         let align = std::mem::align_of::<T>();
         let ptr = self.alloc_raw(size, align) as *mut T;
         for (i, v) in values.iter().enumerate() {
@@ -72,7 +72,7 @@ impl BumpSlab {
         if values.is_empty() {
             return &[];
         }
-        let size = std::mem::size_of::<T>() * values.len();
+        let size = std::mem::size_of_val(values);
         let align = std::mem::align_of::<T>();
         let ptr = self.alloc_raw(size, align) as *mut T;
         unsafe {
@@ -114,7 +114,8 @@ impl BumpSlab {
         rest.push(old);
 
         // Allocate in the fresh chunk (pos = 0, alignment from start).
-        let aligned = (0 + align - 1) & !(align - 1);
+        // A fresh chunk is used from offset 0.
+        let aligned = 0;
         let end = aligned + size;
         unsafe { current.set_len(end) };
         unsafe { current.as_mut_ptr().add(aligned) }

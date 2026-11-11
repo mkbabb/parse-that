@@ -1,0 +1,11 @@
+[package]
+name = "parse-that-corpus"
+version = "0.0.0"
+edition = "2024"
+publish = false
+description = "The one resolver for parse-that's test, bench and example corpus."
+
+# No dependencies: every Rust test, bench and example that reads the corpus
+# resolves it through `parse_that_corpus::path`, and `cargo xtask corpus
+# fetch|verify` provides and checks the same directory.
+[dependencies]

@@ -1,13 +1,13 @@
-# CLAUDE.md — rust/regex/ (bbnf-regex)
+# CLAUDE.md — rust/regex/ (parse-that-regex)
 
 Bespoke regex engine: HIR + hand-written parser, NFA→DFA compilation,
 structural classification, ByteSet algebra, HIR-tier equality saturation,
 unified regex info pass, FIRST-set extraction.
 
 A leaf crate with zero parser-combinator or grammar-IR dependencies. Used
-by `parse_that` (re-exports the engine), by `bbnf` (DFA codegen + regex
-classification + structural facts), and by `bbnf-ir` (FIRST sets + the
-shared `CharSet128` substrate).
+by `parse_that` (re-exports the engine) and by downstream grammar
+compilers (DFA codegen, regex classification, structural facts, FIRST
+sets over the shared `CharSet128` substrate).
 
 ## Structure
 
@@ -100,15 +100,15 @@ rust/regex/
   pattern identity.
 - **`RegexClass`** — semantic pattern category enum (JsonNumber,
   JsonString, Numeric, HexDigits, Identifier, QuotedString, etc.).
-  Drives `FnDescriptor` specialization in bbnf and inline scanner
-  selection in `bbnf::generate::fast_paths`.
+  Lets a code generator specialize a leaf's scanner (for example, an
+  inline fast path chosen per class).
 - **`CharSet128`** — 128-bit ASCII byte set. The shared substrate for
   FIRST/FOLLOW sets across the workspace.
 - **`ByteSet`** — 256-bit full byte set, used by NFA transitions and
   the algebra module.
 - **`HirENode`** — e-node enum parallel to `Hir` (with `Id` children
   instead of `Box<Hir>` / `Vec<Hir>`). Derives `Language` via
-  `egraph_derive::Language`.
+  `parse_that_egraph_derive::Language`.
 
 ## E-graph integration
 
@@ -118,20 +118,20 @@ before any downstream analysis. `simplify_hir` does build → saturate
 Every analysis (FIRST sets, nullable, width, DFA sizing) therefore sees
 the canonicalized HIR with zero caller-side awareness.
 
-`BBNF_HIR_EGRAPH_REPORT=1` prints the per-rule fire counts for the HIR
-saturation, mirroring the grammar tier's `BBNF_EGRAPH_REPORT`.
+`PARSE_THAT_REGEX_EGRAPH_REPORT=1` prints the per-rule fire counts for the
+HIR saturation.
 
 ## Conventions
 
 - **No inline tests in `src/`** (Tranche O). All tests live in `tests/`
-  as integration test binaries; they import via `use bbnf_regex::...`.
+  as integration test binaries; they import via `use parse_that_regex::...`.
 - **No `regex` crate dependency**. Pattern parsing, classification,
   and matching are all bespoke.
 - **`smallvec` for compact storage** in NFA states and HIR children.
 - **Negated classes are first-class** — never expanded eagerly into
   positive form. The `CharClass::Bytes { negated }` flag flows through
   the entire pipeline.
-- **Tests use `bbnf_regex::*` paths** — every public type is reachable
+- **Tests use `parse_that_regex::*` paths** — every public type is reachable
   via the crate root re-exports in `lib.rs`.
 - **Benches use `bencher` (not criterion)** — the parse-that workspace
   convention. `mimalloc` is the global allocator.
@@ -143,8 +143,8 @@ saturation, mirroring the grammar tier's `BBNF_EGRAPH_REPORT`.
   on the public types when the `serde` feature is enabled.
 - **egraph** + **egraph-derive** + **csp-solver** — local-path deps via
   `parse-that/rust/.cargo/config.toml`'s `[patch.crates-io]` table. The
-  HIR e-graph tier consumes this substrate identically to the grammar
-  tier in `bbnf-ir`.
+  HIR e-graph tier consumes this substrate like any other `egraph`
+  client.
 
 [dev-dependencies]
 - **bencher** — bench harness for the 4 bench binaries.

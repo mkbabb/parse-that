@@ -1,29 +1,29 @@
-//! Regex engine: re-exports from `bbnf_regex` + self-hosted parser path.
+//! Regex engine: re-exports from `parse_that_regex` + self-hosted parser path.
 //!
 //! The core regex engine (HIR, NFA, DFA, byte sets, unicode, parser) lives in
-//! the standalone `bbnf-regex` crate. This module re-exports its public API
+//! the standalone `parse-that-regex` crate. This module re-exports its public API
 //! and adds the self-hosted bootstrap path (`generated` + `host`).
 
 // Self-hosted parser (coupled to parse-that combinators)
 pub mod generated;
 pub mod host;
 
-// Re-export the entire regex engine from bbnf-regex
-pub use bbnf_regex::*;
+// Re-export the entire regex engine from parse-that-regex
+pub use parse_that_regex::*;
 
 // Re-export sub-modules for path compatibility (crate::regex::dfa::Dfa, etc.)
-pub use bbnf_regex::automata::accel;
-pub use bbnf_regex::automata::dfa;
-pub use bbnf_regex::automata::nfa;
-pub use bbnf_regex::classify;
-pub use bbnf_regex::first;
-pub use bbnf_regex::hir;
-pub use bbnf_regex::sets;
-pub use bbnf_regex::sets::byteset;
-pub use bbnf_regex::sets::charset;
-pub use bbnf_regex::sets::equiv;
-pub use bbnf_regex::unicode;
-pub use bbnf_regex::utf8;
+pub use parse_that_regex::automata::accel;
+pub use parse_that_regex::automata::dfa;
+pub use parse_that_regex::automata::nfa;
+pub use parse_that_regex::classify;
+pub use parse_that_regex::first;
+pub use parse_that_regex::hir;
+pub use parse_that_regex::sets;
+pub use parse_that_regex::sets::byteset;
+pub use parse_that_regex::sets::charset;
+pub use parse_that_regex::sets::equiv;
+pub use parse_that_regex::unicode;
+pub use parse_that_regex::utf8;
 
 /// Parse a regex pattern using the self-hosted generated parser + host fold.
 ///

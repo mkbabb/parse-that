@@ -11,12 +11,12 @@
 // `quote_bits | bs_bits = stop_bits`. In escape-free mode the inner
 // loop ticks one stripe per iteration with no per-byte branch — when
 // every stripe arrives with `stop_bits == 0` we copy nothing (Borrowed
-// path) or copy a full `u8x16` (Owned path) and continue. The first
+// path) or copy a full 16-byte chunk (Owned path) and continue. The first
 // stripe carrying a real backslash forces owned mode; from there each
 // escape-free run between escapes copies stripe-strided into the arena
 // before scalar handling decodes the escape itself.
 
-use std::simd::prelude::*;
+use super::lanes::{self, Chunk};
 
 use super::quoted_simd::odd_parity_backslashes;
 
@@ -45,7 +45,7 @@ pub enum StringPayload {
 /// invalid escape, bad surrogate pair).
 ///
 /// The fused SIMD scan classifies escape and quote bytes in the same
-/// `u8x16` stripe pass: an escape-free input takes the Borrowed path
+/// 16-byte stripe pass: an escape-free input takes the Borrowed path
 /// without ever touching the arena; an escape-bearing input copies
 /// each escape-free run between escapes 16 bytes at a time.
 #[inline]
@@ -74,13 +74,10 @@ fn simd_scan_or_decode(
     let mut pos = content_start;
     let mut carry: u32 = 0;
 
-    let quote_splat = u8x16::splat(b'"');
-    let bs_splat = u8x16::splat(b'\\');
-
     while pos + CHUNK <= len {
-        let chunk = u8x16::from_slice(unsafe { bytes.get_unchecked(pos..pos + CHUNK) });
-        let quote_bits = chunk.simd_eq(quote_splat).to_bitmask() as u32;
-        let bs_bits = chunk.simd_eq(bs_splat).to_bitmask() as u32;
+        let chunk = lanes::load(unsafe { bytes.get_unchecked(pos..pos + CHUNK) });
+        let quote_bits = lanes::eq_mask(chunk, b'"') as u32;
+        let bs_bits = lanes::eq_mask(chunk, b'\\') as u32;
 
         // Escape-free fast stripe: no backslash in stripe and no
         // pending carry from a previous odd-length backslash run.
@@ -164,15 +161,12 @@ fn owned_decode(
 /// invalid input.
 ///
 /// Inside the loop, escape-free 16-byte stripes copy through a
-/// `u8x16` register store ([`store_chunk`]) — one `vst1q_u8` (NEON) /
+/// 16-byte chunk store ([`store_chunk`]) — one `vst1q_u8` (NEON) /
 /// `_mm_storeu_si128` (x86) per stripe with no per-byte branch.
 /// Sub-stripe runs copy the prefix up to the next stop byte.
 #[inline]
 fn decode_escapes_simd(bytes: &[u8], mut pos: usize, arena: &mut Vec<u8>) -> Option<usize> {
     let len = bytes.len();
-    let quote_splat = u8x16::splat(b'"');
-    let bs_splat = u8x16::splat(b'\\');
-
     loop {
         // Peel any pending escape sequence(s) at `pos`.
         while pos < len && unsafe { *bytes.get_unchecked(pos) } == b'\\' {
@@ -185,9 +179,9 @@ fn decode_escapes_simd(bytes: &[u8], mut pos: usize, arena: &mut Vec<u8>) -> Opt
 
         // SIMD-stride copy escape-free bytes until next stop.
         while pos + CHUNK <= len {
-            let chunk = u8x16::from_slice(unsafe { bytes.get_unchecked(pos..pos + CHUNK) });
-            let quote_bits = chunk.simd_eq(quote_splat).to_bitmask() as u32;
-            let bs_bits = chunk.simd_eq(bs_splat).to_bitmask() as u32;
+            let chunk = lanes::load(unsafe { bytes.get_unchecked(pos..pos + CHUNK) });
+            let quote_bits = lanes::eq_mask(chunk, b'"') as u32;
+            let bs_bits = lanes::eq_mask(chunk, b'\\') as u32;
             let stop_bits = quote_bits | bs_bits;
 
             if stop_bits == 0 {
@@ -218,19 +212,19 @@ fn decode_escapes_simd(bytes: &[u8], mut pos: usize, arena: &mut Vec<u8>) -> Opt
     }
 }
 
-/// Append a `u8x16` register's contents to `arena` as a single 128-bit
+/// Append a 16-byte chunk's contents to `arena` as a single 128-bit
 /// store (`vst1q_u8` on NEON, `_mm_storeu_si128` on x86). Reserves
 /// space if needed, then writes the lane bytes through a raw pointer
 /// before bumping `len` — the register never round-trips through a
 /// stack temporary.
 #[inline(always)]
-fn store_chunk(arena: &mut Vec<u8>, chunk: u8x16) {
+fn store_chunk(arena: &mut Vec<u8>, chunk: Chunk) {
     let old_len = arena.len();
     arena.reserve(CHUNK);
     unsafe {
         let dst = arena.as_mut_ptr().add(old_len);
-        // u8x16 → [u8; 16] lowers to a single SIMD store at dst.
-        std::ptr::write_unaligned(dst as *mut [u8; CHUNK], chunk.to_array());
+        // Chunk → [u8; 16] lowers to a single 128-bit store at dst.
+        std::ptr::write_unaligned(dst as *mut [u8; CHUNK], lanes::to_array(chunk));
         arena.set_len(old_len + CHUNK);
     }
 }

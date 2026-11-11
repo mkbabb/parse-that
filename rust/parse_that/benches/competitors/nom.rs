@@ -2,7 +2,7 @@
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use divan::counter::BytesCount;
 use divan::{Bencher, black_box};
@@ -68,7 +68,7 @@ fn null(i: &str) -> IResult<&str, ()> {
     map(tag("null"), |_| ())(i)
 }
 
-fn array(i: &str) -> IResult<&str, Vec<JsonValue>> {
+fn array(i: &str) -> IResult<&str, Vec<JsonValue<'_>>> {
     preceded(
         char('['),
         cut(terminated(
@@ -78,11 +78,11 @@ fn array(i: &str) -> IResult<&str, Vec<JsonValue>> {
     )(i)
 }
 
-fn key_value(i: &str) -> IResult<&str, (&str, JsonValue)> {
+fn key_value(i: &str) -> IResult<&str, (&str, JsonValue<'_>)> {
     separated_pair(preceded(sp, string), cut(preceded(sp, char(':'))), value)(i)
 }
 
-fn hash(i: &str) -> IResult<&str, HashMap<&str, JsonValue>> {
+fn hash(i: &str) -> IResult<&str, HashMap<&str, JsonValue<'_>>> {
     let (i, _) = char('{')(i)?;
     let mut res = HashMap::default();
 
@@ -99,7 +99,7 @@ fn hash(i: &str) -> IResult<&str, HashMap<&str, JsonValue>> {
     }
 }
 
-fn value(i: &str) -> IResult<&str, JsonValue> {
+fn value(i: &str) -> IResult<&str, JsonValue<'_>> {
     preceded(
         sp,
         alt((
@@ -113,7 +113,7 @@ fn value(i: &str) -> IResult<&str, JsonValue> {
     )(i)
 }
 
-fn root(i: &str) -> IResult<&str, JsonValue> {
+fn root(i: &str) -> IResult<&str, JsonValue<'_>> {
     delimited(
         sp,
         alt((map(hash, JsonValue::Object), map(array, JsonValue::Array))),
@@ -122,7 +122,7 @@ fn root(i: &str) -> IResult<&str, JsonValue> {
 }
 
 fn data_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/json")
+    parse_that_corpus::path("json")
 }
 
 #[divan::bench]

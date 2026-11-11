@@ -38,7 +38,7 @@ mod tests {
 
     #[test]
     fn test_csv_file() {
-        let csv_file_path = "../../data/csv/active_charter_schools_report.csv";
+        let csv_file_path = parse_that_corpus::path("csv/active_charter_schools_report.csv");
         let csv_string = fs::read_to_string(csv_file_path).unwrap();
 
         let rows = csv_parser().parse(&csv_string).unwrap();

@@ -45,14 +45,20 @@ fn lower_node(
         }
 
         RegexParserEnum::concat(items) => {
-            if items.len() == 1 {
-                return lower_node(&items[0], src, ctx);
-            }
+            // A bare flag group lowers to `Empty` and is not an item of the
+            // sequence, as in the hand-written parser.
             let mut hirs = Vec::new();
             for item in *items {
-                hirs.push(lower_node(item, src, ctx)?);
+                match lower_node(item, src, ctx)? {
+                    Hir::Empty => {}
+                    hir => hirs.push(hir),
+                }
             }
-            Ok(Hir::Concat(hirs))
+            Ok(if hirs.len() > 1 {
+                Hir::Concat(hirs)
+            } else {
+                hirs.pop().unwrap_or(Hir::Empty)
+            })
         }
 
         RegexParserEnum::quantified((atom, quant)) => {
@@ -199,7 +205,7 @@ fn lower_quantifier(
         parse_braced_quantifier(span)?
     };
 
-    let greedy = !rest.first().is_some_and(|&b| b == b'?');
+    let greedy = rest.first() != Some(&b'?');
 
     Ok(Hir::Repetition(Repetition {
         sub: Box::new(inner.clone()),

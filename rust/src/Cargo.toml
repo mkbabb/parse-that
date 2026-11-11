@@ -2,6 +2,9 @@
 name = "parse_that_cli"
 version = "0.1.0"
 edition = "2024"
+# sk-v27 LW2.TOPO-4b: a workspace binary that reads the corpus through the
+# unpublished `parse-that-corpus`, so it is not a crates.io package.
+publish = false
 
 [[bin]]
 name = "main"
@@ -9,3 +12,4 @@ path = "main.rs"
 
 [dependencies]
 parse_that = { version = "0.4.0", path = "../parse_that" }
+parse-that-corpus = { path = "../corpus" }

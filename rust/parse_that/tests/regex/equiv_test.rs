@@ -28,7 +28,7 @@ fn single_range() {
 fn two_disjoint_ranges() {
     let digits = ByteSet::range(b'0', b'9');
     let alpha = ByteSet::range(b'a', b'z');
-    let (classes, num) = compute_byte_classes(&[digits, alpha]);
+    let (_classes, num) = compute_byte_classes(&[digits, alpha]);
     // Three classes: {0-9}, {a-z}, {everything else}.
     assert_eq!(num, 3);
 }
@@ -53,7 +53,7 @@ fn utf8_leading_bytes() {
     // Simulate UTF-8: leading bytes 0xC2-0xDF and continuation 0x80-0xBF.
     let leading = ByteSet::range(0xC2, 0xDF);
     let continuation = ByteSet::range(0x80, 0xBF);
-    let (classes, num) = compute_byte_classes(&[leading, continuation]);
+    let (_classes, num) = compute_byte_classes(&[leading, continuation]);
     // Three classes: {leading only}, {continuation only}, {neither}.
     assert_eq!(num, 3);
 }
@@ -72,7 +72,7 @@ fn word_char_classes() {
         bs.insert(b);
     }
     bs.insert(b'_');
-    let (classes, num) = compute_byte_classes(&[bs]);
+    let (_classes, num) = compute_byte_classes(&[bs]);
     // Two classes: word chars and non-word chars.
     assert_eq!(num, 2);
 }

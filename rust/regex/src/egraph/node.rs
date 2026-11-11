@@ -28,12 +28,12 @@
 //! occupy distinct e-classes.
 //!
 //! The `Language` impl is auto-derived via
-//! `egraph_derive::Language`, which classifies fields by type
+//! `parse_that_egraph_derive::Language`, which classifies fields by type
 //! (`Id`, `Box<[Id]>`) and projects them into the required
 //! `children() -> &[Id]` slice.
 
-use egraph::Id;
-use egraph_derive::Language;
+use parse_that_egraph::Id;
+use parse_that_egraph_derive::Language;
 
 use crate::hir::{CharClass, Look};
 
@@ -55,7 +55,7 @@ pub enum HirENode {
     Look(Look),
     /// Quantified sub-expression. The scalar fields (`min`, `max`,
     /// `greedy`) participate in structural equality. `sub` is the
-    /// single e-class Id child — `egraph_derive::Language`
+    /// single e-class Id child — `parse_that_egraph_derive::Language`
     /// classifies it as `FieldKind::SingleId` and produces
     /// `children() -> &[sub]`.
     Repetition {

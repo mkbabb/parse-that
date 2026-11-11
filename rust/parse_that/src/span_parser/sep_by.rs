@@ -35,6 +35,11 @@ impl<'a> SpanParser<'a> {
                 break;
             }
             if let Some(span) = inner.call(state) {
+                // Guard: a zero-progress (sep elem) iteration adds nothing
+                // and ends the loop, as TS `sepBy` does.
+                if state.offset == cp {
+                    break;
+                }
                 end = span.end;
                 count += 1;
             } else {
@@ -83,6 +88,9 @@ impl<'a> SpanParser<'a> {
             // Trim before next element
             trim_leading_whitespace_mut(state);
             if inner.call(state).is_some() {
+                if state.offset == cp {
+                    break;
+                }
                 count += 1;
             } else {
                 state.offset = cp;

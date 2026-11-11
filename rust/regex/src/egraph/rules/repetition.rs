@@ -16,7 +16,7 @@
 //! both the original and merged forms for extraction to choose
 //! from.
 
-use egraph::{Analysis, EGraph, Id, Rewrite};
+use parse_that_egraph::{Analysis, EGraph, Id, Rewrite};
 
 use crate::egraph::node::HirENode;
 

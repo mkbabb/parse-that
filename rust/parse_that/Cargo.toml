@@ -14,6 +14,9 @@ path = "src/lib.rs"
 default = ["combinators"]
 combinators = []
 diagnostics = ["dep:colored"]
+# Opt-in nightly plane (sk-v27 LW2.TOPO-2), off by default: the portable-SIMD
+# scan kernels and smallbox's unsizing coercion. A default build is stable.
+nightly = ["smallbox/nightly"]
 
 # ── parse_that benches ──────────────────────────────────────
 
@@ -87,16 +90,20 @@ harness = false
 # ── dependencies ────────────────────────────────────────────
 
 [dependencies]
-bbnf-regex = { version = "0.1", path = "../regex" }
-pprint = "0.3"
+parse-that-regex = { version = "0.1", path = "../regex" }
+pprint = { version = "0.4", git = "https://github.com/mkbabb/pprint", rev = "32d73ca44921b07eda29ec0d5c0decc430687dd5" }
 colored = { version = "3", optional = true }
+# The structural-byte kernels, re-exported as `parse_that::scan` (sk-v27 LW2.PERF-1, X-3).
+parse-that-simd = { version = "0.1.0", path = "../simd" }
 memchr = "2.5.0"
 aho-corasick = "1.1"
 fast-float2 = "0.2"
 smallvec = "1.13"
-smallbox = { version = "0.8", features = ["nightly"] }
+smallbox = "0.8"
 
 [dev-dependencies]
+# The one corpus resolver for tests and benches (`cargo xtask corpus fetch`).
+parse-that-corpus = { path = "../corpus" }
 serde_json = "1.0.94"
 serde = "1.0.156"
 divan = "0.1"

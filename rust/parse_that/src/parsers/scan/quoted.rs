@@ -196,10 +196,10 @@ fn scan_quoted_string_inner_strict<'a>(
     // Validate escape sequences between the quotes. This is a separate pass
     // but only touches backslash positions — for escape-free strings (the
     // common case), memchr finds no backslashes and we skip instantly.
-    if memchr::memchr(b'\\', &bytes[content_start..close_quote]).is_some() {
-        if !validate_strict_escapes(bytes, content_start, close_quote) {
-            return None;
-        }
+    if memchr::memchr(b'\\', &bytes[content_start..close_quote]).is_some()
+        && !validate_strict_escapes(bytes, content_start, close_quote)
+    {
+        return None;
     }
 
     let end = close_quote + 1; // past the closing quote

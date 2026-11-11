@@ -1,13 +1,13 @@
 [package]
-name = "bbnf-regex"
+name = "parse-that-regex"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
-description = "Bespoke regex engine: HIR, NFA→DFA compilation, structural classification"
+description = "Regex engine for parser generators: HIR, NFA→DFA compilation, e-graph simplification, structural classification"
 repository = "https://github.com/mkbabb/parse-that"
 
 [lib]
-name = "bbnf_regex"
+name = "parse_that_regex"
 path = "src/lib.rs"
 
 [features]
@@ -19,7 +19,7 @@ smallvec = "1.13"
 serde = { version = "1", optional = true, features = ["derive"] }
 # AZ-IV.W2.3 — `path_lexer` exposes a custom HIR API for path-string
 # literals. Tokens carry `proc_macro2::Span` so the consuming `path!`
-# proc-macro (bbnf-path, AZ-IV.W2.4) can anchor diagnostics at the macro
+# proc-macro (AZ-IV.W2.4) can anchor diagnostics at the macro
 # call-site. proc-macro2 is callable from both proc-macro contexts and
 # ordinary library/test contexts under its default features.
 proc-macro2 = "1"
@@ -27,20 +27,19 @@ proc-macro2 = "1"
 # the HIR e-graph rewrite rules. Same hash strategy as the egraph
 # substrate crate (via rustc-hash 2).
 rustc-hash = "2"
-# Tranche H: HIR e-graph substrate. `egraph` + `egraph-derive` supply the
-# equality-saturation machinery; `csp-solver` schedules HIR rewrite
-# eligibility the same way the grammar tier schedules its CSP passes. All
-# three are resolved locally via parse-that/rust/.cargo/config.toml's
-# [patch.crates-io] table — no published crate coordinates required.
-egraph = "0.1"
-egraph-derive = "0.1"
-csp-solver = "0.1"
+# Tranche H: HIR e-graph substrate. `parse-that-egraph` +
+# `parse-that-egraph-derive` supply the equality-saturation machinery and
+# its CSP scheduler (which brings csp-solver with it). Workspace members:
+# path edges with the version each will take on crates.io.
+parse-that-egraph = { version = "0.1.0", path = "../egraph" }
+parse-that-egraph-derive = { version = "0.1.0", path = "../egraph-derive" }
 
 [dev-dependencies]
 divan = "0.1"
 mimalloc = "0.1"
+serde_json = "1"
 
-# ── bbnf-regex benches (Tranche P) ──────────────────────────
+# ── parse-that-regex benches (Tranche P) ──────────────────────────
 
 [[bench]]
 name = "regex_parse"

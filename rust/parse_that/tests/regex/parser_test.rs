@@ -1,5 +1,5 @@
 use parse_that::regex::hir::{ByteRange, CharClass, CodepointRange, Hir, ParseOptions, Repetition};
-use parse_that::regex::parser::{parse, parse_with};
+use parse_that::regex::{parse, parse_with};
 
 fn p(s: &str) -> Hir {
     parse(s).unwrap_or_else(|e| panic!("parse({:?}) failed: {}", s, e))
@@ -118,20 +118,15 @@ fn non_capturing_group() {
 #[test]
 fn dotall_flag_unicode() {
     // (?s). in unicode mode → Unicode class matching all codepoints.
+    // The bare flag group sets state and is not an item of the sequence.
     match p("(?s).") {
-        Hir::Concat(items) => {
-            assert_eq!(items.len(), 2); // Empty (from flag group) + dot
-            match &items[1] {
-                Hir::Class(CharClass::Unicode {
-                    ranges,
-                    negated: false,
-                }) => {
-                    assert_eq!(ranges[0], CodepointRange::new('\0', '\u{10FFFF}'));
-                }
-                other => panic!("expected Unicode class for dotall, got {:?}", other),
-            }
+        Hir::Class(CharClass::Unicode {
+            ranges,
+            negated: false,
+        }) => {
+            assert_eq!(ranges[0], CodepointRange::new('\0', '\u{10FFFF}'));
         }
-        other => panic!("expected Concat, got {:?}", other),
+        other => panic!("expected Unicode class for dotall, got {:?}", other),
     }
 }
 
@@ -140,16 +135,13 @@ fn dotall_flag_byte_mode() {
     // (?s). in byte mode → Bytes class matching all bytes.
     let hir = parse_with("(?s).", &ParseOptions::byte_mode()).unwrap();
     match hir {
-        Hir::Concat(items) => match &items[1] {
-            Hir::Class(CharClass::Bytes {
-                ranges,
-                negated: false,
-            }) => {
-                assert_eq!(ranges[0], ByteRange::new(0, 255));
-            }
-            other => panic!("expected Bytes class for dotall byte mode, got {:?}", other),
-        },
-        other => panic!("expected Concat, got {:?}", other),
+        Hir::Class(CharClass::Bytes {
+            ranges,
+            negated: false,
+        }) => {
+            assert_eq!(ranges[0], ByteRange::new(0, 255));
+        }
+        other => panic!("expected Bytes class for dotall byte mode, got {:?}", other),
     }
 }
 

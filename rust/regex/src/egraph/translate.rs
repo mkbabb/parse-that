@@ -8,7 +8,7 @@
 //! pipeline (the parser, NFA/DFA compiler, classifier) works
 //! against `Hir` exclusively.
 
-use egraph::{Analysis, CostModel, EGraph, Extractor, Id};
+use parse_that_egraph::{Analysis, CostModel, EGraph, Extractor, Id};
 
 use crate::hir::{Hir, Repetition};
 

@@ -1,36 +1,30 @@
 # .cargo/config.toml — parse-that sibling repo
 #
-# Mirrors bbnf-lang's toolchain posture so cross-repo path-patched
-# builds (bbnf-regex + parse_that pulled into bbnf-lang's Cargo.toml
-# via [patch.crates-io]) observe the same rustflags + ax-iter profile.
-# Source of truth for pin is bbnf-lang's rust-toolchain.toml (mirrored
-# into this repo as a same-date twin per B1.W2.c propagation).
+# Mirrors the downstream workspaces' toolchain posture so every build of
+# this workspace observes the same profiles and aliases. No
+# [patch] table: every cross-repository edge is a git + rev edge in the
+# manifest that declares it (sk-v27 LW2.TOPO-1).
+# The toolchain pin is the same stable 1.99.1 as bbnf-lang's
+# rust-toolchain.toml.
 
-[build]
-rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
-
-# macOS arm64: default system ld64 via clang. lld is opt-in; developers
-# who want it must `brew install lld` (separate formula from llvm) and
-# uncomment the block below, adjusting the path from `brew --prefix lld`.
-[target.aarch64-apple-darwin]
-rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
-
-# Opt-in lld (requires `brew install lld`):
-# [target.aarch64-apple-darwin]
-# linker    = "clang"
-# rustflags = [
-#     "-C", "link-arg=-fuse-ld=/opt/homebrew/opt/lld/bin/ld.lld",
-#     "-Zthreads=8",
-#     "-Zshare-generics=y",
-# ]
+# ── Toolchain plane (sk-v27 LW2.TOPO-2) ─────────────────────────────────────
+# Stable is the default plane: rust-toolchain.toml pins stable 1.99.1, and
+# nothing in this file needs nightly. No build wrapper is committed. CI sets
+# RUSTC_WRAPPER=sccache through mozilla-actions/sccache-action; a developer
+# who wants the cache exports RUSTC_WRAPPER=sccache in the shell profile, or
+# sets the same wrapper under [build] in ~/.cargo/config.toml (cargo reads
+# that file for every workspace on the host).
+#
+# Nightly is opt-in and lives in one place: the alias family at the end of
+# this file, run as `cargo +nightly <alias>`.
 
 # Linux x86_64: bundled rust-lld, no extra install.
 [target.x86_64-unknown-linux-gnu]
-rustflags = [
-    "-C", "link-arg=-fuse-ld=lld",
-    "-Zthreads=8",
-    "-Zshare-generics=y",
-]
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+# macOS arm64 uses the system ld64. lld is opt-in: `brew install lld`, then
+# add a [target.aarch64-apple-darwin] block with
+# linker = "clang" and rustflags = ["-C", "link-arg=-fuse-ld=<brew --prefix lld>/bin/ld.lld"].
 
 # ── Profiles ────────────────────────────────────────────────────────────────
 # Three-tier surface mirrored from bbnf-lang's .cargo/config.toml so cross-
@@ -71,3 +65,16 @@ codegen-units   = 1
 [alias]
 iter-check = "check --profile ax-iter"
 iter-test  = "nextest run --cargo-profile ax-iter"
+# `cargo xtask corpus fetch|verify|pack|dir` (from rust/): corpus custody, corpus/MANIFEST.sha256.
+xtask      = "run -p xtask --"
+
+# ── nightly alias family: BEGIN ─────────────────────────────────────────────
+# Opt-in nightly work, run as `cargo +nightly <alias>`; a stable build never
+# reads these. The parallel front end and shared generics go through
+# rustflags here, cranelift through cargo's codegen-backend option, and
+# parse_that's `nightly` feature (portable SIMD kernels, smallbox
+# coercion) through `--features`.
+nightly-check           = ["check", "--profile", "ax-iter", "--workspace", "--features", "parse_that/nightly", "--config", "build.rustflags=['-Zthreads=8','-Zshare-generics=y']"]
+nightly-test            = ["nextest", "run", "--cargo-profile", "ax-iter", "--workspace", "--features", "parse_that/nightly", "--config", "build.rustflags=['-Zthreads=8','-Zshare-generics=y']"]
+nightly-check-cranelift = ["check", "-Zcodegen-backend", "--profile", "ax-iter", "--workspace", "--config", "profile.ax-iter.codegen-backend='cranelift'"]
+# ── nightly alias family: END ───────────────────────────────────────────────

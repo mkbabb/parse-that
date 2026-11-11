@@ -242,9 +242,7 @@ fn subset_construction(
     while let Some(current_set) = worklist.pop() {
         let current_id = set_to_id[&current_set];
 
-        for cls in 0..num_cls {
-            let rep_byte = class_reps[cls];
-
+        for (cls, &rep_byte) in class_reps.iter().enumerate().take(num_cls) {
             // Compute move(current_set, rep_byte) then ε-closure.
             let moved = move_on_byte(nfa, &current_set, rep_byte);
             if moved.is_empty() {
@@ -310,59 +308,13 @@ fn hopcroft_minimize(dfa: &Dfa) -> Dfa {
         }
     }
 
-    // Refine until stable.
-    let mut changed = true;
-    while changed {
-        changed = false;
-
-        for block_id in 0..num_blocks {
-            // Collect states in this block.
-            let members: Vec<usize> = (0..n).filter(|&s| partition[s] == block_id).collect();
-            if members.len() <= 1 {
-                continue;
-            }
-
-            // Try to split this block on each equivalence class.
-            for cls in 0..num_cls {
-                // Get the target block of the first member.
-                let first = members[0];
-                let first_target = dfa.states[first].transitions[cls];
-                let first_target_block = if first_target == DEAD {
-                    usize::MAX // dead state sentinel
-                } else {
-                    partition[first_target as usize]
-                };
-
-                // Check if all members agree.
-                let mut splitters: Vec<usize> = Vec::new();
-                for &m in &members[1..] {
-                    let target = dfa.states[m].transitions[cls];
-                    let target_block = if target == DEAD {
-                        usize::MAX
-                    } else {
-                        partition[target as usize]
-                    };
-                    if target_block != first_target_block {
-                        splitters.push(m);
-                    }
-                }
-
-                if !splitters.is_empty() {
-                    // Split: move disagreeing states to a new block.
-                    let new_block = num_blocks;
-                    num_blocks += 1;
-                    for &s in &splitters {
-                        partition[s] = new_block;
-                    }
-                    changed = true;
-                    break; // restart refinement from the beginning
-                }
-            }
-
-            if changed {
-                break;
-            }
+    // Refine until stable: split one block per round, then rescan.
+    while let Some(splitters) = find_split(dfa, &partition, num_blocks, num_cls) {
+        // Move the disagreeing states to a new block.
+        for &s in &splitters {
+            partition[s] = num_blocks;
         }
+        num_blocks += 1;
     }
 
     // Build minimized DFA.
@@ -435,4 +387,44 @@ fn hopcroft_minimize(dfa: &Dfa) -> Dfa {
         byte_classes: dfa.byte_classes,
         num_classes: dfa.num_classes,
     }
+}
+
+/// The first block, in block order, whose members disagree on the target
+/// block of some equivalence class; returns the members that disagree with
+/// the block's first member (the states to split off), or `None` when the
+/// partition is stable.
+fn find_split(
+    dfa: &Dfa,
+    partition: &[usize],
+    num_blocks: usize,
+    num_cls: usize,
+) -> Option<Vec<usize>> {
+    let target_block = |s: usize, cls: usize| {
+        let target = dfa.states[s].transitions[cls];
+        if target == DEAD {
+            usize::MAX // dead state sentinel
+        } else {
+            partition[target as usize]
+        }
+    };
+    for block_id in 0..num_blocks {
+        let members: Vec<usize> = (0..partition.len())
+            .filter(|&s| partition[s] == block_id)
+            .collect();
+        if members.len() <= 1 {
+            continue;
+        }
+        for cls in 0..num_cls {
+            let first_target_block = target_block(members[0], cls);
+            let splitters: Vec<usize> = members[1..]
+                .iter()
+                .copied()
+                .filter(|&m| target_block(m, cls) != first_target_block)
+                .collect();
+            if !splitters.is_empty() {
+                return Some(splitters);
+            }
+        }
+    }
+    None
 }

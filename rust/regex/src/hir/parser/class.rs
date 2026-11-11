@@ -2,6 +2,24 @@
 
 use super::*;
 
+/// A class member before ranges are assembled.
+#[derive(Clone, Copy)]
+enum ClassAtom {
+    Byte(u8),
+    Scalar(char),
+}
+
+impl ClassAtom {
+    /// The member as a scalar value; a byte promotes to the scalar of the
+    /// same number, as a byte range does in a codepoint class.
+    fn scalar(self) -> char {
+        match self {
+            ClassAtom::Byte(b) => b as char,
+            ClassAtom::Scalar(c) => c,
+        }
+    }
+}
+
 impl<'a> Parser<'a> {
     /// Parse `[...]` or `[^...]`.
     ///
@@ -60,22 +78,21 @@ impl<'a> Parser<'a> {
         cp_ranges: &mut Vec<CodepointRange>,
     ) -> Result<(), ParseError> {
         if self.peek() == Some(b'\\') {
-            self.advance();
-            match self.peek() {
+            match self.src.get(self.pos + 1).copied() {
                 // Shorthand classes — expand directly into byte ranges.
                 Some(b'd') => {
-                    self.advance();
+                    self.pos += 2;
                     byte_ranges.push(ByteRange::new(b'0', b'9'));
                     return Ok(());
                 }
                 Some(b'D') => {
-                    self.advance();
+                    self.pos += 2;
                     byte_ranges.push(ByteRange::new(0, b'0' - 1));
                     byte_ranges.push(ByteRange::new(b'9' + 1, 255));
                     return Ok(());
                 }
                 Some(b'w') => {
-                    self.advance();
+                    self.pos += 2;
                     byte_ranges.push(ByteRange::new(b'0', b'9'));
                     byte_ranges.push(ByteRange::new(b'A', b'Z'));
                     byte_ranges.push(ByteRange::new(b'_', b'_'));
@@ -83,7 +100,7 @@ impl<'a> Parser<'a> {
                     return Ok(());
                 }
                 Some(b'W') => {
-                    self.advance();
+                    self.pos += 2;
                     byte_ranges.push(ByteRange::new(0, b'0' - 1));
                     byte_ranges.push(ByteRange::new(b'9' + 1, b'A' - 1));
                     byte_ranges.push(ByteRange::new(b'Z' + 1, b'_' - 1));
@@ -92,80 +109,66 @@ impl<'a> Parser<'a> {
                     return Ok(());
                 }
                 Some(b's') => {
-                    self.advance();
+                    self.pos += 2;
                     byte_ranges.push(ByteRange::new(0x09, 0x0D));
                     byte_ranges.push(ByteRange::new(0x20, 0x20));
                     return Ok(());
                 }
                 Some(b'S') => {
-                    self.advance();
+                    self.pos += 2;
                     byte_ranges.push(ByteRange::new(0, 0x08));
                     byte_ranges.push(ByteRange::new(0x0E, 0x1F));
                     byte_ranges.push(ByteRange::new(0x21, 255));
                     return Ok(());
                 }
-                // Hex escape inside class: \xHH
-                Some(b'x') => {
-                    self.advance();
-                    let hi = self.parse_hex_digit()?;
-                    let lo_d = self.parse_hex_digit()?;
-                    let val = (hi << 4) | lo_d;
-                    if self.peek() == Some(b'-') && self.src.get(self.pos + 1) != Some(&b']') {
-                        self.advance(); // consume '-'
-                        let range_hi = self.parse_class_atom_single()?;
-                        byte_ranges.push(ByteRange::new(val, range_hi));
-                    } else {
-                        byte_ranges.push(ByteRange::new(val, val));
-                    }
-                    return Ok(());
-                }
-                // Unicode escape inside class: \u{XXXX}
-                Some(b'u') => {
-                    self.advance();
-                    let cp = self.parse_class_unicode_codepoint()?;
-                    let ch = char::from_u32(cp)
-                        .ok_or_else(|| self.err(format!("invalid codepoint U+{:04X}", cp)))?;
-                    if self.peek() == Some(b'-') && self.src.get(self.pos + 1) != Some(&b']') {
-                        self.advance(); // consume '-'
-                        // Expect another \u{...} for the range end.
-                        self.expect(b'\\')?;
-                        self.expect(b'u')?;
-                        let cp_hi = self.parse_class_unicode_codepoint()?;
-                        let ch_hi = char::from_u32(cp_hi).ok_or_else(|| {
-                            self.err(format!("invalid codepoint U+{:04X}", cp_hi))
-                        })?;
-                        cp_ranges.push(CodepointRange::new(ch, ch_hi));
-                    } else {
-                        cp_ranges.push(CodepointRange::new(ch, ch));
-                    }
-                    return Ok(());
-                }
-                _ => {
-                    // Single-byte escape.
-                    let b = self.parse_class_escape_single()?;
-                    let lo = b;
-                    if self.peek() == Some(b'-') && self.src.get(self.pos + 1) != Some(&b']') {
-                        self.advance();
-                        let hi = self.parse_class_atom_single()?;
-                        byte_ranges.push(ByteRange::new(lo, hi));
-                    } else {
-                        byte_ranges.push(ByteRange::new(lo, lo));
-                    }
-                    return Ok(());
-                }
+                _ => {}
             }
         }
 
-        // Non-escape atom.
-        let lo = self.parse_class_atom_single()?;
-        if self.peek() == Some(b'-') && self.src.get(self.pos + 1) != Some(&b']') {
-            self.advance();
-            let hi = self.parse_class_atom_single()?;
-            byte_ranges.push(ByteRange::new(lo, hi));
+        let lo = self.parse_class_atom()?;
+        let hi = if self.peek() == Some(b'-') && self.src.get(self.pos + 1) != Some(&b']') {
+            self.advance(); // consume '-'
+            self.parse_class_atom()?
         } else {
-            byte_ranges.push(ByteRange::new(lo, lo));
+            lo
+        };
+        match (lo, hi) {
+            (ClassAtom::Byte(lo), ClassAtom::Byte(hi)) => byte_ranges.push(ByteRange::new(lo, hi)),
+            (lo, hi) => cp_ranges.push(CodepointRange::new(lo.scalar(), hi.scalar())),
         }
         Ok(())
+    }
+
+    /// One class member: a byte, or a scalar value. A `\u` escape is a
+    /// scalar; so is a raw non-ASCII character in Unicode mode, read whole
+    /// (ECMAScript reads a class one scalar at a time, never one byte of
+    /// one). In byte mode a raw non-ASCII character is its bytes.
+    fn parse_class_atom(&mut self) -> Result<ClassAtom, ParseError> {
+        match self.peek() {
+            Some(b'\\') if self.src.get(self.pos + 1) == Some(&b'u') => {
+                self.pos += 2;
+                let cp = self.parse_class_unicode_codepoint()?;
+                let ch = char::from_u32(cp)
+                    .ok_or_else(|| self.err(format!("invalid codepoint U+{:04X}", cp)))?;
+                Ok(ClassAtom::Scalar(ch))
+            }
+            Some(b) if b >= 0x80 && self.unicode => {
+                let len = match b {
+                    0xF0..=0xFF => 4,
+                    0xE0..=0xEF => 3,
+                    _ => 2,
+                };
+                let ch = self
+                    .src
+                    .get(self.pos..self.pos + len)
+                    .and_then(|bytes| std::str::from_utf8(bytes).ok())
+                    .and_then(|text| text.chars().next())
+                    .ok_or_else(|| self.err("invalid UTF-8 inside character class".into()))?;
+                self.pos += len;
+                Ok(ClassAtom::Scalar(ch))
+            }
+            _ => Ok(ClassAtom::Byte(self.parse_class_atom_single()?)),
+        }
     }
 
     /// Parse `{XXXX}` after `\u` inside a character class.
@@ -204,6 +207,7 @@ impl<'a> Parser<'a> {
             Some(b'f') => Ok(0x0C),
             Some(b'a') => Ok(0x07),
             Some(b'0') => Ok(0),
+            Some(b'b') => Ok(0x08), // backspace inside a class
             Some(b'x') => {
                 let hi = self.parse_hex_digit()?;
                 let lo = self.parse_hex_digit()?;

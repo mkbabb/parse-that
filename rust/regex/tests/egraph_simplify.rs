@@ -1,8 +1,8 @@
 //! Tranche O — extracted from `regex/src/egraph/mod.rs`.
 //! End-to-end `simplify_hir` tests.
 
-use bbnf_regex::egraph::{RegexExtractionCost, simplify_hir};
-use bbnf_regex::hir::{ByteRange, CharClass, Hir};
+use parse_that_regex::egraph::{RegexExtractionCost, simplify_hir};
+use parse_that_regex::hir::{ByteRange, CharClass, Hir};
 
 fn mk_class(ranges: &[(u8, u8)]) -> Hir {
     Hir::Class(CharClass::Bytes {
