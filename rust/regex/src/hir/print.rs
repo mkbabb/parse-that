@@ -108,6 +108,8 @@ impl Printer<'_> {
                 // line terminators are LF, CR, U+2028 and U+2029.
                 Look::StartLF | Look::StartCRLF => "(?m:^)",
                 Look::EndLF | Look::EndCRLF => "(?m:$)",
+                Look::WordBoundary => "\\b",
+                Look::NotWordBoundary => "\\B",
             }),
             Hir::Repetition(rep) => self.repetition(rep),
             Hir::Group(inner) => self.group(inner),

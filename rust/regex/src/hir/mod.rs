@@ -183,6 +183,13 @@ pub enum Look {
     StartCRLF,
     /// End of line (CRLF).
     EndCRLF,
+    /// `\b` outside a class — the ECMAScript word boundary over the ASCII
+    /// word set `[A-Za-z0-9_]`: exactly one of the bytes before and after the
+    /// position is a word byte (the edges of the input count as non-word).
+    /// Never backspace; inside a class `\b` is backspace (sk-v27 A-9).
+    WordBoundary,
+    /// `\B` — the negation of [`Look::WordBoundary`] at the same position.
+    NotWordBoundary,
 }
 
 // ── Repetition ──────────────────────────────────────────────────────────

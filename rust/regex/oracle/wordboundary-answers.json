@@ -1,0 +1,102 @@
+{
+  "wb-b-foo-start": {
+    "id": "wb-b-foo-start",
+    "status": "MATCH",
+    "end16": 3,
+    "len16": 3,
+    "end8": 3,
+    "len8": 3
+  },
+  "wb-b-foo-midword": {
+    "id": "wb-b-foo-midword",
+    "status": "NO_MATCH"
+  },
+  "wb-b-foo-after-space": {
+    "id": "wb-b-foo-after-space",
+    "status": "MATCH",
+    "end16": 4,
+    "len16": 3,
+    "end8": 4,
+    "len8": 3
+  },
+  "wb-foo-b-end": {
+    "id": "wb-foo-b-end",
+    "status": "MATCH",
+    "end16": 3,
+    "len16": 3,
+    "end8": 3,
+    "len8": 3
+  },
+  "wb-foo-b-word-follows": {
+    "id": "wb-foo-b-word-follows",
+    "status": "NO_MATCH"
+  },
+  "wb-foo-b-punct-follows": {
+    "id": "wb-foo-b-punct-follows",
+    "status": "MATCH",
+    "end16": 3,
+    "len16": 3,
+    "end8": 3,
+    "len8": 3
+  },
+  "wb-B-midword": {
+    "id": "wb-B-midword",
+    "status": "MATCH",
+    "end16": 2,
+    "len16": 2,
+    "end8": 2,
+    "len8": 2
+  },
+  "wb-B-at-boundary": {
+    "id": "wb-B-at-boundary",
+    "status": "NO_MATCH"
+  },
+  "wb-B-inside-word": {
+    "id": "wb-B-inside-word",
+    "status": "MATCH",
+    "end16": 2,
+    "len16": 1,
+    "end8": 2,
+    "len8": 1
+  },
+  "wb-b-empty-input": {
+    "id": "wb-b-empty-input",
+    "status": "NO_MATCH"
+  },
+  "wb-B-empty-input": {
+    "id": "wb-B-empty-input",
+    "status": "MATCH",
+    "end16": 0,
+    "len16": 0,
+    "end8": 0,
+    "len8": 0
+  },
+  "wb-b-underscore-digit": {
+    "id": "wb-b-underscore-digit",
+    "status": "MATCH",
+    "end16": 2,
+    "len16": 2,
+    "end8": 2,
+    "len8": 2
+  },
+  "wb-b-non-ascii-not-word": {
+    "id": "wb-b-non-ascii-not-word",
+    "status": "MATCH",
+    "end16": 2,
+    "len16": 1,
+    "end8": 3,
+    "len8": 2
+  },
+  "wb-class-backspace": {
+    "id": "wb-class-backspace",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 1,
+    "len8": 1
+  },
+  "wb-class-not-b": {
+    "id": "wb-class-not-b",
+    "status": "NO_MATCH"
+  }
+}
