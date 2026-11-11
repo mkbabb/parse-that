@@ -1129,8 +1129,8 @@ checksum = "c33a9471896f1c69cecef8d20cbe2f7accd12527ce60845ff44c153bb2a21b49"
 
 [[package]]
 name = "pprint"
-version = "0.3.7"
-source = "git+https://github.com/mkbabb/pprint?rev=9322105b34bda70828d71b359c12992e78562375#9322105b34bda70828d71b359c12992e78562375"
+version = "0.4.0"
+source = "git+https://github.com/mkbabb/pprint?rev=60114420ba45124440c16327aeaf428f3f69cd25#60114420ba45124440c16327aeaf428f3f69cd25"
 dependencies = [
  "itoap",
  "pprint_derive",
@@ -1139,8 +1139,8 @@ dependencies = [
 
 [[package]]
 name = "pprint_derive"
-version = "0.2.3"
-source = "git+https://github.com/mkbabb/pprint?rev=9322105b34bda70828d71b359c12992e78562375#9322105b34bda70828d71b359c12992e78562375"
+version = "0.3.0"
+source = "git+https://github.com/mkbabb/pprint?rev=60114420ba45124440c16327aeaf428f3f69cd25#60114420ba45124440c16327aeaf428f3f69cd25"
 dependencies = [
  "proc-macro2",
  "quote",
