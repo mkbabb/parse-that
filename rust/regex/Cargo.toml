@@ -37,6 +37,7 @@ parse-that-egraph-derive = { version = "0.1.0", path = "../egraph-derive" }
 [dev-dependencies]
 divan = "0.1"
 mimalloc = "0.1"
+serde_json = "1"
 
 # ── parse-that-regex benches (Tranche P) ──────────────────────────
 

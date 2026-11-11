@@ -4,6 +4,7 @@
 //! `negated` flag instead of materializing the complement as positive ranges.
 
 pub mod parser;
+mod print;
 
 // ── Byte-level range ────────────────────────────────────────────────────
 

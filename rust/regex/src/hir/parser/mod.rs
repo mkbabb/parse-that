@@ -83,7 +83,12 @@ impl<'a> Parser<'a> {
         while !self.at_end() {
             match self.peek() {
                 Some(b'|') | Some(b')') => break,
-                _ => items.push(self.parse_quantified()?),
+                // A bare flag group (`(?i)`, `(?s)`) only sets parser state;
+                // it reads as `Empty` and is not an item of the sequence.
+                _ => match self.parse_quantified()? {
+                    Hir::Empty => {}
+                    item => items.push(item),
+                },
             }
         }
         match items.len() {
