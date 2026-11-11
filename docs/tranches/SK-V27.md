@@ -48,3 +48,11 @@ Record: bbnf-lang seat branch `lw2/lg2-r4` `0a3ccb1b7` (LEDGER LG-2 fourth-readi
 - The S4-B, PERF-3 and S6/S7 cures are merged; the held set from the third reading is gone.
 - Hir ABI v1 (RX-2) is frozen: `abi_fingerprint` 1/1 ×2 at `0x0c587e007f6ccf7d`.
 - The gate stays RED on bbnf-lang's side: TOPO-4's publish dry-run fails at `bbnf-ir` (this repo's crates publish rc 0 ×2), and LG-d/LG-e were not re-read in Phase 3. No master merge.
+
+### LW2 LG-2, sixth reading (2026-11-11): NOT TAKEN, RED; nothing merged or published
+
+Record: bbnf-lang `lw2/lg2-r6` `a8522e3ac` (LEDGER LG-2 sixth-reading row, `evidence/LW2.GATE/r6/`), after LW2.TOPO-4e. For this repo, at `sk-v27-lw2` `02de298` (PR #4, 9/9 pass):
+- `parse_that` re-pins `pprint = "0.4"` at `32d73ca`, the 0.4.0 publish tree after its CI clippy cure (`48ed339`, merged ordinarily).
+- `check-repo-dag.sh` rc 0 ×2, no edge into bbnf-lang; Hir ABI v1 `abi_fingerprint` 1/1 ×2.
+- This repo's 5 crates publish rc 0 in `topo4c.sh` ×2 and `semver-probe.sh` ×2 (GREEN).
+- The one RED row is on bbnf-lang's side: its `iai-callgrind regression` job failed 5 times at `apt-get install valgrind` (runner DNS to the Ubuntu archive). No master merge, no publish.
