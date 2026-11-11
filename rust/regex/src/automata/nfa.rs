@@ -266,6 +266,11 @@ impl NfaBuilder {
                     accept: s,
                 })
             }
+            // A word boundary reads the byte before the position, which this
+            // byte automaton does not carry: it refuses the pattern rather
+            // than read the assertion as empty (sk-v27 A-9). Under OR-7
+            // Route A the determinizer carries it.
+            Look::WordBoundary | Look::NotWordBoundary => None,
         }
     }
 
