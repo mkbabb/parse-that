@@ -178,7 +178,14 @@ impl<'a> SpanParser<'a> {
         result
     }
 
-    #[inline(always)]
+    /// The kind dispatch. `#[inline]`, not `#[inline(always)]`: the kind is a
+    /// runtime value, so a copy of this match at a call site decides nothing
+    /// the out-of-line copy does not, and forcing it duplicated every inlined
+    /// leaf's locals into the caller's frame at each `.call` site. Unoptimised
+    /// builds do not share stack slots, so a closure with ~36 sites (the CSS
+    /// at-rule body) reserved 1.31 MiB per frame, once per nesting level
+    /// (sk-v27 LW2.PERF-3; `tests/css_stack_depth.rs` holds the slope).
+    #[inline]
     fn call_inner(&self, state: &mut ParserState<'a>) -> Option<Span<'a>> {
         match &self.kind {
             // ── Leaf dispatch (leaves.rs) ─────────────────────

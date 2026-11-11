@@ -117,6 +117,12 @@ where
                     break;
                 }
                 if let Some(value) = self.call(state) {
+                    // Guard: a (sep elem) iteration that consumed nothing
+                    // adds nothing and ends the loop, as TS `sepBy` does
+                    // (S4-B: leaves may match empty).
+                    if state.offset == cp {
+                        break;
+                    }
                     values.push(value);
                 } else {
                     state.offset = cp;
