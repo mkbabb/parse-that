@@ -33,3 +33,10 @@ Verdict: still NOT CLOSED. The record is in bbnf-lang `sk-v27-lw1-gate` `b133466
 - The quote-parity pseudo-code is now a `text` block, so `cargo test --doc` returns rc 0 ×2.
 - CI is still RED at dependency resolution. The bbnf-lang edges need the private `docs/precepts` submodule. This is owner ruling R-a, or X-5's move together with PP-07.
 - `test_nested_media` still overflows a 2 MiB debug stack. Each at-rule nesting level costs about 1.36 MiB, and the measurements are in bbnf-lang `evidence/LW1.LG1/`.
+
+## LW2 lockstep gate (LG-2), third reading on CI, 2026-11-10
+
+Verdict: NOT TAKEN, RED; nothing merged, PR #4 stays draft. The record is in bbnf-lang `lw2/lg2-r3` `0379fe71a` (LEDGER LG-2 third-reading row, `evidence/LW2.GATE/r3/`). For this repo, at `sk-v27-lw2` `e2d1af5` (CI `42752374625`):
+- The repo-DAG and hermetic clean-clone job passes; `check-repo-dag.sh` rc 0 ×2 locally, with no edge into bbnf-lang.
+- `ci-ok` is RED on exactly the held set: `test_nested_media` overflows its stack on `+stable` and macos-15 (PERF-3, cured on `lw2/s6-perf`, unmerged), and the 5 `debug_test::tests::test_css_*` fail on ubuntu (S4-B, cured on `lw2/s4b-regex-empty` `e028e8b`, unmerged).
+- PERF-1's `rust/simd` crate is formed on `lw2/s6-perf` `011ba27`; PERF-1b is owed.
