@@ -91,7 +91,7 @@ harness = false
 
 [dependencies]
 parse-that-regex = { version = "0.1", path = "../regex" }
-pprint = { version = "0.4", git = "https://github.com/mkbabb/pprint", rev = "32d73ca44921b07eda29ec0d5c0decc430687dd5" }
+pprint = { version = "0.5.0-alpha.0", git = "https://github.com/mkbabb/pprint", rev = "bc78dd850edb533a9a587f1f6bb7694ff0b358a8" }
 colored = { version = "3", optional = true }
 # The structural-byte kernels, re-exported as `parse_that::scan` (sk-v27 LW2.PERF-1, X-3).
 parse-that-simd = { version = "0.1.0", path = "../simd" }
