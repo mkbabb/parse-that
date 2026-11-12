@@ -40,7 +40,8 @@ enum Classify<'a> {
 /// wasm32 entry point. Mirrors `scan_structural`.
 pub fn scan(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
     match KernelShape::select(alphabet) {
-        KernelShape::Empty => StructuralIndex::new(),
+        // No singletons: digraphs alone, through the compare path.
+        KernelShape::Empty if alphabet.digraph_pairs.is_empty() => StructuralIndex::new(),
         KernelShape::NibbleLut => {
             let lut = NibbleLut::from_singletons(alphabet.singletons);
             let classify = Classify::Nibble {
@@ -50,7 +51,7 @@ pub fn scan(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
             };
             run(input, alphabet, classify, &lut.expand())
         }
-        KernelShape::WideLut | KernelShape::MultiCmp => {
+        KernelShape::Empty | KernelShape::WideLut | KernelShape::MultiCmp => {
             let mut byte_lut = [false; 256];
             for &b in alphabet.singletons {
                 byte_lut[b as usize] = true;
@@ -163,3 +164,152 @@ fn u8x16_from(arr: [u8; 16]) -> v128 {
         arr[11], arr[12], arr[13], arr[14], arr[15],
     )
 }
+
+// ─────────────────────────── stage 1 (LW3.PERF-1a) ───────────────────────────
+
+/// Mask of the bytes of `v` equal to any of `set`.
+#[inline(always)]
+fn eq_set(v: v128, set: &[u8]) -> u16 {
+    let mut acc = u8x16_splat(0);
+    for &b in set {
+        acc = v128_or(acc, u8x16_eq(v, u8x16_splat(b)));
+    }
+    u8x16_bitmask(acc)
+}
+
+/// Mask of the positions of `chunk` where `seq` (one or two bytes)
+/// begins; `next` is the 16 bytes one byte on.
+#[inline(always)]
+fn seq_mask(chunk: v128, next: v128, seq: &[u8]) -> u16 {
+    let first = u8x16_eq(chunk, u8x16_splat(seq[0]));
+    if seq.len() == 1 {
+        u8x16_bitmask(first)
+    } else {
+        u8x16_bitmask(v128_and(first, u8x16_eq(next, u8x16_splat(seq[1]))))
+    }
+}
+
+/// The fused UTF-8 validator's state (Keiser–Lemire lookup), 16 bytes a
+/// step.
+struct Utf8 {
+    prev: v128,
+    incomplete: v128,
+    error: v128,
+}
+
+impl Utf8 {
+    #[inline(always)]
+    fn step(&mut self, input: v128) {
+        use crate::stage1::utf8::{BYTE_1_HIGH, BYTE_1_LOW, BYTE_2_HIGH, FOURTH, THIRD};
+        let lo = u8x16_splat(0x0F);
+        let prev1 = i8x16_shuffle::<15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30>(
+            self.prev, input,
+        );
+        let sc = v128_and(
+            v128_and(
+                u8x16_swizzle(u8x16_from(BYTE_1_HIGH), u8x16_shr(prev1, 4)),
+                u8x16_swizzle(u8x16_from(BYTE_1_LOW), v128_and(prev1, lo)),
+            ),
+            u8x16_swizzle(u8x16_from(BYTE_2_HIGH), u8x16_shr(input, 4)),
+        );
+        let prev2 = i8x16_shuffle::<14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29>(
+            self.prev, input,
+        );
+        let prev3 = i8x16_shuffle::<13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28>(
+            self.prev, input,
+        );
+        let must = v128_and(
+            v128_or(
+                u8x16_sub_sat(prev2, u8x16_splat(THIRD)),
+                u8x16_sub_sat(prev3, u8x16_splat(FOURTH)),
+            ),
+            u8x16_splat(0x80),
+        );
+        self.error = v128_or(self.error, v128_xor(must, sc));
+        self.prev = input;
+    }
+
+    #[inline(always)]
+    fn block(&mut self, c: [v128; 4]) {
+        let any = v128_or(v128_or(c[0], c[1]), v128_or(c[2], c[3]));
+        if u8x16_bitmask(any) == 0 {
+            self.error = v128_or(self.error, self.incomplete);
+            self.incomplete = u8x16_splat(0);
+            self.prev = c[3];
+            return;
+        }
+        for v in c {
+            self.step(v);
+        }
+        self.incomplete = u8x16_sub_sat(c[3], u8x16_from(crate::stage1::utf8::INCOMPLETE_16));
+    }
+}
+
+/// wasm32 SIMD128 stage 1 ([`crate::stage1`]).
+pub(crate) fn stage1(
+    input: crate::PaddedSlice<'_>,
+    spec: &crate::Stage1Spec,
+) -> Result<crate::Stage1Index, crate::Stage1Error> {
+    use crate::stage1::{MAX_COMMENT_CLASSES, Raw, TAIL_MASK, drive, utf8_error};
+    let alphabet = spec.alphabet();
+    let classify = match KernelShape::select(alphabet) {
+        KernelShape::NibbleLut => {
+            let lut = NibbleLut::from_singletons(alphabet.singletons);
+            Some(Classify::Nibble {
+                lo: u8x16_from(lut.lo),
+                hi: u8x16_from(lut.hi),
+                lo_mask: u8x16_splat(0x0F),
+            })
+        }
+        KernelShape::WideLut | KernelShape::MultiCmp => Some(Classify::Multi(alphabet.singletons)),
+        KernelShape::Empty => None,
+    };
+    let mut utf8 = Utf8 {
+        prev: u8x16_splat(0),
+        incomplete: u8x16_splat(0),
+        error: u8x16_splat(0),
+    };
+    let out = drive(input, spec, |ptr, n| {
+        let mut raw = Raw::default();
+        let mut c = [u8x16_splat(0); 4];
+        for (k, slot) in c.iter_mut().enumerate() {
+            // SAFETY: `drive`'s contract: 65 bytes are readable at `ptr`.
+            let (chunk, next) = unsafe {
+                let p = ptr.add(k * CHUNK);
+                (v128_load(p as *const v128), v128_load(p.add(1) as *const v128))
+            };
+            let shift = k * CHUNK;
+            if let Some(classify) = classify {
+                raw.singles |= (classify_chunk(chunk, classify) as u64) << shift;
+            }
+            for &(first, second) in alphabet.digraph_pairs {
+                raw.digraph |= (seq_mask(chunk, next, &[first, second]) as u64) << shift;
+            }
+            for (q, &b) in alphabet.quote_classes.iter().enumerate() {
+                raw.quotes[q] |= (eq_set(chunk, &[b]) as u64) << shift;
+            }
+            raw.bs |= (eq_set(chunk, b"\\") as u64) << shift;
+            raw.ws |= (eq_set(chunk, spec.whitespace()) as u64) << shift;
+            for (cc, class) in spec.comments().iter().enumerate().take(MAX_COMMENT_CLASSES) {
+                raw.open[cc] |= (seq_mask(chunk, next, class.open()) as u64) << shift;
+                raw.close[cc] |= (seq_mask(chunk, next, class.close()) as u64) << shift;
+            }
+            *slot = if n < 64 {
+                // SAFETY: reads `TAIL_MASK[64 - n + 16 k .. + 16]`, inside
+                // its 128 bytes.
+                let keep = unsafe { v128_load(TAIL_MASK.as_ptr().add(64 - n + shift) as *const v128) };
+                v128_and(chunk, keep)
+            } else {
+                chunk
+            };
+        }
+        utf8.block(c);
+        raw
+    });
+    if !v128_any_true(v128_or(utf8.error, utf8.incomplete)) {
+        Ok(out)
+    } else {
+        Err(utf8_error(input.bytes()))
+    }
+}
+

@@ -68,8 +68,14 @@ const MULTI: Stage1Spec = Stage1Spec::new(
 );
 const NO_QUOTES: Stage1Spec =
     Stage1Spec::new(StructuralAlphabet::from_parts(b"abc", &[], &[]), WS, &[]);
+/// No singletons: the `Empty` kernel shape, with digraphs and a comment.
+const DIGRAPHS_ONLY: Stage1Spec = Stage1Spec::new(
+    StructuralAlphabet::from_parts(&[], &[(b'-', b'>'), (b':', b'=')], b"\""),
+    WS,
+    &[CommentClass::line(b"--", b"\n")],
+);
 
-const SPECS: [(&str, &Stage1Spec); 8] = [
+const SPECS: [(&str, &Stage1Spec); 9] = [
     ("json", &JSON),
     ("css", &CSS),
     ("css-digraphs", &CSS_DIGRAPHS),
@@ -78,6 +84,7 @@ const SPECS: [(&str, &Stage1Spec); 8] = [
     ("wide", &WIDE),
     ("multi", &MULTI),
     ("no-quotes", &NO_QUOTES),
+    ("digraphs-only", &DIGRAPHS_ONLY),
 ];
 
 fn cases() -> u32 {

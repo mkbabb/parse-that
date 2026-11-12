@@ -220,12 +220,27 @@ unsafe fn run(tier: Tier, input: &[u8], alphabet: &StructuralAlphabet) -> Struct
 /// Run `tier`'s stage-1 kernel ([`crate::stage1`]), or `None` when the
 /// build or the host cannot run it. Output is identical to
 /// [`crate::scalar::stage1`] for every tier that returns `Some`.
+///
+/// ```
+/// use parse_that_simd::{PaddedInput, Stage1Spec, StructuralAlphabet, compiled_tiers, scalar, stage1_with};
+/// const JSON: Stage1Spec =
+///     Stage1Spec::new(StructuralAlphabet::from_parts(b"{}[]:,", &[], b"\""), b" \n", &[]);
+/// let input = PaddedInput::from_slice(br#"{"a": [1, true]}"#);
+/// let oracle = scalar::stage1(input.as_bytes(), &JSON);
+/// for tier in compiled_tiers() {
+///     if let Some(got) = stage1_with(tier, input.as_padded(), &JSON) {
+///         assert_eq!(got, oracle, "{}", tier.name());
+///     }
+/// }
+/// ```
 pub fn stage1_with(
     tier: Tier,
     input: PaddedSlice<'_>,
     spec: &Stage1Spec,
 ) -> Option<Result<Stage1Index, Stage1Error>> {
-    tier.is_supported().then(|| crate::stage1::stub(input.bytes(), spec))
+    // SAFETY: `run_stage1`'s precondition is exactly `is_supported`.
+    tier.is_supported()
+        .then(|| unsafe { run_stage1(tier, input, spec) })
 }
 
 /// [`stage1_with`] on [`selected_tier`].
@@ -233,5 +248,31 @@ pub(crate) fn stage1_selected(
     input: PaddedSlice<'_>,
     spec: &Stage1Spec,
 ) -> Result<Stage1Index, Stage1Error> {
-    crate::stage1::stub(input.bytes(), spec)
+    // SAFETY: `selected_tier` only returns a supported tier.
+    unsafe { run_stage1(selected_tier(), input, spec) }
 }
+
+/// # Safety
+/// `tier.is_supported()`.
+unsafe fn run_stage1(
+    tier: Tier,
+    input: PaddedSlice<'_>,
+    spec: &Stage1Spec,
+) -> Result<Stage1Index, Stage1Error> {
+    if u32::try_from(input.len()).is_err() {
+        return Err(Stage1Error::TooLong { len: input.len() });
+    }
+    match tier {
+        #[cfg(target_arch = "aarch64")]
+        Tier::Neon => crate::neon::stage1(input, spec),
+        // SAFETY (both x86 arms): the caller guarantees the features.
+        #[cfg(target_arch = "x86_64")]
+        Tier::Avx2 => unsafe { crate::avx2::stage1(input, spec) },
+        #[cfg(target_arch = "x86_64")]
+        Tier::Avx512 => unsafe { crate::avx512::stage1(input, spec) },
+        #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+        Tier::Simd128 => crate::wasm::stage1(input, spec),
+        _ => crate::scalar::stage1(input.bytes(), spec),
+    }
+}
+

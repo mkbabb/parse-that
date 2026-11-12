@@ -49,10 +49,12 @@
 use crate::alphabet::StructuralAlphabet;
 use crate::index::Stage1Index;
 use crate::padded::PaddedSlice;
-use crate::stripe::MAX_QUOTE_CLASSES;
 
 /// Comment classes a [`Stage1Spec`] may carry.
 pub const MAX_COMMENT_CLASSES: usize = 4;
+
+/// Quote classes a kernel tracks (per-class mask slots).
+pub(crate) const MAX_QUOTE_CLASSES: usize = 4;
 
 /// One comment syntax: an opener and a closer, each one or two bytes.
 ///
@@ -263,20 +265,469 @@ pub fn stage1(input: PaddedSlice<'_>, spec: &Stage1Spec) -> Result<Stage1Index, 
     crate::dispatch::stage1_selected(input, spec)
 }
 
-/// Born-RED stand-in (sk-v27 LW3.PERF-1a): the old index, no comment
-/// mask, no atom starts, no UTF-8 check.
-pub(crate) fn stub(input: &[u8], spec: &Stage1Spec) -> Result<Stage1Index, Stage1Error> {
-    let old = crate::scan_structural(input, &spec.alphabet);
-    let mut out = Stage1Index::with_capacity(old.len());
-    for (&p, &k) in old.positions.iter().zip(&old.kinds) {
-        out.push(p, k, false);
+// ───────────────────────── the arch-neutral resolver ─────────────────────────
+
+/// One 64-byte block's raw masks, as a tier's kernel classifies them:
+/// bit `i` for byte `i` of the block. Bytes past the input's end and
+/// matches whose second byte is past it are masked off by [`Resolver`],
+/// so a kernel may classify the padding freely.
+#[derive(Clone, Copy, Default)]
+pub(crate) struct Raw {
+    /// Singleton bytes.
+    pub(crate) singles: u64,
+    /// First bytes of digraph matches (the second byte read at `i + 1`).
+    pub(crate) digraph: u64,
+    /// Per-quote-class bytes.
+    pub(crate) quotes: [u64; MAX_QUOTE_CLASSES],
+    /// Backslashes.
+    pub(crate) bs: u64,
+    /// Whitespace bytes.
+    pub(crate) ws: u64,
+    /// First bytes of comment-opener matches, per class.
+    pub(crate) open: [u64; MAX_COMMENT_CLASSES],
+    /// First bytes of comment-closer matches, per class.
+    pub(crate) close: [u64; MAX_COMMENT_CLASSES],
+}
+
+/// Where the resolver is at a block boundary.
+#[derive(Clone, Copy, Default)]
+enum Mode {
+    #[default]
+    Outside,
+    String(usize),
+    /// In a comment of class `class`; a closer may start at absolute
+    /// offset `close_from`; `end` is the absolute offset of the last byte
+    /// of a matched closer that runs into the next block.
+    Comment {
+        class: usize,
+        close_from: usize,
+        end: Option<usize>,
+    },
+}
+
+/// The state [`drive`] carries from one block to the next.
+#[derive(Default)]
+struct Resolver {
+    mode: Mode,
+    bs_carry: bool,
+    prev_atom: bool,
+    prev_digraph: bool,
+}
+
+/// Bits `0..n` (`n <= 64`).
+#[inline(always)]
+fn low(n: usize) -> u64 {
+    if n >= 64 { u64::MAX } else { (1u64 << n) - 1 }
+}
+
+/// Bits `0..=b` (`b < 64`).
+#[inline(always)]
+fn through(b: u32) -> u64 {
+    low(b as usize + 1)
+}
+
+impl Resolver {
+    /// Apply the module's definition to the block at `base` and append its
+    /// slots to `out`.
+    #[inline(always)]
+    fn block(
+        &mut self,
+        raw: &Raw,
+        base: usize,
+        spec: &Stage1Spec,
+        bytes: &[u8],
+        out: &mut Stage1Index,
+    ) {
+        let rest = bytes.len() - base;
+        let n = rest.min(64);
+        let valid = low(n);
+        // A two-byte match at `i` needs `base + i + 1 < len`.
+        let pair_valid = low(rest - 1);
+
+        let bs = raw.bs & valid;
+        let (escape, _) = crate::parity::escape_mask_64(bs, self.bs_carry);
+        let run = (bs << (64 - n)).leading_ones() as usize;
+        self.bs_carry = if run == n {
+            self.bs_carry ^ (n % 2 == 1)
+        } else {
+            run % 2 == 1
+        };
+
+        let quote_classes = spec.alphabet.quote_classes;
+        let nq = quote_classes.len();
+        let mut quotes = [0u64; MAX_QUOTE_CLASSES];
+        for (q, r) in quotes.iter_mut().zip(&raw.quotes).take(nq) {
+            *q = r & !escape & valid;
+        }
+        let comments = spec.comments;
+        let nc = comments.len();
+        let mut open = [0u64; MAX_COMMENT_CLASSES];
+        let mut close = [0u64; MAX_COMMENT_CLASSES];
+        for (c, class) in comments.iter().enumerate() {
+            open[c] = raw.open[c] & if class.open.len() == 2 { pair_valid } else { valid };
+            close[c] = raw.close[c] & if class.close.len() == 2 { pair_valid } else { valid };
+        }
+
+        let (qbody, cbody, opener) = if nc == 0 && nq <= 1 {
+            (self.one_quote_class(quotes[0], n, nq), 0, 0)
+        } else {
+            self.walk(&quotes[..nq], &open[..nc], &close[..nc], comments, base, n)
+        };
+
+        let outside = valid & !qbody & !cbody;
+        let digraph = raw.digraph & pair_valid & outside;
+        let structural = (raw.singles & outside) | digraph;
+        let tail = (digraph << 1) | u64::from(self.prev_digraph);
+        self.prev_digraph = digraph >> 63 == 1;
+        let ws = raw.ws & outside;
+        let atom = valid & !structural & !tail & !ws & !cbody & !opener;
+        let starts = atom & !((atom << 1) | u64::from(self.prev_atom));
+        self.prev_atom = atom >> 63 == 1;
+
+        let mut slots = structural | starts;
+        while slots != 0 {
+            let bit = slots.trailing_zeros();
+            let pos = base + bit as usize;
+            out.push(pos as u32, bytes[pos], starts >> bit & 1 == 1);
+            slots &= slots - 1;
+        }
     }
-    Ok(out)
+
+    /// The string body of a block under at most one quote class and no
+    /// comments: the prefix-XOR of its unescaped quotes.
+    #[inline(always)]
+    fn one_quote_class(&mut self, quotes: u64, n: usize, nq: usize) -> u64 {
+        if nq == 0 {
+            return 0;
+        }
+        let carry = matches!(self.mode, Mode::String(_));
+        let prefix = crate::parity::prefix_xor_64(quotes, carry);
+        self.mode = if (prefix >> (n - 1)) & 1 == 1 {
+            Mode::String(0)
+        } else {
+            Mode::Outside
+        };
+        (prefix ^ quotes) & low(n)
+    }
+
+    /// String bodies, comment bodies and comment-opener first bytes of one
+    /// block, by walking its events (unescaped quotes, opener and closer
+    /// matches) in order from the carried mode.
+    #[inline(always)]
+    fn walk(
+        &mut self,
+        quotes: &[u64],
+        open: &[u64],
+        close: &[u64],
+        comments: &[CommentClass],
+        base: usize,
+        n: usize,
+    ) -> (u64, u64, u64) {
+        let valid = low(n);
+        let any_quote = quotes.iter().fold(0, |a, &m| a | m);
+        let any_open = open.iter().fold(0, |a, &m| a | m);
+        let (mut qbody, mut cbody, mut opener) = (0u64, 0u64, 0u64);
+        let mut pos = 0usize;
+        while pos < n {
+            let from = !0u64 << pos;
+            match self.mode {
+                Mode::Outside => {
+                    let events = (any_quote | any_open) & from & valid;
+                    if events == 0 {
+                        break;
+                    }
+                    let b = events.trailing_zeros();
+                    let bit = 1u64 << b;
+                    if any_quote & bit != 0 {
+                        let k = quotes.iter().position(|&m| m & bit != 0).unwrap_or(0);
+                        self.mode = Mode::String(k);
+                    } else {
+                        let class = open.iter().position(|&m| m & bit != 0).unwrap_or(0);
+                        opener |= bit;
+                        self.mode = Mode::Comment {
+                            class,
+                            close_from: base + b as usize + comments[class].open.len(),
+                            end: None,
+                        };
+                    }
+                    pos = b as usize + 1;
+                }
+                Mode::String(k) => {
+                    let events = quotes[k] & from;
+                    if events == 0 {
+                        qbody |= from & valid;
+                        break;
+                    }
+                    let b = events.trailing_zeros();
+                    qbody |= from & through(b);
+                    self.mode = Mode::Outside;
+                    pos = b as usize + 1;
+                }
+                Mode::Comment { end: Some(end), .. } => {
+                    // A two-byte closer that began on the last byte of the
+                    // previous block ends on this block's first byte.
+                    let e = (end - base) as u32;
+                    cbody |= from & through(e);
+                    self.mode = Mode::Outside;
+                    pos = e as usize + 1;
+                }
+                Mode::Comment {
+                    class,
+                    close_from,
+                    end: None,
+                } => {
+                    let earliest = close_from.saturating_sub(base);
+                    let events = if earliest >= 64 {
+                        0
+                    } else {
+                        close[class] & from & (!0u64 << earliest)
+                    };
+                    if events == 0 {
+                        cbody |= from & valid;
+                        break;
+                    }
+                    let b = events.trailing_zeros();
+                    let c = comments[class];
+                    if c.keep {
+                        // The terminator ends the comment and stays outside.
+                        cbody |= from & low(b as usize);
+                        self.mode = Mode::Outside;
+                        pos = b as usize;
+                    } else {
+                        let e = b as usize + c.close.len() - 1;
+                        if e < 64 {
+                            cbody |= from & through(e as u32);
+                            self.mode = Mode::Outside;
+                            pos = e + 1;
+                        } else {
+                            cbody |= from & valid;
+                            self.mode = Mode::Comment {
+                                class,
+                                close_from,
+                                end: Some(base + e),
+                            };
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        (qbody, cbody, opener)
+    }
+}
+
+/// Run the resolver over `input`, one 64-byte block at a time. `block`
+/// classifies the block at its pointer argument into [`Raw`] masks; its
+/// second argument is the number of the block's bytes inside the input
+/// (`1..=64`).
+///
+/// # Contract for `block`
+///
+/// It may read the 65 bytes from its pointer argument (the block and the
+/// one byte of two-byte-match lookahead): [`PaddedSlice`] guarantees
+/// `base + 65 <= len + PADDING` for every block start `base < len`.
+#[inline(always)]
+pub(crate) fn drive(
+    input: PaddedSlice<'_>,
+    spec: &Stage1Spec,
+    mut block: impl FnMut(*const u8, usize) -> Raw,
+) -> Stage1Index {
+    let bytes = input.bytes();
+    let len = bytes.len();
+    let ptr = input.as_ptr();
+    let mut out = Stage1Index::with_capacity(len / 8 + 1);
+    let mut resolver = Resolver::default();
+    let mut base = 0usize;
+    while base < len {
+        // SAFETY: `base < len <= padded_len`, so the offset is in bounds.
+        let raw = block(unsafe { ptr.add(base) }, (len - base).min(64));
+        resolver.block(&raw, base, spec, bytes, &mut out);
+        base += 64;
+    }
+    out
+}
+
+/// The error a tier returns when its fused validator flagged the input:
+/// the exact position is [`core::str::from_utf8`]'s.
+#[cold]
+pub(crate) fn utf8_error(bytes: &[u8]) -> Stage1Error {
+    match core::str::from_utf8(bytes) {
+        Err(e) => Stage1Error::InvalidUtf8 {
+            valid_up_to: e.valid_up_to(),
+        },
+        Ok(_) => unreachable!("a tier's UTF-8 validator flagged valid UTF-8"),
+    }
+}
+
+/// The 64 `0xFF` bytes then 64 zero bytes a tier loads at
+/// `64 - n + offset` to keep the first `n` bytes of a block and zero the
+/// rest (the UTF-8 validator must read zeros past the end).
+// Only the vector tiers load it (a build with no vector tier has none).
+#[cfg(any(
+    target_arch = "aarch64",
+    target_arch = "x86_64",
+    all(target_arch = "wasm32", target_feature = "simd128")
+))]
+pub(crate) static TAIL_MASK: [u8; 128] = {
+    let mut m = [0u8; 128];
+    let mut i = 0;
+    while i < 64 {
+        m[i] = 0xFF;
+        i += 1;
+    }
+    m
+};
+
+/// The Keiser–Lemire UTF-8 lookup tables, indexed by a nibble: the
+/// error classes a byte pair can raise, by the first byte's high nibble,
+/// its low nibble, and the second byte's high nibble. A pair is
+/// malformed iff the three lookups share a bit, except that the
+/// two-continuations bit is expected (and so cancelled) where the pair
+/// is the second and third, or third and fourth, bytes of a longer
+/// sequence.
+#[cfg(any(
+    target_arch = "aarch64",
+    target_arch = "x86_64",
+    all(target_arch = "wasm32", target_feature = "simd128")
+))]
+pub(crate) mod utf8 {
+    const TOO_SHORT: u8 = 1 << 0;
+    const TOO_LONG: u8 = 1 << 1;
+    const OVERLONG_3: u8 = 1 << 2;
+    const TOO_LARGE: u8 = 1 << 3;
+    const SURROGATE: u8 = 1 << 4;
+    const OVERLONG_2: u8 = 1 << 5;
+    const TOO_LARGE_1000: u8 = 1 << 6;
+    const OVERLONG_4: u8 = 1 << 6;
+    const TWO_CONTS: u8 = 1 << 7;
+    const CARRY: u8 = TOO_SHORT | TOO_LONG | TWO_CONTS;
+
+    /// By the first byte's high nibble.
+    pub(crate) static BYTE_1_HIGH: [u8; 16] = [
+        TOO_LONG,
+        TOO_LONG,
+        TOO_LONG,
+        TOO_LONG,
+        TOO_LONG,
+        TOO_LONG,
+        TOO_LONG,
+        TOO_LONG,
+        TWO_CONTS,
+        TWO_CONTS,
+        TWO_CONTS,
+        TWO_CONTS,
+        TOO_SHORT | OVERLONG_2,
+        TOO_SHORT,
+        TOO_SHORT | OVERLONG_3 | SURROGATE,
+        TOO_SHORT | TOO_LARGE | TOO_LARGE_1000 | OVERLONG_4,
+    ];
+
+    /// By the first byte's low nibble.
+    pub(crate) static BYTE_1_LOW: [u8; 16] = [
+        CARRY | OVERLONG_3 | OVERLONG_2 | OVERLONG_4,
+        CARRY | OVERLONG_2,
+        CARRY,
+        CARRY,
+        CARRY | TOO_LARGE,
+        CARRY | TOO_LARGE | TOO_LARGE_1000,
+        CARRY | TOO_LARGE | TOO_LARGE_1000,
+        CARRY | TOO_LARGE | TOO_LARGE_1000,
+        CARRY | TOO_LARGE | TOO_LARGE_1000,
+        CARRY | TOO_LARGE | TOO_LARGE_1000,
+        CARRY | TOO_LARGE | TOO_LARGE_1000,
+        CARRY | TOO_LARGE | TOO_LARGE_1000,
+        CARRY | TOO_LARGE | TOO_LARGE_1000,
+        CARRY | TOO_LARGE | TOO_LARGE_1000 | SURROGATE,
+        CARRY | TOO_LARGE | TOO_LARGE_1000,
+        CARRY | TOO_LARGE | TOO_LARGE_1000,
+    ];
+
+    /// By the second byte's high nibble.
+    pub(crate) static BYTE_2_HIGH: [u8; 16] = [
+        TOO_SHORT,
+        TOO_SHORT,
+        TOO_SHORT,
+        TOO_SHORT,
+        TOO_SHORT,
+        TOO_SHORT,
+        TOO_SHORT,
+        TOO_SHORT,
+        TOO_LONG | OVERLONG_2 | TWO_CONTS | OVERLONG_3 | TOO_LARGE_1000 | OVERLONG_4,
+        TOO_LONG | OVERLONG_2 | TWO_CONTS | OVERLONG_3 | TOO_LARGE,
+        TOO_LONG | OVERLONG_2 | TWO_CONTS | SURROGATE | TOO_LARGE,
+        TOO_LONG | OVERLONG_2 | TWO_CONTS | SURROGATE | TOO_LARGE,
+        TOO_SHORT,
+        TOO_SHORT,
+        TOO_SHORT,
+        TOO_SHORT,
+    ];
+
+    /// `b - THIRD >= 0x80` (saturating) iff `b >= 0xE0`: `b` leads a
+    /// sequence of three or more, so the byte two after it continues one.
+    pub(crate) const THIRD: u8 = 0xE0 - 0x80;
+    /// `b - FOURTH >= 0x80` iff `b >= 0xF0`: the byte three after `b`
+    /// continues a four-byte sequence.
+    pub(crate) const FOURTH: u8 = 0xF0 - 0x80;
+
+    /// Saturating-subtracted from a vector's last 16 bytes, nonzero iff a
+    /// sequence that starts there is cut off at the vector's end.
+    pub(crate) static INCOMPLETE_16: [u8; 16] = [
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF0 - 1,
+        0xE0 - 1, 0xC0 - 1,
+    ];
 }
 
 #[doc(hidden)]
 /// The arch-neutral resolver over bytewise raw masks (a test hook: it
-/// runs on every host and under Miri).
+/// runs on every host and under Miri, and it reads the padding through
+/// [`drive`]'s contract, so Miri checks that contract).
 pub fn portable(input: PaddedSlice<'_>, spec: &Stage1Spec) -> Result<Stage1Index, Stage1Error> {
-    stub(input.bytes(), spec)
+    if u32::try_from(input.len()).is_err() {
+        return Err(Stage1Error::TooLong { len: input.len() });
+    }
+    let lut = spec.alphabet.byte_lut();
+    let mut ws = [false; 256];
+    for &b in spec.whitespace {
+        ws[b as usize] = true;
+    }
+    let out = drive(input, spec, |ptr, _| {
+        // SAFETY: `drive`'s contract: 65 bytes are readable at `ptr`.
+        let block = unsafe { core::slice::from_raw_parts(ptr, 65) };
+        let mut raw = Raw::default();
+        let matches = |seq: &[u8], i: usize| block[i] == seq[0] && (seq.len() == 1 || block[i + 1] == seq[1]);
+        for i in 0..64 {
+            let (x, y) = (block[i], block[i + 1]);
+            let bit = 1u64 << i;
+            if lut[x as usize] {
+                raw.singles |= bit;
+            }
+            if spec.alphabet.digraph_pairs.iter().any(|&(f, s)| f == x && s == y) {
+                raw.digraph |= bit;
+            }
+            for (k, &q) in spec.alphabet.quote_classes.iter().enumerate() {
+                if x == q {
+                    raw.quotes[k] |= bit;
+                }
+            }
+            if x == b'\\' {
+                raw.bs |= bit;
+            }
+            if ws[x as usize] {
+                raw.ws |= bit;
+            }
+            for (c, class) in spec.comments.iter().enumerate() {
+                if matches(class.open, i) {
+                    raw.open[c] |= bit;
+                }
+                if matches(class.close, i) {
+                    raw.close[c] |= bit;
+                }
+            }
+        }
+        raw
+    });
+    match core::str::from_utf8(input.bytes()) {
+        Ok(_) => Ok(out),
+        Err(_) => Err(utf8_error(input.bytes())),
+    }
 }

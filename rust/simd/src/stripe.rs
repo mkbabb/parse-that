@@ -15,7 +15,7 @@ use crate::parity;
 pub(crate) const STRIPE: usize = 64;
 
 /// Quote classes a kernel tracks (per-class mask slots).
-pub(crate) const MAX_QUOTE_CLASSES: usize = 4;
+pub(crate) use crate::stage1::MAX_QUOTE_CLASSES;
 
 /// String-literal state carried from one stripe (or chunk) to the next.
 #[derive(Default)]

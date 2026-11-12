@@ -49,6 +49,17 @@
 //! holds every tier the host can run to [`scalar::scan`];
 //! `tests/guard_page.rs` proves no tier reads past its input).
 
+//!
+//! # Stage 1
+//!
+//! [`stage1`] is the indexer of a two-stage parser: over a
+//! [`PaddedSlice`] (the input plus [`PADDING`] readable bytes) it
+//! returns a [`Stage1Index`] of every structural byte outside strings and
+//! comments merged with every atom start (pseudo-structural positions),
+//! validating the input as UTF-8 in the same pass. Its definition is in
+//! [`stage1`]'s module docs; [`scalar::stage1`] is its oracle, and every
+//! tier's kernel feeds one arch-neutral resolver.
+
 #![warn(missing_docs)]
 
 pub mod alphabet;

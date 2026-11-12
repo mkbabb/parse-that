@@ -144,7 +144,7 @@ impl Stage1Index {
     #[inline]
     pub fn push(&mut self, pos: u32, kind: u8, atom: bool) {
         let slot = self.index.positions.len();
-        if slot % 64 == 0 {
+        if slot.is_multiple_of(64) {
             self.atoms.push(0);
         }
         if atom {
