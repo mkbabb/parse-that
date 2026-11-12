@@ -20,6 +20,23 @@ impl<'a> Parser<'a> {
                 Ok(Hir::Look(Look::End))
             }
             Some(b'\\') => self.parse_escape(),
+            // A raw non-ASCII scalar under `i` is folded whole (it is read
+            // one byte at a time otherwise: its bytes are the literal).
+            Some(b) if b >= 0x80 && self.case_insensitive => {
+                let len = match b {
+                    0xF0..=0xFF => 4,
+                    0xE0..=0xEF => 3,
+                    _ => 2,
+                };
+                let ch = self
+                    .src
+                    .get(self.pos..self.pos + len)
+                    .and_then(|bytes| std::str::from_utf8(bytes).ok())
+                    .and_then(|text| text.chars().next())
+                    .ok_or_else(|| self.err("invalid UTF-8 in pattern".into()))?;
+                self.pos += len;
+                Ok(self.scalar_literal(ch))
+            }
             Some(b) if is_literal_char(b) => {
                 self.advance();
                 Ok(self.maybe_case_fold_byte(b))
@@ -44,8 +61,19 @@ impl<'a> Parser<'a> {
                     negated: false,
                 })
             }
+        } else if self.unicode {
+            // Default: `.` is any scalar but a LineTerminator (LF, CR, LS,
+            // PS), one scalar at a time (sk-v27 LW3.RX-1d).
+            Hir::Class(CharClass::Unicode {
+                ranges: vec![
+                    CodepointRange::new('\n', '\n'),
+                    CodepointRange::new('\r', '\r'),
+                    CodepointRange::new('\u{2028}', '\u{2029}'),
+                ],
+                negated: true,
+            })
         } else {
-            // Default: . matches everything except \n.
+            // Byte mode: any byte except \n.
             Hir::Class(CharClass::Bytes {
                 ranges: vec![ByteRange::new(b'\n', b'\n')],
                 negated: true,

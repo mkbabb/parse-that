@@ -50,7 +50,17 @@ impl<'a> Parser<'a> {
 
         self.expect(b']')?;
 
-        if cp_ranges.is_empty() {
+        // Under u/v semantics (Unicode mode) a class is a set of scalar
+        // values: a negated class is its complement over scalars and consumes
+        // a whole scalar, and a member at or above 0x80 is that scalar, never
+        // a byte (sk-v27 LW3.RX-1d). Byte mode keeps byte classes.
+        // Under `i` a class is closed over the case equivalence of its
+        // members (a negated class is the complement of that closure).
+        let scalar_class = !cp_ranges.is_empty()
+            || (self.unicode && (negated || byte_ranges.iter().any(|r| r.end >= 0x80)))
+            || (self.case_insensitive
+                && (self.unicode || byte_ranges.iter().all(|r| r.end < 0x80)));
+        if !scalar_class {
             byte_ranges.sort();
             byte_ranges = merge_byte_ranges(byte_ranges);
             Ok(Hir::Class(CharClass::Bytes {
@@ -62,12 +72,11 @@ impl<'a> Parser<'a> {
             for br in &byte_ranges {
                 cp_ranges.push(CodepointRange::new(br.start as char, br.end as char));
             }
-            cp_ranges.sort();
-            cp_ranges.dedup();
-            Ok(Hir::Class(CharClass::Unicode {
-                ranges: cp_ranges,
-                negated,
-            }))
+            let mut ranges = crate::hir::merge_codepoint_ranges(cp_ranges);
+            if self.case_insensitive {
+                ranges = crate::casefold::close_ranges(&ranges, self.unicode);
+            }
+            Ok(Hir::Class(class_of(ranges, negated)))
         }
     }
 
@@ -77,52 +86,59 @@ impl<'a> Parser<'a> {
         byte_ranges: &mut Vec<ByteRange>,
         cp_ranges: &mut Vec<CodepointRange>,
     ) -> Result<(), ParseError> {
-        if self.peek() == Some(b'\\') {
-            match self.src.get(self.pos + 1).copied() {
-                // Shorthand classes — expand directly into byte ranges.
-                Some(b'd') => {
-                    self.pos += 2;
-                    byte_ranges.push(ByteRange::new(b'0', b'9'));
-                    return Ok(());
-                }
-                Some(b'D') => {
-                    self.pos += 2;
-                    byte_ranges.push(ByteRange::new(0, b'0' - 1));
-                    byte_ranges.push(ByteRange::new(b'9' + 1, 255));
-                    return Ok(());
-                }
-                Some(b'w') => {
-                    self.pos += 2;
-                    byte_ranges.push(ByteRange::new(b'0', b'9'));
-                    byte_ranges.push(ByteRange::new(b'A', b'Z'));
-                    byte_ranges.push(ByteRange::new(b'_', b'_'));
-                    byte_ranges.push(ByteRange::new(b'a', b'z'));
-                    return Ok(());
-                }
-                Some(b'W') => {
-                    self.pos += 2;
-                    byte_ranges.push(ByteRange::new(0, b'0' - 1));
-                    byte_ranges.push(ByteRange::new(b'9' + 1, b'A' - 1));
-                    byte_ranges.push(ByteRange::new(b'Z' + 1, b'_' - 1));
-                    byte_ranges.push(ByteRange::new(b'_' + 1, b'a' - 1));
-                    byte_ranges.push(ByteRange::new(b'z' + 1, 255));
-                    return Ok(());
-                }
-                Some(b's') => {
-                    self.pos += 2;
-                    byte_ranges.push(ByteRange::new(0x09, 0x0D));
-                    byte_ranges.push(ByteRange::new(0x20, 0x20));
-                    return Ok(());
-                }
-                Some(b'S') => {
-                    self.pos += 2;
-                    byte_ranges.push(ByteRange::new(0, 0x08));
-                    byte_ranges.push(ByteRange::new(0x0E, 0x1F));
-                    byte_ranges.push(ByteRange::new(0x21, 255));
-                    return Ok(());
-                }
-                _ => {}
+        // Shorthand classes. `\d` and `\w` are ASCII; `\s` is the ECMAScript
+        // set. In Unicode mode a negated shorthand is its complement over
+        // scalar values; in byte mode, over bytes.
+        if self.peek() == Some(b'\\')
+            && let Some(c @ (b'd' | b'D' | b'w' | b'W' | b's' | b'S')) =
+                self.src.get(self.pos + 1).copied()
+        {
+            self.pos += 2;
+            let positive: Vec<CodepointRange> = match c.to_ascii_lowercase() {
+                b'd' => vec![CodepointRange::new('0', '9')],
+                b'w' => vec![
+                    CodepointRange::new('0', '9'),
+                    CodepointRange::new('A', 'Z'),
+                    CodepointRange::new('_', '_'),
+                    CodepointRange::new('a', 'z'),
+                ],
+                _ if self.unicode => super::escape::ecma_space_ranges(),
+                _ => vec![
+                    CodepointRange::new('\t', '\r'),
+                    CodepointRange::new(' ', ' '),
+                ],
+            };
+            let mut positive = positive;
+            if c.eq_ignore_ascii_case(&b'w') && self.unicode && self.case_insensitive {
+                positive
+                    .extend(crate::casefold::iu_word_extra().map(|e| CodepointRange::new(e, e)));
+                positive = crate::hir::merge_codepoint_ranges(positive);
             }
+            let negated_shorthand = c.is_ascii_uppercase();
+            if self.unicode {
+                if negated_shorthand {
+                    cp_ranges.extend(crate::hir::negate_codepoint_ranges(&positive));
+                } else if positive.iter().any(|r| r.end as u32 >= 0x80) {
+                    cp_ranges.extend(positive);
+                } else {
+                    byte_ranges.extend(
+                        positive
+                            .iter()
+                            .map(|r| ByteRange::new(r.start as u8, r.end as u8)),
+                    );
+                }
+            } else {
+                let bytes: Vec<ByteRange> = positive
+                    .iter()
+                    .map(|r| ByteRange::new(r.start as u8, r.end as u8))
+                    .collect();
+                if negated_shorthand {
+                    byte_ranges.extend(crate::hir::negate_byte_ranges(&bytes));
+                } else {
+                    byte_ranges.extend(bytes);
+                }
+            }
+            return Ok(());
         }
 
         let lo = self.parse_class_atom()?;
@@ -179,13 +195,7 @@ impl<'a> Parser<'a> {
             self.expect(b'}')?;
             Ok(cp)
         } else {
-            // \uHHHH — exactly 4 hex digits.
-            let mut cp = 0u32;
-            for _ in 0..4 {
-                let d = self.parse_hex_digit()? as u32;
-                cp = (cp << 4) | d;
-            }
-            Ok(cp)
+            self.parse_u_hex4()
         }
     }
 
@@ -218,4 +228,19 @@ impl<'a> Parser<'a> {
             None => Err(self.err("unexpected end after backslash in class".into())),
         }
     }
+}
+
+/// A scalar class, written as a byte class when every member is ASCII and
+/// the class is not negated (the two read the same).
+pub(super) fn class_of(ranges: Vec<CodepointRange>, negated: bool) -> CharClass {
+    if !negated && ranges.iter().all(|r| (r.end as u32) < 0x80) {
+        return CharClass::Bytes {
+            ranges: ranges
+                .iter()
+                .map(|r| ByteRange::new(r.start as u8, r.end as u8))
+                .collect(),
+            negated: false,
+        };
+    }
+    CharClass::Unicode { ranges, negated }
 }

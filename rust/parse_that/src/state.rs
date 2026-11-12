@@ -392,8 +392,11 @@ impl<'a> ParserState<'a> {
                     self.secondary_spans.clear();
                 }
                 Ordering::Equal => {
-                    if !self.expected.contains(&_label) {
-                        self.expected.push(_label);
+                    // Sorted by the labels' bytes and deduplicated by
+                    // construction (sk-v27 LW3.COMP-4b), so `ParseError`
+                    // and `Diagnostic` carry the failure contract's order.
+                    if let Err(at) = self.expected.binary_search(&_label) {
+                        self.expected.insert(at, _label);
                     }
                 }
                 Ordering::Less => {

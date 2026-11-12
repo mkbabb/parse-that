@@ -20,6 +20,10 @@ const ARROW: StructuralAlphabet =
     StructuralAlphabet::from_parts(b"{}();:,=", &[(b'-', b'>')], b"\"");
 const WIDE: StructuralAlphabet =
     StructuralAlphabet::from_parts(b"{}();:,=|<>[]?", &[(b'-', b'>')], b"\"");
+/// No singletons, only digraphs (sk-v27 LW3.PERF-1a: the `Empty` shape
+/// is chosen by the singleton count alone, and must still index digraphs).
+const DIGRAPHS_ONLY: StructuralAlphabet =
+    StructuralAlphabet::from_parts(&[], &[(b'/', b'*'), (b'*', b'/'), (b'-', b'>')], b"\"'");
 
 #[test]
 fn every_isa_tier_of_the_target_is_compiled() {
@@ -112,6 +116,7 @@ fn every_supported_tier_matches_the_scalar_oracle() {
             ("css", &CSS),
             ("arrow", &ARROW),
             ("wide", &WIDE),
+            ("digraphs-only", &DIGRAPHS_ONLY),
         ] {
             for input in &corpus {
                 let want = scalar::scan(input, alphabet);
@@ -132,6 +137,33 @@ fn every_supported_tier_matches_the_scalar_oracle() {
         assert!(
             ran.contains(&"avx2"),
             "host has avx2 but the avx2 tier did not run: {ran:?}"
+        );
+    }
+}
+
+/// sk-v27 LW3.PERF-1a (X-4): the tiers a CI arm names in
+/// `PARSE_THAT_REQUIRE_TIERS` (comma-separated `Tier::name`s) are the
+/// ones it executes, so an arm whose CPU (or emulator) stops offering a
+/// tier fails instead of silently holding fewer kernels to the oracle.
+#[test]
+fn required_tiers_are_supported_on_this_host() {
+    let runnable: Vec<&str> = compiled_tiers()
+        .into_iter()
+        .filter(|t| t.is_supported())
+        .map(|t| t.name())
+        .collect();
+    eprintln!("tiers this host runs: {runnable:?}");
+    let Ok(required) = std::env::var("PARSE_THAT_REQUIRE_TIERS") else {
+        return;
+    };
+    for name in required.split(',').map(str::trim).filter(|s| !s.is_empty()) {
+        assert!(
+            Tier::from_name(name).is_some(),
+            "PARSE_THAT_REQUIRE_TIERS names no tier {name:?}"
+        );
+        assert!(
+            runnable.contains(&name),
+            "tier {name} is required on this arm but does not run here: {runnable:?}"
         );
     }
 }

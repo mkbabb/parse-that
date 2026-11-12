@@ -15,8 +15,7 @@ block and that its FNV-1a 64 digest is `RECORDED`.
 - sha256 of the block (`text` fence contents, final newline included): `149c6a93375d0807583831d5186eed9f259223ae4a2aea51a3a1de8abbe9abd5`
 
 Any change to a frozen type is an addendum here (a new version line and new
-digests), cited in the API-freeze seam record (bbnf-lang
-`restart/skinny/tranches/sk-v27/LW2-SEAMS.md`). If OR-7 reopens to Route B, the
+digests), cited in each consumer's API-freeze seam record. If OR-7 reopens to Route B, the
 state type is frozen by addendum.
 
 ```text

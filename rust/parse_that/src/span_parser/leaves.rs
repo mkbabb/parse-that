@@ -42,11 +42,12 @@ impl<'a> SpanParser<'a> {
         dfa: &Arc<crate::regex::dfa::Dfa>,
         state: &mut ParserState<'a>,
     ) -> Option<Span<'a>> {
-        let bytes = &state.src_bytes[state.offset..];
-        match dfa.find_at(bytes, 0) {
+        // The whole input and the offset: look-behind reads the byte before
+        // the leaf (sk-v27 LW3.RX-1b).
+        match dfa.find_at(state.src_bytes, state.offset) {
             Some(end) => {
                 let start = state.offset;
-                state.offset += end;
+                state.offset = end;
                 Some(Span::new(start, state.offset, state.src))
             }
             None => {

@@ -35,6 +35,11 @@ name = "parse_that_css"
 path = "benches/parse_that/css.rs"
 harness = false
 
+[[bench]]
+name = "kernel_success_path"
+path = "benches/kernel/success_path.rs"
+harness = false
+
 # ── competitor benches ──────────────────────────────────────
 
 [[bench]]
@@ -91,7 +96,7 @@ harness = false
 
 [dependencies]
 parse-that-regex = { version = "0.1", path = "../regex" }
-pprint = { version = "0.4", git = "https://github.com/mkbabb/pprint", rev = "32d73ca44921b07eda29ec0d5c0decc430687dd5" }
+pprint = { version = "0.5.0-alpha.0", git = "https://github.com/mkbabb/pprint", rev = "69d1fe9fa522f18e129fbedea0288a9c19b5bbf9" }
 colored = { version = "3", optional = true }
 # The structural-byte kernels, re-exported as `parse_that::scan` (sk-v27 LW2.PERF-1, X-3).
 parse-that-simd = { version = "0.1.0", path = "../simd" }

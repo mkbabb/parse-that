@@ -1,0 +1,174 @@
+{
+ "name": "sk-v27-LW3-RX1b-anchors",
+ "note": "LW3.RX-1b: ^, $, \\b, \\B as automaton conditions; sticky at `at` (UTF-8 offsets), no m flag.",
+ "cases": [
+  {
+   "id": "start-at-0",
+   "pattern": "^a",
+   "flags": "",
+   "input": "ab"
+  },
+  {
+   "id": "start-at-1",
+   "pattern": "^a",
+   "flags": "",
+   "input": "ba",
+   "at": 1
+  },
+  {
+   "id": "start-after-nl",
+   "pattern": "^a",
+   "flags": "",
+   "input": "\na",
+   "at": 1
+  },
+  {
+   "id": "start-empty",
+   "pattern": "^",
+   "flags": "",
+   "input": ""
+  },
+  {
+   "id": "end-at-eoi",
+   "pattern": "a$",
+   "flags": "",
+   "input": "a"
+  },
+  {
+   "id": "end-before-x",
+   "pattern": "a$",
+   "flags": "",
+   "input": "ax"
+  },
+  {
+   "id": "end-before-nl",
+   "pattern": "a$",
+   "flags": "",
+   "input": "a\n"
+  },
+  {
+   "id": "end-empty",
+   "pattern": "$",
+   "flags": "",
+   "input": ""
+  },
+  {
+   "id": "end-mid",
+   "pattern": "ab$",
+   "flags": "",
+   "input": "xab",
+   "at": 1
+  },
+  {
+   "id": "end-star",
+   "pattern": "a*$",
+   "flags": "",
+   "input": "aab"
+  },
+  {
+   "id": "end-star-full",
+   "pattern": "a*$",
+   "flags": "",
+   "input": "aaa"
+  },
+  {
+   "id": "end-alt",
+   "pattern": "a$|ab",
+   "flags": "",
+   "input": "ab"
+  },
+  {
+   "id": "end-alt2",
+   "pattern": "ab|a$",
+   "flags": "",
+   "input": "a"
+  },
+  {
+   "id": "both",
+   "pattern": "^ab$",
+   "flags": "",
+   "input": "ab"
+  },
+  {
+   "id": "both-off",
+   "pattern": "^ab$",
+   "flags": "",
+   "input": "xab",
+   "at": 1
+  },
+  {
+   "id": "dollar-mid-alt",
+   "pattern": "(?:a$|b)c",
+   "flags": "",
+   "input": "bc"
+  },
+  {
+   "id": "dollar-lazy",
+   "pattern": "a+?$",
+   "flags": "",
+   "input": "aaa"
+  },
+  {
+   "id": "start-in-alt",
+   "pattern": "x|^a",
+   "flags": "",
+   "input": "a"
+  },
+  {
+   "id": "start-rep",
+   "pattern": "(?:^a)+",
+   "flags": "",
+   "input": "aa"
+  },
+  {
+   "id": "end-nbsp-i",
+   "pattern": "!important\\s*$",
+   "flags": "i",
+   "input": "!IMPORTANT  "
+  },
+  {
+   "id": "end-nbsp-i-x",
+   "pattern": "!important\\s*$",
+   "flags": "i",
+   "input": "!important x"
+  },
+  {
+   "id": "wb-mid-at",
+   "pattern": "foo\\b",
+   "flags": "",
+   "input": "xfoo ",
+   "at": 1
+  },
+  {
+   "id": "wb-B-start-off",
+   "pattern": "\\Bo",
+   "flags": "",
+   "input": "foo",
+   "at": 1
+  },
+  {
+   "id": "wb-nonascii-after",
+   "pattern": "a\\b",
+   "flags": "",
+   "input": "aé"
+  },
+  {
+   "id": "wb-digit",
+   "pattern": "\\b\\d+\\b",
+   "flags": "",
+   "input": "12 34"
+  },
+  {
+   "id": "wb-alt",
+   "pattern": "\\ba|b",
+   "flags": "",
+   "input": "b"
+  },
+  {
+   "id": "wb-B-end",
+   "pattern": "a\\B",
+   "flags": "",
+   "input": "a"
+  }
+ ]
+}

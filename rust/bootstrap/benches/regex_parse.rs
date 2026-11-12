@@ -1,6 +1,6 @@
 //! Benchmark: hand-written regex parser vs self-hosted (derive-generated) parser.
 //!
-//! Parses a comprehensive suite of regex patterns used across BBNF grammars.
+//! Parses a comprehensive suite of regex patterns used across parser grammars.
 //! Measures cold parse throughput — fresh parser per iteration.
 
 #[global_allocator]
@@ -8,7 +8,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use divan::Bencher;
 
-/// Comprehensive pattern suite — every regex pattern class from BBNF grammars.
+/// Comprehensive pattern suite — every regex pattern class from parser grammars.
 const PATTERNS: &[&str] = &[
     // JSON
     r#"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?"#,

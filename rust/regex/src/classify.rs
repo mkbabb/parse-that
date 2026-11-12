@@ -1074,17 +1074,47 @@ fn extract_class_range_info(hir: &Hir) -> Option<ClassRangeInfo> {
                 Hir::Class(class) => class,
                 _ => return None,
             };
-            Some(class_to_range_info(class, *min, *max))
+            class_to_range_info(class, *min, *max)
         }
         // Bare class with implicit `{1,1}` (rare but valid).
-        Hir::Class(class) => Some(class_to_range_info(class, 1, Some(1))),
+        Hir::Class(class) => class_to_range_info(class, 1, Some(1)),
         _ => None,
     }
 }
 
-fn class_to_range_info(class: &CharClass, min: u32, max: Option<u32>) -> ClassRangeInfo {
-    let negated = class.negated();
-    let ranges = class.to_positive_byte_ranges();
+/// The class as an ASCII set, or `None` when a member is not ASCII: a
+/// [`CharSet128`] cannot hold it, and a scan over the class's bytes would
+/// read one byte of a scalar (sk-v27 LW3.RX-1d). A negated class of ASCII
+/// members admits every non-ASCII scalar whole, which a byte scan to an
+/// ASCII terminator reads correctly, so it keeps its info.
+pub(crate) fn class_to_range_info(
+    class: &CharClass,
+    min: u32,
+    max: Option<u32>,
+) -> Option<ClassRangeInfo> {
+    let (members, negated): (Vec<ByteRange>, bool) = match class {
+        CharClass::Bytes { ranges, negated } => (ranges.clone(), *negated),
+        CharClass::Unicode { ranges, negated } => (
+            ranges
+                .iter()
+                .filter(|r| (r.end as u32) < 0x80)
+                .map(|r| ByteRange::new(r.start as u8, r.end as u8))
+                .collect(),
+            *negated,
+        ),
+    };
+    let ascii_members = match class {
+        CharClass::Bytes { ranges, .. } => ranges.iter().all(|r| r.end < 0x80),
+        CharClass::Unicode { ranges, .. } => ranges.iter().all(|r| (r.end as u32) < 0x80),
+    };
+    if !ascii_members {
+        return None;
+    }
+    let ranges = if negated {
+        crate::hir::negate_byte_ranges(&members)
+    } else {
+        members
+    };
     let mut chars = CharSet128::new();
     for r in &ranges {
         let lo = r.start;
@@ -1093,12 +1123,12 @@ fn class_to_range_info(class: &CharClass, min: u32, max: Option<u32>) -> ClassRa
             chars.add_range(lo, hi);
         }
     }
-    ClassRangeInfo {
+    Some(ClassRangeInfo {
         chars,
         negated,
         min,
         max,
-    }
+    })
 }
 
 // ── PrefixThenClass ────────────────────────────────────────────────────────

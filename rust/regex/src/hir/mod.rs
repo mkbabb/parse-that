@@ -140,6 +140,24 @@ pub fn negate_codepoint_ranges(ranges: &[CodepointRange]) -> Vec<CodepointRange>
     result
 }
 
+/// Sort and merge codepoint ranges into a sorted, non-overlapping list.
+pub fn merge_codepoint_ranges(mut ranges: Vec<CodepointRange>) -> Vec<CodepointRange> {
+    ranges.sort();
+    let mut merged: Vec<CodepointRange> = Vec::with_capacity(ranges.len());
+    for r in ranges {
+        if let Some(last) = merged.last_mut()
+            && (r.start as u32) <= (last.end as u32).saturating_add(1)
+        {
+            if r.end > last.end {
+                last.end = r.end;
+            }
+            continue;
+        }
+        merged.push(r);
+    }
+    merged
+}
+
 /// Add a codepoint range, splitting around the surrogate gap.
 fn add_codepoint_range(out: &mut Vec<CodepointRange>, lo: u32, hi: u32) {
     if lo > hi {

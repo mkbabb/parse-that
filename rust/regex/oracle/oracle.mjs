@@ -36,7 +36,7 @@ function flag(name, fallback) {
 
 const corpusPath = resolve(flag("--corpus", join(here, "smoke.json")));
 const reps = Number(flag("--reps", "2"));
-const outDir = resolve(flag("--out", join(homedir(), ".dev-logs/bbnf-lockstep/rx/oracle")));
+const outDir = resolve(flag("--out", join(homedir(), ".dev-logs/regex-oracle")));
 const execJs = join(here, "exec.js");
 const guard = join(homedir(), ".claude/guard/guarded");
 const JSC_FRAMEWORK = "/System/Library/Frameworks/JavaScriptCore.framework";

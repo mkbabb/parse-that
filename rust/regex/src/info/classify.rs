@@ -73,48 +73,25 @@ pub(super) fn class_to_charset_positive(hir: &Hir) -> CharSet128 {
 pub(super) fn detect_quantified_class(hir: &Hir) -> Option<QuantifiedClassInfo> {
     match hir {
         Hir::Repetition(Repetition { sub, min, max, .. }) => {
-            if let Hir::Class(class) = sub.as_ref() {
-                let negated = class.negated();
-                let ranges = class.to_positive_byte_ranges();
-                let mut chars = CharSet128::new();
-                for r in &ranges {
-                    let lo = r.start;
-                    let hi = r.end.min(127);
-                    if lo <= hi {
-                        chars.add_range(lo, hi);
-                    }
-                }
-                Some(QuantifiedClassInfo {
-                    chars,
-                    negated,
-                    min: *min,
-                    max: *max,
-                })
-            } else if let Hir::Group(inner) = sub.as_ref() {
+            let class = match sub.as_ref() {
+                Hir::Class(class) => class,
                 // Unwrap group around class
-                if let Hir::Class(class) = inner.as_ref() {
-                    let negated = class.negated();
-                    let ranges = class.to_positive_byte_ranges();
-                    let mut chars = CharSet128::new();
-                    for r in &ranges {
-                        let lo = r.start;
-                        let hi = r.end.min(127);
-                        if lo <= hi {
-                            chars.add_range(lo, hi);
-                        }
-                    }
-                    Some(QuantifiedClassInfo {
-                        chars,
-                        negated,
-                        min: *min,
-                        max: *max,
-                    })
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
+                Hir::Group(inner) => match inner.as_ref() {
+                    Hir::Class(class) => class,
+                    _ => return None,
+                },
+                _ => return None,
+            };
+            // A class with a non-ASCII member has no ASCII-set info (sk-v27
+            // LW3.RX-1d: it is read one scalar at a time); the rule is
+            // `classify`'s.
+            let info = crate::classify::class_to_range_info(class, *min, *max)?;
+            Some(QuantifiedClassInfo {
+                chars: info.chars,
+                negated: info.negated,
+                min: *min,
+                max: *max,
+            })
         }
 
         // Concat where first element is a quantified class

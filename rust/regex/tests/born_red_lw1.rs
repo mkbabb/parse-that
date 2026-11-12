@@ -53,8 +53,9 @@ fn c1_1_negative_lookahead_full_run_when_unblocked() {
 /// grammar tier's `FuseAltRegexBranches` turns `Alt(/a/, /ab/)` into exactly
 /// this pattern, and the Rust leaf runs it on a leftmost-longest DFA, so the
 /// fused leaf consumes `"ab"` where the unfused ordered choice consumes `"a"`.
+/// Cured at LW3.RX-1a/1c: the determinizer is regex-automata's
+/// leftmost-first DFA, so the priority cut is in the table.
 #[test]
-#[ignore = "born-RED LW1.RX-2 (Alt fusion): the DFA is leftmost-longest and returns 2; cure LW3.RX-1 (leftmost-first), LW2.RX-4 disables Rust fusion meanwhile"]
 fn alt_fusion_is_leftmost_first() {
     assert_eq!(leaf("a|ab", "ab"), Some(1));
 }
@@ -156,7 +157,6 @@ fn superset_absorb_ascii_single_class_holds() {
 /// folding) `k` and `K` match U+212A KELVIN SIGN (3 UTF-8 bytes), and
 /// `rx2-kelvin-sign-iu-on-k`: U+212A matches `k`.
 #[test]
-#[ignore = "born-RED LW1.RX-2 (Kelvin /iu): case folding is ASCII-only; cure LW3.RX-1 (u/v semantics)"]
 fn kelvin_folds_under_iu() {
     assert_eq!(leaf("(?i)k", "\u{212A}"), Some(3));
     assert_eq!(leaf("(?i)K", "\u{212A}"), Some(3));
@@ -166,7 +166,6 @@ fn kelvin_folds_under_iu() {
 /// Oracle `rx2-long-s-iu-on-s`: U+017F LATIN SMALL LETTER LONG S matches `s`
 /// under `/iu`.
 #[test]
-#[ignore = "born-RED LW1.RX-2 (fold /iu): case folding is ASCII-only; cure LW3.RX-1"]
 fn long_s_folds_under_iu() {
     assert_eq!(leaf("(?i)\u{17F}", "s"), Some(1));
 }
@@ -174,7 +173,6 @@ fn long_s_folds_under_iu() {
 /// Oracles `rx2-e-acute-i-on-E-acute` and `rx2-e-acute-iu-on-E-acute`: `é`
 /// matches `É` under both `/i` and `/iu`.
 #[test]
-#[ignore = "born-RED LW1.RX-2 (fold, non-ASCII): case folding is ASCII-only; cure LW3.RX-1"]
 fn latin1_folds_under_i_and_iu() {
     assert_eq!(leaf("(?i)é", "É"), Some(2));
     assert_eq!(leaf_byte_mode("(?i)é", "É"), Some(2));
@@ -182,9 +180,8 @@ fn latin1_folds_under_i_and_iu() {
 
 /// Oracles `rx2-kelvin-k-i` and `rx2-long-s-i-on-s`: without `u`, JS
 /// canonicalises through `toUpperCase`, so `k` does not match U+212A and
-/// U+017F does not match `s`. The engine has no JS non-`u` mode yet; byte
-/// mode is the nearest, and it agrees today. A cure that adds Unicode folding
-/// must keep this.
+/// U+017F does not match `s`. Byte mode reads the non-`u` canonicalization
+/// (sk-v27 LW3.RX-3), so it keeps this.
 #[test]
 fn kelvin_does_not_fold_without_u() {
     assert_eq!(leaf_byte_mode("(?i)k", "\u{212A}"), None);

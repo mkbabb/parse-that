@@ -25,6 +25,9 @@ use std::sync::OnceLock;
 
 use crate::StructuralIndex;
 use crate::alphabet::StructuralAlphabet;
+use crate::index::Stage1Index;
+use crate::padded::PaddedSlice;
+use crate::stage1::{Stage1Error, Stage1Spec};
 
 /// One structural-scan kernel tier.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -211,5 +214,112 @@ unsafe fn run(tier: Tier, input: &[u8], alphabet: &StructuralAlphabet) -> Struct
         #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
         Tier::Simd128 => crate::wasm::scan(input, alphabet),
         _ => crate::scalar::scan(input, alphabet),
+    }
+}
+
+/// Run `tier`'s stage-1 kernel ([`crate::stage1`]), or `None` when the
+/// build or the host cannot run it. Output is identical to
+/// [`crate::scalar::stage1`] for every tier that returns `Some`.
+///
+/// ```
+/// use parse_that_simd::{PaddedInput, Stage1Spec, StructuralAlphabet, compiled_tiers, scalar, stage1_with};
+/// const JSON: Stage1Spec =
+///     Stage1Spec::new(StructuralAlphabet::from_parts(b"{}[]:,", &[], b"\""), b" \n", &[]);
+/// let input = PaddedInput::from_slice(br#"{"a": [1, true]}"#);
+/// let oracle = scalar::stage1(input.as_bytes(), &JSON);
+/// for tier in compiled_tiers() {
+///     if let Some(got) = stage1_with(tier, input.as_padded(), &JSON) {
+///         assert_eq!(got, oracle, "{}", tier.name());
+///     }
+/// }
+/// ```
+pub fn stage1_with(
+    tier: Tier,
+    input: PaddedSlice<'_>,
+    spec: &Stage1Spec,
+) -> Option<Result<Stage1Index, Stage1Error>> {
+    // SAFETY: `run_stage1`'s precondition is exactly `is_supported`.
+    tier.is_supported()
+        .then(|| unsafe { run_stage1(tier, input, spec) })
+}
+
+/// [`stage1_with`] on [`selected_tier`].
+pub(crate) fn stage1_selected(
+    input: PaddedSlice<'_>,
+    spec: &Stage1Spec,
+) -> Result<Stage1Index, Stage1Error> {
+    // SAFETY: `selected_tier` only returns a supported tier.
+    unsafe { run_stage1(selected_tier(), input, spec) }
+}
+
+/// # Safety
+/// `tier.is_supported()`.
+unsafe fn run_stage1(
+    tier: Tier,
+    input: PaddedSlice<'_>,
+    spec: &Stage1Spec,
+) -> Result<Stage1Index, Stage1Error> {
+    if u32::try_from(input.len()).is_err() {
+        return Err(Stage1Error::TooLong { len: input.len() });
+    }
+    match tier {
+        #[cfg(target_arch = "aarch64")]
+        Tier::Neon => crate::neon::stage1(input, spec),
+        // SAFETY (both x86 arms): the caller guarantees the features.
+        #[cfg(target_arch = "x86_64")]
+        Tier::Avx2 => unsafe { crate::avx2::stage1(input, spec) },
+        #[cfg(target_arch = "x86_64")]
+        Tier::Avx512 => unsafe { crate::avx512::stage1(input, spec) },
+        #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+        Tier::Simd128 => crate::wasm::stage1(input, spec),
+        _ => crate::scalar::stage1(input.bytes(), spec),
+    }
+}
+
+/// The length of the longest prefix of `bytes` whose every byte is
+/// ASCII (below `0x80`), on the selected tier ([`selected_tier`]).
+///
+/// ```
+/// use parse_that_simd::ascii_prefix_len;
+/// assert_eq!(ascii_prefix_len(b"plain"), 5);
+/// assert_eq!(ascii_prefix_len("na\u{ef}ve".as_bytes()), 2);
+/// ```
+pub fn ascii_prefix_len(bytes: &[u8]) -> usize {
+    // SAFETY: `selected_tier` only returns a supported tier.
+    unsafe { run_ascii(selected_tier(), bytes) }
+}
+
+/// [`ascii_prefix_len`] on `tier`, or `None` when the build or the host
+/// cannot run it. Equal to [`crate::scalar::ascii_prefix_len`] for every
+/// tier that returns `Some`.
+///
+/// ```
+/// use parse_that_simd::{ascii_prefix_len_with, compiled_tiers, scalar};
+/// let text = "width \u{2194} measured".as_bytes();
+/// for tier in compiled_tiers() {
+///     if let Some(n) = ascii_prefix_len_with(tier, text) {
+///         assert_eq!(n, scalar::ascii_prefix_len(text), "{}", tier.name());
+///     }
+/// }
+/// ```
+pub fn ascii_prefix_len_with(tier: Tier, bytes: &[u8]) -> Option<usize> {
+    // SAFETY: `run_ascii`'s precondition is exactly `is_supported`.
+    tier.is_supported().then(|| unsafe { run_ascii(tier, bytes) })
+}
+
+/// # Safety
+/// `tier.is_supported()`.
+unsafe fn run_ascii(tier: Tier, bytes: &[u8]) -> usize {
+    match tier {
+        #[cfg(target_arch = "aarch64")]
+        Tier::Neon => crate::neon::ascii_prefix_len(bytes),
+        // SAFETY (both x86 arms): the caller guarantees the features.
+        #[cfg(target_arch = "x86_64")]
+        Tier::Avx2 => unsafe { crate::avx2::ascii_prefix_len(bytes) },
+        #[cfg(target_arch = "x86_64")]
+        Tier::Avx512 => unsafe { crate::avx512::ascii_prefix_len(bytes) },
+        #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+        Tier::Simd128 => crate::wasm::ascii_prefix_len(bytes),
+        _ => crate::scalar::ascii_prefix_len(bytes),
     }
 }

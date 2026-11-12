@@ -1,13 +1,45 @@
-//! DFA construction via subset (powerset) construction + Hopcroft minimization.
+//! The DFA: regex-automata's anchored dense DFA, read into this crate's table.
 //!
-//! Converts an NFA to a DFA by computing the ε-closure of NFA state sets,
-//! then minimizes via Hopcroft's algorithm. The resulting DFA operates on
-//! byte equivalence classes rather than raw bytes, reducing table size.
+//! The determinizer and minimizer are `regex-automata`'s (OR-7 Route A): the
+//! `Hir` is lowered node for node (`super::lower`), compiled by its Thompson
+//! compiler into an NFA, and determinized into a dense DFA with
+//! `MatchKind::LeftmostFirst`, anchored starts and minimization. That DFA is
+//! then read, state by state, into the flat table this crate's consumers
+//! walk, with two changes of form and none of meaning:
+//!
+//! - **Match timing.** regex-automata reports a match one transition late
+//!   (a match state means a match ended *before* the byte just read). The
+//!   table here marks acceptance at the position itself: a state accepts
+//!   when a match ends where the walk stands. Where that depends on what
+//!   follows (`$`, `\b`), the state carries the condition per byte class and
+//!   at the end of the input ([`AcceptWhen`]).
+//! - **Start states.** One start per look-behind context (none, `\n`, `\r`,
+//!   a word byte, a non-word byte); state 0 is the start with no look-behind.
+//!
+//! States from which no acceptance is reachable are folded into `DEAD`.
+//! The walk ([`Dfa::find_at`]) returns the end of the last acceptance before
+//! the walk dies, which on this automaton is the leftmost-first match.
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::VecDeque;
 
-use super::nfa::{DEAD, Nfa, StateId};
-use crate::sets::equiv::compute_byte_classes;
+use regex_automata::dfa::{Automaton, StartKind, dense};
+use regex_automata::nfa::thompson;
+use regex_automata::util::primitives::StateID as RaStateId;
+use regex_automata::util::start;
+use regex_automata::{Anchored, MatchKind};
+
+use super::lower::{LowerError, lower};
+use super::nfa::{DEAD, StateId};
+use crate::hir::Hir;
+
+/// Acceptance that depends on what follows the position (a look condition).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AcceptWhen {
+    /// `classes[c]`: a match ends here when the next byte is in class `c`.
+    pub classes: Vec<bool>,
+    /// A match ends here when the position is the end of the input.
+    pub eoi: bool,
+}
 
 /// A single DFA state.
 #[derive(Clone, Debug)]
@@ -15,16 +47,56 @@ pub struct DfaState {
     /// Transitions indexed by equivalence class.
     /// `transitions[class]` = target StateId, or `DEAD` for no transition.
     pub transitions: Vec<StateId>,
-    /// Whether this is an accepting state.
+    /// A match ends at this state's position whatever follows it.
     pub is_accept: bool,
+    /// Present when this state accepts only under some of what may follow
+    /// (some classes, or only at the end of the input). `None` for every
+    /// state of a pattern without look conditions.
+    pub accept_when: Option<AcceptWhen>,
 }
+
+impl DfaState {
+    /// Whether a match ends at this state's position when the next byte is
+    /// in class `class` (`None` = the end of the input).
+    #[inline]
+    pub fn accepts_before(&self, class: Option<usize>) -> bool {
+        if self.is_accept {
+            return true;
+        }
+        match (&self.accept_when, class) {
+            (None, _) => false,
+            (Some(w), None) => w.eoi,
+            (Some(w), Some(c)) => w.classes[c],
+        }
+    }
+}
+
+/// The look-behind contexts a start state is chosen by: the byte before the
+/// match's first position, or none at the start of the input.
+pub const LOOK_BEHIND_KINDS: usize = 5;
+
+/// Index into [`Dfa::starts`] for the byte before the start position.
+#[inline]
+pub fn look_behind_kind(prev: Option<u8>) -> usize {
+    match prev {
+        None => 0,
+        Some(b'\n') => 1,
+        Some(b'\r') => 2,
+        Some(b) if b.is_ascii_alphanumeric() || b == b'_' => 3,
+        Some(_) => 4,
+    }
+}
+
+/// One representative byte per look-behind kind (kind 0 has none).
+const LOOK_BEHIND_REPS: [Option<u8>; LOOK_BEHIND_KINDS] =
+    [None, Some(b'\n'), Some(b'\r'), Some(b'a'), Some(b' ')];
 
 /// Options for DFA construction.
 #[derive(Clone, Debug)]
 pub struct DfaOptions {
     /// Maximum DFA states before bailing (guards against exponential blowup).
     pub state_limit: usize,
-    /// Whether to minimize the DFA via Hopcroft's algorithm.
+    /// Whether the determinizer minimizes the DFA.
     pub minimize: bool,
     /// Whether to enable Unicode mode in regex parsing.
     pub unicode: bool,
@@ -40,10 +112,23 @@ impl Default for DfaOptions {
     }
 }
 
+/// Why a pattern has no DFA.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DfaError {
+    /// The pattern does not parse.
+    Parse(String),
+    /// The `Hir` has no lowering (an assertion the determinizer is not given).
+    Lower(LowerError),
+    /// The determinizer refused or exceeded its size limits.
+    Build(String),
+    /// The DFA exceeds `DfaOptions::state_limit`.
+    StateLimit(usize),
+}
+
 /// A compiled DFA. Transitions are indexed by byte equivalence classes.
 #[derive(Clone, Debug)]
 pub struct Dfa {
-    /// DFA states (kept for minimization, accept checks, etc.).
+    /// DFA states. State 0 is the start with no look-behind.
     pub states: Vec<DfaState>,
     /// Flat transition table: `flat_transitions[state * num_classes + class]` = target StateId.
     /// Single contiguous allocation, cache-friendly access — one indirection instead of two.
@@ -52,6 +137,11 @@ pub struct Dfa {
     pub byte_classes: [u8; 256],
     /// Number of equivalence classes.
     pub num_classes: u16,
+    /// Start state per look-behind kind ([`look_behind_kind`]); `starts[0] == 0`.
+    pub starts: [StateId; LOOK_BEHIND_KINDS],
+    /// Whether any state's acceptance depends on what follows, or the start
+    /// depends on what precedes: the walk then reads look context.
+    pub has_look: bool,
 }
 
 impl Dfa {
@@ -65,40 +155,40 @@ impl Dfa {
 
     /// Compile with explicit options.
     pub fn compile_with(pattern: &str, opts: &DfaOptions) -> Option<Self> {
+        Self::try_compile_with(pattern, opts).ok()
+    }
+
+    /// Compile with explicit options, naming the reason on refusal.
+    pub fn try_compile_with(pattern: &str, opts: &DfaOptions) -> Result<Self, DfaError> {
         let parse_opts = crate::hir::ParseOptions {
             unicode: opts.unicode,
         };
-        let hir = crate::parse_with(pattern, &parse_opts).ok()?;
-        let nfa = Nfa::from_hir(&hir)?;
-        Self::from_nfa(&nfa, opts)
+        let hir =
+            crate::parse_with(pattern, &parse_opts).map_err(|e| DfaError::Parse(e.to_string()))?;
+        Self::from_hir(&hir, opts)
     }
 
-    /// Build DFA from a pre-constructed NFA.
-    pub fn from_nfa(nfa: &Nfa, opts: &DfaOptions) -> Option<Self> {
-        // Step 1: Compute byte equivalence classes.
-        let byte_sets = nfa.transition_byte_sets();
-        let (byte_classes, num_classes) = compute_byte_classes(&byte_sets);
-
-        // Step 2: Build a representative byte for each class.
-        let class_reps = compute_class_representatives(&byte_classes, num_classes);
-
-        // Step 3: Subset construction.
-        let mut dfa = subset_construction(nfa, &byte_classes, num_classes, &class_reps, opts)?;
-
-        // Step 4: Minimize.
-        if opts.minimize && dfa.states.len() > 1 {
-            dfa = hopcroft_minimize(&dfa);
-        }
-
-        // Step 5: Flatten transition table for cache-friendly access.
-        let num_cls = dfa.num_classes as usize;
-        let mut flat = Vec::with_capacity(dfa.states.len() * num_cls);
-        for state in dfa.states.iter() {
-            flat.extend_from_slice(&state.transitions);
-        }
-        dfa.flat_transitions = flat;
-
-        Some(dfa)
+    /// Build the DFA of an already-parsed `Hir`.
+    pub fn from_hir(hir: &Hir, opts: &DfaOptions) -> Result<Self, DfaError> {
+        let lowered = lower(hir).map_err(DfaError::Lower)?;
+        let nfa = thompson::Compiler::new()
+            .configure(
+                thompson::Config::new()
+                    .utf8(false)
+                    .which_captures(thompson::WhichCaptures::None),
+            )
+            .build_from_hir(&lowered)
+            .map_err(|e| DfaError::Build(e.to_string()))?;
+        let ra = dense::Builder::new()
+            .configure(
+                dense::Config::new()
+                    .match_kind(MatchKind::LeftmostFirst)
+                    .start_kind(StartKind::Anchored)
+                    .minimize(opts.minimize),
+            )
+            .build_from_nfa(&nfa)
+            .map_err(|e| DfaError::Build(e.to_string()))?;
+        read_dense(&ra, opts.state_limit)
     }
 
     /// Number of states.
@@ -111,9 +201,24 @@ impl Dfa {
         self.num_classes as usize
     }
 
-    /// Anchored match at the given byte offset.
-    /// Returns the end position of the longest match, or `None`.
+    /// The start state for a match beginning at `offset` of `bytes`.
+    #[inline]
+    pub fn start_at(&self, bytes: &[u8], offset: usize) -> StateId {
+        let prev = if offset == 0 {
+            None
+        } else {
+            bytes.get(offset - 1).copied()
+        };
+        self.starts[look_behind_kind(prev)]
+    }
+
+    /// Anchored (sticky) match at `offset` of `bytes`: the end of the
+    /// leftmost-first match, or `None`. Look-behind is read from
+    /// `bytes[offset - 1]`, so pass the whole input, not a suffix.
     pub fn find_at(&self, bytes: &[u8], offset: usize) -> Option<usize> {
+        if self.has_look {
+            return self.find_at_look(bytes, offset);
+        }
         let num_cls = self.num_classes as usize;
         let flat = &self.flat_transitions;
         let states = &self.states;
@@ -138,293 +243,192 @@ impl Dfa {
         last_accept
     }
 
-    /// Anchored shortest (non-greedy) match at the given byte offset.
-    /// Returns the end position of the first (shortest) match, or `None`.
-    pub fn find_at_shortest(&self, bytes: &[u8], offset: usize) -> Option<usize> {
+    /// The walk with look conditions: acceptance is read before each byte
+    /// (and at the end of the input), the start by the byte before `offset`.
+    fn find_at_look(&self, bytes: &[u8], offset: usize) -> Option<usize> {
         let num_cls = self.num_classes as usize;
-        let flat = &self.flat_transitions;
-        let states = &self.states;
-        let mut state: u32 = 0;
+        let mut state = self.start_at(bytes, offset);
         let mut pos = offset;
-
-        // If the start state is accepting, that's the shortest match (empty).
-        if states[0].is_accept {
-            return Some(pos);
-        }
-
-        while pos < bytes.len() {
-            let b = bytes[pos];
-            let class = self.byte_classes[b as usize] as usize;
-            let next = flat[state as usize * num_cls + class];
+        let mut last_accept = None;
+        loop {
+            let st = &self.states[state as usize];
+            if pos >= bytes.len() {
+                if st.accepts_before(None) {
+                    last_accept = Some(pos);
+                }
+                return last_accept;
+            }
+            let class = self.byte_classes[bytes[pos] as usize] as usize;
+            if st.accepts_before(Some(class)) {
+                last_accept = Some(pos);
+            }
+            let next = self.flat_transitions[state as usize * num_cls + class];
             if next == DEAD {
-                break;
+                return last_accept;
             }
             state = next;
             pos += 1;
-            if states[state as usize].is_accept {
-                return Some(pos); // first accept = shortest match
-            }
         }
-
-        None
     }
 }
 
-/// Compute one representative byte for each equivalence class.
-fn compute_class_representatives(byte_classes: &[u8; 256], num_classes: u16) -> Vec<u8> {
-    let mut reps = vec![0u8; num_classes as usize];
-    let mut found = vec![false; num_classes as usize];
-    for (b, &cls) in byte_classes.iter().enumerate() {
-        if !found[cls as usize] {
-            reps[cls as usize] = b as u8;
-            found[cls as usize] = true;
+// ── Reading regex-automata's dense DFA ───────────────────────────────────
+
+/// Read an anchored, leftmost-first dense DFA into this crate's table.
+fn read_dense(ra: &dense::DFA<Vec<u32>>, state_limit: usize) -> Result<Dfa, DfaError> {
+    let classes = ra.byte_classes();
+    // The last class of regex-automata's alphabet is end-of-input.
+    let num_cls = classes.alphabet_len() - 1;
+    let mut byte_classes = [0u8; 256];
+    let mut reps: Vec<Option<u8>> = vec![None; num_cls];
+    for b in 0..=255u8 {
+        let c = classes.get(b);
+        byte_classes[b as usize] = c;
+        reps[c as usize].get_or_insert(b);
+    }
+    let reps: Vec<u8> = reps
+        .into_iter()
+        .map(|r| r.expect("every byte class has a member"))
+        .collect();
+
+    // Breadth-first from the starts; the start with no look-behind is 0.
+    let mut ids: std::collections::HashMap<RaStateId, StateId> = Default::default();
+    let mut order: Vec<RaStateId> = Vec::new();
+    let mut queue: VecDeque<RaStateId> = VecDeque::new();
+    let mut ra_starts = [RaStateId::ZERO; LOOK_BEHIND_KINDS];
+    for (k, lb) in LOOK_BEHIND_REPS.iter().enumerate() {
+        let config = start::Config::new()
+            .anchored(Anchored::Yes)
+            .look_behind(*lb);
+        let s = ra
+            .start_state(&config)
+            .map_err(|e| DfaError::Build(e.to_string()))?;
+        ra_starts[k] = s;
+        if let std::collections::hash_map::Entry::Vacant(e) = ids.entry(s) {
+            e.insert(order.len() as StateId);
+            order.push(s);
+            queue.push_back(s);
         }
     }
-    reps
-}
-
-// ── Subset Construction ─────────────────────────────────────────────────
-
-/// Compute the ε-closure of a set of NFA states.
-fn epsilon_closure(nfa: &Nfa, states: &BTreeSet<StateId>) -> BTreeSet<StateId> {
-    let mut closure = states.clone();
-    let mut stack: Vec<StateId> = states.iter().copied().collect();
-
-    while let Some(s) = stack.pop() {
-        for edge in &nfa.states[s as usize].epsilon {
-            if closure.insert(edge.target) {
-                stack.push(edge.target);
+    // Raw table over regex-automata states (dead states map to DEAD).
+    let mut raw_next: Vec<Vec<StateId>> = Vec::new();
+    let mut raw_accept: Vec<(Vec<bool>, bool)> = Vec::new();
+    while let Some(s) = queue.pop_front() {
+        let mut next = vec![DEAD; num_cls];
+        let mut acc = vec![false; num_cls];
+        for (c, &b) in reps.iter().enumerate() {
+            let t = ra.next_state(s, b);
+            if ra.is_quit_state(t) {
+                return Err(DfaError::Build(format!("quit on byte {b:#04x}")));
             }
-        }
-    }
-
-    closure
-}
-
-/// Compute the set of NFA states reachable from `current` via byte `b`.
-fn move_on_byte(nfa: &Nfa, current: &BTreeSet<StateId>, b: u8) -> BTreeSet<StateId> {
-    let mut result = BTreeSet::new();
-    for &s in current {
-        for (bs, target) in &nfa.states[s as usize].transitions {
-            if bs.contains(b) {
-                result.insert(*target);
-            }
-        }
-    }
-    result
-}
-
-/// Subset construction: NFA → DFA.
-fn subset_construction(
-    nfa: &Nfa,
-    byte_classes: &[u8; 256],
-    num_classes: u16,
-    class_reps: &[u8],
-    opts: &DfaOptions,
-) -> Option<Dfa> {
-    let num_cls = num_classes as usize;
-
-    // Initial DFA state = ε-closure of NFA start.
-    let start_set = epsilon_closure(nfa, &BTreeSet::from([nfa.start]));
-
-    let mut dfa_states: Vec<DfaState> = Vec::new();
-    let mut set_to_id: HashMap<BTreeSet<StateId>, u32> = HashMap::new();
-    let mut worklist: Vec<BTreeSet<StateId>> = Vec::new();
-
-    let is_accept = start_set.contains(&nfa.accept);
-    dfa_states.push(DfaState {
-        transitions: vec![DEAD; num_cls],
-        is_accept,
-    });
-    set_to_id.insert(start_set.clone(), 0);
-    worklist.push(start_set);
-
-    while let Some(current_set) = worklist.pop() {
-        let current_id = set_to_id[&current_set];
-
-        for (cls, &rep_byte) in class_reps.iter().enumerate().take(num_cls) {
-            // Compute move(current_set, rep_byte) then ε-closure.
-            let moved = move_on_byte(nfa, &current_set, rep_byte);
-            if moved.is_empty() {
-                continue; // Transition to dead state (already DEAD).
-            }
-            let next_set = epsilon_closure(nfa, &moved);
-            if next_set.is_empty() {
+            acc[c] = ra.is_match_state(t);
+            if ra.is_dead_state(t) {
                 continue;
             }
-
-            let next_id = if let Some(&id) = set_to_id.get(&next_set) {
-                id
-            } else {
-                // Check state limit.
-                if dfa_states.len() >= opts.state_limit {
-                    return None;
+            let id = match ids.get(&t) {
+                Some(&id) => id,
+                None => {
+                    let id = order.len() as StateId;
+                    if order.len() >= state_limit.saturating_mul(4).max(64) {
+                        return Err(DfaError::StateLimit(order.len()));
+                    }
+                    ids.insert(t, id);
+                    order.push(t);
+                    queue.push_back(t);
+                    id
                 }
-                let id = dfa_states.len() as u32;
-                let is_accept = next_set.contains(&nfa.accept);
-                dfa_states.push(DfaState {
-                    transitions: vec![DEAD; num_cls],
-                    is_accept,
-                });
-                set_to_id.insert(next_set.clone(), id);
-                worklist.push(next_set);
-                id
             };
-
-            dfa_states[current_id as usize].transitions[cls] = next_id;
+            next[c] = id;
         }
+        let eoi = ra.is_match_state(ra.next_eoi_state(s));
+        raw_next.push(next);
+        raw_accept.push((acc, eoi));
     }
+    let n = order.len();
 
-    Some(Dfa {
-        states: dfa_states,
-        flat_transitions: vec![], // built in from_nfa after minimization
-        byte_classes: *byte_classes,
-        num_classes,
-    })
-}
-
-// ── Hopcroft Minimization ───────────────────────────────────────────────
-
-/// Minimize a DFA using Hopcroft's algorithm.
-fn hopcroft_minimize(dfa: &Dfa) -> Dfa {
-    let n = dfa.states.len();
-    let num_cls = dfa.num_classes as usize;
-
-    if n <= 1 {
-        return dfa.clone();
-    }
-
-    // Initial partition: accepting vs non-accepting.
-    let mut partition: Vec<usize> = vec![0; n]; // state → block ID
-    let mut num_blocks: usize = 1;
-
-    let has_accept = dfa.states.iter().any(|s| s.is_accept);
-    let has_non_accept = dfa.states.iter().any(|s| !s.is_accept);
-
-    if has_accept && has_non_accept {
-        num_blocks = 2;
-        for (i, state) in dfa.states.iter().enumerate() {
-            partition[i] = if state.is_accept { 0 } else { 1 };
-        }
-    }
-
-    // Refine until stable: split one block per round, then rescan.
-    while let Some(splitters) = find_split(dfa, &partition, num_blocks, num_cls) {
-        // Move the disagreeing states to a new block.
-        for &s in &splitters {
-            partition[s] = num_blocks;
-        }
-        num_blocks += 1;
-    }
-
-    // Build minimized DFA.
-    // Choose representative: first state in each block.
-    let mut block_rep: Vec<Option<usize>> = vec![None; num_blocks];
-    for (s, &block) in partition.iter().enumerate() {
-        if block_rep[block].is_none() {
-            block_rep[block] = Some(s);
-        }
-    }
-
-    // Remap state IDs: block representative → new state ID.
-    let mut old_to_new = vec![DEAD; n];
-    let mut new_states: Vec<DfaState> = Vec::with_capacity(num_blocks);
-
-    // Ensure start state (0) maps to new state 0.
-    let start_block = partition[0];
-    let mut block_to_new = vec![DEAD; num_blocks];
-    block_to_new[start_block] = 0;
-    old_to_new[0] = 0;
-    let rep = block_rep[start_block].unwrap();
-    new_states.push(DfaState {
-        transitions: vec![DEAD; num_cls],
-        is_accept: dfa.states[rep].is_accept,
-    });
-
-    let mut next_id: u32 = 1;
-    for block in 0..num_blocks {
-        if block_to_new[block] != DEAD {
-            continue; // already assigned (start block)
-        }
-        if let Some(rep) = block_rep[block] {
-            block_to_new[block] = next_id;
-            new_states.push(DfaState {
-                transitions: vec![DEAD; num_cls],
-                is_accept: dfa.states[rep].is_accept,
-            });
-            next_id += 1;
-        }
-    }
-
-    // Map old states to new IDs.
-    for (s, &block) in partition.iter().enumerate() {
-        old_to_new[s] = block_to_new[block];
-    }
-
-    // Fill transitions.
-    for block in 0..num_blocks {
-        let Some(rep) = block_rep[block] else {
-            continue;
-        };
-        let new_id = block_to_new[block];
-        if new_id == DEAD {
-            continue;
-        }
-        for cls in 0..num_cls {
-            let old_target = dfa.states[rep].transitions[cls];
-            let new_target = if old_target == DEAD {
-                DEAD
-            } else {
-                old_to_new[old_target as usize]
-            };
-            new_states[new_id as usize].transitions[cls] = new_target;
-        }
-    }
-
-    Dfa {
-        states: new_states,
-        flat_transitions: vec![], // rebuilt by caller
-        byte_classes: dfa.byte_classes,
-        num_classes: dfa.num_classes,
-    }
-}
-
-/// The first block, in block order, whose members disagree on the target
-/// block of some equivalence class; returns the members that disagree with
-/// the block's first member (the states to split off), or `None` when the
-/// partition is stable.
-fn find_split(
-    dfa: &Dfa,
-    partition: &[usize],
-    num_blocks: usize,
-    num_cls: usize,
-) -> Option<Vec<usize>> {
-    let target_block = |s: usize, cls: usize| {
-        let target = dfa.states[s].transitions[cls];
-        if target == DEAD {
-            usize::MAX // dead state sentinel
-        } else {
-            partition[target as usize]
-        }
-    };
-    for block_id in 0..num_blocks {
-        let members: Vec<usize> = (0..partition.len())
-            .filter(|&s| partition[s] == block_id)
-            .collect();
-        if members.len() <= 1 {
-            continue;
-        }
-        for cls in 0..num_cls {
-            let first_target_block = target_block(members[0], cls);
-            let splitters: Vec<usize> = members[1..]
-                .iter()
-                .copied()
-                .filter(|&m| target_block(m, cls) != first_target_block)
-                .collect();
-            if !splitters.is_empty() {
-                return Some(splitters);
+    // Fold states from which no acceptance is reachable into DEAD (the
+    // regex-automata states that only carry a delayed match, among them).
+    let accepts_somewhere: Vec<bool> = raw_accept
+        .iter()
+        .map(|(acc, eoi)| *eoi || acc.iter().any(|&a| a))
+        .collect();
+    let mut live = accepts_somewhere.clone();
+    let mut changed = true;
+    while changed {
+        changed = false;
+        for s in 0..n {
+            if !live[s] && raw_next[s].iter().any(|&t| t != DEAD && live[t as usize]) {
+                live[s] = true;
+                changed = true;
             }
         }
     }
-    None
+    let is_start = |s: usize| ra_starts.iter().any(|&r| ids[&r] as usize == s);
+    let mut new_id = vec![DEAD; n];
+    let mut kept = 0u32;
+    for s in 0..n {
+        if live[s] || is_start(s) {
+            new_id[s] = kept;
+            kept += 1;
+        }
+    }
+    if kept as usize > state_limit {
+        return Err(DfaError::StateLimit(kept as usize));
+    }
+
+    let mut states = Vec::with_capacity(kept as usize);
+    let mut has_look = false;
+    for s in 0..n {
+        if new_id[s] == DEAD {
+            continue;
+        }
+        let transitions: Vec<StateId> = raw_next[s]
+            .iter()
+            .map(|&t| {
+                if t == DEAD || !live[t as usize] {
+                    DEAD
+                } else {
+                    new_id[t as usize]
+                }
+            })
+            .collect();
+        let (acc, eoi) = &raw_accept[s];
+        let all = *eoi && acc.iter().all(|&a| a);
+        let none = !*eoi && acc.iter().all(|&a| !a);
+        let accept_when = if all || none {
+            None
+        } else {
+            has_look = true;
+            Some(AcceptWhen {
+                classes: acc.clone(),
+                eoi: *eoi,
+            })
+        };
+        states.push(DfaState {
+            transitions,
+            is_accept: all,
+            accept_when,
+        });
+    }
+    let mut starts = [0 as StateId; LOOK_BEHIND_KINDS];
+    for k in 0..LOOK_BEHIND_KINDS {
+        starts[k] = new_id[ids[&ra_starts[k]] as usize];
+    }
+    debug_assert_eq!(starts[0], 0);
+    if starts.iter().any(|&s| s != starts[0]) {
+        has_look = true;
+    }
+
+    let mut flat = Vec::with_capacity(states.len() * num_cls);
+    for state in &states {
+        flat.extend_from_slice(&state.transitions);
+    }
+    Ok(Dfa {
+        states,
+        flat_transitions: flat,
+        byte_classes,
+        num_classes: num_cls as u16,
+        starts,
+        has_look,
+    })
 }

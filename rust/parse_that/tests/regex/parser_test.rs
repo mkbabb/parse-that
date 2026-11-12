@@ -33,11 +33,16 @@ fn char_class() {
     }
 }
 
+/// Under u/v semantics a negated class is a set of scalar values: it
+/// consumes a whole scalar, never one byte of one (sk-v27 LW3.RX-1d).
 #[test]
 fn negated_class() {
     match p("[^abc]") {
-        Hir::Class(CharClass::Bytes { negated, .. }) => assert!(negated),
-        other => panic!("expected negated Bytes class, got {:?}", other),
+        Hir::Class(CharClass::Unicode { ranges, negated }) => {
+            assert!(negated);
+            assert_eq!(ranges, vec![CodepointRange::new('a', 'c')]);
+        }
+        other => panic!("expected negated scalar class, got {:?}", other),
     }
 }
 
@@ -222,14 +227,23 @@ fn byte_mode() {
     }
 }
 
+/// `.` is any scalar but a LineTerminator: LF, CR, U+2028, U+2029
+/// (ECMA-262, sk-v27 LW3.RX-1d).
 #[test]
 fn dot_default() {
     match p(".") {
-        Hir::Class(CharClass::Bytes {
+        Hir::Class(CharClass::Unicode {
             negated: true,
             ranges,
         }) => {
-            assert_eq!(ranges, vec![ByteRange::new(b'\n', b'\n')]);
+            assert_eq!(
+                ranges,
+                vec![
+                    CodepointRange::new('\n', '\n'),
+                    CodepointRange::new('\r', '\r'),
+                    CodepointRange::new('\u{2028}', '\u{2029}'),
+                ]
+            );
         }
         other => panic!("expected negated class for dot, got {:?}", other),
     }
