@@ -55,9 +55,11 @@ pub mod alphabet;
 pub mod compaction;
 pub mod dispatch;
 pub mod index;
+pub mod padded;
 pub mod parity;
 pub mod prim;
 pub mod scalar;
+pub mod stage1;
 #[cfg(any(
     target_arch = "aarch64",
     target_arch = "x86_64",
@@ -78,8 +80,10 @@ pub mod avx512;
 pub mod wasm;
 
 pub use alphabet::{KernelShape, NibbleLut, StructuralAlphabet, WideLut};
-pub use dispatch::{TIER_ENV, Tier, compiled_tiers, scan_with, selected_tier};
-pub use index::{StructuralIndex, next_structural_at_or_after};
+pub use dispatch::{TIER_ENV, Tier, compiled_tiers, scan_with, selected_tier, stage1_with};
+pub use index::{Stage1Index, StructuralIndex, next_structural_at_or_after};
+pub use padded::{PADDING, PaddedInput, PaddedSlice};
+pub use stage1::{CommentClass, MAX_COMMENT_CLASSES, Stage1Error, Stage1Spec, stage1};
 
 /// Build the [`StructuralIndex`] for `input` under `alphabet`.
 ///

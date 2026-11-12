@@ -25,6 +25,9 @@ use std::sync::OnceLock;
 
 use crate::StructuralIndex;
 use crate::alphabet::StructuralAlphabet;
+use crate::index::Stage1Index;
+use crate::padded::PaddedSlice;
+use crate::stage1::{Stage1Error, Stage1Spec};
 
 /// One structural-scan kernel tier.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -212,4 +215,23 @@ unsafe fn run(tier: Tier, input: &[u8], alphabet: &StructuralAlphabet) -> Struct
         Tier::Simd128 => crate::wasm::scan(input, alphabet),
         _ => crate::scalar::scan(input, alphabet),
     }
+}
+
+/// Run `tier`'s stage-1 kernel ([`crate::stage1`]), or `None` when the
+/// build or the host cannot run it. Output is identical to
+/// [`crate::scalar::stage1`] for every tier that returns `Some`.
+pub fn stage1_with(
+    tier: Tier,
+    input: PaddedSlice<'_>,
+    spec: &Stage1Spec,
+) -> Option<Result<Stage1Index, Stage1Error>> {
+    tier.is_supported().then(|| crate::stage1::stub(input.bytes(), spec))
+}
+
+/// [`stage1_with`] on [`selected_tier`].
+pub(crate) fn stage1_selected(
+    input: PaddedSlice<'_>,
+    spec: &Stage1Spec,
+) -> Result<Stage1Index, Stage1Error> {
+    crate::stage1::stub(input.bytes(), spec)
 }

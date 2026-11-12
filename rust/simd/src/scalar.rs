@@ -127,3 +127,11 @@ pub fn compute_inside_string_mask(input: &[u8], quote_lut: &[bool; 256]) -> Vec<
 
     out
 }
+
+/// The stage-1 oracle ([`crate::stage1`]'s definition, byte by byte).
+pub fn stage1(
+    input: &[u8],
+    spec: &crate::Stage1Spec,
+) -> Result<crate::Stage1Index, crate::Stage1Error> {
+    crate::stage1::stub(input, spec)
+}
