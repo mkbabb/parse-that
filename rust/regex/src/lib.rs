@@ -27,7 +27,7 @@ pub mod utf8;
 // Re-exports for convenience
 pub use crate::hir::parser::{parse, parse_with};
 pub use automata::accel::{AccelStrategy, StateAccel, detect_accel};
-pub use automata::dfa::{Dfa, DfaOptions, DfaState};
+pub use automata::dfa::{AcceptWhen, Dfa, DfaError, DfaOptions, DfaState};
 pub use automata::nfa::{DEAD, Nfa, StateId};
 pub use classify::{RegexClass, classify_regex, classify_regex_from_hir};
 pub use first::{regex_first_chars, regex_first_chars_from_hir};

@@ -27,6 +27,14 @@ proc-macro2 = "1"
 # the HIR e-graph rewrite rules. Same hash strategy as the egraph
 # substrate crate (via rustc-hash 2).
 rustc-hash = "2"
+# sk-v27 LW3.RX-1a (OR-7 Route A, RULINGS OR-7): regex-automata is the
+# determinizer and minimizer: our Hir is lowered into regex-syntax's Hir and
+# built into an anchored, leftmost-first, minimized dense DFA, then read into
+# this crate's table (`automata::dfa`). Exact pins: the OR-7 evidence was
+# taken at these versions. Neither crate's types are part of this crate's
+# public API.
+regex-automata = { version = "=0.4.14", default-features = false, features = ["std", "syntax", "dfa-build", "dfa-search"] }
+regex-syntax = { version = "=0.8.10", default-features = false, features = ["std"] }
 # Tranche H: HIR e-graph substrate. `parse-that-egraph` +
 # `parse-that-egraph-derive` supply the equality-saturation machinery and
 # its CSP scheduler (which brings csp-solver with it). Workspace members:

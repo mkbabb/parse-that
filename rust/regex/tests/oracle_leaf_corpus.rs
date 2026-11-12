@@ -62,7 +62,10 @@ struct Verdict {
 }
 
 fn read_corpus() -> Vec<Verdict> {
-    let path = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/oracle/leaf-corpus.json"));
+    let path = Path::new(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/oracle/leaf-corpus.json"
+    ));
     let doc: serde_json::Value =
         serde_json::from_str(&std::fs::read_to_string(path).expect("leaf-corpus.json"))
             .expect("json");
@@ -108,7 +111,9 @@ fn read_corpus() -> Vec<Verdict> {
                 v.differing += 1;
                 v.engine = true;
                 if v.first.is_none() {
-                    v.first = Some(format!("case {k} {input:?}: oracle {want:?} engine {got:?}"));
+                    v.first = Some(format!(
+                        "case {k} {input:?}: oracle {want:?} engine {got:?}"
+                    ));
                 }
             }
         }

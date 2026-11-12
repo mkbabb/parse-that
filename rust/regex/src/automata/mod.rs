@@ -2,4 +2,5 @@
 
 pub mod accel;
 pub mod dfa;
+pub mod lower;
 pub mod nfa;

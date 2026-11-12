@@ -1,6 +1,7 @@
 # CLAUDE.md — rust/regex/ (parse-that-regex)
 
-Bespoke regex engine: HIR + hand-written parser, NFA→DFA compilation,
+Regex engine: HIR + hand-written parser, leftmost-first DFA compilation
+(regex-automata as the determinizer, OR-7 Route A),
 structural classification, ByteSet algebra, HIR-tier equality saturation,
 unified regex info pass, FIRST-set extraction.
 
@@ -32,7 +33,8 @@ rust/regex/
 │   ├── automata/
 │   │   ├── mod.rs          Re-exports
 │   │   ├── nfa.rs          Thompson NFA construction + ByteSet transitions + ε-edges
-│   │   ├── dfa.rs          NFA→DFA powerset + Hopcroft minimization + flat transition table
+│   │   ├── lower.rs        Hir → regex-syntax Hir (the determinizer's input; internal)
+│   │   ├── dfa.rs          regex-automata's anchored leftmost-first minimized dense DFA, read into the flat table
 │   │   └── accel.rs        AccelStrategy / StateAccel — single-byte hot-loop acceleration
 │   ├── classify/
 │   │   ├── mod.rs          RegexClass enum (parameterized) + classify_regex + classify_regex_from_hir + canonical_pattern

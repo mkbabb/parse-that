@@ -53,8 +53,9 @@ fn c1_1_negative_lookahead_full_run_when_unblocked() {
 /// grammar tier's `FuseAltRegexBranches` turns `Alt(/a/, /ab/)` into exactly
 /// this pattern, and the Rust leaf runs it on a leftmost-longest DFA, so the
 /// fused leaf consumes `"ab"` where the unfused ordered choice consumes `"a"`.
+/// Cured at LW3.RX-1a/1c: the determinizer is regex-automata's
+/// leftmost-first DFA, so the priority cut is in the table.
 #[test]
-#[ignore = "born-RED LW1.RX-2 (Alt fusion): the DFA is leftmost-longest and returns 2; cure LW3.RX-1 (leftmost-first), LW2.RX-4 disables Rust fusion meanwhile"]
 fn alt_fusion_is_leftmost_first() {
     assert_eq!(leaf("a|ab", "ab"), Some(1));
 }
