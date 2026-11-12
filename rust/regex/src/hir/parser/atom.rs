@@ -44,8 +44,19 @@ impl<'a> Parser<'a> {
                     negated: false,
                 })
             }
+        } else if self.unicode {
+            // Default: `.` is any scalar but a LineTerminator (LF, CR, LS,
+            // PS), one scalar at a time (sk-v27 LW3.RX-1d).
+            Hir::Class(CharClass::Unicode {
+                ranges: vec![
+                    CodepointRange::new('\n', '\n'),
+                    CodepointRange::new('\r', '\r'),
+                    CodepointRange::new('\u{2028}', '\u{2029}'),
+                ],
+                negated: true,
+            })
         } else {
-            // Default: . matches everything except \n.
+            // Byte mode: any byte except \n.
             Hir::Class(CharClass::Bytes {
                 ranges: vec![ByteRange::new(b'\n', b'\n')],
                 negated: true,

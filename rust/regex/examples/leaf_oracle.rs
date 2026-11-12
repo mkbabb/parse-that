@@ -39,10 +39,53 @@ impl Rng {
 
 /// Scalars that separate the u and non-u readings, and the `\s` set.
 const SPICE: &[char] = &[
-    '\u{A0}', '\u{1680}', '\u{2000}', '\u{2028}', '\u{2029}', '\u{202F}', '\u{205F}', '\u{3000}',
-    '\u{FEFF}', '\u{0B}', '\u{0C}', '\r', '\n', '\t', ' ', 'é', 'É', 'ſ', '\u{212A}', 'ß', 'Ω',
-    '€', '😀', '\u{10000}', '\u{10FFFF}', '\u{FFFF}', '\u{80}', '\u{FF}', 'a', 'Z', '0', '_',
-    '-', '.', '(', ')', '"', '\'', '\\', '/', '*', ';', ',', '#', '%', '@', '!',
+    '\u{A0}',
+    '\u{1680}',
+    '\u{2000}',
+    '\u{2028}',
+    '\u{2029}',
+    '\u{202F}',
+    '\u{205F}',
+    '\u{3000}',
+    '\u{FEFF}',
+    '\u{0B}',
+    '\u{0C}',
+    '\r',
+    '\n',
+    '\t',
+    ' ',
+    'é',
+    'É',
+    'ſ',
+    '\u{212A}',
+    'ß',
+    'Ω',
+    '€',
+    '😀',
+    '\u{10000}',
+    '\u{10FFFF}',
+    '\u{FFFF}',
+    '\u{80}',
+    '\u{FF}',
+    'a',
+    'Z',
+    '0',
+    '_',
+    '-',
+    '.',
+    '(',
+    ')',
+    '"',
+    '\'',
+    '\\',
+    '/',
+    '*',
+    ';',
+    ',',
+    '#',
+    '%',
+    '@',
+    '!',
 ];
 
 fn class_has(class: &CharClass, c: char) -> bool {
@@ -70,12 +113,22 @@ fn sample_into(hir: &Hir, rng: &mut Rng, out: &mut String, depth: u32) {
         }
         Hir::Class(class) => {
             let pick = match class {
-                CharClass::Bytes { ranges, negated: false } if !ranges.is_empty() => {
+                CharClass::Bytes {
+                    ranges,
+                    negated: false,
+                } if !ranges.is_empty() => {
                     let r = ranges[rng.below(ranges.len() as u64) as usize];
                     let b = r.start as u64 + rng.below(r.end as u64 - r.start as u64 + 1);
-                    if b < 0x80 { Some(b as u8 as char) } else { None }
+                    if b < 0x80 {
+                        Some(b as u8 as char)
+                    } else {
+                        None
+                    }
                 }
-                CharClass::Unicode { ranges, negated: false } if !ranges.is_empty() => {
+                CharClass::Unicode {
+                    ranges,
+                    negated: false,
+                } if !ranges.is_empty() => {
                     let r = ranges[rng.below(ranges.len() as u64) as usize];
                     let span = r.end as u64 - r.start as u64 + 1;
                     char::from_u32(r.start as u32 + rng.below(span) as u32)
@@ -197,7 +250,10 @@ fn generate(leaf_corpus: &str, per_leaf: usize, seed: u64, out: &str, out_u: &st
                 0 => s.clone(),
                 1 => spiced(&s, &mut rng),
                 2 => format!("{s}{s}"),
-                3 => s.chars().take(s.chars().count().saturating_sub(1)).collect(),
+                3 => s
+                    .chars()
+                    .take(s.chars().count().saturating_sub(1))
+                    .collect(),
                 4 => spiced(&spiced(&s, &mut rng), &mut rng),
                 _ => {
                     let c = SPICE[rng.below(SPICE.len() as u64) as usize];

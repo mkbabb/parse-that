@@ -11,6 +11,7 @@
 //! - [`sets`] — Byte set and character set data structures
 //! - [`unicode`] — Unicode general-category property tables
 //! - [`utf8`] — Codepoint range → UTF-8 byte sequence expansion
+//! - [`lint`] — lints over a pattern's reading (`RX-NOU`)
 
 pub mod algebra;
 pub mod automata;
@@ -19,6 +20,7 @@ pub mod egraph;
 pub mod first;
 pub mod hir;
 pub mod info;
+pub mod lint;
 pub mod path_lexer;
 pub mod sets;
 pub mod unicode;

@@ -34,7 +34,12 @@ fn start_anchor_holds_only_at_the_start_of_the_input() {
 
 #[test]
 fn span_leaf_reads_the_byte_before_too() {
-    assert!(string("x").then(regex_span(r"\bfoo")).parse("xfoo").is_none());
+    assert!(
+        string("x")
+            .then(regex_span(r"\bfoo"))
+            .parse("xfoo")
+            .is_none()
+    );
     let (_, span) = string(" ")
         .then(regex_span(r"\bfoo"))
         .parse(" foo")

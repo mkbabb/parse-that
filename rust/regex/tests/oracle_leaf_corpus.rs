@@ -24,6 +24,7 @@
 use std::path::Path;
 
 use parse_that_regex::Dfa;
+use parse_that_regex::lint::reads_differently_without_u;
 
 /// DFA-tier leaves whose divergence a later unit owns. Empty since
 /// LW3.RX-1d; the list may only shrink.
@@ -51,6 +52,7 @@ struct Verdict {
     differing: usize,
     encoding: usize,
     dialect: usize,
+    linted: bool,
     first: Option<String>,
 }
 
@@ -90,6 +92,8 @@ fn read_corpus() -> Vec<Verdict> {
             tier: leaf["tier"].as_str().expect("tier").to_string(),
             ..Verdict::default()
         };
+        v.linted = non_u
+            && parse_that_regex::parse(&pattern).is_ok_and(|hir| reads_differently_without_u(&hir));
         let Some(dfa) = Dfa::compile(&pattern) else {
             // Every leaf of the corpus compiles under the oracle.
             v.engine = true;
@@ -148,9 +152,20 @@ fn dfa_tier_agrees_with_v8_and_jsc() {
         dfa.len(),
         dfa.len() - agree
     );
+    let mut unlinted = Vec::new();
     for v in dfa.iter().filter(|v| v.dialect > 0) {
         println!("DIALECT {} ({} cases)", v.id, v.dialect);
+        if !v.linted {
+            unlinted.push(v.id.clone());
+        }
     }
+    // A DIALECT-EXCLUDED case is only admitted for a leaf the engine lints.
+    assert!(
+        unlinted.is_empty(),
+        "DIALECT leaves without the RX-NOU lint: {unlinted:?}"
+    );
+    let linted = dfa.iter().filter(|v| v.linted).count();
+    println!("RX-NOU linted leaves: {linted}");
     let mut unowned = Vec::new();
     for v in dfa.iter().filter(|v| v.engine) {
         let owed = OWED.contains(&v.id.as_str());
@@ -166,6 +181,9 @@ fn dfa_tier_agrees_with_v8_and_jsc() {
             unowned.push(v.id.clone());
         }
     }
-    assert!(unowned.is_empty(), "ENGINE leaves no unit owns: {unowned:?}");
+    assert!(
+        unowned.is_empty(),
+        "ENGINE leaves no unit owns: {unowned:?}"
+    );
     assert_eq!(agree, 133 - OWED.len());
 }
