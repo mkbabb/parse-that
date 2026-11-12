@@ -34,16 +34,22 @@ struct Parser<'a> {
     unicode: bool,
     /// Case-insensitive mode — literals match both cases.
     case_insensitive: bool,
+    /// Current group nesting depth, and the depth past which a group is
+    /// refused (sk-v27 LW3.COMP-1b-RB; [`parse_with_nesting_limit`]).
+    nesting_depth: usize,
+    nesting_limit: usize,
 }
 
 impl<'a> Parser<'a> {
-    fn new(src: &'a str, opts: &ParseOptions) -> Self {
+    fn new(src: &'a str, opts: &ParseOptions, nesting_limit: usize) -> Self {
         Self {
             src: src.as_bytes(),
             pos: 0,
             dotall: false,
             unicode: opts.unicode,
             case_insensitive: false,
+            nesting_depth: 0,
+            nesting_limit,
         }
     }
 
@@ -161,6 +167,22 @@ pub fn parse(pattern: &str) -> Result<Hir, ParseError> {
 
 /// Parse a regex pattern into HIR with explicit options.
 pub fn parse_with(pattern: &str, opts: &ParseOptions) -> Result<Hir, ParseError> {
-    let mut parser = Parser::new(pattern, opts);
+    parse_with_nesting_limit(pattern, opts, usize::MAX)
+}
+
+/// Parse a regex pattern into HIR, refusing a group nested deeper than
+/// `nesting_limit` (sk-v27 LW3.COMP-1b-RB).
+///
+/// A caller that compiles untrusted patterns sets the bound, so a hostile
+/// pattern is refused with a [`ParseError`] at the offset of the group that
+/// crosses it instead of exhausting the stack. Groups count at every form
+/// (`(…)`, `(?:…)`, `(?flags:…)`); sibling groups do not add depth, and a
+/// pattern with no group reads at limit 0.
+pub fn parse_with_nesting_limit(
+    pattern: &str,
+    opts: &ParseOptions,
+    nesting_limit: usize,
+) -> Result<Hir, ParseError> {
+    let mut parser = Parser::new(pattern, opts, nesting_limit);
     parser.parse_regex()
 }

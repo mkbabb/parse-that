@@ -123,6 +123,9 @@ pub enum DfaError {
     Build(String),
     /// The DFA exceeds `DfaOptions::state_limit`.
     StateLimit(usize),
+    /// The Thompson NFA handed to the determinizer exceeds the caller's
+    /// state budget ([`Dfa::from_hir_with_nfa_limit`]; sk-v27 LW3.COMP-1b-RB).
+    NfaStateLimit(usize),
 }
 
 /// A compiled DFA. Transitions are indexed by byte equivalence classes.
@@ -170,15 +173,31 @@ impl Dfa {
 
     /// Build the DFA of an already-parsed `Hir`.
     pub fn from_hir(hir: &Hir, opts: &DfaOptions) -> Result<Self, DfaError> {
-        let lowered = lower(hir).map_err(DfaError::Lower)?;
-        let nfa = thompson::Compiler::new()
-            .configure(
-                thompson::Config::new()
-                    .utf8(false)
-                    .which_captures(thompson::WhichCaptures::None),
-            )
-            .build_from_hir(&lowered)
-            .map_err(|e| DfaError::Build(e.to_string()))?;
+        Self::from_nfa(&thompson_nfa(hir)?, opts)
+    }
+
+    /// Build the DFA of an already-parsed `Hir`, refusing a Thompson NFA of
+    /// more than `nfa_state_limit` states before it is determinized
+    /// (sk-v27 LW3.COMP-1b-RB). The cap itself is accepted.
+    pub fn from_hir_with_nfa_limit(
+        hir: &Hir,
+        opts: &DfaOptions,
+        nfa_state_limit: usize,
+    ) -> Result<Self, DfaError> {
+        let nfa = thompson_nfa(hir)?;
+        if nfa.states().len() > nfa_state_limit {
+            return Err(DfaError::NfaStateLimit(nfa_state_limit));
+        }
+        Self::from_nfa(&nfa, opts)
+    }
+
+    /// The number of Thompson NFA states the determinizer is given for
+    /// `hir`: the quantity [`Dfa::from_hir_with_nfa_limit`] bounds.
+    pub fn nfa_state_count(hir: &Hir) -> Result<usize, DfaError> {
+        Ok(thompson_nfa(hir)?.states().len())
+    }
+
+    fn from_nfa(nfa: &thompson::NFA, opts: &DfaOptions) -> Result<Self, DfaError> {
         let ra = dense::Builder::new()
             .configure(
                 dense::Config::new()
@@ -186,7 +205,7 @@ impl Dfa {
                     .start_kind(StartKind::Anchored)
                     .minimize(opts.minimize),
             )
-            .build_from_nfa(&nfa)
+            .build_from_nfa(nfa)
             .map_err(|e| DfaError::Build(e.to_string()))?;
         read_dense(&ra, opts.state_limit)
     }
@@ -431,4 +450,17 @@ fn read_dense(ra: &dense::DFA<Vec<u32>>, state_limit: usize) -> Result<Dfa, DfaE
         starts,
         has_look,
     })
+}
+
+/// The Thompson NFA of a lowered `Hir`: byte-oriented, no captures.
+fn thompson_nfa(hir: &Hir) -> Result<thompson::NFA, DfaError> {
+    let lowered = lower(hir).map_err(DfaError::Lower)?;
+    thompson::Compiler::new()
+        .configure(
+            thompson::Config::new()
+                .utf8(false)
+                .which_captures(thompson::WhichCaptures::None),
+        )
+        .build_from_hir(&lowered)
+        .map_err(|e| DfaError::Build(e.to_string()))
 }
