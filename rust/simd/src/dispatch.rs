@@ -292,6 +292,16 @@ pub fn ascii_prefix_len(bytes: &[u8]) -> usize {
 /// [`ascii_prefix_len`] on `tier`, or `None` when the build or the host
 /// cannot run it. Equal to [`crate::scalar::ascii_prefix_len`] for every
 /// tier that returns `Some`.
+///
+/// ```
+/// use parse_that_simd::{ascii_prefix_len_with, compiled_tiers, scalar};
+/// let text = "width \u{2194} measured".as_bytes();
+/// for tier in compiled_tiers() {
+///     if let Some(n) = ascii_prefix_len_with(tier, text) {
+///         assert_eq!(n, scalar::ascii_prefix_len(text), "{}", tier.name());
+///     }
+/// }
+/// ```
 pub fn ascii_prefix_len_with(tier: Tier, bytes: &[u8]) -> Option<usize> {
     // SAFETY: `run_ascii`'s precondition is exactly `is_supported`.
     tier.is_supported().then(|| unsafe { run_ascii(tier, bytes) })

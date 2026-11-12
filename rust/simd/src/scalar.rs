@@ -255,11 +255,11 @@ pub fn stage1(
                 .iter()
                 .any(|&(f, s)| f == b && input.get(i + 1) == Some(&s));
         let structural = outside && (singleton[b as usize] || digraph);
-        let atom = !structural
-            && !prev_digraph
-            && !(outside && whitespace[b as usize])
-            && !in_comment
-            && !opener;
+        let atom = !(structural
+            || prev_digraph
+            || (outside && whitespace[b as usize])
+            || in_comment
+            || opener);
         if structural {
             out.push(i as u32, b, false);
         } else if atom && !prev_atom {

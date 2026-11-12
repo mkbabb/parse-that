@@ -681,6 +681,17 @@ pub(crate) mod utf8 {
 /// The arch-neutral resolver over bytewise raw masks (a test hook: it
 /// runs on every host and under Miri, and it reads the padding through
 /// [`drive`]'s contract, so Miri checks that contract).
+///
+/// ```
+/// use parse_that_simd::{PaddedInput, Stage1Spec, StructuralAlphabet, scalar, stage1};
+/// const JSON: Stage1Spec =
+///     Stage1Spec::new(StructuralAlphabet::from_parts(b"{}[]:,", &[], b"\""), b" ", &[]);
+/// let input = PaddedInput::from_slice(br#"{"a": [1, 2]}"#);
+/// assert_eq!(
+///     stage1::portable(input.as_padded(), &JSON),
+///     scalar::stage1(input.as_bytes(), &JSON)
+/// );
+/// ```
 pub fn portable(input: PaddedSlice<'_>, spec: &Stage1Spec) -> Result<Stage1Index, Stage1Error> {
     if u32::try_from(input.len()).is_err() {
         return Err(Stage1Error::TooLong { len: input.len() });
