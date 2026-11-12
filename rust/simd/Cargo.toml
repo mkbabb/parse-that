@@ -29,3 +29,7 @@ libc = "0.2"
 [[bench]]
 name = "stage1_throughput"
 harness = false
+
+[[bench]]
+name = "stage1_split"
+harness = false
