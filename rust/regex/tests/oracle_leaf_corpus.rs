@@ -1,42 +1,33 @@
-//! sk-v27 LW3.RX-1a: the oracle leaf corpus read through the engine.
+//! sk-v27 LW3.RX-1a / RX-1d: the oracle leaf corpus read through the engine.
 //!
 //! `oracle/leaf-corpus.json` holds 171 leaves (115 from value.js's grammars,
 //! 56 from the sk-v24 corpus) and 21,722 cases, each a sticky match at offset
 //! 0 with the leaf's own flags, answered by V8 and JavaScriptCore agreeing
-//! (two reps each). The DFA tier is the 133 leaves without lookaround; the
-//! lookaround tier is never pooled with it (C1-9).
+//! (two reps each). Each case also carries the answer for the leaf read with
+//! `u` (the canonical reading; ECMAScript non-`u` leaves are read as `u`,
+//! OR-1). The DFA tier is the 133 leaves without lookaround; the lookaround
+//! tier is never pooled with it (C1-9).
 //!
-//! Per leaf the verdict is ENGINE when any compared case differs or the
-//! engine refuses a pattern the oracle compiles, else AGREE. A case whose
-//! oracle match ends inside a surrogate pair (non-`u`, astral input) has no
-//! UTF-8 image and is not compared (ENCODING-EXCLUDED); a SPEC-AMBIGUITY
-//! case is not compared either (the corpus has none).
+//! Every case is classed by rule, in this order, never by hand:
 //!
-//! The leaves still owed by a later unit are named here with their owner;
-//! the test fails on an ENGINE leaf that is not named and on a named leaf
-//! that now agrees (the list may only shrink).
+//! - **ENCODING-EXCLUDED**: the leaf's own (non-`u`) oracle match ends inside
+//!   a surrogate pair, which has no UTF-8 image.
+//! - **AGREE**: the engine gives the leaf's own oracle answer.
+//! - **DIALECT-EXCLUDED**: the leaf has no `u`/`v` flag, the oracle's answer
+//!   for the leaf read with `u` differs from its non-`u` answer, and the
+//!   engine gives the `u` answer (the engine reads every leaf as `u`; the
+//!   leaf is linted `RX-NOU`).
+//! - **ENGINE**: anything else. The gate is 0 ENGINE cases.
+//!
+//! A SPEC-AMBIGUITY case is not compared (the corpus has none).
 
 use std::path::Path;
 
 use parse_that_regex::Dfa;
 
-/// DFA-tier leaves whose divergence belongs to the front end's u/v
-/// semantics (LW3.RX-1d): `\s` without U+00A0 (11 leaves) and the non-`u`
-/// class and negated-class readings of leaf #8.
-const OWED_TO_RX1D: &[&str] = &[
-    "value.js@8d7bb5b8#8",
-    "value.js@8d7bb5b8#10",
-    "value.js@8d7bb5b8#13",
-    "value.js@8d7bb5b8#17",
-    "value.js@8d7bb5b8#59",
-    "value.js@8d7bb5b8#60",
-    "value.js@8d7bb5b8#69",
-    "value.js@8d7bb5b8#70",
-    "value.js@8d7bb5b8#73",
-    "value.js@8d7bb5b8#86",
-    "value.js@8d7bb5b8#89",
-    "sk-v24-56#50",
-];
+/// DFA-tier leaves whose divergence a later unit owns. Empty since
+/// LW3.RX-1d; the list may only shrink.
+const OWED: &[&str] = &[];
 
 /// The pattern as the engine's front end reads it: ECMAScript `i` and `s`
 /// become inline flags.
@@ -51,14 +42,34 @@ fn engine_pattern(pattern: &str, flags: &str) -> String {
     p + pattern
 }
 
+#[derive(Default)]
 struct Verdict {
     id: String,
     tier: String,
     engine: bool,
     compared: usize,
     differing: usize,
-    excluded: usize,
+    encoding: usize,
+    dialect: usize,
     first: Option<String>,
+}
+
+enum Want {
+    End(Option<usize>),
+    Encoding,
+    Ambiguous,
+    Syntax,
+}
+
+fn want(v: &serde_json::Value) -> Want {
+    match v {
+        serde_json::Value::Null => Want::End(None),
+        serde_json::Value::Number(n) => Want::End(Some(n.as_u64().expect("end8") as usize)),
+        serde_json::Value::String(s) if s == "ENC" => Want::Encoding,
+        serde_json::Value::String(s) if s == "AMB" => Want::Ambiguous,
+        serde_json::Value::String(s) if s == "SYN" => Want::Syntax,
+        other => panic!("answer {other:?}"),
+    }
 }
 
 fn read_corpus() -> Vec<Verdict> {
@@ -71,23 +82,15 @@ fn read_corpus() -> Vec<Verdict> {
             .expect("json");
     let mut out = Vec::new();
     for leaf in doc["leaves"].as_array().expect("leaves") {
-        let id = leaf["id"].as_str().expect("id").to_string();
-        let tier = leaf["tier"].as_str().expect("tier").to_string();
-        let pattern = engine_pattern(
-            leaf["pattern"].as_str().expect("pattern"),
-            leaf["flags"].as_str().expect("flags"),
-        );
-        let dfa = Dfa::compile(&pattern);
+        let flags = leaf["flags"].as_str().expect("flags");
+        let non_u = !flags.contains('u') && !flags.contains('v');
+        let pattern = engine_pattern(leaf["pattern"].as_str().expect("pattern"), flags);
         let mut v = Verdict {
-            id,
-            tier,
-            engine: false,
-            compared: 0,
-            differing: 0,
-            excluded: 0,
-            first: None,
+            id: leaf["id"].as_str().expect("id").to_string(),
+            tier: leaf["tier"].as_str().expect("tier").to_string(),
+            ..Verdict::default()
         };
-        let Some(dfa) = dfa else {
+        let Some(dfa) = Dfa::compile(&pattern) else {
             // Every leaf of the corpus compiles under the oracle.
             v.engine = true;
             v.first = Some("refused".into());
@@ -96,25 +99,33 @@ fn read_corpus() -> Vec<Verdict> {
         };
         for (k, case) in leaf["cases"].as_array().expect("cases").iter().enumerate() {
             let input = case[0].as_str().expect("input");
-            let want = match &case[1] {
-                serde_json::Value::Null => None,
-                serde_json::Value::Number(n) => Some(n.as_u64().expect("end8") as usize),
-                serde_json::Value::String(s) if s == "ENC" || s == "AMB" => {
-                    v.excluded += 1;
+            let own = match want(&case[1]) {
+                Want::End(e) => e,
+                Want::Encoding => {
+                    v.encoding += 1;
                     continue;
                 }
-                other => panic!("{}: case {k}: answer {other:?}", v.id),
+                Want::Ambiguous => continue,
+                Want::Syntax => panic!("{}: case {k}: the leaf is valid JS", v.id),
             };
             v.compared += 1;
             let got = dfa.find_at(input.as_bytes(), 0);
-            if got != want {
-                v.differing += 1;
-                v.engine = true;
-                if v.first.is_none() {
-                    v.first = Some(format!(
-                        "case {k} {input:?}: oracle {want:?} engine {got:?}"
-                    ));
-                }
+            if got == own {
+                continue;
+            }
+            if non_u
+                && let Some(u) = case.get(2)
+                && let Want::End(u_end) = want(u)
+                && u_end != own
+                && got == u_end
+            {
+                v.dialect += 1;
+                continue;
+            }
+            v.differing += 1;
+            v.engine = true;
+            if v.first.is_none() {
+                v.first = Some(format!("case {k} {input:?}: oracle {own:?} engine {got:?}"));
             }
         }
         out.push(v);
@@ -130,38 +141,31 @@ fn dfa_tier_agrees_with_v8_and_jsc() {
     let agree = dfa.iter().filter(|v| !v.engine).count();
     let cases: usize = dfa.iter().map(|v| v.compared).sum();
     let differing: usize = dfa.iter().map(|v| v.differing).sum();
-    let excluded: usize = dfa.iter().map(|v| v.excluded).sum();
+    let encoding: usize = dfa.iter().map(|v| v.encoding).sum();
+    let dialect: usize = dfa.iter().map(|v| v.dialect).sum();
     println!(
-        "oracle leaf corpus, DFA tier: {} leaves, AGREE {agree}, ENGINE {}; cases compared {cases}, differing {differing}, not compared {excluded}",
+        "oracle leaf corpus, DFA tier: {} leaves, AGREE {agree}, ENGINE {}; cases compared {cases}, ENGINE {differing}, DIALECT-EXCLUDED {dialect}, ENCODING-EXCLUDED {encoding}",
         dfa.len(),
         dfa.len() - agree
     );
+    for v in dfa.iter().filter(|v| v.dialect > 0) {
+        println!("DIALECT {} ({} cases)", v.id, v.dialect);
+    }
     let mut unowned = Vec::new();
     for v in dfa.iter().filter(|v| v.engine) {
-        let owed = OWED_TO_RX1D.contains(&v.id.as_str());
+        let owed = OWED.contains(&v.id.as_str());
         println!(
             "ENGINE {} ({} of {} cases){} first: {}",
             v.id,
             v.differing,
             v.compared,
-            if owed { " [owed: LW3.RX-1d]" } else { "" },
+            if owed { " [owed]" } else { "" },
             v.first.as_deref().unwrap_or("-")
         );
         if !owed {
             unowned.push(v.id.clone());
         }
     }
-    let stale: Vec<&&str> = OWED_TO_RX1D
-        .iter()
-        .filter(|id| dfa.iter().any(|v| v.id == **id && !v.engine))
-        .collect();
-    assert!(
-        unowned.is_empty(),
-        "ENGINE leaves no unit owns: {unowned:?}"
-    );
-    assert!(
-        stale.is_empty(),
-        "named as owed but now AGREE (shrink the list): {stale:?}"
-    );
-    assert!(agree >= 133 - OWED_TO_RX1D.len());
+    assert!(unowned.is_empty(), "ENGINE leaves no unit owns: {unowned:?}");
+    assert_eq!(agree, 133 - OWED.len());
 }
