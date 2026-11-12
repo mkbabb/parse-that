@@ -1087,7 +1087,11 @@ fn extract_class_range_info(hir: &Hir) -> Option<ClassRangeInfo> {
 /// read one byte of a scalar (sk-v27 LW3.RX-1d). A negated class of ASCII
 /// members admits every non-ASCII scalar whole, which a byte scan to an
 /// ASCII terminator reads correctly, so it keeps its info.
-fn class_to_range_info(class: &CharClass, min: u32, max: Option<u32>) -> Option<ClassRangeInfo> {
+pub(crate) fn class_to_range_info(
+    class: &CharClass,
+    min: u32,
+    max: Option<u32>,
+) -> Option<ClassRangeInfo> {
     let (members, negated): (Vec<ByteRange>, bool) = match class {
         CharClass::Bytes { ranges, negated } => (ranges.clone(), *negated),
         CharClass::Unicode { ranges, negated } => (
