@@ -7,6 +7,7 @@
 mod kernel {
     mod control_laws;
     mod difference_laws;
+    mod failure_contract_laws;
     mod generated_shaped_control;
     mod input_contract;
     mod module_laws;
