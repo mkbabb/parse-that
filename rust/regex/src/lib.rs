@@ -31,7 +31,7 @@ pub mod unicode;
 pub mod utf8;
 
 // Re-exports for convenience
-pub use crate::hir::parser::{parse, parse_with};
+pub use crate::hir::parser::{parse, parse_with, parse_with_nesting_limit};
 pub use automata::accel::{AccelStrategy, StateAccel, detect_accel};
 pub use automata::dfa::{AcceptWhen, Dfa, DfaError, DfaOptions, DfaState};
 pub use automata::nfa::{DEAD, Nfa, StateId};

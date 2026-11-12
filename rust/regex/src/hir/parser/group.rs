@@ -5,6 +5,19 @@ use super::*;
 impl<'a> Parser<'a> {
     /// Parse `(...)` or `(?:...)` or `(?flags)` or `(?flags:...)`.
     pub(super) fn parse_group(&mut self) -> Result<Hir, ParseError> {
+        if self.nesting_depth >= self.nesting_limit {
+            return Err(self.err(format!(
+                "group nesting exceeds the configured {}-level limit",
+                self.nesting_limit
+            )));
+        }
+        self.nesting_depth += 1;
+        let group = self.parse_group_body();
+        self.nesting_depth -= 1;
+        group
+    }
+
+    fn parse_group_body(&mut self) -> Result<Hir, ParseError> {
         self.expect(b'(')?;
 
         if self.peek() == Some(b'?') {
