@@ -54,7 +54,9 @@ fn anchors_and_boundaries_reproduce_the_oracle() {
                 if got == expected {
                     agreed += 1;
                 } else {
-                    wrong.push(format!("{id}: {pattern} at {at}: oracle {expected:?}, engine {got:?}"));
+                    wrong.push(format!(
+                        "{id}: {pattern} at {at}: oracle {expected:?}, engine {got:?}"
+                    ));
                 }
             }
         }
@@ -63,5 +65,9 @@ fn anchors_and_boundaries_reproduce_the_oracle() {
     for w in &wrong {
         println!("DIFFER {w}");
     }
-    assert!(wrong.is_empty(), "{} of the anchor cases differ", wrong.len());
+    assert!(
+        wrong.is_empty(),
+        "{} of the anchor cases differ",
+        wrong.len()
+    );
 }
