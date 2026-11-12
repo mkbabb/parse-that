@@ -5,7 +5,7 @@ use core::sync::atomic::{AtomicUsize, Ordering};
 static NEXT_EMPTY_SOURCE_ID: AtomicUsize = AtomicUsize::new(1);
 
 #[derive(Clone, Copy, Eq, PartialEq)]
-struct EmptySourceId(NonZeroUsize);
+pub(super) struct EmptySourceId(NonZeroUsize);
 
 impl EmptySourceId {
     fn fresh() -> Self {
@@ -41,8 +41,8 @@ fn same_source(
 /// process-local token.
 #[derive(Clone, Copy)]
 pub struct Input<'i> {
-    bytes: &'i [u8],
-    empty_source_id: Option<EmptySourceId>,
+    pub(super) bytes: &'i [u8],
+    pub(super) empty_source_id: Option<EmptySourceId>,
 }
 
 impl<'i> Input<'i> {
@@ -152,9 +152,9 @@ impl fmt::Debug for Input<'_> {
 /// ```
 #[derive(Clone, Copy)]
 pub struct Cursor<'i> {
-    source: &'i [u8],
-    empty_source_id: Option<EmptySourceId>,
-    offset: usize,
+    pub(super) source: &'i [u8],
+    pub(super) empty_source_id: Option<EmptySourceId>,
+    pub(super) offset: usize,
 }
 
 impl Cursor<'_> {
@@ -200,10 +200,10 @@ impl Eq for Cursor<'_> {}
 /// A checked, zero-copy interval in an [`Input`].
 #[derive(Clone, Copy)]
 pub struct Span<'i> {
-    bytes: &'i [u8],
-    empty_source_id: Option<EmptySourceId>,
-    start: usize,
-    end: usize,
+    pub(super) bytes: &'i [u8],
+    pub(super) empty_source_id: Option<EmptySourceId>,
+    pub(super) start: usize,
+    pub(super) end: usize,
 }
 
 impl<'i> Span<'i> {

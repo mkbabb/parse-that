@@ -10,6 +10,8 @@
 //! walk is leftmost-first and reads look conditions and u/v semantics as the
 //! engine compiled them.
 
+#[doc(hidden)]
+pub mod abi;
 mod control;
 mod input;
 mod module;
@@ -18,10 +20,12 @@ mod run;
 mod terminal;
 mod transaction;
 
-pub use control::{choice, difference, repeat, sequence};
+pub use control::{choice, difference, label, repeat, sequence};
 pub use input::{Cursor, Input, InputError, Span};
 pub use module::ModuleResult;
-pub use outcome::{Failure, Fault, ResourceKind, Step};
+pub use outcome::{
+    Expected, ExpectedIter, Failure, Fault, LABEL_CAPACITY, Label, ResourceKind, Step,
+};
 pub use run::Run;
 pub use terminal::{RegexPlan, RegexPlanError, RegexTerminal, eof, literal, regex};
 pub use transaction::{EventSink, NoSink};
@@ -30,4 +34,7 @@ pub use transaction::{EventSink, NoSink};
 ///
 /// Consumers may assert this integer in const context so an older
 /// dependency cannot silently satisfy a newer generated-control boundary.
-pub const KERNEL_ABI: u32 = 3;
+///
+/// ABI 4 (sk-v27 LW3.COMP-4b): [`Failure`] carries the furthest cursor and
+/// the sorted, deduplicated expected-label set at it; see `KERNEL-ABI.md`.
+pub const KERNEL_ABI: u32 = 4;

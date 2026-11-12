@@ -5,7 +5,7 @@ use parse_that::kernel::{
     sequence,
 };
 
-const _: () = assert!(parse_that::kernel::KERNEL_ABI == 3);
+const _: () = assert!(parse_that::kernel::KERNEL_ABI == 4);
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 struct ProbeEvent {

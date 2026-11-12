@@ -107,7 +107,9 @@ describe("P-2 the failure path is silent and allocation-free", () => {
         const top = failing.parseState("(1,22,333x)");
         expect(top.isError).toBe(true);
         expect(top.furthest).toBe(9);
-        expect(top.expected).toEqual(['","', '")"']);
+        // Sorted and deduplicated by construction (sk-v27 LW3.COMP-4b):
+        // '")"' (0x29) before '","' (0x2c), not the order the labels met.
+        expect(top.expected).toEqual(['")"', '","']);
         expect(bytes()).toBe(0);
     });
 });

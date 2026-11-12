@@ -1,4 +1,5 @@
 import type { Diagnostic, ParserState, Suggestion, SecondarySpan } from "./state.js";
+import { insertExpected } from "./state.js";
 
 export type { Diagnostic, Suggestion, SecondarySpan } from "./state.js";
 
@@ -41,9 +42,7 @@ export function mergeErrorState(state: ParserState<unknown>, label?: string) {
         // Same furthest offset — accumulate the label (diagnostics only).
         if (diagnosticsEnabled && label) {
             if (state.expected) {
-                if (!state.expected.includes(label)) {
-                    state.expected.push(label);
-                }
+                insertExpected(state.expected, label);
             } else {
                 state.expected = [label];
             }

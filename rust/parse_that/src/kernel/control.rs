@@ -1,4 +1,4 @@
-use super::{EventSink, Failure, Fault, Run, Step};
+use super::{EventSink, Failure, Fault, Label, Run, Step};
 
 /// Run one generated sequence atomically.
 pub fn sequence<'i, S, T, F>(run: &mut Run<'i, S>, parser: F) -> Step<'i, T>
@@ -156,5 +156,26 @@ where
         let failure = last_failure.unwrap_or_else(|| Failure::new(run.cursor()));
         run.rollback(entry);
         Step::Mismatch(failure)
+    }
+}
+
+/// Name what one generated operation recognizes.
+///
+/// A mismatch at the operation's own entry offset reports `label` as the
+/// whole expected set there; a mismatch further in keeps the inner set,
+/// which names what was expected at that further offset. A match and a
+/// fault pass through untouched, so the success path does no work.
+#[inline]
+pub fn label<'i, S, T, F>(run: &mut Run<'i, S>, label: Label, parser: F) -> Step<'i, T>
+where
+    S: EventSink,
+    F: FnOnce(&mut Run<'i, S>) -> Step<'i, T>,
+{
+    let entry = run.offset;
+    match parser(run) {
+        Step::Mismatch(failure) if failure.at().offset() == entry => {
+            Step::Mismatch(failure.labelled(label))
+        }
+        step => step,
     }
 }
