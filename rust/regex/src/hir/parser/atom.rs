@@ -20,6 +20,23 @@ impl<'a> Parser<'a> {
                 Ok(Hir::Look(Look::End))
             }
             Some(b'\\') => self.parse_escape(),
+            // A raw non-ASCII scalar under `i` is folded whole (it is read
+            // one byte at a time otherwise: its bytes are the literal).
+            Some(b) if b >= 0x80 && self.case_insensitive => {
+                let len = match b {
+                    0xF0..=0xFF => 4,
+                    0xE0..=0xEF => 3,
+                    _ => 2,
+                };
+                let ch = self
+                    .src
+                    .get(self.pos..self.pos + len)
+                    .and_then(|bytes| std::str::from_utf8(bytes).ok())
+                    .and_then(|text| text.chars().next())
+                    .ok_or_else(|| self.err("invalid UTF-8 in pattern".into()))?;
+                self.pos += len;
+                Ok(self.scalar_literal(ch))
+            }
             Some(b) if is_literal_char(b) => {
                 self.advance();
                 Ok(self.maybe_case_fold_byte(b))

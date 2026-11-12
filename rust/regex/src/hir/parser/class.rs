@@ -54,8 +54,12 @@ impl<'a> Parser<'a> {
         // values: a negated class is its complement over scalars and consumes
         // a whole scalar, and a member at or above 0x80 is that scalar, never
         // a byte (sk-v27 LW3.RX-1d). Byte mode keeps byte classes.
+        // Under `i` a class is closed over the case equivalence of its
+        // members (a negated class is the complement of that closure).
         let scalar_class = !cp_ranges.is_empty()
-            || (self.unicode && (negated || byte_ranges.iter().any(|r| r.end >= 0x80)));
+            || (self.unicode && (negated || byte_ranges.iter().any(|r| r.end >= 0x80)))
+            || (self.case_insensitive
+                && (self.unicode || byte_ranges.iter().all(|r| r.end < 0x80)));
         if !scalar_class {
             byte_ranges.sort();
             byte_ranges = merge_byte_ranges(byte_ranges);
@@ -68,7 +72,10 @@ impl<'a> Parser<'a> {
             for br in &byte_ranges {
                 cp_ranges.push(CodepointRange::new(br.start as char, br.end as char));
             }
-            let ranges = crate::hir::merge_codepoint_ranges(cp_ranges);
+            let mut ranges = crate::hir::merge_codepoint_ranges(cp_ranges);
+            if self.case_insensitive {
+                ranges = crate::casefold::close_ranges(&ranges, self.unicode);
+            }
             Ok(Hir::Class(class_of(ranges, negated)))
         }
     }
@@ -101,6 +108,12 @@ impl<'a> Parser<'a> {
                     CodepointRange::new(' ', ' '),
                 ],
             };
+            let mut positive = positive;
+            if c.eq_ignore_ascii_case(&b'w') && self.unicode && self.case_insensitive {
+                positive
+                    .extend(crate::casefold::iu_word_extra().map(|e| CodepointRange::new(e, e)));
+                positive = crate::hir::merge_codepoint_ranges(positive);
+            }
             let negated_shorthand = c.is_ascii_uppercase();
             if self.unicode {
                 if negated_shorthand {

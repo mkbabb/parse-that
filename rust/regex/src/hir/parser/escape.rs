@@ -38,6 +38,13 @@ impl<'a> Parser<'a> {
             // `\b` and `\B` outside a class are the ECMAScript word-boundary
             // assertions (sk-v27 A-9), never backspace. Inside a class `\b` is
             // backspace (`parse_class_escape_single`).
+            // Under `/iu` the word set gains U+017F and U+212A, which the
+            // `Hir` v1 boundary (the ASCII set) cannot carry: refused, named,
+            // never read with the wrong set (its reading is the Hir v2
+            // lookaround of LW3.RX-1f).
+            Some(b'b' | b'B') if self.unicode && self.case_insensitive => Err(self.err(
+                "\\b and \\B under case-insensitive Unicode mode use the /iu word set (U+017F, U+212A), which Hir v1 cannot carry".into(),
+            )),
             Some(b'b') => Ok(Hir::Look(Look::WordBoundary)),
             Some(b'B') => Ok(Hir::Look(Look::NotWordBoundary)),
 
@@ -158,11 +165,22 @@ impl<'a> Parser<'a> {
         self.shorthand(&[(b'0', b'9')], negated)
     }
 
+    /// `\w`: `[A-Za-z0-9_]`; under `/iu` also the scalars whose folding is
+    /// in it (U+017F, U+212A), ECMA-262 WordCharacters.
     fn shorthand_word(&self, negated: bool) -> Hir {
-        self.shorthand(
-            &[(b'0', b'9'), (b'A', b'Z'), (b'_', b'_'), (b'a', b'z')],
-            negated,
-        )
+        const ASCII: &[(u8, u8)] = &[(b'0', b'9'), (b'A', b'Z'), (b'_', b'_'), (b'a', b'z')];
+        if self.unicode && self.case_insensitive {
+            let mut ranges: Vec<CodepointRange> = ASCII
+                .iter()
+                .map(|&(lo, hi)| CodepointRange::new(lo as char, hi as char))
+                .collect();
+            ranges.extend(crate::casefold::iu_word_extra().map(|e| CodepointRange::new(e, e)));
+            return Hir::Class(CharClass::Unicode {
+                ranges: crate::hir::merge_codepoint_ranges(ranges),
+                negated,
+            });
+        }
+        self.shorthand(ASCII, negated)
     }
 
     /// `\s` is ECMAScript's WhiteSpace and LineTerminator set; in byte mode,
@@ -199,22 +217,30 @@ impl<'a> Parser<'a> {
         })
     }
 
-    /// Produce a literal or a case-insensitive class for a single byte.
+    /// Produce a literal or a case-insensitive class for a single byte
+    /// (an ASCII byte, or any byte in byte mode).
     pub(super) fn maybe_case_fold_byte(&self, b: u8) -> Hir {
-        if self.case_insensitive && b.is_ascii_alphabetic() {
-            let lo = b.to_ascii_lowercase();
-            let hi = b.to_ascii_uppercase();
-            Hir::Class(CharClass::Bytes {
-                ranges: vec![ByteRange::new(hi, hi), ByteRange::new(lo, lo)],
-                negated: false,
-            })
-        } else {
-            Hir::Literal(vec![b])
+        if self.case_insensitive && b.is_ascii() {
+            return self.scalar_literal(b as char);
         }
+        Hir::Literal(vec![b])
     }
 
-    /// One scalar as a literal (its UTF-8 bytes).
+    /// One scalar as a literal (its UTF-8 bytes), or under `i` the class of
+    /// the scalars that canonicalize with it (ECMA-262 Canonicalize: simple
+    /// case folding in Unicode mode, the non-u toUppercase rule in byte
+    /// mode).
     pub(super) fn scalar_literal(&self, c: char) -> Hir {
+        if self.case_insensitive {
+            let eq = crate::casefold::equivalents(c, self.unicode);
+            if eq.len() > 1 {
+                let ranges = eq.into_iter().map(|e| CodepointRange::new(e, e)).collect();
+                return Hir::Class(super::class::class_of(
+                    crate::hir::merge_codepoint_ranges(ranges),
+                    false,
+                ));
+            }
+        }
         let mut buf = [0u8; 4];
         Hir::Literal(c.encode_utf8(&mut buf).as_bytes().to_vec())
     }

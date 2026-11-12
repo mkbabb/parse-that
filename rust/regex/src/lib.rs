@@ -12,9 +12,13 @@
 //! - [`unicode`] — Unicode general-category property tables
 //! - [`utf8`] — Codepoint range → UTF-8 byte sequence expansion
 //! - [`lint`] — lints over a pattern's reading (`RX-NOU`)
+//! - [`casefold`] — ECMAScript case canonicalization (generated UCD tables)
 
 pub mod algebra;
 pub mod automata;
+#[rustfmt::skip]
+mod case_tables;
+pub mod casefold;
 pub mod classify;
 pub mod egraph;
 pub mod first;

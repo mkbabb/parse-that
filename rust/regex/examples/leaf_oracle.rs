@@ -12,6 +12,17 @@
 //!       Runs every case through the engine and classes it by the rule of
 //!       `tests/oracle_leaf_corpus.rs` (ENCODING-EXCLUDED, AGREE,
 //!       DIALECT-EXCLUDED, ENGINE). Exit 0 only with 0 ENGINE cases.
+//!   fold-generate <cases> <seed> <out.json>
+//!       LW3.RX-3: a case-folding corpus. Each case is one scalar `c` as a
+//!       pattern (escaped when it is syntax) under `i` or `iu`, on an input
+//!       scalar `d`: half the `d` are drawn from `c`'s case class in either
+//!       canonicalization, the rest at random (BMP and astral).
+//!   fold-compare <out.json> <answers.json>
+//!       The engine reads `iu` in Unicode mode and `i` in byte mode (the
+//!       non-u canonicalization); every case with an oracle answer must
+//!       equal it (a SPEC-AMBIGUITY case, V8 and JSC disagreeing, is listed
+//!       and not compared). Exit 0 only with 0 differing cases.
+//!
 //!
 //! Inputs are valid Unicode scalar-value strings; a case is a sticky match
 //! at offset 0. The generator is deterministic (SplitMix64 from the seed).
@@ -360,6 +371,142 @@ fn compare(corpus: &str, answers: &str, answers_u: &str) -> bool {
     engine == 0
 }
 
+fn random_scalar(rng: &mut Rng) -> char {
+    loop {
+        let cp = match rng.below(4) {
+            0 => rng.below(0x250) as u32,
+            1 => rng.below(0x3000) as u32,
+            2 => rng.below(0x10000) as u32,
+            _ => rng.below(0x110000) as u32,
+        };
+        if let Some(c) = char::from_u32(cp)
+            && !c.is_control()
+        {
+            return c;
+        }
+    }
+}
+
+fn pattern_of(c: char) -> String {
+    if "\\^$.|?*+()[]{}/".contains(c) {
+        format!("\\{c}")
+    } else {
+        c.to_string()
+    }
+}
+
+fn fold_generate(n: usize, seed: u64, out: &str) {
+    let mut rng = Rng(seed);
+    let mut s = String::from(
+        "{\"name\":\"sk-v27-LW3-RX3-fold\",\"note\":\"LW3.RX-3 case-folding corpus: one scalar under i or iu on one scalar.\",\"cases\":[\n",
+    );
+    // Seeds rich in case classes: Latin, Greek, Cyrillic, the specials.
+    let specials = [
+        'k',
+        'K',
+        '\u{212A}',
+        's',
+        'S',
+        '\u{17F}',
+        'é',
+        'É',
+        'ß',
+        '\u{1E9E}',
+        'µ',
+        'Μ',
+        'μ',
+        'ı',
+        'İ',
+        'i',
+        'I',
+        'ǅ',
+        'Ω',
+        '\u{2126}',
+        'ω',
+        'σ',
+        'ς',
+        'Σ',
+        '\u{10400}',
+        '\u{10428}',
+    ];
+    for k in 0..n {
+        let c = if rng.below(4) == 0 {
+            specials[rng.below(specials.len() as u64) as usize]
+        } else {
+            random_scalar(&mut rng)
+        };
+        let unicode = rng.below(2) == 0;
+        let d = if rng.below(2) == 0 {
+            let eq = parse_that_regex::casefold::equivalents(c, rng.below(2) == 0);
+            eq[rng.below(eq.len() as u64) as usize]
+        } else {
+            random_scalar(&mut rng)
+        };
+        let sep = if k == 0 { "" } else { ",\n" };
+        let _ = write!(
+            s,
+            "{sep}{{\"id\":\"f{k}\",\"pattern\":{},\"flags\":\"{}\",\"input\":{}}}",
+            json_str(&pattern_of(c)),
+            if unicode { "iu" } else { "i" },
+            json_str(&d.to_string())
+        );
+    }
+    s.push_str("\n]}\n");
+    std::fs::write(out, s).expect("write");
+    println!("fold corpus: {n} cases");
+}
+
+fn fold_compare(corpus: &str, answers: &str) -> bool {
+    let corpus = read_json(corpus);
+    let answers = read_json(answers);
+    let (mut agree, mut differ, mut amb) = (0, 0, 0);
+    for case in corpus["cases"].as_array().expect("cases") {
+        let id = case["id"].as_str().unwrap();
+        let unicode = case["flags"].as_str().unwrap().contains('u');
+        let pattern = format!("(?i){}", case["pattern"].as_str().unwrap());
+        let input = case["input"].as_str().unwrap();
+        let (st, end) = status(&answers[id]);
+        let want = match st {
+            "MATCH" => end,
+            "NO_MATCH" => None,
+            "SPEC-AMBIGUITY" => {
+                // V8 and JSC disagree: no oracle answer, so not compared
+                // (the leaf corpus's rule); each is listed.
+                amb += 1;
+                println!(
+                    "SPEC-AMBIGUITY {id} /{}/{} on {input:?}",
+                    case["pattern"].as_str().unwrap(),
+                    case["flags"].as_str().unwrap()
+                );
+                continue;
+            }
+            other => panic!("{id}: {other}"),
+        };
+        let opts = parse_that_regex::DfaOptions {
+            unicode,
+            ..parse_that_regex::DfaOptions::default()
+        };
+        let got = Dfa::compile_with(&pattern, &opts).and_then(|d| d.find_at(input.as_bytes(), 0));
+        if got == want {
+            agree += 1;
+        } else {
+            differ += 1;
+            if differ <= 20 {
+                println!(
+                    "DIFFER {id} /{}/{} on {input:?}: oracle {want:?} engine {got:?}",
+                    case["pattern"].as_str().unwrap(),
+                    case["flags"].as_str().unwrap()
+                );
+            }
+        }
+    }
+    println!(
+        "fold corpus: {} cases; agree {agree}; differ {differ}; spec-ambiguity {amb}",
+        agree + differ + amb
+    );
+    differ == 0
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     match args.get(1).map(String::as_str) {
@@ -370,6 +517,16 @@ fn main() {
             &args[5],
             &args[6],
         ),
+        Some("fold-generate") => fold_generate(
+            args[2].parse().expect("cases"),
+            args[3].parse().expect("seed"),
+            &args[4],
+        ),
+        Some("fold-compare") => {
+            if !fold_compare(&args[2], &args[3]) {
+                std::process::exit(1);
+            }
+        }
         Some("compare") => {
             if !compare(&args[2], &args[3], &args[4]) {
                 std::process::exit(1);
@@ -377,7 +534,7 @@ fn main() {
         }
         _ => {
             eprintln!(
-                "usage: generate <leaf-corpus.json> <per-leaf> <seed> <out.json> <out-u.json> | compare <out.json> <answers.json> <answers-u.json>"
+                "usage: generate <leaf-corpus.json> <per-leaf> <seed> <out.json> <out-u.json> | compare <out.json> <answers.json> <answers-u.json> | fold-generate <cases> <seed> <out.json> | fold-compare <out.json> <answers.json>"
             );
             std::process::exit(2);
         }
