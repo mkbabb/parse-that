@@ -138,3 +138,16 @@ fn test_identifier_double_dash_only() {
         RegexClass::Identifier { .. }
     ));
 }
+
+/// sk-v27 LW3.RX-1d: a quantified class with a non-ASCII member has no
+/// ASCII-set info, and analysing it never panics (a scalar class has no
+/// byte ranges).
+#[test]
+fn a_non_ascii_quantified_class_has_no_ascii_info() {
+    for pattern in [r"[\u0080-￿]+", "[é]+", r"[^é]*"] {
+        let info = RegexInfo::analyze(pattern).expect("parses");
+        assert!(info.quantified_class.is_none(), "{pattern:?}");
+    }
+    let ascii = RegexInfo::analyze(r#"[^"\\]+"#).expect("parses");
+    assert!(ascii.quantified_class.is_some());
+}

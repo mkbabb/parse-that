@@ -1,8 +1,17 @@
 # CLAUDE.md — rust/regex/ (parse-that-regex)
 
-Bespoke regex engine: HIR + hand-written parser, NFA→DFA compilation,
+Regex engine: HIR + hand-written parser, leftmost-first DFA compilation
+(regex-automata as the determinizer, OR-7 Route A),
 structural classification, ByteSet algebra, HIR-tier equality saturation,
 unified regex info pass, FIRST-set extraction.
+
+The default `ParseOptions` read a pattern with ECMAScript u/v semantics: a
+class is a set of scalar values and matches one whole scalar; `\s` is the
+ECMAScript WhiteSpace + LineTerminator set; `.` excludes LF, CR, U+2028 and
+U+2029; `\xHH` is U+00HH; `\uHHHH\uHHHH` names the scalar of a surrogate
+pair. `ParseOptions::byte_mode()` is the byte reading, for analyses over
+bytes. A caller holding a pattern written without `u` reports it with the
+`lint` module's `RX-NOU`.
 
 A leaf crate with zero parser-combinator or grammar-IR dependencies. Used
 by `parse_that` (re-exports the engine) and by downstream grammar
@@ -19,6 +28,7 @@ rust/regex/
 │   ├── unicode.rs          Unicode general-category property tables
 │   ├── utf8.rs             Codepoint range → UTF-8 byte sequence expansion
 │   ├── first.rs            Conservative FIRST char extraction (regex_first_chars + _from_hir)
+│   ├── lint.rs             RX-NOU: a pattern whose reading differs without `u` (reads_differently_without_u)
 │   ├── hir/
 │   │   ├── mod.rs          Hir enum + ByteRange + CharClass + Look + Repetition + ParseOptions
 │   │   └── parser/         Hand-written recursive-descent parser (Tranche T split)
@@ -32,7 +42,8 @@ rust/regex/
 │   ├── automata/
 │   │   ├── mod.rs          Re-exports
 │   │   ├── nfa.rs          Thompson NFA construction + ByteSet transitions + ε-edges
-│   │   ├── dfa.rs          NFA→DFA powerset + Hopcroft minimization + flat transition table
+│   │   ├── lower.rs        Hir → regex-syntax Hir (the determinizer's input; internal)
+│   │   ├── dfa.rs          regex-automata's anchored leftmost-first minimized dense DFA, read into the flat table
 │   │   └── accel.rs        AccelStrategy / StateAccel — single-byte hot-loop acceleration
 │   ├── classify/
 │   │   ├── mod.rs          RegexClass enum (parameterized) + classify_regex + classify_regex_from_hir + canonical_pattern

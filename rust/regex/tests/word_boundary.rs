@@ -4,9 +4,8 @@
 //!
 //! The expected values are the V8+JSC oracle's (`oracle/wordboundary.json`,
 //! answers in `oracle/wordboundary-answers.json`, both engines agreeing on
-//! 15/15 cases ×2 reps). The in-house byte DFA carries no look-behind, so it
-//! must refuse a pattern with a word boundary; where it compiles a pattern,
-//! its answer must equal the oracle's. It never reads `\b` as empty.
+//! 15/15 cases ×2 reps). Since LW3.RX-1b the engine carries the boundary
+//! as an automaton condition and must reproduce all 15 answers.
 
 use std::path::Path;
 
@@ -72,11 +71,14 @@ fn word_boundary_round_trips_through_to_source() {
     }
 }
 
+/// LW3.RX-1b: the engine carries the word boundary as an automaton
+/// condition (regex-automata's `WordAscii` / `WordAsciiNegate`), so every
+/// case compiles and gives the oracle's answer; none is refused and none is
+/// read as empty.
 #[test]
-fn byte_dfa_refuses_or_agrees_with_the_oracle() {
+fn engine_reproduces_the_oracle() {
     let corpus = oracle("wordboundary.json");
     let answers = oracle("wordboundary-answers.json");
-    let mut refused = 0;
     let mut agreed = 0;
     for case in corpus["cases"].as_array().expect("cases") {
         let id = case["id"].as_str().expect("id");
@@ -89,24 +91,9 @@ fn byte_dfa_refuses_or_agrees_with_the_oracle() {
             Some("NO_MATCH") => None,
             other => panic!("{id}: oracle status {other:?}"),
         };
-        let has_look = matches!(
-            parse(pattern),
-            Ok(ref h) if format!("{h:?}").contains("WordBoundary")
-        );
-        match Dfa::compile(pattern) {
-            None => {
-                assert!(has_look, "{id}: {pattern} refused without a word boundary");
-                refused += 1;
-            }
-            Some(dfa) => {
-                assert!(
-                    !has_look,
-                    "{id}: {pattern} compiled a word boundary as empty"
-                );
-                assert_eq!(dfa.find_at(input, at), expected, "{id}: {pattern}");
-                agreed += 1;
-            }
-        }
+        let dfa = Dfa::compile(pattern).unwrap_or_else(|| panic!("{id}: {pattern} refused"));
+        assert_eq!(dfa.find_at(input, at), expected, "{id}: {pattern}");
+        agreed += 1;
     }
-    assert_eq!((refused, agreed), (13, 2));
+    assert_eq!(agreed, 15);
 }
