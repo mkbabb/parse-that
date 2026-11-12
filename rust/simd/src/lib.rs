@@ -49,15 +49,34 @@
 //! holds every tier the host can run to [`scalar::scan`];
 //! `tests/guard_page.rs` proves no tier reads past its input).
 
+//!
+//! # Stage 1
+//!
+//! [`stage1`] is the indexer of a two-stage parser: over a
+//! [`PaddedSlice`] (the input plus [`PADDING`] readable bytes) it
+//! returns a [`Stage1Index`] of every structural byte outside strings and
+//! comments merged with every atom start (pseudo-structural positions),
+//! validating the input as UTF-8 in the same pass. Its definition is in
+//! [`stage1`]'s module docs; [`scalar::stage1`] is its oracle, and every
+//! tier's kernel feeds one arch-neutral resolver.
+//!
+//! # The all-ASCII run
+//!
+//! [`ascii_prefix_len`] is the length of the longest all-ASCII prefix
+//! of a byte slice, on the selected tier; a renderer measures a line's
+//! width by bytes up to it. [`scalar::ascii_prefix_len`] is its oracle.
+
 #![warn(missing_docs)]
 
 pub mod alphabet;
 pub mod compaction;
 pub mod dispatch;
 pub mod index;
+pub mod padded;
 pub mod parity;
 pub mod prim;
 pub mod scalar;
+pub mod stage1;
 #[cfg(any(
     target_arch = "aarch64",
     target_arch = "x86_64",
@@ -78,8 +97,13 @@ pub mod avx512;
 pub mod wasm;
 
 pub use alphabet::{KernelShape, NibbleLut, StructuralAlphabet, WideLut};
-pub use dispatch::{TIER_ENV, Tier, compiled_tiers, scan_with, selected_tier};
-pub use index::{StructuralIndex, next_structural_at_or_after};
+pub use dispatch::{
+    TIER_ENV, Tier, ascii_prefix_len, ascii_prefix_len_with, compiled_tiers, scan_with,
+    selected_tier, stage1_with,
+};
+pub use index::{Stage1Index, StructuralIndex, next_structural_at_or_after};
+pub use padded::{PADDING, PaddedInput, PaddedSlice};
+pub use stage1::{CommentClass, MAX_COMMENT_CLASSES, Stage1Error, Stage1Spec, stage1};
 
 /// Build the [`StructuralIndex`] for `input` under `alphabet`.
 ///

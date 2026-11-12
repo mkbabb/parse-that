@@ -48,7 +48,10 @@ const CHUNK: usize = 16;
 pub fn scan(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
     let shape = KernelShape::select(alphabet);
     match shape {
-        KernelShape::Empty => StructuralIndex::new(),
+        // No singletons: digraphs alone, through the compare path (whose
+        // singleton loop is then empty).
+        KernelShape::Empty if alphabet.digraph_pairs.is_empty() => StructuralIndex::new(),
+        KernelShape::Empty => scan_multi(input, alphabet),
         KernelShape::NibbleLut => scan_nibble(input, alphabet),
         KernelShape::WideLut => scan_wide(input, alphabet),
         KernelShape::MultiCmp => scan_multi(input, alphabet),
@@ -390,4 +393,243 @@ pub(crate) unsafe fn movemask_u8x16(v: uint8x16_t) -> u16 {
         let hi_u8 = vaddv_u8(vget_high_u8(bits)) as u16;
         lo_u8 | (hi_u8 << 8)
     }
+}
+
+// ─────────────────────────── stage 1 (LW3.PERF-1a) ───────────────────────────
+
+/// Bitmask of the bytes of the 64-byte region at `ptr` equal to any of `set`.
+///
+/// # Safety
+/// `ptr..ptr + 64` is readable.
+#[inline(always)]
+unsafe fn eq_set_stripe(ptr: *const u8, set: &[u8]) -> u64 {
+    if set.is_empty() {
+        return 0;
+    }
+    let mut mask = 0u64;
+    // SAFETY: per the contract above.
+    unsafe {
+        for k in 0..4 {
+            let chunk = vld1q_u8(ptr.add(k * CHUNK));
+            let mut acc = vdupq_n_u8(0);
+            for &b in set {
+                acc = vorrq_u8(acc, vceqq_u8(chunk, vdupq_n_u8(b)));
+            }
+            mask |= (movemask_u8x16(acc) as u64) << (k * CHUNK);
+        }
+    }
+    mask
+}
+
+/// Bitmask of the positions of the 64-byte region at `ptr` where `seq`
+/// (one or two bytes) begins.
+///
+/// # Safety
+/// `ptr..ptr + 65` is readable.
+#[inline(always)]
+unsafe fn seq_stripe(ptr: *const u8, seq: &[u8]) -> u64 {
+    // SAFETY: per the contract above.
+    unsafe {
+        if seq.len() == 1 {
+            eq_set_stripe(ptr, seq)
+        } else {
+            digraph_region(ptr, 4, &[(seq[0], seq[1])])
+        }
+    }
+}
+
+/// The fused UTF-8 validator's state (Keiser–Lemire lookup), 16 bytes a
+/// step.
+struct Utf8 {
+    prev: uint8x16_t,
+    incomplete: uint8x16_t,
+    error: uint8x16_t,
+    b1h: uint8x16_t,
+    b1l: uint8x16_t,
+    b2h: uint8x16_t,
+    max: uint8x16_t,
+}
+
+impl Utf8 {
+    #[inline(always)]
+    fn new() -> Self {
+        use crate::stage1::utf8;
+        // SAFETY: NEON is baseline on aarch64; the loads read the 16-byte
+        // tables.
+        unsafe {
+            Utf8 {
+                prev: vdupq_n_u8(0),
+                incomplete: vdupq_n_u8(0),
+                error: vdupq_n_u8(0),
+                b1h: vld1q_u8(utf8::BYTE_1_HIGH.as_ptr()),
+                b1l: vld1q_u8(utf8::BYTE_1_LOW.as_ptr()),
+                b2h: vld1q_u8(utf8::BYTE_2_HIGH.as_ptr()),
+                max: vld1q_u8(utf8::INCOMPLETE_16.as_ptr()),
+            }
+        }
+    }
+
+    /// One 16-byte step: the error classes of each byte paired with its
+    /// predecessor, less the continuations a 3- or 4-byte lead expects.
+    #[inline(always)]
+    fn step(&mut self, input: uint8x16_t) {
+        use crate::stage1::utf8::{FOURTH, THIRD};
+        // SAFETY: register-only NEON arithmetic.
+        unsafe {
+            let prev1 = vextq_u8(self.prev, input, 15);
+            let lo = vdupq_n_u8(0x0F);
+            let sc = vandq_u8(
+                vandq_u8(
+                    vqtbl1q_u8(self.b1h, vshrq_n_u8(prev1, 4)),
+                    vqtbl1q_u8(self.b1l, vandq_u8(prev1, lo)),
+                ),
+                vqtbl1q_u8(self.b2h, vshrq_n_u8(input, 4)),
+            );
+            let prev2 = vextq_u8(self.prev, input, 14);
+            let prev3 = vextq_u8(self.prev, input, 13);
+            let must = vandq_u8(
+                vorrq_u8(vqsubq_u8(prev2, vdupq_n_u8(THIRD)), vqsubq_u8(prev3, vdupq_n_u8(FOURTH))),
+                vdupq_n_u8(0x80),
+            );
+            self.error = vorrq_u8(self.error, veorq_u8(must, sc));
+            self.prev = input;
+        }
+    }
+
+    /// The block at `ptr`, its first `n` bytes kept and the rest zeroed.
+    ///
+    /// # Safety
+    /// `ptr..ptr + 64` is readable.
+    #[inline(always)]
+    unsafe fn block(&mut self, ptr: *const u8, n: usize) {
+        // SAFETY: per the contract above; the mask loads read
+        // `TAIL_MASK[64 - n + 16 k .. + 16]`, inside its 128 bytes.
+        unsafe {
+            let mut c = [
+                vld1q_u8(ptr),
+                vld1q_u8(ptr.add(16)),
+                vld1q_u8(ptr.add(32)),
+                vld1q_u8(ptr.add(48)),
+            ];
+            if n < 64 {
+                let mask = crate::stage1::TAIL_MASK.as_ptr().add(64 - n);
+                for (k, v) in c.iter_mut().enumerate() {
+                    *v = vandq_u8(*v, vld1q_u8(mask.add(16 * k)));
+                }
+            }
+            let any = vorrq_u8(vorrq_u8(c[0], c[1]), vorrq_u8(c[2], c[3]));
+            if vmaxvq_u8(any) < 0x80 {
+                // All ASCII: only a sequence cut off at the previous
+                // block's end can be wrong.
+                self.error = vorrq_u8(self.error, self.incomplete);
+                self.incomplete = vdupq_n_u8(0);
+                self.prev = c[3];
+                return;
+            }
+            for v in c {
+                self.step(v);
+            }
+            self.incomplete = vqsubq_u8(c[3], self.max);
+        }
+    }
+
+    #[inline(always)]
+    fn valid(&self) -> bool {
+        // SAFETY: register-only NEON arithmetic.
+        unsafe { vmaxvq_u8(vorrq_u8(self.error, self.incomplete)) == 0 }
+    }
+}
+
+/// NEON stage 1 ([`crate::stage1`]).
+pub(crate) fn stage1(
+    input: crate::PaddedSlice<'_>,
+    spec: &crate::Stage1Spec,
+) -> Result<crate::Stage1Index, crate::Stage1Error> {
+    use crate::stage1::{MAX_COMMENT_CLASSES, Raw, drive, utf8_error};
+    let alphabet = spec.alphabet();
+    let shape = KernelShape::select(alphabet);
+    let nib = NibbleLut::from_singletons(if shape == KernelShape::NibbleLut {
+        alphabet.singletons
+    } else {
+        &[]
+    });
+    let wide = WideLut::from_singletons(if shape == KernelShape::WideLut {
+        alphabet.singletons
+    } else {
+        &[]
+    });
+    let mut utf8 = Utf8::new();
+    // SAFETY: NEON is baseline on aarch64; the LUT loads read 16-byte arrays.
+    let (lo_v, hi_v, lo_lo, hi_lo, lo_hi, hi_hi, lo_mask) = unsafe {
+        (
+            vld1q_u8(nib.lo.as_ptr()),
+            vld1q_u8(nib.hi.as_ptr()),
+            vld1q_u8(wide.lo_lo.as_ptr()),
+            vld1q_u8(wide.hi_lo.as_ptr()),
+            vld1q_u8(wide.lo_hi.as_ptr()),
+            vld1q_u8(wide.hi_hi.as_ptr()),
+            vdupq_n_u8(0x0F),
+        )
+    };
+    let out = drive(input, spec, |ptr, n| {
+        let mut raw = Raw::default();
+        // SAFETY: `drive`'s contract: 65 bytes are readable at `ptr`.
+        unsafe {
+            raw.singles = match shape {
+                KernelShape::Empty => 0,
+                KernelShape::NibbleLut => classify_stripe_nibble(ptr, lo_v, hi_v, lo_mask),
+                KernelShape::WideLut => {
+                    classify_stripe_wide(ptr, lo_lo, hi_lo, lo_hi, hi_hi, lo_mask)
+                }
+                KernelShape::MultiCmp => classify_stripe_multi(ptr, alphabet.singletons),
+            };
+            if !alphabet.digraph_pairs.is_empty() {
+                raw.digraph = digraph_region(ptr, 4, alphabet.digraph_pairs);
+            }
+            raw.bs = raw_quotes_and_bs(ptr, 4, alphabet.quote_classes, &mut raw.quotes);
+            raw.ws = eq_set_stripe(ptr, spec.whitespace());
+            for (c, class) in spec.comments().iter().enumerate().take(MAX_COMMENT_CLASSES) {
+                raw.open[c] = seq_stripe(ptr, class.open());
+                raw.close[c] = seq_stripe(ptr, class.close());
+            }
+            utf8.block(ptr, n);
+        }
+        raw
+    });
+    if utf8.valid() {
+        Ok(out)
+    } else {
+        Err(utf8_error(input.bytes()))
+    }
+}
+
+// ─────────────────────── the all-ASCII run (LW3.PERF-2) ───────────────────────
+
+/// NEON [`crate::ascii_prefix_len`]: 64 bytes a step while the run lasts,
+/// then 16, then the scalar oracle on the last `< 16` bytes. Reads only
+/// `bytes`.
+pub(crate) fn ascii_prefix_len(bytes: &[u8]) -> usize {
+    let len = bytes.len();
+    let p = bytes.as_ptr();
+    let mut i = 0usize;
+    // SAFETY: every load reads `p[i..i + w]` with `i + w <= len`.
+    unsafe {
+        while i + 64 <= len {
+            let a = vmaxq_u8(vld1q_u8(p.add(i)), vld1q_u8(p.add(i + 16)));
+            let b = vmaxq_u8(vld1q_u8(p.add(i + 32)), vld1q_u8(p.add(i + 48)));
+            if vmaxvq_u8(vmaxq_u8(a, b)) >= 0x80 {
+                break;
+            }
+            i += 64;
+        }
+        while i + 16 <= len {
+            let v = vld1q_u8(p.add(i));
+            if vmaxvq_u8(v) >= 0x80 {
+                let high = vcltzq_s8(vreinterpretq_s8_u8(v));
+                return i + movemask_u8x16(high).trailing_zeros() as usize;
+            }
+            i += 16;
+        }
+    }
+    i + crate::scalar::ascii_prefix_len(&bytes[i..])
 }

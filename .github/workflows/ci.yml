@@ -71,9 +71,13 @@ jobs:
       # `--cargo-profile ax-iter` selects the cargo build profile defined
       # in .cargo/config.toml (parse-that has no .config/nextest.toml; the
       # nextest runner uses its built-in `default` profile).
+      # sk-v27 LW3.PERF-1a (X-4): the arm fails unless it runs the tier it
+      # is here for (parse-that-simd `tests/dispatch_tiers.rs`).
       - name: workspace tests (nextest, ax-iter)
         run: cargo nextest run --cargo-profile ax-iter --workspace --no-fail-fast
         working-directory: rust
+        env:
+          PARSE_THAT_REQUIRE_TIERS: ${{ matrix.os == 'ubuntu-latest' && 'avx2' || 'neon' }}
       - name: workspace tests with diagnostics (nextest, ax-iter)
         run: cargo nextest run --cargo-profile ax-iter --workspace --features diagnostics --no-fail-fast
         working-directory: rust
@@ -168,6 +172,7 @@ jobs:
         working-directory: rust
         env:
           RUSTFLAGS: ""
+          PARSE_THAT_REQUIRE_TIERS: avx2,avx512
 
   kernel-asan:
     # sk-v27 LW3.COMP-1a unsafe law: the kernel's law files that hold
@@ -186,6 +191,41 @@ jobs:
           RUSTFLAGS: -Zsanitizer=address
           RUSTDOCFLAGS: -Zsanitizer=address
         run: cargo +nightly-2026-04-11 test -Zbuild-std --target x86_64-unknown-linux-gnu -p parse_that --locked --test kernel --test kernel_allocation --test kernel_regex --test kernel_abi
+        working-directory: rust
+
+  simd-asan:
+    # sk-v27 LW3.PERF-1a / PERF-2 unsafe law: every parse-that-simd suite
+    # (the stage-1 indexer, the all-ASCII run kernel, the structural scan,
+    # the block primitives, the guard-page tests) under AddressSanitizer,
+    # with the tier each arm is for required: AVX2 on ubuntu-latest, NEON
+    # on macos-15 (Apple silicon).
+    name: Rust — parse-that-simd under ASan (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            tiers: avx2
+          - os: macos-15
+            target: aarch64-apple-darwin
+            tiers: neon
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-04-11
+          components: rust-src
+      - name: corpus — fetch and verify
+        run: cargo xtask corpus fetch
+        working-directory: rust
+      - name: parse-that-simd suites, -Zsanitizer=address
+        env:
+          RUSTFLAGS: -Zsanitizer=address
+          RUSTDOCFLAGS: -Zsanitizer=address
+          PARSE_THAT_REQUIRE_TIERS: ${{ matrix.tiers }}
+        run: cargo +nightly-2026-04-11 test -Zbuild-std --target ${{ matrix.target }} -p parse-that-simd --locked --no-fail-fast --lib --tests -- --nocapture
         working-directory: rust
 
   wasm:
@@ -213,6 +253,8 @@ jobs:
           export PARSE_THAT_CORPUS_DIR="$PWD/../data"
           RUSTFLAGS="-C target-feature=+simd128" cargo test -p parse-that-simd --locked --no-fail-fast --target wasm32-wasip1 --lib --tests -- --nocapture
         working-directory: rust
+        env:
+          PARSE_THAT_REQUIRE_TIERS: simd128
       - name: parse-that-simd builds on wasm32 without simd128 (scalar only)
         run: cargo check -p parse-that-simd --locked --target wasm32-wasip1
         working-directory: rust
@@ -240,7 +282,7 @@ jobs:
     # The one required check: every arm above, by name.
     name: ci-ok
     if: always()
-    needs: [typescript, rust, stable, nightly-plane, kernel-asan, sde, wasm, hermetic]
+    needs: [typescript, rust, stable, nightly-plane, kernel-asan, simd-asan, sde, wasm, hermetic]
     runs-on: ubuntu-latest
     steps:
       - name: every arm succeeded
