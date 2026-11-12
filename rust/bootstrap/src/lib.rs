@@ -1,23 +1,20 @@
 //! Bootstrap diagnostic crate: thin re-export of `parse_that::regex`'s
 //! self-hosted parser surface, preserving the `regex_parse` divan bench.
 //!
-//! Pre-B2: this crate carried `#[derive(bbnf_derive::Parser)]` on a
-//! `RegexParser` marker; `cargo expand -p regex-bootstrap` was post-
-//! processed by `scripts/bootstrap-regex.sh` into
-//! `parse_that/src/regex/generated.rs`.
+//! Earlier, this crate carried a derive attribute on a `RegexParser`
+//! marker; `cargo expand -p regex-bootstrap` was post-processed by
+//! `scripts/bootstrap-regex.sh` into `parse_that/src/regex/generated.rs`.
 //!
-//! Post-B2 (bbnf-lang commit `6142387f feat(b2): retire crates/derive
-//! proc-macro crate; purge bbnf_derive deps`): the proc-macro crate is
-//! gone. The IR pipeline runs through bbnf-lang's `cargo xtask regen`,
-//! and the generated regex parser lives directly in `parse_that::
-//! regex::generated`. This crate retires its derive-host role and
-//! re-exports the canonical surface so `benches/regex_parse.rs`
-//! (and any external consumer of `regex_bootstrap::parse_generated`)
-//! keeps resolving without a registry edge.
+//! The derive host is retired upstream (the parser generator's proc-macro
+//! crate is gone). The generator's regen step emits the regex parser, which
+//! lives directly in `parse_that::regex::generated`. This crate retires its
+//! derive-host role and re-exports the canonical surface so
+//! `benches/regex_parse.rs` (and any external consumer of
+//! `regex_bootstrap::parse_generated`) keeps resolving without a registry
+//! edge.
 //!
-//! Mirror: bbnf-lang's `crates/bootstrap/src/lib.rs` is one
-//! `pub use ::bbnf::grammar::generated::BbnfBootstrap;` line. This
-//! file follows the same shape.
+//! The generator's own bootstrap crate is the same shape: one re-export of
+//! its emitted parser.
 
 pub use parse_that::regex::generated::{RegexParser, parse_generated};
 

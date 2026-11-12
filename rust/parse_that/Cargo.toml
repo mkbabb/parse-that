@@ -35,6 +35,11 @@ name = "parse_that_css"
 path = "benches/parse_that/css.rs"
 harness = false
 
+[[bench]]
+name = "kernel_success_path"
+path = "benches/kernel/success_path.rs"
+harness = false
+
 # ── competitor benches ──────────────────────────────────────
 
 [[bench]]

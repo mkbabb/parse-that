@@ -50,11 +50,47 @@ type ParserFault =
 
 const NESTING_LIMIT = 256;
 
+/**
+ * Order of the expected-label set: code-point order, which is the byte order
+ * of the labels' UTF-8 (the Rust runtimes and the failure contract sort by
+ * bytes). JavaScript's `<` compares UTF-16 code units and would put a label
+ * above U+FFFF before one in U+E000..U+FFFF.
+ */
+export function compareExpected(a: string, b: string): number {
+    const n = Math.min(a.length, b.length);
+    for (let i = 0; i < n; i++) {
+        const x = a.codePointAt(i)!;
+        const y = b.codePointAt(i)!;
+        if (x !== y) return x < y ? -1 : 1;
+        if (x > 0xffff) i++;
+    }
+    return a.length - b.length;
+}
+
+/**
+ * Insert `label` into `set`, which is sorted by {@link compareExpected} and
+ * holds no label twice: the expected set is sorted and deduplicated by
+ * construction, never by a later pass.
+ */
+export function insertExpected(set: string[], label: string): void {
+    let lo = 0;
+    let hi = set.length;
+    while (lo < hi) {
+        const mid = (lo + hi) >>> 1;
+        const c = compareExpected(set[mid], label);
+        if (c === 0) return;
+        if (c < 0) lo = mid + 1;
+        else hi = mid;
+    }
+    set.splice(lo, 0, label);
+}
+
 export class ParserState<T = unknown> {
     /**
      * Furthest-offset error tracking, threaded per-parse (the Rust port's
      * `state.furthest_offset` model). `expected` is the accumulated label set
-     * at `furthest`; `suggestions`/`secondarySpans` are the diagnostic extras
+     * at `furthest`, sorted and deduplicated by construction
+     * ({@link insertExpected}); `suggestions`/`secondarySpans` are the diagnostic extras
      * collected at `furthest` when diagnostics are enabled.
      */
     expected?: string[];

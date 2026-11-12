@@ -19,6 +19,13 @@ pub use scanners::*;
 
 pub mod regex;
 
+// ── The transactional recognition kernel (generated parsers, ABI) ───────
+//
+// Additive (sk-v27 LW3.COMP-1a): the kernel lives beside the combinator
+// runtime above and shares no state with it. `parse_that::kernel::KERNEL_ABI`
+// names its contract.
+pub mod kernel;
+
 // Re-export memchr so generated monolithic code can reference it.
 pub use memchr;
 pub use smallvec;

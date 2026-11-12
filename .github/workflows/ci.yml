@@ -169,6 +169,25 @@ jobs:
         env:
           RUSTFLAGS: ""
 
+  kernel-asan:
+    # sk-v27 LW3.COMP-1a unsafe law: the kernel's law files that hold
+    # `unsafe` (the counting global allocators of kernel_allocation and
+    # kernel_regex) under AddressSanitizer, with every kernel law beside them.
+    name: Rust — kernel laws under ASan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-04-11
+          components: rust-src
+      - name: kernel laws, -Zsanitizer=address
+        env:
+          RUSTFLAGS: -Zsanitizer=address
+          RUSTDOCFLAGS: -Zsanitizer=address
+        run: cargo +nightly-2026-04-11 test -Zbuild-std --target x86_64-unknown-linux-gnu -p parse_that --locked --test kernel --test kernel_allocation --test kernel_regex --test kernel_abi
+        working-directory: rust
+
   wasm:
     # parse-that-simd's SIMD128 tier on wasm32-wasip1 under Node's WASI
     # (scripts/wasi-run.mjs). wasm has no runtime feature detection, so the
@@ -221,7 +240,7 @@ jobs:
     # The one required check: every arm above, by name.
     name: ci-ok
     if: always()
-    needs: [typescript, rust, stable, nightly-plane, sde, wasm, hermetic]
+    needs: [typescript, rust, stable, nightly-plane, kernel-asan, sde, wasm, hermetic]
     runs-on: ubuntu-latest
     steps:
       - name: every arm succeeded

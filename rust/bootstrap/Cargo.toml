@@ -10,16 +10,15 @@ name = "regex_parse"
 harness = false
 
 [dependencies]
-# Post-B2 contract: bbnf-lang's `crates/derive` proc-macro retired (commit
-# `6142387f`), so the historical `bbnf_derive = "0.2"` registry edge that
-# expanded `RegexParser` from `regex.bbnf` is gone. The generated parser
-# now lives at `parse_that::regex::generated` (committed source); this
+# The derive host this crate once was is retired upstream: the parser
+# generator's proc-macro crate is gone, so the historical registry edge that
+# expanded `RegexParser` from the regex grammar is gone too. The generated
+# parser now lives at `parse_that::regex::generated` (committed source); this
 # crate is a thin re-export that preserves the `regex_bootstrap::*`
 # benchmark surface without re-running a proc-macro.
 #
-# Mirrors the bbnf-lang `crates/bootstrap` crate, whose lib.rs
-# `pub use ::bbnf::grammar::generated::BbnfBootstrap` is the analogous
-# diagnostic re-export of the workspace's xtask-emitted parser.
+# The generator's own bootstrap crate is the analogous diagnostic re-export
+# of its emitted parser.
 parse_that = { path = "../parse_that" }
 
 [dev-dependencies]
