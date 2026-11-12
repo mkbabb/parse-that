@@ -603,3 +603,33 @@ pub(crate) fn stage1(
     }
 }
 
+// ─────────────────────── the all-ASCII run (LW3.PERF-2) ───────────────────────
+
+/// NEON [`crate::ascii_prefix_len`]: 64 bytes a step while the run lasts,
+/// then 16, then the scalar oracle on the last `< 16` bytes. Reads only
+/// `bytes`.
+pub(crate) fn ascii_prefix_len(bytes: &[u8]) -> usize {
+    let len = bytes.len();
+    let p = bytes.as_ptr();
+    let mut i = 0usize;
+    // SAFETY: every load reads `p[i..i + w]` with `i + w <= len`.
+    unsafe {
+        while i + 64 <= len {
+            let a = vmaxq_u8(vld1q_u8(p.add(i)), vld1q_u8(p.add(i + 16)));
+            let b = vmaxq_u8(vld1q_u8(p.add(i + 32)), vld1q_u8(p.add(i + 48)));
+            if vmaxvq_u8(vmaxq_u8(a, b)) >= 0x80 {
+                break;
+            }
+            i += 64;
+        }
+        while i + 16 <= len {
+            let v = vld1q_u8(p.add(i));
+            if vmaxvq_u8(v) >= 0x80 {
+                let high = vcltzq_s8(vreinterpretq_s8_u8(v));
+                return i + movemask_u8x16(high).trailing_zeros() as usize;
+            }
+            i += 16;
+        }
+    }
+    i + crate::scalar::ascii_prefix_len(&bytes[i..])
+}

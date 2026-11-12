@@ -276,3 +276,40 @@ unsafe fn run_stage1(
     }
 }
 
+/// The length of the longest prefix of `bytes` whose every byte is
+/// ASCII (below `0x80`), on the selected tier ([`selected_tier`]).
+///
+/// ```
+/// use parse_that_simd::ascii_prefix_len;
+/// assert_eq!(ascii_prefix_len(b"plain"), 5);
+/// assert_eq!(ascii_prefix_len("na\u{ef}ve".as_bytes()), 2);
+/// ```
+pub fn ascii_prefix_len(bytes: &[u8]) -> usize {
+    // SAFETY: `selected_tier` only returns a supported tier.
+    unsafe { run_ascii(selected_tier(), bytes) }
+}
+
+/// [`ascii_prefix_len`] on `tier`, or `None` when the build or the host
+/// cannot run it. Equal to [`crate::scalar::ascii_prefix_len`] for every
+/// tier that returns `Some`.
+pub fn ascii_prefix_len_with(tier: Tier, bytes: &[u8]) -> Option<usize> {
+    // SAFETY: `run_ascii`'s precondition is exactly `is_supported`.
+    tier.is_supported().then(|| unsafe { run_ascii(tier, bytes) })
+}
+
+/// # Safety
+/// `tier.is_supported()`.
+unsafe fn run_ascii(tier: Tier, bytes: &[u8]) -> usize {
+    match tier {
+        #[cfg(target_arch = "aarch64")]
+        Tier::Neon => crate::neon::ascii_prefix_len(bytes),
+        // SAFETY (both x86 arms): the caller guarantees the features.
+        #[cfg(target_arch = "x86_64")]
+        Tier::Avx2 => unsafe { crate::avx2::ascii_prefix_len(bytes) },
+        #[cfg(target_arch = "x86_64")]
+        Tier::Avx512 => unsafe { crate::avx512::ascii_prefix_len(bytes) },
+        #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+        Tier::Simd128 => crate::wasm::ascii_prefix_len(bytes),
+        _ => crate::scalar::ascii_prefix_len(bytes),
+    }
+}

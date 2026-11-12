@@ -262,3 +262,42 @@ pub(crate) unsafe fn stage1(
     }
 }
 
+// ─────────────────────── the all-ASCII run (LW3.PERF-2) ───────────────────────
+
+/// AVX-512 [`crate::ascii_prefix_len`]: 256 bytes a step while the run
+/// lasts, then 64, then the scalar oracle on the last `< 64` bytes. Reads
+/// only `bytes`.
+///
+/// # Safety
+/// The running CPU supports AVX-512 F, BW and VBMI2.
+#[target_feature(enable = "avx512f,avx512bw,avx512vbmi2")]
+pub(crate) unsafe fn ascii_prefix_len(bytes: &[u8]) -> usize {
+    let len = bytes.len();
+    let p = bytes.as_ptr();
+    let mut i = 0usize;
+    // SAFETY: every load reads `p[i..i + w]` with `i + w <= len`.
+    unsafe {
+        while i + 256 <= len {
+            let a = _mm512_or_si512(
+                _mm512_loadu_si512(p.add(i).cast()),
+                _mm512_loadu_si512(p.add(i + 64).cast()),
+            );
+            let b = _mm512_or_si512(
+                _mm512_loadu_si512(p.add(i + 128).cast()),
+                _mm512_loadu_si512(p.add(i + 192).cast()),
+            );
+            if _mm512_movepi8_mask(_mm512_or_si512(a, b)) != 0 {
+                break;
+            }
+            i += 256;
+        }
+        while i + 64 <= len {
+            let m = _mm512_movepi8_mask(_mm512_loadu_si512(p.add(i).cast()));
+            if m != 0 {
+                return i + m.trailing_zeros() as usize;
+            }
+            i += 64;
+        }
+    }
+    i + crate::scalar::ascii_prefix_len(&bytes[i..])
+}

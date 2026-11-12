@@ -452,3 +452,42 @@ pub(crate) unsafe fn stage1(
     }
 }
 
+// ─────────────────────── the all-ASCII run (LW3.PERF-2) ───────────────────────
+
+/// AVX2 [`crate::ascii_prefix_len`]: 128 bytes a step while the run
+/// lasts, then 32, then the scalar oracle on the last `< 32` bytes. Reads
+/// only `bytes`.
+///
+/// # Safety
+/// The running CPU supports AVX2.
+#[target_feature(enable = "avx2")]
+pub(crate) unsafe fn ascii_prefix_len(bytes: &[u8]) -> usize {
+    let len = bytes.len();
+    let p = bytes.as_ptr();
+    let mut i = 0usize;
+    // SAFETY: every load reads `p[i..i + w]` with `i + w <= len`.
+    unsafe {
+        while i + 128 <= len {
+            let a = _mm256_or_si256(
+                _mm256_loadu_si256(p.add(i).cast()),
+                _mm256_loadu_si256(p.add(i + 32).cast()),
+            );
+            let b = _mm256_or_si256(
+                _mm256_loadu_si256(p.add(i + 64).cast()),
+                _mm256_loadu_si256(p.add(i + 96).cast()),
+            );
+            if _mm256_movemask_epi8(_mm256_or_si256(a, b)) != 0 {
+                break;
+            }
+            i += 128;
+        }
+        while i + 32 <= len {
+            let m = _mm256_movemask_epi8(_mm256_loadu_si256(p.add(i).cast())) as u32;
+            if m != 0 {
+                return i + m.trailing_zeros() as usize;
+            }
+            i += 32;
+        }
+    }
+    i + crate::scalar::ascii_prefix_len(&bytes[i..])
+}

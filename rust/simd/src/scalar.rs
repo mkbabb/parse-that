@@ -128,6 +128,12 @@ pub fn compute_inside_string_mask(input: &[u8], quote_lut: &[bool; 256]) -> Vec<
     out
 }
 
+/// The all-ASCII run oracle: the length of the longest prefix of `bytes`
+/// whose every byte is below `0x80` ([`crate::ascii_prefix_len`]).
+pub fn ascii_prefix_len(bytes: &[u8]) -> usize {
+    bytes.iter().position(|&b| b >= 0x80).unwrap_or(bytes.len())
+}
+
 /// The stage-1 oracle: [`crate::stage1`]'s definition (see
 /// [`crate::stage1`]'s module docs), one byte at a time, after
 /// [`core::str::from_utf8`].
