@@ -1,7 +1,7 @@
 //! sk-v27 LW3.PERF-1a / PERF-2: the stage-1 cycle split and the G-K1 cells.
 //!
 //! Nothing here is read outside a scheduled quiet window (X-7, DIG-QW).
-//! The arms are registered as PREREG cells by S12 (bbnf-lang
+//! The arms are registered as PREREG cells by S12 (the programme's
 //! `evidence/LW3.PERF/gk1-cells.md`):
 //!
 //! - **split** (DIG-K-B8, "the measured negatives"): on each corpus file,
