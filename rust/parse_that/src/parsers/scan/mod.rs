@@ -25,6 +25,19 @@ pub use parse_that_simd::{
     next_structural_at_or_after, scan_structural, scan_with, selected_tier,
 };
 
+/// The 64-byte block class mask: bit `i` is set iff `src[i]` is one of
+/// the bytes of `set` (NEON under the runtime tier on aarch64, the scalar
+/// oracle elsewhere). Generated parsers name this path.
+///
+/// ```
+/// use parse_that::scan::byte_class_from_eq_set_64;
+/// let mut block = [b'a'; 64];
+/// block[1] = b' ';
+/// block[62] = b'\n';
+/// assert_eq!(byte_class_from_eq_set_64(&block, b" \t\n\r"), 1 << 1 | 1 << 62);
+/// ```
+pub use parse_that_simd::prim::byte_class_from_eq_set_64;
+
 pub use balanced::{BalancedScanConfig, scan_balanced};
 pub use decode::{StringPayload, decode_json_string_to_arena};
 pub use digits::{
