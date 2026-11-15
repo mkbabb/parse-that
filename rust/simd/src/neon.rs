@@ -639,8 +639,10 @@ pub(crate) fn ascii_prefix_len(bytes: &[u8]) -> usize {
 /// NEON [`crate::find_quote_or_backslash`]: 16 bytes a step, then the
 /// scalar oracle on the last `< 16` bytes. Reads only `bytes`. Relocated
 /// from bbnf-lang's emitted shape-dispatch support module (RULINGS
-/// 2026-11-14e PERF1D-B), unchanged but for the tail, which is the oracle.
-#[inline]
+/// 2026-11-14e PERF1D-B), unchanged but for the tail, which is the oracle;
+/// `#[inline(always)]` as the emitted body was (RULINGS 2026-11-14f
+/// PERF1D-B2: called directly on aarch64).
+#[inline(always)]
 pub(crate) fn find_quote_or_backslash(bytes: &[u8]) -> Option<(usize, u8)> {
     let len = bytes.len();
     let p = bytes.as_ptr();

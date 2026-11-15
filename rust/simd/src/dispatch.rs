@@ -324,9 +324,19 @@ unsafe fn run_ascii(tier: Tier, bytes: &[u8]) -> usize {
     }
 }
 
-/// The first byte of `bytes` that is `"` or `\`, with its offset, on the
-/// selected tier ([`selected_tier`]): the NEON body on aarch64, the scalar
-/// oracle elsewhere (sk-v27 LW3.PERF-1d; no x86 body yet).
+/// The first byte of `bytes` that is `"` or `\`, with its offset: the NEON
+/// body on aarch64, the scalar oracle elsewhere (sk-v27 LW3.PERF-1d; no x86
+/// body yet).
+///
+/// The body is chosen at compile time where the target guarantees the
+/// instruction set (RULINGS 2026-11-14f PERF1D-B2): NEON is baseline on every
+/// aarch64 CPU, so an aarch64 build calls the NEON body directly, with no
+/// tier load on the call path, as bbnf-lang's emitted
+/// `#[cfg(target_arch = "aarch64")]` body did. That direct call is not
+/// steered by [`TIER_ENV`]; the `force-scalar` feature and Miri still select
+/// the scalar oracle at compile time. Every other target keeps the runtime
+/// dispatch on [`selected_tier`]. [`find_quote_or_backslash_with`] runs any
+/// named tier, the oracle included.
 ///
 /// ```
 /// use parse_that_simd::find_quote_or_backslash;
@@ -334,10 +344,17 @@ unsafe fn run_ascii(tier: Tier, bytes: &[u8]) -> usize {
 /// assert_eq!(find_quote_or_backslash(br"a\b"), Some((1, b'\\')));
 /// assert_eq!(find_quote_or_backslash(b"none here"), None);
 /// ```
-#[inline]
+#[inline(always)]
 pub fn find_quote_or_backslash(bytes: &[u8]) -> Option<(usize, u8)> {
-    // SAFETY: `selected_tier` only returns a supported tier.
-    unsafe { run_quote_or_backslash(selected_tier(), bytes) }
+    #[cfg(all(target_arch = "aarch64", not(feature = "force-scalar"), not(miri)))]
+    {
+        crate::neon::find_quote_or_backslash(bytes)
+    }
+    #[cfg(not(all(target_arch = "aarch64", not(feature = "force-scalar"), not(miri))))]
+    {
+        // SAFETY: `selected_tier` only returns a supported tier.
+        unsafe { run_quote_or_backslash(selected_tier(), bytes) }
+    }
 }
 
 /// [`find_quote_or_backslash`] on `tier`, or `None` when the build or the
