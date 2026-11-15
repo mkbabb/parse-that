@@ -271,3 +271,13 @@ pub fn stage1(
     }
     Ok(out)
 }
+
+/// The quote-or-backslash oracle: the first byte of `bytes` that is `"`
+/// or `\`, with its offset ([`crate::find_quote_or_backslash`]).
+#[inline]
+pub fn find_quote_or_backslash(bytes: &[u8]) -> Option<(usize, u8)> {
+    bytes
+        .iter()
+        .position(|&b| b == b'"' || b == b'\\')
+        .map(|i| (i, bytes[i]))
+}
