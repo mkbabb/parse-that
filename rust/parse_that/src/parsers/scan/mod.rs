@@ -38,6 +38,16 @@ pub use parse_that_simd::{
 /// ```
 pub use parse_that_simd::prim::byte_class_from_eq_set_64;
 
+/// The first `"` or `\` byte of `bytes`, with its offset: NEON under the
+/// runtime tier on aarch64, the scalar oracle elsewhere. Equal to
+/// `find_first_of(bytes, b"\"\\")`. Generated parsers name this path.
+///
+/// ```
+/// use parse_that::scan::find_quote_or_backslash;
+/// assert_eq!(find_quote_or_backslash(b"key\": 1"), Some((3, b'"')));
+/// ```
+pub use parse_that_simd::find_quote_or_backslash;
+
 pub use balanced::{BalancedScanConfig, scan_balanced};
 pub use decode::{StringPayload, decode_json_string_to_arena};
 pub use digits::{

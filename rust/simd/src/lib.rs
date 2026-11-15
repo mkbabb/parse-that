@@ -98,8 +98,8 @@ pub mod wasm;
 
 pub use alphabet::{KernelShape, NibbleLut, StructuralAlphabet, WideLut};
 pub use dispatch::{
-    TIER_ENV, Tier, ascii_prefix_len, ascii_prefix_len_with, compiled_tiers, scan_with,
-    selected_tier, stage1_with,
+    TIER_ENV, Tier, ascii_prefix_len, ascii_prefix_len_with, compiled_tiers,
+    find_quote_or_backslash, find_quote_or_backslash_with, scan_with, selected_tier, stage1_with,
 };
 pub use index::{Stage1Index, StructuralIndex, next_structural_at_or_after};
 pub use padded::{PADDING, PaddedInput, PaddedSlice};

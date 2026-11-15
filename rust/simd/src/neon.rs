@@ -633,3 +633,33 @@ pub(crate) fn ascii_prefix_len(bytes: &[u8]) -> usize {
     }
     i + crate::scalar::ascii_prefix_len(&bytes[i..])
 }
+
+// ─────────────── the quote-or-backslash finder (sk-v27 LW3.PERF-1d) ───────────────
+
+/// NEON [`crate::find_quote_or_backslash`]: 16 bytes a step, then the
+/// scalar oracle on the last `< 16` bytes. Reads only `bytes`. Relocated
+/// from bbnf-lang's emitted shape-dispatch support module (RULINGS
+/// 2026-11-14e PERF1D-B), unchanged but for the tail, which is the oracle.
+#[inline]
+pub(crate) fn find_quote_or_backslash(bytes: &[u8]) -> Option<(usize, u8)> {
+    let len = bytes.len();
+    let p = bytes.as_ptr();
+    let mut i = 0usize;
+    // SAFETY: every load reads `p[i..i + 16]` with `i + 16 <= len`.
+    unsafe {
+        let quote = vdupq_n_u8(b'"');
+        let backslash = vdupq_n_u8(b'\\');
+        while i + 16 <= len {
+            let v = vld1q_u8(p.add(i));
+            let hit = vorrq_u8(vceqq_u8(v, quote), vceqq_u8(v, backslash));
+            let packed = vshrn_n_u16::<4>(vreinterpretq_u16_u8(hit));
+            let bits = vget_lane_u64::<0>(vreinterpret_u64_u8(packed));
+            if bits != 0 {
+                let off = i + (bits.trailing_zeros() >> 2) as usize;
+                return Some((off, *p.add(off)));
+            }
+            i += 16;
+        }
+    }
+    crate::scalar::find_quote_or_backslash(&bytes[i..]).map(|(off, b)| (i + off, b))
+}

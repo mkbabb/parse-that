@@ -323,3 +323,49 @@ unsafe fn run_ascii(tier: Tier, bytes: &[u8]) -> usize {
         _ => crate::scalar::ascii_prefix_len(bytes),
     }
 }
+
+/// The first byte of `bytes` that is `"` or `\`, with its offset, on the
+/// selected tier ([`selected_tier`]): the NEON body on aarch64, the scalar
+/// oracle elsewhere (sk-v27 LW3.PERF-1d; no x86 body yet).
+///
+/// ```
+/// use parse_that_simd::find_quote_or_backslash;
+/// assert_eq!(find_quote_or_backslash(b"plain text, then \"q\""), Some((17, b'"')));
+/// assert_eq!(find_quote_or_backslash(br"a\b"), Some((1, b'\\')));
+/// assert_eq!(find_quote_or_backslash(b"none here"), None);
+/// ```
+#[inline]
+pub fn find_quote_or_backslash(bytes: &[u8]) -> Option<(usize, u8)> {
+    // SAFETY: `selected_tier` only returns a supported tier.
+    unsafe { run_quote_or_backslash(selected_tier(), bytes) }
+}
+
+/// [`find_quote_or_backslash`] on `tier`, or `None` when the build or the
+/// host cannot run it. Equal to [`crate::scalar::find_quote_or_backslash`]
+/// for every tier that returns `Some`.
+///
+/// ```
+/// use parse_that_simd::{compiled_tiers, find_quote_or_backslash_with, scalar};
+/// let text = br#"a "quoted" \ run"#;
+/// for tier in compiled_tiers() {
+///     if let Some(hit) = find_quote_or_backslash_with(tier, text) {
+///         assert_eq!(hit, scalar::find_quote_or_backslash(text), "{}", tier.name());
+///     }
+/// }
+/// ```
+pub fn find_quote_or_backslash_with(tier: Tier, bytes: &[u8]) -> Option<Option<(usize, u8)>> {
+    // SAFETY: `run_quote_or_backslash`'s precondition is exactly `is_supported`.
+    tier.is_supported()
+        .then(|| unsafe { run_quote_or_backslash(tier, bytes) })
+}
+
+/// # Safety
+/// `tier.is_supported()`.
+#[inline]
+unsafe fn run_quote_or_backslash(tier: Tier, bytes: &[u8]) -> Option<(usize, u8)> {
+    match tier {
+        #[cfg(target_arch = "aarch64")]
+        Tier::Neon => crate::neon::find_quote_or_backslash(bytes),
+        _ => crate::scalar::find_quote_or_backslash(bytes),
+    }
+}
